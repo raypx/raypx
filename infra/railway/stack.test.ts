@@ -43,7 +43,7 @@ it("deploys the whole canary revision after CI, even after a docs-only push", as
         watchPatterns: [],
       },
       deploy: {
-        preDeployCommand: ["bun run --cwd packages/database migrate"],
+        preDeployCommand: ["bun run --cwd apps/api db:migrate"],
         healthcheckPath: deploymentServices.api.ready,
         multiRegionConfig: { "asia-southeast1-eqsg3a": { numReplicas: 1 } },
       },

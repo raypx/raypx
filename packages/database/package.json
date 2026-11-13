@@ -13,9 +13,8 @@
     "test": "bun --bun vitest run",
     "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
     "test:coverage": "bun --bun vitest run --coverage",
-    "generate": "bun --bun drizzle-kit generate --config drizzle.config.ts",
-    "migrate": "bun src/commands.ts migrate",
-    "studio": "bun --bun drizzle-kit studio --config drizzle.config.ts"
+    "generate": "bun --bun raypx-drizzle-kit generate --config drizzle.config.ts",
+    "studio": "bun --bun raypx-drizzle-kit studio --config drizzle.config.ts"
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
@@ -23,9 +22,9 @@
     "postgres": "catalog:"
   },
   "devDependencies": {
+    "@raypx/drizzle-kit": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
-    "drizzle-kit": "catalog:dev",
     "vitest": "catalog:dev"
   }
 }

@@ -1,11 +1,14 @@
 import { sql } from "drizzle-orm";
 import { fileURLToPath } from "node:url";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { connectDatabase } from "./connection.js";
+import { connectDatabase, type Database } from "./connection.js";
+
+type MigrationTransaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export async function migrateDatabase(
   databaseUrl: string,
   migrationsFolder = fileURLToPath(new URL("../drizzle-foundation", import.meta.url)),
+  afterSchema?: (tx: MigrationTransaction) => Promise<void>,
 ): Promise<void> {
   const connection = connectDatabase(databaseUrl, { max: 1 });
   try {
@@ -21,6 +24,7 @@ export async function migrateDatabase(
         migrationsFolder,
         migrationsSchema: "raypx_foundation_migrations",
       });
+      await afterSchema?.(tx);
     });
   } finally {
     await connection.close();

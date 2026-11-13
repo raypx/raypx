@@ -70,7 +70,7 @@ The accepted foundation design and current architecture decisions define the imp
 - DOM React and React DOM share one exact version. Mobile owns its Expo-supported
   React version in catalog:mobile; shared React peers must support both. Metro
   resolves React and JSX subpaths through Mobile so shared sources use one native instance.
-- Other @raypx-kit packages remain independently released external dependencies; environment and TypeScript presets are local @raypx workspaces.
+- Remaining @raypx-kit packages are independently released external dependencies. Environment, TypeScript presets and the Drizzle Kit launcher are local @raypx workspaces.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Desktop's Go module lives in `apps/desktop`, with MyGo v0.8.3 and Go 1.27.3.

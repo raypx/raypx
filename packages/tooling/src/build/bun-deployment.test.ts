@@ -41,11 +41,15 @@ it("shares a frozen dependency layer before copying application sources", () => 
 it("runs the images unprivileged and keeps migration inputs separate", () => {
   for (const runtime of [api.get("runtime"), web.get("runtime"), api.get("migrate")])
     expect(runtime?.lines).toContain("USER bun");
-  expect(api.get("migrate-dependencies")!.lines.join("\n")).toMatch(
-    /--production --filter @raypx\/database --ignore-scripts/,
-  );
   expect(api.get("migrate")?.from).toBe("bun");
-  expect(api.get("migration-payload")?.from).toBe("migrate-dependencies");
+  expect(api.get("migration-payload")?.from).toBe("dependencies");
+  expect(api.get("migration-payload")?.lines.join("\n")).toContain(
+    "--packages=bundle --env=disable",
+  );
+  expect(api.get("migration-payload")?.lines.join("\n")).toContain(
+    '"migrate":"bun run --cwd ../../apps/api db:migrate"',
+  );
+  expect(api.get("migrate")?.lines.join("\n")).toContain('"apps/api", "db:migrate"');
   expect(api.get("deploy")?.from).toBe("runtime");
   expect(api.get("deploy")?.lines.join("\n")).toContain("COPY --from=migration-payload");
 });

@@ -7,9 +7,9 @@ Dockerfiles in apps/api and apps/web. Keep install/build commands in those files
 project dependency installation. Docker uses the same pinned Bun runtime.
 `manifests.ts` stages workspace metadata before dependency installation. Each
 service installs its own workspace dependency closure and root build tools through
-Bun filters. API's `migrate-dependencies` installs the Database production closure;
-`migration-sources` stages its source closure, and `migration-payload` combines them
-with canonical SQL for `migrate` and `deploy`. Deployment acceptance separately
+Bun filters. API's `migration-payload` bundles the explicit migration command
+with its production imports and canonical SQL for `migrate` and `deploy`.
+Deployment acceptance separately
 bundles its synthetic account fixture and mounts it read-only into the migration
 image; production images do not build or ship that fixture.
 `build.sh` adds Compose-only Bun cache mounts to temporary copies and removes them on exit.
@@ -42,8 +42,8 @@ The rules below apply to the Compose host workflow.
 - Require a digest-pinned PostgreSQL image and a project-private Traefik ingress network. Trust exact proxy addresses, never a shared container subnet.
 - Build versioned images sequentially with a bounded container builder. Preserve
   previous image versions and persistent volumes for rollbacks.
-- Keep the migration image on database production dependencies; it must not
-  inherit the API build or development tools. Reuse manifest/dependency image layers.
+- Keep only the migration bundle and SQL in the migration image. It must not
+  inherit the API build or development tools. Reuse manifest/dependency build layers.
 - Compose and Railway share apps/api/Dockerfile and apps/web/Dockerfile.
   Keep cache mounts out of these portable files; Railway requires service-specific IDs.
 - Credentials belong in protected host files or Dokploy environment settings;

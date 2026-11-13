@@ -45,6 +45,7 @@
     "@earendil-works/pi-agent-core": "catalog:",
     "@hona/strobe": "catalog:dev",
     "@orpc/server": "catalog:",
+    "@raypx/drizzle-kit": "workspace:*",
     "@raypx/testing": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
@@ -52,7 +53,6 @@
     "@types/node": "catalog:dev",
     "@types/semver": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "drizzle-kit": "catalog:dev",
     "vitest": "catalog:dev"
   },
   "herdr": {

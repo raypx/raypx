@@ -29,7 +29,7 @@ or a protected file. Web can manage credentials and settings for that endpoint
 after it is configured.
 
 ```sh
-bun run --cwd apps/api storage:configure < /path/to/protected-storage-config.json
+bun run db:migrate --storage-stdin < /path/to/protected-storage-config.json
 ```
 
 ```json
@@ -46,7 +46,11 @@ bun run --cwd apps/api storage:configure < /path/to/protected-storage-config.jso
 keys sealed together using AES-256-GCM. A domain-separated HKDF key is derived
 from the API's `AUTH_SECRET`. Enter both keys in Web or run the command again to
 re-seal them after changing `AUTH_SECRET`. Each upload reads the committed
-configuration. This command replaces the former `S3_*` API environment settings.
+configuration. To initialize a missing row from existing `S3_*` environment
+variables, run `bun run db:migrate --import-config`. Supply `S3_ENDPOINT`,
+`S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` together.
+`S3_REGION` defaults to `auto`. The explicit stdin form can also replace
+an existing location or credentials and preserves the upload switch.
 The browser and Desktop daemon use authenticated RPC, so S3 CORS rules and
 public URLs are unnecessary.
 

@@ -2,8 +2,8 @@
 
 Merged Raypx changes consume `@raypx-kit/*` from npm at exact versions. Raypx Kit is
 maintained in its own repository. This workflow applies only to remaining external
-`@raypx-kit/*` dependencies: `@raypx/env`, `@raypx/tsconfig` and `@raypx/logger`
-are private workspaces changed and checked here. A change needing a new Kit API follows
+`@raypx-kit/*` dependencies. `@raypx/env`, `@raypx/tsconfig`, `@raypx/logger` and
+`@raypx/drizzle-kit` are private workspaces changed and checked here. A change needing a new Kit API follows
 the same three steps. Review branches may use a published snapshot or a tracked
 local archive while publication is pending; neither is a merge-ready dependency.
 
@@ -84,3 +84,10 @@ needs no Kit release or preview archive while its product workflow settles.
 Future extraction follows the release steps above. Its safe/managed/stream
 behavior is checked by workspace tests and Raypx's Bun API and standalone CLI
 artifact gates; Workers and packaged-platform acceptance remain separate.
+
+The Drizzle Kit extractor lives in `packages/drizzle-kit`. Database and CLI use
+the same pinned upstream Kit and ORM versions. The upstream package is installed
+for development. The launcher stages its CLI and skills without altering their
+bytes, and runtime migrations continue using Drizzle ORM.
+The official RC5 `up` command converted PostgreSQL snapshots to version 9.
+It preserved the applied SQL and the SQLite migration journal.

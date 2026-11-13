@@ -33,15 +33,22 @@
       ]
     },
     "apps/web": {
-      "entry": ["src/routes/**/*.{ts,tsx}", "vite.app.config.ts", "e2e/**/*.spec.ts"]
+      "entry": [
+        "src/routes/**/*.{ts,tsx}",
+        "vite.app.config.ts",
+        "e2e/**/*.spec.ts",
+        "public/sw.js"
+      ]
     },
     "apps/cli": {
       "entry": [
         "tests/smoke/*.ts",
         "tests/fixtures/**/*.{ts,mjs}",
         "perf/*.bench.ts",
-        "scripts/*.ts"
-      ]
+        "scripts/*.ts",
+        "drizzle.config.ts"
+      ],
+      "drizzle": false
     },
     "apps/storybook": {
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]

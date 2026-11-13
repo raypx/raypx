@@ -17,12 +17,15 @@ PostgreSQL persistence for the new account foundation.
 
 Use postgres.js and Drizzle. Active tables are in raypx_foundation; migration history uses raypx_foundation_migrations. Only drizzle-foundation is retained; retired migration histories are available in Git history. No reset/drop command. Generate new migrations with drizzle-kit; never edit generated SQL or snapshots. No runtime dependency on auth, tooling or apps.
 `studio` (root `db:studio`) opens Drizzle Studio with write access; only point it at the local foundation database.
+Schema generation and Studio run through the private `@raypx/drizzle-kit` workspace.
 Bun defaults to a process pool of ten connections. `/connection` keeps runtime
 connections separate from filesystem-based migrations in `migrate.ts`.
 API startup and explicit commands share the migrator's transaction-scoped advisory lock
 before any ledger/schema access. Lock acquisition waits at most 120 seconds; subsequent
 DDL lock waits are bounded to ten seconds. Migration, ledger and lock release commit or
 roll back together. Keep the official Drizzle migrator inside that transaction.
+The API's `db:migrate` command can inject a provider import into the same
+transaction after the schema applies. Database has no dependency on provider policy.
 Session and verification expiry indexes support API maintenance batches; retention
 and scheduling policy belongs to the API, not this persistence package.
 Better Auth Admin uses `user.role/banned/ban_reason/ban_expires` and

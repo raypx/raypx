@@ -8,10 +8,10 @@ server or configuration package.
 
 1. Create the PostgreSQL database and configure `DATABASE_URL`, authentication,
    and origins in the API environment.
-2. Run `bun run db:migrate` against that database. This creates all foundation
-   tables, including `system_configuration`; the migration does not create a database.
-3. Initialize Resend with the operator command below, then register the intended
-   administrator accounts and verify their emails.
+2. Provide the Resend settings below and run `bun run db:migrate --import-config`
+   against that database. The command creates the foundation tables and seeds
+   missing provider settings. The target database must already exist.
+3. Register the intended administrator accounts and verify their emails.
 4. Set explicit `DATABASE_URL` and `ADMIN_EMAILS=owner@example.com` (comma-separated
    for multiple accounts), then run `bun run --cwd apps/api auth:bootstrap-admins`.
    This is an operator command, never a startup action. Database roles remain
@@ -89,19 +89,20 @@ API replicas to reload on their next mail request. A five-second process-local
 TTL covers missed notifications and deployments without Redis. Saving does not
 send a test email or verify the key with Resend.
 
-For a new deployment without a verified administrator, or before upgrading from
-environment-based mail delivery, apply the foundation migrations and run the
-following from the repository with the target `DATABASE_URL`, `AUTH_SECRET`,
+For a new deployment without a verified administrator, or when upgrading from
+environment-based mail delivery, run the following from the repository with
+the target `DATABASE_URL`, `AUTH_SECRET`,
 `RESEND_API_KEY` and `MAIL_FROM` supplied securely to the command's environment.
 `MAIL_DEFAULT_LOCALE` is optional and defaults to `en`.
 
 ```sh
-bun run --cwd apps/api mail:configure
+bun run db:migrate --import-config
 ```
 
-The explicit command only creates the Resend row if it is missing. Use the
-configuration center for later changes. After seeding the row, the API no longer
-needs those three mail environment variables. Keep the same deployment secret
+Schema migrations and the requested imports commit in one PostgreSQL transaction.
+The import initializes missing Resend and S3 rows and preserves existing settings.
+Use the configuration center for later changes. After seeding the row, remove the
+three import-only mail variables. Keep the same deployment secret
 across replicas. With delivery paused or unconfigured, mail actions return
 `MAIL_NOT_CONFIGURED`; existing verified users can still sign in.
 

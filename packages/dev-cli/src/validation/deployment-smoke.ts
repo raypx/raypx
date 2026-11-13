@@ -279,7 +279,7 @@ export async function smokeDeployment(root: string, args: string[]) {
           migrate,
           { DATABASE_URL: database },
           [],
-          profile === "railway" ? ["bun", "run", "--cwd", "packages/database", "migrate"] : [],
+          profile === "railway" ? ["bun", "run", "--cwd", "apps/api", "db:migrate"] : [],
         );
         if (profile === "compose")
           await once(

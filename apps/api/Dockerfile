@@ -14,23 +14,19 @@ WORKDIR /app
 COPY --from=manifests /manifests/ ./
 RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
-FROM bun AS migrate-dependencies
-WORKDIR /app
-COPY --from=manifests /manifests/ ./
-RUN bun install --frozen-lockfile --production --filter @raypx/database --ignore-scripts
-
-FROM manifests AS migration-sources
-RUN bun deploy/sources.ts /app /migration-sources @raypx/database
-
-FROM migrate-dependencies AS migration-payload
-COPY --from=migration-sources /migration-sources/ ./
-COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
+FROM dependencies AS migration-payload
+COPY . .
+RUN bun --no-env-file build apps/api/server/configuration/migrate.ts --target=bun --format=esm --minify --packages=bundle --env=disable --outfile=/migration/apps/api/server/configuration/migrate.ts \
+  && cp apps/api/package.json /migration/apps/api/ \
+  && mkdir -p /migration/packages/database \
+  && printf '%s\n' '{"scripts":{"migrate":"bun run --cwd ../../apps/api db:migrate"}}' > /migration/packages/database/package.json \
+  && cp -R packages/database/drizzle-foundation /migration/packages/database/
 
 FROM bun AS migrate
 WORKDIR /app
-COPY --from=migration-payload /app/ ./
+COPY --from=migration-payload /migration/ ./
 USER bun
-CMD ["bun", "run", "--cwd", "packages/database", "migrate"]
+CMD ["bun", "run", "--cwd", "apps/api", "db:migrate"]
 
 FROM dependencies AS build
 COPY . .
@@ -52,4 +48,4 @@ CMD ["bun", ".output/server/index.mjs"]
 # The default image supports pre-deploy migrations. Select runtime for an API-only
 # image, or migrate for an isolated migration job without the API build.
 FROM runtime AS deploy
-COPY --from=migration-payload --chown=bun:bun /app/ ./
+COPY --from=migration-payload --chown=bun:bun /migration/ ./

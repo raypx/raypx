@@ -8,7 +8,7 @@ if (process.argv.slice(2).some((arg) => arg !== "--check"))
   throw new Error("Usage: bun scripts/generate-sqlite.ts [--check]");
 if (!check) {
   const result = Bun.spawnSync(
-    [process.execPath, "--bun", "drizzle-kit", "generate", "--config", "drizzle.config.ts"],
+    [process.execPath, "--bun", "raypx-drizzle-kit", "generate", "--config", "drizzle.config.ts"],
     { cwd: directory, stdout: "inherit", stderr: "inherit" },
   );
   if (result.exitCode !== 0) process.exit(result.exitCode);

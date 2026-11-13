@@ -55,25 +55,28 @@ async function sealCredentials(
 }
 
 export async function saveStorageConfiguration(
-  db: Database,
+  db: Pick<Database, "insert">,
   secret: string,
   input: z.output<typeof storageConfigSchema>,
+  mode: "replace" | "initialize" = "replace",
 ) {
   const { accessKeyId, secretAccessKey, endpoint, bucket, region } = input;
   const location = { endpoint, bucket, region };
   const credentials = await sealCredentials(secret, location, { accessKeyId, secretAccessKey });
-  await db
-    .insert(storageConfiguration)
-    .values({ id, ...location, credentials })
-    .onConflictDoUpdate({
-      target: storageConfiguration.id,
-      set: {
-        ...location,
-        credentials,
-        updatedAt: sql`now()`,
-        revision: sql`${storageConfiguration.revision} + 1`,
-      },
-    });
+  const insert = db.insert(storageConfiguration).values({ id, ...location, credentials });
+  if (mode === "initialize") {
+    await insert.onConflictDoNothing();
+    return;
+  }
+  await insert.onConflictDoUpdate({
+    target: storageConfiguration.id,
+    set: {
+      ...location,
+      credentials,
+      updatedAt: sql`now()`,
+      revision: sql`${storageConfiguration.revision} + 1`,
+    },
+  });
 }
 
 /** Each upload observes the current database configuration. Credentials stay in the API process. */

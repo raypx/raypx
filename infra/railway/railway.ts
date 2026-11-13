@@ -28,7 +28,7 @@ export default defineRailway((context) => {
       dockerfilePath: "apps/api/Dockerfile",
       watchPatterns: [],
     },
-    preDeploy: "bun run --cwd packages/database migrate",
+    preDeploy: "bun run --cwd apps/api db:migrate",
     healthcheck: deploymentServices.api.ready,
     healthcheckTimeout: 180,
     deploy: { ...deployment, preDeployTimeoutSeconds: 180 },

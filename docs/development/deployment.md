@@ -32,6 +32,9 @@ migrations against an operator database. New projects use their own isolated
 volume and credentials.
 
 Account mail and storage are set in the [configuration center](configuration.md).
+Set `DB_MIGRATE_IMPORT_CONFIG=true` and provide the existing provider inputs
+for the Compose migration job when upgrading an environment-based configuration.
+Remove the import flag and inputs after the migration succeeds.
 Optional OAuth, analytics and cookie domain settings are explicit in the template.
 `JOBS_ENABLED` enables server
 maintenance and cloud scheduling. Empty optional values disable integrations.
@@ -58,8 +61,8 @@ Dockerfiles and removes them on exit. The Dockerfiles run each workspace's `chec
 and `build` scripts directly in the Git-free build context. Docker owns image caching.
 
 The backend Dockerfile offers `runtime` (Nitro output), `migrate` (isolated DB
-job) and default `deploy` (runtime plus pre-deploy migration payload). The payload
-follows the Database production dependency closure and carries canonical SQL.
+job) and default `deploy` (runtime plus pre-deploy migration payload). Both carry
+the bundled `db:migrate` command and canonical SQL.
 Startup migrations also use private bundled SQL unless
 `DATABASE_MIGRATE_ON_START=false`. Every migration path shares the transaction
 advisory lock and ledger. Failure aborts startup safely and removes temporary SQL.

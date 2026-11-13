@@ -1,0 +1,29 @@
+{
+  "name": "@raypx/drizzle-kit",
+  "version": "0.0.0",
+  "private": true,
+  "bin": {
+    "raypx-drizzle-kit": "./bin/raypx-drizzle-kit.mjs"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/config.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vitest run",
+    "test:unit": "bun --bun vitest run"
+  },
+  "dependencies": {
+    "@raypx/runtime-node": "workspace:*",
+    "drizzle-kit": "catalog:dev",
+    "drizzle-orm": "catalog:",
+    "postgres": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "vitest": "catalog:dev"
+  }
+}

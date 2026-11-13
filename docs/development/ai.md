@@ -1,7 +1,7 @@
 # Pi AI model calls
 
-`@raypx/ai` uses the catalog-pinned `@earendil-works/pi-ai` 1.5.0 from the
-[Pi repository](https://github.com/earendil-works/pi/tree/v1.5.0/packages/ai).
+`@raypx/ai` uses the catalog-pinned `@earendil-works/pi-ai` 1.5.2 from the
+[Pi repository](https://github.com/earendil-works/pi/tree/v1.5.2/packages/ai).
 
 The package provides model catalogs, streaming responses, structured tool-call
 data, usage totals, deadlines and cancellation. Default providers are Anthropic,
@@ -123,7 +123,7 @@ inference; a real-provider check must be reported separately.
 
 ## Injected Agent loop
 
-`@raypx/providers/pi` uses `@earendil-works/pi-agent-core` 1.5.0 for `PiRunner`
+`@raypx/providers/pi` uses `@earendil-works/pi-agent-core` 1.5.2 for `PiRunner`
 and its provider-session adapter. CLI's private `src/runtime/agents/pi/` composes
 this adapter for local managed tasks alongside Claude and Codex.
 Callers inject the model stream, tools, approval callback and a context store with

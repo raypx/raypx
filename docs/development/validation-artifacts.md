@@ -429,10 +429,10 @@ The root script runs Knip's `knip-bun` binary. Root dependency overrides use
 fixtures are explicit entries; vendored
 skills stay outside product analysis. The root `skills` dependency is the CLI used
 by `skills:update`. Root overrides pin `oxc-parser` and `@oxc-project/types` together
-at `0.157.0`. Revalidate Tooling, Knip, type checks and builds when changing this
+at `0.158.0`. Revalidate Tooling, Knip, type checks and builds when changing this
 pair, including compatibility with Vite+'s declarations. Native parser bindings
-follow the parser package. Vite+ 1.5.1 supplies `@oxc-project/runtime` at
-`0.157.0`, `oxfmt` at `0.76.0`, and `oxlint-tsgolint` at `7.0.2005` without
+follow the parser package. Vite+ 1.6.0 supplies `@oxc-project/runtime` at
+`0.158.0`, `oxfmt` at `0.78.0`, and `oxlint-tsgolint` at `7.0.2006` without
 root overrides. Keep `oxlint` and `@oxlint/plugins` overridden together at `1.90.0`
 until the React `immutability` false positive in bundled Oxlint 1.91.0 is fixed
 ([upstream issue](https://github.com/oxc-project/oxc/issues/28401)). Revalidate lint,

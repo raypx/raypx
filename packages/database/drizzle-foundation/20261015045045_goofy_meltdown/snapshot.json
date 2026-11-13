@@ -1,9 +1,229 @@
 {
-  "version": "8",
+  "type": "base",
+  "version": "9",
   "dialect": "postgres",
   "id": "ad1e022d-6df6-42db-a7f7-ac47d0468a17",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_schema",
+      "statementTarget": [
+        "schema",
+        "raypx_foundation"
+      ],
+      "writes": [
+        "s|sch|raypx_foundation",
+        "n|sch|raypx_foundation",
+        "e|sch|raypx_foundation"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "account"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.account",
+        "n|tbl|raypx_foundation.account",
+        "e|tbl|raypx_foundation.account",
+        "n|rel|raypx_foundation.account",
+        "n|type|raypx_foundation.account",
+        "n|rel|raypx_foundation.account_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "session"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.session",
+        "n|tbl|raypx_foundation.session",
+        "e|tbl|raypx_foundation.session",
+        "n|rel|raypx_foundation.session",
+        "n|type|raypx_foundation.session",
+        "n|rel|raypx_foundation.session_pkey",
+        "n|rel|raypx_foundation.session_token_key"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "user"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.user",
+        "n|tbl|raypx_foundation.user",
+        "e|tbl|raypx_foundation.user",
+        "n|rel|raypx_foundation.user",
+        "n|type|raypx_foundation.user",
+        "n|rel|raypx_foundation.user_pkey",
+        "n|rel|raypx_foundation.user_email_key"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "verification"
+      ],
+      "writes": [
+        "s|tbl|raypx_foundation.verification",
+        "n|tbl|raypx_foundation.verification",
+        "e|tbl|raypx_foundation.verification",
+        "n|rel|raypx_foundation.verification",
+        "n|type|raypx_foundation.verification",
+        "n|rel|raypx_foundation.verification_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "account",
+        "account_user_id_idx"
+      ],
+      "writes": [
+        "s|idx|raypx_foundation.account_user_id_idx",
+        "n|idx|raypx_foundation.account_user_id_idx",
+        "e|idx|raypx_foundation.account_user_id_idx",
+        "n|rel|raypx_foundation.account_user_id_idx"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.account",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.account.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "account",
+        "account_provider_account_idx"
+      ],
+      "writes": [
+        "s|idx|raypx_foundation.account_provider_account_idx",
+        "n|idx|raypx_foundation.account_provider_account_idx",
+        "e|idx|raypx_foundation.account_provider_account_idx",
+        "n|rel|raypx_foundation.account_provider_account_idx"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.account",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.account.provider_id",
+        "n|col|raypx_foundation.account.account_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "session",
+        "session_user_id_idx"
+      ],
+      "writes": [
+        "s|idx|raypx_foundation.session_user_id_idx",
+        "n|idx|raypx_foundation.session_user_id_idx",
+        "e|idx|raypx_foundation.session_user_id_idx",
+        "n|rel|raypx_foundation.session_user_id_idx"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.session",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.session.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "verification",
+        "verification_identifier_idx"
+      ],
+      "writes": [
+        "s|idx|raypx_foundation.verification_identifier_idx",
+        "n|idx|raypx_foundation.verification_identifier_idx",
+        "e|idx|raypx_foundation.verification_identifier_idx",
+        "n|rel|raypx_foundation.verification_identifier_idx"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.verification",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.verification.identifier"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "account"
+      ],
+      "writes": [
+        "s|fk|raypx_foundation.account.account_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.account.account_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.account.account_user_id_user_id_fkey",
+        "n|con|raypx_foundation.account.account_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.account",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.account.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "session"
+      ],
+      "writes": [
+        "s|fk|raypx_foundation.session.session_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.session.session_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.session.session_user_id_user_id_fkey",
+        "n|con|raypx_foundation.session.session_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.session",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.session.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
+    }
   ],
   "ddl": [
     {
@@ -11,43 +231,33 @@
       "entityType": "schemas"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "raypx_foundation",
       "name": "account",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "raypx_foundation",
       "name": "session",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "raypx_foundation",
       "name": "user",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
       "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "raypx_foundation",
       "name": "verification",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
       "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
+      "table": "account",
+      "name": "id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -55,12 +265,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "account_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -68,12 +278,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "provider_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -81,25 +291,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
+      "entityType": "columns"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "account",
+      "name": "user_id",
       "type": "text",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "access_token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -107,12 +317,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "refresh_token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -120,25 +330,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "id_token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "text",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "access_token_expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -146,25 +356,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "refresh_token_expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "scope",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -172,25 +382,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "password",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "text",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
-      "default": "now()",
+      "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -198,12 +408,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
+      "entityType": "columns"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "account",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
+      "name": "id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -211,51 +434,38 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "raypx_foundation",
+      "table": "session",
       "name": "expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "text",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
       "name": "token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
       "type": "text",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
       "name": "ip_address",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -263,38 +473,38 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
       "name": "user_agent",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
       "type": "text",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
       "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "text",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": "now()",
+      "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -302,25 +512,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
       "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "text",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "user",
       "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -328,12 +538,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "user",
       "name": "name",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -341,12 +551,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "email",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
+      "entityType": "columns"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "user",
+      "name": "email",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "user",
+      "name": "email_verified",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -354,12 +577,12 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "email_verified",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
+      "entityType": "columns"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "user",
+      "name": "image",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -367,25 +590,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "image",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
+      "schema": "raypx_foundation",
+      "table": "user",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -393,25 +603,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
+      "entityType": "columns"
     },
     {
-      "type": "text",
+      "schema": "raypx_foundation",
+      "table": "user",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "verification",
       "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -419,12 +629,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "verification",
       "name": "identifier",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -432,12 +642,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "value",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
+      "entityType": "columns"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "verification",
+      "name": "value",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "verification",
+      "name": "expires_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -445,25 +668,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
+      "schema": "raypx_foundation",
+      "table": "verification",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -471,12 +681,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
+      "entityType": "columns"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "verification",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "account",
+      "name": "account_user_id_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -492,12 +715,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "account_user_id_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "account"
+      "entityType": "indexes"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "account",
+      "name": "account_provider_account_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -520,12 +743,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "account_provider_account_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "account"
+      "entityType": "indexes"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "session",
+      "name": "session_user_id_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -541,12 +764,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "session_user_id_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "session"
+      "entityType": "indexes"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "verification",
+      "name": "verification_identifier_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -562,107 +785,103 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "verification_identifier_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "verification"
+      "entityType": "indexes"
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "account_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "session_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "account_pkey",
       "schema": "raypx_foundation",
       "table": "account",
-      "entityType": "pks"
-    },
-    {
+      "name": "account_user_id_user_id_fkey",
+      "nameExplicit": false,
       "columns": [
+        "user_id"
+      ],
+      "schemaTo": "raypx_foundation",
+      "tableTo": "user",
+      "columnsTo": [
         "id"
       ],
-      "nameExplicit": false,
-      "name": "session_pkey",
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
       "schema": "raypx_foundation",
       "table": "session",
-      "entityType": "pks"
+      "name": "session_user_id_user_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "raypx_foundation",
+      "tableTo": "user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "account",
+      "name": "account_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "user_pkey",
+      "entityType": "pks"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
+      "name": "session_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
       "schema": "raypx_foundation",
       "table": "user",
-      "entityType": "pks"
-    },
-    {
+      "name": "user_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "verification_pkey",
-      "schema": "raypx_foundation",
-      "table": "verification",
       "entityType": "pks"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "verification",
+      "name": "verification_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "raypx_foundation",
+      "table": "session",
+      "name": "session_token_key",
       "nameExplicit": false,
       "columns": [
         "token"
       ],
       "nullsNotDistinct": false,
-      "name": "session_token_key",
-      "schema": "raypx_foundation",
-      "table": "session",
       "entityType": "uniques"
     },
     {
+      "schema": "raypx_foundation",
+      "table": "user",
+      "name": "user_email_key",
       "nameExplicit": false,
       "columns": [
         "email"
       ],
       "nullsNotDistinct": false,
-      "name": "user_email_key",
-      "schema": "raypx_foundation",
-      "table": "user",
       "entityType": "uniques"
     }
-  ],
-  "renames": []
+  ]
 }

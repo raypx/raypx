@@ -44,7 +44,8 @@ bun run --cwd apps/cli db:generate
 bun run --cwd apps/cli check
 ```
 
-Change the Drizzle definitions, then run `db:generate`. It invokes drizzle-kit
+Change the Drizzle definitions, then run `db:generate`. It invokes the workspace's
+`raypx-drizzle-kit` launcher
 and regenerates `migrations.generated.json` from the SQL migration files. Commit
 the schema, SQL, snapshots and embedded journal together. Do not edit generated
 files by hand. The check command fails if the embedded journal differs from the

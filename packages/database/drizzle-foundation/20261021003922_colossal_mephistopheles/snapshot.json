@@ -1,1512 +1,1520 @@
 {
-  "version": "8",
+  "type": "diff",
+  "version": "9",
   "dialect": "postgres",
   "id": "edfa4905-6760-4565-8548-d9832899efe2",
   "prevIds": [
     "ad1e022d-6df6-42db-a7f7-ac47d0468a17"
   ],
-  "ddl": [
-    {
-      "name": "raypx_foundation",
-      "entityType": "schemas"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "account",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_command",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_device",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_event",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_grant",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_owner",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_project",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_request",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "control_task",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "session",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "user",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "verification",
-      "entityType": "tables",
-      "schema": "raypx_foundation"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "account_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "provider_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "access_token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "refresh_token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id_token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "access_token_expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "refresh_token_expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "scope",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "password",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "account"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_command"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_command"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "device_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_command"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "body",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_command"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_device"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_device"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "device_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_device"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "body",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_device"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_event"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_event"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "device_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_event"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "body",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_event"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_grant"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_grant"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "device_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_grant"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "body",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_grant"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_owner"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_project"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_project"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "device_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_project"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "body",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_project"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_request"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_request"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "device_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_request"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "body",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_request"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_task"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_task"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "device_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_task"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "body",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "control_task"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "token",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "ip_address",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_agent",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "session"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "name",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "email",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
-      "type": "boolean",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "false",
-      "generated": null,
-      "identity": null,
-      "name": "email_verified",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "image",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "user"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "identifier",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "value",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "raypx_foundation",
-      "table": "verification"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_command"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "account_user_id_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "account"
+      "writes": [
+        "s|tbl|raypx_foundation.control_command",
+        "n|tbl|raypx_foundation.control_command",
+        "e|tbl|raypx_foundation.control_command",
+        "n|rel|raypx_foundation.control_command",
+        "n|type|raypx_foundation.control_command",
+        "n|rel|raypx_foundation.control_command_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "provider_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "account_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_device"
       ],
-      "isUnique": true,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "account_provider_account_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "account"
+      "writes": [
+        "s|tbl|raypx_foundation.control_device",
+        "n|tbl|raypx_foundation.control_device",
+        "e|tbl|raypx_foundation.control_device",
+        "n|rel|raypx_foundation.control_device",
+        "n|type|raypx_foundation.control_device",
+        "n|rel|raypx_foundation.control_device_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "device_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_event"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "control_command_device_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "control_command"
+      "writes": [
+        "s|tbl|raypx_foundation.control_event",
+        "n|tbl|raypx_foundation.control_event",
+        "e|tbl|raypx_foundation.control_event",
+        "n|rel|raypx_foundation.control_event",
+        "n|type|raypx_foundation.control_event",
+        "n|rel|raypx_foundation.control_event_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "device_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_grant"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "control_device_device_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "control_device"
+      "writes": [
+        "s|tbl|raypx_foundation.control_grant",
+        "n|tbl|raypx_foundation.control_grant",
+        "e|tbl|raypx_foundation.control_grant",
+        "n|rel|raypx_foundation.control_grant",
+        "n|type|raypx_foundation.control_grant",
+        "n|rel|raypx_foundation.control_grant_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "device_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_owner"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "control_event_device_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "control_event"
+      "writes": [
+        "s|tbl|raypx_foundation.control_owner",
+        "n|tbl|raypx_foundation.control_owner",
+        "e|tbl|raypx_foundation.control_owner",
+        "n|rel|raypx_foundation.control_owner",
+        "n|type|raypx_foundation.control_owner",
+        "n|rel|raypx_foundation.control_owner_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "device_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_project"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "control_grant_device_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "control_grant"
+      "writes": [
+        "s|tbl|raypx_foundation.control_project",
+        "n|tbl|raypx_foundation.control_project",
+        "e|tbl|raypx_foundation.control_project",
+        "n|rel|raypx_foundation.control_project",
+        "n|type|raypx_foundation.control_project",
+        "n|rel|raypx_foundation.control_project_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "device_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_request"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "control_project_device_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "control_project"
+      "writes": [
+        "s|tbl|raypx_foundation.control_request",
+        "n|tbl|raypx_foundation.control_request",
+        "e|tbl|raypx_foundation.control_request",
+        "n|rel|raypx_foundation.control_request",
+        "n|type|raypx_foundation.control_request",
+        "n|rel|raypx_foundation.control_request_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "device_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_task"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "control_request_device_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "control_request"
+      "writes": [
+        "s|tbl|raypx_foundation.control_task",
+        "n|tbl|raypx_foundation.control_task",
+        "e|tbl|raypx_foundation.control_task",
+        "n|rel|raypx_foundation.control_task",
+        "n|type|raypx_foundation.control_task",
+        "n|rel|raypx_foundation.control_task_pkey"
+      ],
+      "reads": [
+        "n|sch|raypx_foundation"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "device_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "control_command",
+        "control_command_device_idx"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "control_task_device_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "control_task"
+      "writes": [
+        "s|idx|raypx_foundation.control_command_device_idx",
+        "n|idx|raypx_foundation.control_command_device_idx",
+        "e|idx|raypx_foundation.control_command_device_idx",
+        "n|rel|raypx_foundation.control_command_device_idx"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.control_command",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_command.user_id",
+        "n|col|raypx_foundation.control_command.device_id"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "control_device",
+        "control_device_device_idx"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "session_user_id_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "session"
+      "writes": [
+        "s|idx|raypx_foundation.control_device_device_idx",
+        "n|idx|raypx_foundation.control_device_device_idx",
+        "e|idx|raypx_foundation.control_device_device_idx",
+        "n|rel|raypx_foundation.control_device_device_idx"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.control_device",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_device.user_id",
+        "n|col|raypx_foundation.control_device.device_id"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "identifier",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "control_event",
+        "control_event_device_idx"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "verification_identifier_idx",
-      "entityType": "indexes",
-      "schema": "raypx_foundation",
-      "table": "verification"
+      "writes": [
+        "s|idx|raypx_foundation.control_event_device_idx",
+        "n|idx|raypx_foundation.control_event_device_idx",
+        "e|idx|raypx_foundation.control_event_device_idx",
+        "n|rel|raypx_foundation.control_event_device_idx"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.control_event",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_event.user_id",
+        "n|col|raypx_foundation.control_event.device_id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "control_grant",
+        "control_grant_device_idx"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|idx|raypx_foundation.control_grant_device_idx",
+        "n|idx|raypx_foundation.control_grant_device_idx",
+        "e|idx|raypx_foundation.control_grant_device_idx",
+        "n|rel|raypx_foundation.control_grant_device_idx"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "account_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "account"
+      "reads": [
+        "n|tbl|raypx_foundation.control_grant",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_grant.user_id",
+        "n|col|raypx_foundation.control_grant.device_id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "control_project",
+        "control_project_device_idx"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|idx|raypx_foundation.control_project_device_idx",
+        "n|idx|raypx_foundation.control_project_device_idx",
+        "e|idx|raypx_foundation.control_project_device_idx",
+        "n|rel|raypx_foundation.control_project_device_idx"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_command_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_command"
+      "reads": [
+        "n|tbl|raypx_foundation.control_project",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_project.user_id",
+        "n|col|raypx_foundation.control_project.device_id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "control_request",
+        "control_request_device_idx"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|idx|raypx_foundation.control_request_device_idx",
+        "n|idx|raypx_foundation.control_request_device_idx",
+        "e|idx|raypx_foundation.control_request_device_idx",
+        "n|rel|raypx_foundation.control_request_device_idx"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_device_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_device"
+      "reads": [
+        "n|tbl|raypx_foundation.control_request",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_request.user_id",
+        "n|col|raypx_foundation.control_request.device_id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "raypx_foundation",
+        "control_task",
+        "control_task_device_idx"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|idx|raypx_foundation.control_task_device_idx",
+        "n|idx|raypx_foundation.control_task_device_idx",
+        "e|idx|raypx_foundation.control_task_device_idx",
+        "n|rel|raypx_foundation.control_task_device_idx"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_event_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_event"
+      "reads": [
+        "n|tbl|raypx_foundation.control_task",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_task.user_id",
+        "n|col|raypx_foundation.control_task.device_id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_command"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|fk|raypx_foundation.control_command.control_command_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_command.control_command_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_command.control_command_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_command.control_command_user_id_user_id_fkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_grant_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_grant"
+      "reads": [
+        "n|tbl|raypx_foundation.control_command",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_command.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_device"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|fk|raypx_foundation.control_device.control_device_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_device.control_device_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_device.control_device_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_device.control_device_user_id_user_id_fkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_owner_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_owner"
+      "reads": [
+        "n|tbl|raypx_foundation.control_device",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_device.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_event"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|fk|raypx_foundation.control_event.control_event_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_event.control_event_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_event.control_event_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_event.control_event_user_id_user_id_fkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_project_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_project"
+      "reads": [
+        "n|tbl|raypx_foundation.control_event",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_event.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_grant"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|fk|raypx_foundation.control_grant.control_grant_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_grant.control_grant_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_grant.control_grant_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_grant.control_grant_user_id_user_id_fkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_request_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_request"
+      "reads": [
+        "n|tbl|raypx_foundation.control_grant",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_grant.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_owner"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|fk|raypx_foundation.control_owner.control_owner_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_owner.control_owner_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_owner.control_owner_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_owner.control_owner_user_id_user_id_fkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "control_task_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "control_task"
+      "reads": [
+        "n|tbl|raypx_foundation.control_owner",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_owner.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "user_id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_project"
       ],
-      "schemaTo": "raypx_foundation",
-      "tableTo": "user",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|fk|raypx_foundation.control_project.control_project_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_project.control_project_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_project.control_project_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_project.control_project_user_id_user_id_fkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "session_user_id_user_id_fkey",
-      "entityType": "fks",
-      "schema": "raypx_foundation",
-      "table": "session"
+      "reads": [
+        "n|tbl|raypx_foundation.control_project",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_project.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     },
     {
-      "columns": [
-        "user_id",
-        "id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_request"
       ],
-      "nameExplicit": false,
-      "name": "control_command_pkey",
-      "entityType": "pks",
-      "schema": "raypx_foundation",
-      "table": "control_command"
+      "writes": [
+        "s|fk|raypx_foundation.control_request.control_request_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_request.control_request_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_request.control_request_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_request.control_request_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|raypx_foundation.control_request",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_request.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     },
     {
-      "columns": [
-        "user_id",
-        "id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "raypx_foundation",
+        "control_task"
       ],
-      "nameExplicit": false,
-      "name": "control_device_pkey",
-      "entityType": "pks",
-      "schema": "raypx_foundation",
-      "table": "control_device"
-    },
-    {
-      "columns": [
-        "user_id",
-        "id"
+      "writes": [
+        "s|fk|raypx_foundation.control_task.control_task_user_id_user_id_fkey",
+        "n|fk|raypx_foundation.control_task.control_task_user_id_user_id_fkey",
+        "e|fk|raypx_foundation.control_task.control_task_user_id_user_id_fkey",
+        "n|con|raypx_foundation.control_task.control_task_user_id_user_id_fkey"
       ],
-      "nameExplicit": false,
-      "name": "control_event_pkey",
-      "entityType": "pks",
-      "schema": "raypx_foundation",
-      "table": "control_event"
-    },
-    {
-      "columns": [
-        "user_id",
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "control_grant_pkey",
-      "entityType": "pks",
-      "schema": "raypx_foundation",
-      "table": "control_grant"
-    },
-    {
-      "columns": [
-        "user_id",
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "control_project_pkey",
-      "entityType": "pks",
-      "schema": "raypx_foundation",
-      "table": "control_project"
-    },
-    {
-      "columns": [
-        "user_id",
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "control_request_pkey",
-      "entityType": "pks",
-      "schema": "raypx_foundation",
-      "table": "control_request"
-    },
-    {
-      "columns": [
-        "user_id",
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "control_task_pkey",
-      "entityType": "pks",
-      "schema": "raypx_foundation",
-      "table": "control_task"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "account_pkey",
-      "schema": "raypx_foundation",
-      "table": "account",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "nameExplicit": false,
-      "name": "control_owner_pkey",
-      "schema": "raypx_foundation",
-      "table": "control_owner",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "session_pkey",
-      "schema": "raypx_foundation",
-      "table": "session",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "user_pkey",
-      "schema": "raypx_foundation",
-      "table": "user",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "verification_pkey",
-      "schema": "raypx_foundation",
-      "table": "verification",
-      "entityType": "pks"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
-      "nullsNotDistinct": false,
-      "name": "session_token_key",
-      "schema": "raypx_foundation",
-      "table": "session",
-      "entityType": "uniques"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
-      "nullsNotDistinct": false,
-      "name": "user_email_key",
-      "schema": "raypx_foundation",
-      "table": "user",
-      "entityType": "uniques"
+      "reads": [
+        "n|tbl|raypx_foundation.control_task",
+        "n|sch|raypx_foundation",
+        "n|tbl|raypx_foundation.user",
+        "n|sch|raypx_foundation",
+        "n|col|raypx_foundation.control_task.user_id",
+        "n|col|raypx_foundation.user.id",
+        "e|uniqueness|raypx_foundation.user.id"
+      ]
     }
   ],
-  "renames": []
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_command",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_device",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_event",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_grant",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_owner",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_project",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_request",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "name": "control_task",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_command",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_command",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_command",
+        "name": "device_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_command",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_device",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_device",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_device",
+        "name": "device_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_device",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_event",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_event",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_event",
+        "name": "device_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_event",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_grant",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_grant",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_grant",
+        "name": "device_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_grant",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_owner",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_project",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_project",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_project",
+        "name": "device_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_project",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_request",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_request",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_request",
+        "name": "device_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_request",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_task",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_task",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_task",
+        "name": "device_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_task",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_command",
+        "name": "control_command_device_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "device_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_device",
+        "name": "control_device_device_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "device_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_event",
+        "name": "control_event_device_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "device_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_grant",
+        "name": "control_grant_device_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "device_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_project",
+        "name": "control_project_device_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "device_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_request",
+        "name": "control_request_device_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "device_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_task",
+        "name": "control_task_device_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "device_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_command",
+        "name": "control_command_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_device",
+        "name": "control_device_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_event",
+        "name": "control_event_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_grant",
+        "name": "control_grant_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_owner",
+        "name": "control_owner_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_project",
+        "name": "control_project_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_request",
+        "name": "control_request_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_task",
+        "name": "control_task_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "raypx_foundation",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_command",
+        "name": "control_command_pkey",
+        "columns": [
+          "user_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_device",
+        "name": "control_device_pkey",
+        "columns": [
+          "user_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_event",
+        "name": "control_event_pkey",
+        "columns": [
+          "user_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_grant",
+        "name": "control_grant_pkey",
+        "columns": [
+          "user_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_project",
+        "name": "control_project_pkey",
+        "columns": [
+          "user_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_request",
+        "name": "control_request_pkey",
+        "columns": [
+          "user_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_task",
+        "name": "control_task_pkey",
+        "columns": [
+          "user_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "raypx_foundation",
+        "table": "control_owner",
+        "name": "control_owner_pkey",
+        "columns": [
+          "user_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
 }

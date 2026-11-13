@@ -30,7 +30,7 @@ function snapshot(
 
 /** Explicit bootstrap for deployments without an administrator session yet. */
 export async function initializeResend(
-  db: Database,
+  db: Pick<Database, "insert">,
   secret: string,
   values: ResendSettingsUpdate["values"],
   apiKey: string,

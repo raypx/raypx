@@ -1,6 +1,6 @@
 export const configurationScopes = ["site", "storage", "resend"] as const;
 export type ConfigurationScope = (typeof configurationScopes)[number];
-export type ConfigurationChange = { scope: ConfigurationScope; revision: number };
+type ConfigurationChange = { scope: ConfigurationScope; revision: number };
 
 export interface ConfigurationNotifications {
   publish(change: ConfigurationChange): void;

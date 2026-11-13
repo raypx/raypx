@@ -1,0 +1,4 @@
+{
+  "extends": "@raypx/tsconfig/node.json",
+  "include": ["src/**/*.ts", "vitest.config.ts"]
+}

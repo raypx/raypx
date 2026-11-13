@@ -42,8 +42,10 @@ railway variable set --skip-deploys; never commit decrypted variables.
 | web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                  |
 | api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                          |
 
-Mail and storage live in each environment's database. Seed existing Resend
-credentials before upgrading, using the [configuration center guide](configuration.md#resend-email).
+Mail and storage live in each environment's database. To seed them on upgrade,
+set `DB_MIGRATE_IMPORT_CONFIG=true` and supply the existing provider environment
+variables to the API service before the pre-deploy job runs. Remove the import
+flag and input variables after the upgrade. [Configuration center guide](configuration.md#resend-email)
 Unconfigured mail actions return `MAIL_NOT_CONFIGURED`.
 Both Dockerfiles declare `RAILWAY_GIT_COMMIT_SHA` as a build argument. Manual builds
 outside Git must supply it or `VITE_APP_RELEASE`; no unversioned production fallback
@@ -143,7 +145,7 @@ the current Railway dashboard settings or live deployment health.
 
 ### CLI workflow
 
-Install the repository dependencies with the pinned Bun. CLI 5.71.0 and SDK 3.16.0
+Install the repository dependencies with the pinned Bun. CLI 5.74.0 and SDK 3.17.0
 were used for the initial deployment. Railway's legacy railway.toml configuration
 has been replaced by its [current IaC interface](https://docs.railway.com/infrastructure-as-code).
 
@@ -174,14 +176,14 @@ Detached upload completion is not a health result: inspect deployment status and
 logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v5.
 
 Railway and Compose share apps/api/Dockerfile and apps/web/Dockerfile. The default
-API `deploy` stage extends the runtime stage with database production dependencies
-and canonical migrations. Its shared `migration-payload` stage discovers the
-database workspace's production dependency sources automatically through
-`deploy/sources.ts`; Compose's migration image copies the same payload.
+API `deploy` stage extends the runtime stage with the bundled migration command
+and canonical migrations. Compose's migration image copies the same payload.
 Compose selects runtime and the independent migrate
 stage explicitly; Web defaults to runtime on both platforms.
-Railway runs bun run --cwd packages/database migrate
+Railway runs `bun run --cwd apps/api db:migrate`
 in its isolated pre-deploy container. A failure blocks the new deployment.
+Images also route an existing `bun run --cwd packages/database migrate` hook
+to that same command while the Railway configuration catches up.
 API startup also checks pending migrations by default from private bundled SQL assets.
 `DATABASE_MIGRATE_ON_START=false` skips the startup check when the pre-deploy hook
 owns migration. Both paths share the same database advisory lock and migration ledger;

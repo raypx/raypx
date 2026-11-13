@@ -39,6 +39,9 @@ Platform entry modules live in `app/`; runtime composition and adapters live in 
 owned resources in reverse order, every one even after a failure, and only once.
 `runtime/server.ts` initializes one process runtime, closed by `runtime/plugin.ts` through Nitro's close hook.
 Before allocating runtime resources it applies pending foundation migrations by default.
+`db:migrate` is the explicit operator entry for schema and requested provider
+imports. Imports run inside the Drizzle migration transaction. API startup
+applies schema only.
 `DATABASE_MIGRATE_ON_START=false` skips only API startup migration. Nitro bundles private
 SQL assets; startup stages them temporarily for the database package's Drizzle migrator
 and removes the temporary directory on success or failure. Migration errors stop startup
@@ -85,7 +88,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
 - Dockerfile is shared by Compose and Railway. Its default deploy stage carries
-  the Bun migration sources, production database dependencies and canonical SQL
+  the bundled Bun migration command and canonical SQL
   for pre-deploy migration.
   Compose selects the runtime and independent migrate targets explicitly.
   The runtime output also includes private SQL assets for default startup migration.
@@ -196,7 +199,7 @@ Registration is enforced by the Better Auth user-create hook with a fresh read, 
 it covers every sign-in method; the email signup route only pre-checks the 5-second
 `readCached()` snapshot. Use `readCached()` only where that delay is acceptable.
 `configuration.storage/updateStorage` manage revisioned S3 settings with the same
-permission and audit gates. Reads exclude credentials. The `storage:configure`
+permission and audit gates. Reads exclude credentials. The `db:migrate --storage-stdin`
 operator command also supports custom S3 endpoints. PostgreSQL stores credentials
 encrypted with the API's deployment secret. `attachments.upload` verifies the account, origin
 and project before storing an original in the private bucket. The split relay
@@ -208,7 +211,7 @@ Each save clears its scope after commit and publishes its revision over Redis.
 A five-second TTL covers missed notifications. Keep administrator reads,
 registration admission and S3 uploads on the authoritative path.
 The Resend API key is write-only and encrypted with the
-deployment secret. `mail:configure` seeds a missing row
+deployment secret. `db:migrate --import-config` seeds a missing row
 explicitly before the first administrator signup or when upgrading.
 See `docs/development/caching.md` for the configuration reader.
 Run the migration before deploying: signup fails closed without the table. Jobs combine the
