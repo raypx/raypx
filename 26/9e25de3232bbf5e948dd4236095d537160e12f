@@ -1,0 +1,39 @@
+.github/workflows/ci.yml
+  s_652cc4f0b5d7e1::t_26410db1423362 3
+.github/workflows/mobile-build.yml
+  s_652cc4f0b5d7e1::t_26410db1423362 1-83
+apps/mobile/scripts/configure-native-build.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 1-38
+docs/development/mobile.md
+  s_652cc4f0b5d7e1::t_26410db1423362 42-91
+.github/workflows/mobile-release.yml
+  s_652cc4f0b5d7e1::t_26410db1423362 1-74
+apps/mobile/AGENTS.md
+  s_652cc4f0b5d7e1::t_26410db1423362 58-60
+apps/mobile/eas.json
+  s_652cc4f0b5d7e1::t_26410db1423362 1-23
+apps/mobile/tsconfig.json
+  s_652cc4f0b5d7e1::t_26410db1423362 8-15
+apps/mobile/package.json
+  s_652cc4f0b5d7e1::t_26410db1423362 10
+package.json
+  s_652cc4f0b5d7e1::t_26410db1423362 118
+bun.lock
+  s_652cc4f0b5d7e1::t_6ded1d8a2f88c0 983
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "269e25de3232bbf5e948dd4236095d537160e12f",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
