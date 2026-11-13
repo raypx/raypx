@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { Input, type InputRef } from "heroui-native/input";
 import { Label } from "heroui-native/label";
 import { TextField } from "heroui-native/text-field";
@@ -7,8 +7,10 @@ import { useAuthActions } from "@raypx/auth/hooks";
 import { apiOrigin, authClient } from "../src/auth.js";
 import { actionErrorKey, useCopy } from "../src/locale.js";
 import { Action, Screen } from "../src/ui.js";
+import { restoreSession, sessionExpired, subscribeSession } from "../src/session-events.js";
 
 export default function LoginScreen() {
+  const expired = useSyncExternalStore(subscribeSession, sessionExpired, sessionExpired);
   const { locale, t } = useCopy();
   const { refetch } = authClient.useSession();
   const [challenge, setChallenge] = useState<"totp" | "backup">();
@@ -45,6 +47,7 @@ export default function LoginScreen() {
       setPassword("");
       // Explicitly refresh the subscribed session atom before opening protected routes.
       await refetch();
+      restoreSession();
     });
   };
   async function verifyCode() {
@@ -60,6 +63,7 @@ export default function LoginScreen() {
           : await authClient.twoFactor.verifyTotp(input);
       if (result.error) throw new Error("Invalid code");
       await refetch();
+      restoreSession();
     } catch {
       setCodeError(true);
     } finally {
@@ -135,6 +139,11 @@ export default function LoginScreen() {
       <Text accessibilityRole="header" className="text-[28px] font-semibold text-foreground">
         {t("auth.login")}
       </Text>
+      {expired ? (
+        <Text accessibilityRole="alert" className="text-base text-foreground">
+          {t("mobile.sessionExpired")}
+        </Text>
+      ) : null}
       <TextField isDisabled={actions.busy} className="gap-2">
         <Label accessible={false} onPress={() => emailInput.current?.focus()}>
           <Label.Text nativeID="email-label" className="text-sm">

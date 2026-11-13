@@ -1,0 +1,11 @@
+{
+  "lastEdited": "Last edited {date}",
+  "openLink": "Open link",
+  "linkError": "Could not open the link.",
+  "image": "Image",
+  "sessionExpired": "Your session expired. Sign in to continue.",
+  "modelSource": {
+    "connection": "Connection",
+    "deployment": "Deployment"
+  }
+}

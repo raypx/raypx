@@ -57,6 +57,7 @@ export class ConversationController {
   private generation = 0;
   private started = false;
   private disposed = false;
+  private suspended = false;
   private hasSnapshot = false;
   private storageUnavailable = false;
   private approvalsGeneration = 0;
@@ -125,6 +126,7 @@ export class ConversationController {
   async start() {
     if (this.started || this.disposed) return;
     this.started = true;
+    if (this.suspended) return;
     await this.refreshSnapshot("connecting");
   }
   private closeSocket() {
@@ -160,7 +162,7 @@ export class ConversationController {
     }
   }
   private openSocket() {
-    if (this.disposed) return;
+    if (this.disposed || this.suspended) return;
     const generation = ++this.generation;
     this.timer = setTimeout(() => {
       if (!this.disposed && generation === this.generation) this.interrupted(false);
@@ -254,7 +256,7 @@ export class ConversationController {
     else if (applied === "applied") this.update();
   }
   private interrupted(authorizationLost: boolean) {
-    if (this.disposed) return;
+    if (this.disposed || this.suspended) return;
     ++this.generation;
     this.cancelTimer();
     this.closeSocket();
@@ -267,7 +269,7 @@ export class ConversationController {
       }, 1_000);
   }
   reconnect() {
-    if (this.disposed) return;
+    if (this.disposed || this.suspended) return;
     if (
       !this.hasSnapshot ||
       this.view.connection === "snapshot-required" ||
@@ -283,6 +285,28 @@ export class ConversationController {
     this.update({ connection: "reconnecting", error: null });
     this.openSocket();
   }
+  /** Platform lifecycle adapter: retain applied state/cursor, fence I/O and discard transient text. */
+  suspend() {
+    if (this.disposed || this.suspended) return;
+    this.suspended = true;
+    ++this.generation;
+    ++this.approvalsGeneration;
+    this.cancelTimer();
+    this.closeSocket();
+    this.state.clearLiveReplies();
+    this.update({ connection: "reconnecting", approvalsLoading: false });
+  }
+  /** Resume the same projection; a fresh mount still begins with an authoritative snapshot. */
+  resume() {
+    if (this.disposed || !this.suspended) return;
+    this.suspended = false;
+    // Foreground reconciliation must not depend on the event socket becoming ready.
+    // A new projection hydrates approvals after its snapshot establishes row positions.
+    if (this.hasSnapshot) void this.refreshApprovals();
+    void this.options.computer?.refresh();
+    if (!this.started) void this.start();
+    else this.reconnect();
+  }
   async send(): Promise<boolean> {
     if (this.disposed || this.view.sending || !this.view.draft.trim()) return false;
     if (this.view.pending && this.view.pending.text !== this.view.draft) return false;
@@ -297,7 +321,7 @@ export class ConversationController {
   }
   async refreshApprovals(): Promise<void> {
     const port = this.options.approvals;
-    if (!port || this.disposed) return;
+    if (!port || this.disposed || this.suspended) return;
     const generation = ++this.approvalsGeneration;
     const known = new Set(this.approvals.getSnapshot().map((card) => card.requestId));
     this.update({ approvalsLoading: true, approvalsError: false });

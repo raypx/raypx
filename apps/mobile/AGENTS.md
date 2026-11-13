@@ -2,16 +2,29 @@
 
 ## Purpose
 
-Expo iOS/Android composition root. Account access always requires login; local
-execution remains in the Desktop/CLI device host.
+Expo iOS/Android composition root for Space Agents, conversations and account
+access. Every application screen requires login; execution stays on the backend.
 
 ## Interface
 
 Expo Router owns `app/` routes. The root session boundary protects `(app)` and
 exposes `/login` only while signed out. Session restoration, refresh failures,
 expiry and verification must fail closed before protected screens mount.
-The first authenticated screen is the account shell; task/push features are later work.
+Agents is the authenticated home. `/conversation/[agentId]` selects a conversation
+with `spaceId`; `/agent` creates or edits an Agent, `/space` creates a Space and
+`/account` retains account/sign-out. Preserve validated return destinations across
+session expiry. A route parameter is a selector, never authorization.
 OTA updates are not configured; keep updates.enabled false until an update service is established.
+
+Import `@raypx/agents/model` for page state, conversation/event projections,
+idempotent sends, approvals and computer lifecycle. Never import its DOM client.
+Mobile injects authenticated RPC, `/events`, device storage and AppState ports.
+Close the socket in the background; resume the retained projection/cursor on
+foreground and refresh pending approvals and computer state. Apply durable events
+before ACK; transient reply text never advances the cursor. No automatic send on
+draft restoration or retry editing. Drafts and frozen uncertain-send receipts use
+SecureStore with keys scoped by origin, account, Space and conversation. Do not
+persist server history or live text as a second authority.
 
 `EXPO_PUBLIC_API_URL` selects one HTTPS gateway origin (default `https://raypx.com`).
 It is public build configuration, never a credential. SecureStore namespaces
@@ -22,8 +35,11 @@ Do not add OAuth/deep-link login without the matching server integration.
 Use HeroUI Native for interactive controls and React Native for layout/text,
 styled with Tailwind CSS 4 through Uniwind; never import shared DOM components.
 Import components through their public subpaths. The root layout mounts a gesture
-root, SafeAreaProvider and HeroUINativeProviderRaw; add portal/toast providers only
-when a feature needs them. The provider respects system reduced motion.
+root, SafeAreaProvider, HeroUINativeProviderRaw and the Select portal host. The
+provider respects system reduced motion. Computer controls use a native Modal
+bottom sheet without animation; destructive deletion/stop use native confirmation.
+Pending approval cards never disable the composer. Render replies as native
+Markdown without raw HTML, WebViews or shared DOM components.
 Import `src/global.css` once in the root layout.
 Use `className`, `contentContainerClassName` and color prop class names; wrap
 third-party native components with `withUniwind` when they need style adaptation.
@@ -55,13 +71,23 @@ to their TypeScript sources; keep this remapping out of dependencies in `node_mo
 Wrap the configured resolver with `withUniwindConfig` last. Its type generation
 stays under ignored `.expo/`; static `uniwind/types` also makes clean checks work.
 Run `bun run --cwd apps/mobile check`, `test`, and `build`; device acceptance is separate.
+Vitest native component tests use the mobile React version with a test renderer
+and native/HeroUI host mocks, alongside port and AppState resume tests. These do
+not verify native layout, keyboard, accessibility or device socket behavior.
+Markdown suites exercise the real parser and reply renderer. Keep its list/table
+dependencies inside Vitest's module pipeline and select their native ESM/TS entries;
+CommonJS `require` bypasses the native aliases. SVG stays a native host mock.
+The model picker shows catalog source metadata. Tool lifecycle rows wait for the
+shared conversation model to expose `tool.started`/`tool.finished` activity; never
+project those events separately in Mobile.
 The manual Mobile build workflow verifies unsigned native builds on GitHub runners.
 Mobile release uses EAS for signed builds. Both workflows configure generated native
 projects to run Metro with Bun. Keep native projects ignored.
 
 ## Catalog composition
 
-Statically compose common and auth in private language entries; never import DOM
-i18n adapters or other product catalogs.
+Statically compose common, Auth and Agents' pure English/Chinese catalogs in
+private language entries; mobile-only copy belongs in `locales/{en,zh}/mobile.json`.
+Never import DOM i18n adapters.
 
 - Expo password login handles Better Auth TOTP and backup-code challenges.

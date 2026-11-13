@@ -14,7 +14,11 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:mobile",
+    "@raypx/agents": "workspace:*",
     "@raypx/auth": "workspace:*",
+    "@raypx/client": "workspace:*",
+    "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
     "better-auth": "catalog:",
@@ -32,6 +36,7 @@
     "react": "catalog:mobile",
     "react-native": "catalog:mobile",
     "react-native-gesture-handler": "catalog:mobile",
+    "react-native-marked": "catalog:mobile",
     "react-native-reanimated": "catalog:mobile",
     "react-native-safe-area-context": "catalog:mobile",
     "react-native-screens": "catalog:mobile",
@@ -45,7 +50,9 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/react": "catalog:mobile",
+    "@types/react-test-renderer": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
+    "react-test-renderer": "catalog:mobile",
     "tailwindcss": "catalog:",
     "vitest": "catalog:dev"
   }

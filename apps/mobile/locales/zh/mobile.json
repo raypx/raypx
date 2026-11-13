@@ -1,0 +1,11 @@
+{
+  "lastEdited": "最近编辑：{date}",
+  "openLink": "打开链接",
+  "linkError": "无法打开链接。",
+  "image": "图片",
+  "sessionExpired": "会话已过期，请登录以继续。",
+  "modelSource": {
+    "connection": "连接",
+    "deployment": "部署"
+  }
+}

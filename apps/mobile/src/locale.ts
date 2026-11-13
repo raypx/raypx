@@ -1,4 +1,5 @@
 import { useLocales } from "expo-localization";
+import { useMemo } from "react";
 import { createTranslator, matchLocale } from "@raypx/i18n";
 import { messages } from "../locales/index.js";
 import type { AuthActionError } from "@raypx/auth/hooks";
@@ -6,7 +7,7 @@ import type { AuthActionError } from "@raypx/auth/hooks";
 export function useCopy() {
   const locales = useLocales();
   const locale = matchLocale(locales.map((item) => item.languageTag)) ?? "en";
-  const t = createTranslator({ locale, messages: messages[locale] });
+  const t = useMemo(() => createTranslator({ locale, messages: messages[locale] }), [locale]);
   return { locale, t };
 }
 

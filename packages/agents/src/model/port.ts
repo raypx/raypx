@@ -82,6 +82,8 @@ export interface AgentConversationView {
 export interface OfferedModel {
   modelId: string;
   name: string;
+  /** Optional display metadata; injected catalogs may provide only model identity/name. */
+  source?: "connection" | "deployment";
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {

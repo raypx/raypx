@@ -11,6 +11,8 @@
     "src/**/*.tsx",
     "*.config.ts",
     "locales/**/*.ts",
-    "scripts/**/*.ts"
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
   ]
 }
