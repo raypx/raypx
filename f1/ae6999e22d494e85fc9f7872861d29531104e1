@@ -1,0 +1,22 @@
+docs/next/README.md
+  s_f9cc0d01f49051::t_97873885315fed 1-60,79-84,98-155,161-304,313-320
+  s_f9cc0d01f49051::t_adf91f663f9616 61-78,85-97,156-160,305-312
+docs/README.md
+  s_f9cc0d01f49051::t_adf91f663f9616 26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f1ae6999e22d494e85fc9f7872861d29531104e1",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
