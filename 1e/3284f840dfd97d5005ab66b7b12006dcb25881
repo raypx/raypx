@@ -1,0 +1,21 @@
+apps/mobile/package.json
+  s_f9cc0d01f49051::t_86430a454d2b75 13-14
+packages/agents/tests/setup.ts
+  s_f9cc0d01f49051::t_86430a454d2b75 5,9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1e3284f840dfd97d5005ab66b7b12006dcb25881",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
