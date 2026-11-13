@@ -1,0 +1,51 @@
+apps/web/locales/zh/users.ts
+  s_28758cb14041db::t_57bb8d90f690a5 7-10,13,52,54
+apps/web/locales/en/users.ts
+  s_28758cb14041db::t_57bb8d90f690a5 4-7,10,49,51
+apps/web/AGENTS.md
+  s_28758cb14041db::t_57bb8d90f690a5 269-271
+apps/web/e2e/user-management.spec.ts
+  s_28758cb14041db::t_111cd8869d4ff3 107-109
+  s_28758cb14041db::t_30f482fa172ffa 28,41-46,83-92,136-138
+apps/api/tests/postgres/node/admin.test.ts
+  s_28758cb14041db::t_2d0fbbb8d1449e 55,80,109-124,126-137
+  s_28758cb14041db::t_cb4526aa4f712f 125
+  s_b3a73425358550::t_2e6fa3201739d9 138
+apps/web/src/features/users/components/user-filters.tsx
+  s_28758cb14041db::t_c56833717638e7 1-29,33-50,53-63,65-78,80-108,115-119,121-122,124-131,133-151
+  s_28758cb14041db::t_57bb8d90f690a5 30-32,114,120,123,132
+  s_28758cb14041db::t_3f42847af90b27 51-52,64,79
+  s_28758cb14041db::t_5e097c8a3e475c 109-113
+apps/web/src/features/users/components/users.component.test.tsx
+  s_28758cb14041db::t_5e651b4d6288db 267,274-278,285-291,293-312
+  s_28758cb14041db::t_30f482fa172ffa 279-284,292
+  s_28758cb14041db::t_111cd8869d4ff3 313-324
+apps/web/src/features/users/components/users.tsx
+  s_28758cb14041db::t_75d0422ed267b0 11,28-29,37-41,72,74,82,89-95,111-112
+  s_28758cb14041db::t_92b2ab25da3a6a 175-206,208-214,218-223,225-233,235
+  s_28758cb14041db::t_5e097c8a3e475c 215-217
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f9c64780c1fd03f2c7ec34ec1aa68c29c1f4ac97",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_b3a73425358550": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d384-f0df-7d93-8e7b-1bd5033a7825",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
