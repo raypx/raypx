@@ -339,6 +339,12 @@ provides scoped project tools. The rollout order is recorded in the
 [roadmap](../roadmap.md); the current sections above continue to describe shipped
 architecture until each target phase is implemented.
 
+[ADR 0065](0065-spaces-and-sandbox-computers.md) adds the Space as the authorization
+boundary and defines the Computer contract with `host`, `docker` and hosted sandbox
+providers. Device Spaces belong to a local profile; shared Spaces are server-owned
+and follow server ownership. Neither is implemented: tools currently run through
+the host path described under [Device runtime](#device-runtime).
+
 ## Registered instances and providers
 
 [ADR 0040](0040-instance-enrollment-and-providers.md) defines account-bound enrollment, offline identity, revocation and provider adapter boundaries; its amendment consolidates the adapters into one `@raypx/providers` workspace. Registration does not grant remote Host access or upload local history.
@@ -384,6 +390,7 @@ current implementation.
 - [0062: Desktop sign-in in the system browser](0062-desktop-browser-sign-in.md)
 - [0063: OAuth/OIDC for Desktop sign-in](0063-desktop-oauth.md)
 - [0064: JSON message catalogs with generated literal types](0064-json-message-catalogs.md)
+- [0065: Spaces and sandbox computers](0065-spaces-and-sandbox-computers.md) — accepted for planning; refines the Computer contract in 0039
 
 ## Distribution and performance
 

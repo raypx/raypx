@@ -11,16 +11,17 @@ candidate and platform.
 Phases are delivered in this order. A phase starts when the phases it depends on
 meet their acceptance criteria.
 
-| Phase                                 | Status                                            | Depends on                    |
-| ------------------------------------- | ------------------------------------------------- | ----------------------------- |
-| 0. Current foundation                 | Delivered                                         | —                             |
-| 1. Local Pi Run review                | Implemented; live packaged acceptance open        | 0                             |
-| 2. Pi recovery and acceptance         | Started: single-approval recovery delivered       | 1                             |
-| 3. Local Pi automations               | Triggers delivered; routine authoring open        | 1; Slack trigger also needs 6 |
-| 4. Named Agents and project artifacts | Not started                                       | 2, 3                          |
-| 5. Explicit server ownership          | Not started; design in ADR 0039                   | 2, 4                          |
-| 6. Team work and messaging            | Not started                                       | 5                             |
-| 7. Clients and extensibility          | Not started; items join a phase when it needs one | —                             |
+| Phase                                     | Status                                            | Depends on                    |
+| ----------------------------------------- | ------------------------------------------------- | ----------------------------- |
+| 0. Current foundation                     | Delivered                                         | —                             |
+| 1. Local Pi Run review                    | Implemented; live packaged acceptance open        | 0                             |
+| 2. Pi recovery and acceptance             | Started: single-approval recovery delivered       | 1                             |
+| 3. Local Pi automations                   | Triggers delivered; routine authoring open        | 1; Slack trigger also needs 7 |
+| 4. Device Spaces and sandbox computers    | Not started; design in ADR 0065                   | 2                             |
+| 5. Named Agents and project artifacts     | Not started                                       | 2, 3, 4                       |
+| 6. Explicit server ownership              | Not started; design in ADR 0039                   | 2, 5                          |
+| 7. Shared Spaces, team work and messaging | Not started; shared Spaces in ADR 0065            | 4, 6                          |
+| 8. Clients and extensibility              | Not started; items join a phase when it needs one | —                             |
 
 Status describes the source implementation. "Delivered" needs passing source
 checks and deterministic tests. Packaged Desktop, live provider, PostgreSQL and
@@ -139,10 +140,48 @@ Acceptance:
 Outside this phase: catching up missed occurrences, unattended approval of file
 mutations or commands, and Slack triggers.
 
-## 4. Named Agents and project artifacts
+## 4. Device Spaces and sandbox computers
+
+[ADR 0065](architecture/0065-spaces-and-sandbox-computers.md) defines both. A
+Space is the authorization boundary for projects, sessions, memory, automations,
+computers and connections. This phase delivers device Spaces: each belongs to one
+local profile, has one Owner and works offline. Existing device-owned work joins
+the profile's default Space.
+
+Put the current file and command tools behind a Computer contract with a `host`
+provider that keeps today's behavior. Add a `docker` provider managed by the
+daemon, then one hosted sandbox provider through the same contract. Each Space
+gets one sandbox Computer with a persistent home. Pi runs outside the Computer
+and reaches it through its tools.
+
+Acceptance:
+
+- A project, session, memory, automation or reference in one Space is not listed,
+  readable or selectable from another Space. The check is in the store and the
+  request boundary, with a test for each kind.
+- After the schema migration, every existing row belongs to the default Space and
+  reads back unchanged.
+- One deterministic conformance suite passes for an in-memory provider, `host`,
+  `docker` and the hosted provider. It covers lifecycle, execution, cancellation,
+  bounded files and home persistence across a replaced container.
+- A Pi Run in a Docker Computer reads and changes only the mounted project. A
+  command that reads a path outside the mount, the profile directory or the Docker
+  socket fails inside the container.
+- A file mutation or command in a sandbox still waits for its approval.
+- A stopped or missing Docker Engine, and an unreachable hosted provider, each
+  produce an explicit state. The Run never continues on the host.
+- A hosted sandbox receives project content only after a confirmed import. A test
+  asserts that no request carries project content before it.
+- Live runs are recorded for local Docker on macOS and Windows and for the hosted
+  provider. Each is opt-in and reported per platform.
+
+Outside this phase: shared Spaces and membership, graphical desktops, browser
+tools, screen streaming and user takeover, and sandboxed Claude or Codex.
+
+## 5. Named Agents and project artifacts
 
 Give a project multiple named Agents with their own instructions, model,
-sessions, memory and automations. Add MCP connections and reusable Skills with
+sessions, memory and automations. Agents belong to the project's Space. Add MCP connections and reusable Skills with
 project-scoped permissions. Start with private reports and dashboards that a
 routine can update, then add explicit link sharing and revocation.
 
@@ -164,7 +203,7 @@ Acceptance:
 Outside this phase: Agent teams, delegation between Agents and a public plugin
 marketplace.
 
-## 5. Explicit server ownership
+## 6. Explicit server ownership
 
 The longer-term ownership model is in [ADR 0039](architecture/0039-local-server-agent-platform.md).
 After the local workflow is proven, support reviewed export/import into one
@@ -180,9 +219,11 @@ An unavailable Host must wait or fail explicitly rather than switching workspace
 The server owns the migrated Run; the paired Host owns only its granted local
 execution. These are future capabilities, separate from current remote access.
 
-Extend this phase with browser and desktop viewing and user takeover, private
-sandbox computers, and Web and mobile session access. Keep the same execution and
-approval semantics across clients.
+The server runtime starts sandbox Computers for server-owned work through the
+phase 4 contract. Server-side Docker runs behind a separate supervisor that alone
+holds the Docker socket. Extend this phase with browser and desktop viewing, user
+takeover, and Web and mobile session access. Keep the same execution and approval
+semantics across clients.
 
 Acceptance:
 
@@ -196,29 +237,46 @@ Acceptance:
   state.
 - Reconnecting clients resume from an acknowledged cursor without a gap or a
   duplicate event.
+- A server-owned Run executes in a sandbox Computer started by the server runtime.
+  API and Relay hold no Docker socket and no sandbox provider key.
 
-Outside this phase: horizontal workers, multi-tenant Agent storage,
-object-storage snapshots and container or VM execution.
+Outside this phase: horizontal workers, multi-tenant Agent storage and
+object-storage snapshots.
 
-## 6. Team work and messaging
+## 7. Shared Spaces, team work and messaging
 
-Add shared spaces with explicit membership, project grants and audit history.
+Add shared Spaces as [ADR 0065](architecture/0065-spaces-and-sandbox-computers.md)
+defines them: server-owned, with `owner` and `member` roles, single-use
+invitations, project grants and audit history. Members share the Space's projects,
+sessions, memory, automations and computers. Each keeps their own model
+credentials, connections and approval rules. A device Space moves into a shared
+Space only through the reviewed export/import of phase 6.
+
 Add group chat, Agent delegation, shared computer access and a ticket board as
 consumers of those boundaries. Connect messaging channels and voice once the
 shared session and approval flows can be recovered across clients.
 
 Acceptance:
 
-- A member reads and acts only within projects granted to their space. Removing
-  the membership ends access on the next request.
+- A member reads and acts only within Spaces they have joined. A deployment
+  administrator who has not joined a Space cannot read it.
+- An invitation works once and expires after seven days. Joining grants nothing
+  in the inviter's other Spaces.
+- Removing a membership ends access on the next request and revokes the Host
+  grants that member gave to the Space.
+- A Run uses the credentials of the member who started it. A paired Host executes
+  only Runs started by the member who granted it.
 - Membership, grant and approval changes are recorded in audit history, including
   refusals.
-- An approval answered by one member resolves for every client, and a second
-  answer is rejected.
+- Only the member who started a Run can answer its approvals. The answer resolves
+  on all of that member's clients, and a second answer is rejected.
 - A messaging channel starts or answers a session only through an explicit,
-  revocable connection bound to one space.
+  revocable connection bound to one Space.
 
-## 7. Clients and extensibility
+Outside this phase: billing and seats, organization accounts, SCIM and enterprise
+SSO, and per-member Computers inside one shared Space.
+
+## 8. Clients and extensibility
 
 These items have no fixed order. Each joins a phase when that phase needs it.
 
@@ -235,7 +293,7 @@ These items have no fixed order. Each joins a phase when that phase needs it.
 ## Deferred
 
 Defer Agent teams, a public plugin marketplace, horizontal workers, multi-tenant
-Agent storage, object-storage snapshots and container/VM execution until concrete
+Agent storage, object-storage snapshots and VM execution until concrete
 workflows establish their need. Never treat prompt instructions as authorization
 or claim exactly-once external effects. Measure response and recovery behavior
 without logging prompts, credentials, private paths or file content.

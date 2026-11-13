@@ -20,6 +20,7 @@ boundaries behind the implementation.
 - [Accepted Bun CLI production packaging](architecture/0047-bun-cli-production-packaging.md)
 - [MyGo / Bun and immutable CLI artifacts](architecture/0046-mygo-bun-artifacts.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
+- [Planned Spaces and sandbox computers](architecture/0065-spaces-and-sandbox-computers.md)
 - [Decision history and supersession status](architecture/README.md#decision-history)
 - [Pi product roadmap](roadmap.md)
 

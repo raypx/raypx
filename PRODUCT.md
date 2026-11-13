@@ -46,7 +46,7 @@ macOS can install Claude and Codex terminal hooks. Per-project Away mode forward
 
 The CLI, application features, and shared contracts use Bun and TypeScript. Desktop uses a MyGo policy host and system WKWebView or WebView2. Native development and packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI. Windows terminal hooks still await a packaged acceptance run.
 
-Retired business projects, research, cloud file delivery, and custom role definitions stay outside this scope. Configuration sync, local Web, a standalone Server, the complete native mobile workbench, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. The Expo Mobile workspace currently implements the account/login baseline. Shared packages are added only when a real consumer needs them.
+Retired business projects, research, cloud file delivery, and custom role definitions stay outside this scope. Configuration sync, local Web, a standalone Server, the complete native mobile workbench, team ownership, and additional providers remain separate deliveries. Signing in enables none of them. Spaces and sandbox computers are planned in [ADR 0065](docs/architecture/0065-spaces-and-sandbox-computers.md) and are not in this release: every tool still runs with the user's OS permissions, and a profile holds one scope of work. The Expo Mobile workspace currently implements the account/login baseline. Shared packages are added only when a real consumer needs them.
 
 Show real execution, permission failures, and retry state. Never fabricate data.
 
