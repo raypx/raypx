@@ -34,6 +34,7 @@ export {
   type AgentsPageState,
 } from "./model/page.js";
 export type {
+  ApprovalPort,
   ComputerPort,
   ConversationSelection,
   ConversationOwner,
@@ -48,3 +49,10 @@ export type {
   OfferedModel,
 } from "./model/port.js";
 export { ComputerController, type ComputerView } from "./model/computer.js";
+export {
+  ApprovalProjection,
+  approvalRemainingSeconds,
+  activityForRun,
+  type ApprovalCardView,
+  type ApprovalCardError,
+} from "./model/approvals.js";

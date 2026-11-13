@@ -9,7 +9,8 @@ import { CloseIcon } from "@raypx/icons/close";
 import { PlayIcon } from "@raypx/icons/play";
 import { StopIcon } from "@raypx/icons/stop";
 import { RefreshIcon } from "@raypx/icons/refresh";
-import type { ComputerController, ComputerView } from "../model.js";
+import type { ApprovalCardView, ComputerController, ComputerView } from "../model.js";
+import { ComputerActivity } from "./tool-activity.js";
 import { useTranslations } from "./i18n.js";
 
 const statusKeys = {
@@ -71,10 +72,12 @@ export function ComputerPanel({
   controller,
   onClose,
   sheet = false,
+  activity = [],
 }: {
   controller: ComputerController;
   onClose: () => void;
   sheet?: boolean;
+  activity?: readonly ApprovalCardView[];
 }) {
   const t = useTranslations("agents");
   const state = useSyncExternalStore(
@@ -165,6 +168,7 @@ export function ComputerPanel({
           </Button>
         )}
       </section>
+      <ComputerActivity cards={activity} />
       {confirmation.dialog}
     </div>
   );

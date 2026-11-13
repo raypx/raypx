@@ -70,7 +70,11 @@ export function conversationRows(view: ConversationView): ConversationRow[] {
 
 /** Stop the running reply first, then any queued reply in this conversation. */
 export function activeConversationRun(runs: readonly RunView[]): RunView | undefined {
-  return runs.find((run) => run.state === "running") ?? runs.find((run) => run.state === "queued");
+  return (
+    runs.find((run) => run.state === "running") ??
+    runs.find((run) => run.state === "waiting") ??
+    runs.find((run) => run.state === "queued")
+  );
 }
 export interface ConversationEventEntry {
   event: ConversationEvent;

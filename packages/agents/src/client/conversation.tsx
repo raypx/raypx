@@ -39,8 +39,13 @@ import {
   type ConversationDraftStore,
   type ConversationSocketPort,
   type ConversationPort,
+  type ApprovalCardView,
+  type ApprovalPort,
 } from "../model.js";
 import { ComputerIndicator, ComputerPanel } from "./computer.js";
+import { ApprovalCard, toolLabelKeys } from "./approval-card.js";
+import { ToolActivity } from "./tool-activity.js";
+import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
 
 const connectionKeys = {
@@ -59,6 +64,9 @@ interface AgentConversationProps {
   item: AgentConversationView;
   port: ConversationPort;
   computerPort: ComputerPort;
+  approvalPort?: ApprovalPort | undefined;
+  activity?: readonly ApprovalCardView[] | undefined;
+  onActivity?: ((spaceId: string, cards: readonly ApprovalCardView[]) => void) | undefined;
   socket: ConversationSocketPort;
   drafts: ConversationDraftStore;
   origin: string;
@@ -69,6 +77,9 @@ export function AgentConversation({
   item,
   port,
   computerPort,
+  approvalPort,
+  activity,
+  onActivity,
   socket,
   drafts,
   origin,
@@ -88,6 +99,7 @@ export function AgentConversation({
       computer = new ComputerController(item.agent.spaceId, computerPort);
       next = new ConversationController({
         computer,
+        ...(approvalPort ? { approvals: approvalPort } : {}),
         selection: { spaceId: item.agent.spaceId, conversationId: item.conversation.id },
         owner: { origin, accountId },
         port,
@@ -111,6 +123,7 @@ export function AgentConversation({
     accountId,
     port,
     computerPort,
+    approvalPort,
     socket,
     drafts,
   ]);
@@ -126,6 +139,9 @@ export function AgentConversation({
       controller={controllers.conversation}
       computer={controllers.computer}
       accountId={accountId}
+      approvalPort={approvalPort}
+      activity={activity}
+      onActivity={onActivity}
     />
   );
 }
@@ -135,11 +151,17 @@ function ConversationContents({
   controller,
   computer,
   accountId,
+  approvalPort,
+  activity,
+  onActivity,
 }: {
   item: AgentConversationView;
   controller: ConversationController;
   computer: ComputerController;
   accountId: string;
+  approvalPort: ApprovalPort | undefined;
+  activity: readonly ApprovalCardView[] | undefined;
+  onActivity: ((spaceId: string, cards: readonly ApprovalCardView[]) => void) | undefined;
 }) {
   const t = useTranslations("agents");
   const id = useId();
@@ -167,16 +189,40 @@ function ConversationContents({
   const [stopping, setStopping] = useState<RunId | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const observed = useRef(new Map<RunId, string>());
+  const observedCards = useRef(new Map<string, string>());
   const state = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,
     controller.getSnapshot,
   );
   const { messages, runs, segments, liveReplies, cursor } = state;
-  const rows = useMemo(
+  const chatRows = useMemo(
     () => conversationRows({ messages, runs, segments, liveReplies, cursor }),
     [messages, runs, segments, liveReplies, cursor],
   );
+  const rows = useMemo(
+    () =>
+      [
+        ...chatRows,
+        ...state.cards.map((card) => ({
+          id: `approval:${card.requestId}`,
+          kind: "approval" as const,
+          sender: "approval",
+          sequence: card.sequence,
+          card,
+        })),
+      ].sort((left, right) => left.sequence - right.sequence),
+    [chatRows, state.cards],
+  );
+  const pendingCards = state.cards.filter(
+    (card) =>
+      card.state === "pending" &&
+      card.memberAccountId === accountId &&
+      card.error !== "resolvedElsewhere",
+  );
+  useEffect(() => {
+    if (state.cards.length) onActivity?.(item.agent.spaceId, state.cards);
+  }, [state.cards, onActivity, item.agent.spaceId]);
   const active = activeConversationRun(state.runs);
   const sendDisabled =
     state.loading ||
@@ -217,14 +263,22 @@ function ConversationContents({
       observed.current.set(run.id, run.state);
       if (previous === run.state) continue;
       if (run.state === "running") next = t("replying");
-      else if (previous === "running" || previous === "queued") {
+      else if (run.state === "waiting") next = t("waiting");
+      else if (previous === "running" || previous === "queued" || previous === "waiting") {
         if (run.state === "succeeded") next = t("replyReady");
         if (run.state === "failed") next = t("failed");
         if (run.state === "cancelled") next = t("cancelled");
       }
     }
+    for (const card of state.cards) {
+      const previous = observedCards.current.get(card.requestId);
+      observedCards.current.set(card.requestId, card.state);
+      if (!previous && card.state === "pending")
+        next = t("approval.announced", { tool: t(toolLabelKeys[card.toolName]) });
+      else if (previous && previous !== card.state) next = t(`approval.states.${card.state}`);
+    }
     if (next) queueMicrotask(() => setAnnouncement(next));
-  }, [state.runs, t]);
+  }, [state.runs, state.cards, t]);
 
   const restoreReading = useCallback(() => {
     const node = history.current;
@@ -265,7 +319,7 @@ function ConversationContents({
     history.current?.focus();
   }
   async function send() {
-    if (active || sendDisabled) return;
+    if ((active && active.state !== "waiting") || sendDisabled) return;
     await controller.send();
     editor.current?.focus();
   }
@@ -372,6 +426,19 @@ function ConversationContents({
                 </Empty>
               )}
               {rows.map((row, index) => {
+                if (row.kind === "approval")
+                  return (
+                    <ApprovalCard
+                      key={row.id}
+                      card={row.card}
+                      accountId={accountId}
+                      onAnswer={(decision, allowTool) =>
+                        controller.answerApproval(row.card.requestId, decision, allowTool)
+                      }
+                      onExpired={() => void controller.refreshApprovals()}
+                      onAnswered={() => editor.current?.focus()}
+                    />
+                  );
                 const showSender = index === 0 || rows[index - 1]?.sender !== row.sender;
                 if (row.kind === "member")
                   return (
@@ -432,26 +499,47 @@ function ConversationContents({
                             {run.failureCode && (
                               <span className="wrap-anywhere">{t(run.failureCode)}</span>
                             )}
-                            {run.state === "failed" && retryMessage && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={retryDisabled}
-                                  onClick={() => {
-                                    if (controller.prepareRetry(run.id)) editor.current?.focus();
-                                  }}
-                                >
-                                  {t("retry")}
-                                </Button>
-                                {retryDisabled && (
-                                  <HelpHint label={t("retry")} description={t("retryDraftHint")} />
-                                )}
-                              </>
+                            {run.failureCode === "EFFECT_UNKNOWN" && approvalPort && (
+                              <EffectRecords
+                                port={approvalPort}
+                                selection={{
+                                  spaceId: item.agent.spaceId,
+                                  conversationId: item.conversation.id,
+                                }}
+                                runId={run.id}
+                              />
                             )}
+                            {run.state === "failed" &&
+                              run.failureCode !== "EFFECT_UNKNOWN" &&
+                              retryMessage && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={retryDisabled}
+                                    onClick={() => {
+                                      if (controller.prepareRetry(run.id)) editor.current?.focus();
+                                    }}
+                                  >
+                                    {t("retry")}
+                                  </Button>
+                                  {retryDisabled && (
+                                    <HelpHint
+                                      label={t("retry")}
+                                      description={t("retryDraftHint")}
+                                    />
+                                  )}
+                                </>
+                              )}
                           </div>
                         )}
                       </div>
+                      {run && (
+                        <ToolActivity
+                          runId={run.id}
+                          cards={state.cards.filter((card) => card.runId === run.id)}
+                        />
+                      )}
                     </div>
                   </article>
                 );
@@ -477,6 +565,35 @@ function ConversationContents({
               {t("retryDelivery")}
             </Button>
           </div>
+        )}
+        {state.approvalsError && (
+          <div className="flex min-w-0 shrink-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <p>{t("approval.loadError")}</p>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={state.approvalsLoading}
+              onClick={() => void controller.refreshApprovals()}
+            >
+              {t("refresh")}
+            </Button>
+          </div>
+        )}
+        {pendingCards.length > 0 && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="max-w-full shrink-0 self-start"
+            onClick={() => {
+              const card = pendingCards[0];
+              if (!card) return;
+              const node = document.getElementById(`approval-${card.requestId}`);
+              node?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+              node?.focus({ preventScroll: true });
+            }}
+          >
+            {t("approval.pendingCount", { count: pendingCards.length })}
+          </Button>
         )}
         <form onSubmit={submit} className="min-w-0 shrink-0">
           <Field>
@@ -513,7 +630,7 @@ function ConversationContents({
                 }}
               />
               <InputGroupAddon align="block-end" className="justify-end">
-                {active ? (
+                {active && (
                   <IconButton
                     variant="default"
                     label={t("stop")}
@@ -522,7 +639,8 @@ function ConversationContents({
                   >
                     <StopIcon aria-hidden="true" />
                   </IconButton>
-                ) : (
+                )}
+                {(!active || active.state === "waiting") && (
                   <IconButton
                     type="submit"
                     variant="default"
@@ -543,7 +661,11 @@ function ConversationContents({
           aria-label={t("computerTitle")}
           className="flex w-72 min-w-0 shrink-0 flex-col border-l"
         >
-          <ComputerPanel controller={computer} onClose={closeComputer} />
+          <ComputerPanel
+            controller={computer}
+            onClose={closeComputer}
+            activity={activity ?? state.cards}
+          />
         </aside>
       )}
       {!wide && (
@@ -559,7 +681,12 @@ function ConversationContents({
             finalFocus={computerTrigger}
             className="max-w-[calc(100vw-3rem)] motion-reduce:transform-none motion-reduce:transition-none"
           >
-            <ComputerPanel sheet controller={computer} onClose={closeComputer} />
+            <ComputerPanel
+              sheet
+              controller={computer}
+              onClose={closeComputer}
+              activity={activity ?? state.cards}
+            />
           </SheetContent>
         </Sheet>
       )}

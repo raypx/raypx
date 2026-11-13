@@ -1,13 +1,18 @@
 import { useTranslations } from "../../i18n.js";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
+import { ApprovalSettings } from "@raypx/agents/client";
 
 import { getBridge, isDesktop } from "../../lib/desktop.js";
 import { useState } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
+import { authClient } from "../auth/client.js";
+import { agentsClient } from "../agents/client.js";
 
 export default function SettingsContent() {
   const t = useTranslations("settings");
+  const session = authClient.useSession();
+  const accountId = !session.isPending && !session.error ? session.data?.user.id : undefined;
   return (
     <>
       <section aria-label={t("device")} className="border-b border-border">
@@ -15,6 +20,7 @@ export default function SettingsContent() {
         <LanguageSettings />
       </section>
       <SessionRecovery />
+      {accountId && <ApprovalSettings key={accountId} port={agentsClient.approvals} />}
       <div className="border-b border-border">
         <AnalyticsSettings />
       </div>

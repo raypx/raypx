@@ -1,5 +1,7 @@
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import type { RunId } from "@raypx/core/conversation";
+import type { ApprovalRequest } from "@raypx/core/approvals";
+import { ApprovalProjection, type ApprovalCardView } from "./approvals.js";
 import { ConversationState, type ConversationView } from "./conversation.js";
 import type { ComputerController } from "./computer.js";
 import {
@@ -16,11 +18,15 @@ import type {
   ConversationSelection,
   ConversationSocket,
   ConversationSocketPort,
+  ApprovalPort,
 } from "./port.js";
 
 export type ConversationConnection = "connecting" | "live" | "reconnecting" | "snapshot-required";
 export type ConversationError = "load" | "send" | "stop" | "storage";
 export interface ConversationControllerView extends ConversationView {
+  cards: ApprovalCardView[];
+  approvalsLoading: boolean;
+  approvalsError: boolean;
   connection: ConversationConnection;
   loading: boolean;
   error: ConversationError | null;
@@ -29,6 +35,7 @@ export interface ConversationControllerView extends ConversationView {
   pending: PendingMessage | null;
 }
 export interface ConversationControllerOptions {
+  approvals?: ApprovalPort;
   computer?: ComputerController;
   selection: ConversationSelection;
   owner: ConversationOwner;
@@ -41,6 +48,7 @@ export interface ConversationControllerOptions {
 /** Owns one selected conversation. Adapters provide transport and device persistence. */
 export class ConversationController {
   readonly state: ConversationState;
+  private readonly approvals: ApprovalProjection;
   private readonly listeners = new Set<() => void>();
   private readonly draftKey: string;
   private view: ConversationControllerView;
@@ -51,8 +59,10 @@ export class ConversationController {
   private disposed = false;
   private hasSnapshot = false;
   private storageUnavailable = false;
+  private approvalsGeneration = 0;
   constructor(private readonly options: ConversationControllerOptions) {
     this.state = new ConversationState(options.selection);
+    this.approvals = new ApprovalProjection(options.selection);
     this.draftKey = conversationDraftKey(options.owner, options.selection);
     let draft = { text: "", pending: null } as ReturnType<typeof readConversationDraft>;
     let error: ConversationError | null = null;
@@ -64,6 +74,9 @@ export class ConversationController {
     }
     this.view = {
       ...this.state.getSnapshot(),
+      cards: [],
+      approvalsLoading: false,
+      approvalsError: false,
       connection: "connecting",
       loading: true,
       error,
@@ -85,6 +98,7 @@ export class ConversationController {
     this.view = {
       ...this.view,
       ...this.state.getSnapshot(),
+      cards: this.approvals.getSnapshot(),
       ...patch,
       ...(error !== undefined ? { error } : {}),
     };
@@ -138,6 +152,7 @@ export class ConversationController {
       if (!this.state.applySnapshot(snapshot)) throw new Error("Invalid conversation snapshot");
       this.hasSnapshot = true;
       this.update({ loading: false });
+      void this.refreshApprovals();
       this.openSocket();
     } catch {
       if (this.disposed || generation !== this.generation) return;
@@ -202,6 +217,7 @@ export class ConversationController {
       if (subscribed) {
         this.update({ connection: "live", error: null });
         void this.options.computer?.refresh();
+        void this.refreshApprovals();
       }
       return;
     }
@@ -214,6 +230,7 @@ export class ConversationController {
       if (applied === "ignored") return;
       if (applied === "applied" && frame.entry.event.kind === "computer.state")
         this.options.computer?.applyEvent(frame.entry.event);
+      if (applied === "applied") this.approvals.applyEvent(frame.entry.event);
       this.update();
       this.sendFrame({
         type: "ack",
@@ -278,6 +295,60 @@ export class ConversationController {
     this.update({ pending });
     return this.sendPending();
   }
+  async refreshApprovals(): Promise<void> {
+    const port = this.options.approvals;
+    if (!port || this.disposed) return;
+    const generation = ++this.approvalsGeneration;
+    const known = new Set(this.approvals.getSnapshot().map((card) => card.requestId));
+    this.update({ approvalsLoading: true, approvalsError: false });
+    try {
+      const requests = await port.pending({ spaceId: this.options.selection.spaceId });
+      if (this.disposed || generation !== this.approvalsGeneration) return;
+      this.approvals.hydrate(requests, (request) => {
+        const run = this.view.runs.find((item) => item.id === request.runId);
+        const message = this.view.messages.find((item) => item.id === run?.messageId);
+        return message ? message.sequence + 0.75 : this.view.cursor + 0.25;
+      });
+      this.approvals.reconcileMissing(requests, known, this.options.owner.accountId);
+      this.update({ approvalsLoading: false });
+    } catch {
+      if (!this.disposed && generation === this.approvalsGeneration)
+        this.update({ approvalsLoading: false, approvalsError: true });
+    }
+  }
+  async answerApproval(
+    requestId: ApprovalRequest["id"],
+    decision: "approved" | "denied",
+    allowTool = false,
+  ): Promise<boolean> {
+    const port = this.options.approvals;
+    if (!port || this.disposed) return false;
+    if (!this.approvals.begin(requestId, this.options.owner.accountId, Date.now())) {
+      void this.refreshApprovals();
+      return false;
+    }
+    this.update();
+    try {
+      const request = await port.answer({
+        spaceId: this.options.selection.spaceId,
+        requestId,
+        decision,
+        ...(allowTool ? { allowTool: true } : {}),
+      });
+      if (this.disposed) return false;
+      const card = this.approvals.getSnapshot().find((item) => item.requestId === requestId);
+      if (card) this.approvals.receive(request, card.sequence);
+      this.update();
+      return true;
+    } catch (error) {
+      if (this.disposed) return false;
+      const reason = error instanceof Error ? error.message : "";
+      this.approvals.reject(requestId, reason);
+      this.update();
+      void this.refreshApprovals();
+      return false;
+    }
+  }
   async sendPending(): Promise<boolean> {
     const pending = this.view.pending;
     if (!pending || this.view.sending || this.disposed) return false;
@@ -298,7 +369,8 @@ export class ConversationController {
   /** Deliberate retry restores text only. The next explicit Send creates a new message. */
   prepareRetry(runId: RunId): boolean {
     const run = this.view.runs.find((item) => item.id === runId);
-    if (!run || run.state !== "failed" || this.view.pending) return false;
+    if (!run || run.state !== "failed" || run.failureCode === "EFFECT_UNKNOWN" || this.view.pending)
+      return false;
     const message = this.view.messages.find((item) => item.id === run.messageId);
     if (!message || (this.view.draft && this.view.draft !== message.text)) return false;
     this.setDraft(message.text);
@@ -317,6 +389,7 @@ export class ConversationController {
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    ++this.approvalsGeneration;
     ++this.generation;
     this.cancelTimer();
     this.closeSocket();

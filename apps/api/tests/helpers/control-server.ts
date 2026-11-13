@@ -9,11 +9,16 @@ import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { createApiApp } from "./app.js";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
-import { ConversationRunner } from "@raypx/agents/server";
+import {
+  ConversationRunner,
+  createApprovalsService,
+  createComputerTools,
+} from "@raypx/agents/server";
 import {
   createAgentsRepository,
   createConversationsRepository,
   createConversationFanout,
+  createApprovalsRepository,
 } from "@raypx/agents/server/postgres";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import { ConversationStream } from "../../src/conversations/stream.js";
@@ -52,9 +57,10 @@ const auth = createAuth({
 });
 const control = new ControlService(createControlRepository(connection.db));
 // The in-memory provider lets browser journeys start and stop a computer without an Engine.
+const computerProvider = createMemoryComputerProvider();
 const computers = createComputersService(
   createComputersRepository(connection.db, { perSpace: 10, perMember: 100 }),
-  createMemoryComputerProvider(),
+  computerProvider,
   "memory",
 );
 // Sign-up reads the registration switch, so the fixture needs the real configuration service.
@@ -66,7 +72,14 @@ const config = createConfigService({
 });
 const spaces = createSpaceAccess(connection.db);
 const model = browserModelFixture();
-const runner = new ConversationRunner(createConversationsRepository(connection.db), model.models);
+const agentApprovals = createApprovalsService(createApprovalsRepository(connection.db));
+const runner = new ConversationRunner(
+  createConversationsRepository(connection.db),
+  model.models,
+  undefined,
+  undefined,
+  { tools: createComputerTools(computers, computerProvider, []), approvals: agentApprovals },
+);
 const fanout = createConversationFanout(url);
 const readSession = (headers: Headers) => readAuthSession(auth, headers);
 const stream = new ConversationStream({
@@ -106,6 +119,7 @@ const app = createApiApp({
   control,
   config,
   computers,
+  agentApprovals,
   spaces,
   agents: createAgentsRepository(connection.db),
   conversationModels: model.models,

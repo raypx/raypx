@@ -9,6 +9,21 @@ import type {
 } from "@raypx/core/conversation";
 import type { Space, SpaceId, SpaceInput, SpaceMember } from "@raypx/core/spaces";
 import type { SpaceComputer } from "@raypx/core/computers";
+import type { ApprovalRequest, Effect } from "@raypx/core/approvals";
+
+export interface ApprovalPort {
+  pending(this: void, input: { spaceId: SpaceId }): Promise<ApprovalRequest[]>;
+  answer(
+    this: void,
+    input: {
+      spaceId: SpaceId;
+      requestId: ApprovalRequest["id"];
+      decision: "approved" | "denied";
+      allowTool?: boolean;
+    },
+  ): Promise<ApprovalRequest>;
+  effects(this: void, input: { spaceId: SpaceId; runId: RunId }): Promise<Effect[]>;
+}
 
 export interface ComputerPort {
   get(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
@@ -70,6 +85,7 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  approvals?: ApprovalPort;
   computers: ComputerPort;
   spaces: {
     list(input: Record<string, never>): Promise<SpaceMembership[]>;

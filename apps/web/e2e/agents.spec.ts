@@ -7,7 +7,7 @@ async function expectConversationGeometry(page: Page, name: string, sheetOpen = 
   // DOM locators also measure the conversation while the modal sheet makes it inert.
   const pane = page.locator('section[aria-label="Conversation"]');
   const heading = pane.locator("header h2");
-  const sender = pane.locator("article h3[title]");
+  const sender = pane.locator("article h3[title]").first();
   const bubble = sender.locator("xpath=following-sibling::div[1]");
   await expect(heading).toHaveText(name);
   const paneBox = await pane.boundingBox();
@@ -48,10 +48,18 @@ async function expectConversationGeometry(page: Page, name: string, sheetOpen = 
     expect(await status.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
     await expect(sender).toHaveAccessibleName(name);
   }
+  for (const selector of ["[data-approval-card]", "[data-tool-activity]"]) {
+    const row = pane.locator(selector).first();
+    await expect(row).toBeVisible();
+    const box = await row.boundingBox();
+    expect(box!.x).toBeGreaterThanOrEqual(paneBox!.x);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(paneBox!.x + paneBox!.width);
+    expect(await row.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  }
 }
 
 test(
-  "Conversation Agent streams a deterministic reply and preserves history after reload",
+  "Conversation Agent streams, requests approval, resumes and preserves history after reload",
   { tag: "@web" },
   async ({ page }) => {
     test.skip(!apiUrl, "Requires the owned backend fixture from bun run test backends --with-e2e");
@@ -97,6 +105,29 @@ test(
     await page.reload();
     await expect(page.getByText(prompt, { exact: true })).toHaveCount(1);
     await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(1);
+    const writePrompt = `Fixture file write ${crypto.randomUUID()}`;
+    const editor = page.getByRole("textbox", { name: "Message", exact: true });
+    await editor.fill(writePrompt);
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    const approval = page.locator("[data-approval-card]").first();
+    await expect(approval).toBeVisible();
+    await expect(approval.getByText("Write a file", { exact: true })).toBeVisible();
+    await expect(approval.getByText("browser-fixture.txt", { exact: true })).toBeVisible();
+    await expect(approval.getByRole("button", { name: "Approve", exact: true })).toBeEnabled();
+    // A request leaves the composer usable; no message is submitted by restoring a draft.
+    await editor.fill("A draft while approval is pending");
+    await expect(page.getByRole("button", { name: "Send", exact: true })).toBeEnabled();
+    await page.reload();
+    await expect(approval).toBeVisible();
+    await expect(editor).toHaveValue("A draft while approval is pending");
+    await expect(page.getByText(writePrompt, { exact: true })).toHaveCount(1);
+    await editor.fill("");
+    const activity = page.locator("[data-tool-activity]").first();
+    const activityToggle = activity.getByRole("button", { name: /tool requests?/ });
+    await expect(activityToggle).toHaveAttribute("aria-expanded", "false");
+    await activityToggle.click();
+    await expect(activityToggle).toHaveAttribute("aria-expanded", "true");
+    await expect(activity.getByText("Write a file", { exact: true })).toBeVisible();
     // Both mounts use a bounded log and a composer at the bottom of the shell.
     for (const viewport of [
       { width: 1440, height: 860 },
@@ -110,10 +141,10 @@ test(
         await expect(page.locator('[data-slot="sidebar"][data-state="expanded"]')).toBeVisible();
       }
       const log = page.getByRole("log", { name: "Conversation", exact: true });
-      const editor = page.getByRole("textbox", { name: "Message", exact: true });
+      const viewportEditor = page.getByRole("textbox", { name: "Message", exact: true });
       await expect(log).toBeVisible();
       const history = await log.boundingBox();
-      const composer = await editor.locator("xpath=ancestor::form").boundingBox();
+      const composer = await viewportEditor.locator("xpath=ancestor::form").boundingBox();
       const main = await page.getByRole("main").boundingBox();
       expect(history!.height).toBeGreaterThan(200);
       expect(history!.y + history!.height).toBeLessThanOrEqual(composer!.y);
@@ -138,6 +169,20 @@ test(
         await expect(row).toHaveAttribute("aria-current", "page");
       }
     }
+    await approval.getByRole("button", { name: "Approve", exact: true }).click();
+    await expect(approval.getByRole("button", { name: "Approve", exact: true })).toHaveCount(0);
+    await expect(approval.getByText("Approved", { exact: true })).toBeVisible();
+    await expect(page.getByText("Fixture reply", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toBeVisible();
+    const finishWrite = await page.request.post(`${apiUrl}/fixture/conversation/complete`, {
+      headers: { origin: "http://127.0.0.1:4173" },
+    });
+    expect(finishWrite.status()).toBe(204);
+    await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(2);
+    await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByText(writePrompt, { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(2);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.getByRole("button", { name: "Back to Agents", exact: true }).click();
     await expect(page.getByRole("button", { name, exact: true })).toBeFocused();

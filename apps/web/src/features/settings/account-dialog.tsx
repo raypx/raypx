@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { AccountDetails } from "@raypx/account/client";
+import { ApprovalSettings } from "@raypx/agents/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
 
@@ -20,6 +21,7 @@ import { InstanceRegistration } from "../auth/components/instance-registration.j
 import { analytics } from "../analytics/client.js";
 import { AccountSettingsContent, AccountSettingsPanel } from "./account-settings.js";
 import type { SettingsSection } from "./navigation.js";
+import { agentsClient } from "../agents/client.js";
 
 function PrivateSettings({ children }: { children: (accountId: string) => ReactNode }) {
   const t = useTranslations("auth");
@@ -213,24 +215,27 @@ function AccountProfile({
       </div>
     );
   return (
-    <AccountDetails
-      account={state.account}
-      busy={auth.busy || query.isFetching}
-      onSignOut={() =>
-        auth.signOut(async () => {
-          analytics.reset();
-          queries.clear();
-          await router.invalidate();
-          onClose();
-        })
-      }
-    >
-      <ProfileSettings client={authClient} name={state.account.name} onSaved={reload} />
-      {auth.error && (
-        <p role="alert" className="mb-5 text-destructive">
-          {c("networkError")}
-        </p>
-      )}
-    </AccountDetails>
+    <div className="flex min-w-0 flex-col">
+      <AccountDetails
+        account={state.account}
+        busy={auth.busy || query.isFetching}
+        onSignOut={() =>
+          auth.signOut(async () => {
+            analytics.reset();
+            queries.clear();
+            await router.invalidate();
+            onClose();
+          })
+        }
+      >
+        <ProfileSettings client={authClient} name={state.account.name} onSaved={reload} />
+        {auth.error && (
+          <p role="alert" className="mb-5 text-destructive">
+            {c("networkError")}
+          </p>
+        )}
+      </AccountDetails>
+      <ApprovalSettings port={agentsClient.approvals} />
+    </div>
   );
 }

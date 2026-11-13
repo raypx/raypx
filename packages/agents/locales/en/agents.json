@@ -88,5 +88,80 @@
   "computerStopError": "Could not confirm the computer stopped. Refresh and try again.",
   "waiting": "Waiting for approval",
   "TOOL_ROUND_LIMIT": "The reply used too many tool steps.",
-  "EFFECT_UNKNOWN": "An action's outcome is unknown. Review it before continuing."
+  "EFFECT_UNKNOWN": "An action's outcome is unknown. Review it before continuing.",
+  "tools": {
+    "listFiles": "List files",
+    "readFile": "Read a file",
+    "writeFile": "Write a file",
+    "runCommand": "Run a command"
+  },
+  "approval": {
+    "addressedTo": "For {member}",
+    "answeredBy": "Answered by {member}",
+    "remaining": "{seconds}s remaining",
+    "awaitingExpiry": "Time elapsed; confirming expiry…",
+    "alwaysTool": "Always allow this exact tool",
+    "alwaysExecutable": "Always allow this tool with this exact executable",
+    "approve": "Approve",
+    "deny": "Deny",
+    "ruleLimit": "The Allow list is full. You can approve once without remembering.",
+    "unconfirmed": "Your answer is unconfirmed. Waiting for the server state.",
+    "resolvedElsewhere": "This request is no longer pending. Waiting for its final state.",
+    "pendingCount": "{count, plural, one {# approval waiting for you} other {# approvals waiting for you}}",
+    "announced": "Approval requested: {tool}",
+    "loadError": "Could not refresh approvals. Try again.",
+    "states": {
+      "pending": "Waiting for approval",
+      "approved": "Approved",
+      "denied": "Denied",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    }
+  },
+  "activity": {
+    "title": "Activity",
+    "requests": "{count, plural, one {# tool request} other {# tool requests}}",
+    "empty": "No tool requests observed in this Space yet."
+  },
+  "effects": {
+    "open": "Review effects",
+    "title": "Effect records",
+    "description": "An action may have happened. Inspect these records before deciding what to do next.",
+    "empty": "No effect records for this reply.",
+    "error": "Could not load effect records. Try again.",
+    "states": {
+      "intent": "Started; outcome not recorded",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "unknown": "Outcome unknown"
+    }
+  },
+  "approvalSettings": {
+    "title": "Approvals",
+    "mode": "Mode",
+    "ask": "Ask before changes",
+    "never": "Never ask",
+    "auto": "Auto (unavailable)",
+    "autoUnavailable": "Auto is unavailable on this server.",
+    "blockHint": "Blocked actions are refused in every mode; Block wins over Allow.",
+    "allow": "Allow list",
+    "block": "Block list",
+    "emptyList": "No rules",
+    "addRule": "Add rule",
+    "tool": "Tool",
+    "executable": "Exact executable",
+    "list": "List",
+    "removeRule": "Remove {tool} {executable}",
+    "neverTitle": "Never ask before changes?",
+    "neverDescription": "Actions can change files and run commands without approval. Blocked actions remain refused.",
+    "saved": "Approval settings saved.",
+    "load": "Could not load approval settings. Try again.",
+    "save": "Could not confirm the save. Your changes are kept.",
+    "conflict": "Settings changed on another client. Your changes are kept; reload to discard them and review the latest settings.",
+    "ruleLimit": "The rule limit is 256. Remove a rule before adding another.",
+    "invalidRule": "Choose a tool and an exact executable for command rules.",
+    "discardReload": "Discard changes and reload"
+  },
+  "running": "Running",
+  "succeeded": "Completed"
 }

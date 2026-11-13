@@ -88,5 +88,80 @@
   "computerStopError": "无法确认电脑已停止，请刷新后重试。",
   "waiting": "等待审批",
   "TOOL_ROUND_LIMIT": "回复使用的工具步骤过多。",
-  "EFFECT_UNKNOWN": "某个操作的结果未知，请先查看再继续。"
+  "EFFECT_UNKNOWN": "某个操作的结果未知，请先查看再继续。",
+  "tools": {
+    "listFiles": "列出文件",
+    "readFile": "读取文件",
+    "writeFile": "写入文件",
+    "runCommand": "运行命令"
+  },
+  "approval": {
+    "addressedTo": "审批人：{member}",
+    "answeredBy": "由{member}处理",
+    "remaining": "剩余{seconds}秒",
+    "awaitingExpiry": "已到期，正在确认状态…",
+    "alwaysTool": "始终允许此工具",
+    "alwaysExecutable": "始终允许此工具运行此可执行程序",
+    "approve": "批准",
+    "deny": "拒绝",
+    "ruleLimit": "允许列表已满。你仍可仅批准本次操作。",
+    "unconfirmed": "尚未确认你的答复，正在等待服务器状态。",
+    "resolvedElsewhere": "此请求已不再等待审批，正在等待最终状态。",
+    "pendingCount": "{count}个审批等待你处理",
+    "announced": "请求审批：{tool}",
+    "loadError": "无法刷新审批，请重试。",
+    "states": {
+      "pending": "等待审批",
+      "approved": "已批准",
+      "denied": "已拒绝",
+      "expired": "已过期",
+      "cancelled": "已取消"
+    }
+  },
+  "activity": {
+    "title": "活动",
+    "requests": "{count}个工具请求",
+    "empty": "尚未收到此空间的工具请求。"
+  },
+  "effects": {
+    "open": "查看操作记录",
+    "title": "操作记录",
+    "description": "操作可能已经发生。请先查看记录，再决定下一步。",
+    "empty": "此回复暂无操作记录。",
+    "error": "无法加载操作记录，请重试。",
+    "states": {
+      "intent": "已开始，结果尚未记录",
+      "succeeded": "已成功",
+      "failed": "失败",
+      "unknown": "结果未知"
+    }
+  },
+  "approvalSettings": {
+    "title": "审批",
+    "mode": "模式",
+    "ask": "更改前询问",
+    "never": "从不询问",
+    "auto": "自动（不可用）",
+    "autoUnavailable": "此服务器不支持自动审批。",
+    "blockHint": "所有模式都会拒绝阻止的操作；阻止优先于允许。",
+    "allow": "允许列表",
+    "block": "阻止列表",
+    "emptyList": "暂无规则",
+    "addRule": "添加规则",
+    "tool": "工具",
+    "executable": "完整可执行程序名",
+    "list": "列表",
+    "removeRule": "移除{tool} {executable}",
+    "neverTitle": "更改前不再询问？",
+    "neverDescription": "操作可不经审批更改文件和运行命令。阻止的操作仍会被拒绝。",
+    "saved": "审批设置已保存。",
+    "load": "无法加载审批设置，请重试。",
+    "save": "无法确认保存结果，已保留你的更改。",
+    "conflict": "其他客户端已更改设置。已保留你的更改；重新加载将放弃当前更改并查看最新设置。",
+    "ruleLimit": "最多可添加256条规则，请先移除一条规则。",
+    "invalidRule": "请选择工具，并为命令规则填写完整可执行程序名。",
+    "discardReload": "放弃更改并重新加载"
+  },
+  "running": "运行中",
+  "succeeded": "已完成"
 }

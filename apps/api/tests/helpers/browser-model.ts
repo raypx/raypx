@@ -1,4 +1,5 @@
 import { createAssistantMessageEventStream, type AssistantMessage } from "@raypx/ai";
+import type { ModelTurn } from "@raypx/agents/server";
 import type { ConversationModels } from "../../src/conversations/models.js";
 
 /** An explicit completion gate lets browsers inspect streamed text before commit. */
@@ -7,7 +8,7 @@ export function browserModelFixture() {
   const models: ConversationModels = {
     list: async () => [{ modelId: "browser-fixture", name: "Deterministic fixture" }],
     resolve: async () => ({
-      stream(_input, signal) {
+      stream(input: ModelTurn, signal) {
         const stream = createAssistantMessageEventStream();
         let text = "Fixture reply";
         function message(stopReason: "stop" | "aborted" = "stop"): AssistantMessage {
@@ -28,6 +29,28 @@ export function browserModelFixture() {
               cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
             },
           };
+        }
+        const lastMessage = [...input.history].reverse().find((entry) => entry.role === "user");
+        const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
+        if (requestsFile && !input.continuation?.length) {
+          const request: AssistantMessage = {
+            ...message(),
+            content: [
+              {
+                type: "toolCall",
+                id: "browser-write-file",
+                name: "computer_write_file",
+                arguments: {
+                  path: "browser-fixture.txt",
+                  content: "A deterministic browser approval fixture.\n",
+                },
+              },
+            ],
+            stopReason: "toolUse",
+          };
+          stream.push({ type: "done", reason: "toolUse", message: request });
+          stream.end(request);
+          return stream;
         }
         function abort() {
           completions.delete(complete);

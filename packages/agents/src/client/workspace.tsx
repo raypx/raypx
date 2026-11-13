@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ShellToolbar, ShellSidebarHeader, ShellPrimaryAction } from "@raypx/blocks/shell";
 import { Avatar, AvatarFallback } from "@raypx/ui/components/ui/avatar";
 import { Empty, EmptyHeader, EmptyTitle, EmptyMedia } from "@raypx/ui/components/ui/empty";
@@ -38,6 +38,8 @@ import {
   type ConversationPort,
   type ComputerPort,
   type ConversationSocketPort,
+  type ApprovalCardView,
+  type ApprovalPort,
 } from "../model.js";
 import { AgentForm } from "./agent-form.js";
 import { SpaceForm } from "./space-form.js";
@@ -90,6 +92,24 @@ function AgentsWorkspaceContents({
   const loading = spacesLoading || agentsLoading;
   const [failed, setFailed] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [activity, setActivity] = useState<Record<string, readonly ApprovalCardView[]>>({});
+  const rememberActivity = useCallback(
+    (selectedSpaceId: string, cards: readonly ApprovalCardView[]) => {
+      setActivity((previous) => {
+        const entries = new Map(
+          (previous[selectedSpaceId] ?? []).map((card) => [card.requestId, card]),
+        );
+        for (const card of cards) entries.set(card.requestId, card);
+        return {
+          ...previous,
+          [selectedSpaceId]: [...entries.values()]
+            .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+            .slice(0, 100),
+        };
+      });
+    },
+    [],
+  );
   const [newSpace, setNewSpace] = useState(false);
   const [form, setForm] = useState<"new" | AgentConversationView | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -113,6 +133,15 @@ function AgentsWorkspaceContents({
     }),
     [client],
   );
+  const approvalPort = useMemo<ApprovalPort | undefined>(() => {
+    const approvals = client.approvals;
+    if (!approvals) return undefined;
+    return {
+      pending: (input) => approvals.pending(input),
+      answer: (input) => approvals.answer(input),
+      effects: (input) => approvals.effects(input),
+    };
+  }, [client]);
   useEffect(() => {
     let cancelled = false;
     queueMicrotask(() => {
@@ -443,6 +472,9 @@ function AgentsWorkspaceContents({
                 item={selected}
                 port={conversationPort}
                 computerPort={computerPort}
+                approvalPort={approvalPort}
+                activity={activity[selected.agent.spaceId]}
+                onActivity={rememberActivity}
                 socket={eventSocket}
                 drafts={draftStore}
                 origin={origin}

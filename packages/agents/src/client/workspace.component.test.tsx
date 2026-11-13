@@ -4,6 +4,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { agentSchema, conversationSchema } from "@raypx/core/agents";
 import { messageSchema, runSchema } from "@raypx/core/conversation";
+import { approvalRequestSchema } from "@raypx/core/approvals";
 import { spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import type {
@@ -12,6 +13,7 @@ import type {
   ConversationDraftStore,
   ConversationSocketPort,
   ConversationSnapshot,
+  ApprovalPort,
 } from "../model.js";
 import { AgentsWorkspace } from "./workspace.js";
 import en from "../../locales/en/index.js";
@@ -86,12 +88,14 @@ function fixture({
   language = "en",
   items = [{ agent, conversation }],
   memberships = [membership],
+  approvals,
 }: {
   models?: { modelId: string; name: string }[];
   snapshot?: ConversationSnapshot;
   language?: "en" | "zh";
   items?: AgentConversationView[];
   memberships?: (typeof membership)[];
+  approvals?: ApprovalPort;
 } = {}) {
   let receive: ((frame: ConversationServerFrame) => void) | undefined;
   let close: ((code?: number) => void) | undefined;
@@ -129,6 +133,7 @@ function fixture({
     async () => snapshot ?? { conversation, messages: [], runs: [], segments: [], cursor: 0 },
   );
   const client: AgentsWorkspacePort = {
+    ...(approvals ? { approvals } : {}),
     computers: {
       get: async () => ({ status: "not-configured" }),
       start: async () => ({ status: "not-configured" }),
@@ -184,6 +189,95 @@ function fixture({
     },
   };
 }
+
+it.each(["en", "zh"] as const)(
+  "keeps the composer usable while waiting, announces a request once and resolves it in %s",
+  async (language) => {
+    const strings = { en, zh }[language].agents;
+    const request = approvalRequestSchema.parse({
+      id: "request-one",
+      spaceId: agent.spaceId,
+      conversationId: conversation.id,
+      runId: run.id,
+      memberAccountId: "account",
+      toolCallId: "call-one",
+      toolName: "computer_write_file",
+      arguments: { path: "notes.txt", content: "PRIVATE FILE BODY" },
+      target: "notes.txt",
+      argumentSummary: "Write 17 bytes",
+      state: "pending",
+      createdAt: time,
+      expiresAt: "2100-01-01T00:00:00Z",
+      resolvedAt: null,
+      answeredByAccountId: null,
+    });
+    let finish: ((value: typeof request) => void) | undefined;
+    const answer = vi.fn<ApprovalPort["answer"]>(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const test = fixture({
+      language,
+      approvals: { pending: async () => [request], answer, effects: async () => [] },
+      snapshot: {
+        conversation,
+        messages: [message],
+        runs: [{ ...run, state: "waiting" }],
+        segments: [],
+        cursor: 3,
+      },
+    });
+    test.mount(true);
+    const approve = await screen.findByRole("button", { name: strings.approval.approve });
+    expect(screen.getByRole("log")).not.toHaveTextContent("PRIVATE FILE BODY");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      language === "en" ? "Approval requested: Write a file" : "请求审批：写入文件",
+    );
+    const editor = screen.getByRole("textbox", { name: strings.message });
+    fireEvent.change(editor, { target: { value: "Keep chatting while waiting" } });
+    expect(screen.getByRole("button", { name: strings.send })).toBeEnabled();
+    expect(screen.getByRole("button", { name: strings.stop })).toBeEnabled();
+    fireEvent.click(approve);
+    expect(approve).toBeDisabled();
+    expect(screen.getByRole("button", { name: strings.approval.deny })).toBeDisabled();
+    fireEvent.click(approve);
+    expect(answer).toHaveBeenCalledTimes(1);
+    await test.emit({
+      type: "event",
+      entry: {
+        event: {
+          kind: "card.resolved",
+          spaceId: agent.spaceId,
+          conversationId: conversation.id,
+          sequence: 4,
+          createdAt: time,
+          requestId: request.id,
+          runId: run.id,
+          toolName: request.toolName,
+          argumentSummary: request.argumentSummary,
+          target: request.target,
+          memberAccountId: request.memberAccountId,
+          expiresAt: request.expiresAt,
+          outcome: "approved",
+          answeredByAccountId: "account",
+        },
+      },
+    });
+    await act(async () =>
+      finish?.({ ...request, state: "approved", answeredByAccountId: "account", resolvedAt: time }),
+    );
+    expect(
+      screen.queryByRole("button", { name: strings.approval.approve }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole("log")).getByText(strings.approval.states.approved),
+    ).toBeInTheDocument();
+    expect(editor).toHaveValue("Keep chatting while waiting");
+    expect(editor).toHaveFocus();
+  },
+);
 
 it("uses one Space menu to create and switch Spaces", async () => {
   const test = fixture();
