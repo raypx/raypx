@@ -1,5 +1,6 @@
 name: CI
 # raypx canary baseline policy v1
+run-name: Verify
 on:
   pull_request:
   push:

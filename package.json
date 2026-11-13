@@ -115,6 +115,7 @@
         "@vitest/coverage-v8": "5.1.0",
         "@raypx-kit/email-preview": "0.0.0-alpha.5",
         "drizzle-kit": "1.0.0-rc.5",
+        "eas-cli": "27.9.0",
         "happy-dom": "^21.0.4",
         "knip": "^6.44.1",
         "lightningcss": "^1.33.0",

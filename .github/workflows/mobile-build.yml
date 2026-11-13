@@ -1,0 +1,83 @@
+name: Mobile build
+run-name: Mobile build
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platforms to build
+        type: choice
+        options: [all, ios, android]
+        default: all
+permissions:
+  contents: read
+concurrency:
+  group: mobile-build
+  cancel-in-progress: false
+env:
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+jobs:
+  checks:
+    name: Mobile source checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Check mobile sources and tests
+        run: |
+          bun run raypx-dev tasks '@raypx/mobile#check'
+          bun run raypx-dev tasks '@raypx/mobile#test'
+  build:
+    name: Verify ${{ matrix.platform }} build
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(inputs.platform == 'all' && '["ios", "android"]' || format('["{0}"]', inputs.platform)) }}
+    runs-on: ${{ matrix.platform == 'ios' && 'macos-26' || 'ubuntu-24.04' }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Generate native project
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: bun --bun expo prebuild --no-install --platform "$PLATFORM"
+      - name: Install Android NDK
+        if: matrix.platform == 'android'
+        run: |
+          ndk_version=$(bun -p 'Bun.TOML.parse(require("node:fs").readFileSync("node_modules/react-native/gradle/libs.versions.toml", "utf8")).versions.ndkVersion')
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$ndk_version"
+      - name: Install iOS pods
+        if: matrix.platform == 'ios'
+        run: pod install --project-directory=ios
+      - name: Configure unsigned native build
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: bun scripts/configure-native-build.ts "$PLATFORM" --unsigned
+      - name: Build unsigned Android App Bundle
+        if: matrix.platform == 'android'
+        working-directory: apps/mobile/android
+        run: |
+          ./gradlew :app:bundleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+          bundle=app/build/outputs/bundle/release/app-release.aab
+          test -s "$bundle"
+          entries=$(unzip -Z1 "$bundle")
+          if grep -Eiq '^META-INF/[^/]+\.(RSA|DSA|EC)$' <<< "$entries"; then
+            echo 'Expected an unsigned Android App Bundle.' >&2
+            exit 1
+          fi
+      - name: Build unsigned iOS app
+        if: matrix.platform == 'ios'
+        run: |
+          xcodebuild build -workspace ios/Raypx.xcworkspace -scheme Raypx \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/raypx-ios" CODE_SIGNING_ALLOWED=NO
+          test -x "$RUNNER_TEMP/raypx-ios/Build/Products/Release-iphoneos/Raypx.app/Raypx"

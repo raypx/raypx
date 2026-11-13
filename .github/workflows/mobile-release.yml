@@ -1,0 +1,74 @@
+name: Mobile release
+run-name: Mobile release
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platforms to build
+        type: choice
+        options: [all, ios, android]
+        default: all
+      submit:
+        description: Submit signed builds to TestFlight or Google Play internal testing
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: mobile-release
+  cancel-in-progress: false
+env:
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+jobs:
+  release:
+    name: Mobile release (${{ inputs.platform }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Check mobile sources and tests
+        run: |
+          bun run raypx-dev tasks '@raypx/mobile#check'
+          bun run raypx-dev tasks '@raypx/mobile#test'
+      - name: Prepare EAS configuration
+        working-directory: apps/mobile
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          SUBMIT: ${{ inputs.submit }}
+          ASC_APP_ID: ${{ vars.APP_STORE_CONNECT_APP_ID }}
+        run: |
+          bun - <<'TS'
+          const app = await Bun.file("app.json").json();
+          if (!app.expo.extra?.eas?.projectId) {
+            throw new Error("Link apps/mobile to its EAS project and commit app.json before releasing.");
+          }
+
+          const config = await Bun.file("eas.json").json();
+          config.build.production.bun = Bun.version;
+          if (process.env.SUBMIT === "true" && process.env.PLATFORM !== "android") {
+            const appId = process.env.ASC_APP_ID ?? "";
+            if (!/^\d+$/.test(appId)) {
+              throw new Error("Set the APP_STORE_CONNECT_APP_ID Actions variable before submitting iOS.");
+            }
+            config.submit.production.ios.ascAppId = appId;
+          }
+          await Bun.write("eas.json", `${JSON.stringify(config, null, 2)}\n`);
+          TS
+      - name: Build and optionally submit with EAS
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PLATFORM: ${{ inputs.platform }}
+          SUBMIT: ${{ inputs.submit }}
+        shell: bash
+        run: |
+          : "${EXPO_TOKEN:?Set the EXPO_TOKEN Actions secret before releasing.}"
+          eas_version=$(bun -p 'require("../../package.json").workspaces.catalogs.dev["eas-cli"]')
+          args=(build --platform "$PLATFORM" --profile production --non-interactive --wait)
+          if [[ "$SUBMIT" == true ]]; then
+            args+=(--auto-submit)
+          fi
+          bun x --bun "eas-cli@$eas_version" "${args[@]}"

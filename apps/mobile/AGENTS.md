@@ -55,6 +55,9 @@ to their TypeScript sources; keep this remapping out of dependencies in `node_mo
 Wrap the configured resolver with `withUniwindConfig` last. Its type generation
 stays under ignored `.expo/`; static `uniwind/types` also makes clean checks work.
 Run `bun run --cwd apps/mobile check`, `test`, and `build`; device acceptance is separate.
+The manual Mobile build workflow verifies unsigned native builds on GitHub runners.
+Mobile release uses EAS for signed builds. Both workflows configure generated native
+projects to run Metro with Bun. Keep native projects ignored.
 
 ## Catalog composition
 

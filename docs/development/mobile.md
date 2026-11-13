@@ -39,6 +39,56 @@ reach it. Expo embeds this public value at bundle time. Never put secrets in
 `EXPO_PUBLIC_*`. The gateway must route `/api/auth/*` to the API and serve the
 existing `/signup` and `/forgot-password` Web pages.
 
+## Build verification
+
+Once the workflow is on the repository's default branch, open
+**Actions → Mobile build → Run workflow** and select `all`, `ios` or `android`.
+The workflow checks Mobile source and tests, then compiles an unsigned iOS Release
+app for devices or an unsigned Android Release App Bundle for ARM64 on
+GitHub-hosted runners. It needs no Expo project, Expo token or signing credentials.
+
+## Release
+
+Open **Actions → Mobile release → Run workflow** and select `all`, `ios` or
+`android`. The workflow checks Mobile source and tests, then waits for EAS to
+produce signed `.ipa` or `.aab` files and print download links. Enable `submit`
+to send those builds to TestFlight or Google Play internal testing. Production
+rollout is handled in the store consoles.
+
+### Configure signed releases
+
+1. From the repository root, link the app to its Expo project with the pinned EAS CLI.
+
+   ```sh
+   eas_version=$(bun -p 'require("./package.json").workspaces.catalogs.dev["eas-cli"]')
+   cd apps/mobile
+   bun x --bun "eas-cli@$eas_version" login
+   bun x --bun "eas-cli@$eas_version" init
+   ```
+
+   Commit `app.json` with its Expo owner and `extra.eas.projectId`. Set
+   `expo.version` in that file for the release.
+
+2. Run an interactive build to provision signing credentials for each target.
+   Use `--platform ios` or `android` to configure one platform. EAS manages and
+   increments native build numbers.
+
+   ```sh
+   bun x --bun "eas-cli@$eas_version" build --profile production --platform all
+   ```
+
+3. Add the `EXPO_TOKEN` GitHub Actions secret for an account with access to the
+   linked Expo project. If using a different public gateway, set
+   `EXPO_PUBLIC_API_URL` in the Expo `production` environment.
+4. For iOS submission, create the app in App Store Connect, add its numeric Apple
+   ID as the `APP_STORE_CONNECT_APP_ID` Actions variable, and configure an App
+   Store Connect API key in Expo. For Android submission, create the app in
+   Google Play Console and assign its Google service account key in Expo.
+
+See [Expo's CI setup](https://docs.expo.dev/build/building-on-ci/),
+[iOS submission](https://docs.expo.dev/submit/ios/) and
+[Android submission](https://docs.expo.dev/submit/android/).
+
 ## Authentication
 
 The mobile composition root uses Better Auth's Expo client and SecureStore with
