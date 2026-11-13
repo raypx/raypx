@@ -22,14 +22,17 @@
   "dependencies": {
     "@raypx/ai": "workspace:*",
     "@raypx/blocks": "workspace:*",
+    "@raypx/computers": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
+    "@raypx/providers": "workspace:*",
     "@raypx/spaces": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

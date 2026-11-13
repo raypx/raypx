@@ -1,4 +1,4 @@
-import { AiError, type AiStream } from "@raypx/ai";
+import { AiError, type AiStream, type Message as ModelMessage, type Tool } from "@raypx/ai";
 import type { ConversationId } from "@raypx/core/agents";
 import {
   MAX_REPLY_TEXT,
@@ -12,6 +12,19 @@ import type {
   ConversationsRepository,
   RunExecution,
 } from "./conversations.js";
+import { EffectUnknownError, type ApprovalsService } from "./approvals.js";
+import { ComputerToolsError, type ComputerTools } from "./computer-tools.js";
+
+export interface ModelTurn extends Pick<RunExecution, "instructions" | "history"> {
+  /** Process-local canonical tool turns; no checkpoint or automatic replay. */
+  continuation?: ModelMessage[];
+  tools?: Tool[];
+}
+export interface RunTools {
+  tools: ComputerTools;
+  approvals: ApprovalsService;
+  maxToolRounds?: number;
+}
 
 /** Pinned Space/member identity permits a future member-owned connection adapter. */
 export interface ModelAccess {
@@ -19,7 +32,7 @@ export interface ModelAccess {
     this: void,
     run: Run,
   ): Promise<{
-    stream(input: Pick<RunExecution, "instructions" | "history">, signal: AbortSignal): AiStream;
+    stream(input: ModelTurn, signal: AbortSignal): AiStream;
   }>;
   close(): void;
 }
@@ -75,7 +88,15 @@ export class ConversationRunner {
       runId: string,
       durationMs: number,
     ) => void = () => {},
+    private readonly toolRuntime?: RunTools,
   ) {
+    if (
+      toolRuntime?.maxToolRounds !== undefined &&
+      (!Number.isSafeInteger(toolRuntime.maxToolRounds) ||
+        toolRuntime.maxToolRounds < 1 ||
+        toolRuntime.maxToolRounds > 32)
+    )
+      throw new RangeError("Invalid tool round limit");
     this.conversations = {
       ...repository,
       send: async (scope, id, input) => {
@@ -85,7 +106,10 @@ export class ConversationRunner {
       },
       stop: async (scope, id, runId) => {
         const run = await repository.stop(scope, id, runId);
-        if (run.state === "cancelled") this.active.get(runId)?.controller.abort();
+        if (run.state === "cancelled") {
+          this.active.get(runId)?.controller.abort();
+          await this.toolRuntime?.tools.cancel(scope, run);
+        }
         this.wake(scope, id);
         return run;
       },
@@ -143,30 +167,21 @@ export class ConversationRunner {
     let errorCode: RunFailure | null = null;
     let storing = false;
     try {
+      await this.toolRuntime?.approvals.assertContinuable(scope, run);
       const model = await this.models.resolve(run);
       if (controller.signal.aborted) return;
-      const stream = model.stream(input, controller.signal);
-      let text = "";
-      let firstResponseAt: string | undefined;
-      const segmentId = crypto.randomUUID();
-      this.live.set({
-        spaceId: run.spaceId,
-        conversationId: run.conversationId,
-        runId: run.id,
-        segmentId,
-        text,
-      });
-      for await (const event of stream) {
-        if (controller.signal.aborted) break;
-        if (event.type === "error") throw new AiError("AI_REQUEST_FAILED");
-        if (event.type !== "text_delta") continue;
-        if (event.delta) firstResponseAt ??= new Date().toISOString();
-        text += event.delta;
-        if (text.length > MAX_REPLY_TEXT) {
-          errorCode = "REPLY_TOO_LARGE";
-          controller.abort();
-          break;
-        }
+      const continuation: ModelMessage[] = [];
+      const definitions = this.toolRuntime?.tools.definitions() ?? [];
+      let rounds = 0;
+      for (;;) {
+        if (rounds > 0) await this.toolRuntime?.approvals.assertContinuable(scope, run);
+        const stream = model.stream(
+          { ...input, continuation, tools: definitions },
+          controller.signal,
+        );
+        let text = "";
+        let firstResponseAt: string | undefined;
+        const segmentId = crypto.randomUUID();
         this.live.set({
           spaceId: run.spaceId,
           conversationId: run.conversationId,
@@ -174,46 +189,149 @@ export class ConversationRunner {
           segmentId,
           text,
         });
-      }
-      if (!controller.signal.aborted) {
-        const result = await stream.result();
-        if (
-          result.stopReason === "error" ||
-          result.stopReason === "aborted" ||
-          result.content.some((part) => part.type === "toolCall")
-        )
-          throw new AiError("AI_REQUEST_FAILED");
-        text = result.content
-          .filter((part) => part.type === "text")
-          .map((part) => part.text)
-          .join("");
-        if (text.length > MAX_REPLY_TEXT) {
-          errorCode = "REPLY_TOO_LARGE";
-          return;
-        }
-        if (text) {
-          firstResponseAt ??= new Date().toISOString();
-          storing = true;
-          const committed = await this.repository.commitSegment(
-            scope,
-            run,
+        for await (const event of stream) {
+          if (controller.signal.aborted) break;
+          if (event.type === "error") throw new AiError("AI_REQUEST_FAILED");
+          if (event.type !== "text_delta") continue;
+          if (event.delta) firstResponseAt ??= new Date().toISOString();
+          text += event.delta;
+          if (text.length > MAX_REPLY_TEXT) {
+            errorCode = "REPLY_TOO_LARGE";
+            controller.abort();
+            break;
+          }
+          this.live.set({
+            spaceId: run.spaceId,
+            conversationId: run.conversationId,
+            runId: run.id,
             segmentId,
             text,
-            firstResponseAt,
-          );
-          if (committed)
-            this.timing(
-              "run.first_response",
-              run.id,
-              Math.max(0, Date.parse(firstResponseAt) - Date.parse(run.startedAt!)),
-            );
+          });
         }
+        if (!controller.signal.aborted) {
+          const result = await stream.result();
+          if (result.stopReason === "error" || result.stopReason === "aborted")
+            throw new AiError("AI_REQUEST_FAILED");
+          text = result.content
+            .filter((part) => part.type === "text")
+            .map((part) => part.text)
+            .join("");
+          if (text.length > MAX_REPLY_TEXT) {
+            errorCode = "REPLY_TOO_LARGE";
+            return;
+          }
+          if (text) {
+            firstResponseAt ??= new Date().toISOString();
+            storing = true;
+            const committed = await this.repository.commitSegment(
+              scope,
+              run,
+              segmentId,
+              text,
+              firstResponseAt,
+            );
+            if (committed)
+              this.timing(
+                "run.first_response",
+                run.id,
+                Math.max(0, Date.parse(firstResponseAt) - Date.parse(run.startedAt!)),
+              );
+            storing = false;
+          }
+          this.live.clear(run);
+          const calls = result.content.filter((part) => part.type === "toolCall");
+          if (calls.length === 0) break;
+          if (!this.toolRuntime || definitions.length === 0) throw new AiError("AI_REQUEST_FAILED");
+          if (++rounds > (this.toolRuntime.maxToolRounds ?? 8) || calls.length > 16) {
+            errorCode = "TOOL_ROUND_LIMIT";
+            break;
+          }
+          const prepared = calls.map((call, index) => {
+            try {
+              return { call, prepared: this.toolRuntime!.tools.prepare(call) };
+            } catch (error) {
+              const code = error instanceof ComputerToolsError ? error.code : "INVALID_ARGUMENTS";
+              return {
+                call: {
+                  type: "toolCall" as const,
+                  id: `refused-${rounds}-${index}`,
+                  name: "refused_tool",
+                  arguments: {},
+                },
+                error: code,
+              };
+            }
+          });
+          // Invalid or secret arguments are omitted from subsequent model context.
+          let callIndex = 0;
+          continuation.push({
+            ...result,
+            content: result.content.map((part) => {
+              if (part.type !== "toolCall") return part;
+              return prepared[callIndex++]!.call;
+            }),
+          });
+          for (const item of prepared) {
+            if (controller.signal.aborted) break;
+            await this.toolRuntime.approvals.assertContinuable(scope, run);
+            let output: string;
+            let isError = false;
+            if (!item.prepared) {
+              output = JSON.stringify({ untrusted: true, state: "refused", code: item.error });
+              isError = true;
+            } else {
+              const decision = await this.toolRuntime.approvals.authorize(
+                scope,
+                run,
+                item.prepared,
+                controller.signal,
+              );
+              if (controller.signal.aborted || decision === "cancelled") break;
+              if (decision !== "approved") {
+                output = JSON.stringify({ untrusted: true, state: decision, refused: true });
+                isError = true;
+              } else {
+                try {
+                  const operation = () =>
+                    this.toolRuntime!.tools.execute(scope, run, item.prepared, controller.signal);
+                  output = item.prepared.changes
+                    ? await this.toolRuntime.approvals.executeEffect(
+                        scope,
+                        run,
+                        item.prepared,
+                        operation,
+                        controller.signal,
+                      )
+                    : await operation();
+                  const state = (JSON.parse(output) as { state?: string }).state;
+                  isError = state !== "succeeded";
+                } catch (error) {
+                  if (error instanceof EffectUnknownError) throw error;
+                  const code = error instanceof ComputerToolsError ? error.code : "TOOL_FAILED";
+                  output = JSON.stringify({ untrusted: true, state: "failed", code });
+                  isError = true;
+                }
+              }
+            }
+            continuation.push({
+              role: "toolResult",
+              toolCallId: item.call.id,
+              toolName: item.call.name,
+              content: [{ type: "text", text: output }],
+              isError,
+              timestamp: Date.now(),
+            });
+          }
+          if (controller.signal.aborted) break;
+        } else break;
       }
     } catch (error) {
-      errorCode = storing ? "EXECUTION_FAILED" : failure(error);
+      if (error instanceof EffectUnknownError) errorCode = "EFFECT_UNKNOWN";
+      else errorCode = storing ? "EXECUTION_FAILED" : failure(error);
     } finally {
       clearInterval(timer);
       this.active.delete(run.id);
+      this.toolRuntime?.tools.release(run);
       // Cancellation already committed its terminal event. CAS prevents a late reply or failure.
       try {
         if (!controller.signal.aborted || errorCode)
@@ -234,6 +352,7 @@ export class ConversationRunner {
           this.diagnostic("EXECUTION_FAILED");
         } finally {
           controller.abort();
+          await this.toolRuntime?.tools.cancel(scope, run);
         }
       }),
     );

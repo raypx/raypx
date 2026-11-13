@@ -9,6 +9,8 @@ export default {
   NODE_ENV: "derived",
   AGENT_MODELS: "input",
   AGENT_MODEL_CREDENTIALS: "input",
+  APPROVAL_DEFAULT_MODE: "input",
+  APPROVAL_REQUEST_TTL_MS: "input",
   ADMIN_EMAILS: "input",
   JOBS_ENABLED: "input",
   DATABASE_MIGRATE_ON_START: "input",

@@ -92,6 +92,13 @@ The Computer port, the Docker provider and supervisor, file and command tools,
 approval modes, lists and effects. See [computers](architecture/computers.md) and
 [approvals](architecture/approvals.md).
 
+Implemented backend second slice: bounded Computer tool rounds, lazy start,
+Ask/Never ask account settings, exact Allow/Block rules, addressed expiring
+approvals, conversation card events, cancellation and durable effect intents/
+outcomes with unknown-outcome guards. Auto review, protected input, client UI and
+durable Run recovery remain outside this slice. PostgreSQL, loopback stream and
+live Docker acceptance remain separate, unclaimed gates.
+
 Acceptance:
 
 - The conformance suite passes for the in-memory and Docker providers.

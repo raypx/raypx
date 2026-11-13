@@ -16,7 +16,8 @@
     "./memory": "./src/memory.ts",
     "./jobs": "./src/jobs.ts",
     "./conversation": "./src/conversation.ts",
-    "./computers": "./src/computers.ts"
+    "./computers": "./src/computers.ts",
+    "./approvals": "./src/approvals.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

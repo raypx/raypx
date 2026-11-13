@@ -76,8 +76,9 @@ member enables previews.
 ## Implemented conversation slice
 
 `@raypx/core/conversation` defines member messages and the immutable
-`message.created`, `run.state` and `reply.segment` event variants. Events reference the stored message or segment; cursor
-reads hydrate that message for transport. Run state events contain only the Run ID, state and a stable failure code. Snapshots include messages, Runs and completed reply segments. Future variants ship with their writers.
+`message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created`
+and `card.resolved` event variants. Events reference the stored message or segment; cursor
+reads hydrate that message for transport. Run state events contain only the Run ID, state and a stable failure code. Snapshots include messages, Runs and completed reply segments.
 `@raypx/agents/server` owns scoped conversation persistence and the small fanout
 subscriber port. The PostgreSQL repository accepts a transactional publisher;
 its default calls `pg_notify` inside the write transaction, so rollbacks publish
@@ -127,6 +128,24 @@ connection with 4003; authentication loss uses 4001. Invalid frames/cursors/ACKs
 use 4000, unavailable storage uses 1013, and shutdown uses 1001. Socket and query
 bounds apply independently. No message text, account credentials or event content
 is published on the notification channel or written to logs.
+
+## Approval cards
+
+Both card events carry the usual `spaceId`, `conversationId`, `sequence` and
+`createdAt`, plus `requestId`, `runId`, `toolName`, `argumentSummary`, `target`,
+`memberAccountId` and `expiresAt`. Summary and target are at most 1,024 UTF-16 code
+units. `card.resolved` also carries `outcome` (`approved`, `denied`, `expired` or
+`cancelled`) and nullable `answeredByAccountId`. Exact arguments, file contents,
+command output and credentials never enter these events.
+
+Creating a request writes `card.created` then `run.state: waiting` atomically.
+Answering or expiration writes `card.resolved` then `run.state: running` unless
+the Run is already terminal. Stop writes cancellation and pending-card resolutions
+in one transaction. They use the same counter, fanout, replay and ACK protocol as
+other events, without another stream version. After a snapshot, clients can read
+current addressed requests through `approvals.pending`; snapshots do not embed
+request arguments or effect results. Live approval handling still requires the
+single API-enabled execution process.
 
 ## Live replies in phase 1
 

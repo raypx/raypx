@@ -23,6 +23,7 @@ import {
 export * from "./tasks.js";
 export * from "./config.js";
 import { configurationContract } from "./config.js";
+import { agentApprovalsContract } from "./approvals.js";
 import { jobsContract } from "./jobs.js";
 export * from "./jobs.js";
 import { memoryContract } from "./memory.js";
@@ -149,6 +150,7 @@ export const apiContract = {
       ),
   },
   approvals: {
+    ...agentApprovalsContract,
     list: httpRead("/approvals", "approvals", "List pending approvals")
       .meta(exposeApiTo("renderer"), rpcAccess("approvals.read"))
       .input(z.object({}))

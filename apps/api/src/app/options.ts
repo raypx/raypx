@@ -19,6 +19,7 @@ import type { ConversationsRepository, AgentsRepository } from "@raypx/agents/se
 import type { ConversationModels } from "../conversations/models.js";
 /** Every service is required: an absent one is a composition error, not a runtime state. */
 export interface ApiAppOptions {
+  agentApprovals: import("@raypx/agents/server").ApprovalsService;
   computers: import("@raypx/computers/server").ComputersService;
   spaces: SpaceAccess;
   agents: AgentsRepository;

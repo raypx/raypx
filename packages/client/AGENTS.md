@@ -52,6 +52,8 @@ carries relay scheduling.
 
 `createApiClient().configuration` exposes the typed site-settings RPCs. TaskClient
 selects only the account/coordination contracts, excluding administrator settings.
+Its approvals type selects only the retained device `list` projection; new Computer
+approval procedures are consumed through `/api`.
 
 `TaskClient.observed` reads bounded summaries and individual request bodies, and sends
 receipt-bound decisions over relay v5. Never automatically retry a changed decision.

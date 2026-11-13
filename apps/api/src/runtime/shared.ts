@@ -1,13 +1,18 @@
 import { createComputersService } from "@raypx/computers/server";
 import { createComputersRepository } from "@raypx/computers/server/postgres";
-import { configuredComputerProvider } from "./computers.js";
-import { ConversationRunner } from "@raypx/agents/server";
+import { configuredComputerProvider, knownComputerSecrets } from "./computers.js";
+import {
+  ConversationRunner,
+  createComputerTools,
+  createApprovalsService,
+} from "@raypx/agents/server";
 import { createDeploymentModels, type ConversationModels } from "../conversations/models.js";
 import { InstanceService } from "@raypx/instances/server";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import {
   createConversationsRepository,
   createAgentsRepository,
+  createApprovalsRepository,
 } from "@raypx/agents/server/postgres";
 import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
 import { createInstanceRepository } from "../instances/repository.js";
@@ -161,16 +166,27 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const conversationModels =
       resources.createModels?.() ??
       createDeploymentModels(environment.AGENT_MODELS, environment.AGENT_MODEL_CREDENTIALS);
+    const agentApprovals = createApprovalsService(createApprovalsRepository(db), {
+      defaultMode: environment.APPROVAL_DEFAULT_MODE,
+      requestTtlMs: environment.APPROVAL_REQUEST_TTL_MS,
+    });
+    const tools = createComputerTools(
+      computers,
+      computerProvider,
+      knownComputerSecrets(environment),
+    );
     const runner = new ConversationRunner(
       createConversationsRepository(db),
       conversationModels,
       (code) => logger.createLogger({ operation: "run.execution" }).emit({ status: 503, code }),
       (operation, runId, durationMs) =>
         logger.createLogger({ operation }).emit({ status: 200, code: "OK", runId, durationMs }),
+      { tools, approvals: agentApprovals },
     );
     lifecycle.own(() => runner.close());
     const conversations = runner.conversations;
     return {
+      agentApprovals,
       computers,
       spaces,
       liveReplies: runner.live,
@@ -194,6 +210,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        agentApprovals,
         computers,
         spaces,
         conversations,

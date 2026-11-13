@@ -85,5 +85,8 @@
   "computerRestoreFailed": "无法恢复电脑的主目录。",
   "computerLoadError": "无法加载电脑，请重试。",
   "computerStartError": "无法确认电脑已启动，请刷新后重试。",
-  "computerStopError": "无法确认电脑已停止，请刷新后重试。"
+  "computerStopError": "无法确认电脑已停止，请刷新后重试。",
+  "waiting": "等待审批",
+  "TOOL_ROUND_LIMIT": "回复使用的工具步骤过多。",
+  "EFFECT_UNKNOWN": "某个操作的结果未知，请先查看再继续。"
 }

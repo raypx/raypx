@@ -20,6 +20,10 @@ frames, transient reply prefix/delta frames and event/snapshot-required replies.
 `computers.get/start/stop` compose Core Computer state, use the same session/Space
 boundary and expose no command or file operation. `not-configured` is explicit.
 Member management remains outside this slice.
+`approvals.pending/answer/settings/updateSettings/effects` compose backend Computer
+approval schemas. Pending/answer/effects select a Space; settings use the session
+account. Auto is accepted only to return explicit unavailability. Card events carry
+bounded summaries and targets, never exact arguments or file/command content.
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 
 `/desktop`: bounded API request/reply DTOs, scoped execution list/result/terminal

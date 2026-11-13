@@ -23,6 +23,8 @@ const server = {
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   AGENT_MODELS: z.string().default("[]"),
   AGENT_MODEL_CREDENTIALS: z.string().default("{}"),
+  APPROVAL_DEFAULT_MODE: z.enum(["ask", "never"]).default("ask"),
+  APPROVAL_REQUEST_TTL_MS: z.coerce.number().int().min(1).max(86_400_000).default(600_000),
   ADMIN_EMAILS: z
     .string()
     .default("")

@@ -1,6 +1,16 @@
 import { expect, it } from "vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { computers, conversationEvents, schema, user } from "./schema.js";
+import {
+  computers,
+  conversationEvents,
+  conversationRuns,
+  approvalSettings,
+  approvalRules,
+  approvalRequests,
+  conversationEffects,
+  schema,
+  user,
+} from "./schema.js";
 
 it("uses the public schema with Better Auth Admin fields", () => {
   expect(Object.keys(schema)).toEqual(
@@ -44,4 +54,75 @@ it("keeps Computer references fenced by the same Space in the database metadata"
         index.config.where !== undefined,
     ),
   ).toBe(true);
+});
+
+it("keeps approval settings and exact rules account-owned", () => {
+  for (const table of [approvalSettings, approvalRules]) {
+    const config = getTableConfig(table);
+    expect(config.columns.some((column) => column.name === "space_id")).toBe(false);
+    expect(
+      config.foreignKeys.map((key) => key.reference().columns.map((column) => column.name)),
+    ).toContainEqual(["account_id"]);
+  }
+  const rules = getTableConfig(approvalRules);
+  const action = rules.uniqueConstraints.find(
+    (constraint) => constraint.name === "approval_rules_action_idx",
+  );
+  expect(action?.columns.map((column) => column.name)).toEqual([
+    "account_id",
+    "tool_name",
+    "executable",
+  ]);
+  expect(action?.nullsNotDistinct).toBe(true);
+});
+
+it("includes the Space in every approval/effect and card reference", () => {
+  for (const table of [approvalRequests, conversationEffects]) {
+    const config = getTableConfig(table);
+    expect(config.primaryKeys[0]?.columns[0]?.name).toBe("space_id");
+    for (const key of config.foreignKeys) {
+      const reference = key.reference();
+      expect(reference.columns[0]?.name).toBe("space_id");
+      expect(reference.foreignColumns[0]?.name).toBe("space_id");
+    }
+    expect(
+      config.foreignKeys.some(
+        (key) =>
+          key
+            .reference()
+            .columns.map((column) => column.name)
+            .join() === "space_id,conversation_id,run_id",
+      ),
+    ).toBe(true);
+  }
+  const card = getTableConfig(conversationEvents)
+    .foreignKeys.find((key) =>
+      key.reference().columns.some((column) => column.name === "request_id"),
+    )
+    ?.reference();
+  expect(card?.columns.map((column) => column.name)).toEqual([
+    "space_id",
+    "conversation_id",
+    "request_id",
+  ]);
+  expect(card?.foreignColumns.map((column) => column.name)).toEqual([
+    "space_id",
+    "conversation_id",
+    "id",
+  ]);
+  const active = getTableConfig(conversationRuns).indexes.find(
+    (index) => index.config.name === "conversation_runs_active_agent_idx",
+  );
+  expect(active?.config.unique).toBe(true);
+  expect(active?.config.where).toBeDefined();
+});
+it("cascades approval ownership and retains Run actor identity after membership removal", () => {
+  for (const table of [approvalSettings, approvalRules, approvalRequests, conversationEffects])
+    for (const key of getTableConfig(table).foreignKeys) expect(key.onDelete).toBe("cascade");
+  const actor = getTableConfig(conversationRuns).foreignKeys.find((key) =>
+    key.reference().columns.some((column) => column.name === "member_account_id"),
+  );
+  expect(actor?.reference().columns.map((column) => column.name)).toEqual(["member_account_id"]);
+  expect(actor?.reference().foreignTable).toBe(user);
+  expect(actor?.onDelete).toBe("no action");
 });

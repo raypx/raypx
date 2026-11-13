@@ -1,21 +1,23 @@
 import { vi } from "vitest";
-import { createAssistantMessageEventStream, type AssistantMessage } from "@raypx/ai";
-import type { RunExecution } from "@raypx/agents/server";
+import { createAssistantMessageEventStream, type AssistantMessage, type ToolCall } from "@raypx/ai";
+import type { ModelTurn } from "@raypx/agents/server";
 import type { ConversationModels } from "../../src/conversations/models.js";
 
 /** Explicit gates, no clocks or provider network. Also used by the PostgreSQL suite. */
 export function modelFixture() {
   const calls: Array<{
+    input: ModelTurn;
     signal: AbortSignal;
     delta(text: string): void;
     reasoning(text: string): void;
     complete(finalText?: string): void;
+    toolCalls(calls: ToolCall[]): void;
     fail(): void;
   }> = [];
   const models: ConversationModels = {
     list: async () => [{ modelId: "fixture", name: "Deterministic fixture" }],
     resolve: vi.fn(async () => ({
-      stream: (_input: Pick<RunExecution, "instructions" | "history">, signal: AbortSignal) => {
+      stream: (input: ModelTurn, signal: AbortSignal) => {
         const stream = createAssistantMessageEventStream();
         let text = "";
         function message(stopReason: "stop" | "error" | "aborted" = "stop"): AssistantMessage {
@@ -46,6 +48,7 @@ export function modelFixture() {
           { once: true },
         );
         calls.push({
+          input: structuredClone(input),
           signal,
           reasoning(delta) {
             stream.push({ type: "thinking_delta", contentIndex: 1, delta, partial: message() });
@@ -59,6 +62,15 @@ export function modelFixture() {
             stream.push({ type: "text_end", contentIndex: 0, content: text, partial: message() });
             stream.push({ type: "done", reason: "stop", message: message() });
             stream.end(message());
+          },
+          toolCalls(tools) {
+            const result: AssistantMessage = {
+              ...message(),
+              stopReason: "toolUse",
+              content: [...message().content, ...tools],
+            };
+            stream.push({ type: "done", reason: "toolUse", message: result });
+            stream.end(result);
           },
           fail() {
             stream.push({

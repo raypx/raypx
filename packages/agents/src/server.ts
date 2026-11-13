@@ -24,4 +24,29 @@ export type {
   ConversationNotice,
 } from "./conversations.js";
 
-export { ConversationRunner, LiveReplies, type ModelAccess } from "./runner.js";
+export {
+  ConversationRunner,
+  LiveReplies,
+  type ModelAccess,
+  type ModelTurn,
+  type RunTools,
+} from "./runner.js";
+export {
+  createApprovalsService,
+  ApprovalOperationError,
+  EffectUnknownError,
+  type ApprovalsService,
+  type ApprovalsRepository,
+  type ApprovalCall,
+  type ApprovalAnswer,
+  type ApprovalOutcome,
+  type ApprovalSettingsInput,
+} from "./approvals.js";
+export {
+  createComputerTools,
+  ComputerToolsError,
+  computerToolResult,
+  type ComputerTools,
+  type PreparedComputerCall,
+} from "./computer-tools.js";
+export { EFFECT_INTENT_TIMEOUT_MS } from "./tool-limits.js";

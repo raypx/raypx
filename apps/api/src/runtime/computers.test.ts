@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { getApiEnvironment } from "../env.js";
 import inputs from "../env.contract.js";
-import { configuredComputerProvider } from "./computers.js";
+import { configuredComputerProvider, knownComputerSecrets } from "./computers.js";
 it("starts without a computer and never accepts a Docker socket in backend configuration", async () => {
   const environment = getApiEnvironment({
     NODE_ENV: "test",
@@ -39,4 +39,27 @@ it("validates the configured HTTP provider and demands an independent token", as
     }),
   ).toThrow("dedicated");
   expect(await configuredComputerProvider(getApiEnvironment(configuration))).not.toBeNull();
+});
+it("protects configured credential values at the tool boundary", () => {
+  const environment = getApiEnvironment({
+    AGENT_MODEL_CREDENTIALS: JSON.stringify({ primary: "private-model-credential" }),
+    GOOGLE_CLIENT_ID: "fixture-client-id",
+    GOOGLE_CLIENT_SECRET: "private-oauth-credential",
+  });
+  expect(knownComputerSecrets(environment)).toEqual(
+    expect.arrayContaining([
+      "private-model-credential",
+      "private-oauth-credential",
+      environment.APP_KEY,
+    ]),
+  );
+  expect(() =>
+    knownComputerSecrets(getApiEnvironment({ AGENT_MODEL_CREDENTIALS: '{"primary":3}' })),
+  ).toThrow("Invalid deployment model configuration");
+});
+it("defaults to Ask and rejects Auto deployment configuration", () => {
+  expect(getApiEnvironment({}).APPROVAL_DEFAULT_MODE).toBe("ask");
+  expect(getApiEnvironment({ APPROVAL_DEFAULT_MODE: "never" }).APPROVAL_DEFAULT_MODE).toBe("never");
+  expect(() => getApiEnvironment({ APPROVAL_DEFAULT_MODE: "auto" })).toThrow("Invalid environment");
+  expect(() => getApiEnvironment({ APPROVAL_REQUEST_TTL_MS: "0" })).toThrow("Invalid environment");
 });

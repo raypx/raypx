@@ -7,6 +7,10 @@ import {
 } from "./computers.js";
 import { agentIdSchema, agentModelChoiceSchema, conversationIdSchema } from "./agents.js";
 import { spaceIdSchema } from "./spaces.js";
+import { runIdSchema } from "./run-identity.js";
+import { approvalCardFields } from "./approvals.js";
+
+export { runIdSchema } from "./run-identity.js";
 
 export const eventSequenceSchema = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
 export const messageIdSchema = z.string().min(1).max(128).brand<"MessageId">();
@@ -29,8 +33,14 @@ export const messageSchema = z.strictObject({
   createdAt: z.iso.datetime(),
 });
 export type Message = z.infer<typeof messageSchema>;
-export const runIdSchema = z.string().min(1).max(128).brand<"RunId">();
-export const runStateSchema = z.enum(["queued", "running", "succeeded", "failed", "cancelled"]);
+export const runStateSchema = z.enum([
+  "queued",
+  "running",
+  "waiting",
+  "succeeded",
+  "failed",
+  "cancelled",
+]);
 export const runFailureSchema = z.enum([
   "MODEL_UNAVAILABLE",
   "MODEL_NOT_CONFIGURED",
@@ -40,6 +50,8 @@ export const runFailureSchema = z.enum([
   "MODEL_FAILED",
   "REPLY_TOO_LARGE",
   "EXECUTION_FAILED",
+  "TOOL_ROUND_LIMIT",
+  "EFFECT_UNKNOWN",
 ]);
 export const runSchema = z
   .strictObject({
@@ -84,6 +96,18 @@ const eventFields = {
 };
 export const conversationEventSchema = z
   .discriminatedUnion("kind", [
+    z.strictObject({
+      ...eventFields,
+      ...approvalCardFields,
+      kind: z.literal("card.created"),
+    }),
+    z.strictObject({
+      ...eventFields,
+      ...approvalCardFields,
+      kind: z.literal("card.resolved"),
+      outcome: z.enum(["approved", "denied", "expired", "cancelled"]),
+      answeredByAccountId: z.string().min(1).max(128).nullable(),
+    }),
     z.strictObject({
       ...eventFields,
       kind: z.literal("computer.state"),

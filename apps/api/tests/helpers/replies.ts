@@ -2,6 +2,7 @@ import {
   ConversationRunner,
   type ConversationsRepository,
   type ConversationRunRepository,
+  type RunTools,
 } from "@raypx/agents/server";
 import {
   runSchema,
@@ -14,7 +15,7 @@ import { conversationFixture } from "./conversations.js";
 import { modelFixture } from "./model.js";
 
 /** Repository double; transaction and FK behavior is covered by the real PostgreSQL suite. */
-export function replyFixture() {
+export function replyFixture(toolRuntime?: RunTools) {
   const f = conversationFixture();
   const model = modelFixture();
   const runs: Run[] = [];
@@ -74,7 +75,7 @@ export function replyFixture() {
       return message;
     },
     async claimNext() {
-      if (runs.some((run) => run.state === "running")) return undefined;
+      if (runs.some((run) => run.state === "running" || run.state === "waiting")) return undefined;
       const run = runs.find((candidate) => candidate.state === "queued");
       if (!run) return undefined;
       run.state = "running";
@@ -87,7 +88,7 @@ export function replyFixture() {
     },
     async stop(_scope, _id, id) {
       const run = runs.find((candidate) => candidate.id === id)!;
-      if (run.state === "running" || run.state === "queued") {
+      if (run.state === "running" || run.state === "waiting" || run.state === "queued") {
         run.state = "cancelled";
         run.finishedAt = now();
         state(run);
@@ -122,7 +123,13 @@ export function replyFixture() {
     },
   };
   const diagnostics: string[] = [];
-  const runner = new ConversationRunner(repository, model.models, (code) => diagnostics.push(code));
+  const runner = new ConversationRunner(
+    repository,
+    model.models,
+    (code) => diagnostics.push(code),
+    undefined,
+    toolRuntime,
+  );
   return {
     ...f,
     ...model,

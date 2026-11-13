@@ -38,9 +38,18 @@ messages and advances the replay floor atomically. API owns socket lifecycle,
 ACKs and fresh membership checks. Sends also create a pinned queued Run and state
 event. `/server` owns ConversationRunner, the injectable member-aware ModelAccess
 port and process-local LiveReplies prefixes. It uses the public AI transport and
-serializes each Agent's queued Runs. Stop commits cancellation before aborting;
-segment output and first-response time commit together. No tools, leases,
-attempts, retries or recovery exist yet. API owns credentials and configuration.
+serializes each Agent's queued Runs, including a Run waiting for approval. The
+bounded model/tool loop uses the injected Computer port; no provider means no
+offered tools. Account approval settings and exact tool/executable rules gate
+changes; pending requests bind exact arguments to the initiating member. Card
+events carry bounded summaries and omit file contents. Effect intents precede
+changes, completed outcomes are reused, and unknown outcomes block continuation.
+Runtime construction performs no effect I/O. Reads and effect decisions atomically
+age intents into unknown after TOOL_DEADLINE_MS plus the shared safety margin;
+young intents remain in progress. There is no startup scan or Run recovery.
+Stop commits cancellation and pending-card resolution before aborting model
+and computer work; segment output and first-response time commit together. No
+leases, attempts, retries or recovery exist yet. API owns credentials and configuration.
 Deletion still cascades synchronously; active Run status checks abort deleted work.
 Computer owner references restrict deletion until a resumable workflow releases them.
 

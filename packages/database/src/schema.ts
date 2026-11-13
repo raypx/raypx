@@ -6,6 +6,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  unique,
   integer,
   jsonb,
   primaryKey,
@@ -236,10 +237,15 @@ export const conversationRuns = pgTable(
     trigger: text("trigger").notNull().default("message"),
     messageId: text("message_id").notNull(),
     messageSequence: bigint("message_sequence", { mode: "number" }).notNull(),
-    memberAccountId: text("member_account_id").notNull(),
+    // Historical actor identity survives removal of the current Space membership.
+    memberAccountId: text("member_account_id")
+      .notNull()
+      .references(() => user.id),
     modelId: text("model_id").notNull(),
     instructions: text("instructions").notNull(),
-    state: text("state", { enum: ["queued", "running", "succeeded", "failed", "cancelled"] })
+    state: text("state", {
+      enum: ["queued", "running", "waiting", "succeeded", "failed", "cancelled"],
+    })
       .notNull()
       .default("queued"),
     failureCode: text("failure_code"),
@@ -257,7 +263,7 @@ export const conversationRuns = pgTable(
     ),
     uniqueIndex("conversation_runs_active_agent_idx")
       .on(table.spaceId, table.agentId)
-      .where(sql`${table.state} = 'running'`),
+      .where(sql`${table.state} in ('running', 'waiting')`),
     index("conversation_runs_queue_idx").on(
       table.spaceId,
       table.conversationId,
@@ -269,10 +275,6 @@ export const conversationRuns = pgTable(
       foreignColumns: [agents.spaceId, agents.id],
     }).onDelete("cascade"),
     foreignKey({
-      columns: [table.spaceId, table.memberAccountId],
-      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
-    }),
-    foreignKey({
       columns: [table.spaceId, table.conversationId, table.messageId, table.messageSequence],
       foreignColumns: [
         conversationMessages.spaceId,
@@ -283,7 +285,7 @@ export const conversationRuns = pgTable(
     }).onDelete("cascade"),
     check(
       "conversation_runs_state_check",
-      sql`${table.state} in ('queued', 'running', 'succeeded', 'failed', 'cancelled')`,
+      sql`${table.state} in ('queued', 'running', 'waiting', 'succeeded', 'failed', 'cancelled')`,
     ),
     check("conversation_runs_trigger_check", sql`${table.trigger} = 'message'`),
   ],
@@ -317,6 +319,157 @@ export const conversationReplySegments = pgTable(
   ],
 );
 
+export const approvalSettings = pgTable(
+  "approval_settings",
+  {
+    accountId: text("account_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    mode: text("mode", { enum: ["ask", "never"] }).notNull(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (table) => [check("approval_settings_mode_check", sql`${table.mode} in ('ask', 'never')`)],
+);
+export const approvalRules = pgTable(
+  "approval_rules",
+  {
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    toolName: text("tool_name").notNull(),
+    executable: text("executable"),
+    decision: text("decision", { enum: ["allow", "block"] }).notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique("approval_rules_action_idx")
+      .on(table.accountId, table.toolName, table.executable)
+      .nullsNotDistinct(),
+    check("approval_rules_decision_check", sql`${table.decision} in ('allow', 'block')`),
+    check(
+      "approval_rules_tool_check",
+      sql`${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command')`,
+    ),
+    check(
+      "approval_rules_executable_check",
+      sql`(${table.toolName} = 'computer_run_command' and ${table.executable} is not null and length(${table.executable}) between 1 and 1024) or (${table.toolName} <> 'computer_run_command' and ${table.executable} is null)`,
+    ),
+  ],
+);
+export const approvalRequests = pgTable(
+  "approval_requests",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    id: text("id").notNull(),
+    runId: text("run_id").notNull(),
+    memberAccountId: text("member_account_id").notNull(),
+    toolCallId: text("tool_call_id").notNull(),
+    toolName: text("tool_name").notNull(),
+    arguments: jsonb("arguments").$type<Record<string, unknown>>().notNull(),
+    argumentSummary: text("argument_summary").notNull(),
+    target: text("target").notNull(),
+    state: text("state", { enum: ["pending", "approved", "denied", "expired", "cancelled"] })
+      .notNull()
+      .default("pending"),
+    createdAt: date("created_at").notNull().defaultNow(),
+    expiresAt: date("expires_at").notNull(),
+    resolvedAt: date("resolved_at"),
+    answeredByAccountId: text("answered_by_account_id"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
+    uniqueIndex("approval_requests_id_idx").on(table.spaceId, table.id),
+    index("approval_requests_call_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.runId,
+      table.toolCallId,
+    ),
+    index("approval_requests_pending_idx")
+      .on(table.spaceId, table.memberAccountId, table.createdAt)
+      .where(sql`${table.state} = 'pending'`),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.memberAccountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.answeredByAccountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    check(
+      "approval_requests_tool_check",
+      sql`${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command')`,
+    ),
+    check(
+      "approval_requests_state_check",
+      sql`${table.state} in ('pending', 'approved', 'denied', 'expired', 'cancelled')`,
+    ),
+    check(
+      "approval_requests_resolution_check",
+      sql`(${table.state} = 'pending' and ${table.resolvedAt} is null and ${table.answeredByAccountId} is null) or (${table.state} in ('approved', 'denied') and ${table.resolvedAt} is not null and ${table.answeredByAccountId} is not null and ${table.answeredByAccountId} = ${table.memberAccountId}) or (${table.state} in ('expired', 'cancelled') and ${table.resolvedAt} is not null and ${table.answeredByAccountId} is null)`,
+    ),
+    check(
+      "approval_requests_bounds_check",
+      sql`length(${table.argumentSummary}) <= 1024 and length(${table.target}) between 1 and 1024 and jsonb_typeof(${table.arguments}) = 'object' and length(${table.arguments}::text) <= 262144 and ${table.expiresAt} > ${table.createdAt}`,
+    ),
+  ],
+);
+export const conversationEffects = pgTable(
+  "conversation_effects",
+  {
+    spaceId: text("space_id").notNull(),
+    key: text("key").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    toolCallId: text("tool_call_id").notNull(),
+    toolName: text("tool_name").notNull(),
+    argumentHash: text("argument_hash").notNull(),
+    state: text("state", { enum: ["intent", "succeeded", "failed", "unknown"] })
+      .notNull()
+      .default("intent"),
+    result: text("result"),
+    createdAt: date("created_at").notNull().defaultNow(),
+    completedAt: date("completed_at"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.key] }),
+    index("conversation_effects_run_idx").on(table.spaceId, table.conversationId, table.runId),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_effects_tool_check",
+      sql`${table.toolName} in ('computer_write_file', 'computer_run_command')`,
+    ),
+    check(
+      "conversation_effects_state_check",
+      sql`${table.state} in ('intent', 'succeeded', 'failed', 'unknown')`,
+    ),
+    check(
+      "conversation_effects_key_check",
+      sql`${table.key} ~ '^[a-f0-9]{64}$' and ${table.argumentHash} ~ '^[a-f0-9]{64}$'`,
+    ),
+    check(
+      "conversation_effects_outcome_check",
+      sql`(${table.state} in ('intent', 'unknown') and ${table.result} is null and ${table.completedAt} is null) or (${table.state} in ('succeeded', 'failed') and ${table.result} is not null and length(${table.result}) <= 16384 and ${table.completedAt} is not null)`,
+    ),
+  ],
+);
+
 export const conversationEvents = pgTable(
   "conversation_events",
   {
@@ -324,13 +477,21 @@ export const conversationEvents = pgTable(
     conversationId: text("conversation_id").notNull(),
     sequence: bigint("sequence", { mode: "number" }).notNull(),
     kind: text("kind", {
-      enum: ["message.created", "run.state", "reply.segment", "computer.state"],
+      enum: [
+        "message.created",
+        "run.state",
+        "reply.segment",
+        "computer.state",
+        "card.created",
+        "card.resolved",
+      ],
     }).notNull(),
     messageId: text("message_id"),
     data: jsonb("data"),
     runId: text("run_id"),
     segmentId: text("segment_id"),
     computerId: text("computer_id"),
+    requestId: text("request_id"),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
@@ -368,18 +529,27 @@ export const conversationEvents = pgTable(
       columns: [table.spaceId, table.computerId],
       foreignColumns: [computers.spaceId, computers.id],
     }),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.requestId],
+      foreignColumns: [
+        approvalRequests.spaceId,
+        approvalRequests.conversationId,
+        approvalRequests.id,
+      ],
+    }).onDelete("cascade"),
     check(
       "conversation_events_payload_check",
       sql`(
-      (${table.kind} = 'message.created' and ${table.messageId} is not null and ${table.runId} is null and ${table.segmentId} is null and ${table.data} is null and ${table.computerId} is null) or
-      (${table.kind} = 'run.state' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null and ${table.computerId} is null) or
-      (${table.kind} = 'reply.segment' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is not null and ${table.data} is null and ${table.computerId} is null) or
-      (${table.kind} = 'computer.state' and ${table.messageId} is null and ${table.runId} is null and ${table.segmentId} is null and ${table.computerId} is not null and ${table.data} is not null)
+      (${table.kind} = 'message.created' and ${table.messageId} is not null and ${table.runId} is null and ${table.segmentId} is null and ${table.data} is null and ${table.computerId} is null and ${table.requestId} is null) or
+      (${table.kind} = 'run.state' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null and ${table.computerId} is null and ${table.requestId} is null) or
+      (${table.kind} = 'reply.segment' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is not null and ${table.data} is null and ${table.computerId} is null and ${table.requestId} is null) or
+      (${table.kind} = 'computer.state' and ${table.messageId} is null and ${table.runId} is null and ${table.segmentId} is null and ${table.computerId} is not null and ${table.data} is not null and ${table.requestId} is null) or
+      (${table.kind} in ('card.created', 'card.resolved') and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.computerId} is null and ${table.requestId} is not null and ${table.data} is not null)
     )`,
     ),
     check(
       "conversation_events_kind_check",
-      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment', 'computer.state')`,
+      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved')`,
     ),
   ],
 );
@@ -799,6 +969,10 @@ export const schema = {
   conversationCounters,
   conversationMessages,
   conversationEvents,
+  approvalSettings,
+  approvalRules,
+  approvalRequests,
+  conversationEffects,
   spaces,
   spaceMembers,
   agents,

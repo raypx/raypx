@@ -85,5 +85,8 @@
   "computerRestoreFailed": "The computer home could not be restored.",
   "computerLoadError": "Could not load the computer. Try again.",
   "computerStartError": "Could not confirm the computer started. Refresh and try again.",
-  "computerStopError": "Could not confirm the computer stopped. Refresh and try again."
+  "computerStopError": "Could not confirm the computer stopped. Refresh and try again.",
+  "waiting": "Waiting for approval",
+  "TOOL_ROUND_LIMIT": "The reply used too many tool steps.",
+  "EFFECT_UNKNOWN": "An action's outcome is unknown. Review it before continuing."
 }

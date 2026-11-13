@@ -14,7 +14,15 @@ API injects the owned database and authorization/transport ports.
 trusted mutation Origin and account quotas. Runtime injects no provider by default;
 `COMPUTER_PROVIDER=docker` lazily loads the private supervisor HTTP adapter and
 requires its independent URL/token. No Engine socket setting is accepted by API.
-The first explicit start creates the team computer; no model or Run consumes it.
+Explicit start or the first executed model tool creates the team computer.
+Runtime composes Computer tools and approval/effect services with the runner.
+`approvals.pending/answer/effects` require fresh Space membership; answers require
+the addressed account. `approvals.settings/updateSettings` use the session account.
+Mutations require trusted Origin and quotas. Auto review is explicitly unavailable.
+APPROVAL_DEFAULT_MODE defaults to ask; APPROVAL_REQUEST_TTL_MS defaults to 600000.
+Runtime construction performs no effect I/O. Effect reads lazily persist unknown
+only after the shared intent timeout; there is no Run recovery. Known deployment
+secrets are rejected at Computer input/output.
 
 `spaces.*` resolves the account from the current session and delegates first-use
 private-Space bootstrap and discovery to `@raypx/spaces/server`. `agents.*`

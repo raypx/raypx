@@ -67,8 +67,9 @@ it("models only current Run states and pins opaque model/member identity without
     finishedAt: null,
   };
   expect(runSchema.parse(base).model).toEqual({ modelId: "opaque-model" });
+  expect(runSchema.parse({ ...base, state: "waiting" }).state).toBe("waiting");
   for (const change of [
-    { state: "waiting" },
+    { state: "recovering" },
     { trigger: "routine" },
     { apiKey: "secret" },
     { state: "failed", failureCode: "raw provider failure" },

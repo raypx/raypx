@@ -33,6 +33,15 @@ computer per Space; private Agent, creator member and event references include
 space_id. Restrictive owner foreign keys prevent silent resource orphaning.
 `computer.state` joins the existing conversation event counter/payload convention.
 
+`approval_settings` and exact-tool/executable `approval_rules` are account-owned.
+`approval_requests` references its Run and addressed/answering members through
+same-Space foreign keys; `conversation_effects` records a hashed intent and bounded
+outcome with the same Run boundary. Card event references include Space and
+Conversation. Requests cascade with addressed/answering memberships and their Run;
+effects cascade with their Run. Run actor identity references the account, so
+membership removal does not erase Run/effect history. The active Run index includes
+`waiting` as well as `running`.
+
 ## Constraints
 
 Use postgres.js and Drizzle. Application tables and `public.__drizzle_migrations`

@@ -15,10 +15,7 @@ import {
 } from "@raypx/core/tasks";
 
 type Input<M extends RelayRequest["method"]> = Extract<RelayRequest, { method: M }>["input"];
-export interface TaskClient extends Pick<
-  ApiClient,
-  "attachments" | "devices" | "relay" | "tasks" | "approvals"
-> {
+export interface TaskClient extends Pick<ApiClient, "attachments" | "devices" | "relay" | "tasks"> {
   account: Pick<ApiClient["account"], "get">;
   observed?: ApiClient["observed"] & {
     decide(
@@ -41,7 +38,7 @@ export interface TaskClient extends Pick<
     ): Promise<ReturnType<typeof taskSchema.parse>>;
     input(input: Input<"tasks.input">, options?: { signal?: AbortSignal }): Promise<TaskInput>;
   };
-  approvals: ApiClient["approvals"] & {
+  approvals: Pick<ApiClient["approvals"], "list"> & {
     decide(
       input: Input<"approvals.decide">,
       options?: { signal?: AbortSignal },

@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lte, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   conversations,
@@ -8,6 +8,7 @@ import {
   conversationCounters as counters,
   conversationMessages as messages,
   conversationEvents as events,
+  approvalRequests,
 } from "@raypx/database/schema";
 import type { ConversationId } from "@raypx/core/agents";
 import {
@@ -134,6 +135,52 @@ export function createConversationsRepository(
     if (!row) throw new SpaceNotFound();
     return runView(row);
   }
+  async function cancelPendingRequests(
+    tx: Pick<Database, "insert" | "update" | "execute">,
+    scope: SpaceScope,
+    run: Run,
+    sequence: number,
+  ) {
+    const cancelled = await tx
+      .update(approvalRequests)
+      .set({ state: "cancelled", resolvedAt: new Date(), answeredByAccountId: null })
+      .where(
+        and(
+          eq(approvalRequests.spaceId, scope.spaceId),
+          eq(approvalRequests.conversationId, run.conversationId),
+          eq(approvalRequests.runId, run.id),
+          eq(approvalRequests.state, "pending"),
+        ),
+      )
+      .returning();
+    for (const request of cancelled) {
+      sequence++;
+      await tx.insert(events).values({
+        spaceId: scope.spaceId,
+        conversationId: run.conversationId,
+        sequence,
+        kind: "card.resolved",
+        runId: run.id,
+        requestId: request.id,
+        data: {
+          toolName: request.toolName,
+          argumentSummary: request.argumentSummary,
+          target: request.target,
+          memberAccountId: request.memberAccountId,
+          expiresAt: request.expiresAt.toISOString(),
+          outcome: "cancelled",
+          answeredByAccountId: null,
+        },
+      });
+    }
+    if (cancelled.length) {
+      await tx
+        .update(counters)
+        .set({ sequence })
+        .where(counterSelection(scope, run.conversationId));
+      await publish(tx, { conversationId: run.conversationId, sequence });
+    }
+  }
   return {
     getRun,
     async stop(scope, id, runId) {
@@ -144,7 +191,8 @@ export function createConversationsRepository(
           .from(runs)
           .where(runSelection(scope, id, runId));
         if (!row) throw new SpaceNotFound();
-        if (row.state !== "queued" && row.state !== "running") return runView(row);
+        if (row.state !== "queued" && row.state !== "running" && row.state !== "waiting")
+          return runView(row);
         const [updated] = await tx
           .update(runs)
           .set({ state: "cancelled", finishedAt: new Date() })
@@ -152,6 +200,7 @@ export function createConversationsRepository(
           .returning();
         const run = runView(updated!);
         await appendState(tx, scope, run, counter.sequence + 1);
+        await cancelPendingRequests(tx, scope, run, counter.sequence + 1);
         return run;
       });
     },
@@ -165,7 +214,7 @@ export function createConversationsRepository(
             and(
               eq(runs.spaceId, scope.spaceId),
               eq(runs.conversationId, id),
-              eq(runs.state, "running"),
+              inArray(runs.state, ["running", "waiting"]),
             ),
           );
         if (active) return undefined;
@@ -249,9 +298,17 @@ export function createConversationsRepository(
             failureCode: failure,
             finishedAt: new Date(),
           })
-          .where(and(runSelection(scope, run.conversationId, run.id), eq(runs.state, "running")))
+          .where(
+            and(
+              runSelection(scope, run.conversationId, run.id),
+              inArray(runs.state, ["running", "waiting"]),
+            ),
+          )
           .returning();
-        if (row) await appendState(tx, scope, runView(row), counter.sequence + 1);
+        if (row) {
+          await appendState(tx, scope, runView(row), counter.sequence + 1);
+          await cancelPendingRequests(tx, scope, runView(row), counter.sequence + 1);
+        }
       });
     },
     async commitSegment(scope, run, segmentId, text, firstResponseAt) {
@@ -398,6 +455,12 @@ export function createConversationsRepository(
               payload = { ...(row.event.data as object), computerId: row.event.computerId };
             if (row.event.kind === "run.state")
               payload = { ...(row.event.data as object), runId: row.event.runId };
+            if (row.event.kind === "card.created" || row.event.kind === "card.resolved")
+              payload = {
+                ...(row.event.data as object),
+                runId: row.event.runId,
+                requestId: row.event.requestId,
+              };
             if (row.event.kind === "reply.segment") {
               payload = { segment: segmentView(row.segment!) };
             }

@@ -8,12 +8,14 @@ adapters, execution hosts and product views. Schemas are the single source of in
 ## Interface
 
 - `/computers` owns vendor-neutral Computer state, generations, revisions and Space projections.
+- `/approvals` owns account modes and exact-tool rules, Space approval requests and
+  bounded effect records. Auto remains an explicitly unavailable input choice.
 - `/spaces` owns Space IDs, names, membership roles and pure membership matching.
 - `/agents` owns persistent Agent configuration and IDs, Conversation IDs and the
   pure direct-Conversation constructor. Model choices are opaque model IDs, with no
   provider vocabulary or credentials. These are separate from device-owned tasks.
 - `/conversation` owns member Message and immutable ConversationEvent schemas, event
-  sequences, Runs, reply segments, live text projections and pure retention-boundary checks. Writers implement `message.created`, `run.state`, `reply.segment` and `computer.state`.
+  sequences, Runs, reply segments, live text projections and pure retention-boundary checks. Writers implement `message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created` and `card.resolved`.
 - `/memory` owns document/version schemas, mutation inputs and domain errors.
 - `/jobs` owns local/cloud schedule schemas, domain errors and pure calendar
   calculations. Cron instances stay paused and are stopped after calculation;

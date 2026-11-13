@@ -1,0 +1,299 @@
+import {
+  approvalSettingsSchema,
+  MAX_TOOL_RESULT,
+  type ApprovalMode,
+  type ApprovalRequest,
+  type ApprovalRule,
+  type ApprovalSettings,
+  type ComputerToolName,
+  type Effect,
+} from "@raypx/core/approvals";
+import type { Run, RunId } from "@raypx/core/conversation";
+import type { SpaceScope } from "@raypx/spaces/server";
+import { computerToolResult } from "./computer-tools.js";
+
+export class ApprovalOperationError extends Error {
+  constructor(
+    readonly code:
+      | "MODE_UNAVAILABLE"
+      | "NOT_FOUND"
+      | "ALREADY_RESOLVED"
+      | "NOT_ADDRESSED"
+      | "EXPIRED"
+      | "RULE_LIMIT",
+  ) {
+    super(code);
+    this.name = "ApprovalOperationError";
+  }
+}
+export class EffectUnknownError extends Error {
+  readonly code = "EFFECT_UNKNOWN";
+  constructor() {
+    super("EFFECT_UNKNOWN");
+    this.name = "EffectUnknownError";
+  }
+}
+/** Prepared by the one computer-tool definition, before policy or execution. */
+export interface ApprovalCall {
+  id: string;
+  name: ComputerToolName;
+  arguments: Record<string, unknown>;
+  argumentSummary: string;
+  target: string;
+  executable?: string;
+  changes: boolean;
+}
+export interface ApprovalSettingsInput {
+  mode: ApprovalMode | "auto";
+  rules: ApprovalRule[];
+}
+export type ApprovalOutcome = "approved" | "denied" | "blocked" | "expired" | "cancelled";
+export interface ApprovalAnswer {
+  decision: "approved" | "denied";
+  allowTool?: boolean;
+}
+export interface ApprovalsRepository {
+  getSettings(accountId: string, defaultMode: ApprovalMode): Promise<ApprovalSettings>;
+  updateSettings(accountId: string, settings: ApprovalSettings): Promise<ApprovalSettings>;
+  listPending(scope: SpaceScope, now: Date): Promise<ApprovalRequest[]>;
+  answer(
+    scope: SpaceScope,
+    id: string,
+    answer: ApprovalAnswer,
+    now: Date,
+  ): Promise<ApprovalRequest>;
+  createRequest(
+    scope: SpaceScope,
+    run: Run,
+    call: ApprovalCall,
+    expiresAt: Date,
+    createdAt: Date,
+  ): Promise<ApprovalRequest>;
+  pollRequest(scope: SpaceScope, run: Run, id: string, now: Date): Promise<ApprovalRequest>;
+  cancelRequest(scope: SpaceScope, run: Run, id: string, now: Date): Promise<void>;
+  listEffects(scope: SpaceScope, runId: RunId, now: Date): Promise<Effect[]>;
+  beginEffect(
+    scope: SpaceScope,
+    run: Run,
+    effect: Effect,
+    now: Date,
+  ): Promise<{ created: boolean; effect: Effect }>;
+  completeEffect(
+    scope: SpaceScope,
+    key: string,
+    state: "succeeded" | "failed" | "unknown",
+    result: string | null,
+    now: Date,
+  ): Promise<void>;
+}
+export interface ApprovalsService {
+  getSettings(accountId: string): Promise<ApprovalSettings>;
+  updateSettings(accountId: string, input: ApprovalSettingsInput): Promise<ApprovalSettings>;
+  listPending(scope: SpaceScope): Promise<ApprovalRequest[]>;
+  answer(scope: SpaceScope, id: string, answer: ApprovalAnswer): Promise<ApprovalRequest>;
+  authorize(
+    scope: SpaceScope,
+    run: Run,
+    call: ApprovalCall,
+    signal: AbortSignal,
+  ): Promise<ApprovalOutcome>;
+  assertContinuable(scope: SpaceScope, run: Run): Promise<void>;
+  listEffects(scope: SpaceScope, runId: RunId): Promise<Effect[]>;
+  executeEffect(
+    scope: SpaceScope,
+    run: Run,
+    call: ApprovalCall,
+    operation: () => Promise<string>,
+    signal: AbortSignal,
+  ): Promise<string>;
+}
+function matchingRule(rule: ApprovalRule, call: ApprovalCall) {
+  if (rule.toolName !== call.name) return false;
+  return rule.executable === (call.executable ?? null);
+}
+function disposition(
+  settings: ApprovalSettings,
+  call: ApprovalCall,
+): "approved" | "blocked" | "ask" {
+  const rules = settings.rules.filter((rule) => matchingRule(rule, call));
+  if (rules.some((rule) => rule.decision === "block")) return "blocked";
+  if (!call.changes || settings.mode === "never" || rules.some((rule) => rule.decision === "allow"))
+    return "approved";
+  return "ask";
+}
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value === "string" || typeof value === "boolean")
+    return JSON.stringify(value);
+  if (typeof value === "number" && Number.isFinite(value)) return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (typeof value === "object" && value && Object.getPrototypeOf(value) === Object.prototype)
+    return `{${Object.keys(value)
+      .sort()
+      .map(
+        (key) => `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key])}`,
+      )
+      .join(",")}}`;
+  throw new Error("INVALID_TOOL_ARGUMENTS");
+}
+async function digest(value: string) {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+function boundedResult(value: string) {
+  if (value.length <= MAX_TOOL_RESULT) return value;
+  return computerToolResult("succeeded", value, true);
+}
+function failedResult(value: string) {
+  try {
+    const result: unknown = JSON.parse(value);
+    return (
+      typeof result === "object" &&
+      result !== null &&
+      "state" in result &&
+      (result.state === "failed" || result.state === "cancelled")
+    );
+  } catch {
+    return false;
+  }
+}
+function pause(milliseconds: number, signal: AbortSignal) {
+  if (signal.aborted) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", done);
+      resolve();
+    };
+    const timer = setTimeout(done, milliseconds);
+    signal.addEventListener("abort", done, { once: true });
+  });
+}
+export function createApprovalsService(
+  repository: ApprovalsRepository,
+  options: {
+    defaultMode?: ApprovalMode;
+    requestTtlMs?: number;
+    pollIntervalMs?: number;
+    now?: () => Date;
+  } = {},
+): ApprovalsService {
+  const defaultMode = options.defaultMode ?? "ask";
+  const requestTtlMs = options.requestTtlMs ?? 600_000;
+  const pollIntervalMs = options.pollIntervalMs ?? 100;
+  const now = options.now ?? (() => new Date());
+  if (![requestTtlMs, pollIntervalMs].every((value) => Number.isSafeInteger(value) && value > 0))
+    throw new RangeError("Invalid approval timing");
+  async function settings(accountId: string) {
+    return repository.getSettings(accountId, defaultMode);
+  }
+  async function assertContinuable(scope: SpaceScope, run: Run) {
+    if (
+      (await repository.listEffects(scope, run.id, now())).some(
+        (effect) => effect.state === "unknown",
+      )
+    )
+      throw new EffectUnknownError();
+  }
+  return {
+    getSettings: settings,
+    async updateSettings(accountId, input) {
+      if (input.mode === "auto") throw new ApprovalOperationError("MODE_UNAVAILABLE");
+      return repository.updateSettings(accountId, approvalSettingsSchema.parse(input));
+    },
+    listPending: (scope) => repository.listPending(scope, now()),
+    answer: (scope, id, answer) => repository.answer(scope, id, answer, now()),
+    assertContinuable,
+    listEffects: (scope, runId) => repository.listEffects(scope, runId, now()),
+    async authorize(scope, run, call, signal) {
+      if (signal.aborted) return "cancelled";
+      const action = disposition(await settings(run.memberAccountId), call);
+      if (action !== "ask") return action;
+      const createdAt = now();
+      const request = await repository.createRequest(
+        scope,
+        run,
+        call,
+        new Date(createdAt.getTime() + requestTtlMs),
+        createdAt,
+      );
+      let current = request;
+      while (current.state === "pending" && !signal.aborted) {
+        await pause(
+          Math.min(pollIntervalMs, Math.max(1, Date.parse(current.expiresAt) - now().getTime())),
+          signal,
+        );
+        if (!signal.aborted) current = await repository.pollRequest(scope, run, request.id, now());
+      }
+      if (signal.aborted) {
+        await repository.cancelRequest(scope, run, request.id, now());
+        return "cancelled";
+      }
+      // A member may have blocked the action while the request was open.
+      if (
+        current.state === "approved" &&
+        disposition(await settings(run.memberAccountId), call) === "blocked"
+      )
+        return "blocked";
+      if (current.state === "pending") throw new Error("INVALID_APPROVAL_STATE");
+      return current.state;
+    },
+    async executeEffect(scope, run, call, operation, signal) {
+      if (signal.aborted) return computerToolResult("cancelled", "The action was cancelled.");
+      if (disposition(await settings(run.memberAccountId), call) === "blocked")
+        return computerToolResult("failed", "The action was refused by the Block list.");
+      const argumentHash = await digest(canonicalJson(call.arguments));
+      const key = await digest(canonicalJson([run.id, call.id, call.name, argumentHash]));
+      const intent: Effect = {
+        spaceId: run.spaceId,
+        conversationId: run.conversationId,
+        key,
+        runId: run.id,
+        toolCallId: call.id,
+        toolName: call.name,
+        argumentHash,
+        state: "intent",
+        result: null,
+        createdAt: now().toISOString(),
+        completedAt: null,
+      };
+      const begun = await repository.beginEffect(scope, run, intent, now());
+      if (!begun.created) {
+        if (begun.effect.state === "unknown") throw new EffectUnknownError();
+        if (begun.effect.state === "intent") throw new Error("EFFECT_IN_PROGRESS");
+        return begun.effect.result ?? computerToolResult("failed", "TOOL_FAILED");
+      }
+      let result: string;
+      let state: "succeeded" | "failed" = "succeeded";
+      try {
+        if (signal.aborted) {
+          result = computerToolResult("cancelled", "The action was cancelled.");
+          state = "failed";
+        } else {
+          result = boundedResult(await operation());
+          if (failedResult(result)) state = "failed";
+        }
+      } catch {
+        // A thrown call has no confirmed outcome. A lost response may follow a
+        // completed change; only a returned result establishes failure/cancellation.
+        try {
+          await repository.completeEffect(scope, key, "unknown", null, now());
+        } catch {
+          // A later read will age the retained intent if storage is unavailable too.
+        }
+        throw new EffectUnknownError();
+      }
+      try {
+        await repository.completeEffect(scope, key, state, result, now());
+      } catch {
+        // A completed computer call without a durable outcome is uncertain too.
+        try {
+          await repository.completeEffect(scope, key, "unknown", null, now());
+        } catch {
+          // A later read will age the remaining intent into unknown.
+        }
+        throw new EffectUnknownError();
+      }
+      return result;
+    },
+  };
+}

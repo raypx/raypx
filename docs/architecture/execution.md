@@ -7,7 +7,7 @@ guide covers how a Run starts, how one process owns it, and how it recovers.
 
 The sections below describe the target execution system. The current Conversation
 slice implements message-triggered Runs inside the backend, with `queued`,
-`running`, `succeeded`, `failed` and `cancelled` states. It has no Attempt,
+`running`, `waiting`, `succeeded`, `failed` and `cancelled` states. It has no Attempt,
 lease, fence, checkpoint, backup job, retry or crash recovery. A crashed process
 can leave queued/running records; no startup scan resumes them in this slice.
 
@@ -18,15 +18,15 @@ member-aware model access port. API supplies deployment configuration and the
 existing `@raypx/ai` Pi transport. Nothing imports the CLI harness.
 
 A task takes the conversation counter lock, refuses to start when a Run is already
-running, and starts the earliest queued trigger. A partial unique index on
-Space/Agent enforces one running Run. On completion it drains the next queued Run.
+running or waiting, and starts the earliest queued trigger. A partial unique index on
+Space/Agent enforces one running or waiting Run. On completion it drains the next queued Run.
 A second message queues its own Run; it does not steer the current one. Context
 pairs each prior member message with its committed reply, then adds the triggering
 message. Inputs queued later are excluded. Each Run's pinned instructions become
-the system prompt. There are no tools.
+the system prompt.
 
 `conversations.stop` takes Space, Conversation and Run IDs through the usual fresh
-membership, Origin and quota gates. It atomically cancels queued or running work,
+membership, Origin and quota gates. It atomically cancels queued, running or waiting work,
 publishes `run.state`, then aborts the local model request. Repeated stops return
 the existing terminal state. A one-second active-Run status check also observes a
 stop committed by another process. Conditional output/state writes prevent late
@@ -39,6 +39,29 @@ stable domain codes. There is one request attempt and no model fallback. Raw
 provider errors, prompts and credentials reach neither events nor logs. Only Run
 IDs, stable codes and millisecond timings enter execution diagnostics. The
 first-response timestamp persists atomically with the completed segment and event.
+
+### Implemented computer tool loop
+
+When a Computer provider is configured, the backend offers four JSON Schema tools
+for listing, reading, writing and executable/argv/cwd commands. The model transport
+never executes them. The runner validates calls, applies account approval policy,
+records effects for changes, invokes only the Computer port and appends bounded
+tool results to its process-local model history before another turn. A Run allows
+eight tool rounds and at most sixteen calls per round; excess fails with
+`TOOL_ROUND_LIMIT`. Each complete serialized result is at most 16,384 UTF-16 code
+units, includes an untrusted-data label and reports truncation. Commands have a
+60-second execution deadline and a combined 32,768-byte capture budget. No implicit
+shell or backend-host execution is introduced. No configured provider means no
+offered tools; ordinary replies still work.
+
+The first executed tool lazily starts and pins the Space team computer generation.
+Approval waits keep the Agent's queue slot, so new messages are accepted and queued
+while only one Run can use that Agent's computer. Completed text on each model turn
+commits as a reply segment before any tool calls. Tool arguments and results are
+not conversation events. Stop resolves pending cards and aborts model access and
+in-flight command execution through the Computer cancellation port. Unknown effects
+block continuation; there are still no checkpoints, attempts or crash recovery.
+See [approvals](approvals.md#implemented-backend-computer-slice).
 
 ### Deployment model configuration
 
