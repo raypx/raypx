@@ -2,10 +2,9 @@
 
 Date: 2026-11-13
 
-Status: Accepted for the `next` branch. Replaces the ownership and runtime
-decisions in ADRs 0035, 0037, 0039, 0040, 0041, 0044, 0052, 0053, 0054 and 0065,
-whose text is removed here and remains in the history of `canary`. Extends
-[ADR 0051](0051-backend-runtime-roles.md) with a `worker` role.
+Status: Accepted for the `next` branch. This is the first decision record on this
+branch. It replaces the earlier device-owned ownership and runtime decisions, which
+remain in the history of `canary`.
 
 ## Context
 

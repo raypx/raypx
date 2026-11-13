@@ -22,8 +22,7 @@ starts. Each missing capability is an explicit state in the product.
 
 - `SERVER_ROLE=all` is the default: `api`, `worker` and `relay` in one process.
 - Split roles use the same artifact. They need no broker; they coordinate through
-  PostgreSQL. See [ADR 0051](0051-backend-runtime-roles.md) and
-  [ADR 0066](0066-server-owned-agent-platform.md).
+  PostgreSQL. See [ADR 0066](0066-server-owned-agent-platform.md).
 - Run any number of `api` and `worker` processes. A Run executes once because of
   its lease. See [execution](execution.md#ownership).
 - The `relay` role starts without sign-in or mail configuration and exposes no RPC.

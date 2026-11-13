@@ -190,7 +190,7 @@ behavior by client/contracts.
 - Do not edit `src/routeTree.gen.ts` or regenerate it with `tsr`.
 - Keep independent test configuration so application plugins stay outside tests.
 
-See [foundation architecture](../../docs/architecture/0034-extensible-foundation.md)
+See foundation architecture
 and [verification](../../docs/development/testing.md).
 
 The public `/desktop-authorize` route displays the account and computer before

@@ -25,10 +25,9 @@ contracts. A workflow works on every client or degrades for a stated reason.
 
 ## Desktop
 
-- The MyGo host wraps the same Web UI in the system WebView. See
-  [ADR 0038](0038-mygo-desktop-host.md).
-- Desktop chooses a server on first run and signs in through the system browser.
-  See [ADR 0063](0063-desktop-oauth.md).
+- The MyGo host wraps the same Web UI in the system WebView.
+- Desktop chooses a server on first run and signs in through the system browser with
+  OAuth and PKCE.
 - Desktop adds native notifications, the application menu and the device
   connector. It launches the bundled CLI by absolute path and never imports CLI
   source.
@@ -39,7 +38,7 @@ contracts. A workflow works on every client or degrades for a stated reason.
 ## Mobile
 
 - The Expo app shares Core, contracts and message catalogs. It keeps its own
-  Expo-supported React version. See [ADR 0050](0050-mobile-react-boundary.md).
+  Expo-supported React version.
 - Mobile covers conversations, approvals, routines and notifications first. A
   workflow that is not available says so.
 - Mobile uses native controls for navigation, pickers and alerts.

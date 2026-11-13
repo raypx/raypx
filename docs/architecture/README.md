@@ -73,7 +73,6 @@ notify each other through it. Redis is optional. Pi runs inside the `api` and
 Workspaces are discovered from the root Bun workspace patterns. Applications are
 composition roots, libraries expose explicit source entries, and executable tooling
 stays outside runtime dependency graphs. See
-[ADR 0059](0059-manifest-workspace-boundaries.md) and
 [workspaces](../development/workspaces.md).
 
 | Workspace            | Role                                                                                         |
@@ -116,30 +115,13 @@ oRPC and Pi. The policy, verification and release gates in
 
 ## Decision history
 
-[ADR 0066](0066-server-owned-agent-platform.md) records this architecture and
-replaces the earlier ownership and runtime decisions. Records that still apply:
+[ADR 0066](0066-server-owned-agent-platform.md) records this architecture. It is
+the first decision record on this branch. Earlier records described the
+device-owned product and are removed here; they remain in the history of `canary`.
 
-- [0034: Extensible foundation](0034-extensible-foundation.md)
-- [0038: MyGo Desktop host](0038-mygo-desktop-host.md) — the host; execution ownership replaced by 0066
-- [0042: Application services and adapters](0042-application-layering.md)
-- [0043: Package surfaces](0043-package-surfaces.md)
-- [0046: MyGo / Bun and immutable CLI artifacts](0046-mygo-bun-artifacts.md)
-- [0047: Production Bun CLI packaging](0047-bun-cli-production-packaging.md)
-- [0048: Core feature domain models](0048-core-feature-models.md)
-- [0049: Feature server ownership](0049-feature-server-ownership.md)
-- [0050: Independent Mobile React](0050-mobile-react-boundary.md)
-- [0051: Backend runtime roles](0051-backend-runtime-roles.md) — extended with the `worker` role by 0066
-- [0055: In-repository internationalization runtime](0055-in-repo-intl-runtime.md)
-- [0056: In-repository devkit](0056-in-repo-devkit.md) — superseded by 0057
-- [0057: Repository automation workspaces](0057-repository-automation-workspaces.md)
-- [0058: Derived source platforms](0058-derived-source-platforms.md) — superseded by 0059
-- [0059: Manifest workspace boundaries](0059-manifest-workspace-boundaries.md)
-- [0060: Turbo task graph](0060-turbo-task-graph.md)
-- [0061: Standalone Vitest](0061-standalone-vitest.md)
-- [0062: Desktop sign-in in the system browser](0062-desktop-browser-sign-in.md)
-- [0063: OAuth/OIDC for Desktop sign-in](0063-desktop-oauth.md)
-- [0064: JSON message catalogs with generated literal types](0064-json-message-catalogs.md)
-- [0066: Server-owned Agent platform](0066-server-owned-agent-platform.md)
+The toolchain and repository rules those records established still apply. They are
+stated in the [root instructions](../../AGENTS.md) and the
+[development guides](../development/getting-started.md).
 
-Records 0035, 0037, 0039, 0040, 0041, 0044, 0052, 0053, 0054 and 0065 described
-device-owned execution and are removed on this branch.
+A later decision adds a new record. An accepted record is not edited; a new record
+supersedes it with a short link.

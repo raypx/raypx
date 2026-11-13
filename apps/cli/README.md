@@ -6,7 +6,7 @@ MyGo/Go host and bundles this same CLI payload, connecting through private IPC.
 The daemon owns scheduling; foreground commands own their work and never install
 a service.
 
-The [accepted production packaging](../../docs/architecture/0047-bun-cli-production-packaging.md)
+The accepted production packaging
 embeds the Bun 1.4.4 stable runtime with minified ESM and depth-0 bytecode.
 
 Run `raypx login` once to enroll the selected profile with an account and server

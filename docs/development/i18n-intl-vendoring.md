@@ -4,7 +4,7 @@
 `b928c371393a14b5bdf8d6e9a075fef66eff32ce`。迁入后由 `@raypx/i18n` 独占
 `use-intl@4.14.9` 的直接依赖和导入。Tooling 使用开发 catalog 中的
 `@formatjs/icu-messageformat-parser@3.5.22` 做静态比对。八个入口和业务导入保持原样。
-架构决策见 [ADR 0055](../architecture/0055-in-repo-intl-runtime.md)。
+架构决策见 ADR 0055。
 
 ## 行数与产物
 

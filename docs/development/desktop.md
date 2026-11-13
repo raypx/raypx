@@ -2,7 +2,7 @@
 
 Runtime connection settings, native API transport and release requirements for
 the MyGo web host. [Desktop workspace commands](../../apps/desktop/README.md)
-and [ADR 0038](../architecture/0038-mygo-desktop-host.md) define its entry points
+and ADR 0038 define its entry points
 and architectural boundary.
 
 ## Renderer navigation

@@ -37,8 +37,7 @@ label is `common.backToWorkspace`. Neither has a compatibility alias.
 
 ## Formats and types
 
-Every language and namespace is `locales/<language>/<namespace>.json`
-([ADR 0064](0064-json-message-catalogs.md)). Handwritten language `index.ts` files
+Every language and namespace is `locales/<language>/<namespace>.json`. Handwritten language `index.ts` files
 explicitly import and assemble their entries with actual `.json` specifiers and
 `with { type: "json" }`; there is no runtime registration. Shared TS presets enable
 `resolveJsonModule`; Bun, Vite and Mobile's Metro consume those imports.
@@ -122,5 +121,5 @@ of Web-only copy and Mobile's DOM-free composition; JSON fixtures exercise each
 bundler. Run focused tests, `bun run i18n:check`, `bun run verify` and Web,
 Desktop-renderer and Mobile export builds. Native device/GUI acceptance is separate.
 
-The runtime is maintained here under [ADR 0055](0055-in-repo-intl-runtime.md).
+The runtime is maintained in this repository.
 See the [migration record](../development/i18n-intl-vendoring.md) for build and test results.

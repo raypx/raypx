@@ -69,7 +69,6 @@ and [development setup](development/getting-started.md).
 - [Compose deployment, production and Beta environments](development/deployment.md)
 - [Railway deployment and domains](development/railway.md)
 - [Infrastructure workspaces](../infra/README.md)
-- [Backend runtime roles](architecture/0051-backend-runtime-roles.md)
 - [Cloudflare Relay ingress](../infra/cloudflare/README.md)
 
 ## Migration record

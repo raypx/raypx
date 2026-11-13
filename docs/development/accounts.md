@@ -310,7 +310,7 @@ Host reauthorization opens the same system-browser flow. Sign in again with the
 account bound to the profile, then approve. API requires a session created after
 the request starts, and Desktop uses that authentication time to renew the Host
 grant. Existing local work remains attached during the renewal.
-See [ADR 0063](../architecture/0063-desktop-oauth.md).
+See ADR 0063.
 
 ### Sign-in methods and account protection
 

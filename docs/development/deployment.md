@@ -3,7 +3,7 @@
 The default topology is Web + one Bun backend + PostgreSQL. `apps/api` builds a
 single Nitro artifact; `SERVER_ROLE=both` hosts HTTP and `/relay` together, with
 direct scheduling/revocation calls. Redis is optional for shared caches and
-multi-node routing. See [ADR 0051](../architecture/0051-backend-runtime-roles.md).
+multi-node routing. See ADR 0051.
 
 ## Project boundaries and configuration
 

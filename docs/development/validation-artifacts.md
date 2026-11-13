@@ -53,7 +53,7 @@ reports only packages in its executed build graph, including restored cache outp
 source-only runs do not produce size rows. Browser gates measure their selected assets.
 Native checks report the CLI payload, while distribution phases additionally report
 the renderer and actual native packages. Size evidence does not establish platform
-acceptance. The [production packaging decision](../architecture/0047-bun-cli-production-packaging.md)
+acceptance. The production packaging decision
 defines the CLI payload; collect current measurements with these commands rather
 than treating older migration outputs as a current baseline.
 

@@ -1,7 +1,7 @@
 # Cloudflare Relay
 
 `relay-cloudflare` adds an optional Workers + Containers deployment for the
-[Bun backend relay role](../../docs/architecture/0051-backend-runtime-roles.md). Railway remains available. API/Web
+Bun backend relay role. Railway remains available. API/Web
 stay at their existing origins; API and this Relay share PostgreSQL and Redis.
 The Worker is a managed ingress, and the container runs the existing
 `apps/api/Dockerfile` with repository-root build context.

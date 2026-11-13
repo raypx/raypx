@@ -55,7 +55,7 @@ are immutable.
 The Bun SQLite migrator receives this embedded journal. SQLite initialization needs
 no external migration files beside the executable or in the repository. Keep the
 complete CLI payload, including Herdr and its inventory, for execution and terminal
-features; see the [packaging contract](../architecture/0047-bun-cli-production-packaging.md).
+features; see the packaging contract.
 
 Startup holds a separate SQLite migration lock while configuring WAL, checking
 the migration ledger and running `migrate()`. This serializes independent CLI

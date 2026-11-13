@@ -60,7 +60,7 @@ Never point API startup or migration commands at the retired database or volume.
 `bun dev` starts Web (Start SSR on 3000) and the combined backend (3002).
 Nitro hosts `/relay` alongside HTTP. Redis is optional for this default topology;
 set `SERVER_ROLE=api` and run another copy with `SERVER_ROLE=relay` only when
-using a shared private broker. See [backend roles](../architecture/0051-backend-runtime-roles.md).
+using a shared private broker. See backend roles.
 `bun dev:desktop` starts Desktop development.
 `bun package:desktop` packages it with its version-matched CLI. Phones use the Web
 application for the remote workbench. An Expo Mobile account/login baseline is
@@ -195,6 +195,6 @@ Before using local files, commands, automations or Agent sessions, register the 
 
 The signed identity remains usable offline and after online logout. Registration enables no remote Host grant and uploads no project content. Account/origin changes cannot take over the profile. The account page lists and revokes registered instances; a successfully synced revocation blocks local execution and preserves stored history. See the instance decision.
 
-See the [production CLI packaging decision](../architecture/0047-bun-cli-production-packaging.md)
+See the production CLI packaging decision
 for the payload contract and the [Desktop guide](desktop.md#build-and-release) for
 native preparation and platform acceptance.
