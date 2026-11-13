@@ -2,6 +2,7 @@ import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 import { migrateDatabase } from "@raypx/database";
 import { resendUpdateSchema } from "@raypx/contracts/api";
+import { configureRuntimeRole } from "./migration-runtime-role.js";
 import { initializeResend } from "./resend.js";
 import { saveStorageConfiguration, storageConfigSchema } from "../storage/config.js";
 
@@ -36,6 +37,15 @@ async function migrate() {
   const { DATABASE_URL: url, APP_KEY: secret } = env;
   if (!url || !URL.canParse(url) || !["postgres:", "postgresql:"].includes(new URL(url).protocol))
     throw new MigrationInputError("Set DATABASE_URL to the active Raypx foundation database.");
+
+  const runtimeUser = env.DB_MIGRATE_RUNTIME_USER;
+  const runtimePassword = env.DB_MIGRATE_RUNTIME_PASSWORD;
+  if (Boolean(runtimeUser) !== Boolean(runtimePassword))
+    throw new MigrationInputError(
+      "Set both DB_MIGRATE_RUNTIME_USER and DB_MIGRATE_RUNTIME_PASSWORD.",
+    );
+  if (runtimeUser && runtimeUser === decodeURIComponent(new URL(url).username))
+    throw new MigrationInputError("The database runtime role must differ from the migration role.");
 
   const importConfig = values["import-config"] || env.DB_MIGRATE_IMPORT_CONFIG === "true";
   const mailPresent = importConfig && Boolean(env.RESEND_API_KEY || env.MAIL_FROM);
@@ -84,6 +94,8 @@ async function migrate() {
     throw new MigrationInputError("Set the API deployment's APP_KEY to import configuration.");
 
   await migrateDatabase(url, migrations, async (tx) => {
+    if (runtimeUser && runtimePassword)
+      await configureRuntimeRole(tx, runtimeUser, runtimePassword);
     if (mail?.success && mail.data.apiKey)
       await initializeResend(tx, secret!, mail.data.values, mail.data.apiKey);
     if (storage?.success)

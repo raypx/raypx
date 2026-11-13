@@ -62,7 +62,8 @@ owned resources in reverse order, every one even after a failure, and only once.
 Before allocating runtime resources it applies pending foundation migrations by default.
 `db:migrate` is the explicit operator entry for schema and requested provider
 imports. Imports run inside the Drizzle migration transaction. API startup
-applies schema only.
+applies schema only. The explicit command can provision a restricted runtime login
+inside the same transaction for isolated Compose deployments.
 `DATABASE_MIGRATE_ON_START=false` skips only API startup migration. Nitro bundles private
 SQL assets; startup stages them temporarily for the database package's Drizzle migrator
 and removes the temporary directory on success or failure. Migration errors stop startup

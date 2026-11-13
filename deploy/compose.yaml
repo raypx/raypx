@@ -30,6 +30,8 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       APP_KEY: ${APP_KEY:?Set the application key}
+      DB_MIGRATE_RUNTIME_USER: ${POSTGRES_RUNTIME_USER:-raypx_runtime}
+      DB_MIGRATE_RUNTIME_PASSWORD: ${POSTGRES_RUNTIME_PASSWORD:?Set the runtime database password}
       DB_MIGRATE_IMPORT_CONFIG: ${DB_MIGRATE_IMPORT_CONFIG:-false}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-}
@@ -54,8 +56,8 @@ services:
     environment:
       NODE_ENV: production
       SERVER_ROLE: ${SERVER_ROLE:-both}
-      DATABASE_MIGRATE_ON_START: ${DATABASE_MIGRATE_ON_START:-true}
-      DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      DATABASE_MIGRATE_ON_START: "false"
+      DATABASE_URL: postgres://${POSTGRES_RUNTIME_USER:-raypx_runtime}:${POSTGRES_RUNTIME_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       AUTH_URL: https://${APP_HOST:?Set the application hostname}
       AUTH_SECRET: ${AUTH_SECRET:?Set the authentication secret}
       APP_KEY: ${APP_KEY:?Set the application key}

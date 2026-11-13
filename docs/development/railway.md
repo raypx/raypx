@@ -42,6 +42,13 @@ railway variable set --skip-deploys; never commit decrypted variables.
 | web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                                       |
 | api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                                               |
 
+The managed Railway pre-deploy command currently receives the API service's
+variables. To isolate the migration credential on Railway, run `db:migrate` in
+a separate one-shot job with the owner URL, `DB_MIGRATE_RUNTIME_USER`, and
+`DB_MIGRATE_RUNTIME_PASSWORD`. Then configure API with the runtime role URL and
+`DATABASE_MIGRATE_ON_START=false`, and remove the shared-environment pre-deploy
+command once the new job gates API deployment.
+
 Mail and storage live in each environment's database. To seed them on upgrade,
 set `DB_MIGRATE_IMPORT_CONFIG=true` and supply the existing provider environment
 variables to the API service before the pre-deploy job runs. Remove the import

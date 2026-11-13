@@ -19,8 +19,13 @@ Use the existing Dokploy appName as `COMPOSE_PROJECT_NAME`. Image tags are
 volumes are scoped to that project. Preserve the project name across updates.
 Choose a new release identifier whenever source or build inputs change.
 
-Use URL-safe `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB`; Compose
-assembles the database URL. `AUTH_SECRET` and `APP_KEY` must be independent per
+Use URL-safe `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` for the
+database owner. Set a separate `POSTGRES_RUNTIME_PASSWORD` of 16–128 URL-safe
+characters and, if needed, override `POSTGRES_RUNTIME_USER` (default
+`raypx_runtime`). The migration job provisions the runtime login and grants
+data access in the same transaction as schema changes. Use a dedicated runtime
+role per database on a shared PostgreSQL cluster. API and Relay receive that
+login, and only the migration job receives the database owner connection. `AUTH_SECRET` and `APP_KEY` must be independent per
 project and differ from each other: `AUTH_SECRET` signs sessions, `APP_KEY`
 encrypts stored provider credentials and signs instance receipts, so replacing it
 requires re-entering those credentials and re-enrolling instances. All
@@ -66,9 +71,10 @@ and `build` scripts directly in the Git-free build context. Docker owns image ca
 The backend Dockerfile offers `runtime` (Nitro output), `migrate` (isolated DB
 job) and default `deploy` (runtime plus pre-deploy migration payload). Both carry
 the bundled `db:migrate` command and canonical SQL.
-Startup migrations also use private bundled SQL unless
-`DATABASE_MIGRATE_ON_START=false`. Every migration path shares the transaction
-advisory lock and ledger. Failure aborts startup safely and removes temporary SQL.
+Compose runs the migration job before replacing the backend and disables API
+startup migrations. Direct API invocations can still enable startup migrations
+with an owner connection. Every migration path shares the transaction advisory
+lock and ledger.
 
 Only Traefik publishes traffic. Keep the management panel behind SSH and block
 public database/application ports. Set APP_HOST, DNS, TLS and the exact project

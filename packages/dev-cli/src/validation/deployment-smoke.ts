@@ -76,6 +76,8 @@ export async function smokeDeployment(root: string, args: string[]) {
   const origin = "https://deployment.example.invalid";
   const password = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
   const dbName = `raypx_deployment_${id}_test`;
+  const runtimePassword = crypto.randomUUID().replaceAll("-", "");
+  const runtimeDatabase = `postgres://raypx_runtime:${runtimePassword}@${project}-db:5432/${dbName}`;
   const database = `postgres://deployment:${password}@${project}-db:5432/${dbName}`;
   const fixture = {
     origin,
@@ -277,7 +279,11 @@ export async function smokeDeployment(root: string, args: string[]) {
           `${profile}-migrate`,
           `${project}-${profile}-migrate`,
           migrate,
-          { DATABASE_URL: database },
+          {
+            DATABASE_URL: database,
+            DB_MIGRATE_RUNTIME_USER: "raypx_runtime",
+            DB_MIGRATE_RUNTIME_PASSWORD: runtimePassword,
+          },
           [],
           profile === "railway" ? ["bun", "run", "--cwd", "apps/api", "db:migrate"] : [],
         );
@@ -305,7 +311,8 @@ export async function smokeDeployment(root: string, args: string[]) {
             profile === "compose" ? images.composeApi : images.railwayApi,
             {
               NODE_ENV: "production",
-              DATABASE_URL: database,
+              DATABASE_URL: runtimeDatabase,
+              DATABASE_MIGRATE_ON_START: "false",
               AUTH_URL: origin,
               AUTH_SECRET: password,
               APP_KEY: `${crypto.randomUUID()}-${crypto.randomUUID()}`,

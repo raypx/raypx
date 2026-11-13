@@ -16,7 +16,7 @@ services:
     environment:
       NODE_ENV: production
       SERVER_ROLE: relay
-      DATABASE_URL: postgres://${POSTGRES_USER:-raypx}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      DATABASE_URL: postgres://${POSTGRES_RUNTIME_USER:-raypx_runtime}:${POSTGRES_RUNTIME_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       REDIS_URL: ${REDIS_URL:?Split roles require a private Redis/Valkey broker}
       ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
     depends_on:

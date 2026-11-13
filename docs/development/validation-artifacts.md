@@ -272,11 +272,13 @@ display names describing their purpose. Matrix names include the runner or platf
 reusable native jobs use phase labels: **Prepare artifacts**, **Checks**,
 **Packaging** and **Smoke**. The final `foundation` job appears as **CI result**.
 
+Each CI run appears as **Verify** in the GitHub Actions run list.
+
 The `changes` job emits one versioned plan bound to the workflow's commit SHA.
 Canary pushes use the latest successful push run of the current baseline policy
 whose commit is an ancestor of the checked-out revision. CI records the policy
-version in `ci.yml` so GitHub Actions can display the commit message. Existing
-runs with the original v1 title still qualify. This carries changes from failed or
+version in `ci.yml` independently of the run title. Existing runs with the
+original v1 title still qualify. This carries changes from failed or
 cancelled pushes into the next run. When the diff from the verified baseline
 contains only documentation, the plan skips both browser suites. If no verified
 ancestor is available, the planner runs full verification to establish one. Pull

@@ -174,3 +174,50 @@ it("imports provider settings explicitly and preserves existing rows on retries"
     await connection.db.delete(storageConfiguration).where(eq(storageConfiguration.id, "s3"));
   }
 });
+
+it("provisions a runtime login with data access and without ownership, DDL or migration-ledger access", async () => {
+  const name = "runtime_" + crypto.randomUUID().replaceAll("-", "");
+  const password = crypto.randomUUID().replaceAll("-", "");
+  const runtimeUrl = new URL(url);
+  runtimeUrl.username = name;
+  runtimeUrl.password = password;
+  const settings = { DB_MIGRATE_RUNTIME_USER: name, DB_MIGRATE_RUNTIME_PASSWORD: password };
+  const role = sql.identifier(name);
+  const app = connectDatabase(runtimeUrl.href, { max: 1 });
+  try {
+    expect((await worker([], settings))[0]).toBe(0);
+    expect((await worker([], settings))[0]).toBe(0);
+    await app.db.execute(sql`select id from public."user" limit 1`);
+    await app.db.execute(sql`select id from public.control_event limit 1`);
+    const verificationId = crypto.randomUUID();
+    await app.db.execute(sql`insert into public.verification (id, identifier, value, expires_at)
+      values (${verificationId}, 'role-fixture', 'value', now())`);
+    const updated = await app.db.execute(sql`update public.verification set value = 'updated'
+      where id = ${verificationId} returning id`);
+    expect(updated).toHaveLength(1);
+    const deleted = await app.db.execute(sql`delete from public.verification
+      where id = ${verificationId} returning id`);
+    expect(deleted).toHaveLength(1);
+    await expect(app.db.execute(sql`select name from public.__drizzle_migrations`)).rejects.toThrow(
+      "Failed query",
+    );
+    await expect(
+      app.db.execute(sql`alter table public.verification add column unauthorized boolean`),
+    ).rejects.toThrow("Failed query");
+    await expect(
+      app.db.execute(sql`create table public.runtime_ddl_fixture (id integer)`),
+    ).rejects.toThrow("Failed query");
+    const sameRole = {
+      ...settings,
+      DB_MIGRATE_RUNTIME_USER: decodeURIComponent(new URL(url).username),
+    };
+    expect((await worker([], sameRole))[0]).toBe(1);
+  } finally {
+    await app.close();
+    const rows = await connection.db.execute(sql`select 1 from pg_roles where rolname = ${name}`);
+    if (rows.length) {
+      await connection.db.execute(sql`DROP OWNED BY ${role}`);
+      await connection.db.execute(sql`DROP ROLE ${role}`);
+    }
+  }
+});

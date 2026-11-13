@@ -46,6 +46,8 @@ The rules below apply to the Compose host workflow.
   inherit the API build or development tools. Reuse manifest/dependency build layers.
 - Compose and Railway share apps/api/Dockerfile and apps/web/Dockerfile.
   Keep cache mounts out of these portable files; Railway requires service-specific IDs.
+- Only the migration job receives the database owner connection. Compose runtime services
+  use the restricted login provisioned by that job, with startup migration disabled.
 - Credentials belong in protected host files or Dokploy environment settings;
   examples contain no credentials. Never print resolved Compose environment values.
 
