@@ -38,6 +38,8 @@ Its server rendering needs the session cookie: serve both from one origin, or se
 Register each local Desktop/CLI profile once to an account and API origin. Its signed
 identity then permits offline local work, including after online logout. Remote
 data and Host authorization require a separate online session and explicit grants.
+Desktop signs in through the system browser. Web supports password, passkey,
+email-code and optional Google/GitHub sign-in; see [accounts](docs/development/accounts.md).
 On macOS and Windows, the independent CLI daemon owns scheduling and execution;
 closing or quitting Desktop leaves daemon tasks running.
 External tools run with the user's OS permissions.
