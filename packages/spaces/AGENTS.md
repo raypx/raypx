@@ -12,8 +12,17 @@ Content repositories require SpaceScope and filter in SQL. Account-scoped discov
 and private-Space creation are the necessary entry into this boundary: no global
 Space lookup is exposed. Bootstrap locks the account and uses `spaces.private_for`
 to create one private owner Space even when other memberships already exist.
-Creating another Space atomically creates its owner membership. Member mutation,
-invitations and audit workflows belong to later roadmap work.
+Creating another Space atomically creates its owner membership and audit records.
+`SpaceManagement` adds owner settings, invitations, rename/deletion claims, member
+directory and mutations, audit pagination and ordered Space events. Its PostgreSQL
+constructor requires transactional Run/card cancellation from API; construction
+performs no I/O. Membership mutations serialize on the Space row and recheck roles.
+Removed memberships retain `removed_at` tombstones for same-Space resource keys;
+only rows with no removal time grant access. Removal pauses retained routines and
+removes their credentials and connection selections. Invitations retain only token
+hashes. Audit appends intent/outcome rows, committing success with the mutation;
+missing audit storage blocks writes. LISTEN hints invalidate streams; event replay
+and every admission still read PostgreSQL.
 
 Use public workspace entries, `.js` relative specifiers and Core domain schemas.
 Run `bun run --cwd packages/spaces check` and `test`. `test:postgres` selects

@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
 import { conversationFixture } from "../../tests/helpers/conversations.js";
+import { spaceStreamFixture } from "../../tests/helpers/space-stream.js";
 import { ConversationStream } from "./stream.js";
 
 const cleanups: Array<() => Promise<void>> = [];
@@ -111,4 +112,63 @@ it("resumes a replacement connection from the applied cursor without replaying a
   f.stream.receive("replacement", JSON.stringify({ ...f.base, type: "ack", sequence: 2 }));
   await expect.poll(sequences).toEqual([2, 3]);
   f.stream.receive("replacement", JSON.stringify({ ...f.base, type: "ack", sequence: 3 }));
+});
+
+it("replays Space events with isolated exact ACKs and resumes from an applied Space cursor", async () => {
+  const f = spaceStreamFixture();
+  const stream = new ConversationStream({ ...f, pollMs: 60_000 });
+  await stream.start();
+  cleanups.push(() => stream.shutdown());
+  const frames: ConversationServerFrame[] = [];
+  const close = vi.fn();
+  stream.open("space-peer", "member", new Headers(), {
+    send: (frame) => frames.push(frame),
+    close,
+  });
+  f.appendSpace({ kind: "space.renamed", payload: { name: "First" } });
+  f.appendSpace({ kind: "space.renamed", payload: { name: "Second" } });
+  const send = (frame: ConversationClientFrame) =>
+    stream.receive("space-peer", JSON.stringify(frame));
+  const selection = { version: 1 as const, spaceId: f.spaceId };
+  const ids = () =>
+    frames.flatMap((frame) => (frame.type === "space.event" ? [frame.event.id] : []));
+  send({ ...selection, type: "space.subscribe", after: 0 });
+  await expect.poll(ids).toEqual([1]);
+  send({ ...selection, type: "space.ack", sequence: 1 });
+  await expect.poll(ids).toEqual([1, 2]);
+  send({ ...selection, type: "space.ack", sequence: 2 });
+  stream.close("space-peer");
+  stream.open("space-peer", "member", new Headers(), {
+    send: (frame) => frames.push(frame),
+    close,
+  });
+  f.appendSpace({ kind: "space.renamed", payload: { name: "Third" } }, false);
+  send({ ...selection, type: "space.subscribe", after: 2 });
+  await expect.poll(ids).toEqual([1, 2, 3]);
+  send({ ...selection, type: "space.ack", sequence: 3 });
+  expect(close).not.toHaveBeenCalled();
+});
+
+it("actively closes a conversation-only peer on membership removal without a poll or next delivery", async () => {
+  const f = spaceStreamFixture();
+  const stream = new ConversationStream({ ...f, pollMs: 60_000 });
+  await stream.start();
+  cleanups.push(() => stream.shutdown());
+  const frames: ConversationServerFrame[] = [];
+  const close = vi.fn();
+  stream.open("peer", "member", new Headers(), { send: (frame) => frames.push(frame), close });
+  stream.receive(
+    "peer",
+    JSON.stringify({
+      version: 1,
+      type: "subscribe",
+      spaceId: f.spaceId,
+      conversationId: f.conversationId,
+      after: 0,
+    }),
+  );
+  await expect.poll(() => f.events.mock.calls.length).toBe(1);
+  f.removeMemberActively();
+  expect(close).toHaveBeenCalledExactlyOnceWith(4003, "Subscription unavailable");
+  expect(frames).toEqual([{ type: "ready", version: 1 }]);
 });

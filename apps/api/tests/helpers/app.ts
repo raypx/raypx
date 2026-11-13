@@ -10,6 +10,7 @@ const services = [
   "agentApprovals",
   "computers",
   "spaces",
+  "spaceManagement",
   "agents",
   "conversations",
   "conversationModels",

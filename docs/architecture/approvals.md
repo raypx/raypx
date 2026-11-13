@@ -71,7 +71,9 @@ model history or a log.
 
 Account settings persist `ask` or `never`; `auto` is explicitly unavailable.
 `APPROVAL_DEFAULT_MODE` selects the first persisted account default (`ask` when
-unset). There are no Space overrides or site rules in this slice. Rules name one
+unset). A Space owner can set or clear an approval-mode exception; policy resolution
+uses that override before the executing member's default. Rules always belong to
+the executing member. There are no site rules in this slice. Rules name one
 of `computer_list_files`, `computer_read_file`, `computer_write_file` and
 `computer_run_command`. A command rule also names its exact executable; it does
 not match argv, prefixes or a category. Block takes precedence, including over
@@ -129,7 +131,9 @@ Protected input is deferred. Known deployment secret values are rejected from
 tool arguments before records or Computer calls, and from output before effects
 or model history. Tool results carry an untrusted-data label; this label does not
 grant authority. Approval decisions remain durable request records and immutable
-conversation resolution events; a general Space audit feed is a later slice.
+conversation resolution events and append-only Space audit records. Audit intent
+storage is required before an answer; success and the answer commit atomically.
+Refused and failed answers are audited with safe codes and no rule contents.
 
 Phase 4 persists inbound provenance on webhook, email and repository Runs.
 The approval policy checks Block first, then read-only/Never ask, then untrusted

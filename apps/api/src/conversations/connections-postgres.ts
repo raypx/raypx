@@ -1,10 +1,11 @@
-import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   modelConnections,
   modelConnectionSecrets,
   modelConnectionSpaces,
   spaceMembers,
+  spaces,
   user,
 } from "@raypx/database/schema";
 import type { ModelConnectionConfiguration } from "@raypx/core/model-connections";
@@ -76,7 +77,14 @@ export function createModelConnectionsRepository(db: Database): ModelConnections
     const members = await tx
       .select({ id: spaceMembers.spaceId })
       .from(spaceMembers)
-      .where(and(eq(spaceMembers.accountId, accountId), inArray(spaceMembers.spaceId, ids)))
+      .where(
+        and(
+          eq(spaceMembers.accountId, accountId),
+          inArray(spaceMembers.spaceId, ids),
+          isNull(spaceMembers.removedAt),
+          sql`exists (select 1 from ${spaces} where ${spaces.id} = ${spaceMembers.spaceId} and ${spaces.deletionClaimedAt} is null)`,
+        ),
+      )
       .orderBy(asc(spaceMembers.spaceId))
       .for("key share");
     if (members.length !== ids.length) throw new ModelConnectionError("NOT_FOUND");
@@ -102,7 +110,7 @@ export function createModelConnectionsRepository(db: Database): ModelConnections
             spaceId === undefined
               ? undefined
               : and(
-                  sql`exists (select 1 from ${spaceMembers} where ${spaceMembers.accountId} = ${accountId} and ${spaceMembers.spaceId} = ${spaceId})`,
+                  sql`exists (select 1 from ${spaceMembers} inner join ${spaces} on ${spaces.id} = ${spaceMembers.spaceId} where ${spaceMembers.accountId} = ${accountId} and ${spaceMembers.spaceId} = ${spaceId} and ${spaceMembers.removedAt} is null and ${spaces.deletionClaimedAt} is null)`,
                   or(
                     eq(modelConnections.availability, "all"),
                     sql`exists (select 1 from ${modelConnectionSpaces} where ${modelConnectionSpaces.connectionId} = ${modelConnections.id} and ${modelConnectionSpaces.accountId} = ${accountId} and ${modelConnectionSpaces.spaceId} = ${spaceId})`,

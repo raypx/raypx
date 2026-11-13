@@ -1,0 +1,191 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "73408149-46fe-4d7e-9608-3b270498e7d6",
+  "prevIds": [
+    "bc893190-a77f-410e-ac61-dc617a8bb707"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "space_events",
+        "subject_account_id"
+      ],
+      "writes": [
+        "s|col|public.space_events.subject_account_id",
+        "n|col|public.space_events.subject_account_id",
+        "e|col|public.space_events.subject_account_id"
+      ],
+      "reads": [
+        "n|tbl|public.space_events",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_events"
+      ],
+      "writes": [
+        "s|fk|public.space_events.space_events_LQC7N4uUAlF6_fkey",
+        "n|fk|public.space_events.space_events_LQC7N4uUAlF6_fkey",
+        "e|fk|public.space_events.space_events_LQC7N4uUAlF6_fkey",
+        "n|con|public.space_events.space_events_LQC7N4uUAlF6_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_events",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.space_events.space_id",
+        "n|col|public.space_events.subject_account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_invitations"
+      ],
+      "writes": [
+        "s|fk|public.space_invitations.space_invitations_ldatC0tErQvS_fkey",
+        "n|fk|public.space_invitations.space_invitations_ldatC0tErQvS_fkey",
+        "e|fk|public.space_invitations.space_invitations_ldatC0tErQvS_fkey",
+        "n|con|public.space_invitations.space_invitations_ldatC0tErQvS_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_invitations",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.space_invitations.space_id",
+        "n|col|public.space_invitations.inviter_account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_invitations"
+      ],
+      "writes": [
+        "s|fk|public.space_invitations.space_invitations_orPQyO8xb1wP_fkey",
+        "n|fk|public.space_invitations.space_invitations_orPQyO8xb1wP_fkey",
+        "e|fk|public.space_invitations.space_invitations_orPQyO8xb1wP_fkey",
+        "n|con|public.space_invitations.space_invitations_orPQyO8xb1wP_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_invitations",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.space_invitations.space_id",
+        "n|col|public.space_invitations.consumed_by_account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "subject_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": {
+          "as": "payload ->> 'accountId'",
+          "type": "stored"
+        },
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "space_events_LQC7N4uUAlF6_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "subject_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_members",
+        "columnsTo": [
+          "space_id",
+          "account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_invitations_ldatC0tErQvS_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "inviter_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_members",
+        "columnsTo": [
+          "space_id",
+          "account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_invitations_orPQyO8xb1wP_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "consumed_by_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_members",
+        "columnsTo": [
+          "space_id",
+          "account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    }
+  ]
+}

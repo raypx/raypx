@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import {
   approvalRules,
@@ -10,6 +10,8 @@ import {
   conversationRuns,
   conversationToolCalls,
   spaceMembers,
+  spaceSettingsOverrides,
+  spaceAudit,
   spaces,
   user,
 } from "@raypx/database/schema";
@@ -20,7 +22,7 @@ import {
   type RunClaimOptions,
 } from "../../src/conversations.js";
 import type { SpaceScope } from "@raypx/spaces/server";
-import { createSpaceAccess } from "@raypx/spaces/server/postgres";
+import { createSpaceAccess, createSpaceAuditWriter } from "@raypx/spaces/server/postgres";
 import { createApprovalsService, type ApprovalCall } from "../../src/approvals.js";
 import { EFFECT_INTENT_TIMEOUT_MS } from "../../src/tool-limits.js";
 import {
@@ -51,6 +53,17 @@ const claimOptions: RunClaimOptions = {
 function uniqueEffectKey() {
   return crypto.randomUUID().replaceAll("-", "").repeat(2);
 }
+function answerAudit(requestId: string) {
+  const operations = first.db
+    .select({ operationId: spaceAudit.operationId })
+    .from(spaceAudit)
+    .where(and(eq(spaceAudit.spaceId, scope.spaceId), eq(spaceAudit.targetId, requestId)));
+  return first.db
+    .select()
+    .from(spaceAudit)
+    .where(and(eq(spaceAudit.spaceId, scope.spaceId), inArray(spaceAudit.operationId, operations)))
+    .orderBy(asc(spaceAudit.createdAt), asc(spaceAudit.id));
+}
 const call: ApprovalCall = {
   id: "write-call",
   name: "computer_write_file",
@@ -77,6 +90,9 @@ beforeAll(async () => {
   foreignScope = await access.resolve(owner, b.space.id);
 });
 beforeEach(async () => {
+  await first.db
+    .delete(spaceSettingsOverrides)
+    .where(eq(spaceSettingsOverrides.spaceId, scope.spaceId));
   const { conversation } = await createAgentsRepository(first.db).create(scope, {
     name: "Helper",
     instructions: "",
@@ -89,6 +105,123 @@ beforeEach(async () => {
   run = (await conversations.claimNext(scope, conversation.id, claimOptions))!.run;
   const settings = await approvals.getSettings(owner, "ask");
   await approvals.updateSettings(owner, { mode: "ask", rules: [] }, settings.revision, "ask");
+});
+
+it("changes a Run's approval policy through the Space exception and restores its actor's default", async () => {
+  const before = await approvals.getSettings(owner, "ask");
+  await approvals.updateSettings(owner, { mode: "never", rules: [] }, before.revision, "ask");
+  await first.db.insert(spaceSettingsOverrides).values({
+    spaceId: scope.spaceId,
+    approvalMode: "ask",
+    updatedByAccountId: owner,
+  });
+  const autoAnswer = createApprovalsService(
+    {
+      ...approvals,
+      async createRequest(selected, execution, action, until, at) {
+        const request = await approvals.createRequest(selected, execution, action, until, at);
+        return approvals.answer(scope, request.id, { decision: "approved" }, at);
+      },
+    },
+    { now: () => createdAt },
+  );
+  const signal = new AbortController().signal;
+  // A wake-up member's account defaults never replace the Run actor's policy.
+  expect(await autoAnswer.authorize(other, run, call, signal)).toBe("approved");
+  const requestRows = () =>
+    first.db
+      .select()
+      .from(approvalRequests)
+      .where(and(eq(approvalRequests.spaceId, scope.spaceId), eq(approvalRequests.runId, run.id)))
+      .orderBy(asc(approvalRequests.createdAt), asc(approvalRequests.id));
+  expect(await requestRows()).toHaveLength(1);
+  expect(await approvals.getSettings(owner, "ask")).toMatchObject({ mode: "never" });
+
+  const account = await approvals.getSettings(owner, "ask");
+  await approvals.updateSettings(owner, { mode: "ask", rules: [] }, account.revision, "ask");
+  await first.db
+    .update(spaceSettingsOverrides)
+    .set({ approvalMode: "never" })
+    .where(eq(spaceSettingsOverrides.spaceId, scope.spaceId));
+  expect(await autoAnswer.authorize(other, run, { ...call, id: "no-card" }, signal)).toBe(
+    "approved",
+  );
+  expect(await requestRows()).toHaveLength(1);
+  await first.db
+    .delete(spaceSettingsOverrides)
+    .where(eq(spaceSettingsOverrides.spaceId, scope.spaceId));
+  expect(await autoAnswer.authorize(other, run, { ...call, id: "default-card" }, signal)).toBe(
+    "approved",
+  );
+  expect(await requestRows()).toHaveLength(2);
+
+  const current = await approvals.getSettings(owner, "ask");
+  await approvals.updateSettings(
+    owner,
+    { mode: "never", rules: [{ toolName: call.name, executable: null, decision: "block" }] },
+    current.revision,
+    "ask",
+  );
+  await first.db.insert(spaceSettingsOverrides).values({
+    spaceId: scope.spaceId,
+    approvalMode: "never",
+    updatedByAccountId: owner,
+  });
+  expect(await autoAnswer.authorize(other, run, call, signal)).toBe("blocked");
+});
+
+it("appends approval-answer success, refusal and rollback failure without private tool details", async () => {
+  const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
+  await expect(
+    approvals.answer(other, request.id, { decision: "approved" }, createdAt),
+  ).rejects.toMatchObject({ code: "NOT_ADDRESSED" });
+  const failing = createApprovalsRepository(first.db, async () => {
+    throw new Error("Fixture delivery failure");
+  });
+  await expect(
+    failing.answer(scope, request.id, { decision: "approved" }, createdAt),
+  ).rejects.toThrow("Fixture delivery failure");
+  expect(await approvals.listPending(scope, createdAt)).toEqual([
+    expect.objectContaining({ id: request.id, state: "pending" }),
+  ]);
+  await approvals.answer(scope, request.id, { decision: "denied" }, createdAt);
+  const audit = await answerAudit(request.id);
+  expect(audit.filter((row) => row.outcome === "pending")).toHaveLength(3);
+  expect(
+    audit
+      .filter((row) => row.outcome !== "pending")
+      .map((row) => [row.outcome, row.code])
+      .sort((left, right) => String(left[0]).localeCompare(String(right[0]))),
+  ).toEqual([
+    ["failed", "WRITE_FAILED"],
+    ["refused", "NOT_ADDRESSED"],
+    ["succeeded", null],
+  ]);
+  expect(audit.every((row) => row.action === "approval.answered")).toBe(true);
+  expect(JSON.stringify(audit)).not.toContain(call.arguments.content);
+  expect(JSON.stringify(audit)).not.toContain(call.target);
+});
+
+it("refuses approval-answer changes when audit intent or terminal storage fails", async () => {
+  const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
+  const writer = createSpaceAuditWriter(first.db);
+  for (const failure of ["begin", "succeed"] as const) {
+    const unavailable = createApprovalsRepository(first.db, undefined, {
+      ...writer,
+      [failure]: async () => {
+        throw new Error("Fixture audit unavailable");
+      },
+    });
+    await expect(
+      unavailable.answer(scope, request.id, { decision: "approved", allowTool: true }, createdAt),
+    ).rejects.toThrow("Fixture audit unavailable");
+    expect(await approvals.listPending(scope, createdAt)).toEqual([
+      expect.objectContaining({ id: request.id, state: "pending" }),
+    ]);
+    expect((await approvals.getSettings(owner, "ask")).rules).toEqual([]);
+    expect((await conversations.getRun(scope, run.conversationId, run.id)).state).toBe("waiting");
+  }
+  await approvals.answer(scope, request.id, { decision: "denied" }, createdAt);
 });
 afterAll(async () => {
   try {
@@ -170,6 +303,14 @@ it("expires requests explicitly and commits expiry even when a late answer is re
   expect((await approvals.pollRequest(scope, run, request.id, expiresAt)).state).toBe("expired");
   expect((await conversations.getRun(scope, run.conversationId, run.id)).state).toBe("running");
   expect(await approvals.listPending(scope, expiresAt)).toEqual([]);
+  const audit = await answerAudit(request.id);
+  expect(audit).toHaveLength(2);
+  expect(audit).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ outcome: "pending", action: "approval.answered" }),
+      expect.objectContaining({ outcome: "refused", code: "EXPIRED", action: "approval.answered" }),
+    ]),
+  );
 });
 it("stop atomically cancels a pending request and repeated stop appends no event", async () => {
   const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);

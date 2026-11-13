@@ -14,7 +14,7 @@ import type { ApiLogging } from "../logging.js";
 import type { RateLimiter } from "../rate-limit/types.js";
 import type { CloudJobsService } from "@raypx/jobs/server";
 import type { ContextLibraryService } from "@raypx/memory/server";
-import type { SpaceAccess } from "@raypx/spaces/server";
+import type { SpaceAccess, SpaceManagement } from "@raypx/spaces/server";
 import type { ConversationsRepository, AgentsRepository } from "@raypx/agents/server";
 import type { ConversationModels } from "../conversations/models.js";
 /** Every service is required: an absent one is a composition error, not a runtime state. */
@@ -26,6 +26,7 @@ export interface ApiAppOptions {
   agentApprovals: import("@raypx/agents/server").ApprovalsService;
   computers: import("@raypx/computers/server").ComputersService;
   spaces: SpaceAccess;
+  spaceManagement: SpaceManagement;
   agents: AgentsRepository;
   conversations: ConversationsRepository;
   conversationModels: Pick<ConversationModels, "list">;

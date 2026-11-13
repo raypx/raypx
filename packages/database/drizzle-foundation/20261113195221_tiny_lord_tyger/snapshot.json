@@ -1,0 +1,1470 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "bc893190-a77f-410e-ac61-dc617a8bb707",
+  "prevIds": [
+    "62bb752b-9a49-4960-bd1d-16ba8ae545dc"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_audit"
+      ],
+      "writes": [
+        "s|tbl|public.space_audit",
+        "n|tbl|public.space_audit",
+        "e|tbl|public.space_audit",
+        "n|rel|public.space_audit",
+        "n|type|public.space_audit",
+        "n|rel|public.space_audit_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_deletion_jobs"
+      ],
+      "writes": [
+        "s|tbl|public.space_deletion_jobs",
+        "n|tbl|public.space_deletion_jobs",
+        "e|tbl|public.space_deletion_jobs",
+        "n|rel|public.space_deletion_jobs",
+        "n|type|public.space_deletion_jobs",
+        "n|rel|public.space_deletion_jobs_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_events"
+      ],
+      "writes": [
+        "s|tbl|public.space_events",
+        "n|tbl|public.space_events",
+        "e|tbl|public.space_events",
+        "n|rel|public.space_events",
+        "n|type|public.space_events",
+        "n|rel|public.space_events_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_invitations"
+      ],
+      "writes": [
+        "s|tbl|public.space_invitations",
+        "n|tbl|public.space_invitations",
+        "e|tbl|public.space_invitations",
+        "n|rel|public.space_invitations",
+        "n|type|public.space_invitations",
+        "n|rel|public.space_invitations_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_settings_overrides"
+      ],
+      "writes": [
+        "s|tbl|public.space_settings_overrides",
+        "n|tbl|public.space_settings_overrides",
+        "e|tbl|public.space_settings_overrides",
+        "n|rel|public.space_settings_overrides",
+        "n|type|public.space_settings_overrides",
+        "n|rel|public.space_settings_overrides_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "space_members",
+        "removed_at"
+      ],
+      "writes": [
+        "s|col|public.space_members.removed_at",
+        "n|col|public.space_members.removed_at",
+        "e|col|public.space_members.removed_at"
+      ],
+      "reads": [
+        "n|tbl|public.space_members",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "spaces",
+        "deletion_claimed_at"
+      ],
+      "writes": [
+        "s|col|public.spaces.deletion_claimed_at",
+        "n|col|public.spaces.deletion_claimed_at",
+        "e|col|public.spaces.deletion_claimed_at"
+      ],
+      "reads": [
+        "n|tbl|public.spaces",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "space_audit",
+        "space_audit_cursor_idx"
+      ],
+      "writes": [
+        "s|idx|public.space_audit_cursor_idx",
+        "n|idx|public.space_audit_cursor_idx",
+        "e|idx|public.space_audit_cursor_idx",
+        "n|rel|public.space_audit_cursor_idx"
+      ],
+      "reads": [
+        "n|tbl|public.space_audit",
+        "n|sch|public",
+        "n|col|public.space_audit.space_id",
+        "n|col|public.space_audit.created_at",
+        "n|col|public.space_audit.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "space_audit",
+        "space_audit_operation_idx"
+      ],
+      "writes": [
+        "s|idx|public.space_audit_operation_idx",
+        "n|idx|public.space_audit_operation_idx",
+        "e|idx|public.space_audit_operation_idx",
+        "n|rel|public.space_audit_operation_idx"
+      ],
+      "reads": [
+        "n|tbl|public.space_audit",
+        "n|sch|public",
+        "n|col|public.space_audit.space_id",
+        "n|col|public.space_audit.operation_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "space_invitations",
+        "space_invitations_token_hash_idx"
+      ],
+      "writes": [
+        "s|idx|public.space_invitations_token_hash_idx",
+        "n|idx|public.space_invitations_token_hash_idx",
+        "e|idx|public.space_invitations_token_hash_idx",
+        "n|rel|public.space_invitations_token_hash_idx"
+      ],
+      "reads": [
+        "n|tbl|public.space_invitations",
+        "n|sch|public",
+        "n|col|public.space_invitations.token_hash"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "space_invitations",
+        "space_invitations_open_idx"
+      ],
+      "writes": [
+        "s|idx|public.space_invitations_open_idx",
+        "n|idx|public.space_invitations_open_idx",
+        "e|idx|public.space_invitations_open_idx",
+        "n|rel|public.space_invitations_open_idx"
+      ],
+      "reads": [
+        "n|tbl|public.space_invitations",
+        "n|sch|public",
+        "n|col|public.space_invitations.space_id",
+        "n|col|public.space_invitations.status",
+        "n|col|public.space_invitations.created_at",
+        "n|col|public.space_invitations.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_audit"
+      ],
+      "writes": [
+        "s|fk|public.space_audit.space_audit_space_id_spaces_id_fkey",
+        "n|fk|public.space_audit.space_audit_space_id_spaces_id_fkey",
+        "e|fk|public.space_audit.space_audit_space_id_spaces_id_fkey",
+        "n|con|public.space_audit.space_audit_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_audit",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.space_audit.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_deletion_jobs"
+      ],
+      "writes": [
+        "s|fk|public.space_deletion_jobs.space_deletion_jobs_space_id_spaces_id_fkey",
+        "n|fk|public.space_deletion_jobs.space_deletion_jobs_space_id_spaces_id_fkey",
+        "e|fk|public.space_deletion_jobs.space_deletion_jobs_space_id_spaces_id_fkey",
+        "n|con|public.space_deletion_jobs.space_deletion_jobs_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_deletion_jobs",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.space_deletion_jobs.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_events"
+      ],
+      "writes": [
+        "s|fk|public.space_events.space_events_space_id_spaces_id_fkey",
+        "n|fk|public.space_events.space_events_space_id_spaces_id_fkey",
+        "e|fk|public.space_events.space_events_space_id_spaces_id_fkey",
+        "n|con|public.space_events.space_events_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_events",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.space_events.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_invitations"
+      ],
+      "writes": [
+        "s|fk|public.space_invitations.space_invitations_space_id_spaces_id_fkey",
+        "n|fk|public.space_invitations.space_invitations_space_id_spaces_id_fkey",
+        "e|fk|public.space_invitations.space_invitations_space_id_spaces_id_fkey",
+        "n|con|public.space_invitations.space_invitations_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_invitations",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.space_invitations.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_settings_overrides"
+      ],
+      "writes": [
+        "s|fk|public.space_settings_overrides.space_settings_overrides_space_id_spaces_id_fkey",
+        "n|fk|public.space_settings_overrides.space_settings_overrides_space_id_spaces_id_fkey",
+        "e|fk|public.space_settings_overrides.space_settings_overrides_space_id_spaces_id_fkey",
+        "n|con|public.space_settings_overrides.space_settings_overrides_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_settings_overrides",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.space_settings_overrides.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "recreate_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|fk|public.computers.computers_space_id_spaces_id_fkey",
+        "n|fk|public.computers.computers_space_id_spaces_id_fkey",
+        "e|fk|public.computers.computers_space_id_spaces_id_fkey",
+        "n|con|public.computers.computers_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.computers.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ],
+      "sqlHash": "3ffcce09a980dac5"
+    },
+    {
+      "statementType": "recreate_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|fk|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey",
+        "n|fk|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey",
+        "e|fk|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey",
+        "n|con|public.computers.computers_space_id_agent_id_agents_space_id_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.agent_id",
+        "n|col|public.agents.space_id",
+        "n|col|public.agents.id",
+        "e|uniqueness|public.agents.id.space_id"
+      ],
+      "sqlHash": "910770970d2b42bb"
+    },
+    {
+      "statementType": "recreate_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|fk|public.computers.computers_ml9XhGwYtCtS_fkey",
+        "n|fk|public.computers.computers_ml9XhGwYtCtS_fkey",
+        "e|fk|public.computers.computers_ml9XhGwYtCtS_fkey",
+        "n|con|public.computers.computers_ml9XhGwYtCtS_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.created_by_account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ],
+      "sqlHash": "ff9dc06d281642e4"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "space_audit",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "space_deletion_jobs",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "space_events",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "space_invitations",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "space_settings_overrides",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "operation_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "actor_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "action",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "target_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "outcome",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "code",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "requested_by_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "stage",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'claimed'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "lease_owner",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "lease_until",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "fence",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "claimed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "id",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": {
+          "type": "always",
+          "name": "space_events_id_seq",
+          "increment": "1",
+          "startWith": "1",
+          "minValue": "1",
+          "maxValue": "9223372036854775807",
+          "cache": 1,
+          "cycle": false
+        },
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "kind",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "payload",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "token_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "inviter_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "inviter_name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'open'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "consumed_by_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "consumed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_members",
+        "name": "removed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_settings_overrides",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_settings_overrides",
+        "name": "approval_mode",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_settings_overrides",
+        "name": "updated_by_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_settings_overrides",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "spaces",
+        "name": "deletion_claimed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "space_audit_cursor_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "space_audit_operation_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "operation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_invitations_token_hash_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "token_hash",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_invitations_open_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "status",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "space_audit_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "space_deletion_jobs_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "space_events_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_invitations_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_settings_overrides",
+        "name": "space_settings_overrides_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "space_audit_pkey",
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "space_events_pkey",
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_invitations_pkey",
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "space_deletion_jobs_pkey",
+        "columns": [
+          "space_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_settings_overrides",
+        "name": "space_settings_overrides_pkey",
+        "columns": [
+          "space_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_audit",
+        "name": "space_audit_outcome_check",
+        "value": "\"outcome\" in ('pending', 'succeeded', 'refused', 'failed')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "space_deletion_jobs_stage_check",
+        "value": "\"stage\" in ('claimed', 'runs_cancelled', 'computers_released', 'objects_removed')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_deletion_jobs",
+        "name": "space_deletion_jobs_lease_check",
+        "value": "(\"lease_owner\" is null) = (\"lease_until\" is null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_events",
+        "name": "space_events_kind_check",
+        "value": "\"kind\" in ('space.member.joined', 'space.member.removed', 'space.member.role_changed', 'space.renamed')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_invitations",
+        "name": "space_invitations_status_check",
+        "value": "\"status\" in ('open', 'expired', 'cancelled', 'consumed')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_settings_overrides",
+        "name": "space_settings_overrides_mode_check",
+        "value": "\"approval_mode\" in ('ask', 'never')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "fks\u0000[\"public\",\"computers\",\"computers_space_id_spaces_id_fkey\"]",
+      "set": {
+        "onDelete": "CASCADE"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "fks\u0000[\"public\",\"computers\",\"computers_space_id_agent_id_agents_space_id_id_fkey\"]",
+      "set": {
+        "onDelete": "CASCADE"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "fks\u0000[\"public\",\"computers\",\"computers_ml9XhGwYtCtS_fkey\"]",
+      "set": {
+        "onDelete": "CASCADE"
+      }
+    }
+  ]
+}

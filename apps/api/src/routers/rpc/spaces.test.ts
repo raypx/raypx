@@ -3,11 +3,11 @@ import { createApiClient } from "@raypx/client/api";
 import { SpaceNotFound, spaceIdSchema, spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
 import { conversationIdSchema, agentIdSchema } from "@raypx/core/agents";
 import type { AuthSession } from "@raypx/core/auth";
-import type { SpaceAccess } from "@raypx/spaces/server";
+import type { SpaceAccess, SpaceManagement } from "@raypx/spaces/server";
 import type { RateLimiter } from "../../rate-limit/types.js";
 import { createApiApp } from "../../../tests/helpers/app.js";
 
-function fixture(rateLimit?: RateLimiter) {
+function fixture(rateLimit?: RateLimiter, spaceManagement?: SpaceManagement) {
   let auth: AuthSession | null = {
     user: {
       id: "account",
@@ -49,6 +49,7 @@ function fixture(rateLimit?: RateLimiter) {
   const app = createApiApp({
     computers,
     spaces: { resolve, list, create },
+    ...(spaceManagement ? { spaceManagement } : {}),
     conversationModels: { list: models },
     readSession,
     allowedOrigins: ["https://web.example.test"],
@@ -86,6 +87,9 @@ it("resolves membership on every Agent procedure and refuses even deployment adm
   const id = agentIdSchema.parse("agent");
   const conversationId = conversationIdSchema.parse("conversation");
   for (const request of [
+    () => f.client().spaces.get({ spaceId: f.spaceId }),
+    () => f.client().spaces.members({ spaceId: f.spaceId }),
+    () => f.client().spaces.audit({ spaceId: f.spaceId }),
     () =>
       f.client().conversations.send({
         spaceId: f.spaceId,
@@ -102,9 +106,61 @@ it("resolves membership on every Agent procedure and refuses even deployment adm
     () => f.client().agents.delete({ spaceId: f.spaceId, id }),
   ])
     await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
-  expect(f.resolve).toHaveBeenCalledTimes(9);
-  expect(f.readSession).toHaveBeenCalledTimes(9);
+  expect(f.resolve).toHaveBeenCalledTimes(12);
+  expect(f.readSession).toHaveBeenCalledTimes(12);
   for (const args of f.resolve.mock.calls) expect(args).toEqual(["account", f.spaceId]);
+});
+
+it("rate limits invitation creation, preview and acceptance before using the token", async () => {
+  const rateLimit = vi.fn<RateLimiter>(async () => false);
+  const used = vi.fn();
+  const management = new Proxy({} as SpaceManagement, { get: () => used });
+  const f = fixture(rateLimit, management);
+  f.admit();
+  for (const invoke of [
+    () => f.client().spaces.createInvitation({ spaceId: f.spaceId }),
+    () => f.client().spaces.previewInvitation({ token: "ab".repeat(32) }),
+    () => f.client().spaces.acceptInvitation({ token: "ab".repeat(32) }),
+  ])
+    await expect(invoke()).rejects.toMatchObject({
+      code: "TOO_MANY_REQUESTS",
+      data: { error: { code: "RATE_LIMITED" } },
+    });
+  expect(used).not.toHaveBeenCalled();
+  expect(f.resolve).not.toHaveBeenCalled();
+  expect(rateLimit.mock.calls).toEqual([
+    ["rpc:account:spaces.createInvitation", { window: 60, max: 10 }],
+    ["rpc:account:spaces.previewInvitation", { window: 60, max: 30 }],
+    ["rpc:account:spaces.acceptInvitation", { window: 60, max: 20 }],
+  ]);
+  f.signOut();
+  await expect(
+    f.client().spaces.previewInvitation({ token: "ab".repeat(32) }),
+  ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+});
+
+it("checks trusted Origin for every new Space mutation", async () => {
+  const f = fixture();
+  const client = f.client("https://untrusted.example.test");
+  const selection = { spaceId: f.spaceId };
+  for (const invoke of [
+    () => client.spaces.rename({ ...selection, name: "Renamed" }),
+    () => client.spaces.delete(selection),
+    () => client.spaces.leave(selection),
+    () => client.spaces.updateMemberRole({ ...selection, accountId: "target", role: "owner" }),
+    () => client.spaces.removeMember({ ...selection, accountId: "target" }),
+    () => client.spaces.createInvitation(selection),
+    () => client.spaces.cancelInvitation({ ...selection, id: "invite" }),
+    () => client.spaces.cancelInvitations(selection),
+    () => client.spaces.acceptInvitation({ token: "ab".repeat(32) }),
+    () => client.spaces.setApprovalOverride({ ...selection, mode: "never" }),
+    () => client.spaces.clearApprovalOverride(selection),
+  ])
+    await expect(invoke()).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      data: { error: { code: "ORIGIN_REJECTED" } },
+    });
+  expect(f.resolve).not.toHaveBeenCalled();
 });
 
 it("lists only offered model names after fresh session and Space membership admission", async () => {

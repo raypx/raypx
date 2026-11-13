@@ -3,6 +3,7 @@ import type { Database } from "@raypx/database/connection";
 import {
   agents,
   spaceMembers,
+  spaces,
   conversationCounters as counters,
   conversationRuns as runs,
   spaceMemoryDocuments as documents,
@@ -136,7 +137,7 @@ async function assertExecution(tx: Transaction, scope: SpaceScope, actor: Memory
         eq(runs.leaseOwner, ownerId),
         eq(runs.fence, fence),
         sql`${runs.leaseExpiresAt} > clock_timestamp()`,
-        sql`exists (select 1 from ${spaceMembers} where ${spaceMembers.spaceId} = ${scope.spaceId} and ${spaceMembers.accountId} = ${actor.accountId})`,
+        sql`exists (select 1 from ${spaceMembers} inner join ${spaces} on ${spaces.id} = ${spaceMembers.spaceId} where ${spaceMembers.spaceId} = ${scope.spaceId} and ${spaceMembers.accountId} = ${actor.accountId} and ${spaceMembers.removedAt} is null and ${spaces.deletionClaimedAt} is null)`,
         or(eq(runs.state, "running"), eq(runs.state, "waiting")),
       ),
     )

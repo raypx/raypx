@@ -172,6 +172,15 @@ Acceptance:
 Members, invitations, audit history, group conversations and delegated work. See
 [spaces](architecture/spaces.md).
 
+Backend membership slice: owner/member management, profile-based member directory,
+single-use seven-day invitations, owner approval-mode overrides, append-only Space
+audit, live Space events and resumable claimed Space deletion are implemented.
+Removal revokes admission/streams, cancels active Runs and approvals, pauses owned
+routines and clears connection selections while retaining conversation history.
+Group conversations, delegation and membership UI remain separate work. PostgreSQL
+and loopback acceptance are authored but remain separate, unrun gates in a sandbox
+that cannot host a database or listener.
+
 Acceptance:
 
 - An invitation works once and expires after seven days. Joining grants nothing in

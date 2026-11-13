@@ -110,6 +110,9 @@ function fixture() {
       settings ??= { mode: defaultMode, rules: [], revision: 0 };
       return structuredClone(settings);
     },
+    getRunSettings(_scope, accountId, defaultMode) {
+      return repository.getSettings(accountId, defaultMode);
+    },
     async updateSettings(_accountId, input, expectedRevision, defaultMode) {
       settings ??= { mode: defaultMode, rules: [], revision: 0 };
       if (settings.revision !== expectedRevision)
@@ -230,6 +233,38 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
 });
 afterEach(() => vi.useRealTimers());
+
+it("uses the Space mode and Run actor even when another member wakes the Run", async () => {
+  const { service, repository, requests } = fixture();
+  const account = await service.getSettings(run.memberAccountId);
+  await service.updateSettings(run.memberAccountId, {
+    mode: "never",
+    rules: [],
+    expectedRevision: account.revision,
+  });
+  const policy = vi.spyOn(repository, "getRunSettings").mockResolvedValue({
+    mode: "ask",
+    rules: [],
+    revision: 1,
+  });
+  const pending = service.authorize(other, run, write, new AbortController().signal);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(policy).toHaveBeenCalledWith(other, run.memberAccountId, "ask");
+  const request = [...requests.values()][0]!;
+  expect(request.memberAccountId).toBe(run.memberAccountId);
+  await service.answer(scope, request.id, { decision: "approved" });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await pending).toBe("approved");
+
+  policy.mockResolvedValue({ mode: "never", rules: [], revision: 1 });
+  expect(await service.authorize(other, run, write, new AbortController().signal)).toBe("approved");
+  policy.mockResolvedValue({
+    mode: "never",
+    rules: [{ toolName: write.name, executable: null, decision: "block" }],
+    revision: 2,
+  });
+  expect(await service.authorize(other, run, write, new AbortController().signal)).toBe("blocked");
+});
 
 it("asks for a change, accepts only the addressed member, rejects second answers, and optionally allows the tool", async () => {
   const { service, requests } = fixture();

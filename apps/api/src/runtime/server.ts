@@ -1,4 +1,5 @@
 import { createConversationFanout } from "@raypx/agents/server/postgres";
+import { createSpaceFanout } from "@raypx/spaces/server/postgres";
 import { ConversationStream } from "../conversations/stream.js";
 import { createConversationSocketRoutes } from "../conversations/socket.js";
 import {
@@ -69,12 +70,16 @@ export async function createApiRuntime(
   const cluster = environment.REDIS_URL ? new RedisRelayCluster(environment.REDIS_URL) : undefined;
   const fanout =
     providers.createConversationFanout?.() ?? createConversationFanout(environment.DATABASE_URL);
+  const spaceFanout =
+    providers.createSpaceFanout?.() ?? createSpaceFanout(environment.DATABASE_URL);
   const events = new ConversationStream({
     spaces: runtime.spaces,
     conversations: runtime.conversations,
     readSession: runtime.readSession,
     fanout,
     live: runtime.liveReplies,
+    spaceEvents: runtime.spaceManagement,
+    spaceFanout,
   });
   try {
     await events.start();
@@ -94,6 +99,7 @@ export async function createApiRuntime(
   } catch (error) {
     await events.shutdown().catch(() => {});
     await fanout.close().catch(() => {});
+    await spaceFanout.close().catch(() => {});
     await hub?.shutdown().catch(() => {});
     await runtime.close();
     throw error;
@@ -122,6 +128,7 @@ export async function createApiRuntime(
       if (combined) {
         await runtime.runner.startWorker(fanout);
         await runtime.routineWorker.start();
+        await runtime.spaceDeletionWorker.start();
       }
     },
     close: () =>
@@ -130,6 +137,7 @@ export async function createApiRuntime(
           await events
             .shutdown()
             .finally(() => fanout.close())
+            .finally(() => spaceFanout.close())
             .finally(() => relay.shutdown());
         } finally {
           await runtime.close();

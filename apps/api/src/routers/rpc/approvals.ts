@@ -1,6 +1,7 @@
 import type { RpcSetup } from "./setup.js";
 import { ApprovalOperationError, ApprovalSettingsConflictError } from "@raypx/agents/server";
-import { SpaceNotFound } from "@raypx/core/spaces";
+import { SpaceMutationError, SpaceNotFound } from "@raypx/core/spaces";
+import type { AccountContext } from "../../middleware/rpc.js";
 import { ORPCError } from "@orpc/server";
 export function createApprovalsHandlers({
   os,
@@ -10,10 +11,14 @@ export function createApprovalsHandlers({
   requireTrustedOrigin,
   limitAccount,
 }: RpcSetup) {
-  async function perform<T>(operation: () => Promise<T>): Promise<T> {
+  async function perform<T>(context: AccountContext, operation: () => Promise<T>): Promise<T> {
     try {
       return await operation();
     } catch (error) {
+      if (error instanceof SpaceMutationError && error.code === "SPACE_AUDIT_UNAVAILABLE")
+        throw new ORPCError("SERVICE_UNAVAILABLE", {
+          data: { error: { code: error.code }, requestId: context.requestId },
+        });
       if (error instanceof SpaceNotFound) throw new ORPCError("NOT_FOUND");
       if (error instanceof ApprovalSettingsConflictError)
         throw new ORPCError("CONFLICT", {
@@ -40,7 +45,7 @@ export function createApprovalsHandlers({
     pending: os.approvals.pending
       .use(read)
       .handler(({ context, input }) =>
-        perform(async () =>
+        perform(context, async () =>
           options.agentApprovals.listPending(
             await options.spaces.resolve(context.auth.user.id, input.spaceId),
           ),
@@ -51,7 +56,7 @@ export function createApprovalsHandlers({
       .use(requireTrustedOrigin)
       .use(quota)
       .handler(({ context, input }) =>
-        perform(async () =>
+        perform(context, async () =>
           options.agentApprovals.answer(
             await options.spaces.resolve(context.auth.user.id, input.spaceId),
             input.requestId,
@@ -65,19 +70,19 @@ export function createApprovalsHandlers({
     settings: os.approvals.settings
       .use(read)
       .handler(({ context }) =>
-        perform(() => options.agentApprovals.getSettings(context.auth.user.id)),
+        perform(context, () => options.agentApprovals.getSettings(context.auth.user.id)),
       ),
     updateSettings: os.approvals.updateSettings
       .use(write)
       .use(requireTrustedOrigin)
       .use(quota)
       .handler(({ context, input }) =>
-        perform(() => options.agentApprovals.updateSettings(context.auth.user.id, input)),
+        perform(context, () => options.agentApprovals.updateSettings(context.auth.user.id, input)),
       ),
     effects: os.approvals.effects
       .use(read)
       .handler(({ context, input }) =>
-        perform(async () =>
+        perform(context, async () =>
           options.agentApprovals.listEffects(
             await options.spaces.resolve(context.auth.user.id, input.spaceId),
             input.runId,

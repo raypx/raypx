@@ -54,8 +54,11 @@ releases leases and publishes a content-free fanout hint. Stop instead commits
 cancelled and resolves pending cards. Resume validates the pinned deployment
 connection and computer generation. Unknown effects block; young intents wait for
 the shared uncertainty deadline without replay. Completed effect outcomes are reused.
-The bounded tool loop uses only the Computer port; account approval settings and
-exact tool/executable rules gate changes. API owns credentials and configuration.
+The bounded tool loop uses only the Computer port; the Space approval-mode
+exception falls back to the Run actor's account default, with that actor's exact
+tool/executable rules. Approval answers append Space audit intents and commit
+their terminal evidence with the decision; missing audit storage blocks the write.
+API owns credentials and configuration.
 Deletion cascades durable Run records with their Space. Computer pin identities
 remain historical selectors so a missing computer produces an explicit failure.
 

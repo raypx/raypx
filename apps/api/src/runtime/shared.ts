@@ -45,6 +45,7 @@ import type { ControlService } from "@raypx/control";
 export interface RuntimeProviders {
   createModels?: () => ConversationModels;
   createConversationFanout?: () => import("@raypx/agents/server").ConversationFanout;
+  createSpaceFanout?: () => import("@raypx/spaces/server").SpaceFanout;
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
   createConfigRepository?: (db: Database, audit: AuditService) => ConfigRepository;
   createAdministrationRepository?: (db: Database) => AdministrationRepository;
@@ -154,19 +155,25 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       routines,
       spaceMemory,
       routineWorker,
+      spaceManagement,
+      spaceDeletionWorker,
     } = await composeAgents(db, environment, logger, resources.createModels);
     lifecycle.own(() => runner.close());
     lifecycle.own(() => routineWorker.close());
+    lifecycle.own(() => spaceDeletionWorker.close());
     const conversations = runner.conversations;
     return {
       routines,
       spaceMemory,
       routineWorker,
+      spaceManagement,
+      spaceDeletionWorker,
       modelConnections,
       agentApprovals,
       runner,
       stopClaiming: () => {
         routineWorker.stop();
+        spaceDeletionWorker.stop();
         runner.stopClaiming();
       },
       computers,
@@ -201,6 +208,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         agentApprovals,
         computers,
         spaces,
+        spaceManagement,
         conversations,
         conversationModels,
         agents: createAgentsRepository(db),

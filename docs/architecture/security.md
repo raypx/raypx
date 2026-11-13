@@ -86,7 +86,9 @@ and a paired `ROUTINE_EMAIL_DOMAIN`; no SMTP listener is added. All three paths
 count stream bytes and commit per-routine rate limits and delivery deduplication
 in PostgreSQL. Signature bytes bind repository delivery ID, event kind and body.
 Secret references, ciphertext, payloads, prompts and memory text are absent from
-routine event/log projections. Deleting a routine, owner membership or Space
-cascades its occurrences, deliveries and encrypted secret. Run/message actor IDs are historical selectors, so account deletion cannot punch
+routine event/log projections. Removing membership pauses its routines and removes
+ingress secrets and connection availability selections, retaining definitions for
+reassignment. Deleting a routine or Space cascades its occurrences, deliveries and
+encrypted secret. Run/message actor IDs are historical selectors, so account deletion cannot punch
 gaps in a surviving conversation stream. Memory's author FK becomes null while its
 immutable provenance remains historical context in a surviving shared Space.

@@ -16,7 +16,10 @@ adapters, execution hosts and product views. Schemas are the single source of in
 - `/approvals` owns account modes, revisioned settings and mode availability,
   exact-tool rules, Space approval requests and bounded effect records.
   Auto reports the stable REVIEW_MODEL_NOT_CONFIGURED reason.
-- `/spaces` owns Space IDs, names, membership roles and pure membership matching.
+- `/spaces` owns Space IDs, names, membership roles and pure membership matching,
+  profile-backed directory projections, token-free invitation projections, sharing
+  previews, approval overrides, append-only audit records and independent Space
+  events. Space mutation codes do not extend Run or tool failure unions.
 - `/agents` owns persistent Agent configuration and IDs, Conversation IDs and the
   pure direct-Conversation constructor. Model choices are opaque model IDs, with no
   provider vocabulary or credentials. These are separate from device-owned tasks.

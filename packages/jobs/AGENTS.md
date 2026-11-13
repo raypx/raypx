@@ -51,6 +51,10 @@ job APIs. Construction performs no I/O; API/worker composition supplies the cloc
 secret envelope store and dispatcher. Repository signatures bind delivery ID and
 event kind as well as the body. Repository secrets are encrypted; webhook keys
 are digest-only. Every automatic occurrence resolves current owner membership.
+Removed owners' definitions remain paused for reassignment; editor metadata reads
+use the caller's Space admission, while ingress and execution require the current
+owner's active membership. Removal clears ingress credentials; reassignment issues
+new keys when needed and never resumes a routine implicitly.
 The worker locks due routines with SKIP LOCKED and the conversation counter before
 coalescing, so a pending catch-up cannot race its first start. `test:postgres`
 selects isolated PostgreSQL acceptance; ordinary test runs exclude that directory.

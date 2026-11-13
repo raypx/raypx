@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lte, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   approvalSettings as settings,
@@ -9,7 +9,9 @@ import {
   conversationEvents as events,
   conversationRuns as runs,
   conversations,
+  spaces,
   spaceMembers,
+  spaceSettingsOverrides,
 } from "@raypx/database/schema";
 import {
   approvalRequestSchema,
@@ -22,6 +24,7 @@ import type { ConversationId } from "@raypx/core/agents";
 import type { Run, RunId } from "@raypx/core/conversation";
 import { SpaceNotFound } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
+import { createSpaceAuditWriter } from "@raypx/spaces/server/postgres";
 import {
   ApprovalOperationError,
   ApprovalSettingsConflictError,
@@ -84,7 +87,18 @@ export function approvalCardData(request: ApprovalRequest) {
 export function createApprovalsRepository(
   db: Database,
   publish = publishConversationNotice,
+  audit = createSpaceAuditWriter(db),
 ): ApprovalsRepository {
+  async function activeSpace(tx: Transaction, spaceId: string) {
+    // Management claims the Space before touching conversation counters. Follow
+    // the same order so member removal cannot deadlock with an approval answer.
+    const [space] = await tx
+      .select({ id: spaces.id })
+      .from(spaces)
+      .where(and(eq(spaces.id, spaceId), isNull(spaces.deletionClaimedAt)))
+      .for("share");
+    if (!space) throw new SpaceNotFound();
+  }
   const requestSelection = (scope: SpaceScope, id: string) =>
     and(eq(requests.spaceId, scope.spaceId), eq(requests.id, id));
   const counterSelection = (scope: SpaceScope, id: ConversationId) =>
@@ -308,6 +322,40 @@ export function createApprovalsRepository(
         return settingsView(tx, row!);
       });
     },
+    async getRunSettings(scope, actorAccountId, defaultMode) {
+      return db.transaction(async (tx) => {
+        await activeSpace(tx, scope.spaceId);
+        // Run policy follows its historical actor, never the member waking it.
+        // Current membership still gates access to that actor's private rules.
+        const [member] = await tx
+          .select({ accountId: spaceMembers.accountId })
+          .from(spaceMembers)
+          .where(
+            and(
+              eq(spaceMembers.spaceId, scope.spaceId),
+              eq(spaceMembers.accountId, actorAccountId),
+              isNull(spaceMembers.removedAt),
+            ),
+          )
+          .for("share");
+        if (!member) throw new SpaceNotFound();
+        await tx
+          .insert(settings)
+          .values({ accountId: actorAccountId, mode: defaultMode })
+          .onConflictDoNothing();
+        const [account] = await tx
+          .select()
+          .from(settings)
+          .where(eq(settings.accountId, actorAccountId))
+          .for("share");
+        const [override] = await tx
+          .select({ mode: spaceSettingsOverrides.approvalMode })
+          .from(spaceSettingsOverrides)
+          .where(eq(spaceSettingsOverrides.spaceId, scope.spaceId));
+        const value = await settingsView(tx, account!);
+        return { ...value, mode: override?.mode ?? value.mode };
+      });
+    },
     async updateSettings(accountId, input, expectedRevision, defaultMode) {
       return db.transaction(async (tx) => {
         await tx.insert(settings).values({ accountId, mode: defaultMode }).onConflictDoNothing();
@@ -373,30 +421,46 @@ export function createApprovalsRepository(
       return rows.map(requestView);
     },
     async answer(scope, id, answer, now) {
-      const result = await db.transaction(async (tx) => {
-        // Historical requests survive revocation; the answering member must still
-        // exist now. Hold the membership through the decision transaction.
-        const [member] = await tx
-          .select({ accountId: spaceMembers.accountId })
-          .from(spaceMembers)
-          .where(
-            and(
-              eq(spaceMembers.spaceId, scope.spaceId),
-              eq(spaceMembers.accountId, scope.member.accountId),
-            ),
-          )
-          .for("key share");
-        if (!member) throw new SpaceNotFound();
-        const before = await findRequest(tx, scope, id);
-        if (before.memberAccountId !== scope.member.accountId)
-          throw new ApprovalOperationError("NOT_ADDRESSED");
-        const counter = await lock(tx, scope, before.conversationId);
-        const current = await findRequest(tx, scope, id);
-        if (current.state !== "pending") throw new ApprovalOperationError("ALREADY_RESOLVED");
-        if (Date.parse(current.expiresAt) <= now.getTime())
-          return {
-            expired: true,
-            request: await resolveRequest(
+      const context: import("@raypx/spaces/server/postgres").SpaceAuditContext = {
+        spaceId: scope.spaceId,
+        actorAccountId: scope.member.accountId,
+        action: "approval.answered",
+      };
+      // A durable intent precedes any decision. Terminal evidence is appended,
+      // never rewritten, and success shares the decision's transaction.
+      const operationId = await audit.begin(
+        context.spaceId,
+        context.actorAccountId,
+        context.action,
+        context.targetId,
+      );
+      let result: { expired: boolean; request: ApprovalRequest };
+      try {
+        result = await db.transaction(async (tx) => {
+          await activeSpace(tx, scope.spaceId);
+          // Historical requests survive revocation; the answering member must still
+          // exist now. Hold the membership through the decision transaction.
+          const [member] = await tx
+            .select({ accountId: spaceMembers.accountId })
+            .from(spaceMembers)
+            .where(
+              and(
+                eq(spaceMembers.spaceId, scope.spaceId),
+                eq(spaceMembers.accountId, scope.member.accountId),
+                isNull(spaceMembers.removedAt),
+              ),
+            )
+            .for("share");
+          if (!member) throw new SpaceNotFound();
+          const before = await findRequest(tx, scope, id);
+          context.targetId = before.id;
+          if (before.memberAccountId !== scope.member.accountId)
+            throw new ApprovalOperationError("NOT_ADDRESSED");
+          const counter = await lock(tx, scope, before.conversationId);
+          const current = await findRequest(tx, scope, id);
+          if (current.state !== "pending") throw new ApprovalOperationError("ALREADY_RESOLVED");
+          if (Date.parse(current.expiresAt) <= now.getTime()) {
+            const request = await resolveRequest(
               tx,
               scope,
               current,
@@ -404,53 +468,54 @@ export function createApprovalsRepository(
               null,
               now,
               counter.sequence + 1,
-            ),
-          };
-        if (answer.decision === "approved" && answer.allowTool) {
-          await tx
-            .insert(settings)
-            .values({ accountId: scope.member.accountId, mode: "ask" })
-            .onConflictDoNothing();
-          await tx
-            .select()
-            .from(settings)
-            .where(eq(settings.accountId, scope.member.accountId))
-            .for("update");
-          const executable =
-            current.toolName === "computer_run_command" &&
-            typeof current.arguments.executable === "string"
-              ? current.arguments.executable
-              : null;
-          const existingRules = await tx
-            .select()
-            .from(rules)
-            .where(eq(rules.accountId, scope.member.accountId));
-          if (
-            existingRules.length >= 256 &&
-            !existingRules.some(
-              (rule) => rule.toolName === current.toolName && rule.executable === executable,
-            )
-          )
-            throw new ApprovalOperationError("RULE_LIMIT");
-          const inserted = await tx
-            .insert(rules)
-            .values({
-              accountId: scope.member.accountId,
-              toolName: current.toolName,
-              executable,
-              decision: "allow",
-            })
-            .onConflictDoNothing()
-            .returning({ accountId: rules.accountId });
-          if (inserted.length)
+            );
+            // The lazy expiry and its refusal must survive the API error together.
+            await audit.append(tx, operationId, context, "refused", "EXPIRED");
+            return { expired: true, request };
+          }
+          if (answer.decision === "approved" && answer.allowTool) {
             await tx
-              .update(settings)
-              .set({ revision: sql`${settings.revision} + 1`, updatedAt: now })
-              .where(eq(settings.accountId, scope.member.accountId));
-        }
-        return {
-          expired: false,
-          request: await resolveRequest(
+              .insert(settings)
+              .values({ accountId: scope.member.accountId, mode: "ask" })
+              .onConflictDoNothing();
+            await tx
+              .select()
+              .from(settings)
+              .where(eq(settings.accountId, scope.member.accountId))
+              .for("update");
+            const executable =
+              current.toolName === "computer_run_command" &&
+              typeof current.arguments.executable === "string"
+                ? current.arguments.executable
+                : null;
+            const existingRules = await tx
+              .select()
+              .from(rules)
+              .where(eq(rules.accountId, scope.member.accountId));
+            if (
+              existingRules.length >= 256 &&
+              !existingRules.some(
+                (rule) => rule.toolName === current.toolName && rule.executable === executable,
+              )
+            )
+              throw new ApprovalOperationError("RULE_LIMIT");
+            const inserted = await tx
+              .insert(rules)
+              .values({
+                accountId: scope.member.accountId,
+                toolName: current.toolName,
+                executable,
+                decision: "allow",
+              })
+              .onConflictDoNothing()
+              .returning({ accountId: rules.accountId });
+            if (inserted.length)
+              await tx
+                .update(settings)
+                .set({ revision: sql`${settings.revision} + 1`, updatedAt: now })
+                .where(eq(settings.accountId, scope.member.accountId));
+          }
+          const request = await resolveRequest(
             tx,
             scope,
             current,
@@ -458,9 +523,18 @@ export function createApprovalsRepository(
             scope.member.accountId,
             now,
             counter.sequence + 1,
-          ),
-        };
-      });
+          );
+          await audit.succeed(tx, operationId, context);
+          return { expired: false, request };
+        });
+      } catch (error) {
+        const refused = error instanceof ApprovalOperationError || error instanceof SpaceNotFound;
+        let code = "WRITE_FAILED";
+        if (error instanceof ApprovalOperationError) code = error.code;
+        if (error instanceof SpaceNotFound) code = "NOT_FOUND";
+        await audit.finish(operationId, context, refused ? "refused" : "failed", code);
+        throw error;
+      }
       if (result.expired) throw new ApprovalOperationError("EXPIRED");
       return result.request;
     },

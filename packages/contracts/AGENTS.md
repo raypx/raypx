@@ -26,7 +26,13 @@ share toolCallId with approval cards and contain summaries/outcomes only.
 `computers.get/start/stop` compose Core Computer state. `computers.listDirectory/readFile`
 are bounded read-only workspace access. All use the same session/Space boundary;
 file reads never start compute. Unconfigured, stopped and unavailable states are explicit.
-Member management remains outside this slice.
+`spaces.get/rename/delete/leave/members/updateMemberRole/removeMember` add backend
+Space/member management; `spaces.*Invitation*`, `spaces.invitations` and
+`spaces.cancelInvitations` add signed-in single-use invitation flows. Settings,
+approval overrides, owner audit and ordered Space events use the same admission.
+Only owner directory projections contain email. Invitation tokens are output only
+when issued. Space stream subscribe/ACK/unsubscribe and `space.event` frames extend
+`/events` without changing conversation payloads.
 `approvals.pending/answer/settings/updateSettings/effects` compose backend Computer
 approval schemas. Pending/answer/effects select a Space; settings use the session
 account. Settings return their revision and mode availability; updates require

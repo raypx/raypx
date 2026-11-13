@@ -96,6 +96,21 @@ recovery fields ship with their writers in later phases.
   then destroyed. The retention period is a deployment setting.
 - Audit events outlive the records they describe.
 
+Space deletion now persists `spaces.deletion_claimed_at` and a Space-owned
+`space_deletion_jobs` stage/lease/fence. Request admission rejects a claimed Space;
+explicit worker startup resumes cancellation, computer release, object removal and
+row removal. A committed stage survives worker replacement. Audit intents precede
+external cleanup and failure leaves a retryable claim. Computer destruction follows
+the existing retained-home provider semantics; Space-owned S3 objects have no
+current writers.
+
+Membership removal records `space_members.removed_at`; active queries exclude it.
+The retained row keeps same-Space routine/computer references valid. Routine
+definitions pause and lose ingress secrets; owner reassignment uses the existing
+routine edit path. Audit/invitation metadata retain historical account IDs rather
+than granting access through those identities. New membership, invitation,
+settings, audit and Space-event records cascade with their Space.
+
 Phase 4 keeps message/Run actor account IDs as historical deployment identities.
 Approval requests bind their addressed and answering identities to the Run's
 historical actor, with a composite Space/Conversation/Run/account key; they remain
@@ -105,8 +120,9 @@ Current membership still gates admission and execution; retaining history grants
 no current access. Space/Conversation/Run deletion cascades its owned history.
 
 Routine source IDs reference minimal `routine_identities` tombstones in the same
-Space. Deleting an active definition/member/account removes its secrets and
-active records while preserving the tombstone and accepted Run attribution;
+Space. Deleting an active definition/account removes its secrets and active
+records while preserving the tombstone and accepted Run attribution. Removing
+membership instead pauses definitions and removes their ingress secrets;
 Space deletion removes both. JSON inbound routine IDs have a generated scoped FK
 and must equal the Run's source ID. External delivery IDs remain external values.
 Memory revision identities in checkpoints live in a relation with composite FKs

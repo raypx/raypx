@@ -1,0 +1,4 @@
+ALTER TABLE "space_events" ADD COLUMN "subject_account_id" text GENERATED ALWAYS AS (payload ->> 'accountId') STORED;--> statement-breakpoint
+ALTER TABLE "space_events" ADD CONSTRAINT "space_events_LQC7N4uUAlF6_fkey" FOREIGN KEY ("space_id","subject_account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "space_invitations" ADD CONSTRAINT "space_invitations_ldatC0tErQvS_fkey" FOREIGN KEY ("space_id","inviter_account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "space_invitations" ADD CONSTRAINT "space_invitations_orPQyO8xb1wP_fkey" FOREIGN KEY ("space_id","consumed_by_account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;

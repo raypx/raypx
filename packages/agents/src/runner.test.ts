@@ -562,6 +562,9 @@ async function toolFixture(db: ReturnType<typeof store>, mode: "ask" | "never" =
     async getSettings() {
       return { mode, rules: [], revision: 0 };
     },
+    getRunSettings(_scope, accountId, defaultMode) {
+      return repository.getSettings(accountId, defaultMode);
+    },
     async updateSettings(_account, value, expectedRevision) {
       return { ...value, revision: expectedRevision + 1 };
     },

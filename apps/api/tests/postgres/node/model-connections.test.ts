@@ -4,6 +4,7 @@ import { ConversationRunner } from "@raypx/agents/server";
 import {
   createAgentsRepository,
   createConversationsRepository,
+  cancelSpaceRuns,
 } from "@raypx/agents/server/postgres";
 import { createApiClient } from "@raypx/client/api";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
@@ -18,7 +19,7 @@ import {
   user,
 } from "@raypx/database/schema";
 import type { ModelConnectionConfiguration } from "@raypx/core/model-connections";
-import { createSpaceAccess } from "@raypx/spaces/server/postgres";
+import { createSpaceAccess, createSpaceManagement } from "@raypx/spaces/server/postgres";
 import { createModelConnectionsRepository } from "../../../src/conversations/connections-postgres.js";
 import {
   connectionModelId,
@@ -390,6 +391,64 @@ it("cascades direct connection and account deletion through every new table", as
   expect(await access.resolve(f.member, f.shared.id)).toMatchObject({
     member: { accountId: f.member },
   });
+});
+
+it("revokes a removed member's selected and all-Space models while retaining their Run history", async () => {
+  const f = await fixture();
+  const selected = await f.service.create(
+    f.member,
+    {
+      ...configuration,
+      availability: { mode: "selected", spaceIds: [f.shared.id] },
+    },
+    secret,
+  );
+  const all = await f.service.create(f.member, configuration, replacementSecret);
+  const conversations = createConversationsRepository(connection.db);
+  const { conversation } = await createAgentsRepository(connection.db).create(f.scope, {
+    name: "Shared history",
+    instructions: "",
+    model: { modelId: connectionModelId(selected.id, "chat-main") },
+  });
+  await conversations.send(f.memberScope, conversation.id, {
+    text: "Keep my history",
+    idempotencyKey: "member-history",
+  });
+  const claimed = (await conversations.claimNext(f.memberScope, conversation.id, {
+    ownerId: "removed-member",
+    leaseMs: 15000,
+    timeoutMs: 300000,
+    backupMarginMs: 30000,
+  }))!;
+  const pinned = await f.models.resolve(claimed.run);
+  await conversations.pinResources(f.memberScope, claimed.run, {
+    connectionId: pinned.connectionId!,
+  });
+  await createSpaceManagement(connection.db, { beforeMemberRemoved: cancelSpaceRuns }).removeMember(
+    f.scope,
+    f.member,
+  );
+  await expect(access.resolve(f.member, f.shared.id)).rejects.toThrow("not found");
+  expect(await repository.list(f.member, f.shared.id)).toEqual([]);
+  expect(await storedSelections(f.member)).toEqual([]);
+  expect((await repository.list(f.member)).map((row) => row.id)).toEqual(
+    expect.arrayContaining([selected.id, all.id]),
+  );
+  const removedActorRun = { ...claimed.run, connectionId: pinned.connectionId! };
+  await expect(f.models.resolve(removedActorRun)).rejects.toMatchObject({
+    code: "CONNECTION_UNAVAILABLE",
+  });
+  const history = await conversations.snapshot(f.scope, conversation.id);
+  expect(history.messages).toContainEqual(expect.objectContaining({ text: "Keep my history" }));
+  expect(history.runs).toContainEqual(
+    expect.objectContaining({ id: claimed.run.id, state: "cancelled" }),
+  );
+  await expect(
+    f.service.update(f.member, selected.id, {
+      ...configuration,
+      availability: { mode: "selected", spaceIds: [f.shared.id] },
+    }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
 });
 
 it("resumes a pinned durable Run after credential rotation and fails explicitly after connection deletion", async () => {

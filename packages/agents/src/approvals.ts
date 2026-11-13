@@ -75,6 +75,11 @@ export interface ApprovalAnswer {
 }
 export interface ApprovalsRepository {
   getSettings(accountId: string, defaultMode: ApprovalMode): Promise<RevisionedApprovalSettings>;
+  getRunSettings(
+    scope: SpaceScope,
+    actorAccountId: string,
+    defaultMode: ApprovalMode,
+  ): Promise<RevisionedApprovalSettings>;
   updateSettings(
     accountId: string,
     settings: ApprovalSettings,
@@ -235,6 +240,9 @@ export function createApprovalsService(
   async function settings(accountId: string) {
     return settingsState(await repository.getSettings(accountId, defaultMode));
   }
+  function runSettings(scope: SpaceScope, run: ExecutionRun) {
+    return repository.getRunSettings(scope, run.memberAccountId, defaultMode);
+  }
   async function assertContinuable(scope: SpaceScope, run: ExecutionRun) {
     const effects = await repository.listEffects(scope, run.id, now(), run);
     if (effects.some((effect) => effect.state === "unknown")) throw new EffectUnknownError();
@@ -264,7 +272,7 @@ export function createApprovalsService(
     async authorize(scope, run, call, signal) {
       if (signal.aborted) return "cancelled";
       const action = approvalDisposition(
-        await settings(run.memberAccountId),
+        await runSettings(scope, run),
         call,
         run.untrustedInput || Boolean(run.inboundProvenance),
       );
@@ -294,7 +302,7 @@ export function createApprovalsService(
       if (
         current.state === "approved" &&
         approvalDisposition(
-          await settings(run.memberAccountId),
+          await runSettings(scope, run),
           call,
           run.untrustedInput || Boolean(run.inboundProvenance),
         ) === "blocked"
@@ -307,7 +315,7 @@ export function createApprovalsService(
       if (signal.aborted) return computerToolResult("cancelled", "The action was cancelled.");
       if (
         approvalDisposition(
-          await settings(run.memberAccountId),
+          await runSettings(scope, run),
           call,
           run.untrustedInput || Boolean(run.inboundProvenance),
         ) === "blocked"

@@ -108,7 +108,7 @@ remain available. There is no scheduled retention policy in this slice.
 API-enabled roles mount `/events` on the existing Hono/CrossWS listener. Upgrade
 requires the normal account session and an allowed Origin when one is present.
 Credentials never appear in the URL. The server sends `{ type: "ready", version: 1 }`.
-Client frames all carry `version: 1`, `spaceId` and `conversationId`:
+Conversation client frames carry `version: 1`, `spaceId` and `conversationId`:
 
 - `subscribe` supplies `after`, the client's persisted applied cursor.
 - `ack` supplies `sequence`, exactly matching the event just applied.
@@ -228,3 +228,31 @@ binding after member/account removal; cancellation/resolution changes their stat
 and appends events instead of deleting their identity. No deletion convenience
 removes the Space foreign key. Routine events also bind their selected Run to the
 same occurrence through a composite key.
+
+## Space membership events
+
+`/events` also accepts `space.subscribe` with `{ version: 1, spaceId, after }`,
+`space.ack` with `{ version: 1, spaceId, sequence }` and `space.unsubscribe` with
+`{ version: 1, spaceId }`. Space and conversation subscriptions share the 32-slot
+bound, session admission and ACK deadline, with independent cursors.
+
+The server sends `{ type: "space.event", spaceId, event }`; `conversationId` is
+absent. The event contains `{ id, spaceId, kind, payload, createdAt }`:
+
+| Kind                        | Payload               |
+| --------------------------- | --------------------- |
+| `space.member.joined`       | `{ accountId }`       |
+| `space.member.removed`      | `{ accountId }`       |
+| `space.member.role_changed` | `{ accountId, role }` |
+| `space.renamed`             | `{ name }`            |
+
+`id` is an ordered replay/ACK cursor, not a gap-free conversation sequence. Space
+events have indefinite retention and can also be read through `spaces.events`.
+Apply each event and its cursor together, then ACK its exact ID. These events
+never extend the existing conversation event union.
+
+The membership transaction publishes a content-free `raypx_space_events` hint.
+Removal actively aborts all affected open sockets, including conversation-only
+subscriptions and idle ACK waiters. A deletion claim likewise closes the Space's
+subscribers. Both use 4003; the internal deletion hint is not a public event kind.
+The repair poll remains a fallback when notifications are missed.

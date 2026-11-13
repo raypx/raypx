@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import type { ToolCall } from "@raypx/ai";
 import { createApiClient } from "@raypx/client/api";
 import { MAX_TOOL_RESULT } from "@raypx/core/approvals";
-import { SpaceNotFound } from "@raypx/core/spaces";
+import { SpaceMutationError, SpaceNotFound } from "@raypx/core/spaces";
 import { EFFECT_INTENT_TIMEOUT_MS } from "@raypx/agents/server";
 import { createApiApp } from "../../tests/helpers/app.js";
 import { agentToolsFixture } from "../../tests/helpers/agent-tools.js";
@@ -334,6 +334,27 @@ it("rejects a non-member before reading or answering requests and protects mutat
   expect(reads).not.toHaveBeenCalled();
   expect(answers).not.toHaveBeenCalled();
   vi.spyOn(f.spaces, "resolve").mockRejectedValue(new SpaceNotFound());
+});
+
+it("returns the stable audit-unavailable code without answering an approval", async () => {
+  const f = fixture();
+  await startWrite(f);
+  await expect.poll(() => f.requests.length).toBe(1);
+  const request = f.requests[0]!;
+  vi.spyOn(f.agentApprovals, "answer").mockRejectedValueOnce(
+    new SpaceMutationError("SPACE_AUDIT_UNAVAILABLE"),
+  );
+  await expect(
+    f.rpc.approvals.answer({
+      spaceId: f.spaceId,
+      requestId: request.id,
+      decision: "approved",
+    }),
+  ).rejects.toMatchObject({
+    code: "SERVICE_UNAVAILABLE",
+    data: { error: { code: "SPACE_AUDIT_UNAVAILABLE" } },
+  });
+  expect(request.state).toBe("pending");
 });
 
 it("bounds tool rounds and stops before another effect can run", async () => {

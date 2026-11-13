@@ -1,6 +1,6 @@
 import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
-import { conversationRuns as runs, spaceMembers } from "@raypx/database/schema";
+import { conversationRuns as runs, spaceMembers, spaces } from "@raypx/database/schema";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { StaleRunFenceError, type ExecutionRun } from "../conversations.js";
 
@@ -22,7 +22,7 @@ export async function assertRunFence(
         eq(runs.fence, run.fence),
         gt(runs.leaseExpiresAt, sql`clock_timestamp()`),
         inArray(runs.state, ["running", "waiting"]),
-        sql`exists (select 1 from ${spaceMembers} where ${spaceMembers.spaceId} = ${runs.spaceId} and ${spaceMembers.accountId} = ${runs.memberAccountId})`,
+        sql`exists (select 1 from ${spaceMembers} inner join ${spaces} on ${spaces.id} = ${spaceMembers.spaceId} where ${spaceMembers.spaceId} = ${runs.spaceId} and ${spaceMembers.accountId} = ${runs.memberAccountId} and ${spaceMembers.removedAt} is null and ${spaces.deletionClaimedAt} is null)`,
       ),
     )
     .for("update");

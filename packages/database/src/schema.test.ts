@@ -27,9 +27,46 @@ import {
   modelConnections,
   modelConnectionSecrets,
   modelConnectionSpaces,
+  spaceAudit,
+  spaceDeletionJobs,
+  spaceEvents,
+  spaceInvitations,
+  spaceSettingsOverrides,
   schema,
   user,
 } from "./schema.js";
+
+it("keeps membership history and new Space references scoped and removable", () => {
+  for (const table of [
+    spaceAudit,
+    spaceDeletionJobs,
+    spaceEvents,
+    spaceInvitations,
+    spaceSettingsOverrides,
+  ]) {
+    const config = getTableConfig(table);
+    expect(config.columns[0]?.name).toBe("space_id");
+    for (const key of config.foreignKeys) {
+      expect(key.reference().columns[0]?.name).toBe("space_id");
+      expect(key.onDelete).toBe("cascade");
+    }
+  }
+  expect(getTableConfig(spaceMembers).columns.map((column) => column.name)).toContain("removed_at");
+  expect(spaceEvents.subjectAccountId.generated).toBeDefined();
+  const invitations = getTableConfig(spaceInvitations);
+  expect(
+    invitations.foreignKeys.map((key) => key.reference().columns.map((column) => column.name)),
+  ).toEqual(
+    expect.arrayContaining([
+      ["space_id", "inviter_account_id"],
+      ["space_id", "consumed_by_account_id"],
+    ]),
+  );
+  expect(getTableConfig(spaceAudit).foreignKeys).toHaveLength(1);
+  expect(getTableConfig(spaceAudit).columns.map((column) => column.name)).not.toEqual(
+    expect.arrayContaining(["token", "email", "arguments", "content"]),
+  );
+});
 
 it("uses the public schema with Better Auth Admin fields", () => {
   expect(Object.keys(schema)).toEqual(

@@ -26,6 +26,16 @@ PostgreSQL persistence for the new account foundation.
 without replacing device records. Space-owned primary keys start with `space_id`;
 Conversation references to Agents include it. A unique Space/Agent pair permits
 one direct Conversation. Features own scoped queries, API owns session admission.
+Space membership removal retains a `removed_at` tombstone so Computer creators and
+paused routine owners keep their composite keys. Only active rows authorize work.
+`space_invitations` stores hashes, terminal states and same-Space retained inviter/
+consumer references. `space_settings_overrides` stores a deliberate Space approval
+mode exception. `space_audit` appends durable intent/outcome rows with historical
+actor/target identities; no membership deletion erases that history. `space_events`
+has independent ordered identities and a generated same-Space member subject key.
+`space_deletion_jobs` retains a leased, fenced cleanup claim until final Space
+deletion. Every new table cascades with its Space. Audit actors, setting editors and
+deletion requesters are historical attribution, never current access selectors.
 `spaces.private_for` is the unique account bootstrap marker, never a public field.
 `conversation_messages`, `conversation_events` and `conversation_counters` use
 Space/Conversation composite references. Messages retain the member-scoped retry

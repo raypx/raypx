@@ -15,6 +15,7 @@ import {
   routineDeliveries as deliveries,
   routineEvents,
   spaceMembers,
+  spaces,
 } from "@raypx/database/schema";
 import {
   RoutineError,
@@ -83,12 +84,22 @@ export function createRoutinesRepository(
       .select()
       .from(spaceMembers)
       .where(
-        and(eq(spaceMembers.spaceId, row.spaceId), eq(spaceMembers.accountId, row.ownerAccountId)),
+        and(
+          eq(spaceMembers.spaceId, row.spaceId),
+          eq(spaceMembers.accountId, row.ownerAccountId),
+          isNull(spaceMembers.removedAt),
+          sql`exists (select 1 from ${spaces} where ${spaces.id} = ${spaceMembers.spaceId} and ${spaces.deletionClaimedAt} is null)`,
+        ),
       )
-      .for("key share");
+      .for("share");
     if (!member) throw new RoutineError("NOT_FOUND");
     return resolveSpaceScope(
-      spaceMemberSchema.parse({ ...member, createdAt: member.createdAt.toISOString() }),
+      spaceMemberSchema.parse({
+        spaceId: member.spaceId,
+        accountId: member.accountId,
+        role: member.role,
+        createdAt: member.createdAt.toISOString(),
+      }),
       member.accountId,
       member.spaceId as SpaceScope["spaceId"],
     );
@@ -96,8 +107,11 @@ export function createRoutinesRepository(
   async function admission(
     tx: Pick<Database, "select">,
     row: RoutineRow,
+    editorScope?: SpaceScope,
   ): Promise<RoutineAdmission> {
-    const scope = await ownerScope(tx, row);
+    // Shared definitions remain editable after their previous owner leaves.
+    // Ingress and fire still resolve the current routine owner before execution.
+    const scope = editorScope ?? (await ownerScope(tx, row));
     const [secret] = await tx
       .select()
       .from(routineSecrets)
@@ -420,7 +434,7 @@ export function createRoutinesRepository(
     },
     get: async (scope, id) => view(await requireRoutine(db, scope, id)),
     admission: async (scope, id) =>
-      db.transaction(async (tx) => admission(tx, await requireRoutine(tx, scope, id))),
+      db.transaction(async (tx) => admission(tx, await requireRoutine(tx, scope, id), scope)),
     async ingress(selector) {
       return db.transaction(async (tx) => {
         const where =

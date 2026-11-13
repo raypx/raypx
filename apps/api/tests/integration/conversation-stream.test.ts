@@ -7,6 +7,7 @@ import { conversationServerFrameSchema, type ConversationServerFrame } from "@ra
 import { ConversationStream } from "../../src/conversations/stream.js";
 import { createConversationSocketRoutes } from "../../src/conversations/socket.js";
 import { conversationFixture } from "../helpers/conversations.js";
+import { spaceStreamFixture } from "../helpers/space-stream.js";
 import { serveBackend } from "../fixtures/backend-server.js";
 
 const cleanups: Array<() => Promise<void>> = [];
@@ -15,8 +16,9 @@ afterEach(async () => {
 });
 async function fixture(
   f: ReturnType<typeof conversationFixture> & { live?: LiveReplies } = conversationFixture(),
+  pollMs = 10,
 ) {
-  const stream = new ConversationStream({ ...f, pollMs: 10 });
+  const stream = new ConversationStream({ ...f, pollMs });
   await stream.start();
   cleanups.push(() => stream.shutdown());
   const app = new Hono().route(
@@ -127,6 +129,40 @@ it("rejects a non-member and closes an already-open subscription when membership
   await expect.poll(() => refused.closed).toContain(4003);
   expect(refused.sequences()).toEqual([]);
   expect(f.events).not.toHaveBeenCalled();
+});
+
+it("actively closes an idle loopback /events subscription on removal before its next membership poll", async () => {
+  const state = spaceStreamFixture();
+  const f = await fixture(state, 60_000);
+  const peer = await f.connect();
+  await expect.poll(() => state.events.mock.calls.length).toBe(1);
+  state.removeMemberActively();
+  await expect.poll(() => peer.closed, { timeout: 1_000 }).toContain(4003);
+  expect(peer.sequences()).toEqual([]);
+});
+
+it("delivers ordered Space changes additively alongside conversation subscriptions", async () => {
+  const state = spaceStreamFixture();
+  const f = await fixture(state, 60_000);
+  const peer = await f.connect();
+  peer.socket.send(
+    JSON.stringify({ version: 1, type: "space.subscribe", spaceId: state.spaceId, after: 0 }),
+  );
+  const first = state.appendSpace({ kind: "space.renamed", payload: { name: "Shared" } });
+  const ids = () =>
+    peer.frames.flatMap((frame) => (frame.type === "space.event" ? [frame.event.id] : []));
+  await expect.poll(ids).toEqual([first.id]);
+  peer.socket.send(
+    JSON.stringify({ version: 1, type: "space.ack", spaceId: state.spaceId, sequence: first.id }),
+  );
+  const second = state.appendSpace({ kind: "space.renamed", payload: { name: "Renamed" } });
+  await expect.poll(ids).toEqual([first.id, second.id]);
+  peer.socket.send(
+    JSON.stringify({ version: 1, type: "space.ack", spaceId: state.spaceId, sequence: second.id }),
+  );
+  state.append();
+  await expect.poll(peer.sequences).toEqual([1]);
+  peer.ack(1);
 });
 it("requires a live session and checks Origin before upgrading on the existing listener", async () => {
   const f = await fixture();

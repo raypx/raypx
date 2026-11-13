@@ -247,6 +247,26 @@ export class ConversationRunner {
       },
     };
   }
+  /** Called after durable revocation; stop this process's model and Computer work promptly. */
+  async cancelMember(spaceId: string, accountId?: string) {
+    await Promise.all(
+      [...this.active.values()]
+        .filter(
+          (active) =>
+            active.scope.spaceId === spaceId &&
+            (accountId === undefined || active.run.memberAccountId === accountId),
+        )
+        .map(async (active) => {
+          active.cancellation = Promise.resolve()
+            .then(() => this.toolRuntime?.tools.cancel(active.scope, active.run))
+            .catch(() => {
+              this.diagnostic("EXECUTION_FAILED");
+            });
+          active.controller.abort("cancelled");
+          await this.settleCancelledWork(active);
+        }),
+    );
+  }
   /** Worker startup owns scans and LISTEN subscriptions; construction never touches storage. */
   async startWorker(fanout?: ConversationFanout) {
     if (!this.accepting || this.closed || this.workerTimer) return;

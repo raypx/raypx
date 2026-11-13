@@ -26,13 +26,12 @@ Member-owned models are available only to their owner in the selected Space.
 An optional deployment display name defaults to the
 opaque identifier; entries without configured credentials are not offered.
 Updates replace the configuration and preserve the Conversation.
-Agent/Conversation creation is atomic. Deletion removes both synchronously while
-they have no execution or external resources; resumable deletion precedes those
-future dependencies. The shared Agents client provides Space creation/switching,
-Agent forms and direct conversations in Web and Desktop. Member mutation remains
-outside these slices. Member messages and their stream are described in
-[the implemented conversation slice](events.md#implemented-conversation-slice). Invitations, membership management and their audit
-workflow remain Phase 6 work.
+Agent/Conversation creation is atomic. The shared Agents client provides Space creation/switching,
+Agent forms and direct conversations in Web and Desktop. Member messages and their
+stream are described in [the conversation guide](events.md#implemented-conversation-slice).
+Phase 6's backend membership slice adds the member directory, invitations, owner
+settings, audit and claimed Space deletion. Membership UI, group conversations and
+Agent delegation are separate work.
 
 ## Spaces
 
@@ -56,6 +55,46 @@ workflow remain Phase 6 work.
   Space grants nothing in the inviter's other Spaces.
 - Removing a member ends their access on the next request, closes their event
   subscriptions and revokes the device grants they gave to the Space.
+
+### Backend membership procedures
+
+`spaces.get/rename/delete/leave/members/updateMemberRole/removeMember` resolve fresh
+membership from the session on every request. Rename, deletion, role changes and
+removal require an owner; a member can leave. The final owner cannot leave, be
+removed or be demoted. Deployment administration never substitutes for membership.
+The directory returns account name and image as avatar/initials sources, role and
+join time. Only an owner receives email fields.
+
+Removal retains a membership tombstone, excluded from admission and execution.
+This preserves the composite references of paused routine definitions and computer
+creator attribution. It transactionally cancels active Runs and pending approvals,
+pauses owned routines, removes their ingress secrets and connection selections,
+and returns the paused routines' IDs and shared names for reassignment. Historical
+Runs/messages remain. Rejoining restores active membership as `member` with a new
+join time; it does not resume routines or restore connection selections.
+
+`spaces.createInvitation/invitations/cancelInvitation/cancelInvitations` are owner
+operations. A link contains 32 random bytes encoded as lowercase hex, returned once;
+only SHA-256 persists. Open invitations expire exactly seven days after creation.
+Listing persists observed expiration. Removing an inviter cancels their open links.
+`spaces.previewInvitation/acceptInvitation` require a signed-in account and a token,
+not prior membership. Preview returns the Space name, inviter display name and the
+shared categories below without joining. Acceptance locks the Space and invitation
+and atomically consumes one link for a new member. Concurrent accepts by different
+accounts have one winner. A current member's acceptance is idempotent, preserves
+their role and consumes nothing, including when retrying a used link. Other callers
+receive distinct expired, cancelled and consumed codes. Creation, preview and
+acceptance are limited per account/procedure to 10, 30 and 20 calls per minute.
+
+Deletion commits a claim before cleanup and immediately excludes the Space from
+admission/discovery. A worker resumes durable, leased stages: cancel Runs, release
+computers, remove Space objects, remove rows. Constructors perform no I/O. Each
+stage can be retried after a crash; external removal must be idempotent. The last
+private Space means the caller's last active, solely occupied owned Space; deletion
+cannot remove that final private home. Computer destruction retains committed
+homes according to the existing provider port. No current Space domain record owns
+an object-storage key; retained account/device attachments are separate. Supervisor
+snapshot purge is outside this slice.
 
 ## What members share
 
@@ -87,6 +126,14 @@ workflow remain Phase 6 work.
   Spaces, never other people.
 - The availability choice appears only to someone with more than one Space.
 
+`spaces.settings/setApprovalOverride/clearApprovalOverride` are owner-only. The
+nullable Space override supports Ask and Never ask. Auto returns
+`REVIEW_MODEL_NOT_CONFIGURED`, as account settings do. Each Run policy resolution
+uses the Space override when present, otherwise its actor's account default; exact
+Allow/Block rules remain that actor's private rules. Changing an override affects
+the next policy resolution, including a running Run. Model defaults stay per
+account in this slice.
+
 ## Deployment administration
 
 - App accounts never administer the server. Signup order, email address and Space
@@ -104,3 +151,18 @@ workflow remain Phase 6 work.
   blocks these writes.
 - An owner reads the audit history of their Space. It never names another member's
   private items.
+
+`spaces.audit` pages newest first by `(createdAt, id)` with a Space-bound opaque
+cursor and at most 100 rows. Audit writes append a durable `pending` intent and a
+separate `succeeded`, `refused` or `failed` outcome linked by `operationId`; outcomes
+never rewrite history. A success commits with the mutation. An audit failure rolls
+back the mutation; failures after rollback append safe codes without arguments,
+tokens, emails or private item names. A crash can leave a visible pending intent.
+Approval answers use the same writer. Audit actor/target IDs are historical
+selectors and confer no access; audit rows cascade only with their Space.
+
+`spaces.events` and `/events` Space subscriptions replay ordered
+`space.member.joined`, `space.member.removed`, `space.member.role_changed` and
+`space.renamed` records. PostgreSQL notifications actively close removed members'
+open streams, including conversation-only subscriptions, without waiting for a
+delivery or poll. Existing conversation event payloads stay unchanged.

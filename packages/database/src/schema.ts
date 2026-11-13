@@ -45,6 +45,7 @@ export const spaces = pgTable("spaces", {
   privateFor: text("private_for")
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
+  deletionClaimedAt: date("deletion_claimed_at"),
   ...timestamps(),
 });
 export const spaceMembers = pgTable(
@@ -57,12 +58,151 @@ export const spaceMembers = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     role: text("role", { enum: ["owner", "member"] }).notNull(),
+    removedAt: date("removed_at"),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.accountId] }),
     index("space_members_account_idx").on(table.accountId, table.spaceId),
     check("space_members_role_check", sql`${table.role} in ('owner', 'member')`),
+  ],
+);
+
+// Historical actor IDs deliberately do not reference current memberships/accounts.
+// Removing one must neither erase audit evidence nor revoke already accepted history.
+export const spaceInvitations = pgTable(
+  "space_invitations",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    inviterAccountId: text("inviter_account_id").notNull(),
+    inviterName: text("inviter_name").notNull(),
+    status: text("status", { enum: ["open", "expired", "cancelled", "consumed"] })
+      .notNull()
+      .default("open"),
+    consumedByAccountId: text("consumed_by_account_id"),
+    consumedAt: date("consumed_at"),
+    createdAt: date("created_at").notNull().defaultNow(),
+    expiresAt: date("expires_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    uniqueIndex("space_invitations_token_hash_idx").on(table.tokenHash),
+    index("space_invitations_open_idx").on(table.spaceId, table.status, table.createdAt, table.id),
+    check(
+      "space_invitations_status_check",
+      sql`${table.status} in ('open', 'expired', 'cancelled', 'consumed')`,
+    ),
+    foreignKey({
+      columns: [table.spaceId, table.inviterAccountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.consumedByAccountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+  ],
+);
+export const spaceSettingsOverrides = pgTable(
+  "space_settings_overrides",
+  {
+    spaceId: text("space_id")
+      .primaryKey()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    approvalMode: text("approval_mode", { enum: ["ask", "never"] }).notNull(),
+    updatedByAccountId: text("updated_by_account_id").notNull(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check("space_settings_overrides_mode_check", sql`${table.approvalMode} in ('ask', 'never')`),
+  ],
+);
+export const spaceAudit = pgTable(
+  "space_audit",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+    operationId: text("operation_id").notNull(),
+    actorAccountId: text("actor_account_id").notNull(),
+    action: text("action").notNull(),
+    targetId: text("target_id"),
+    outcome: text("outcome", { enum: ["pending", "succeeded", "refused", "failed"] }).notNull(),
+    code: text("code"),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    index("space_audit_cursor_idx").on(table.spaceId, table.createdAt, table.id),
+    index("space_audit_operation_idx").on(table.spaceId, table.operationId),
+    check(
+      "space_audit_outcome_check",
+      sql`${table.outcome} in ('pending', 'succeeded', 'refused', 'failed')`,
+    ),
+  ],
+);
+export const spaceEvents = pgTable(
+  "space_events",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: bigint("id", { mode: "number" }).generatedAlwaysAsIdentity(),
+    kind: text("kind", {
+      enum: [
+        "space.member.joined",
+        "space.member.removed",
+        "space.member.role_changed",
+        "space.renamed",
+      ],
+    }).notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    subjectAccountId: text("subject_account_id").generatedAlwaysAs(sql`payload ->> 'accountId'`),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    check(
+      "space_events_kind_check",
+      sql`${table.kind} in ('space.member.joined', 'space.member.removed', 'space.member.role_changed', 'space.renamed')`,
+    ),
+    foreignKey({
+      columns: [table.spaceId, table.subjectAccountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+  ],
+);
+export const spaceDeletionJobs = pgTable(
+  "space_deletion_jobs",
+  {
+    spaceId: text("space_id")
+      .primaryKey()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    requestedByAccountId: text("requested_by_account_id").notNull(),
+    stage: text("stage", {
+      enum: ["claimed", "runs_cancelled", "computers_released", "objects_removed"],
+    })
+      .notNull()
+      .default("claimed"),
+    leaseOwner: text("lease_owner"),
+    leaseUntil: date("lease_until"),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
+    claimedAt: date("claimed_at").notNull().defaultNow(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "space_deletion_jobs_stage_check",
+      sql`${table.stage} in ('claimed', 'runs_cancelled', 'computers_released', 'objects_removed')`,
+    ),
+    check(
+      "space_deletion_jobs_lease_check",
+      sql`(${table.leaseOwner} is null) = (${table.leaseUntil} is null)`,
+    ),
   ],
 );
 export const agents = pgTable(
@@ -85,7 +225,7 @@ export const computers = pgTable(
   {
     spaceId: text("space_id")
       .notNull()
-      .references(() => spaces.id),
+      .references(() => spaces.id, { onDelete: "cascade" }),
     id: text("id").notNull(),
     scope: text("scope", { enum: ["team", "private"] }).notNull(),
     agentId: text("agent_id"),
@@ -113,11 +253,14 @@ export const computers = pgTable(
       .on(t.spaceId, t.agentId)
       .where(sql`${t.scope} = 'private'`),
     index("computers_creator_idx").on(t.createdByAccountId),
-    foreignKey({ columns: [t.spaceId, t.agentId], foreignColumns: [agents.spaceId, agents.id] }),
+    foreignKey({
+      columns: [t.spaceId, t.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
     foreignKey({
       columns: [t.spaceId, t.createdByAccountId],
       foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
-    }),
+    }).onDelete("cascade"),
     check(
       "computers_scope_check",
       sql`(${t.scope} = 'team' and ${t.agentId} is null) or (${t.scope} = 'private' and ${t.agentId} is not null)`,
@@ -1637,6 +1780,11 @@ export const conversationRunMemoryPins = pgTable(
 );
 
 export const schema = {
+  spaceInvitations,
+  spaceSettingsOverrides,
+  spaceAudit,
+  spaceEvents,
+  spaceDeletionJobs,
   routineIdentities,
   conversationRunMemoryPins,
   spaceMemoryDocuments,

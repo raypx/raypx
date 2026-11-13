@@ -18,6 +18,7 @@ import {
   computers,
   conversationToolCalls as toolCalls,
   spaceMembers,
+  spaces,
 } from "@raypx/database/schema";
 import type { ConversationId } from "@raypx/core/agents";
 import {
@@ -55,6 +56,13 @@ import {
 
 type SpaceSelection = Pick<SpaceScope, "spaceId">;
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+type ConversationDatabase = Pick<
+  Database,
+  "select" | "insert" | "update" | "delete" | "execute" | "transaction"
+>;
+interface SpaceRunCleanup {
+  cancelSpaceRuns(spaceId: string, accountId?: string): Promise<void>;
+}
 type StoredCheckpoint = Omit<RunCheckpoint, "memory"> & {
   memory?: Omit<NonNullable<RunCheckpoint["memory"]>, "revisions">;
 };
@@ -105,10 +113,10 @@ function segmentView(row: typeof segments.$inferSelect) {
   return replySegmentSchema.parse({ ...publicRow, createdAt: row.createdAt.toISOString() });
 }
 export function createConversationsRepository(
-  db: Database,
+  db: ConversationDatabase,
   publish = publishConversationNotice,
   options: { timeoutMs?: number; backupMarginMs?: number; now?: () => Date } = {},
-): ConversationsRepository & ConversationRunRepository {
+): ConversationsRepository & ConversationRunRepository & SpaceRunCleanup {
   const timeoutMs = options.timeoutMs ?? 300_000;
   const backupMarginMs = options.backupMarginMs ?? 30_000;
   const runnable = () =>
@@ -252,7 +260,7 @@ export function createConversationsRepository(
     }
   }
   const departedActor = () =>
-    sql`not exists (select 1 from ${spaceMembers} where ${spaceMembers.spaceId} = ${runs.spaceId} and ${spaceMembers.accountId} = ${runs.memberAccountId})`;
+    sql`not exists (select 1 from ${spaceMembers} inner join ${spaces} on ${spaces.id} = ${spaceMembers.spaceId} where ${spaceMembers.spaceId} = ${runs.spaceId} and ${spaceMembers.accountId} = ${runs.memberAccountId} and ${spaceMembers.removedAt} is null and ${spaces.deletionClaimedAt} is null)`;
   /** Counter and Run locks serialize explicit stop, revocation cleanup and attempt writers. */
   async function cancelRun(tx: Transaction, scope: SpaceSelection, row: typeof runs.$inferSelect) {
     const [updated] = await tx
@@ -452,6 +460,7 @@ export function createConversationsRepository(
             and(
               eq(spaceMembers.spaceId, row.spaceId),
               eq(spaceMembers.accountId, row.memberAccountId),
+              isNull(spaceMembers.removedAt),
             ),
           );
         if (!member) {
@@ -463,7 +472,12 @@ export function createConversationsRepository(
         }
         seen.add(key);
         const scope = resolveSpaceScope(
-          spaceMemberSchema.parse({ ...member, createdAt: member.createdAt.toISOString() }),
+          spaceMemberSchema.parse({
+            spaceId: member.spaceId,
+            accountId: member.accountId,
+            role: member.role,
+            createdAt: member.createdAt.toISOString(),
+          }),
           row.memberAccountId,
           row.spaceId as SpaceScope["spaceId"],
         );
@@ -475,6 +489,48 @@ export function createConversationsRepository(
     return result;
   }
   return {
+    /** Maintenance selectors never fabricate a current member scope. */
+    async cancelSpaceRuns(spaceId, accountId) {
+      await db.transaction(async (tx) => {
+        const scope = { spaceId: spaceId as SpaceScope["spaceId"] };
+        const affected = await tx
+          .select({ id: conversations.id })
+          .from(conversations)
+          .where(eq(conversations.spaceId, spaceId))
+          .orderBy(asc(conversations.id));
+        for (const conversation of affected) {
+          const id = conversation.id as ConversationId;
+          await lock(tx, scope, id);
+          const affectedRuns = await tx
+            .select()
+            .from(runs)
+            .where(
+              and(
+                eq(runs.spaceId, spaceId),
+                eq(runs.conversationId, id),
+                or(
+                  inArray(runs.state, ["queued", "running", "waiting"]),
+                  sql`exists (select 1 from ${approvalRequests} where ${approvalRequests.spaceId} = ${runs.spaceId} and ${approvalRequests.conversationId} = ${runs.conversationId} and ${approvalRequests.runId} = ${runs.id} and ${approvalRequests.state} = 'pending')`,
+                ),
+                accountId === undefined ? undefined : eq(runs.memberAccountId, accountId),
+              ),
+            )
+            .orderBy(asc(runs.messageSequence), asc(runs.id))
+            .for("update");
+          for (const row of affectedRuns) {
+            if (["queued", "running", "waiting"].includes(row.state)) {
+              await cancelRun(tx, scope, row);
+              continue;
+            }
+            // Normally finish already resolved these. Sweep any remaining addressed
+            // request without rewriting a completed Run's historical outcome.
+            const [counter] = await tx.select().from(counters).where(counterSelection(scope, id));
+            if (!counter) throw new Error("MISSING_CONVERSATION_COUNTER");
+            await cancelPendingRequests(tx, scope, runView(row), counter.sequence, row.fence);
+          }
+        }
+      });
+    },
     async beginTool(scope, run, tool) {
       await db.transaction(async (tx) => {
         await lock(tx, scope, run.conversationId);
@@ -497,6 +553,12 @@ export function createConversationsRepository(
     },
     async claimNext(scope, id, claim) {
       return db.transaction(async (tx) => {
+        const [available] = await tx
+          .select({ id: spaces.id })
+          .from(spaces)
+          .where(and(eq(spaces.id, scope.spaceId), isNull(spaces.deletionClaimedAt)))
+          .for("share");
+        if (!available) return undefined;
         const counter = await lockAndCancelDeparted(tx, scope, id);
         const [active] = await tx
           .select()
@@ -533,15 +595,21 @@ export function createConversationsRepository(
             and(
               eq(spaceMembers.spaceId, scope.spaceId),
               eq(spaceMembers.accountId, next.memberAccountId),
+              isNull(spaceMembers.removedAt),
             ),
           )
-          .for("key share");
+          .for("share");
         if (!actor) {
           await cancelRun(tx, scope, next);
           return undefined;
         }
         const actorScope = resolveSpaceScope(
-          spaceMemberSchema.parse({ ...actor, createdAt: actor.createdAt.toISOString() }),
+          spaceMemberSchema.parse({
+            spaceId: actor.spaceId,
+            accountId: actor.accountId,
+            role: actor.role,
+            createdAt: actor.createdAt.toISOString(),
+          }),
           next.memberAccountId,
           scope.spaceId,
         );
@@ -807,7 +875,7 @@ export function createConversationsRepository(
             eq(runs.fence, run.fence),
             gt(runs.leaseExpiresAt, sql`clock_timestamp()`),
             inArray(runs.state, ["running", "waiting"]),
-            sql`exists (select 1 from ${spaceMembers} where ${spaceMembers.spaceId} = ${runs.spaceId} and ${spaceMembers.accountId} = ${runs.memberAccountId})`,
+            sql`exists (select 1 from ${spaceMembers} inner join ${spaces} on ${spaces.id} = ${spaceMembers.spaceId} where ${spaceMembers.spaceId} = ${runs.spaceId} and ${spaceMembers.accountId} = ${runs.memberAccountId} and ${spaceMembers.removedAt} is null and ${spaces.deletionClaimedAt} is null)`,
           ),
         )
         .returning({ id: runs.id });
@@ -861,6 +929,7 @@ export function createConversationsRepository(
           and(
             eq(spaceMembers.spaceId, runs.spaceId),
             eq(spaceMembers.accountId, runs.memberAccountId),
+            isNull(spaceMembers.removedAt),
           ),
         )
         .where(runnable())
@@ -1156,6 +1225,25 @@ export function createConversationsRepository(
     async send(scope, id, input) {
       const values = memberMessageInputSchema.parse(input);
       return db.transaction(async (tx) => {
+        // Admission and revocation share Space -> member -> counter lock order.
+        const [available] = await tx
+          .select({ id: spaces.id })
+          .from(spaces)
+          .where(and(eq(spaces.id, scope.spaceId), isNull(spaces.deletionClaimedAt)))
+          .for("share");
+        if (!available) throw new SpaceNotFound();
+        const [member] = await tx
+          .select({ accountId: spaceMembers.accountId })
+          .from(spaceMembers)
+          .where(
+            and(
+              eq(spaceMembers.spaceId, scope.spaceId),
+              eq(spaceMembers.accountId, scope.member.accountId),
+              isNull(spaceMembers.removedAt),
+            ),
+          )
+          .for("share");
+        if (!member) throw new SpaceNotFound();
         const counter = await lockAndCancelDeparted(tx, scope, id);
         const [existing] = await tx
           .select()
@@ -1378,4 +1466,9 @@ export function createConversationsRepository(
       });
     },
   };
+}
+
+/** Shares the membership/deletion transaction, including card events and Run fencing. */
+export async function cancelSpaceRuns(tx: Transaction, spaceId: string, accountId?: string) {
+  await createConversationsRepository(tx).cancelSpaceRuns(spaceId, accountId);
 }

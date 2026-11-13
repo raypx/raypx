@@ -33,6 +33,12 @@ resolves that account's member row for the selected Space on every request befor
 calling `@raypx/agents/server`. Missing membership and missing records both answer
 NOT_FOUND, including for deployment administrators. Mutations require trusted
 Origin and account limits. Agent creation and its direct Conversation commit together.
+`spaceManagement` composes owner/member management, seven-day hashed invitations,
+owner approval overrides/audit and member directory/events. Its required removal
+hook cancels Runs/cards in the membership transaction; postcommit hooks abort local
+execution. A dedicated Space fanout actively closes affected sockets. The worker
+resumes claimed Space deletion in leased durable stages and starts only in worker
+roles, outside construction. No membership UI or group/delegation is implemented.
 `conversations.send/events/snapshot` reuse that scope boundary and delegate to the
 Agents conversation repository. `/events` is a session-authenticated, Origin-checked
 CrossWS route on the same listener in API-enabled roles. It multiplexes bounded

@@ -8,7 +8,9 @@ import {
 import {
   createConversationsRepository,
   createApprovalsRepository,
+  cancelSpaceRuns,
 } from "@raypx/agents/server/postgres";
+import { createSpaceManagement } from "@raypx/spaces/server/postgres";
 import type { Database } from "@raypx/database/connection";
 import { createSpaceMemoryService } from "@raypx/memory/space-server";
 import { createSpaceMemoryRepository } from "@raypx/memory/space-server/postgres";
@@ -17,6 +19,7 @@ import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
 import type { ConversationId } from "@raypx/core/agents";
 import { withMemoryTools } from "../conversations/memory-tools.js";
 import { createRoutineWorker } from "../routines/worker.js";
+import { createSpaceDeletionWorker } from "../spaces/deletion-worker.js";
 import { createDeploymentModels, type ConversationModels } from "../conversations/models.js";
 import type { ApiLogging } from "../logging.js";
 import { createModelConnections } from "../conversations/connections.js";
@@ -120,7 +123,21 @@ export async function composeAgents(
       .createLogger({ operation: "run.execution" })
       .emit({ status: 503, code: "EXECUTION_FAILED" }),
   );
+  const spaceManagement = createSpaceManagement(db, {
+    beforeMemberRemoved: cancelSpaceRuns,
+    afterMemberRemoved: (scope, accountId) => runner.cancelMember(scope.spaceId, accountId),
+    afterDeletionClaimed: (spaceId) => runner.cancelMember(spaceId),
+  });
+  const spaceDeletionWorker = createSpaceDeletionWorker(db, computerProvider, {
+    intervalMs: environment.RUN_RECOVERY_INTERVAL_MS,
+    onError: () =>
+      logger
+        .createLogger({ operation: "run.execution" })
+        .emit({ status: 503, code: "EXECUTION_FAILED" }),
+  });
   return {
+    spaceManagement,
+    spaceDeletionWorker,
     routines,
     spaceMemory,
     routineWorker,

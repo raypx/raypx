@@ -1,7 +1,7 @@
 import { ComputerFilesError, ComputerOperationError } from "@raypx/computers/server";
 import { InvalidConversationCursor } from "@raypx/core/conversation";
 import { ORPCError } from "@orpc/server";
-import { SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
+import { SpaceMutationError, SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { AccountContext } from "../../middleware/rpc.js";
 import type { RpcSetup } from "./setup.js";
@@ -17,6 +17,23 @@ export function createSpaceHandlers({
     try {
       return await run();
     } catch (error) {
+      if (error instanceof SpaceMutationError) {
+        const status = {
+          SPACE_OWNER_REQUIRED: "FORBIDDEN",
+          SPACE_LAST_OWNER: "CONFLICT",
+          SPACE_LAST_PRIVATE: "CONFLICT",
+          INVITATION_NOT_FOUND: "NOT_FOUND",
+          INVITATION_EXPIRED: "GONE",
+          INVITATION_CANCELLED: "GONE",
+          INVITATION_CONSUMED: "CONFLICT",
+          SPACE_AUDIT_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+          INVALID_AUDIT_CURSOR: "BAD_REQUEST",
+          REVIEW_MODEL_NOT_CONFIGURED: "BAD_REQUEST",
+        } as const;
+        throw new ORPCError(status[error.code], {
+          data: { error: { code: error.code }, requestId: context.requestId },
+        });
+      }
       if (error instanceof ComputerFilesError)
         throw new ORPCError(error.code === "FILE_NOT_FOUND" ? "NOT_FOUND" : "BAD_REQUEST", {
           data: { error: { code: error.code }, requestId: context.requestId },
@@ -42,6 +59,8 @@ export function createSpaceHandlers({
   const read = withRpcPermission({ window: 60, max: 60 });
   const write = withRpcPermission();
   const quota = limitAccount({ window: 60, max: 30 });
+  const invitationCreateQuota = limitAccount({ window: 60, max: 10 });
+  const invitationAcceptQuota = limitAccount({ window: 60, max: 20 });
   return {
     computers: {
       get: os.computers.get
@@ -113,6 +132,142 @@ export function createSpaceHandlers({
         ),
     },
     spaces: {
+      get: os.spaces.get
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.spaceManagement.get(scope)),
+        ),
+      rename: os.spaces.rename
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.rename(scope, { name: input.name }),
+          ),
+        ),
+      delete: os.spaces.delete
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.spaceManagement.delete(scope)),
+        ),
+      leave: os.spaces.leave
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.spaceManagement.leave(scope)),
+        ),
+      members: os.spaces.members
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.spaceManagement.members(scope)),
+        ),
+      updateMemberRole: os.spaces.updateMemberRole
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.updateMemberRole(scope, input.accountId, input.role),
+          ),
+        ),
+      removeMember: os.spaces.removeMember
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.removeMember(scope, input.accountId),
+          ),
+        ),
+      invitations: os.spaces.invitations
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.spaceManagement.invitations(scope)),
+        ),
+      createInvitation: os.spaces.createInvitation
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(invitationCreateQuota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.createInvitation(scope),
+          ),
+        ),
+      cancelInvitation: os.spaces.cancelInvitation
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.cancelInvitation(scope, input.id),
+          ),
+        ),
+      cancelInvitations: os.spaces.cancelInvitations
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.cancelInvitations(scope),
+          ),
+        ),
+      previewInvitation: os.spaces.previewInvitation
+        .use(withRpcPermission({ window: 60, max: 30 }))
+        .handler(({ context, input }) =>
+          call(context, () =>
+            options.spaceManagement.previewInvitation(context.auth.user.id, input.token),
+          ),
+        ),
+      acceptInvitation: os.spaces.acceptInvitation
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(invitationAcceptQuota)
+        .handler(({ context, input }) =>
+          call(context, () =>
+            options.spaceManagement.acceptInvitation(context.auth.user.id, input.token),
+          ),
+        ),
+      settings: os.spaces.settings
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) => options.spaceManagement.settings(scope)),
+        ),
+      setApprovalOverride: os.spaces.setApprovalOverride
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.setApprovalOverride(scope, input.mode),
+          ),
+        ),
+      clearApprovalOverride: os.spaces.clearApprovalOverride
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.clearApprovalOverride(scope),
+          ),
+        ),
+      audit: os.spaces.audit
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.audit(scope, input.cursor, input.limit),
+          ),
+        ),
+      events: os.spaces.events
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.spaceManagement.events(scope, input.after, input.limit),
+          ),
+        ),
       list: os.spaces.list
         .use(read)
         .handler(({ context }) => call(context, () => options.spaces.list(context.auth.user.id))),

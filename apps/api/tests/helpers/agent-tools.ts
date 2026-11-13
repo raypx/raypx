@@ -105,6 +105,9 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
         accountSettings.set(accountId, { mode: defaultMode, rules: [], revision: 0 });
       return structuredClone(accountSettings.get(accountId)!);
     },
+    getRunSettings(_scope, accountId, defaultMode) {
+      return approvalRepository.getSettings(accountId, defaultMode);
+    },
     async updateSettings(accountId, input, expectedRevision, defaultMode) {
       const current = accountSettings.get(accountId) ?? {
         mode: defaultMode,
