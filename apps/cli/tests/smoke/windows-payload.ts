@@ -5,10 +5,9 @@ import { tmpdir } from "node:os";
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
 import { enrollTestProfile } from "../helpers/instance.js";
 import { removeTemporaryDirectory } from "../helpers/temporary.js";
+import { readPayloadProxy } from "../helpers/payload-proxy.js";
 import { daemonFetch, readDaemon } from "../../src/runtime/daemon/endpoint.js";
 import { profilePath } from "../../src/runtime/state/index.js";
-import { createInterface } from "node:readline";
-import { Readable } from "node:stream";
 if (process.platform !== "win32") throw new Error("Windows payload lifecycle requires Windows");
 const root = await mkdtemp(join(tmpdir(), "raypx 中文 # payload "));
 const distribution = join(root, "extracted"),
@@ -142,11 +141,8 @@ try {
     env,
     stdin: "pipe",
     stdout: "pipe",
-    stderr: "ignore",
+    stderr: "pipe",
   });
-  // Windows text pipes can deliver CR and LF in separate, delayed chunks.
-  const reader = createInterface({ input: Readable.fromWeb(child.stdout), crlfDelay: Infinity });
-  const timeout = setTimeout(() => child.kill(), 90_000);
   try {
     await child.stdin.write(
       JSON.stringify({
@@ -167,9 +163,8 @@ try {
       }) + "\n",
     );
     await child.stdin.flush();
-    let opened = false,
-      exited = false;
-    for await (const line of reader) {
+    let opened = false;
+    await readPayloadProxy(child, (line) => {
       const message = JSON.parse(line);
       if (message.id === "open") {
         assert.ok(
@@ -178,19 +173,14 @@ try {
         );
         opened = true;
       }
-      if (message.event === "terminal.exit") {
-        assert.equal(message.data.exitCode, 17);
-        exited = true;
-        break;
-      }
-    }
-    assert.ok(opened && exited, "Copied daemon did not complete the PTY");
+      if (message.event !== "terminal.exit") return false;
+      assert.equal(message.data.exitCode, 17);
+      assert.ok(opened, "Copied daemon did not acknowledge terminal.open");
+      return true;
+    });
   } finally {
-    clearTimeout(timeout);
-    await child.stdin.end();
     child.kill();
     await child.exited;
-    reader.close();
   }
   await invoke(stable, ["daemon", "restart"]);
   await invoke(stable, ["daemon", "stop"]);
