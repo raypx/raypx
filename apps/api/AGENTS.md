@@ -10,6 +10,13 @@ API injects the owned database and authorization/transport ports.
 
 ## Interface
 
+`spaces.*` resolves the account from the current session and delegates first-use
+private-Space bootstrap and discovery to `@raypx/spaces/server`. `agents.*`
+resolves that account's member row for the selected Space on every request before
+calling `@raypx/agents/server`. Missing membership and missing records both answer
+NOT_FOUND, including for deployment administrators. Mutations require trusted
+Origin and account limits. Agent creation and its direct Conversation commit together.
+The owning feature packages also have separate `test:postgres` modes.
 `deployment:fixture:build --outfile <absolute-path>` bundles the test-only account
 provisioner for `smoke:deployment` as one minified Bun ESM file, without embedding
 environment values. Tooling mounts that file read-only into the prepared migration

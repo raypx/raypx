@@ -20,12 +20,14 @@ import { createApprovalsHandlers } from "./approvals.js";
 import { createRelayHandlers } from "./relay.js";
 import { createAccountHandlers } from "./account.js";
 import { createAttachmentHandlers } from "./attachments.js";
+import { createSpaceHandlers } from "./spaces.js";
 
 export const rpcPrefix = "/rpc";
 
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
   const setup = createRpcSetup(options);
   return setup.implementer.router({
+    ...createSpaceHandlers(setup),
     admin: createAdministrationHandlers(setup, readReadiness),
     attachments: createAttachmentHandlers(setup),
     instances: createInstancesHandlers(setup),

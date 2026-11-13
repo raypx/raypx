@@ -6,6 +6,11 @@ implements the earlier device-owned product. Guides under
 [delivery phase](../roadmap.md) replaces it. The earlier architecture and its
 decision records remain in the history of `canary`.
 
+The first additive Phase 1 slice provides Space/member and Agent/Conversation
+schemas, foundation tables, scoped feature repositories and session-authorized
+oRPC. Device functionality remains in place. Messages and execution are not part
+of this slice; see [Spaces](spaces.md#implemented-foundation-slice).
+
 Raypx is the durable home for persistent Agents. An Agent has an identity, one
 continuing conversation, memory, routines and a computer. It keeps working while
 the person is away, and it is the same Agent on every device they sign in from.
@@ -86,7 +91,7 @@ stays outside runtime dependency graphs. See
 | `packages/core`      | Domain schemas, identifiers and pure rules.                                                  |
 | `packages/contracts` | oRPC wire definitions composed from Core schemas.                                            |
 | `packages/providers` | Ports and adapters: computer, memory search, connections, web access.                        |
-| `packages/database`  | Drizzle schema, migrations and Space-scoped repositories.                                    |
+| `packages/database`  | Drizzle schema and migrations. Feature server entries own Space-scoped repositories.         |
 | Feature packages     | `agents`, `runs`, `spaces`, `memory`, `routines`, `pages`: model, server and client entries. |
 | Shared packages      | `auth`, `account`, `ui`, `blocks`, `i18n`, `email`, `storage`, `logger`.                     |
 

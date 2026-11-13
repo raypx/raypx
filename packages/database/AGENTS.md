@@ -13,6 +13,12 @@ PostgreSQL persistence for the new account foundation.
 
 PostgreSQL persistence for the new account foundation.
 
+`spaces`, `space_members`, `agents` and `conversations` add the server-owned domain
+without replacing device records. Space-owned primary keys start with `space_id`;
+Conversation references to Agents include it. A unique Space/Agent pair permits
+one direct Conversation. Features own scoped queries, API owns session admission.
+`spaces.private_for` is the unique account bootstrap marker, never a public field.
+
 ## Constraints
 
 Use postgres.js and Drizzle. Application tables and `public.__drizzle_migrations`

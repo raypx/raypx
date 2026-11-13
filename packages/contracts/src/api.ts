@@ -26,6 +26,7 @@ import { configurationContract } from "./config.js";
 import { jobsContract } from "./jobs.js";
 export * from "./jobs.js";
 import { memoryContract } from "./memory.js";
+import { spacesContract, agentsContract } from "./spaces.js";
 export * from "./memory.js";
 import {
   hostAuthorizationSchema,
@@ -54,6 +55,8 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  spaces: spacesContract,
+  agents: agentsContract,
   admin: administrationContract,
   attachments: sessionAttachmentContract,
   instances: instancesContract,

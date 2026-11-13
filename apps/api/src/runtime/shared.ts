@@ -1,4 +1,6 @@
 import { InstanceService } from "@raypx/instances/server";
+import { createSpaceAccess } from "@raypx/spaces/server/postgres";
+import { createAgentsRepository } from "@raypx/agents/server/postgres";
 import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
 import { createInstanceRepository } from "../instances/repository.js";
 import { createConfigRepository } from "../config/repository.js";
@@ -157,6 +159,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        spaces: createSpaceAccess(db),
+        agents: createAgentsRepository(db),
         instances,
         audit,
         administration,

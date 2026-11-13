@@ -5,6 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    "./spaces": "./src/spaces.ts",
+    "./agents": "./src/agents.ts",
     "./auth": "./src/auth.ts",
     "./agent-runs": "./src/agent-runs.ts",
     "./tasks": "./src/tasks.ts",

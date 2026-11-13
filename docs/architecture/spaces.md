@@ -3,6 +3,30 @@
 A Space is the authorization boundary. Agents, conversations, memory, routines,
 pages and computers live in one Space and never cross to another implicitly.
 
+## Implemented foundation slice
+
+`@raypx/spaces/server` exposes the admission and repository ports;
+`/server/postgres` implements account-scoped discovery/bootstrap and Space-scoped
+Space/member reads. A first call to the new procedures creates the account's
+private Space, even if it has already joined another. An account-row lock and the
+unique private-Space marker serialize concurrent first calls. Explicit creation
+also adds an owner in the same transaction. The initial name is `Personal`.
+
+`@raypx/agents/server` exposes Agent CRUD and paired direct Conversation ports,
+implemented by `/server/postgres`. API
+accepts a Space selector, resolves the current session and matching membership
+on every request, and passes an opaque scope to the repository. Both Space roles
+can manage Agents; deployment roles do not bypass admission. Lists filter before
+limiting. Missing membership and missing records both return `NOT_FOUND`.
+
+An Agent's model choice is an opaque `modelId`, without an endpoint, credential or
+vendor field. Updates replace the configuration and preserve the Conversation.
+Agent/Conversation creation is atomic. Deletion removes both synchronously while
+they have no execution or external resources; resumable deletion precedes those
+future dependencies. No Space/member mutation, messages, stream, model execution
+or UI is exposed by this slice. Invitations, membership management and their audit
+workflow remain Phase 6 work.
+
 ## Spaces
 
 - A new account gets one private Space. Most people need only one.

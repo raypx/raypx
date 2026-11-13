@@ -14,8 +14,12 @@ import type { ApiLogging } from "../logging.js";
 import type { RateLimiter } from "../rate-limit/types.js";
 import type { CloudJobsService } from "@raypx/jobs/server";
 import type { ContextLibraryService } from "@raypx/memory/server";
+import type { SpaceAccess } from "@raypx/spaces/server";
+import type { AgentsRepository } from "@raypx/agents/server";
 /** Every service is required: an absent one is a composition error, not a runtime state. */
 export interface ApiAppOptions {
+  spaces: SpaceAccess;
+  agents: AgentsRepository;
   instances: InstanceService;
   audit?: AuditService;
   administration: AdministrationQueries;

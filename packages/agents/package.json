@@ -1,0 +1,25 @@
+{
+  "name": "@raypx/agents",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./server/postgres": "./src/server/postgres.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
+    "test": "bun --bun vitest run",
+    "test:postgres": "bun --bun vitest run --mode postgres"
+  },
+  "dependencies": {
+    "@raypx/core": "workspace:*",
+    "@raypx/database": "workspace:*",
+    "@raypx/spaces": "workspace:*",
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "vitest": "catalog:dev"
+  }
+}

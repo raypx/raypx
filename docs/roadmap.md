@@ -1,8 +1,9 @@
 # Roadmap
 
 This is the delivery order for the [target architecture](architecture/README.md).
-Nothing below is implemented. The code on this branch still implements the earlier
-device-owned product; each phase replaces part of it.
+Phase 1's first additive slice implements Spaces, membership records and Agent CRUD
+with one direct Conversation per Agent, through oRPC. The remainder below is not
+implemented. The earlier device-owned product remains until a phase replaces it.
 
 ## Phase overview
 

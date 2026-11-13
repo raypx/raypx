@@ -7,6 +7,10 @@ adapters, execution hosts and product views. Schemas are the single source of in
 
 ## Interface
 
+- `/spaces` owns Space IDs, names, membership roles and pure membership matching.
+- `/agents` owns persistent Agent configuration and IDs, Conversation IDs and the
+  pure direct-Conversation constructor. Model choices are opaque model IDs, with no
+  provider vocabulary or credentials. These are separate from device-owned tasks.
 - `/memory` owns document/version schemas, mutation inputs and domain errors.
 - `/jobs` owns local/cloud schedule schemas, domain errors and pure calendar
   calculations. Cron instances stay paused and are stopped after calculation;

@@ -9,6 +9,8 @@ import {
   integer,
   jsonb,
   primaryKey,
+  foreignKey,
+  check,
 } from "drizzle-orm/pg-core";
 import { defineRelations, sql } from "drizzle-orm";
 import { oauthTables } from "./oauth-schema.js";
@@ -35,6 +37,69 @@ export const user = pgTable(
   },
   (table) => [index("user_created_at_idx").on(table.createdAt)],
 );
+export const spaces = pgTable("spaces", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  // Durable first-use marker: joining/creating other Spaces cannot suppress the private one.
+  privateFor: text("private_for")
+    .unique()
+    .references(() => user.id, { onDelete: "cascade" }),
+  ...timestamps(),
+});
+export const spaceMembers = pgTable(
+  "space_members",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["owner", "member"] }).notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.accountId] }),
+    index("space_members_account_idx").on(table.accountId, table.spaceId),
+    check("space_members_role_check", sql`${table.role} in ('owner', 'member')`),
+  ],
+);
+export const agents = pgTable(
+  "agents",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+    name: text("name").notNull(),
+    instructions: text("instructions").notNull(),
+    modelId: text("model_id").notNull(),
+    ...timestamps(),
+  },
+  (table) => [primaryKey({ columns: [table.spaceId, table.id] })],
+);
+export const conversations = pgTable(
+  "conversations",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+    agentId: text("agent_id").notNull(),
+    kind: text("kind", { enum: ["direct"] }).notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    uniqueIndex("conversations_direct_agent_idx").on(table.spaceId, table.agentId),
+    foreignKey({
+      columns: [table.spaceId, table.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    check("conversations_kind_check", sql`${table.kind} = 'direct'`),
+  ],
+);
+
 export const twoFactor = pgTable(
   "two_factor",
   {
@@ -444,6 +509,10 @@ export const {
 } = oauthTables(user, session);
 
 export const schema = {
+  spaces,
+  spaceMembers,
+  agents,
+  conversations,
   passkey,
   twoFactor,
   jwks,

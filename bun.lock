@@ -31,6 +31,7 @@
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
         "@raypx/account": "workspace:*",
+        "@raypx/agents": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/control": "workspace:*",
@@ -43,6 +44,7 @@
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
+        "@raypx/spaces": "workspace:*",
         "@raypx/storage": "workspace:*",
         "better-auth": "catalog:",
         "crossws": "catalog:",
@@ -342,6 +344,20 @@
       },
       "peerDependencies": {
         "react": "^19.3.0",
+      },
+    },
+    "packages/agents": {
+      "name": "@raypx/agents",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/database": "workspace:*",
+        "@raypx/spaces": "workspace:*",
+        "drizzle-orm": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tsconfig": "workspace:*",
+        "vitest": "catalog:dev",
       },
     },
     "packages/ai": {
@@ -768,6 +784,19 @@
         "@types/ws": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "typescript": "catalog:dev",
+        "vitest": "catalog:dev",
+      },
+    },
+    "packages/spaces": {
+      "name": "@raypx/spaces",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/database": "workspace:*",
+        "drizzle-orm": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx/tsconfig": "workspace:*",
         "vitest": "catalog:dev",
       },
     },
@@ -1882,6 +1911,8 @@
 
     "@raypx/account": ["@raypx/account@workspace:packages/account"],
 
+    "@raypx/agents": ["@raypx/agents@workspace:packages/agents"],
+
     "@raypx/ai": ["@raypx/ai@workspace:packages/ai"],
 
     "@raypx/analytics": ["@raypx/analytics@workspace:packages/analytics"],
@@ -1931,6 +1962,8 @@
     "@raypx/providers": ["@raypx/providers@workspace:packages/providers"],
 
     "@raypx/runtime-node": ["@raypx/runtime-node@workspace:packages/runtime-node"],
+
+    "@raypx/spaces": ["@raypx/spaces@workspace:packages/spaces"],
 
     "@raypx/storage": ["@raypx/storage@workspace:packages/storage"],
 
