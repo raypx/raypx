@@ -1,0 +1,176 @@
+packages/drizzle-kit/src/config.ts
+  s_28758cb14041db::t_ab15a18486778b 1
+packages/drizzle-kit/src/cli.ts
+  s_28758cb14041db::t_ab15a18486778b 1-5,7-12,14-15,17
+apps/api/Dockerfile
+  s_28758cb14041db::t_fac7c201a08765 17-21,23,27,29,51
+  s_28758cb14041db::t_49a196326d2f37 22
+docs/development/configuration.md
+  s_28758cb14041db::t_1276eb4203103b 11-14,92-94,99,102-105
+packages/database/package.json
+  s_28758cb14041db::t_3b63beff186276 25
+  s_28758cb14041db::t_ab15a18486778b 16-17
+apps/api/server/configuration/reads.ts
+  s_28758cb14041db::t_4711caa42e2e57 3
+packages/drizzle-kit/vitest.config.ts
+  s_28758cb14041db::t_3b63beff186276 4
+  s_28758cb14041db::t_ab15a18486778b 1-3
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_28758cb14041db::t_fac7c201a08765 282
+apps/cli/scripts/generate-sqlite.ts
+  s_28758cb14041db::t_ab15a18486778b 11
+docs/development/local-sqlite.md
+  s_28758cb14041db::t_c5a5d7de38fba6 47-48
+packages/database/drizzle.config.ts
+  s_28758cb14041db::t_ab15a18486778b 1,4,10
+apps/api/server/configuration/migrate.ts
+  s_28758cb14041db::t_fac7c201a08765 40
+  s_28758cb14041db::t_ca49c9343064a2 48-52,58-60,77-78,80-82,90-95
+  s_28758cb14041db::t_3507d77c41fe03 15,17-28,30,106
+  s_28758cb14041db::t_deb9382793c7d5 1-3,6,8-14,29,31-33,35-39,41-47,53-57,61-76,79,83-89,96-102,104-105
+package.json
+  s_28758cb14041db::t_65eedd6cca4e7a 195
+  s_28758cb14041db::t_944b84e0332f27 199
+  s_28758cb14041db::t_deb9382793c7d5 163
+  s_28758cb14041db::t_ab15a18486778b 108
+  s_28758cb14041db::t_e9d913b9f58399 13-17,27,34,38-41,47,52-53,59-60,66-67,87,92,99,112,114-115,117,123-125,130
+docs/development/railway.md
+  s_28758cb14041db::t_49a196326d2f37 185-186
+  s_28758cb14041db::t_1276eb4203103b 45-48,179-180,183
+  s_28758cb14041db::t_65eedd6cca4e7a 148
+knip.json
+  s_28758cb14041db::t_4711caa42e2e57 48-51
+  s_28758cb14041db::t_29a65a89cc7b98 36-41
+deploy/AGENTS.md
+  s_28758cb14041db::t_1276eb4203103b 10-12,45-46
+docs/development/object-storage.md
+  s_28758cb14041db::t_1276eb4203103b 32,49-53
+deploy/compose.yaml
+  s_28758cb14041db::t_fac7c201a08765 32-41
+packages/drizzle-kit/LICENSE
+  s_28758cb14041db::t_ee9454b5283230 1-26
+deploy/.env.example
+  s_28758cb14041db::t_fac7c201a08765 15-16,24
+packages/drizzle-kit/bin/raypx-drizzle-kit.mjs
+  s_28758cb14041db::t_ab15a18486778b 1-4
+apps/api/server/storage/configuration.ts
+  s_28758cb14041db::t_deb9382793c7d5 58,61,66-71
+  s_28758cb14041db::t_ca49c9343064a2 72-79
+packages/drizzle-kit/AGENTS.md
+  s_28758cb14041db::t_ab15a18486778b 1-10
+  s_28758cb14041db::t_c5a5d7de38fba6 11-12
+apps/api/AGENTS.md
+  s_28758cb14041db::t_1276eb4203103b 42-44,91,202,214
+packages/drizzle-kit/package.json
+  s_28758cb14041db::t_ab15a18486778b 1-7,9-13,16-29
+  s_28758cb14041db::t_3b63beff186276 8
+  s_28758cb14041db::t_3ee2bc3a33b127 14-15
+packages/tooling/src/build/bun-deployment.test.ts
+  s_28758cb14041db::t_fac7c201a08765 45,52
+  s_28758cb14041db::t_ca49c9343064a2 46-48
+  s_28758cb14041db::t_49a196326d2f37 49-51
+docs/development/deployment.md
+  s_28758cb14041db::t_5ebcbee8f466eb 64-65
+  s_28758cb14041db::t_1276eb4203103b 35-37
+packages/database/AGENTS.md
+  s_28758cb14041db::t_c5a5d7de38fba6 20
+  s_28758cb14041db::t_1276eb4203103b 27-28
+AGENTS.md
+  s_28758cb14041db::t_5048f4a1982d00 73
+packages/drizzle-kit/tsconfig.json
+  s_28758cb14041db::t_ab15a18486778b 1-4
+infra/railway/railway.ts
+  s_28758cb14041db::t_fac7c201a08765 31
+packages/database/src/migrate.ts
+  s_28758cb14041db::t_deb9382793c7d5 4-6,11,27
+apps/cli/drizzle.config.ts
+  s_28758cb14041db::t_ab15a18486778b 1,3,7
+packages/drizzle-kit/src/extract.test.ts
+  s_28758cb14041db::t_c5a5d7de38fba6 1-23
+apps/cli/package.json
+  s_28758cb14041db::t_3b63beff186276 48
+apps/api/package.json
+  s_28758cb14041db::t_deb9382793c7d5 8
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_28758cb14041db::t_ca49c9343064a2 166-170
+  s_28758cb14041db::t_6743b472b33feb 7-9,18,21-24,32,36-37,82,118,123-165,171-177
+  s_28758cb14041db::t_7586f5fc5e3777 102-105,108-110
+  s_28758cb14041db::t_f82fd585d4c1ad 106-107,111-117
+  s_28758cb14041db::t_8fd297897c0f7b 178-179
+infra/railway/stack.test.ts
+  s_28758cb14041db::t_fac7c201a08765 46
+docs/development/kit-library-release.md
+  s_28758cb14041db::t_c5a5d7de38fba6 87-91
+  s_28758cb14041db::t_5048f4a1982d00 5-6,92-93
+docs/development/validation-artifacts.md
+  s_28758cb14041db::t_b4e36e8ca3b75e 435
+  s_28758cb14041db::t_65eedd6cca4e7a 432,434
+docs/development/ai.md
+  s_28758cb14041db::t_65eedd6cca4e7a 3-4,126
+packages/drizzle-kit/src/extract.ts
+  s_28758cb14041db::t_ab15a18486778b 1-14
+apps/api/server/configuration/resend.ts
+  s_28758cb14041db::t_deb9382793c7d5 33
+bun.lock
+  s_28758cb14041db::t_bd03b07b058e4d 88,498,549-567,871,875,881,883-884,887-890,901,911,915-918,925,927-928,934-935,938-939,947,960,964-965,970-971,973,976,978,999,1197,1199,1201,1203,1205,1207,1209,1211,1225,1227,1229,1231,1233,1235,1259,1261,1263,1265,1365,1367,1369,1371,1409,1411,1553,1555,1557,1559,1561,1563,1565,1567,1569,1571,1573,1575,1577,1579,1581,1583,1585,1587,1589,1591,1593,1595,1597,1599,1603,1745,1801,1831-1832,1935,1937,1939,1941,1943,1945,1947,2053,2333,2535,2597,2615,2617,2619,2623,2749,3037,3107,3167,3197,3201,3209,3211,3481,3507,3517,3573,3575,3579,3691-3692
+packages/database/drizzle-foundation/20261015045045_goofy_meltdown/snapshot.json
+  s_28758cb14041db::t_530d98d0b31c2e 2-3,9-227,234,236-237,240,242-243,246,248-249,252,254-255,258-260,268,271-273,281,284-286,294,297-299,307,310-312,320,323-325,333,336-338,346,349-351,359,362-364,372,375-377,385,388-390,398,401-403,411,414-416,424,427-429,437,440-442,450,453-455,463,466-468,476,479-481,489,492-494,502,505-507,515,518-520,528,531-533,541,544-546,554,557-559,567,570-572,580,583-585,593,596-598,606,609-611,619,622-624,632,635-637,645,648-650,658,661-663,671,674-676,684,687-689,697,700-702,718,721-723,746,749-751,767,770-772,788,791-793,805,808-810,822,825-827,835-837,845-847,855-857,865-867,876-878,886
+packages/database/drizzle-foundation/20261021003922_colossal_mephistopheles/snapshot.json
+  s_28758cb14041db::t_4779261d2c122e 2-3,9,11-15,17-23,25-27,30-34,36-42,44-46,49-53,55-61,63-65,68-72,74-80,82-84,87-91,93-99,101-103,106-110,112-118,120-122,125-129,131-137,139-141,144-148,150-156,158-160,163-168,170-174,176-189,191-195,197-210,212-216,218-231,233-237,239-252,254-258,260-273,275-279,281-294,296-300,302-314,316-320,322-337,339-406,408-491,494-1519
+packages/database/drizzle-foundation/20261022055425_square_robbie_robertson/snapshot.json
+  s_28758cb14041db::t_f5fe567e250eb4 2-3,9-48,51-176
+packages/database/drizzle-foundation/20261022105525_productive_husk/snapshot.json
+  s_28758cb14041db::t_88cf0538eb75c7 2-3,9-48,51-100
+packages/database/drizzle-foundation/20261022123457_wandering_alex_wilder/snapshot.json
+  s_28758cb14041db::t_9237b187df1c39 2-3,9-50,53-208
+packages/database/drizzle-foundation/20261024144609_acoustic_madripoor/snapshot.json
+  s_28758cb14041db::t_a519f412143d50 2-3,9-89,92-245
+packages/database/drizzle-foundation/20261024151740_clever_firebrand/snapshot.json
+  s_28758cb14041db::t_e935067ff6e40f 2-3,9-29,32-71
+packages/database/drizzle-foundation/20261025054251_brave_corsair/snapshot.json
+  s_28758cb14041db::t_055d5949402b38 2-3,9-197,200-615
+packages/database/drizzle-foundation/20261025062543_broken_firebrand/snapshot.json
+  s_28758cb14041db::t_7b75b43ec7744b 2-3,9-28,31-56
+packages/database/drizzle-foundation/20261025094105_overjoyed_nebula/snapshot.json
+  s_28758cb14041db::t_236d25628a1ac8 2-3,9-44,47-80
+packages/database/drizzle-foundation/20261026075921_mushy_kylun/snapshot.json
+  s_28758cb14041db::t_f3e94f7b286fc8 2-3,9-223,226-891
+packages/database/drizzle-foundation/20261026080557_late_wendell_rand/snapshot.json
+  s_28758cb14041db::t_fd57a2aca337b0 2-3,9-49,52-91
+packages/database/drizzle-foundation/20261026093043_common_doctor_octopus/snapshot.json
+  s_28758cb14041db::t_ae838bebea1e26 2-3,9-159,162-584
+packages/database/drizzle-foundation/20261026102159_yielding_lifeguard/snapshot.json
+  s_28758cb14041db::t_7c8d1e98586a26 2-3,9-50,53-130
+packages/database/drizzle-foundation/20261026110729_sour_morph/snapshot.json
+  s_28758cb14041db::t_d49d062d0b6f6f 2-3,9-27,30-55
+packages/database/drizzle-foundation/20261026114643_peaceful_cable/snapshot.json
+  s_28758cb14041db::t_1b56a9bbed9d61 2-3,9-70,73-204
+packages/database/drizzle-foundation/20261102061616_good_mephisto/snapshot.json
+  s_28758cb14041db::t_8fd440f497a9a7 2-3,9-98,101-182
+packages/database/drizzle-foundation/20261102153715_tiresome_bulldozer/snapshot.json
+  s_28758cb14041db::t_d48982e8440d60 2-3,9-111,114-360
+packages/database/drizzle-foundation/20261103153720_sturdy_norman_osborn/snapshot.json
+  s_28758cb14041db::t_cac4e259fc56bb 2-3,9-112,115-461
+packages/database/drizzle-foundation/20261112160612_session-attachments/snapshot.json
+  s_28758cb14041db::t_5f2d7ee8c166d4 2-3,9-110,113-457
+packages/database/drizzle-foundation/20261112162825_storage-settings-revision/snapshot.json
+  s_28758cb14041db::t_a2efcb337d9afb 2-3,9-33,36-39,41-44,47-80
+packages/database/drizzle-foundation/20261112232505_mail-configuration/snapshot.json
+  s_28758cb14041db::t_b6b71580c6b9f8 2-3,6-27,30-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0a67a7b2504c248f5daf5cd8eeec9d1bea863605",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
