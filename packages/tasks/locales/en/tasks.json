@@ -276,5 +276,8 @@
     "unsupported": "This request cannot be answered remotely with the current connector.",
     "expires": "Returns to terminal at {time}",
     "changed": "The request changed. Refresh before answering."
-  }
+  },
+  "copyCode": "Copy code",
+  "codeCopied": "Code copied",
+  "copyCodeError": "Select the code and copy it manually."
 }

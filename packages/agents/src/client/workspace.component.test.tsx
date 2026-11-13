@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { agentSchema, conversationSchema } from "@raypx/core/agents";
@@ -83,10 +84,14 @@ function fixture({
   models = [{ modelId: "fixture", name: "Fixture model" }],
   snapshot,
   language = "en",
+  items = [{ agent, conversation }],
+  memberships = [membership],
 }: {
   models?: { modelId: string; name: string }[];
   snapshot?: ConversationSnapshot;
   language?: "en" | "zh";
+  items?: AgentConversationView[];
+  memberships?: (typeof membership)[];
 } = {}) {
   let receive: ((frame: ConversationServerFrame) => void) | undefined;
   let close: ((code?: number) => void) | undefined;
@@ -125,14 +130,14 @@ function fixture({
   );
   const client: AgentsWorkspacePort = {
     spaces: {
-      list: async () => [membership],
+      list: async () => memberships,
       create: async ({ name }) => ({
         ...membership,
         space: { ...membership.space, id: spaceSchema.shape.id.parse("space-two"), name },
       }),
     },
     agents: {
-      list: async () => [{ agent, conversation }],
+      list: async () => items,
       models: async () => models,
       create,
       update,
@@ -208,7 +213,7 @@ it("allows metadata edits with an unchanged unavailable model and never chooses 
   const test = fixture({ models: [] });
   test.mount();
   await screen.findByRole("button", { name: "Writing Agent" });
-  fireEvent.click(screen.getByRole("button", { name: "Edit Agent" }));
+  await rowAction("Edit Agent");
   const dialog = await screen.findByRole("dialog");
   expect(within(dialog).getByText("No models are available on this server.")).toBeInTheDocument();
   expect(within(dialog).getByText("Unavailable model: fixture")).toBeInTheDocument();
@@ -259,20 +264,19 @@ it("creates and edits an Agent and confirms deletion", async () => {
       },
     }),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Edit Agent" }));
+  await rowAction("Edit Agent");
   const edit = await screen.findByRole("dialog");
   fireEvent.change(within(edit).getByRole("textbox", { name: "Name" }), {
     target: { value: "Edited Agent" },
   });
   fireEvent.click(within(edit).getByRole("button", { name: "Save" }));
   await waitFor(() => expect(test.update).toHaveBeenCalledOnce());
-  fireEvent.click(screen.getByRole("button", { name: "Delete Agent" }));
+  await rowAction("Delete Agent");
   const confirm = await screen.findByRole("alertdialog");
   expect(test.remove).not.toHaveBeenCalled();
   fireEvent.click(within(confirm).getByRole("button", { name: "Cancel" }));
   expect(test.remove).not.toHaveBeenCalled();
-  await waitFor(() => expect(screen.getByRole("button", { name: "Delete Agent" })).toBeEnabled());
-  fireEvent.click(screen.getByRole("button", { name: "Delete Agent" }));
+  await rowAction("Delete Agent");
   fireEvent.click(
     within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete Agent" }),
   );
@@ -306,7 +310,7 @@ it("converges streamed text to one committed segment without announcing each del
     text: "A streamed",
   });
   expect(screen.getByText("A streamed")).toBeInTheDocument();
-  const announcement = screen.getByText("Replying…");
+  const announcement = screen.getByRole("status");
   await test.emit({
     type: "reply.delta",
     spaceId: agent.spaceId,
@@ -524,4 +528,534 @@ it("does not navigate after an Agent mutation completes for an unmounted account
   await screen.findByRole("button", { name: "Writing Agent" });
   expect(navigate).not.toHaveBeenCalled();
   expect(screen.queryByText("Late private Agent")).not.toBeInTheDocument();
+});
+
+async function rowAction(name: string) {
+  fireEvent.click(screen.getByRole("button", { name: /Actions for/ }));
+  fireEvent.click(await screen.findByRole("menuitem", { name }));
+}
+
+it("sends on Enter, inserts a newline with Shift+Enter, and restores composer focus", async () => {
+  const test = fixture();
+  test.mount(true);
+  const editor = await screen.findByRole("textbox", { name: "Message" });
+  const user = userEvent.setup();
+  await user.type(editor, "First line{Shift>}{Enter}{/Shift}Second line");
+  expect(editor).toHaveValue("First line\nSecond line");
+  expect(test.send).not.toHaveBeenCalled();
+  await user.keyboard("{Enter}");
+  await waitFor(() => expect(test.send).toHaveBeenCalledOnce());
+  expect(test.send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: expect.objectContaining({ text: "First line\nSecond line" }),
+    }),
+  );
+  expect(editor).toHaveValue("");
+  expect(editor).toHaveFocus();
+  expect(editor.className).toContain("max-h-48");
+});
+
+it("does not send while Chinese IME composition or its keyCode fallback owns Enter", async () => {
+  const test = fixture();
+  test.mount(true);
+  const editor = await screen.findByRole("textbox", { name: "Message" });
+  fireEvent.change(editor, { target: { value: "你好" } });
+  fireEvent.compositionStart(editor);
+  fireEvent.keyDown(editor, { key: "Enter" });
+  fireEvent.compositionEnd(editor);
+  fireEvent.keyDown(editor, { key: "Enter", isComposing: true });
+  fireEvent.keyDown(editor, { key: "Enter", keyCode: 229 });
+  expect(test.send).not.toHaveBeenCalled();
+  fireEvent.keyDown(editor, { key: "Enter" });
+  await waitFor(() => expect(test.send).toHaveBeenCalledOnce());
+});
+
+it("switches Send to Stop for the selected conversation and back after cancellation", async () => {
+  const test = fixture({
+    snapshot: { conversation, messages: [message], runs: [], segments: [], cursor: 1 },
+  });
+  test.mount(true);
+  await screen.findByRole("button", { name: "Send" });
+  await test.emit({
+    type: "event",
+    entry: {
+      event: {
+        kind: "run.state",
+        runId: run.id,
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        sequence: 2,
+        state: "queued",
+        failureCode: null,
+        createdAt: time,
+      },
+    },
+  });
+  expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
+  expect(screen.getByText("Queued")).toBeInTheDocument();
+  const member = screen.getByText("Hello Agent").closest("article")!;
+  expect(within(member).queryByText("Queued")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Stop reply" }));
+  await waitFor(() =>
+    expect(test.stop).toHaveBeenCalledWith({
+      spaceId: agent.spaceId,
+      conversationId: conversation.id,
+      runId: run.id,
+    }),
+  );
+  await test.emit({
+    type: "event",
+    entry: {
+      event: {
+        kind: "run.state",
+        runId: run.id,
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        sequence: 3,
+        state: "cancelled",
+        failureCode: null,
+        createdAt: time,
+      },
+    },
+  });
+  expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Stop reply" })).not.toBeInTheDocument();
+  expect(within(screen.getByRole("log")).getByText("Stopped")).toBeInTheDocument();
+});
+
+it("follows output only while pinned and offers an explicit jump when reading older messages", async () => {
+  const test = fixture({
+    snapshot: { conversation, messages: [message], runs: [run], segments: [], cursor: 3 },
+  });
+  test.mount(true);
+  await screen.findByText("Hello Agent");
+  const log = screen.getByRole("log");
+  let height = 1000;
+  Object.defineProperties(log, {
+    scrollHeight: { configurable: true, get: () => height },
+    clientHeight: { configurable: true, value: 200 },
+  });
+  log.scrollTop = 800;
+  fireEvent.scroll(log);
+  height = 1100;
+  await test.emit({
+    type: "reply.prefix",
+    spaceId: agent.spaceId,
+    conversationId: conversation.id,
+    runId: run.id,
+    segmentId: "stream",
+    offset: 0,
+    text: "First",
+  });
+  expect(log.scrollTop).toBe(1100);
+  log.scrollTop = 120;
+  fireEvent.scroll(log);
+  expect(screen.getByRole("button", { name: "Jump to latest" })).toBeInTheDocument();
+  height = 1200;
+  await test.emit({
+    type: "reply.delta",
+    spaceId: agent.spaceId,
+    conversationId: conversation.id,
+    runId: run.id,
+    segmentId: "stream",
+    offset: 5,
+    text: " update",
+  });
+  expect(log.scrollTop).toBe(120);
+  fireEvent.click(screen.getByRole("button", { name: "Jump to latest" }));
+  expect(log.scrollTop).toBe(1200);
+  expect(log).toHaveFocus();
+  expect(screen.queryByRole("button", { name: "Jump to latest" })).not.toBeInTheDocument();
+  height = 1300;
+  await test.emit({
+    type: "reply.delta",
+    spaceId: agent.spaceId,
+    conversationId: conversation.id,
+    runId: run.id,
+    segmentId: "stream",
+    offset: 12,
+    text: " again",
+  });
+  expect(log.scrollTop).toBe(1300);
+});
+
+it.each(["en", "zh"] as const)(
+  "truncates long %s Agent names with accessible full names, secondary models and a row menu",
+  async (language) => {
+    const name =
+      language === "zh"
+        ? "用于很长的项目名称和任务说明的写作智能体".repeat(4)
+        : "A very long Agent name with unbrokenwords".repeat(4);
+    const test = fixture({ language, items: [{ agent: { ...agent, name }, conversation }] });
+    test.mount();
+    const row = await screen.findByRole("button", { name });
+    expect(row).toHaveAttribute("title", name);
+    expect(within(row).getByText(name)).toHaveClass("truncate");
+    expect(within(row).getByText("Fixture model")).toHaveClass("truncate");
+    expect(row.querySelector('[data-slot="avatar-fallback"]')).toHaveTextContent(
+      Array.from(name)[0]!,
+    );
+    expect(screen.queryByRole("menuitem")).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: language === "zh" ? `${name}的操作` : `Actions for ${name}`,
+      }),
+    );
+    expect(
+      await screen.findByRole("menuitem", {
+        name: language === "zh" ? "编辑智能体" : "Edit Agent",
+      }),
+    ).toBeInTheDocument();
+  },
+);
+
+it("focuses the conversation on selection and restores the selected row on Back", async () => {
+  const test = fixture();
+  test.mount();
+  const row = await screen.findByRole("button", { name: "Writing Agent" });
+  fireEvent.click(row);
+  await screen.findByRole("textbox", { name: "Message" });
+  expect(screen.getByRole("heading", { level: 2, name: "Writing Agent" })).toHaveFocus();
+  expect(row).toHaveAttribute("aria-current", "page");
+  fireEvent.click(screen.getByRole("button", { name: "Back to Agents" }));
+  expect(row).toHaveFocus();
+});
+
+it("shows one sender for consecutive messages and no status for a completed reply", async () => {
+  const test = fixture({
+    snapshot: {
+      conversation,
+      messages: [
+        message,
+        {
+          ...message,
+          id: messageSchema.shape.id.parse("second"),
+          sequence: 2,
+          text: "A follow-up",
+        },
+      ],
+      runs: [{ ...run, messageId: messageSchema.shape.id.parse("second"), state: "succeeded" }],
+      segments: [
+        {
+          id: "segment",
+          spaceId: agent.spaceId,
+          conversationId: conversation.id,
+          runId: run.id,
+          sequence: 4,
+          text: "A completed answer",
+          createdAt: time,
+        },
+      ],
+      cursor: 5,
+    },
+  });
+  test.mount(true);
+  const log = await screen.findByRole("log");
+  await screen.findByText("A completed answer");
+  expect(within(log).getAllByText("You")).toHaveLength(1);
+  expect(within(log).queryByText("Completed")).not.toBeInTheDocument();
+  expect(screen.queryByText("Live")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Refresh" })).not.toBeInTheDocument();
+});
+
+it("shows an empty Space with one create action and a selection state when Agents exist", async () => {
+  const test = fixture({ items: [] });
+  const view = test.mount();
+  await screen.findByText("No Agents in this Space");
+  expect(screen.getAllByRole("button", { name: "New Agent" })).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "New Agent" }));
+  expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  view.unmount();
+  fixture().mount();
+  expect(await screen.findByText("Choose an Agent to open its conversation.")).toBeInTheDocument();
+});
+
+it("shows no Spaces, loading, and a directory failure with an explicit retry", async () => {
+  const empty = fixture({ memberships: [] });
+  const view = empty.mount();
+  await screen.findByText("Create a Space to get started.");
+  expect(screen.getAllByRole("button", { name: "New Space" })).toHaveLength(1);
+  view.unmount();
+  const test = fixture();
+  let finish!: (value: (typeof membership)[]) => void;
+  test.client.spaces.list = () =>
+    new Promise((resolve) => {
+      finish = resolve;
+    });
+  const loading = test.mount();
+  await screen.findByText("Loading…");
+  expect(screen.queryByText("No Agents in this Space")).not.toBeInTheDocument();
+  await act(async () => finish([membership]));
+  await screen.findByRole("button", { name: "Writing Agent" });
+  loading.unmount();
+  const failed = fixture();
+  failed.client.spaces.list = vi
+    .fn()
+    .mockRejectedValueOnce(new Error("private diagnostic"))
+    .mockResolvedValue([membership]);
+  failed.mount();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Could not load Spaces or Agents. Try again.",
+  );
+  expect(screen.queryByText("private diagnostic")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+  await screen.findByRole("button", { name: "Writing Agent" });
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("loads a conversation with one focus action and keeps failed loads retryable while editing", async () => {
+  const test = fixture();
+  let finish!: (snapshot: ConversationSnapshot) => void;
+  test.readSnapshot.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  test.mount(true);
+  await screen.findByRole("log");
+  expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  await act(async () => finish({ conversation, messages: [], runs: [], segments: [], cursor: 0 }));
+  await screen.findByText("Start a conversation");
+  fireEvent.click(screen.getByRole("button", { name: "Write a message" }));
+  expect(screen.getByRole("textbox", { name: "Message" })).toHaveFocus();
+  test.readSnapshot.mockRejectedValueOnce(new Error("private diagnostic"));
+  await test.emit({
+    type: "snapshot-required",
+    spaceId: agent.spaceId,
+    conversationId: conversation.id,
+    cursor: 0,
+  });
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Could not load the conversation. Try again.",
+  );
+  fireEvent.change(screen.getByRole("textbox", { name: "Message" }), {
+    target: { value: "Kept while unavailable" },
+  });
+  expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  expect(screen.queryByText("private diagnostic")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+  await screen.findByText("Start a conversation");
+  await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
+  expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue("Kept while unavailable");
+});
+
+it("renders Markdown replies safely and preserves their DOM row through streaming and commit", async () => {
+  const test = fixture({
+    snapshot: { conversation, messages: [message], runs: [run], segments: [], cursor: 3 },
+  });
+  test.mount(true);
+  await screen.findByText("Hello Agent");
+  const log = screen.getByRole("log");
+  const replyRow = log.querySelector('[data-message-row="reply:run-one"]');
+  const text =
+    "A **bold** reply with `inline code`.\n\n- First\n- Second\n\n```js\nconst safe = true;\n```\n\n[Safe](https://example.test) [Unsafe](javascript:alert%281%29)\n\n<script>alert('unsafe')</script>\n\n| One | Two |\n| --- | --- |\n| A | B |";
+  await test.emit({
+    type: "reply.prefix",
+    spaceId: agent.spaceId,
+    conversationId: conversation.id,
+    runId: run.id,
+    segmentId: "segment",
+    offset: 0,
+    text,
+  });
+  expect(log.querySelector("strong")).toHaveTextContent("bold");
+  expect(log.querySelector("ul")).toHaveTextContent("First Second");
+  expect(within(log).getByRole("table")).toBeInTheDocument();
+  expect(within(log).getByRole("button", { name: "Copy code" })).toBeInTheDocument();
+  expect(within(log).getByRole("link", { name: "Safe" })).toHaveAttribute(
+    "rel",
+    "noopener noreferrer",
+  );
+  expect(within(log).getByRole("link", { name: "Safe" })).toHaveAttribute("target", "_blank");
+  expect(log.querySelector("script")).toBeNull();
+  expect(log.querySelector('a[href^="javascript:"]')).toBeNull();
+  const copy = within(log).getByRole("button", { name: "Copy code" });
+  await test.emit({
+    type: "reply.delta",
+    spaceId: agent.spaceId,
+    conversationId: conversation.id,
+    runId: run.id,
+    segmentId: "segment",
+    offset: text.length,
+    text: "\n\nLast paragraph",
+  });
+  expect(within(log).getByRole("button", { name: "Copy code" })).toBe(copy);
+  await test.emit({
+    type: "event",
+    entry: {
+      event: {
+        kind: "reply.segment",
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        sequence: 4,
+        createdAt: time,
+        segment: {
+          id: "segment",
+          spaceId: agent.spaceId,
+          conversationId: conversation.id,
+          runId: run.id,
+          sequence: 4,
+          createdAt: time,
+          text: text + "\n\nLast paragraph",
+        },
+      },
+    },
+  });
+  expect(log.querySelector('[data-message-row="reply:run-one"]')).toBe(replyRow);
+  expect(within(log).getByRole("button", { name: "Copy code" })).toBe(copy);
+  await test.emit({
+    type: "event",
+    entry: {
+      event: {
+        kind: "run.state",
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        runId: run.id,
+        state: "succeeded",
+        failureCode: null,
+        sequence: 5,
+        createdAt: time,
+      },
+    },
+  });
+  await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Reply received."));
+  expect(within(log).queryByText("Replying…")).not.toBeInTheDocument();
+  expect(within(log).getAllByText("Last paragraph")).toHaveLength(1);
+});
+
+it("keeps unconfirmed delivery and Stop failures explicit without losing the draft", async () => {
+  const test = fixture();
+  test.send.mockRejectedValueOnce(new Error("sensitive"));
+  test.mount(true);
+  const editor = await screen.findByRole("textbox", { name: "Message" });
+  fireEvent.change(editor, { target: { value: "Preserve this draft" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  await screen.findByRole("button", { name: "Retry delivery" });
+  expect(editor).toHaveValue("Preserve this draft");
+  const pending = test.send.mock.calls[0];
+  fireEvent.click(screen.getByRole("button", { name: "Retry delivery" }));
+  await waitFor(() => expect(test.send).toHaveBeenCalledTimes(2));
+  expect(test.send.mock.calls[1]).toEqual(pending);
+  expect(editor).toHaveFocus();
+  await test.emit({
+    type: "event",
+    entry: {
+      event: {
+        kind: "message.created",
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        messageId: message.id,
+        sequence: 1,
+        createdAt: time,
+      },
+      message,
+    },
+  });
+  await test.emit({
+    type: "event",
+    entry: {
+      event: {
+        kind: "run.state",
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        runId: run.id,
+        state: "running",
+        failureCode: null,
+        sequence: 2,
+        createdAt: time,
+      },
+    },
+  });
+  test.stop.mockRejectedValueOnce(new Error("sensitive"));
+  fireEvent.click(screen.getByRole("button", { name: "Stop reply" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Could not stop the reply. Try again.",
+  );
+  await waitFor(() => expect(screen.getByRole("button", { name: "Stop reply" })).toBeEnabled());
+  expect(screen.queryByText("sensitive")).not.toBeInTheDocument();
+});
+
+it("resizes a multiline composer while preserving a CSS height limit", async () => {
+  fixture().mount(true);
+  const editor = await screen.findByRole("textbox", { name: "Message" });
+  Object.defineProperty(editor, "scrollHeight", { configurable: true, value: 140 });
+  fireEvent.change(editor, { target: { value: "First\nSecond\nThird" } });
+  expect(editor.style.height).toBe("140px");
+  Object.defineProperty(editor, "scrollHeight", { configurable: true, value: 400 });
+  fireEvent.change(editor, { target: { value: "Long\n".repeat(20) } });
+  expect(editor.style.height).toBe("400px");
+  expect(editor).toHaveClass("max-h-48", "overflow-y-auto");
+});
+
+it("preserves the visible reading anchor when Markdown reflows and follows resizing only at the bottom", async () => {
+  const observers: { callback: ResizeObserverCallback; nodes: Element[] }[] = [];
+  class Observer {
+    readonly record: (typeof observers)[number];
+    constructor(callback: ResizeObserverCallback) {
+      this.record = { callback, nodes: [] };
+      observers.push(this.record);
+    }
+    observe(node: Element) {
+      this.record.nodes.push(node);
+    }
+    unobserve() {}
+    disconnect() {}
+  }
+  vi.stubGlobal("ResizeObserver", Observer);
+  try {
+    const test = fixture({
+      snapshot: { conversation, messages: [message], runs: [run], segments: [], cursor: 3 },
+    });
+    test.mount(true);
+    await screen.findByText("Hello Agent");
+    const log = screen.getByRole("log");
+    let height = 1000;
+    Object.defineProperties(log, {
+      scrollHeight: { configurable: true, get: () => height },
+      clientHeight: { configurable: true, value: 200 },
+    });
+    const row = screen.getByText("Hello Agent").closest("article")!;
+    let top = -100;
+    vi.spyOn(row, "getBoundingClientRect").mockImplementation(() => ({
+      x: 0,
+      y: top,
+      top,
+      bottom: top + 200,
+      height: 200,
+      width: 200,
+      left: 0,
+      right: 200,
+      toJSON() {},
+    }));
+    log.scrollTop = 100;
+    fireEvent.scroll(log);
+    const observer = observers.find((entry) => entry.nodes.includes(log))!;
+    top = -60;
+    act(() => observer.callback([], {} as ResizeObserver));
+    expect(log.scrollTop).toBe(140);
+    fireEvent.click(screen.getByRole("button", { name: "Jump to latest" }));
+    height = 1500;
+    act(() => observer.callback([], {} as ResizeObserver));
+    expect(log.scrollTop).toBe(1500);
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+it("shows draft storage failure without sending or clearing the editor", async () => {
+  const test = fixture();
+  test.drafts.write = () => {
+    throw new Error("sensitive diagnostic");
+  };
+  test.mount(true);
+  const editor = await screen.findByRole("textbox", { name: "Message" });
+  fireEvent.change(editor, { target: { value: "Keep this on screen" } });
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Could not save the draft on this device. Keep this page open.",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  expect(editor).toHaveValue("Keep this on screen");
+  expect(test.send).not.toHaveBeenCalled();
+  expect(screen.queryByText("sensitive diagnostic")).not.toBeInTheDocument();
 });

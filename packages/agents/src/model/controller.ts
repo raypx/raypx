@@ -103,7 +103,7 @@ export class ConversationController {
   }
   setDraft(text: string) {
     if (this.disposed || text.length > MAX_CONVERSATION_DRAFT) return;
-    this.update({ draft: text, error: null });
+    this.update({ draft: text, error: this.view.error === "load" ? "load" : null });
     this.persist(text);
   }
   async start() {

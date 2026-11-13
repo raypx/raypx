@@ -8,7 +8,7 @@ test(
   { tag: "@web" },
   async ({ page }) => {
     test.skip(!apiUrl, "Requires the owned backend fixture from bun run test backends --with-e2e");
-    const name = `Conversation fixture ${crypto.randomUUID()}`;
+    const name = `Conversation fixture 长名称 ${"long-name-".repeat(5)}${crypto.randomUUID()}`;
     const prompt = `Remember this message ${crypto.randomUUID()}`;
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("http://127.0.0.1:4173/agents");
@@ -16,6 +16,7 @@ test(
     await page.getByLabel("Password", { exact: true }).fill("Raypx-control-test-123");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page).toHaveURL(/\/agents(?:\?|$)/);
+    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toHaveCount(1);
     await page.getByRole("button", { name: "New Agent", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("textbox", { name: "Name", exact: true }).fill(name);
@@ -40,6 +41,34 @@ test(
     await page.reload();
     await expect(page.getByText(prompt, { exact: true })).toHaveCount(1);
     await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(1);
+    // Both mounts use a bounded log and a composer at the bottom of the shell.
+    for (const width of [375, 1280]) {
+      await page.setViewportSize({ width, height: 812 });
+      const log = page.getByRole("log", { name: "Conversation", exact: true });
+      const editor = page.getByRole("textbox", { name: "Message", exact: true });
+      await expect(log).toBeVisible();
+      const history = await log.boundingBox();
+      const composer = await editor.locator("xpath=ancestor::form").boundingBox();
+      const main = await page.getByRole("main").boundingBox();
+      expect(history!.height).toBeGreaterThan(200);
+      expect(history!.y + history!.height).toBeLessThanOrEqual(composer!.y);
+      expect(main!.y + main!.height - composer!.y - composer!.height).toBeLessThan(64);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      ).toBe(true);
+      if (width === 1280) {
+        const row = page.getByRole("button", { name, exact: true });
+        await expect(row).toBeVisible();
+        await expect(row).toHaveAttribute("title", name);
+        await expect(row).toHaveAttribute("aria-current", "page");
+      }
+    }
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.getByRole("button", { name: "Back to Agents", exact: true }).click();
+    await expect(page.getByRole("button", { name, exact: true })).toBeFocused();
+    await page.getByRole("button", { name: `Actions for ${name}`, exact: true }).click();
+    await expect(page.getByRole("menuitem", { name: "Edit Agent", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);

@@ -32,12 +32,9 @@
   "replying": "Replying…",
   "replyReady": "Reply received.",
   "connecting": "Connecting…",
-  "live": "Live",
   "reconnecting": "Reconnecting…",
   "snapshotRequired": "Refreshing conversation…",
   "queued": "Queued",
-  "running": "Running",
-  "succeeded": "Completed",
   "failed": "Failed",
   "cancelled": "Stopped",
   "loadError": "Could not load the conversation. Try again.",
@@ -58,5 +55,14 @@
   "MODEL_TIMEOUT": "The model took too long to reply.",
   "MODEL_FAILED": "The model could not complete the reply.",
   "REPLY_TOO_LARGE": "The reply exceeded the size limit.",
-  "EXECUTION_FAILED": "The reply could not complete."
+  "EXECUTION_FAILED": "The reply could not complete.",
+  "copyCode": "Copy code",
+  "codeCopied": "Code copied",
+  "copyCodeError": "Select the code and copy it manually.",
+  "agentActions": "Actions for {name}",
+  "latest": "Jump to latest",
+  "loading": "Loading…",
+  "noSpaces": "Create a Space to get started.",
+  "focusMessage": "Write a message",
+  "member": "Member"
 }

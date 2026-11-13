@@ -104,7 +104,7 @@ Chromium conversation fixtures load at most 200 messages in total and check the
 720px viewport/80-row DOM bound, focus, loaded full text, message revisions and
 history loading under fourfold CPU throttling. Virtual reading restoration uses
 an index target with the saved row offset so pending measurements retarget it.
-Markdown must skip raw HTML and remote images. Recognized edit approvals have a
+Markdown reuses `@raypx/blocks/markdown`, with translated copy controls, and must skip raw HTML and remote images. Recognized edit approvals have a
 bounded Diff plus the complete original request. In-flight controls depend on the
 host's advertised inputModes; explain Claude interrupt versus Codex current-turn
 steer. Recover lost input receipts by authoritative entry ID without resending.

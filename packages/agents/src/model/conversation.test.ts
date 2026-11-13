@@ -10,7 +10,7 @@ import {
 } from "@raypx/core/conversation";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { ConversationController } from "./controller.js";
-import { ConversationState } from "./conversation.js";
+import { ConversationState, conversationRows, activeConversationRun } from "./conversation.js";
 import { conversationDraftKey, readConversationDraft } from "./drafts.js";
 import {
   applyAgents,
@@ -611,5 +611,82 @@ describe("draft and page isolation", () => {
     expect(state).toMatchObject({ spaceId: "other", agentId: null, agents: [], models: [] });
     expect(applyAgents(state, "space", [item], "agent")).toBe(state);
     expect(selectAgent(state, "agent")).toBe(state);
+  });
+});
+
+describe("chat presentation", () => {
+  it("keeps the same reply identity and position through queue, streaming and committed output", () => {
+    const state = new ConversationState(selection);
+    state.applySnapshot(snapshot({ messages: [message()], runs: [run()], cursor: 2 }));
+    const queued = conversationRows(state.getSnapshot());
+    expect(queued.map((row) => row.id)).toEqual(["message", "reply:run"]);
+    expect(queued[1]).toMatchObject({
+      kind: "reply",
+      text: "",
+      sequence: 1.5,
+      run: { state: "queued" },
+    });
+    state.applyEvent(runEvent("running", 3).entry);
+    state.applyReply(prefix("A streamed reply"));
+    // A later member message must not move the streaming reply when it commits.
+    state.applyEvent(messageEvent(4, "later").entry);
+    const streaming = conversationRows(state.getSnapshot());
+    expect(streaming.map((row) => row.id)).toEqual(["message", "reply:run", "later"]);
+    expect(streaming[1]?.text).toBe("A streamed reply");
+    state.applyEvent(segment("The committed reply", 5).entry);
+    state.applyEvent(runEvent("succeeded", 6).entry);
+    const committed = conversationRows(state.getSnapshot());
+    expect(committed.map((row) => row.id)).toEqual(streaming.map((row) => row.id));
+    expect(committed[1]).toMatchObject({
+      text: "The committed reply",
+      sequence: 1.5,
+      run: { state: "succeeded" },
+    });
+    expect(activeConversationRun(state.getSnapshot().runs)).toBeUndefined();
+  });
+  it.each(["cancelled", "failed"] as const)(
+    "keeps a %s reply row and failure reason outside member content",
+    (status) => {
+      const state = new ConversationState(selection);
+      state.applySnapshot(snapshot({ messages: [message()], runs: [run(status)], cursor: 3 }));
+      const rows = conversationRows(state.getSnapshot());
+      expect(rows[0]).toEqual({
+        id: "message",
+        kind: "member",
+        sender: "member:member",
+        sequence: 1,
+        text: "Hello 世界",
+      });
+      expect(rows[1]).toMatchObject({
+        kind: "reply",
+        run: { state: status, failureCode: run(status).failureCode },
+      });
+    },
+  );
+  it("chooses the running Run before queued Runs and excludes finished Runs", () => {
+    const state = new ConversationState(selection);
+    state.applySnapshot(
+      snapshot({
+        runs: [
+          run("failed"),
+          { ...run(), id: runIdSchema.parse("queued") },
+          { ...run("running"), id: runIdSchema.parse("active") },
+        ],
+      }),
+    );
+    expect(activeConversationRun(state.getSnapshot().runs)?.id).toBe("active");
+    expect(activeConversationRun(state.getSnapshot().runs.slice(0, 2))?.id).toBe("queued");
+  });
+  it("does not clear a failed load when editing a local draft", async () => {
+    const test = harness();
+    vi.mocked(test.port.snapshot).mockRejectedValueOnce(new Error("unavailable"));
+    await test.controller.start();
+    expect(test.controller.getSnapshot().error).toBe("load");
+    test.controller.setDraft("保留草稿");
+    expect(test.controller.getSnapshot()).toMatchObject({ error: "load", draft: "保留草稿" });
+    test.controller.reconnect();
+    await vi.waitFor(() => expect(test.controller.getSnapshot().error).toBeNull());
+    expect(test.controller.getSnapshot().draft).toBe("保留草稿");
+    test.controller.dispose();
   });
 });

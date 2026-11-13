@@ -1,5 +1,8 @@
 export {
   ConversationState,
+  conversationRows,
+  activeConversationRun,
+  type ConversationRow,
   type ConversationView,
   type ConversationEventEntry,
   type RunView,

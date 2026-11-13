@@ -276,5 +276,8 @@
     "unsupported": "当前连接器不支持远程回答此类请求。",
     "expires": "{time} 交还终端",
     "changed": "请求已变化，请刷新后再回答。"
-  }
+  },
+  "copyCode": "复制代码",
+  "codeCopied": "已复制代码",
+  "copyCodeError": "请选择代码并手动复制。"
 }

@@ -25,6 +25,53 @@ export interface ConversationView {
   runs: RunView[];
   liveReplies: LiveReply[];
 }
+export type ConversationRow =
+  | { id: string; kind: "member"; sender: string; sequence: number; text: string }
+  | {
+      id: string;
+      kind: "reply";
+      sender: "agent";
+      sequence: number;
+      text: string;
+      run: RunView | undefined;
+    };
+
+/** Keep a reply in the same place and DOM row from queue through committed output. */
+export function conversationRows(view: ConversationView): ConversationRow[] {
+  const rows: ConversationRow[] = view.messages.map((message) => ({
+    id: message.id,
+    kind: "member",
+    sender: `member:${message.author.accountId}`,
+    sequence: message.sequence,
+    text: message.text,
+  }));
+  const runIds = new Set([
+    ...view.runs.map((run) => run.id),
+    ...view.segments.map((segment) => segment.runId),
+    ...view.liveReplies.map((reply) => reply.runId),
+  ]);
+  for (const id of runIds) {
+    const run = view.runs.find((item) => item.id === id);
+    const segments = view.segments.filter((item) => item.runId === id);
+    const live = view.liveReplies.find((item) => item.runId === id);
+    if (run?.state === "succeeded" && segments.length === 0 && !live) continue;
+    const message = view.messages.find((item) => item.id === run?.messageId);
+    rows.push({
+      id: `reply:${id}`,
+      kind: "reply",
+      sender: "agent",
+      sequence: message ? message.sequence + 0.5 : (segments[0]?.sequence ?? view.cursor + 1),
+      text: segments.map((segment) => segment.text).join("\n\n") || live?.text || "",
+      run,
+    });
+  }
+  return rows.sort((left, right) => left.sequence - right.sequence);
+}
+
+/** Stop the running reply first, then any queued reply in this conversation. */
+export function activeConversationRun(runs: readonly RunView[]): RunView | undefined {
+  return runs.find((run) => run.state === "running") ?? runs.find((run) => run.state === "queued");
+}
 export interface ConversationEventEntry {
   event: ConversationEvent;
   message?: Message | undefined;

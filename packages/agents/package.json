@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@raypx/ai": "workspace:*",
+    "@raypx/blocks": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
@@ -40,6 +41,7 @@
     "happy-dom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "vite": "catalog:dev",
     "vitest": "catalog:dev"
   },
   "peerDependencies": {

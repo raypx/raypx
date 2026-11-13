@@ -79,7 +79,9 @@
     "./terminal-window": "./src/icons/terminal-window.ts",
     "./text-size": "./src/icons/text-size.ts",
     "./user-circle": "./src/icons/user-circle.ts",
-    "./warning": "./src/icons/warning.ts"
+    "./warning": "./src/icons/warning.ts",
+    "./copy": "./src/icons/copy.ts",
+    "./more-horizontal": "./src/icons/more-horizontal.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

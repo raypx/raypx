@@ -32,12 +32,9 @@
   "replying": "正在回复…",
   "replyReady": "已收到回复。",
   "connecting": "正在连接…",
-  "live": "实时连接",
   "reconnecting": "正在重新连接…",
   "snapshotRequired": "正在刷新对话…",
   "queued": "排队中",
-  "running": "运行中",
-  "succeeded": "已完成",
   "failed": "失败",
   "cancelled": "已停止",
   "loadError": "无法加载对话，请重试。",
@@ -58,5 +55,14 @@
   "MODEL_TIMEOUT": "模型回复超时。",
   "MODEL_FAILED": "模型无法完成回复。",
   "REPLY_TOO_LARGE": "回复超过长度限制。",
-  "EXECUTION_FAILED": "无法完成回复。"
+  "EXECUTION_FAILED": "无法完成回复。",
+  "copyCode": "复制代码",
+  "codeCopied": "已复制代码",
+  "copyCodeError": "请选择代码并手动复制。",
+  "agentActions": "{name}的操作",
+  "latest": "跳到最新消息",
+  "loading": "正在加载…",
+  "noSpaces": "创建空间以开始使用。",
+  "focusMessage": "撰写消息",
+  "member": "成员"
 }

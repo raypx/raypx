@@ -1,3 +1,4 @@
+import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { BrowserLanguageProvider } from "./i18n.js";
 import {
   createMemoryHistory,
@@ -7,8 +8,8 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   account: null as string | null,
@@ -38,8 +39,36 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
 });
+afterEach(cleanup);
+function TestLink({
+  to,
+  markActive: _active,
+  exact: _exact,
+  children,
+  ...props
+}: ShellLinkProps<"/agents">) {
+  return (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  );
+}
+function TestShell() {
+  return (
+    <AppShell
+      frame="window"
+      brand={{ to: "/agents", label: "Raypx" }}
+      navigation={[]}
+      breadcrumbs={["Agents"]}
+      layout="tool"
+      LinkComponent={TestLink}
+    >
+      <Outlet />
+    </AppShell>
+  );
+}
 async function page(destination: string) {
-  const root = createRootRoute({ component: Outlet });
+  const root = createRootRoute({ component: TestShell });
   const tree = root.addChildren([
     createRoute({
       getParentRoute: () => root,
@@ -54,11 +83,13 @@ async function page(destination: string) {
     history: createMemoryHistory({ initialEntries: [destination] }),
   });
   await router.load();
-  render(
-    <BrowserLanguageProvider>
-      <RouterProvider router={router} />
-    </BrowserLanguageProvider>,
-  );
+  await act(async () => {
+    render(
+      <BrowserLanguageProvider>
+        <RouterProvider router={router} />
+      </BrowserLanguageProvider>,
+    );
+  });
   return router;
 }
 it("redirects guests to sign-in with the conversation return path before reads or socket creation", async () => {
@@ -74,6 +105,8 @@ it("injects the account-bound native socket into the shared workspace after logi
   mocks.account = "owner";
   await page("/agents");
   expect(await screen.findByRole("heading", { name: "Agents", level: 1 })).toBeTruthy();
+  expect(screen.getAllByRole("heading", { name: "Agents" })).toHaveLength(1);
+  expect(screen.getByRole("main").firstElementChild?.className).toContain("h-full");
   await waitFor(() => expect(mocks.spaces).toHaveBeenCalledOnce());
   expect(mocks.socket).toHaveBeenCalledWith("owner");
 });

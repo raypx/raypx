@@ -21,6 +21,8 @@ it("mounts the shared Agent workspace for a confirmed member without a deploymen
   signIn();
   await page("/agents");
   expect(await screen.findByRole("heading", { name: "Agents", level: 1 })).toBeVisible();
+  expect(screen.getAllByRole("heading", { name: "Agents" })).toHaveLength(1);
+  expect(screen.getByRole("main").firstElementChild?.className).toContain("h-full");
   await waitFor(() => expect(agents.spaces).toHaveBeenCalledOnce());
   expect(screen.getByRole("link", { name: "Projects" })).toBeVisible();
   expect(screen.getByRole("link", { name: "Agents" })).toBeVisible();

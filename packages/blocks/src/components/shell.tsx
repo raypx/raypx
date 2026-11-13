@@ -102,7 +102,7 @@ const pageLayouts: Record<PageLayout, string> = {
   // List and detail workspaces.
   workbench: "max-w-400 px-6 pt-5 pb-8 @max-2xl/main:px-5",
   // Local tools use the whole main region.
-  tool: "px-6 pt-5 pb-8 @max-2xl/main:px-5",
+  tool: "flex h-full min-h-0 flex-col px-6 pt-5 pb-8 @max-2xl/main:px-5",
 };
 
 export interface AppShellProps<To extends string> {

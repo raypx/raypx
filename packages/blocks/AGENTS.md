@@ -41,7 +41,7 @@ Code outside `src/components/` stays private.
   application's tool links and back action. The application owns link selection.
   `layout` selects the page template that owns content width, gutters and vertical
   rhythm: `document` (reading width for settings, account and onboarding),
-  `workbench` (wide list/detail workspaces) or `tool` (the whole main region).
+  `workbench` (wide list/detail workspaces) or `tool` (a full-height flex column in the main region).
   The content column (top bar, notices and `#main`) is the `main` container: page
   content and notices use `@…/main` variants, which follow the sidebar, while viewport
   variants stay with shell chrome such as the sidebar and top bar.
@@ -63,11 +63,14 @@ Code outside `src/components/` stays private.
   Use the surrounding theme and language providers. Applications place the
   controls and own preference persistence. Both language controls show catalog
   loading feedback and retry the selected language through the shared preference hook.
+- `markdown`: `ReplyMarkdown` renders untrusted replies for Agents and Tasks in both
+  applications. Callers supply translated copy labels. Raw HTML, executable URLs
+  and remote images stay inert; fenced code has a copy/manual-selection control.
 - `styles.css`: registers Blocks as a Tailwind source; applications import it.
 
 ## Constraints
 
-- Depend only on UI, i18n and Icons. Never import account, auth, tasks, analytics,
+- Workspace dependencies stay with UI, i18n and Icons. Never import account, auth, tasks, analytics,
   a router or a remote client; take them as props or children.
 - Add a block when at least two applications render the same composition.
   Single-application layouts stay in that application.

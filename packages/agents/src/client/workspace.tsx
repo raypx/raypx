@@ -1,4 +1,17 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ShellToolbar } from "@raypx/blocks/shell";
+import { Avatar, AvatarFallback } from "@raypx/ui/components/ui/avatar";
+import { Empty, EmptyHeader, EmptyTitle, EmptyMedia } from "@raypx/ui/components/ui/empty";
+import { Alert, AlertDescription, AlertAction } from "@raypx/ui/components/ui/alert";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+} from "@raypx/ui/components/ui/dropdown-menu";
+import { cn } from "@raypx/ui/lib/utils";
+import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
 import type { AgentInput } from "@raypx/core/agents";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -10,7 +23,6 @@ import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { DeleteIcon } from "@raypx/icons/delete";
 import { EditIcon } from "@raypx/icons/edit";
 import { PlusIcon } from "@raypx/icons/plus";
-import { RefreshIcon } from "@raypx/icons/refresh";
 import {
   applyAgents,
   applySpaces,
@@ -146,6 +158,13 @@ function AgentsWorkspaceContents({
   }, [client, page.spaceId, agentId, refresh]);
 
   const selected = page.agents.find((item) => item.agent.id === page.agentId);
+  const rowButtons = useRef(new Map<string, HTMLElement>());
+  const previousSelection = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!selected && previousSelection.current)
+      rowButtons.current.get(previousSelection.current)?.focus();
+    previousSelection.current = selected?.agent.id ?? null;
+  }, [selected]);
   function chooseSpace(value: string) {
     setForm(null);
     setPage((state) => selectSpace(state, value));
@@ -219,107 +238,184 @@ function AgentsWorkspaceContents({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-      <header className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-medium">{t("title")}</h1>
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          {page.spaces.length > 1 && (
-            <Field orientation="horizontal" className="w-auto min-w-0">
-              <FieldLabel htmlFor={id} className="sr-only">
-                {t("space")}
-              </FieldLabel>
-              <SelectField
-                id={id}
-                value={page.spaceId ?? ""}
-                options={page.spaces.map(({ space }) => ({ value: space.id, label: space.name }))}
-                className="max-w-64"
-                onValueChange={chooseSpace}
-              />
-            </Field>
-          )}
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
+      <ShellToolbar>
+        <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
+      </ShellToolbar>
+      <header className="flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
+        {page.spaces.length > 1 && (
+          <Field orientation="horizontal" className="mr-auto w-auto min-w-0 flex-1">
+            <FieldLabel htmlFor={id} className="sr-only">
+              {t("space")}
+            </FieldLabel>
+            <SelectField
+              id={id}
+              value={page.spaceId ?? ""}
+              options={page.spaces.map(({ space }) => ({ value: space.id, label: space.name }))}
+              className="w-full max-w-64"
+              onValueChange={chooseSpace}
+            />
+          </Field>
+        )}
+        {(page.spaces.length > 0 || loading) && (
           <IconButton label={t("newSpace")} onClick={() => setNewSpace(true)}>
             <PlusIcon aria-hidden="true" />
           </IconButton>
-          <IconButton
-            label={t("refresh")}
-            disabled={loading}
-            onClick={() => setRefresh((value) => value + 1)}
-          >
-            <RefreshIcon aria-hidden="true" />
-          </IconButton>
+        )}
+        {page.agents.length > 0 && (
           <Button disabled={!page.spaceId || loading} onClick={() => setForm("new")}>
             <AgentIcon data-icon="inline-start" aria-hidden="true" />
             {t("newAgent")}
           </Button>
-        </div>
+        )}
       </header>
       {failed && (
-        <p role="alert" className="text-sm text-destructive-text">
-          {t("directoryError")}
-        </p>
+        <Alert>
+          <AlertDescription>{t("directoryError")}</AlertDescription>
+          <AlertAction>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={loading}
+              onClick={() => setRefresh((value) => value + 1)}
+            >
+              {t("refresh")}
+            </Button>
+          </AlertAction>
+        </Alert>
       )}
-      {loading && (
-        <p role="status" className="text-sm text-muted-foreground">
-          {t("connecting")}
-        </p>
+      {loading && page.agents.length === 0 && (
+        <Empty role="status">
+          <EmptyTitle>{t("loading")}</EmptyTitle>
+        </Empty>
       )}
-      <div className="flex min-h-0 min-w-0 flex-1 gap-6">
-        <aside
-          aria-label={t("title")}
-          className={`min-w-0 shrink-0 flex-col gap-2 md:flex md:w-56 ${selected ? "hidden" : "flex w-full"}`}
-        >
-          {!loading && page.agents.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t("noAgents")}</p>
-          )}
-          <ul className="flex min-w-0 flex-col gap-1">
-            {page.agents.map((item) => (
-              <li key={item.agent.id} className="flex min-w-0 items-start gap-1 rounded-lg">
-                <Button
-                  variant={item.agent.id === page.agentId ? "secondary" : "ghost"}
-                  className="h-auto min-h-9 min-w-0 flex-1 justify-start py-2 text-left whitespace-normal wrap-anywhere"
-                  aria-current={item.agent.id === page.agentId ? "page" : undefined}
-                  onClick={() => chooseAgent(item)}
+      {!loading && !failed && page.spaces.length === 0 && (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <AgentIcon aria-hidden="true" />
+            </EmptyMedia>
+            <EmptyTitle>{t("noSpaces")}</EmptyTitle>
+          </EmptyHeader>
+          <Button onClick={() => setNewSpace(true)}>{t("newSpace")}</Button>
+        </Empty>
+      )}
+      {!loading && !failed && page.spaceId && page.agents.length === 0 && (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <AgentIcon aria-hidden="true" />
+            </EmptyMedia>
+            <EmptyTitle>{t("noAgents")}</EmptyTitle>
+          </EmptyHeader>
+          <Button onClick={() => setForm("new")}>{t("newAgent")}</Button>
+        </Empty>
+      )}
+      {page.agents.length > 0 && (
+        <div className="flex min-h-0 min-w-0 flex-1 gap-6">
+          <aside
+            aria-label={t("title")}
+            className={cn(
+              "min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain @3xl/main:flex @3xl/main:w-72 @3xl/main:shrink-0",
+              selected ? "hidden" : "flex w-full",
+            )}
+          >
+            <ul className="flex min-w-0 flex-col gap-1">
+              {page.agents.map((item) => (
+                <li
+                  key={item.agent.id}
+                  className={cn(
+                    "flex min-w-0 items-center gap-1 rounded-lg pr-1",
+                    item.agent.id === page.agentId && "bg-muted ring-1 ring-border ring-inset",
+                  )}
                 >
-                  <AgentIcon data-icon="inline-start" aria-hidden="true" />
-                  <span className="min-w-0 wrap-anywhere">{item.agent.name}</span>
+                  <Button
+                    ref={(node) => {
+                      if (node) rowButtons.current.set(item.agent.id, node);
+                      else rowButtons.current.delete(item.agent.id);
+                    }}
+                    variant="ghost"
+                    className="h-auto min-h-14 min-w-0 flex-1 justify-start py-2 text-left"
+                    aria-label={item.agent.name}
+                    title={item.agent.name}
+                    aria-current={item.agent.id === page.agentId ? "page" : undefined}
+                    onClick={() => chooseAgent(item)}
+                  >
+                    <Avatar aria-hidden="true">
+                      <AvatarFallback>
+                        {Array.from(item.agent.name.trim())[0]?.toUpperCase() ?? ""}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span className="truncate">{item.agent.name}</span>
+                      <span className="truncate text-xs font-normal text-muted-foreground">
+                        {page.models.find((model) => model.modelId === item.agent.model.modelId)
+                          ?.name ?? item.agent.model.modelId}
+                      </span>
+                    </span>
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <IconButton
+                          size="icon-sm"
+                          label={t("agentActions", { name: item.agent.name })}
+                        />
+                      }
+                    >
+                      <MoreHorizontalIcon aria-hidden="true" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={() => setForm(item)}>
+                          <EditIcon aria-hidden="true" />
+                          {t("editAgent")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          disabled={deleting !== null}
+                          onClick={() => void removeAgent(item)}
+                        >
+                          <DeleteIcon aria-hidden="true" />
+                          {t("deleteAgent")}
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              ))}
+            </ul>
+          </aside>
+          {selected ? (
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden">
+              <div className="flex shrink-0 justify-start @3xl/main:hidden">
+                <Button variant="ghost" onClick={back}>
+                  <ArrowLeftIcon data-icon="inline-start" aria-hidden="true" />
+                  {t("back")}
                 </Button>
-                <IconButton size="icon-sm" label={t("editAgent")} onClick={() => setForm(item)}>
-                  <EditIcon aria-hidden="true" />
-                </IconButton>
-                <IconButton
-                  size="icon-sm"
-                  label={t("deleteAgent")}
-                  disabled={deleting !== null}
-                  onClick={() => void removeAgent(item)}
-                >
-                  <DeleteIcon aria-hidden="true" />
-                </IconButton>
-              </li>
-            ))}
-          </ul>
-        </aside>
-        {selected ? (
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-            <div className="flex justify-start md:hidden">
-              <Button variant="ghost" onClick={back}>
-                <ArrowLeftIcon data-icon="inline-start" aria-hidden="true" />
-                {t("back")}
-              </Button>
+              </div>
+              <AgentConversation
+                key={JSON.stringify([accountId, origin, selected.conversation.id])}
+                item={selected}
+                port={conversationPort}
+                socket={eventSocket}
+                drafts={draftStore}
+                origin={origin}
+                accountId={accountId}
+              />
             </div>
-            <AgentConversation
-              key={JSON.stringify([accountId, origin, selected.conversation.id])}
-              item={selected}
-              port={conversationPort}
-              socket={eventSocket}
-              drafts={draftStore}
-              origin={origin}
-              accountId={accountId}
-            />
-          </div>
-        ) : (
-          <p className="hidden text-sm text-muted-foreground md:block">{t("chooseAgent")}</p>
-        )}
-      </div>
+          ) : (
+            <Empty className="hidden @3xl/main:flex">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <AgentIcon aria-hidden="true" />
+                </EmptyMedia>
+                <EmptyTitle>{t("chooseAgent")}</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </div>
+      )}
       {newSpace && <SpaceForm onSave={createSpace} onClose={() => setNewSpace(false)} />}
       {form && (
         <AgentForm

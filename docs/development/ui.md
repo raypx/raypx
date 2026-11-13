@@ -21,6 +21,15 @@ uses Tailwind utilities, translated copy and icons from `@raypx/icons`.
 The additive `/agents` workspace follows the same split: `@raypx/agents/model`
 owns page selection, event/cursor convergence and injected command, stream and
 draft ports; `/client` owns the shared Space/Agent forms and bounded transcript.
+The shell renders one title. The directory and conversation fill the tool layout;
+Agent rows truncate names, show models and keep actions in a row menu. Narrow
+layouts use Back navigation. The transcript scrolls independently of its growing
+composer, follows output only near the bottom and offers a jump back to latest.
+Runs own their reply status; completed replies have no status label. Enter sends,
+Shift+Enter inserts a newline and IME composition keeps Enter. Both Tasks and Agents
+use `@raypx/blocks/markdown`: GFM without raw HTML, executable URLs or remote images,
+with safe external links and fenced-code copy/manual selection. Reply rows retain
+their identity as streaming text commits; only reply lifecycle changes are announced.
 Web uses the cookie-authenticated `/events` socket and Desktop injects its
 credential-free daemon bridge. Component suites cover both languages, explicit
 retry, reconnect/snapshot recovery and stale account completions. The Web

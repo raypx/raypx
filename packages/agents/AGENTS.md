@@ -2,7 +2,11 @@
 
 `/model` owns pure Space/Agent page selection, the conversation projection and its
 injected RPC, stream and draft ports. Applied state and cursor advance together;
-React lives only in `/client`. Web and Desktop consume that shared workspace.
+React lives only in `/client`. Web and Desktop consume that shared workspace. The shell owns its single title;
+list/detail panes fill the tool layout, with a scrolling transcript and fixed composer.
+Model conversation rows keep reply identity/order stable from queue through commit.
+The client reuses Blocks Markdown, keeps reading anchors, and announces Run lifecycle
+changes only. Enter sends, Shift+Enter inserts a newline, and IME owns composition.
 `/messages/en` and `/messages/zh` own the `agents` catalog; `/client/styles.css`
 registers Tailwind sources only. Component tests use happy-dom and
 `*.component.test.tsx`; `test:unit` selects the pure model and server suites.
