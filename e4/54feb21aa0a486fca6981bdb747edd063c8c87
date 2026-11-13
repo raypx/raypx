@@ -1,0 +1,42 @@
+deploy/compose.yaml
+  s_652cc4f0b5d7e1::t_26410db1423362 33-34,59-60
+deploy/.env.example
+  s_652cc4f0b5d7e1::t_26410db1423362 11-12,45
+apps/api/src/config/migrate.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 5,41-49,97-98
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 79-80,282-286,314-315
+apps/api/src/config/migration-runtime-role.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 1-64
+deploy/AGENTS.md
+  s_652cc4f0b5d7e1::t_26410db1423362 49-50
+docs/development/validation-artifacts.md
+  s_652cc4f0b5d7e1::t_26410db1423362 275-276,280-281
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 177-223
+docs/development/railway.md
+  s_652cc4f0b5d7e1::t_26410db1423362 45-50
+  s_652cc4f0b5d7e1::t_c8abbd8a885f72 44
+docs/development/deployment.md
+  s_652cc4f0b5d7e1::t_26410db1423362 22-28,74-77
+apps/api/AGENTS.md
+  s_652cc4f0b5d7e1::t_26410db1423362 65-66
+deploy/compose.split.yaml
+  s_652cc4f0b5d7e1::t_26410db1423362 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e454feb21aa0a486fca6981bdb747edd063c8c87",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
