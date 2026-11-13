@@ -32,6 +32,7 @@ export function reportCiPlan(plan: CiPlan) {
     `- Native distribution · ${plan.distribution ? "selected" : "skipped"}`,
     `- Backend integration · ${plan.backend ? "selected" : "skipped"}`,
     `- Container smoke · ${plan.containerSmoke ? "selected" : "skipped"}`,
+    `- Sandbox real-Engine acceptance · ${plan.sandbox ? "selected" : "skipped"}`,
   );
   appendFileSync(summary, `${lines.join("\n")}\n`);
 }

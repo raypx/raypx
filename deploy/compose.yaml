@@ -122,6 +122,11 @@ services:
   sandbox:
     profiles: [sandbox]
     image: raypx/sandbox:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
+    build:
+      context: ..
+      dockerfile: infra/sandbox/Dockerfile
+      args:
+        BUN_IMAGE_DIGEST: ${BUN_IMAGE_DIGEST:-}
     pull_policy: never
     restart: unless-stopped
     init: true
@@ -131,6 +136,7 @@ services:
       SANDBOX_SUPERVISOR_TOKEN: ${SANDBOX_SUPERVISOR_TOKEN:-}
       SANDBOX_COMPUTER_IMAGE: ${SANDBOX_COMPUTER_IMAGE:-}
       SANDBOX_NAMESPACE: ${COMPOSE_PROJECT_NAME:?}
+      SANDBOX_ENGINE_SOCKET: /var/run/docker.sock
       SANDBOX_STATE_DIRECTORY: /var/lib/raypx-sandbox
       SANDBOX_MEMORY_BYTES: ${SANDBOX_MEMORY_BYTES:-536870912}
       SANDBOX_NANO_CPUS: ${SANDBOX_NANO_CPUS:-1000000000}
@@ -138,7 +144,9 @@ services:
       SANDBOX_RESTRICTED_EGRESS: ${SANDBOX_RESTRICTED_EGRESS:-false}
       SANDBOX_HOST_RULES_APPLIED: ${SANDBOX_HOST_RULES_APPLIED:-false}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: ${SANDBOX_ENGINE_SOCKET:-/var/run/docker.sock}
+        target: /var/run/docker.sock
       - sandbox-state:/var/lib/raypx-sandbox
     networks:
       sandbox-control:

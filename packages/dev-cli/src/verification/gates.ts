@@ -2,7 +2,7 @@ import type { VerificationPlan } from "./plan.js";
 
 export type SourcePhase = "checks" | "tests";
 export type CiPlan = VerificationPlan & { distribution: boolean };
-const ciPlanVersion = 3;
+const ciPlanVersion = 4;
 
 /** Keep native checks together; workspace suites run on their own runner. */
 export function sourceTasks(plan: VerificationPlan, phase: SourcePhase) {
@@ -16,6 +16,7 @@ export function sourcePhases(plan: VerificationPlan): SourcePhase[] {
 export const gateDefinitions = [
   { name: "source", flag: undefined },
   { name: "container-smoke", flag: "container_smoke" },
+  { name: "sandbox", flag: "sandbox" },
   { name: "backend", flag: "backend" },
   { name: "browser", flag: "browser" },
   { name: "desktop", flag: "native" },
@@ -36,6 +37,7 @@ export function ciOutputs(plan: CiPlan, revision: string) {
     native: String(plan.nativeRunners.length > 0),
     native_runners: JSON.stringify(plan.nativeRunners),
     container_smoke: String(plan.containerSmoke),
+    sandbox: String(plan.sandbox),
     backend: String(plan.backend),
     browser: String(Object.values(plan.browser).some(({ mode }) => mode !== "none")),
     distribution: String(plan.distribution),
@@ -56,7 +58,7 @@ export function parseCiPlan(raw: string, revision: string): CiPlan {
     | undefined;
   if (
     !plan ||
-    !["full", "native", "backend", "containerSmoke", "distribution"].every(
+    !["full", "native", "backend", "containerSmoke", "sandbox", "distribution"].every(
       (key) => typeof plan[key] === "boolean",
     ) ||
     !["reasons", "files", "workspaces", "tasks", "artifacts", "nativeRunners"].every((key) =>

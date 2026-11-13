@@ -12,7 +12,8 @@
     "test:unit": "bun --bun vitest run --exclude \"**/tests/integration/**\"",
     "test:integration": "bun --bun vitest run tests/integration",
     "test:inventory": "bun src/cli.ts test inventory",
-    "test:backends": "bun src/cli.ts test backends"
+    "test:backends": "bun src/cli.ts test backends",
+    "test:sandbox": "bun src/cli.ts test sandbox"
   },
   "dependencies": {
     "@formatjs/icu-messageformat-parser": "catalog:dev",

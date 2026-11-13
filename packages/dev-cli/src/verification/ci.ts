@@ -125,6 +125,9 @@ export async function ciGate(root: string, args: string[]) {
   } else if (gate === "container-smoke") {
     const { smokeDeployment } = await import("../validation/deployment-smoke.js");
     await smokeDeployment(root, []);
+  } else if (gate === "sandbox") {
+    const { runSandboxValidation } = await import("../validation/sandbox.js");
+    await runSandboxValidation(root, []);
   } else if (gate === "backend") {
     for (const task of ["test:postgres", "test:redis", "test:cluster"])
       await runTasks(root, `api#${task}`);

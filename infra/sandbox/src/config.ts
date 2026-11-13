@@ -44,7 +44,8 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
       throw new Error("SANDBOX_SUPERVISOR_TOKEN must be dedicated");
   }
   const image = env.SANDBOX_COMPUTER_IMAGE ?? "";
-  if (!/^[a-zA-Z0-9./:_-]+@sha256:[a-f0-9]{64}$/.test(image))
+  // Locally built images have an immutable Engine image ID before registry publication.
+  if (!/^(?:[a-zA-Z0-9./:_-]+@)?sha256:[a-f0-9]{64}$/.test(image))
     throw new Error("Invalid SANDBOX_COMPUTER_IMAGE: digest required");
   const namespace = env.SANDBOX_NAMESPACE ?? "raypx";
   if (!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(namespace)) throw new Error("Invalid SANDBOX_NAMESPACE");

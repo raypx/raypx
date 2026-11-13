@@ -26,6 +26,7 @@ it("reports the comparison SHA and escaped browser selection reasons", () => {
   expect(content).toContain("Native checks · skipped");
   expect(content).toContain("Backend integration · skipped");
   expect(content).toContain("Container smoke · skipped");
+  expect(content).toContain("Sandbox real-Engine acceptance · skipped");
 });
 
 it("reports selected source and acceptance jobs with their native runners", () => {
@@ -40,6 +41,7 @@ it("reports selected source and acceptance jobs with their native runners", () =
   expect(content).toContain("Native distribution · selected");
   expect(content).toContain("Backend integration · selected");
   expect(content).toContain("Container smoke · selected");
+  expect(content).toContain("Sandbox real-Engine acceptance · selected");
 });
 
 it("replaces stale success evidence before starting checks and records a failed run", async () => {

@@ -81,7 +81,8 @@ The supervisor is a separate service under `infra/sandbox`.
 - With restricted egress, a container reaches the public internet but not the
   Docker host, the local network or cloud metadata addresses. This needs a host
   ruleset. Where it is not applied, the supervisor reports egress as unrestricted.
-- The computer image is built from this repository and pinned by digest.
+- The computer image is built from this repository and pinned by repository digest
+  or immutable local Engine image ID. Mutable tags are rejected.
 
 ## Device connectors
 
@@ -174,3 +175,22 @@ uses a prepared digest-pinned image, without pulling or building it. The compute
 bridge name is `rpx` plus the first ten hexadecimal SHA-256 characters of
 `SANDBOX_NAMESPACE`. The deployment guide describes the private listener,
 dedicated token, host-rules assertion and opt-in acceptance commands.
+
+The host ruleset is [`infra/sandbox/egress.sh`](../../infra/sandbox/egress.sh).
+On the Linux Engine host, pass its deterministic bridge with `--bridge` and use
+`--dry-run`, `--apply` or `--remove`. Apply/remove are scoped and idempotent. The
+script requires Docker's iptables backend, `iptables`, `ip6tables` and root; apply
+also verifies the bridge exists in the current host namespace. It blocks computer
+traffic to the host and private/reserved IPv4 destinations before and after DNAT.
+Public IPv4 follows Docker's policy; all computer IPv6 egress is denied. Set both
+egress assertions only after applying and verifying the rules on that Engine host.
+Native nftables Docker networking and rootless/remote network namespaces are not
+supported by this script. macOS/Colima requires rules inside the Linux Engine VM.
+
+`bun run raypx-dev test sandbox` owns real-Engine conformance, isolation and home
+replacement acceptance, with optional `--with-egress` host probes. Ordinary source
+verification uses fakes and never invokes Docker. The only recorded real-Engine
+acceptance is manual provider conformance on macOS arm64 / Docker Engine 29.5
+through Colima (`77a9421c`, 10/10). The new gate, Ubuntu/Linux amd64 or arm64,
+macOS x64/other Engine configurations, Windows, rootless engines and restricted
+egress have no recorded real-Engine acceptance. CI wiring is not a passing run.

@@ -81,3 +81,28 @@ it("fails on unsupported suites, empty layers, unknown or ambiguous packages bef
   expect(() => planTests(root, root, ambiguous, ["--package", "tasks"])).toThrow("Ambiguous");
   expect(planTests(root, root, members, ["list"])).toMatchObject({ kind: "list" });
 });
+
+it("dispatches the owned sandbox workflow with strict gate options and package ownership", () => {
+  const owned = [
+    ...members,
+    { name: "@raypx/dev-cli", path: "packages/dev-cli", scripts: { "test:sandbox": "public" } },
+  ];
+  expect(
+    planTests(root, root, owned, [
+      "sandbox",
+      "--engine-socket",
+      "/tmp/engine.sock",
+      "--with-egress",
+    ]),
+  ).toEqual({
+    kind: "sandbox",
+    args: ["--engine-socket", "/tmp/engine.sock", "--with-egress"],
+  });
+  expect(planTests(root, root, owned, ["sandbox", "--package", "dev-cli"])).toEqual({
+    kind: "sandbox",
+    args: [],
+  });
+  expect(() => planTests(root, root, owned, ["sandbox", "--package", "tasks"])).toThrow(
+    "does not own",
+  );
+});

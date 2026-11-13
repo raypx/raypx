@@ -26,10 +26,12 @@ describe("required CI results", () => {
         native: "false",
         distribution: "false",
         container_smoke: "false",
+        sandbox: "false",
       },
     },
     source: { result: "success" },
     "container-smoke": { result: "skipped" },
+    sandbox: { result: "skipped" },
     backend: { result: "skipped" },
     browser: { result: "skipped" },
     desktop: { result: "skipped" },
@@ -139,6 +141,8 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
     { ...plan, tasks: null },
     { ...plan, backend: "false" },
     { ...plan, containerSmoke: undefined },
+    { ...plan, sandbox: undefined },
+    { ...plan, sandbox: "false" },
     { ...plan, browser: "unknown" },
     { ...plan, browser: ["all"] },
     { ...plan, browser: { ...plan.browser, web: { mode: "smoke", reasons: [] } } },
@@ -157,6 +161,7 @@ it("executes the analyzed plan only on its matching commit and refuses malformed
   vi.stubEnv("GITHUB_SHA", "commit-a");
   await expect(ciGate(root, ["backend"])).rejects.toThrow(/was not selected/);
   await expect(ciGate(root, ["container-smoke"])).rejects.toThrow(/was not selected/);
+  await expect(ciGate(root, ["sandbox"])).rejects.toThrow(/was not selected/);
   await expect(ciGate(root, ["deployment"])).rejects.toThrow(/Unknown internal CI gate/);
   await expect(ciGate(root, ["unknown"])).rejects.toThrow(/Unknown internal CI gate/);
   await expect(ciGate(root, ["source"])).rejects.toThrow(/Unknown internal CI gate/);
@@ -312,6 +317,23 @@ it("registers every CI dependency and passes the authoritative plan to each sour
   expect(workflow.jobs.changes!.outputs?.container_smoke).toBe(
     "${{ steps.plan.outputs.container_smoke }}",
   );
+  const sandbox = workflow.jobs.sandbox!;
+  expect(sandbox.if).toBe("needs.changes.outputs.sandbox == 'true'");
+  expect(sandbox.uses).toBe("./.github/workflows/sandbox.yml");
+  expect(sandbox.with?.plan).toBe("${{ needs.changes.outputs.plan }}");
+  const sandboxWorkflow = Bun.YAML.parse(
+    readFileSync(resolve(import.meta.dirname, "../../../../.github/workflows/sandbox.yml"), "utf8"),
+  ) as { jobs: Record<string, Job & { "runs-on"?: string }> };
+  const sandboxChecks = sandboxWorkflow.jobs.checks!;
+  expect(sandboxChecks.env?.RAYPX_CI_PLAN).toBe("${{ inputs.plan }}");
+  expect(sandboxChecks["runs-on"]).toBe("ubuntu-24.04");
+  expect(
+    sandboxChecks.steps?.some((step) => step.run === "bun run raypx-dev ci:gate sandbox"),
+  ).toBe(true);
+  expect(
+    sandboxChecks.steps?.find((step) => step.uses === "actions/upload-artifact@v7")?.with?.path,
+  ).toBe(".artifacts/sandbox/**");
+  expect(workflow.jobs.changes!.outputs?.sandbox).toBe("${{ steps.plan.outputs.sandbox }}");
   expect(workflow.jobs.changes!.outputs?.source_phases).toBe(
     "${{ steps.plan.outputs.source_phases }}",
   );
@@ -327,6 +349,7 @@ it("requires selected container smoke results and rejects skipped or cancelled a
         browser: "false",
         distribution: "false",
         container_smoke: "true",
+        sandbox: "false",
       },
     },
     source: { result: "success" },
@@ -334,6 +357,7 @@ it("requires selected container smoke results and rejects skipped or cancelled a
     browser: { result: "skipped" },
     desktop: { result: "skipped" },
     "container-smoke": { result: "success" },
+    sandbox: { result: "skipped" },
   };
   expect(() => assertCiResult(needs)).not.toThrow();
   for (const result of ["skipped", "failure", "cancelled", "abandoned"])
@@ -351,4 +375,29 @@ it("accepts Windows-only manual distribution plans and retains both release-tag 
   const release = githubPlan(root, "push", { ref: "refs/tags/v1.0.0" });
   expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
   expect(parseCiPlan(ciOutputs(release, "commit-a").plan, "commit-a")).toEqual(release);
+});
+
+it("requires selected sandbox acceptance and refuses missing, skipped or cancelled results", () => {
+  const { model } = project();
+  const plan = {
+    ...verificationPlan(model, ["infra/sandbox/src/supervisor.ts"]),
+    distribution: false,
+  };
+  const outputs = ciOutputs(plan, "commit-a");
+  expect(outputs.sandbox).toBe("true");
+  expect(requiredGates(outputs).find(({ name }) => name === "sandbox")?.required).toBe(true);
+  const needs = {
+    changes: { result: "success", outputs },
+    ...Object.fromEntries(
+      requiredGates(outputs).map(({ name, required }) => [
+        name,
+        { result: required ? "success" : "skipped" },
+      ]),
+    ),
+  };
+  expect(() => assertCiResult(needs, false, "commit-a")).not.toThrow();
+  for (const result of ["skipped", "failure", "cancelled", "abandoned"])
+    expect(() => assertCiResult({ ...needs, sandbox: { result } })).toThrow(/sandbox/);
+  const missing = Object.fromEntries(Object.entries(needs).filter(([name]) => name !== "sandbox"));
+  expect(() => assertCiResult(missing)).toThrow(/sandbox/);
 });

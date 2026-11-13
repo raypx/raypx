@@ -24,3 +24,10 @@ it("requires a private listener, a dedicated token and immutable image", () => {
   );
   expect(sandboxConfig(base).bridge).toBe(sandboxConfig(base).bridge);
 });
+it("accepts immutable local Engine IDs and rejects malformed IDs", () => {
+  expect(sandboxConfig({ ...base, SANDBOX_COMPUTER_IMAGE: `sha256:${"b".repeat(64)}` }).image).toBe(
+    `sha256:${"b".repeat(64)}`,
+  );
+  for (const image of ["sha256:short", "computer:local", `sha256:${"B".repeat(64)}`])
+    expect(() => sandboxConfig({ ...base, SANDBOX_COMPUTER_IMAGE: image })).toThrow("digest");
+});

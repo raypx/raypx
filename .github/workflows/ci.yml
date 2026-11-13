@@ -41,6 +41,7 @@ jobs:
       native: ${{ steps.plan.outputs.native }}
       native_runners: ${{ steps.plan.outputs.native_runners }}
       container_smoke: ${{ steps.plan.outputs.container_smoke }}
+      sandbox: ${{ steps.plan.outputs.sandbox }}
       backend: ${{ steps.plan.outputs.backend }}
       browser: ${{ steps.plan.outputs.browser }}
       distribution: ${{ steps.plan.outputs.distribution }}
@@ -175,6 +176,13 @@ jobs:
     uses: ./.github/workflows/container-smoke.yml
     with:
       plan: ${{ needs.changes.outputs.plan }}
+  sandbox:
+    name: Sandbox real-Engine acceptance
+    needs: changes
+    if: needs.changes.outputs.sandbox == 'true'
+    uses: ./.github/workflows/sandbox.yml
+    with:
+      plan: ${{ needs.changes.outputs.plan }}
   desktop:
     name: Native acceptance
     needs: changes
@@ -192,7 +200,7 @@ jobs:
   foundation:
     name: CI result
     if: always()
-    needs: [changes, source, backend, browser, desktop, container-smoke]
+    needs: [changes, source, backend, browser, desktop, container-smoke, sandbox]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

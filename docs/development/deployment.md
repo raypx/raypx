@@ -102,13 +102,15 @@ manifest digests for `oven/bun:1.4.4` and `python:3.13-slim-bookworm`; there is 
 floating base fallback. Build from the repository root, without a secret build arg:
 
 ```sh
-docker build -f infra/sandbox/Dockerfile --build-arg BUN_IMAGE_DIGEST="$BUN_IMAGE_DIGEST" -t "raypx/sandbox:${COMPOSE_PROJECT_NAME}-${RAYPX_RELEASE}" .
+docker compose --env-file deploy/.env -f deploy/compose.yaml --profile sandbox build sandbox
 docker build -f infra/sandbox/Computer.Dockerfile --build-arg BUN_IMAGE_DIGEST="$BUN_IMAGE_DIGEST" --build-arg COMPUTER_BASE_DIGEST="$COMPUTER_BASE_DIGEST" -t raypx/computer:prepared .
 ```
 
 Publish the prepared computer image to an operator-controlled registry if needed,
 record its immutable digest, and preload it into the selected Engine. Set
-`SANDBOX_COMPUTER_IMAGE` to that digest reference. Provision never pulls or builds.
+`SANDBOX_COMPUTER_IMAGE` to that digest reference. For a local build, an immutable
+`sha256:<64 lowercase hex>` Engine image ID from `docker image inspect --format '{{.Id}}'
+raypx/computer:prepared` is also accepted; mutable tags are rejected. Provision never pulls or builds.
 The image contains a shell, coreutils, git, Python 3.13 and the repository-pinned Bun.
 Use an Engine supporting API v1.47. Generate a new, dedicated 32+ character
 `SANDBOX_SUPERVISOR_TOKEN`; it must differ from authentication, encryption, model
@@ -131,27 +133,69 @@ inside that subnet. Only the supervisor mounts `/var/run/docker.sock`; treat its
 socket access as host control. Its separate `sandbox-state` volume stores metadata,
 generation tombstones and immutable snapshots. Run one supervisor per state volume.
 Back it up with PostgreSQL; do not delete it during image replacement.
+Compose builds that service from `infra/sandbox/Dockerfile` with `BUN_IMAGE_DIGEST`
+from the protected environment. For rootless or Colima sockets, set
+`SANDBOX_ENGINE_SOCKET` to the absolute Engine-host socket path; Compose maps it
+to `/var/run/docker.sock` inside the supervisor only. These configurations still
+need their own acceptance; a socket path alone does not establish isolation.
 
 `SANDBOX_MEMORY_BYTES`, `SANDBOX_NANO_CPUS` (one CPU = 1,000,000,000) and
 `SANDBOX_PIDS_LIMIT` are positive decimal ceilings; malformed settings fail startup
 and name the setting. Computers run as UID/GID 1000, with no privileges or host
-network, read-only root, bounded tmpfs and only their own home volume.
+network, read-only root, bounded tmpfs, their own home volume and a private anonymous
+helper-input volume at `/run/raypx`. Container removal also removes that helper volume.
 `COMPUTERS_PER_SPACE` and `COMPUTERS_PER_MEMBER` cap retained records (defaults 1
 and 10). Stopped homes still count. API stores no command output or file content
 through these lifecycle procedures.
 
-For restricted egress, set `SANDBOX_RESTRICTED_EGRESS=true` and apply host firewall
-rules on the deterministic bridge (`rpx` + the first ten hex characters of SHA-256
-of the Compose project name). The rules must reject the host itself, local/private
-networks, link-local and cloud metadata destinations, including IPv6, while allowing
-public internet traffic and established replies. Use the Docker host's supported
-firewall backend and verify from a prepared computer; a bridge alone does not
-provide this restriction. Only then set `SANDBOX_HOST_RULES_APPLIED=true`.
-The supervisor reports unrestricted egress otherwise; it cannot verify the host
-ruleset. Keep computer traffic away from backend/control networks with those rules.
+For restricted egress, use [`infra/sandbox/egress.sh`](../../infra/sandbox/egress.sh)
+on the Linux Docker Engine host. Its bridge is `rpx` plus the first ten hex
+characters of SHA-256 of `SANDBOX_NAMESPACE` (the Compose project name in this
+profile). After a computer has created the bridge, derive its name without a
+secret and review the rules:
 
-Offline tests use a fake Engine HTTP transport and never start listeners. To run
-real acceptance against a prepared supervisor and images on an isolated host:
+```sh
+bridge="$(printf %s "$COMPOSE_PROJECT_NAME" | sha256sum | cut -c1-10)"
+bridge="rpx$bridge"
+sh infra/sandbox/egress.sh --bridge "$bridge" --dry-run
+sudo sh infra/sandbox/egress.sh --bridge "$bridge" --apply
+# Remove only this bridge's owned rules when retiring it:
+sudo sh infra/sandbox/egress.sh --bridge "$bridge" --remove
+```
+
+Apply/remove are idempotent and scoped to the supplied bridge. Apply requires the
+bridge in the current host namespace, root, `iptables`, `ip6tables` and Docker's
+iptables backend with `DOCKER-USER`; native nftables Docker networking is unsupported.
+The script refuses an existing hook displaced behind another rule; review host
+policy and restore its priority explicitly before retrying. It blocks all traffic
+from computers to the host, and private/reserved IPv4 destinations before and after
+DNAT, including LAN, link-local and cloud metadata. Public IPv4 returns to Docker's
+normal forwarding/NAT policy; computer IPv6 egress is denied. Reapply after host
+firewall resets and verify whenever Docker or firewall configuration changes.
+The rules do not persist across reboot automatically.
+
+Keep computers stopped while establishing and verifying restriction. Only then set
+both `SANDBOX_RESTRICTED_EGRESS=true` and `SANDBOX_HOST_RULES_APPLIED=true` in the
+supervisor environment and recreate it. It reports unrestricted egress otherwise;
+those settings are operator assertions, not automated firewall verification.
+Apply rules inside the Engine VM for macOS/Colima. Rootless/remote network
+namespaces require a separate supported host policy and are not accepted here.
+
+Offline tests use a fake Engine HTTP transport and never start listeners. The
+owned real-Engine gate needs no prepared service or operator token:
+
+```sh
+bun run raypx-dev test sandbox
+bun run raypx-dev test sandbox --engine-socket "$HOME/.colima/default/docker.sock"
+# Explicitly authorizes temporary firewall changes on the Linux Engine host:
+bun run raypx-dev test sandbox --with-egress
+```
+
+It builds from resolved base digests, creates a source supervisor on loopback,
+runs conformance and isolation/home probes, then tears down only its resources.
+Egress is not run without the explicit flag and supported OS/privileges. Details
+and evidence are in [validation artifacts](validation-artifacts.md#owned-sandbox-real-engine-acceptance).
+To run just conformance against an already prepared isolated supervisor:
 
 ```sh
 RAYPX_TEST_DOCKER=1 SANDBOX_SUPERVISOR_URL=http://127.0.0.1:4020 SANDBOX_SUPERVISOR_TOKEN="$SANDBOX_SUPERVISOR_TOKEN" bun run --cwd packages/providers test -- tests/computer/conformance.test.ts
@@ -165,6 +209,12 @@ reach public internet but not host/LAN/metadata when restricted egress is assert
 Restart the supervisor and Engine, replace a computer, and inject a restore failure
 to verify fencing and preservation of the last committed revision. These real
 Engine and firewall checks are required before describing isolation as accepted.
+
+The only recorded real-Engine acceptance is manual provider conformance on macOS
+arm64 with Docker Engine 29.5 through Colima (`77a9421c`, 10/10). No real run of the
+new gate, Ubuntu/Linux amd64 or arm64, macOS x64/other Engine configurations,
+Windows, rootless engines or restricted egress is recorded. Compose profile
+syntax/property tests do not establish real deployment or firewall acceptance.
 
 ## Optional split roles
 

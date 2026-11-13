@@ -28,6 +28,8 @@ prints the stack.
 
 Command behavior and the rules each check enforces are documented in
 [Dev CLI commands and checks](../../docs/development/dev-cli.md).
+`test sandbox` owns opt-in real-Engine conformance and isolation acceptance;
+ordinary source verification never starts Docker or changes host firewall rules.
 
 ## Constraints
 

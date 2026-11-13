@@ -20,6 +20,7 @@ const suites = [
   "e2e",
   "inventory",
   "backends",
+  "sandbox",
 ];
 /** Package scripts accept runner flags directly; only explicit graph controls stay outside --. */
 type TestPlan =
@@ -27,6 +28,7 @@ type TestPlan =
   | { kind: "list"; members: TestWorkspace[] }
   | { kind: "inventory"; args: string[] }
   | { kind: "backends"; args: string[] }
+  | { kind: "sandbox"; args: string[] }
   | { kind: "tasks"; task: string; args: string[]; env: Record<string, string> };
 
 export function planTests(
@@ -83,7 +85,7 @@ export function planTests(
     };
   if (!suites.includes(suite))
     throw new Error(`Unknown test suite: ${suite}; use test --help (filenames go after --)`);
-  if (suite === "inventory" || suite === "backends") {
+  if (suite === "inventory" || suite === "backends" || suite === "sandbox") {
     if (selected && !owner?.scripts[`test:${suite}`])
       throw new Error(`Workspace does not own test:${suite}`);
     return { kind: suite, args: [...args, ...forwarded] };
@@ -134,6 +136,7 @@ export async function runTests(root: string, cwd: string, args: string[]) {
           "bun e2e [--web|--desktop] [--smoke] [--visual] [Playwright flags]",
           "bun run test inventory [--layers] [--baseline file] [--owners file]",
           "bun run test backends [--with-e2e [-- Playwright flags]]",
+          "bun run test sandbox [--engine-socket /absolute/socket] [--with-egress]",
           "bun run test list",
           "Package: bun run --cwd packages/tasks test (or test:unit / test:component)",
         ].join("\n"),
@@ -152,5 +155,8 @@ export async function runTests(root: string, cwd: string, args: string[]) {
   } else if (plan.kind === "backends") {
     const { validateBackends } = await import("./validation/backends.js");
     await validateBackends(root, plan.args);
+  } else if (plan.kind === "sandbox") {
+    const { runSandboxValidation } = await import("./validation/sandbox.js");
+    await runSandboxValidation(root, plan.args);
   } else await runTasks(root, plan.task, plan.args, plan.env);
 }

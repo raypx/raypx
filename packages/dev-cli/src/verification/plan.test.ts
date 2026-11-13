@@ -683,3 +683,48 @@ it("keeps application source, dependencies and build configuration on source gat
   expect(unknown.workspaces).toHaveLength(model.members.length);
   expect(unknown.native).toBe(true);
 });
+
+it("selects sandbox acceptance only for its Engine, image, provider and gate inputs", () => {
+  const { model } = project();
+  for (const file of [
+    "infra/sandbox/src/supervisor.ts",
+    "infra/sandbox/src/home.py",
+    "infra/sandbox/src/config.test.ts",
+    "infra/sandbox/tests/fake-engine.ts",
+    "infra/sandbox/Computer.Dockerfile",
+    "infra/sandbox/Dockerfile",
+    "infra/sandbox/egress.sh",
+    "packages/providers/src/computer/port.ts",
+    "packages/providers/src/computer/docker.ts",
+    "packages/providers/tests/computer/conformance.test.ts",
+    "packages/providers/tests/helpers/computer.ts",
+    "packages/providers/package.json",
+    "packages/providers/vitest.config.ts",
+    "packages/dev-cli/src/validation/sandbox.ts",
+    "packages/dev-cli/src/validation/sandbox.test.ts",
+    "packages/dev-cli/src/validation/sandbox-runtime.ts",
+    "packages/tooling/src/build/deployment.ts",
+    "deploy/compose.yaml",
+    "deploy/.env.example",
+    ".dockerignore",
+    ".github/workflows/sandbox.yml",
+  ])
+    expect(verificationPlan(model, [file]).sandbox).toBe(true);
+  for (const file of [
+    "infra/sandbox/AGENTS.md",
+    "docs/architecture/computers.md",
+    "docs/development/testing.md",
+    "apps/api/src/server.ts",
+    "packages/providers/src/chat.ts",
+    "packages/providers/tests/chat.test.ts",
+    "packages/dev-cli/src/verification/plan.ts",
+    "packages/dev-cli/src/validation/backends.ts",
+    ".github/workflows/ci.yml",
+    ".github/workflows/container-smoke.yml",
+    "bun.lock",
+    "package.json",
+  ])
+    expect(verificationPlan(model, [file]).sandbox).toBe(false);
+  expect(verificationPlan(model, [], { full: true }).sandbox).toBe(true);
+  expect(verificationPlan(model, [], { reasons: ["Git base unavailable"] }).sandbox).toBe(false);
+});

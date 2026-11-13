@@ -28,6 +28,7 @@ export interface VerificationPlan {
   nativeRunners: string[];
   backend: boolean;
   containerSmoke: boolean;
+  sandbox: boolean;
   browser: BrowserPlan;
 }
 export function changedFiles(
@@ -165,6 +166,27 @@ function containerSmokeInput(file: string) {
       "packages/dev-cli/src/validation/deployment-smoke.ts",
       "packages/dev-cli/src/validation/evidence.ts",
       "packages/dev-cli/src/smoke/checks.ts",
+    ].includes(file)
+  );
+}
+
+/** Real-Engine acceptance stays separate from source-only verification. */
+function sandboxInput(file: string) {
+  if (documentation(file)) return false;
+  return (
+    file.startsWith("infra/sandbox/") ||
+    file.startsWith("packages/providers/src/computer/") ||
+    file.startsWith("packages/providers/tests/computer/") ||
+    /^packages\/dev-cli\/src\/validation\/sandbox(?:[-/.]|\.ts$)/.test(file) ||
+    [
+      "packages/providers/tests/helpers/computer.ts",
+      "packages/providers/package.json",
+      "packages/providers/vitest.config.ts",
+      "packages/tooling/src/build/deployment.ts",
+      "deploy/compose.yaml",
+      "deploy/.env.example",
+      ".dockerignore",
+      ".github/workflows/sandbox.yml",
     ].includes(file)
   );
 }
@@ -340,6 +362,7 @@ export function verificationPlan(
     ...native,
     backend,
     containerSmoke: full || files.some(containerSmokeInput),
+    sandbox: full || files.some(sandboxInput),
     browser: browserChanges(model, files, full),
   };
 }

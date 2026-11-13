@@ -1,0 +1,30 @@
+name: Sandbox real-Engine acceptance
+on:
+  workflow_call:
+    inputs:
+      plan:
+        description: Commit-bound verification plan
+        type: string
+        required: true
+permissions:
+  contents: read
+env:
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+jobs:
+  checks:
+    name: Checks
+    env:
+      RAYPX_CI_PLAN: ${{ inputs.plan }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-bun
+      - name: Build computer image and accept the sandbox on Docker Engine
+        run: bun run raypx-dev ci:gate sandbox
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sandbox-results
+          path: .artifacts/sandbox/**
+          if-no-files-found: ignore

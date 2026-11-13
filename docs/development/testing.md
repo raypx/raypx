@@ -95,7 +95,7 @@ directly. Root `--package` resolves workspace names and paths.
 `raypx-dev e2e` builds the selected applications through Turbo and then starts the
 shared Playwright process itself; no private runner scripts exist.
 
-Inventory and isolated-backend orchestration belong to Tooling and stay repository-wide,
+Inventory, isolated-backend and sandbox orchestration belong to Dev CLI and stay repository-wide,
 even when launched from that package. Baseline/mapping filenames resolve against
 the caller's current directory. Prerequisites, generated reports and cleanup are in
 [validation artifacts](validation-artifacts.md). Live inference remains a separate,
@@ -247,6 +247,15 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
 
 ## Explicit gates
 
+- `bun run raypx-dev test sandbox` builds the computer image and runs real-Engine
+  provider conformance, container isolation and home-replacement probes against an
+  owned source supervisor. It requires the pinned Bun, installed dependencies and
+  a reachable Linux Docker Engine (API v1.47+) through a Unix socket. For Colima:
+  `bun run raypx-dev test sandbox --engine-socket "$HOME/.colima/default/docker.sock"`.
+  Unix `DOCKER_HOST` is also honored; other transports use `/var/run/docker.sock`
+  unless overridden. Add `--with-egress` only on the Linux Engine host to authorize
+  temporary firewall rules and public/gateway/metadata TCP probes. Otherwise egress
+  is explicitly not run. See [owned sandbox acceptance](validation-artifacts.md#owned-sandbox-real-engine-acceptance).
 - TEST_DATABASE_URL pointing to an isolated *_test database, NODE_ENV=test:
   bun run test postgres validates full verification/login/reset/session revocation.
   CI uses PostgreSQL 17; an older local server is reported separately.
@@ -261,6 +270,12 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
   bundled CLI resolution, picker grants, daemon scheduling/task survival after GUI
   Quit, explicit daemon shutdown and PTY resize/cancellation. Renderer previews
   cannot establish these native results.
+
+Recorded sandbox real-Engine acceptance is limited to the manual macOS arm64 run
+against Docker Engine 29.5 through Colima (provider conformance 10/10, commit
+`77a9421c`). It did not establish restricted egress. The new gate and its Ubuntu CI
+job have no recorded real-Engine run yet. Linux amd64/arm64, macOS x64, other
+macOS Engine configurations, Windows and rootless engines remain unverified.
 
 ### Faster browser feedback
 

@@ -9,7 +9,7 @@ boundaries; this page keeps the behavior.
 - raypx-dev tasks <task> [Turbo options]
 - raypx-dev test [suite] [--package name|path] [Turbo options] [-- runner arguments]
   Root owns this aggregate; package scripts own actual suites. `test list` discovers
-  capabilities. Dev CLI owns test:inventory/test:backends; E2E owns browser gates.
+  capabilities. Dev CLI owns test:inventory/test:backends/test:sandbox; E2E owns browser gates.
 - raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev format [--write] [files] defaults to Vite+'s format check and forwards native formatter flags.
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
@@ -35,6 +35,13 @@ boundaries; this page keeps the behavior.
   FormatJS runtimes out of other product workspaces (`src/validation/intl-engine.ts`).
 - raypx-dev test inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test backends [--with-e2e [-- Playwright flags]]
+- raypx-dev test sandbox [--engine-socket /absolute/socket] [--with-egress]
+  Owns a temporary source supervisor, a digest-built computer image, provider
+  conformance, Engine/container isolation and persistent-home replacement probes.
+  Requires a reachable Linux Engine through a Unix socket. Egress rules require
+  the explicit flag plus Linux root or passwordless sudo on that Engine host.
+  Writes `.artifacts/sandbox/`; cleans only run-labeled resources, with no global
+  pruning. See [prerequisites and evidence](validation-artifacts.md#owned-sandbox-real-engine-acceptance).
 - raypx-dev size [--package name|path] [--native] [--browser] [--require]
   Discovers buildable workspaces, measures existing deployable directories and CLI
   runtime components, and writes JSON/Markdown under `.artifacts/sizes/`. Native
@@ -95,6 +102,9 @@ boundaries; this page keeps the behavior.
   workflow orchestration edits do not request container builds. Ordinary source, dependency and
   application build-config changes use source gates; Railway owns production image builds.
   Source-only verify remains independent of Docker.
+  The separate `sandbox` job uses the same plan for supervisor, Computer provider
+  and sandbox acceptance inputs; it uploads owned real-Engine evidence. Default
+  CI does not opt into host firewall probing.
 - Branch/PR native gates run only for native/IPC/terminal/daemon inputs, CLI runtime
   packaging helpers and their regressions, and select
   macOS/Windows by platform-specific filenames; shared native CI inputs default to Windows.
