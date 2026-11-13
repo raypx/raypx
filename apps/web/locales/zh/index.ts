@@ -7,12 +7,12 @@ import jobs from "@raypx/jobs/messages/zh";
 import analytics from "@raypx/analytics/messages/zh";
 import blocks from "@raypx/blocks/messages/zh";
 import instances from "@raypx/instances/messages/zh";
-import desktopAuthorization from "./desktopAuthorization.js";
-import dash from "./dash.js";
-import users from "./users.js";
-import site from "./site.js";
-import guest from "./guest.js";
-import legal from "./legal.js";
+import desktopAuthorization from "./desktopAuthorization.json" with { type: "json" };
+import dash from "./dash.json" with { type: "json" };
+import users from "./users.json" with { type: "json" };
+import site from "./site.json" with { type: "json" };
+import guest from "./guest.json" with { type: "json" };
+import legal from "./legal.json" with { type: "json" };
 
 export default {
   ...i18n,

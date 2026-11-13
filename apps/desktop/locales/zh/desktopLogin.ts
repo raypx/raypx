@@ -1,8 +1,0 @@
-export default {
-  openBrowser: "在浏览器中登录",
-  waiting: "请在浏览器中完成登录，然后返回这里。",
-  failed: "桌面端登录失败，请重新打开浏览器。",
-  expired: "登录请求已过期，请重新发起登录。",
-  mismatch: "此本地配置属于其他账号或服务器。",
-  refreshFailed: "登录已完成，请重试加载账号。",
-} as const;

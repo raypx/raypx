@@ -13,10 +13,12 @@ boundaries; this page keeps the behavior.
 - raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev format [--write] [files] defaults to Vite+'s format check and forwards native formatter flags.
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
-- raypx-dev i18n
-  Discover `locales/<language>/<namespace>.ts` or `.json` from workspace manifests;
+- raypx-dev i18n [types]
+  Discover `locales/<language>/<namespace>.json` from workspace manifests;
   compare namespace/key, ICU syntax, argument and rich-tag parity without executing
-  modules. Reject duplicate formats/ownership and missing supported languages.
+  entries. Reject TypeScript catalogs, duplicate ownership and missing supported languages.
+  `types` writes the ignored `<namespace>.d.json.ts` literal types beside each
+  reference-language catalog and removes stale ones; `check` tasks depend on it.
   Language `index.ts` files explicitly assemble owned namespaces; AST checks verify registration.
   Only apps spread shared public entries from the same language, with no namespace overwrites.
   TS uses literal objects, JSON nested strings. Include both formats in cache inputs;

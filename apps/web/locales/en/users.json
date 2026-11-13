@@ -1,0 +1,76 @@
+{
+  "searchBy": "Search by",
+  "search": "Search users",
+  "filters": "User filters",
+  "appliedFilters": "Applied filters",
+  "removeFilter": "Remove filter: {filter}",
+  "clearFilters": "Clear filters",
+  "email": "Email address",
+  "verification": "Email verification",
+  "anyVerification": "Any status",
+  "role": "Role",
+  "created": "Registered",
+  "newestFirst": "Newest first",
+  "oldestFirst": "Oldest first",
+  "verified": "Verified",
+  "unverified": "Unverified",
+  "member": "Member",
+  "admin": "Admin",
+  "unknown": "Unsupported role",
+  "viewPermissions": "View permissions",
+  "permissionsFor": "Permissions for {email}.",
+  "currentRole": "Current role",
+  "chooseRole": "Choose a role",
+  "grantedPermissions": "Permissions granted by role",
+  "addedPermissions": "Permissions to add",
+  "removedPermissions": "Permissions to remove",
+  "noPermissions": "No permissions granted.",
+  "noPermissionChanges": "No permission changes.",
+  "editRole": "Change role",
+  "selfRole": "Your role",
+  "selfRoleHint": "You cannot change your own role. Ask another administrator.",
+  "confirm": "Change the role assigned to {email}.",
+  "permissions": {
+    "admin": {
+      "read": "View the admin overview"
+    },
+    "audit": {
+      "read": "View the audit log"
+    },
+    "users": {
+      "read": "View users",
+      "roles": {
+        "update": "Change user roles"
+      }
+    },
+    "projects": {
+      "read": "View projects"
+    },
+    "tasks": {
+      "read": "View tasks"
+    },
+    "approvals": {
+      "read": "View approvals"
+    },
+    "automations": {
+      "manage": "Manage automations"
+    },
+    "memory": {
+      "manage": "Manage memory"
+    },
+    "account": {
+      "manage": "Manage own account"
+    },
+    "configuration": {
+      "read": "View configuration",
+      "update": "Change configuration"
+    }
+  },
+  "forbidden": "You do not have permission to manage users.",
+  "failed": "Unable to change this role. Check your connection and try again.",
+  "refreshFailed": "The role was saved. Try again to refresh the list.",
+  "empty": "No matching users.",
+  "noUsers": "No users to display.",
+  "pagination": "User pages",
+  "results": "{from, number}–{to, number} of {total, plural, one {# user} other {# users}}"
+}

@@ -16,7 +16,6 @@
     "test:unit": "bun --bun vitest run"
   },
   "dependencies": {
-    "@raypx/i18n": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

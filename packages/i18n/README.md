@@ -11,30 +11,22 @@ global message declaration or runtime namespace registration.
 
 ## Authoring catalogs
 
-Use `locales/<language>/<namespace>.ts` or `.json` in the owning workspace.
+Use `locales/<language>/<namespace>.json` in the owning workspace, in every language.
 Each file contains that namespace's nested string object, without a namespace wrapper.
-A namespace may use different formats across languages, but each language must have
-exactly one format. Keep a handwritten `index.ts` in each language directory:
+Keep a handwritten `index.ts` in each language directory:
 
 ```ts
-import common from "./common.js";
+import common from "./common.json" with { type: "json" };
 import example from "./example.json" with { type: "json" };
 
 export default { common, example } as const;
 ```
 
-TS namespace modules use `export default { ... } as const`. A translated TS module
-can use `satisfies CatalogShape<typeof en>` from `@raypx/i18n/types`.
-JSON contains only standard nested string objects. Shared TypeScript presets enable
-`resolveJsonModule`; JSON imports retain `.json` and the standard import attribute.
-
-An English TS baseline preserves exact keys, ICU argument types and rich-text
-callbacks. An English JSON baseline preserves keys, but its widened strings do
-not guarantee call-site ICU argument checking. `bun run i18n:check` checks both
-formats for static shape, language/key parity, ICU syntax and matching argument/tag
-names. It also rejects conflicting formats, duplicate namespace ownership and
-missing language entries or namespace registrations. This catalog validation does
-not type-check translation calls or replace TypeScript's TS-literal checks.
+TypeScript widens imported JSON values to `string`. `bun run i18n:types` writes
+`<namespace>.d.json.ts` beside each English catalog with literal types, so call sites
+keep exact keys, ICU argument types and rich-text callbacks. The file is ignored by
+Git; `check` regenerates it, and you run the command yourself after editing English
+copy when you want the editor to see the change immediately.
 
 Reuse `common` for shared controls and status words; keep feature-specific guidance
 in its owning namespace. Use ICU plural parameters for numeric variants and pass

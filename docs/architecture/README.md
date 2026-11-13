@@ -164,7 +164,7 @@ messages. Client is the remote SDK. Local interfaces are never registered on
 public RPC. UI contains DOM components, a `themes` entry and a pure `themes/config` entry.
 I18n owns common copy, locale policy and platform adapters. Business packages expose
 pure language data entries; Web, Desktop and Mobile privately compose their own
-TS/JSON catalogs. Typed feature hooks share the application messages context without
+JSON catalogs, typed through generated literal declarations ([ADR 0064](0064-json-message-catalogs.md)). Typed feature hooks share the application messages context without
 global declarations. The in-repository i18n runtime owns the controlled provider and delegates translation,
 formatting and the shared messages context to one pinned copy of `use-intl`.
 Only `useLanguagePreference().setPreference()` changes the product language
@@ -383,6 +383,7 @@ current implementation.
 - [0061: Standalone Vitest](0061-standalone-vitest.md) — updates the leaf test runner in 0060
 - [0062: Desktop sign-in in the system browser](0062-desktop-browser-sign-in.md)
 - [0063: OAuth/OIDC for Desktop sign-in](0063-desktop-oauth.md)
+- [0064: JSON message catalogs with generated literal types](0064-json-message-catalogs.md)
 
 ## Distribution and performance
 

@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
+    "allowArbitraryExtensions": true,
     "noEmit": true,
     "skipLibCheck": true,
     "types": []

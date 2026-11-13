@@ -18,7 +18,7 @@
       ]
     },
     "check": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "//#i18n:types"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
       "outputs": []
     },
@@ -277,8 +277,16 @@
       ],
       "outputs": []
     },
+    "//#i18n:types": {
+      "inputs": [
+        "{apps,packages,infra}/*/locales/*/*.json",
+        "packages/i18n/src/config.ts",
+        "packages/dev-cli/src/**"
+      ],
+      "outputs": ["{apps,packages,infra}/*/locales/*/*.d.json.ts"]
+    },
     "//#types": {
-      "dependsOn": ["^transit"],
+      "dependsOn": ["^transit", "//#i18n:types"],
       "inputs": [
         "package.json",
         "bun.lock",

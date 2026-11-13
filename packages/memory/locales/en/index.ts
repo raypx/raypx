@@ -1,3 +1,3 @@
-import memory from "./memory.js";
+import memory from "./memory.json" with { type: "json" };
 
 export default { memory } as const;

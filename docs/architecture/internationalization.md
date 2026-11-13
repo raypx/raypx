@@ -37,24 +37,26 @@ label is `common.backToWorkspace`. Neither has a compatibility alias.
 
 ## Formats and types
 
-Every language and namespace supports `locales/<language>/<namespace>.ts` or
-`.json`, with one format per namespace/language. Formats may differ across languages.
-Handwritten language `index.ts` files explicitly import and assemble their entries;
-there is no generated source or runtime registration. TS objects use `as const`
-and relative `.js` imports. JSON contains nested string objects and uses actual
-`.json` specifiers with `with { type: "json" }`. Shared TS presets enable
+Every language and namespace is `locales/<language>/<namespace>.json`
+([ADR 0064](0064-json-message-catalogs.md)). Handwritten language `index.ts` files
+explicitly import and assemble their entries with actual `.json` specifiers and
+`with { type: "json" }`; there is no runtime registration. Shared TS presets enable
 `resolveJsonModule`; Bun, Vite and Mobile's Metro consume those imports.
 
-An English TS baseline preserves key, ICU argument and rich-text tag call-site
-checks. Translated TS can satisfy `CatalogShape<typeof en>`. An English JSON
-baseline retains key types, but widened string values do not guarantee ICU argument
-checking at calls. The repository validator reads TS and JSON statically without
-executing modules. It checks supported languages, formats, nested string leaves,
-namespace/key parity, ICU syntax, matching argument/tag names, unique ownership and
-language entry registration. Shared entries expose only their owner's namespaces;
-application spreads must reference same-language public entries and cannot overwrite
-namespaces. These checks do not validate call-site arguments.
-JSON files are explicit validation and source/build cache inputs.
+TypeScript widens imported JSON values to `string`. `raypx-dev i18n types` writes an
+ignored `<namespace>.d.json.ts` beside each English catalog, restating its values as
+literal types, and the presets enable `allowArbitraryExtensions` so the compiler uses
+it. English therefore keeps key, ICU argument and rich-text tag call-site checks.
+The Turbo task `//#i18n:types` produces these files before every `check`; run
+`bun run i18n:types` after editing English copy to refresh the editor.
+
+The repository validator reads catalogs statically. It checks supported languages,
+nested string leaves, namespace/key parity, ICU syntax, matching argument/tag names,
+unique ownership and language entry registration, and rejects a TypeScript catalog.
+Shared entries expose only their owner's namespaces; application spreads must
+reference same-language public entries and cannot overwrite namespaces. These checks
+do not validate call-site arguments. JSON files are explicit validation and
+source/build cache inputs.
 
 ## Runtime composition
 
@@ -114,7 +116,7 @@ locale/appearance adapters without importing DOM entry points.
 
 Package-local tests cover typed TS and JSON bindings, shared context, form drafts,
 retry, persistence, time zones, concurrent SSR and hydration. Tooling fixtures cover
-all-TS, all-JSON and mixed formats plus rejected malformed/conflicting/missing
+JSON catalogs, their generated declarations and rejected malformed/conflicting/missing
 catalogs. Build acceptance checks Web's lazy Chinese resource, Desktop's exclusion
 of Web-only copy and Mobile's DOM-free composition; JSON fixtures exercise each
 bundler. Run focused tests, `bun run i18n:check`, `bun run verify` and Web,

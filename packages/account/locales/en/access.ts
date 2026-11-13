@@ -1,4 +1,0 @@
-export default {
-  forbidden: "You do not have permission to access this page.",
-  unavailable: "Unable to verify permissions. Please try again.",
-} as const;

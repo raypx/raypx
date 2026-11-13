@@ -1,0 +1,8 @@
+{
+  "replaceOwner": "Stop old host and update",
+  "upgradeWarning": "An older host is still running. Replacing it cancels its active sessions.",
+  "upgradeTitle": "Update the execution host",
+  "unavailable": "Local tools are unavailable",
+  "retry": "Restart local tools",
+  "hint": "Restart local tools to reconnect. Your workspace stays on this computer."
+}

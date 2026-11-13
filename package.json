@@ -151,6 +151,7 @@
     "workspace:new": "raypx-dev workspace new",
     "policy": "raypx-dev policy",
     "i18n:check": "raypx-dev i18n",
+    "i18n:types": "raypx-dev i18n types",
     "dev": "raypx-dev tasks dev --filter web --filter api",
     "dev:desktop": "raypx-dev tasks dev --filter desktop",
     "dev:storybook": "raypx-dev tasks dev --filter ui-storybook",

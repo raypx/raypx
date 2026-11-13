@@ -1,5 +1,0 @@
-export default {
-  MAIL_NOT_CONFIGURED: "暂时无法发送验证邮件",
-  REGISTRATION_DISABLED: "注册已关闭",
-  CONFIGURATION_UNAVAILABLE: "暂时无法读取站点配置",
-} as const;

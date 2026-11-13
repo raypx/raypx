@@ -7,12 +7,12 @@ import jobs from "@raypx/jobs/messages/zh";
 import analytics from "@raypx/analytics/messages/zh";
 import blocks from "@raypx/blocks/messages/zh";
 import instances from "@raypx/instances/messages/zh";
-import desktopLogin from "./desktopLogin.js";
-import files from "./files.js";
-import terminal from "./terminal.js";
-import engine from "./engine.js";
-import command from "./command.js";
-import localWorkspace from "./localWorkspace.js";
+import desktopLogin from "./desktopLogin.json" with { type: "json" };
+import files from "./files.json" with { type: "json" };
+import terminal from "./terminal.json" with { type: "json" };
+import engine from "./engine.json" with { type: "json" };
+import command from "./command.json" with { type: "json" };
+import localWorkspace from "./localWorkspace.json" with { type: "json" };
 
 export default {
   ...i18n,

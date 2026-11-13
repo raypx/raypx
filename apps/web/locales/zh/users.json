@@ -1,0 +1,76 @@
+{
+  "searchBy": "搜索字段",
+  "search": "搜索用户",
+  "filters": "用户筛选",
+  "appliedFilters": "已应用的筛选",
+  "removeFilter": "移除筛选：{filter}",
+  "clearFilters": "清除筛选",
+  "email": "邮箱",
+  "verification": "邮箱验证",
+  "anyVerification": "全部状态",
+  "role": "角色",
+  "created": "注册时间",
+  "newestFirst": "最新注册优先",
+  "oldestFirst": "最早注册优先",
+  "verified": "已验证",
+  "unverified": "未验证",
+  "member": "成员",
+  "admin": "管理员",
+  "unknown": "不支持的角色",
+  "viewPermissions": "查看权限",
+  "permissionsFor": "{email} 的权限。",
+  "currentRole": "当前角色",
+  "chooseRole": "选择角色",
+  "grantedPermissions": "角色授予的权限",
+  "addedPermissions": "将新增的权限",
+  "removedPermissions": "将移除的权限",
+  "noPermissions": "未授予权限。",
+  "noPermissionChanges": "权限无变化。",
+  "editRole": "修改角色",
+  "selfRole": "本人角色",
+  "selfRoleHint": "不能修改自己的角色，请联系其他管理员。",
+  "confirm": "修改 {email} 的角色。",
+  "permissions": {
+    "admin": {
+      "read": "查看管理概览"
+    },
+    "audit": {
+      "read": "查看审计日志"
+    },
+    "users": {
+      "read": "查看用户",
+      "roles": {
+        "update": "修改用户角色"
+      }
+    },
+    "projects": {
+      "read": "查看项目"
+    },
+    "tasks": {
+      "read": "查看任务"
+    },
+    "approvals": {
+      "read": "查看审批"
+    },
+    "automations": {
+      "manage": "管理自动化"
+    },
+    "memory": {
+      "manage": "管理记忆"
+    },
+    "account": {
+      "manage": "管理自己的账号"
+    },
+    "configuration": {
+      "read": "查看配置",
+      "update": "修改配置"
+    }
+  },
+  "forbidden": "你没有管理用户的权限。",
+  "failed": "角色修改失败，请检查网络后重试。",
+  "refreshFailed": "角色已保存，请重试刷新列表。",
+  "empty": "没有匹配的用户。",
+  "noUsers": "暂无用户。",
+  "pagination": "用户分页",
+  "results": "第 {from, number}–{to, number} 位，共 {total, number} 位用户"
+}

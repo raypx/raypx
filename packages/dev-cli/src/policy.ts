@@ -77,4 +77,4 @@ export function policy(root: string): string[] {
   return [...new Set(findings)];
 }
 
-export { checkLocales } from "./validation/locales.js";
+export { checkLocales, writeLocaleTypes } from "./validation/locales.js";

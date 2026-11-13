@@ -117,11 +117,16 @@ const commands: Record<string, Command> = {
     },
   },
   i18n: {
-    usage: "i18n",
-    summary: "Check locale catalog parity",
+    usage: "i18n [types]",
+    summary: "Check locale catalog parity, or write catalog type declarations",
     async run(args) {
+      const { checkLocales, writeLocaleTypes } = await import("./policy.js");
+      if (args.length === 1 && args[0] === "types") {
+        const changed = writeLocaleTypes(root);
+        console.log(`Catalog types current (${changed.length} written)`);
+        return;
+      }
       noArguments("i18n", args);
-      const { checkLocales } = await import("./policy.js");
       findings(checkLocales(root), "Locale catalogs");
     },
   },

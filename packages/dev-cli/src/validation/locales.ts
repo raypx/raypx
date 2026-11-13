@@ -1,6 +1,7 @@
 import { existsSync, globSync, readFileSync, readdirSync } from "node:fs";
 import { join, posix } from "node:path";
 import { readStaticCatalog, type CatalogTree } from "../repo/catalogs.js";
+import { writeCatalogDeclarations } from "../repo/catalog-types.js";
 import type { WorkspaceIndex } from "../repo/workspaces.js";
 import { discover } from "../repository.js";
 import { checkCatalogEntry } from "./catalog-entry.js";
@@ -33,10 +34,27 @@ function localeDefaults(root: string, index: WorkspaceIndex): Required<LocaleCat
 }
 
 function catalogPaths(root: string, folder: string): string[] {
-  return globSync(`${folder}/*.{ts,json}`, { cwd: root })
+  return globSync(`${folder}/*.json`, { cwd: root })
     .map((path) => path.replaceAll("\\", "/"))
-    .filter((path) => posix.basename(path) !== "index.ts")
     .sort();
+}
+
+/** Catalogs are JSON so translation tooling reads them; only the entry stays TypeScript. */
+function authoredModules(root: string, folder: string): string[] {
+  return globSync(`${folder}/*.ts`, { cwd: root })
+    .map((path) => path.replaceAll("\\", "/"))
+    .filter((path) => posix.basename(path) !== "index.ts" && !path.endsWith(".d.json.ts"))
+    .sort();
+}
+
+/** Writes the literal-typed declarations that sit beside reference-language catalogs. */
+export function writeLocaleTypes(root: string): string[] {
+  const index = discover(root);
+  return writeCatalogDeclarations(
+    root,
+    index.workspaces.map((workspace) => workspace.path),
+    localeDefaults(root, index).base,
+  );
 }
 
 /** Public language entries expose their owner's namespace files; apps alone compose them. */
@@ -56,7 +74,7 @@ function sharedCatalogs(root: string, index: WorkspaceIndex, locale: string) {
   return sources;
 }
 
-/** Compare authored TS/JSON namespace catalogs without executing them. */
+/** Compare authored JSON namespace catalogs without executing their entries. */
 export function checkLocales(root: string, options: LocaleCatalogOptions = {}): string[] {
   const index = discover(root);
   const findings: string[] = [];
@@ -101,6 +119,8 @@ export function checkLocales(root: string, options: LocaleCatalogOptions = {}): 
     for (const locale of locales) {
       const folder = `${directory}/${locale}`;
       const paths = catalogPaths(root, folder);
+      for (const module of authoredModules(root, folder))
+        findings.push(`${module}: catalogs are JSON; move these messages to a .json file`);
       const entry = `${folder}/index.ts`;
       const hasEntry = existsSync(join(root, entry));
       if (!paths.length && !hasEntry)
@@ -124,11 +144,6 @@ export function checkLocales(root: string, options: LocaleCatalogOptions = {}): 
       for (const path of paths) {
         const extension = posix.extname(path);
         const namespace = posix.basename(path, extension);
-        if (names.includes(namespace)) {
-          invalidCatalog = true;
-          findings.push(`${folder}/${namespace}: choose one catalog format (TS or JSON)`);
-          continue;
-        }
         names.push(namespace);
         if (locale === base) {
           const owner = owners.get(namespace);

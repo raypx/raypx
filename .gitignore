@@ -79,5 +79,8 @@ e2e/playwright-report/
 # Retain ignored build caches from older branches until explicitly cleaned.
 /target/
 
+# Literal types for JSON message catalogs; `bun run i18n:types` writes them.
+*.d.json.ts
+
 # Turbo task cache and run summaries
 .turbo/

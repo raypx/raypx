@@ -22,13 +22,14 @@ Never import business catalogs, UI or icons into this package.
 
 ## Catalogs and state
 
-Author static `locales/<language>/<namespace>.ts` or `.json`, one format per
-namespace/language, with handwritten language `index.ts` assembly. TS uses
-`as const`, relative `.js` imports and optional translated `CatalogShape`
-checks; JSON uses `.json` imports with `with { type: "json" }`. No generation.
-English TS preserves key/ICU/tag call-site types; English JSON preserves keys only.
-The static validator checks both formats' shape, parity, ICU syntax, arguments,
-tags, unique namespace ownership and entry registration without executing modules.
+Author static `locales/<language>/<namespace>.json` in every language, with
+handwritten language `index.ts` assembly using `.json` imports and
+`with { type: "json" }`. `bun run i18n:types` writes the ignored
+`<namespace>.d.json.ts` beside each English catalog so key, ICU argument and tag
+call-site types survive JSON's widened strings (ADR 0064); never edit or commit it.
+Run it after editing English outside `check`. The static validator checks shape,
+parity, ICU syntax, arguments, tags, unique namespace ownership and entry
+registration without executing entries, and rejects TypeScript catalogs.
 
 Typed hooks may have different message types but share one SDK messages context.
 Only the singleton runtime owns preference context. Never create per-feature

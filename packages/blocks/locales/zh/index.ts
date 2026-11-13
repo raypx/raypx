@@ -1,3 +1,3 @@
-import settings from "./settings.js";
+import settings from "./settings.json" with { type: "json" };
 
 export default { settings } as const;

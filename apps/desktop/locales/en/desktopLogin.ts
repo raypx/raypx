@@ -1,8 +1,0 @@
-export default {
-  openBrowser: "Sign in with browser",
-  waiting: "Finish signing in in your browser, then return here.",
-  failed: "Desktop sign-in failed. Try opening the browser again.",
-  expired: "This sign-in request expired. Start again to open a new request.",
-  mismatch: "This profile belongs to a different account or server.",
-  refreshFailed: "Sign-in completed. Retry loading your account.",
-} as const;

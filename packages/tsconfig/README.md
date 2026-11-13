@@ -36,23 +36,24 @@ Install `@types/node` alongside it. The other presets declare no ambient types.
 
 Every preset inherits these options from `base.json`:
 
-| Option                           | Value | Consequence for source code                                     |
-| -------------------------------- | ----- | --------------------------------------------------------------- |
-| strict                           | true  | all strict type-checking families                               |
-| noUncheckedIndexedAccess         | true  | indexed reads include undefined                                 |
-| exactOptionalPropertyTypes       | true  | omit optional keys instead of assigning undefined               |
-| verbatimModuleSyntax             | true  | type-only imports use import type                               |
-| isolatedModules                  | true  | each file can be transpiled independently                       |
-| noImplicitOverride               | true  | overriding members declare override                             |
-| useUnknownInCatchVariables       | true  | catch variables are unknown                                     |
-| noFallthroughCasesInSwitch       | true  | non-empty switch cases end explicitly                           |
-| noUnusedLocals                   | true  | unused declarations are errors                                  |
-| noUnusedParameters               | true  | unused parameters are errors unless prefixed with \_            |
-| noUncheckedSideEffectImports     | true  | side-effect imports must resolve                                |
-| forceConsistentCasingInFileNames | true  | import casing matches the file system                           |
-| resolveJsonModule                | true  | infer keys for imported JSON objects                            |
-| noEmit                           | true  | type-checking only; bundlers and declaration builders emit code |
-| skipLibCheck                     | true  | third-party declarations are not re-checked                     |
+| Option                           | Value | Consequence for source code                                        |
+| -------------------------------- | ----- | ------------------------------------------------------------------ |
+| strict                           | true  | all strict type-checking families                                  |
+| noUncheckedIndexedAccess         | true  | indexed reads include undefined                                    |
+| exactOptionalPropertyTypes       | true  | omit optional keys instead of assigning undefined                  |
+| verbatimModuleSyntax             | true  | type-only imports use import type                                  |
+| isolatedModules                  | true  | each file can be transpiled independently                          |
+| noImplicitOverride               | true  | overriding members declare override                                |
+| useUnknownInCatchVariables       | true  | catch variables are unknown                                        |
+| noFallthroughCasesInSwitch       | true  | non-empty switch cases end explicitly                              |
+| noUnusedLocals                   | true  | unused declarations are errors                                     |
+| noUnusedParameters               | true  | unused parameters are errors unless prefixed with \_               |
+| noUncheckedSideEffectImports     | true  | side-effect imports must resolve                                   |
+| forceConsistentCasingInFileNames | true  | import casing matches the file system                              |
+| resolveJsonModule                | true  | infer keys for imported JSON objects                               |
+| allowArbitraryExtensions         | true  | use `<name>.d.json.ts` declarations for literal JSON message types |
+| noEmit                           | true  | type-checking only; bundlers and declaration builders emit code    |
+| skipLibCheck                     | true  | third-party declarations are not re-checked                        |
 
 With `exactOptionalPropertyTypes`, use conditional spread for optional values:
 
