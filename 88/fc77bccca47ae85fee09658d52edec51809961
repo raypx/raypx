@@ -1,0 +1,72 @@
+docs/architecture/0038-mygo-desktop-host.md
+  s_f9cc0d01f49051::t_b208258c744490 5
+docs/development/getting-started.md
+  s_f9cc0d01f49051::t_b208258c744490 196
+docs/development/terminal-host.md
+  s_f9cc0d01f49051::t_b208258c744490 7
+docs/roadmap.md
+  s_f9cc0d01f49051::t_bda46b66ee577d 1,3-5,9-25,27-30,32,34-38,40-47,49-50,52,54-55,59-68,70-71,73,75-77,79,81-93,95,97-100,104-110,112-113,115-118,122-134,138-155,159-183
+docs/README.md
+  s_f9cc0d01f49051::t_8b481a94fcec51 3-8,10-11,13,17-29
+docs/development/local-sqlite.md
+  s_f9cc0d01f49051::t_b208258c744490 17
+docs/development/desktop.md
+  s_f9cc0d01f49051::t_b208258c744490 162-163
+PRODUCT.md
+  s_f9cc0d01f49051::t_b208258c744490 49
+docs/architecture/0046-mygo-bun-artifacts.md
+  s_f9cc0d01f49051::t_b208258c744490 5
+docs/architecture/spaces.md
+  s_f9cc0d01f49051::t_145e7a922b205d 1-75
+GLOSSARY.md
+  s_f9cc0d01f49051::t_b208258c744490 24-25,28-37
+docs/architecture/computers.md
+  s_f9cc0d01f49051::t_8b481a94fcec51 28-32
+  s_f9cc0d01f49051::t_eb61a1b8509efd 1-27,33-116
+docs/architecture/events.md
+  s_f9cc0d01f49051::t_8b481a94fcec51 24-32
+  s_f9cc0d01f49051::t_e02dec48945c51 1-23,33-74
+docs/architecture/clients.md
+  s_f9cc0d01f49051::t_4bf28cd9a31ac7 1-57
+docs/architecture/README.md
+  s_f9cc0d01f49051::t_59fb095abad7fd 3-31,39,41-44,46-54,57-64,66-69,71,73-78,91,93-115,119-120,123,126-131,137-138,142,144-145
+  s_f9cc0d01f49051::t_8b481a94fcec51 79-90,92
+docs/architecture/approvals.md
+  s_f9cc0d01f49051::t_ab91c16b2a15e3 1-8,14-68
+  s_f9cc0d01f49051::t_8b481a94fcec51 9-13
+docs/architecture/operations.md
+  s_f9cc0d01f49051::t_8b481a94fcec51 8-16
+  s_f9cc0d01f49051::t_c935c32445c664 1-7,17-72
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_b78c9dc5c9e786 1-8,20-66
+  s_f9cc0d01f49051::t_8b481a94fcec51 9-19
+docs/architecture/0066-server-owned-agent-platform.md
+  s_f9cc0d01f49051::t_8fb3eada689b0c 1-66
+docs/architecture/execution.md
+  s_f9cc0d01f49051::t_39aec8131b6bb0 1-96
+docs/architecture/capabilities.md
+  s_f9cc0d01f49051::t_7ad01b8193a7a0 1-77
+docs/architecture/0042-application-layering.md
+  s_f9cc0d01f49051::t_b208258c744490 5,43
+docs/development/ai.md
+  s_f9cc0d01f49051::t_b208258c744490 375
+docs/architecture/domain.md
+  s_f9cc0d01f49051::t_b1ef6ffe70397b 1-8,28,33-47,56-90
+  s_f9cc0d01f49051::t_8b481a94fcec51 9-27,29-32,48-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "88fc77bccca47ae85fee09658d52edec51809961",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
