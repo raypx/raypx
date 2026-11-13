@@ -26,7 +26,7 @@ function authError(c: Context<AuthRouteEnv>, code: AuthErrorCode, status: 403 | 
   return c.json({ code, message: messages[locale][code] }, status);
 }
 
-export function authPreflight(options: Pick<ApiAppOptions, "mailAvailable" | "configuration">) {
+export function authPreflight(options: Pick<ApiAppOptions, "mailAvailable" | "config">) {
   return createMiddleware<AuthRouteEnv>(async (c, next) => {
     const mount = basePath(c).replace(/\/$/, "");
     const path = decodeURIComponent(c.req.path.slice(mount.length)).replace(/\/+$/, "");
@@ -40,7 +40,7 @@ export function authPreflight(options: Pick<ApiAppOptions, "mailAvailable" | "co
     if (c.req.method === "POST" && path === emailSignupPath) {
       try {
         // Cheap early answer; the auth user-create hook re-checks with a fresh read.
-        if (!(await options.configuration.readCached()).values.registrationEnabled)
+        if (!(await options.config.readCached()).values.registrationEnabled)
           return authError(c, "REGISTRATION_DISABLED", 403);
       } catch {
         return authError(c, "CONFIGURATION_UNAVAILABLE", 503);

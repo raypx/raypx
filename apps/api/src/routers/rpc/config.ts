@@ -20,7 +20,7 @@ export function createConfigurationHandlers({
     run: (service: ConfigurationService) => Promise<T>,
   ) {
     try {
-      return await run(options.configuration);
+      return await run(options.config);
     } catch (error) {
       return configurationFailure(error, context);
     }

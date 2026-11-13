@@ -160,7 +160,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         administration,
         access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
-        configuration,
+        config: configuration,
         storageSettings: createStorageSettings(db, environment.APP_KEY, audit, reads),
         resendSettings: createResendSettings(db, environment.APP_KEY, audit, reads),
         jobsEnabled: environment.JOBS_ENABLED,

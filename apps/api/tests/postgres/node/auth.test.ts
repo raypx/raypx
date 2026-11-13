@@ -40,7 +40,7 @@ const auth = createAuth({
   },
 });
 const app = createApiApp({
-  configuration: createConfigurationService({
+  config: createConfigurationService({
     repository: createConfigurationRepository(connection.db),
     access: createAccessPolicy(),
   }),

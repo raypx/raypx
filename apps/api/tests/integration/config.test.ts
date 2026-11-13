@@ -37,14 +37,14 @@ function fixture(options: Pick<ApiAppOptions, "audit" | "rateLimit"> = {}) {
     }),
   };
   const access = createAccessPolicy();
-  const configuration = createConfigurationService({
+  const config = createConfigurationService({
     repository,
     access,
   });
   const authHandler = vi.fn(async () => Response.json({ ok: true }));
   const app = createApiApp({
     access,
-    configuration,
+    config,
     authHandler,
     readSession: async () => auth,
     allowedOrigins: ["https://web.example.test/", "invalid"],

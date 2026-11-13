@@ -20,7 +20,7 @@ export interface ApiAppOptions {
   audit?: AuditService;
   administration: AdministrationQueries;
   access?: AccessPolicy;
-  configuration: ConfigurationService;
+  config: ConfigurationService;
   storageSettings: StorageSettingsService;
   resendSettings: ResendSettingsService;
   jobsEnabled?: boolean;
