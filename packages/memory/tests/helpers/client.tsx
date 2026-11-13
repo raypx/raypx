@@ -40,22 +40,8 @@ export function deferred<T>() {
 export function fixture() {
   const client = {
     list: vi.fn<MemoryClientPort["list"]>(async () => [document()]),
-    delete: vi.fn<MemoryClientPort["delete"]>(async () => ({ deleted: true })),
     get: vi.fn<MemoryClientPort["get"]>(async () => document()),
-    create: vi.fn<MemoryClientPort["create"]>(async (input) => ({
-      ...document(),
-      ...input.document,
-    })),
-    update: vi.fn<MemoryClientPort["update"]>(async (input) => ({
-      ...document(input.revision + 1),
-      ...input.document,
-    })),
-    archive: vi.fn<MemoryClientPort["archive"]>(async (input) => ({
-      ...document(input.revision + 1),
-      archived: input.archived,
-    })),
     history: vi.fn<MemoryClientPort["history"]>(async () => [version(2), version(1)]),
-    restore: vi.fn<MemoryClientPort["restore"]>(async (input) => document(input.revision + 1)),
     resolve: vi.fn<MemoryClientPort["resolve"]>(async () => ({
       capturedAt: "2026-10-26T00:00:00Z",
       sources: [],

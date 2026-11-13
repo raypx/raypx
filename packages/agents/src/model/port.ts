@@ -11,6 +11,8 @@ import type {
 import type { Space, SpaceId, SpaceInput, SpaceMember } from "@raypx/core/spaces";
 import type { SpaceComputer } from "@raypx/core/computers";
 import type { ApprovalRequest, Effect } from "@raypx/core/approvals";
+import type { RoutinesPort } from "@raypx/jobs/model";
+import type { SpaceMemoryClientPort } from "@raypx/memory/model";
 import type { ComputerFilesPort } from "./computer-files.js";
 
 export interface ApprovalPort {
@@ -90,6 +92,8 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  routines?: RoutinesPort;
+  spaceMemory?: SpaceMemoryClientPort;
   approvals?: ApprovalPort;
   computers: ComputerPort;
   spaces: {

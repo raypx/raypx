@@ -16,7 +16,6 @@ import { Route as landingRouteRouteImport } from './routes/(landing)/route'
 import { Route as legalRouteRouteImport } from './routes/(legal)/route'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as appAgentsRouteImport } from './routes/(app)/agents'
-import { Route as appMemoryRouteImport } from './routes/(app)/memory'
 import { Route as appSettingsRouteImport } from './routes/(app)/settings'
 import { Route as authDesktopAuthorizeRouteImport } from './routes/(auth)/desktop-authorize'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
@@ -59,11 +58,6 @@ const HealthRoute = HealthRouteImport.update({
 const appAgentsRoute = appAgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appMemoryRoute = appMemoryRouteImport.update({
-  id: '/memory',
-  path: '/memory',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appSettingsRoute = appSettingsRouteImport.update({
@@ -136,7 +130,6 @@ export interface FileRoutesByFullPath {
   '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/agents': typeof appAgentsRoute
-  '/memory': typeof appMemoryRoute
   '/settings': typeof appSettingsRoute
   '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -154,7 +147,6 @@ export interface FileRoutesByTo {
   '/': typeof landingIndexRoute
   '/health': typeof HealthRoute
   '/agents': typeof appAgentsRoute
-  '/memory': typeof appMemoryRoute
   '/settings': typeof appSettingsRoute
   '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -177,7 +169,6 @@ export interface FileRoutesById {
   '/(legal)': typeof legalRouteRouteWithChildren
   '/health': typeof HealthRoute
   '/(app)/agents': typeof appAgentsRoute
-  '/(app)/memory': typeof appMemoryRoute
   '/(app)/settings': typeof appSettingsRoute
   '/(auth)/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
@@ -198,7 +189,6 @@ export interface FileRouteTypes {
     | '/'
     | '/health'
     | '/agents'
-    | '/memory'
     | '/settings'
     | '/desktop-authorize'
     | '/forgot-password'
@@ -216,7 +206,6 @@ export interface FileRouteTypes {
     | '/'
     | '/health'
     | '/agents'
-    | '/memory'
     | '/settings'
     | '/desktop-authorize'
     | '/forgot-password'
@@ -238,7 +227,6 @@ export interface FileRouteTypes {
     | '/(legal)'
     | '/health'
     | '/(app)/agents'
-    | '/(app)/memory'
     | '/(app)/settings'
     | '/(auth)/desktop-authorize'
     | '/(auth)/forgot-password'
@@ -312,13 +300,6 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/agents'
       preLoaderRoute: typeof appAgentsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/memory': {
-      id: '/(app)/memory'
-      path: '/memory'
-      fullPath: '/memory'
-      preLoaderRoute: typeof appMemoryRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/settings': {
@@ -435,13 +416,11 @@ const adminRouteRouteWithChildren = adminRouteRoute._addFileChildren(
 
 interface appRouteRouteChildren {
   appAgentsRoute: typeof appAgentsRoute
-  appMemoryRoute: typeof appMemoryRoute
   appSettingsRoute: typeof appSettingsRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appAgentsRoute: appAgentsRoute,
-  appMemoryRoute: appMemoryRoute,
   appSettingsRoute: appSettingsRoute,
 }
 

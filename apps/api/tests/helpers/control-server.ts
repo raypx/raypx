@@ -21,13 +21,21 @@ import {
   createApprovalsRepository,
 } from "@raypx/agents/server/postgres";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
+import { createRoutinesService } from "@raypx/jobs/routines";
+import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
+import { createSpaceMemoryService } from "@raypx/memory/space-server";
+import { createSpaceMemoryRepository } from "@raypx/memory/space-server/postgres";
+import type { ConversationId } from "@raypx/core/agents";
 import { ConversationStream } from "../../src/conversations/stream.js";
 import { browserModelFixture } from "./browser-model.js";
 import { createModelConnections } from "../../src/conversations/connections.js";
+import { withMemoryTools } from "../../src/conversations/memory-tools.js";
 import { createModelConnectionsRepository } from "../../src/conversations/connections-postgres.js";
 import {
   applicationSecretKeyProvider,
   createPostgresSecretStore,
+  sealStoredSecret,
+  openStoredSecret,
 } from "../../src/conversations/secrets.js";
 import { createComputersService } from "@raypx/computers/server";
 import { createComputersRepository } from "@raypx/computers/server/postgres";
@@ -88,13 +96,31 @@ const modelConnections = createModelConnections(
 );
 const conversationModels = modelConnections.models(model.models);
 const agentApprovals = createApprovalsService(createApprovalsRepository(connection.db));
+const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(connection.db));
 const runner = new ConversationRunner(
   createConversationsRepository(connection.db),
   conversationModels,
   undefined,
   undefined,
-  { tools: createComputerTools(computers, computerProvider, []), approvals: agentApprovals },
+  {
+    tools: withMemoryTools(
+      createComputerTools(computers, computerProvider, []),
+      spaceMemory,
+      () => [],
+    ),
+    approvals: agentApprovals,
+  },
+  { recallMemory: (scope, run) => spaceMemory.recall(scope, run.agentId) },
 );
+const routineKeys = applicationSecretKeyProvider("browser-fixture-routine-encryption-key");
+const routines = createRoutinesService(createRoutinesRepository(connection.db), {
+  dispatch: (scope, conversationId) => runner.dispatch(scope, conversationId as ConversationId),
+  emailDomain: "routines.example.test",
+  secrets: {
+    seal: (accountId, secretId, value) => sealStoredSecret(routineKeys, accountId, secretId, value),
+    open: (accountId, secretId, value) => openStoredSecret(routineKeys, accountId, secretId, value),
+  },
+});
 const fanout = createConversationFanout(url);
 const readSession = (headers: Headers) => readAuthSession(auth, headers);
 const stream = new ConversationStream({
@@ -136,6 +162,8 @@ const app = createApiApp({
   computers,
   modelConnections,
   agentApprovals,
+  routines,
+  spaceMemory,
   spaces,
   agents: createAgentsRepository(connection.db),
   conversationModels,

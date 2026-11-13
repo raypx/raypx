@@ -28,6 +28,8 @@
     "@raypx/database": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
+    "@raypx/jobs": "workspace:*",
+    "@raypx/memory": "workspace:*",
     "@raypx/providers": "workspace:*",
     "@raypx/spaces": "workspace:*",
     "@raypx/ui": "workspace:*",

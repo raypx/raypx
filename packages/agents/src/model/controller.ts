@@ -61,6 +61,7 @@ export class ConversationController {
   private hasSnapshot = false;
   private storageUnavailable = false;
   private approvalsGeneration = 0;
+  private runDetailsLoading = false;
   constructor(private readonly options: ConversationControllerOptions) {
     this.state = new ConversationState(options.selection);
     this.approvals = new ApprovalProjection(options.selection);
@@ -234,6 +235,8 @@ export class ConversationController {
         this.options.computer?.applyEvent(frame.entry.event);
       if (applied === "applied") this.approvals.applyEvent(frame.entry.event);
       this.update();
+      if (applied === "applied" && frame.entry.event.kind === "run.state")
+        void this.refreshRunDetails();
       this.sendFrame({
         type: "ack",
         version: 1,
@@ -254,6 +257,30 @@ export class ConversationController {
     const applied = this.state.applyReply(frame);
     if (applied === "reconnect") this.interrupted(false);
     else if (applied === "applied") this.update();
+  }
+  private async refreshRunDetails() {
+    if (this.runDetailsLoading || !this.view.runs.some((run) => run.trigger === undefined)) return;
+    this.runDetailsLoading = true;
+    const requested = new Set(
+      this.view.runs.filter((run) => run.trigger === undefined).map((run) => run.id),
+    );
+    const generation = this.generation;
+    try {
+      const snapshot = await this.options.port.snapshot(this.options.selection);
+      if (this.disposed || generation !== this.generation) return;
+      if (this.state.applyRunDetails(snapshot.runs)) this.update();
+    } catch {
+      // Reconnect or the next Run event retries metadata; never infer an origin.
+    } finally {
+      this.runDetailsLoading = false;
+      // A second Run may arrive while the first metadata read is in flight.
+      if (
+        !this.disposed &&
+        generation === this.generation &&
+        this.view.runs.some((run) => run.trigger === undefined && !requested.has(run.id))
+      )
+        void this.refreshRunDetails();
+    }
   }
   private interrupted(authorizationLost: boolean) {
     if (this.disposed || this.suspended) return;

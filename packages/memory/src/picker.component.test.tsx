@@ -48,7 +48,7 @@ it("filters sources by project and preserves a chosen historical revision until 
     );
   }
   render(language(<Picker />));
-  await userEvent.click(screen.getByRole("button", { name: /Memory and templates/ }));
+  await userEvent.click(screen.getByRole("button", { name: /References/ }));
   const checkbox = await screen.findByRole("checkbox", { name: /Project conventions.*Revision 1/ });
   expect(checkbox).toBeChecked();
   expect(screen.queryByText("Wrong project")).toBeNull();
@@ -85,7 +85,7 @@ it("ignores a preview failure arriving after another preview succeeded", async (
       />,
     ),
   );
-  await userEvent.click(screen.getByRole("button", { name: /Memory and templates/ }));
+  await userEvent.click(screen.getByRole("button", { name: /References/ }));
   fireEvent.click(await screen.findByRole("button", { name: "Preview: Project conventions" }));
   fireEvent.click(screen.getByRole("button", { name: "Preview: Second reference" }));
   expect(await screen.findByText("Second preview content")).toBeVisible();
@@ -110,7 +110,7 @@ it("clears a previous preview error when a later preview succeeds", async () => 
       />,
     ),
   );
-  await userEvent.click(screen.getByRole("button", { name: /Memory and templates/ }));
+  await userEvent.click(screen.getByRole("button", { name: /References/ }));
   fireEvent.click(await screen.findByRole("button", { name: "Preview: Project conventions" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("This reference is unavailable");
   fireEvent.click(screen.getByRole("button", { name: "Preview: Project conventions" }));
@@ -141,12 +141,12 @@ it.each(["close", "refresh", "collapse"] as const)(
         />,
       ),
     );
-    await userEvent.click(screen.getByRole("button", { name: /Memory and templates/ }));
+    await userEvent.click(screen.getByRole("button", { name: /References/ }));
     fireEvent.click(await screen.findByRole("button", { name: "Preview: Second reference" }));
     await screen.findByText("Second preview content");
     fireEvent.click(screen.getByRole("button", { name: "Preview: Project conventions" }));
     if (action === "collapse")
-      await userEvent.click(screen.getByRole("button", { name: /Memory and templates/ }));
+      await userEvent.click(screen.getByRole("button", { name: /References/ }));
     else
       fireEvent.click(
         screen.getByRole("button", { name: action === "close" ? "Close" : "Refresh" }),
@@ -156,7 +156,7 @@ it.each(["close", "refresh", "collapse"] as const)(
       else pending.reject(new Error("CONTEXT_NOT_FOUND: private late failure"));
     });
     if (action === "collapse")
-      await userEvent.click(screen.getByRole("button", { name: /Memory and templates/ }));
+      await userEvent.click(screen.getByRole("button", { name: /References/ }));
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText("Second preview content")).toBeNull();
     expect(screen.queryByText("Reference revision 2")).toBeNull();
@@ -183,7 +183,7 @@ it("never auto-selects references and enforces the eight-source limit", async ()
     );
   }
   render(language(<Picker />));
-  await userEvent.click(screen.getByRole("button", { name: /Memory and templates/ }));
+  await userEvent.click(screen.getByRole("button", { name: /References/ }));
   const boxes = await screen.findAllByRole("checkbox");
   for (const box of boxes) expect(box).not.toBeChecked();
   for (const box of boxes.slice(0, 8)) await userEvent.click(box);

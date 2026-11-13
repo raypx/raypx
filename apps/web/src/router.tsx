@@ -36,8 +36,7 @@ type PageTitle =
   | "common.users"
   | "site.title"
   | "common.home"
-  | "common.settings"
-  | "memory.title";
+  | "common.settings";
 
 declare module "@tanstack/react-router" {
   interface HistoryState {

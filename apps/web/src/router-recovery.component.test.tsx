@@ -5,15 +5,15 @@ import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
 describe("authentication routes", () => {
   it("preserves the page through registration and password recovery links", async () => {
-    const router = await page("/login?returnTo=%2Fmemory");
+    const router = await page("/login?returnTo=%2Fagents");
     fireEvent.click(screen.getByRole("link", { name: "Create account" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/signup"));
-    expect(router.state.location.search).toMatchObject({ returnTo: "/memory" });
+    expect(router.state.location.search).toMatchObject({ returnTo: "/agents" });
     fireEvent.click(screen.getByRole("link", { name: "Sign in" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
     fireEvent.click(screen.getByRole("link", { name: "Forgot password?" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/forgot-password"));
-    expect(router.state.location.search).toMatchObject({ returnTo: "/memory" });
+    expect(router.state.location.search).toMatchObject({ returnTo: "/agents" });
   });
 
   it("preserves the destination in verification and reset emails", async () => {

@@ -243,3 +243,14 @@ it("updates only the deadline on each tick and switches from minutes to seconds"
   ).toBe(true);
   observer.disconnect();
 });
+
+it.each([
+  { language: "en" as const, toolName: "agent_memory_save" as const, label: "Save memory" },
+  { language: "zh" as const, toolName: "agent_memory_save" as const, label: "保存记忆" },
+  { language: "en" as const, toolName: "agent_memory_update" as const, label: "Update memory" },
+  { language: "zh" as const, toolName: "agent_memory_update" as const, label: "更新记忆" },
+])("names $toolName plainly on approval cards in $language", ({ language, toolName, label }) => {
+  fixture(pendingCard({ toolName, target: "Agent memory" }), language);
+  expect(screen.getByRole("heading", { name: label })).toBeVisible();
+  expect(screen.queryByText(toolName)).toBeNull();
+});

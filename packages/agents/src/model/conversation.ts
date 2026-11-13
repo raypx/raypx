@@ -20,6 +20,8 @@ export interface RunView {
   failureCode: RunFailure | null;
   messageId: string | undefined;
   createdAt: string;
+  trigger?: Run["trigger"] | undefined;
+  inboundProvenance?: Run["inboundProvenance"] | undefined;
 }
 export interface ConversationView {
   cursor: number;
@@ -219,12 +221,31 @@ export class ConversationState {
         failureCode: run.failureCode,
         messageId: run.messageId,
         createdAt: run.createdAt,
+        trigger: run.trigger,
+        inboundProvenance: run.inboundProvenance,
       })),
       liveReplies: [],
       toolActivity: mergeToolActivity([], snapshot.toolActivity ?? []),
       toolActivityTruncated: snapshot.toolActivityTruncated ?? false,
     };
     return true;
+  }
+  /** Snapshot metadata fills fields absent from run.state without replacing newer events. */
+  applyRunDetails(runs: readonly Run[]): boolean {
+    const scoped = new Map(runs.filter((run) => this.owns(run)).map((run) => [run.id, run]));
+    let changed = false;
+    const projected = this.view.runs.map((run) => {
+      const detail = scoped.get(run.id);
+      if (
+        !detail ||
+        (run.trigger === detail.trigger && run.inboundProvenance === detail.inboundProvenance)
+      )
+        return run;
+      changed = true;
+      return { ...run, trigger: detail.trigger, inboundProvenance: detail.inboundProvenance };
+    });
+    if (changed) this.view = { ...this.view, runs: projected };
+    return changed;
   }
   applyEvent(entry: ConversationEventEntry): EventApplication {
     const { event } = entry;
@@ -250,6 +271,7 @@ export class ConversationState {
         previous?.messageId ??
         this.view.messages.find((message) => message.sequence === event.sequence - 1)?.id;
       const run: RunView = {
+        ...previous,
         id: event.runId,
         state: event.state,
         failureCode: event.failureCode,

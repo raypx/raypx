@@ -5,7 +5,6 @@ const allowedReturnPaths = new Set([
   "/",
   "/agents",
   desktopAuthorizationPath,
-  "/memory",
   "/settings",
   "/admin",
   "/admin/audit",

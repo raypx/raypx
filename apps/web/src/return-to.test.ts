@@ -18,7 +18,7 @@ it("preserves a valid application path, query and fragment", () => {
     "/agents?spaceId=space&agentId=agent#settings/account",
   );
   expect(safeReturnTo("/settings")).toBe("/settings");
-  expect(safeReturnTo("/memory")).toBe("/memory");
+  expect(safeReturnTo("/memory")).toBe("/");
   for (const retired of ["/projects", "/tasks", "/approvals", "/automations"])
     expect(safeReturnTo(retired)).toBe("/");
 });

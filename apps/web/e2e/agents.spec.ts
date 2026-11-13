@@ -1,9 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectOption } from "@raypx/e2e/testing";
+import { selectOption, expectConversationHeaderControls } from "@raypx/e2e/testing";
 
 const apiUrl = process.env.CONTROL_E2E_API_URL;
 
 async function expectConversationGeometry(page: Page, name: string, sheetOpen = false) {
+  if (sheetOpen) {
+    const sheet = page.getByRole("dialog", { name: "Team computer", exact: true });
+    await expect(sheet).toBeVisible();
+    await sheet.evaluate(async (node) => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await Promise.all(
+        node
+          .getAnimations({ subtree: true })
+          .map((animation) => animation.finished.catch(() => {})),
+      );
+    });
+  }
   // DOM locators also measure the conversation while the modal sheet makes it inert.
   const pane = page.locator('section[aria-label="Conversation"]');
   const heading = page.locator("[data-conversation-header] h1");
@@ -88,9 +100,23 @@ test(
       "browser-fixture",
     );
     await dialog.getByRole("button", { name: "Create Agent", exact: true }).click();
+    await expect(dialog).toBeHidden();
     const computer = page.getByRole("button", { name: /^Computer:/ });
     await expect(computer).toBeVisible();
-    await computer.click();
+    for (const viewport of [
+      { width: 375, height: 812 },
+      { width: 1024, height: 768 },
+      { width: 1280, height: 800 },
+      { width: 1440, height: 860 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expectConversationHeaderControls(page);
+    }
+    await page.setViewportSize({ width: 375, height: 812 });
+    await expectConversationHeaderControls(page);
+    await test.step("Open the unobscured Computer control at phone width", async () => {
+      await computer.click({ timeout: 2000 });
+    });
     await page.getByRole("button", { name: "Start computer", exact: true }).click();
     await expect(page.getByRole("button", { name: "Stop computer", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Close computer panel", exact: true }).click();

@@ -9,3 +9,7 @@ export {
 export { preferencesPersist } from "./preferences.js";
 export { capture } from "./capture.js";
 export { selectOption } from "./select.js";
+export {
+  expectConversationHeaderControls,
+  openConversationCapability,
+} from "./conversation-header.js";

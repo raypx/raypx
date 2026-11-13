@@ -552,16 +552,6 @@ try {
     const references = (await engine.request("memory.list", {})) as ContextDocumentSummary[];
     assert.equal(references.length, 1, "Device references did not survive restart");
     assert.equal(references[0]?.revision, 3);
-    await navigate("/memory");
-    await waitFor(
-      async () =>
-        Boolean(
-          await evaluate(
-            'return [...document.querySelectorAll("article h2")].some(node=>node.textContent==="Native smoke memory")',
-          ),
-        ),
-      "Signed-out renderer did not load device-owned memory through Native IPC",
-    );
     if (phase === "shell" && process.platform === "darwin") {
       stage = "signed-out local terminal approvals and window lease";
       assert.equal((await engine.features()).localTerminalApprovals, true);

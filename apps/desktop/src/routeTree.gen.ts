@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AgentsRouteImport } from './routes/agents'
-import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
@@ -37,11 +36,6 @@ const AccountRoute = AccountRouteImport.update({
 const AgentsRoute = AgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MemoryRoute = MemoryRouteImport.update({
-  id: '/memory',
-  path: '/memory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -74,7 +68,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
-  '/memory': typeof MemoryRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -85,7 +78,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
-  '/memory': typeof MemoryRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -98,7 +90,6 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
-  '/memory': typeof MemoryRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -111,7 +102,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/agents'
-    | '/memory'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -122,7 +112,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/agents'
-    | '/memory'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -134,7 +123,6 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/account'
     | '/agents'
-    | '/memory'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -147,7 +135,6 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   AccountRoute: typeof AccountRoute
   AgentsRoute: typeof AgentsRoute
-  MemoryRoute: typeof MemoryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,13 +165,6 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/agents'
       preLoaderRoute: typeof AgentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/memory': {
-      id: '/memory'
-      path: '/memory'
-      fullPath: '/memory'
-      preLoaderRoute: typeof MemoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -250,7 +230,6 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   AccountRoute: AccountRoute,
   AgentsRoute: AgentsRoute,
-  MemoryRoute: MemoryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

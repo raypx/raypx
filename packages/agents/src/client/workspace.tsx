@@ -532,6 +532,7 @@ function AgentsWorkspaceContents({
               <AgentConversation
                 key={JSON.stringify([accountId, origin, selected.conversation.id])}
                 item={selected}
+                capabilities={client}
                 port={conversationPort}
                 computerPort={computerPort}
                 approvalPort={approvalPort}

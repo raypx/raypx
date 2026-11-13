@@ -25,7 +25,6 @@ import { useCommandShortcut } from "@raypx/blocks/command-palette";
 import { WebCommandMenu } from "./command-menu.js";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
-import { BookOpenIcon } from "@raypx/icons/book-open";
 import { AgentIcon } from "@raypx/icons/agent";
 import {
   AppShell,
@@ -75,7 +74,6 @@ export function WebShell() {
   }, [accountId, queryClient, router]);
   const t = useTranslations();
   const c = useTranslations("common");
-  const memory = useTranslations("memory");
   const pathname = useMatches({ select: (matches) => matches.at(-1)?.fullPath ?? "/" });
   const pagePermission = Object.hasOwn(webPages, pathname)
     ? webPages[pathname as WebPath].permission
@@ -89,7 +87,6 @@ export function WebShell() {
   });
   const navigation: ShellNavItem<WebPath>[] = [
     { to: "/agents", label: t("agents.title"), icon: <AgentIcon /> },
-    { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
   ];
   const secondaryNavigation: ShellNavItem<WebPath>[] = [
     { to: "/admin", label: t("dash.nav.console"), icon: <AdjustmentsIcon /> },

@@ -259,5 +259,17 @@
     "size": "{size, number} 字节",
     "computerUnavailable": "电脑暂不可用。",
     "notRunning": "{state}，电脑运行时可查看文件。"
-  }
+  },
+  "routines": "例行任务",
+  "spaceMemory": "记忆",
+  "closePanel": "关闭面板",
+  "origins": {
+    "routine": "例行任务",
+    "webhook": "Webhook",
+    "email": "邮件",
+    "repository": "仓库事件"
+  },
+  "untrustedInput": "此运行接收了不可信的外部输入。",
+  "allowSharedMemory": "允许此智能体保存空间共享记忆",
+  "capabilityMenu": "例行任务与记忆"
 }

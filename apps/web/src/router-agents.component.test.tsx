@@ -42,7 +42,7 @@ it("searches only existing member destinations through the command shortcut", as
   const palette = within(await screen.findByRole("dialog", { name: "Search" }));
   expect(palette.getByRole("option", { name: "Agents" })).toBeVisible();
   expect(palette.getByRole("option", { name: "Settings" })).toBeVisible();
-  expect(palette.getByRole("option", { name: "Memory and templates" })).toBeVisible();
+  expect(palette.queryByRole("option", { name: "Memory and templates" })).toBeNull();
   expect(
     palette.queryByRole("option", { name: /Projects|Waiting|Automations|New session/ }),
   ).toBeNull();

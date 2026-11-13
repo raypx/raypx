@@ -25,7 +25,6 @@ describe("Desktop shell pages", () => {
       "/": undefined,
       "/account": { title: "common.account", layout: "document" },
       "/agents": { title: "agents.title", layout: "tool" },
-      "/memory": { title: "memory.title", layout: "workbench" },
     });
   });
 });

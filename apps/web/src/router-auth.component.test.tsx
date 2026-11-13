@@ -24,7 +24,7 @@ describe("authentication routes", () => {
   });
   it("switches language without losing credentials or the return destination", async () => {
     mocks.signIn.mockResolvedValue({ error: { code: "INVALID_EMAIL_OR_PASSWORD" } });
-    const router = await page("/login?returnTo=%2Fmemory");
+    const router = await page("/login?returnTo=%2Fagents");
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "ada@example.test" },
     });
@@ -47,7 +47,7 @@ describe("authentication routes", () => {
     expect(screen.getByLabelText("密码")).toHaveValue("password123");
     expect(localStorage.getItem("raypx_locale")).toBe("zh");
     expect(router.state.location.pathname).toBe("/login");
-    expect(router.state.location.search).toMatchObject({ returnTo: "/memory" });
+    expect(router.state.location.search).toMatchObject({ returnTo: "/agents" });
     expect(mocks.signIn).not.toHaveBeenCalled();
     fireEvent.submit(screen.getByRole("button", { name: "登录" }).closest("form")!);
     await screen.findByRole("alert");

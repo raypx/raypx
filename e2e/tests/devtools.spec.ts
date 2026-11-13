@@ -21,7 +21,7 @@ test("opens the official Dock and copies current page metadata without private v
 }, testInfo) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(
-    `${testInfo.project.name.startsWith("web") ? "/settings" : "/memory"}?diagnostic=private-search-value`,
+    `${testInfo.project.name.startsWith("web") ? "/settings" : "/login"}?diagnostic=private-search-value`,
   );
   await page.waitForFunction(() => Boolean(customElements.get("devframes-dock-embedded")));
   await page.keyboard.press("Shift+Alt+KeyD");
@@ -99,7 +99,7 @@ test("keeps Chinese dark mode usable at narrow widths and offers manual copy", a
     });
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(testInfo.project.name.startsWith("web") ? "/settings" : "/memory");
+  await page.goto(testInfo.project.name.startsWith("web") ? "/settings" : "/login");
   await page.waitForFunction(() => Boolean(customElements.get("devframes-dock-embedded")));
   await page.keyboard.press("Shift+Alt+KeyD");
   const logo = page.getByRole("img", { name: "Vite DevTools logo" });

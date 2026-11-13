@@ -11,7 +11,8 @@
     "./messages/en": "./locales/en/index.ts",
     "./messages/zh": "./locales/zh/index.ts",
     "./space-server": "./src/space-server.ts",
-    "./space-server/postgres": "./src/space-server/postgres.ts"
+    "./space-server/postgres": "./src/space-server/postgres.ts",
+    "./model": "./src/model.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -21,6 +22,7 @@
     "test:postgres": "bun --bun vitest run --mode postgres"
   },
   "dependencies": {
+    "@raypx/blocks": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/i18n": "workspace:*",

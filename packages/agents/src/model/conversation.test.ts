@@ -712,3 +712,88 @@ it.each([false, true])(
     }
   },
 );
+
+it("retains additive inbound origin metadata through state events and scopes detail reads", () => {
+  const state = new ConversationState(selection);
+  const inbound: Run = {
+    ...run("running"),
+    trigger: "webhook",
+    inboundProvenance: { kind: "repository", routineId: "routine", deliveryId: "delivery" },
+  };
+  expect(state.applySnapshot(snapshot({ runs: [inbound], cursor: 2 }))).toBe(true);
+  expect(state.applyEvent(runEvent("waiting", 3).entry)).toBe("applied");
+  expect(state.getSnapshot().runs[0]).toMatchObject({
+    trigger: "webhook",
+    inboundProvenance: inbound.inboundProvenance,
+  });
+  expect(
+    state.applyRunDetails([
+      { ...inbound, spaceId: spaceIdSchema.parse("elsewhere"), trigger: "email" },
+    ]),
+  ).toBe(false);
+  expect(state.getSnapshot().cursor).toBe(3);
+});
+
+it("hydrates live Run origins without rolling back state, cursor or streaming text", async () => {
+  const test = harness();
+  await test.controller.start();
+  const connection = test.connections[0]!;
+  connection.onFrame({ type: "ready", version: 1 });
+  connection.onFrame(messageEvent());
+  vi.mocked(test.port.snapshot).mockResolvedValue(
+    snapshot({
+      messages: [message()],
+      runs: [
+        {
+          ...run("queued"),
+          trigger: "email",
+          inboundProvenance: { kind: "email", routineId: "routine", deliveryId: "mail" },
+        },
+      ],
+      cursor: 2,
+    }),
+  );
+  connection.onFrame(runEvent("running", 2));
+  connection.onFrame(prefix("Streaming"));
+  await vi.waitFor(() => expect(test.controller.getSnapshot().runs[0]?.trigger).toBe("email"));
+  expect(test.controller.getSnapshot().runs[0]?.state).toBe("running");
+  expect(test.controller.getSnapshot().cursor).toBe(2);
+  expect(test.controller.getSnapshot().liveReplies[0]?.text).toBe("Streaming");
+  expect(test.connections).toHaveLength(1);
+  test.controller.dispose();
+});
+
+it("hydrates a second Run that arrives during the first provenance read", async () => {
+  const test = harness();
+  await test.controller.start();
+  const connection = test.connections[0]!;
+  connection.onFrame({ type: "ready", version: 1 });
+  connection.onFrame(messageEvent());
+  let finish: (value: ConversationSnapshot) => void = () => {};
+  vi.mocked(test.port.snapshot).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  connection.onFrame(runEvent("running", 2));
+  const second = {
+    ...run("queued"),
+    id: runIdSchema.parse("run-two"),
+    trigger: "routine" as const,
+  };
+  vi.mocked(test.port.snapshot).mockResolvedValue(
+    snapshot({ runs: [run("running"), second], cursor: 3 }),
+  );
+  const frame = runEvent("queued", 3);
+  if (frame.entry.event.kind !== "run.state") throw new Error("Expected Run event");
+  connection.onFrame({ ...frame, entry: { event: { ...frame.entry.event, runId: second.id } } });
+  finish(snapshot({ runs: [run("running")], cursor: 2 }));
+  await vi.waitFor(() =>
+    expect(test.controller.getSnapshot().runs.find((item) => item.id === second.id)?.trigger).toBe(
+      "routine",
+    ),
+  );
+  expect(test.controller.getSnapshot().cursor).toBe(3);
+  test.controller.dispose();
+});

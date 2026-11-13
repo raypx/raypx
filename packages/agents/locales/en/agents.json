@@ -259,5 +259,17 @@
     "size": "{size, number} bytes",
     "computerUnavailable": "The computer is unavailable.",
     "notRunning": "{state}. Files are available while the computer is running."
-  }
+  },
+  "routines": "Routines",
+  "spaceMemory": "Memory",
+  "closePanel": "Close panel",
+  "origins": {
+    "routine": "Routine",
+    "webhook": "Webhook",
+    "email": "Email",
+    "repository": "Repository event"
+  },
+  "untrustedInput": "This Run received untrusted external input.",
+  "allowSharedMemory": "Allow this Agent to save shared Space memory",
+  "capabilityMenu": "Routines and memory"
 }

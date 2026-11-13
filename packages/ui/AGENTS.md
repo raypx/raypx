@@ -24,6 +24,10 @@ packages own page layout, forms, navigation and product behavior.
   an addon focuses its input without stealing focus from nested buttons.
 - `components/ui/dialog`: callers supply translated `closeLabel` when displaying
   a built-in close button in DialogContent or DialogFooter; primitives do not own locale.
+- `components/ui/tooltip`: `TooltipProvider escapeKeyBubbles` lets tooltip Escape
+  dismissals propagate to their containing popup. This is opt-in for capability
+  sheets; nested providers inherit it unless they explicitly override it. The
+  default retains ordinary tooltip dismissal.
 - `components/ui/collapsible`: `CollapsibleContent animated` opts into a 200ms
   measured-height fold; put padding on its child. Keyboard focus and reduced
   motion disable the transition. The default remains immediate.

@@ -64,7 +64,7 @@ export function registerTests() {
     await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
     await expect(
       navigation.getByRole("link", { name: "Memory and templates", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     for (const name of ["Projects", "Waiting", "Automations", "New session"])
       await expect(sidebar.getByRole("link", { name, exact: true })).toHaveCount(0);
     await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toHaveAttribute(

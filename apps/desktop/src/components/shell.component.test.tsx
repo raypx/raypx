@@ -44,7 +44,6 @@ async function page(locale: "en" | "zh") {
         path: "/agents",
         component: () => <h1>Conversation workspace</h1>,
       }),
-      createRoute({ getParentRoute: () => root, path: "/memory", component: () => null }),
       createRoute({ getParentRoute: () => root, path: "/account", component: () => null }),
     ]),
     history: createMemoryHistory({ initialEntries: ["/"] }),
@@ -65,29 +64,26 @@ it.each([
   {
     locale: "en",
     agents: "Agents",
-    memory: "Memory and templates",
     account: "Account",
     search: "Search",
     settings: "Settings",
-    removed: /Projects|Waiting|Automations|New session/,
+    removed: /Projects|Waiting|Automations|New session|Memory and templates/,
   },
   {
     locale: "zh",
     agents: "智能体",
-    memory: "记忆与模板",
     account: "账号",
     search: "搜索",
     settings: "设置",
-    removed: /项目|等待处理|自动化|新建会话/,
+    removed: /项目|等待处理|自动化|新建会话|记忆与模板/,
   },
 ] as const)(
   "opens Agents with current navigation and a single page heading in $locale",
-  async ({ locale, agents, memory, account, search, settings, removed }) => {
+  async ({ locale, agents, account, search, settings, removed }) => {
     const router = await page(locale);
     expect(router.state.location.pathname).toBe("/agents");
     const nav = within(screen.getByRole("navigation", { name: "Raypx" }));
     expect(nav.getByRole("link", { name: agents }).getAttribute("href")).toBe("/agents");
-    expect(nav.getByRole("link", { name: memory }).getAttribute("href")).toBe("/memory");
     expect(nav.getByRole("link", { name: account }).getAttribute("href")).toBe("/account");
     expect(nav.queryByRole("group", { name: /Workspace|工作区/ })).toBeNull();
     expect(nav.queryByRole("link", { name: removed })).toBeNull();
@@ -97,7 +93,6 @@ it.each([
     const palette = await screen.findByRole("dialog", { name: search });
     expect(within(palette).queryByRole("option", { name: removed })).toBeNull();
     expect(within(palette).getByRole("option", { name: agents })).toBeTruthy();
-    expect(within(palette).getByRole("option", { name: memory })).toBeTruthy();
     expect(within(palette).getByRole("option", { name: account })).toBeTruthy();
   },
 );

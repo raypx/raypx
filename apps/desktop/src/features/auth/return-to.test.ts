@@ -24,6 +24,6 @@ it("retains the selected Space, Agent and standalone library through login", () 
   expect(desktopReturnTo("/agents?spaceId=space&agentId=agent#settings")).toBe(
     "/agents?spaceId=space&agentId=agent#settings",
   );
-  expect(desktopReturnTo("/memory?scope=account")).toBe("/memory?scope=account");
+  expect(desktopReturnTo("/memory?scope=account")).toBe("/agents");
   expect(desktopReturnTo("/account")).toBe("/account");
 });

@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from "react";
 import type { AgentInput } from "@raypx/core/agents";
+import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -33,6 +34,7 @@ export function AgentForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [instructions, setInstructions] = useState(initial?.instructions ?? "");
   const [modelId, setModelId] = useState(initial?.model.modelId ?? models[0]?.modelId ?? "");
+  const [allowSharedMemory, setAllowSharedMemory] = useState(initial?.allowSharedMemory ?? false);
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const modelAllowed =
@@ -44,7 +46,14 @@ export function AgentForm({
     setPending(true);
     setFailed(false);
     try {
-      await onSave({ name: name.trim(), instructions, model: { modelId } });
+      await onSave({
+        name: name.trim(),
+        instructions,
+        model: { modelId },
+        ...(initial?.allowSharedMemory !== undefined || allowSharedMemory
+          ? { allowSharedMemory }
+          : {}),
+      });
     } catch {
       setFailed(true);
       setPending(false);
@@ -97,6 +106,15 @@ export function AgentForm({
                 onValueChange={setModelId}
                 onOpenModels={onOpenModels}
               />
+            </Field>
+            <Field orientation="horizontal">
+              <Checkbox
+                id={`${id}-shared-memory`}
+                checked={allowSharedMemory}
+                disabled={pending}
+                onCheckedChange={setAllowSharedMemory}
+              />
+              <FieldLabel htmlFor={`${id}-shared-memory`}>{t("allowSharedMemory")}</FieldLabel>
             </Field>
           </FieldGroup>
           {failed && (

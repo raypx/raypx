@@ -21,7 +21,6 @@ export const webPages = {
   "/admin": { permission: "admin.read", guest: false, publicNavigation: false },
   "/admin/audit": { permission: "audit.read", guest: false, publicNavigation: false },
   "/settings": { permission: null, guest: true, publicNavigation: true },
-  "/memory": { permission: "memory.manage", guest: true, publicNavigation: false },
   "/admin/users": { permission: "users.read", guest: false, publicNavigation: false },
   "/admin/settings": { permission: "configuration.read", guest: false, publicNavigation: false },
 } as const satisfies Record<

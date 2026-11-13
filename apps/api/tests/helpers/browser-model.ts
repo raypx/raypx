@@ -6,7 +6,7 @@ import { createConnectionTransport } from "../../src/conversations/connection-tr
 /** An explicit completion gate lets browsers inspect streamed text before commit. */
 export function browserModelFixture() {
   const completions = new Set<() => void>();
-  const resolve = async () => ({
+  const resolve = async (completeImmediately = false) => ({
     stream(input: ModelTurn, signal: AbortSignal) {
       const stream = createAssistantMessageEventStream();
       let text = "Fixture reply";
@@ -73,6 +73,9 @@ export function browserModelFixture() {
       stream.push({ type: "text_delta", contentIndex: 0, delta: text, partial: message() });
       signal.addEventListener("abort", abort, { once: true });
       completions.add(complete);
+      // Background-triggered replies complete independently of the interactive
+      // streaming gate, so parallel browser journeys cannot release each other.
+      if (completeImmediately) queueMicrotask(complete);
       return stream;
     },
   });
@@ -80,7 +83,7 @@ export function browserModelFixture() {
     list: async () => [
       { modelId: "browser-fixture", name: "Deterministic fixture", source: "deployment" },
     ],
-    resolve,
+    resolve: (run) => resolve(run.trigger !== "message"),
     close() {
       completions.clear();
     },
@@ -89,7 +92,7 @@ export function browserModelFixture() {
     models,
     connectionTransport: {
       ...createConnectionTransport(),
-      resolve,
+      resolve: () => resolve(),
       test: async () => "SUCCEEDED" as const,
     },
     complete() {

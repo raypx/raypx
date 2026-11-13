@@ -49,7 +49,7 @@ member `account.access` projection; custom signed-in cases use `accountAccessFix
 The automatic public fixture defaults to guest access. Named steps identify checks
 within a combined journey. See docs/development/testing.md for the coverage map.
 Shared navigation journeys cover Agents, account menus, local preferences, English/Chinese
-and 375px/1280px layouts. Memory journeys cover the retained standalone reference library.
+and 375px/1280px layouts. Routines and Space memory journeys cover Cron creation, manual execution, document revisions and restore through the owned backend fixture.
 
 ## Constraints
 

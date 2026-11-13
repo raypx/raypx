@@ -16,7 +16,6 @@ import {
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
 import { SettingsIcon } from "@raypx/icons/settings";
-import { BookOpenIcon } from "@raypx/icons/book-open";
 import { AgentIcon } from "@raypx/icons/agent";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { AppShell, type ShellAction, type ShellLinkProps } from "@raypx/blocks/shell";
@@ -33,7 +32,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { SettingsOverlay } from "../features/settings/overlay.js";
 import { useSettingsNavigation } from "../features/settings/navigation.js";
 
-type DesktopPath = "/agents" | "/memory" | "/account";
+type DesktopPath = "/agents" | "/account";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<DesktopPath>) {
   return (
@@ -71,14 +70,12 @@ export function DesktopShell() {
   });
   const t = useTranslations();
   const c = useTranslations("common");
-  const memory = useTranslations("memory");
   const { engine, restart } = useDesktopEngine();
   const [searchOpen, setSearchOpen] = useState(false);
   const shortcut = useCommandShortcut();
   const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
   const pages = [
     { to: "/agents", label: t("agents.title"), icon: <AgentIcon /> },
-    { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
     { to: "/account", label: c("account"), icon: <UserCircleIcon /> },
   ] as const;
   const actions: ShellAction[] = [
@@ -96,7 +93,7 @@ export function DesktopShell() {
           frame="window"
           brand={{ to: "/agents", label: "Raypx" }}
           actions={actions}
-          navigation={[[pages[0], pages[1], pages[2]]]}
+          navigation={[[pages[0], pages[1]]]}
           accountAction={
             <Tooltip>
               <TooltipTrigger

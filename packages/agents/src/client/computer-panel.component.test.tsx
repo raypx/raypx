@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { afterEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import type { SpaceComputer } from "@raypx/core/computers";
-import { Sheet, SheetContent } from "@raypx/ui/components/ui/sheet";
+import { CapabilitySheet } from "./capability-sheet.js";
 import { ComputerController, type ComputerFilesPort, type ComputerPort } from "../model.js";
 import { ComputerPanel } from "./computer.js";
 import {
@@ -33,9 +33,15 @@ function fixture(initial: SpaceComputer = computerResult(), files?: ComputerFile
     return render(
       <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
         {sheet ? (
-          <Sheet open>
-            <SheetContent showCloseButton={false}>{panel}</SheetContent>
-          </Sheet>
+          <CapabilitySheet
+            open
+            title={{ en, zh }[language].agents.computerTitle}
+            closeLabel={{ en, zh }[language].agents.computerClose}
+            onClose={onClose}
+            finalFocus={false}
+          >
+            {panel}
+          </CapabilitySheet>
         ) : (
           panel
         )}

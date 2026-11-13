@@ -2,6 +2,7 @@ import i18n from "@raypx/i18n/messages/zh";
 import auth from "@raypx/auth/messages/zh";
 import account from "@raypx/account/messages/zh";
 import agents from "@raypx/agents/messages/zh";
+import jobs from "@raypx/jobs/messages/zh";
 import memory from "@raypx/memory/messages/zh";
 import analytics from "@raypx/analytics/messages/zh";
 import blocks from "@raypx/blocks/messages/zh";
@@ -19,6 +20,7 @@ export default {
   ...account,
   ...agents,
   ...memory,
+  ...jobs,
   ...analytics,
   ...blocks,
   ...instances,

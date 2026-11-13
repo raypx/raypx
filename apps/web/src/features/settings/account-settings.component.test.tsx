@@ -73,13 +73,8 @@ async function openPanel(url = "/agents#settings/account") {
       </>
     ),
   });
-  const tasks = createRoute({
-    getParentRoute: () => root,
-    path: "/memory",
-    component: () => <p>Reference list</p>,
-  });
   const router = createRouter({
-    routeTree: root.addChildren([projects, tasks]),
+    routeTree: root.addChildren([projects]),
     history: createMemoryHistory({ initialEntries: [url] }),
   });
   await router.load();
@@ -134,10 +129,10 @@ it("changes device preferences within the dialog through the compact category se
 });
 
 it.each(["close", "escape"])("returns to the originating page and query on %s", async (action) => {
-  const { router } = await openPanel("/memory?referenceId=task-123#settings/account");
+  const { router } = await openPanel("/agents?referenceId=task-123#settings/account");
   if (action === "close") fireEvent.click(screen.getByRole("button", { name: "Close" }));
   else fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
-  await waitFor(() => expect(router.state.location.href).toBe("/memory?referenceId=task-123"));
+  await waitFor(() => expect(router.state.location.href).toBe("/agents?referenceId=task-123"));
 });
 
 it("keeps the background draft mounted and supports back/forward after opening and switching", async () => {
@@ -165,14 +160,14 @@ it("keeps the background draft mounted and supports back/forward after opening a
 });
 
 it("opens a deep-linked category without mounting unvisited private panels", async () => {
-  const { router, mounted } = await openPanel("/memory?referenceId=one#settings/sessions");
+  const { router, mounted } = await openPanel("/agents?referenceId=one#settings/sessions");
   expect(mounted).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole("textbox", { name: "Draft name" })).toBeNull();
   expect(screen.getByRole("tab", { name: "Signed-in sessions" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
-  expect(router.state.location.href).toBe("/memory?referenceId=one#settings/sessions");
+  expect(router.state.location.href).toBe("/agents?referenceId=one#settings/sessions");
 });
 
 it.each([

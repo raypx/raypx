@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef, useSyncExternalStore, type Ref } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
-import { SheetTitle } from "@raypx/ui/components/ui/sheet";
 import { IconButton } from "@raypx/ui/icon-button";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { MonitorIcon } from "@raypx/icons/monitor";
@@ -61,7 +60,7 @@ export function ComputerIndicator({
       ref={ref}
       size="sm"
       variant="ghost"
-      className="min-w-0 shrink-0"
+      className="shrink-0 flex-nowrap whitespace-nowrap"
       aria-label={label}
       title={label}
       aria-expanded={open}
@@ -127,18 +126,16 @@ export function ComputerPanel({
     "min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring";
   return (
     <div className="box-border flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-6 overflow-x-hidden overflow-y-auto p-4">
-      <header className="flex min-w-0 items-center justify-between gap-2">
-        {sheet ? (
-          <SheetTitle className={titleClass}>{t("computerTitle")}</SheetTitle>
-        ) : (
+      {!sheet && (
+        <header className="flex min-w-0 items-center justify-between gap-2">
           <h2 ref={title} tabIndex={-1} className={titleClass}>
             {t("computerTitle")}
           </h2>
-        )}
-        <IconButton label={t("computerClose")} size="icon-sm" onClick={onClose}>
-          <CloseIcon aria-hidden="true" />
-        </IconButton>
-      </header>
+          <IconButton label={t("computerClose")} size="icon-sm" onClick={onClose}>
+            <CloseIcon aria-hidden="true" />
+          </IconButton>
+        </header>
+      )}
       <section aria-label={t("computerStatus")} className="flex min-w-0 flex-col gap-3">
         <h3 className="text-xs font-medium text-muted-foreground">{t("computerStatus")}</h3>
         <p role="status" aria-live="polite" aria-atomic="true" className="text-sm wrap-anywhere">

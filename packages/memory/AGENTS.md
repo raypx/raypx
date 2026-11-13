@@ -6,6 +6,13 @@ Versioned user-selected memory and task templates: injected server use cases and
 
 ## Interface
 
+`/model` owns the pure Space memory editor, revision guards and injected port.
+`/client` exports `SpaceMemoryPanel` for Web/Desktop conversation-header sheets:
+Agent/shared groups, Markdown preview, pinning, provenance, removal and revision
+restore. Conflict reload retains the draft and updates only the current revision.
+The old standalone account/device library page is removed; context picker, budget
+and snapshot views remain for the retained task/job consumers.
+
 `/space-server` owns the separate Space/Agent memory service, deterministic bounded
 recall and memory change-tool port; `/space-server/postgres` owns its persistence.
 API resolves fresh membership. Agent memory references one Agent; shared documents

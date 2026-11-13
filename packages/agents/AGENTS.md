@@ -5,16 +5,25 @@ injected RPC, stream and draft ports. ComputerController owns the Space computer
 lifecycle projection, guarded commands and refreshes from events/reconnects. Applied state and cursor advance together;
 React lives only in `/client`. Web and Desktop consume that shared workspace. The shell owns its single title;
 list/detail panes fill the tool layout, with a scrolling transcript and fixed composer.
-Space selection and New Agent mount into sidebar slots. The conversation header
-opens the lifecycle-only computer panel: a sheet below 1280px, an inline side panel
-at wider widths. Computer Stop requires confirmation. Pending approvals appear once as
+Space selection and New Agent mount into sidebar slots. The conversation header opens Routines and Space memory sheets through optional
+`routines` and `spaceMemory` ports, and the computer panel: a sheet below 1280px, an inline side panel
+at wider widths. `CapabilitySheet` owns all three sheets' heading focus and
+scoped tooltip Escape propagation; one Escape closes the sheet even with its
+close tooltip open. Final focus resolves the currently visible opener. The
+compact menu also opens the team computer, whose indicator remains on the bar.
+Computer Stop requires confirmation. Pending approvals appear once as
 cards; resolved requests fold into tool rows. The composer links to offscreen requests
 and shows one primary Stop or Send action. Sending uses the existing message port.
 Model conversation rows keep reply identity/order stable from queue through commit.
 The client reuses Blocks Markdown, keeps reading anchors, and announces Run lifecycle
 and approval changes without announcing streaming text or deadline ticks. Direct replies
 omit sender names; optional sender context supports multiple participants. The top bar
-owns the selected Agent name and computer indicator. Enter sends, Shift+Enter inserts a newline, and IME owns composition.
+owns the selected Agent name and computer indicator in one non-wrapping row.
+Only the name shrinks. Below 640px, Routines and Memory share an overflow menu;
+at wider widths they appear inline. Toolbar content is portaled outside `main`,
+so header responsiveness uses viewport breakpoints, not `@*/main` queries. Enter sends, Shift+Enter inserts a newline, and IME owns composition.
+Run metadata adds optional trigger/provenance fields for Mobile compatibility.
+Live Run metadata hydrates from snapshots without replacing the event cursor or live text.
 `/messages/en` and `/messages/zh` own the `agents` catalog; `/client/styles.css`
 registers Tailwind sources only. Component tests use happy-dom and
 `*.component.test.tsx`; `test:unit` selects the pure model and server suites.

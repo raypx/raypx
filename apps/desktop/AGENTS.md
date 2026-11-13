@@ -22,8 +22,8 @@ use the existing daemon-authenticated client without exposing credentials.
 
 The phase 1 renderer has no project/session editor, Waiting inbox, Automations,
 Files, Terminal or local onboarding screen. Their native/CLI implementations remain
-until later roadmap phases; do not reintroduce them as Agent execution. Standalone
-Memory retains the earlier device/account library, not the planned Space memory.
+until later roadmap phases; do not reintroduce them as Agent execution. The conversation header opens Space routines and memory sheets. The earlier
+standalone device/account Memory route and navigation are removed.
 Account and security, authentication, appearance, language, analytics and session
 recovery stay available. Desktop has no embedded administration area; deployment
 administration remains in Web.
@@ -59,7 +59,7 @@ Auth clients live in `features/auth`. Account reads use the direct API client an
 client-only route loader. Better Auth session updates invalidate that route rather
 than creating another profile state machine. Login uses the system browser and
 configured OAuth endpoint; the daemon owns callback and token exchange. Resume only
-allowlisted Agents, Memory or account destinations. Shared forms own fields and
+allowlisted Agents or account destinations. Shared forms own fields and
 feedback; the renderer owns navigation.
 
 The root `DesktopSignOutProvider` owns explicit logout. Clear account caches after
@@ -171,7 +171,7 @@ production cookie persistence. Never count an unrun native platform as passed.
 
 ## Catalog composition
 
-Explicitly compose common, auth, account, agents, memory, analytics, blocks and
+Explicitly compose common, auth, account, agents, jobs, memory, analytics, blocks and
 instances language entries with private desktopLogin, engine and localWorkspace
 catalogs. Infer app message types from English. Shared views read the same messages
 context. Keep private copy only for current renderer behavior; native notification

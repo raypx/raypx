@@ -8,8 +8,7 @@ Waiting and Automations have been removed from this renderer. Do not restore the
 
 ## Routes and ownership
 
-- `src/routes/(app)` composes the shared Agents workspace, the standalone account
-  Memory library and device preferences. Every shell route declares `staticData.page`
+- `src/routes/(app)` composes the shared Agents workspace, Space routines/memory panels and device preferences. Every shell route declares `staticData.page`
   and an entry in `features/auth/access.ts`; the shell owns its title and page layout.
   `@raypx/agents/model` owns selection and conversation state; `/client` renders it.
   Agent drafts stay scoped by origin, account, Space and conversation. Restoring
@@ -17,8 +16,8 @@ Waiting and Automations have been removed from this renderer. Do not restore the
   The shared workspace places its Space menu and New Agent action in sidebar slots;
   Space selection has no second page control. Its conversation-header computer
   indicator opens the shared lifecycle panel through the existing API client.
-- Memory still edits the earlier account reference library through the API. It has
-  no project navigation and is not Agent/Space memory. That arrives in a later phase.
+- The conversation header opens Space-scoped routines and memory. The earlier
+  standalone account Memory route and its navigation have been removed.
 - The `(app)` loader resolves account context through a router-owned QueryClient.
   `SessionBoundary` waits for confirmed sessions and shows retryable failures.
   Agents redirects confirmed guests to login with a validated return destination.
@@ -82,7 +81,7 @@ can be started and stopped; Agent tools, approvals and durable Run recovery rema
   before restoring browser preference. Use the shared preference provider only.
 - Compose handwritten package catalogs with private `dash`, `users`, `site`,
   `guest`, `desktopAuthorization` and `legal` namespaces. Infer types from English;
-  update Chinese together. English is static, Chinese lazy and SSR uses static
+  update Chinese together. Jobs and Memory contribute the panel catalogs. English is static, Chinese lazy and SSR uses static
   catalogs. Run `bun run i18n:types` after changing messages.
 - Optional statistics and errors default off separately. Defer the analytics SDK,
   clear identity on logout and exclude prompts, paths, files, URLs and credentials.

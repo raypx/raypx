@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
+import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { agentSchema, conversationSchema } from "@raypx/core/agents";
 import { messageSchema, runSchema } from "@raypx/core/conversation";
@@ -17,10 +18,18 @@ import type {
 } from "../model.js";
 import { AgentConversation } from "./conversation.js";
 import { AgentsWorkspace } from "./workspace.js";
+import commonEn from "@raypx/i18n/messages/en";
+import commonZh from "@raypx/i18n/messages/zh";
+import blocksEn from "@raypx/blocks/messages/en";
+import blocksZh from "@raypx/blocks/messages/zh";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
 
-const { BrowserLanguageProvider } = createBrowserI18n<typeof en>({ en, zh });
+const catalogs = {
+  en: { ...commonEn, ...blocksEn, ...en },
+  zh: { ...commonZh, ...blocksZh, ...zh },
+};
+const { BrowserLanguageProvider } = createBrowserI18n<typeof catalogs.en>(catalogs);
 const time = "2026-11-13T03:00:00Z";
 const membership = {
   space: spaceSchema.parse({
@@ -156,17 +165,33 @@ function fixture({
     },
     conversations: { snapshot: readSnapshot, send, stop },
   };
-  function mount(selected = false) {
+  function mount(selected = false, frame?: "document" | "window") {
+    const workspace = (
+      <AgentsWorkspace
+        client={client}
+        accountId="account"
+        origin="https://example.test"
+        socket={socket}
+        drafts={drafts}
+        {...(selected ? { agentId: agent.id } : {})}
+      />
+    );
     return render(
       <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
-        <AgentsWorkspace
-          client={client}
-          accountId="account"
-          origin="https://example.test"
-          socket={socket}
-          drafts={drafts}
-          {...(selected ? { agentId: agent.id } : {})}
-        />
+        {frame ? (
+          <AppShell
+            frame={frame}
+            brand={{ to: "/agents", label: "Raypx" }}
+            navigation={[]}
+            breadcrumbs={[]}
+            layout="tool"
+            LinkComponent={HeaderTestLink}
+          >
+            {workspace}
+          </AppShell>
+        ) : (
+          workspace
+        )}
       </BrowserLanguageProvider>,
     );
   }
@@ -1307,7 +1332,7 @@ it.each([
       );
       expect(panel).not.toHaveClass("data-[side=right]:data-starting-style:translate-x-[2.5rem]");
       expect(panel).not.toHaveClass("data-[side=right]:data-ending-style:translate-x-[2.5rem]");
-      expect(width >= 1280 && document.activeElement === heading).toBe(width >= 1280);
+      expect(heading).toHaveFocus();
       expectShrinkableConversation();
       fireEvent.click(
         screen.getByRole("button", {
@@ -1541,3 +1566,218 @@ it("keeps an exchange tight and separates the next member turn", async () => {
   expect(screen.getByText("Next exchange").closest("article")).toHaveClass("mt-4");
   expect(screen.getByRole("log").firstElementChild).toHaveClass("gap-2");
 });
+
+it.each([
+  { trigger: "routine" as const, kind: null, label: "Routine", untrusted: false },
+  { trigger: "webhook" as const, kind: "webhook" as const, label: "Webhook", untrusted: true },
+  { trigger: "email" as const, kind: "email" as const, label: "Email", untrusted: true },
+  {
+    trigger: "webhook" as const,
+    kind: "repository" as const,
+    label: "Repository event",
+    untrusted: true,
+  },
+])("shows $label origin from server metadata", async ({ trigger, kind, label, untrusted }) => {
+  const test = fixture({
+    snapshot: {
+      conversation,
+      messages: [message],
+      runs: [
+        {
+          ...run,
+          trigger,
+          inboundProvenance: kind ? { kind, routineId: "routine", deliveryId: "delivery" } : null,
+        },
+      ],
+      segments: [],
+      cursor: 2,
+    },
+  });
+  test.mount(true);
+  expect(await screen.findByText(label, { selector: "[data-run-origin]" })).toBeVisible();
+  expect(screen.queryByText("This Run received untrusted external input.") !== null).toBe(
+    untrusted,
+  );
+});
+
+function HeaderTestLink({
+  to,
+  markActive: _active,
+  exact: _exact,
+  children,
+  ...props
+}: ShellLinkProps<string>) {
+  return (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  );
+}
+
+it.each(
+  (["document", "window"] as const).flatMap((frame) =>
+    (["en", "zh"] as const).flatMap((language) =>
+      [375, 1024, 1280, 1440].map((width) => ({ frame, language, width })),
+    ),
+  ),
+)(
+  "keeps the portaled $frame header in one row at $width px with a long $language name",
+  async ({ frame, language, width }) => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => {
+        const rule = query.match(/\((min|max)-width: (\d+)px\)/);
+        let matches = false;
+        if (rule) matches = rule[1] === "min" ? width >= Number(rule[2]) : width <= Number(rule[2]);
+        return { matches, media: query, addEventListener() {}, removeEventListener() {} };
+      }),
+    );
+    try {
+      const strings = { en, zh }[language].agents;
+      const name =
+        language === "en"
+          ? "A long English Agent name for the conversation header ".repeat(3).trim()
+          : "用于检查会话标题栏布局的很长的中文智能体名称".repeat(4);
+      const context = fixture({ language, items: [{ agent: { ...agent, name }, conversation }] });
+      enableCapabilityTestPorts(context.client);
+      await act(async () => {
+        context.mount(true, frame);
+      });
+      const title = await screen.findByRole("heading", { name, level: 1 });
+      const header = title.parentElement!;
+      const actions = header.querySelector("[data-conversation-actions]")!;
+      expect(header.closest("header[data-frame]")).toHaveAttribute("data-frame", frame);
+      expect(header).toHaveClass("h-full", "min-w-0", "flex-row", "flex-nowrap");
+      expect([...header.children]).toEqual([title, actions]);
+      expect(title).toHaveClass("min-w-0", "flex-1", "truncate");
+      expect(title).not.toHaveClass("shrink-0");
+      expect(title).toHaveAttribute("title", name);
+      expect(actions).toHaveClass(
+        "shrink-0",
+        "flex-row",
+        "flex-nowrap",
+        "items-center",
+        "whitespace-nowrap",
+      );
+      for (const child of actions.children) expect(child).toHaveClass("shrink-0");
+      for (const button of actions.querySelectorAll("button"))
+        expect(button).toHaveClass("shrink-0");
+      expect(
+        within(header).getByRole("button", {
+          name: strings.computerIndicator.replace("{state}", strings.computerNotConfigured),
+        }),
+      ).not.toHaveClass("truncate");
+      const inline = header.querySelector("[data-capability-inline]")!;
+      expect(inline).toHaveClass("hidden", "sm:flex", "shrink-0", "flex-row", "flex-nowrap");
+      const menu = within(header).getByRole("button", { name: strings.capabilityMenu });
+      expect(menu.parentElement).toHaveClass("shrink-0", "sm:hidden");
+      for (const node of [header, actions, inline]) {
+        expect(node.className).not.toMatch(/flex-col|(?:^| )flex-wrap(?: |$)|@[^ ]*\/main/);
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  },
+);
+
+function enableCapabilityTestPorts(client: AgentsWorkspacePort) {
+  const unused = async () => {
+    throw new Error("Unexpected capability request");
+  };
+  client.routines = {
+    list: unused,
+    get: unused,
+    create: unused,
+    update: unused,
+    pause: unused,
+    resume: unused,
+    delete: unused,
+    test: unused,
+    rotateWebhookKey: unused,
+    history: unused,
+    events: unused,
+  };
+  client.spaceMemory = {
+    list: unused,
+    get: unused,
+    create: unused,
+    update: unused,
+    remove: unused,
+    history: unused,
+    restore: unused,
+  };
+}
+
+it.each(
+  (["routines", "memory", "computer"] as const).flatMap((kind) =>
+    (["inline", "menu"] as const).flatMap((opener) =>
+      [false, true].map((resize) => ({ kind, opener, resize })),
+    ),
+  ),
+)(
+  "closes $kind with one Escape from its focused close tooltip after $opener opening (resize=$resize)",
+  async ({ kind, opener, resize }) => {
+    let width = opener === "menu" ? 375 : 1024;
+    const listeners = new Set<() => void>();
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(min-width: 640px)" && width >= 640,
+        media: query,
+        addEventListener(_type: string, listener: () => void) {
+          listeners.add(listener);
+        },
+        removeEventListener(_type: string, listener: () => void) {
+          listeners.delete(listener);
+        },
+      })),
+    );
+    try {
+      const context = fixture();
+      enableCapabilityTestPorts(context.client);
+      const user = userEvent.setup();
+      context.mount(true);
+      const computer = await screen.findByRole("button", {
+        name: "Computer: Not configured on this server",
+      });
+      const names = { routines: "Routines", memory: "Memory", computer: "Team computer" };
+      const inlineNames = {
+        routines: "Routines",
+        memory: "Memory",
+        computer: "Computer: Not configured on this server",
+      };
+      const inline = screen.getByRole("button", { name: inlineNames[kind] });
+      const menu = screen.getByRole("button", { name: "Routines and memory" });
+      if (opener === "menu") {
+        await user.click(menu);
+        await user.click(await screen.findByRole("menuitem", { name: names[kind] }));
+      } else await user.click(inline);
+      const sheet = await screen.findByRole("dialog", { name: names[kind] });
+      await waitFor(() =>
+        expect(within(sheet).getByRole("heading", { name: names[kind] })).toHaveFocus(),
+      );
+      await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+      if (resize)
+        await act(async () => {
+          width = width < 640 ? 1024 : 375;
+          for (const listener of listeners) listener();
+        });
+      const closeLabel = kind === "computer" ? "Close computer panel" : "Close panel";
+      const close = within(sheet).getByRole("button", { name: closeLabel });
+      await act(async () => {
+        close.focus();
+      });
+      await user.hover(close);
+      expect(await screen.findByRole("tooltip", { name: closeLabel })).toBeVisible();
+      expect(close).toHaveFocus();
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog", { name: names[kind] })).toBeNull());
+      let returnTo = inline;
+      if (width < 640 && (kind !== "computer" || opener === "menu")) returnTo = menu;
+      await waitFor(() => expect(returnTo).toHaveFocus());
+      expect(computer).toHaveAttribute("aria-expanded", "false");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  },
+);

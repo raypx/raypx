@@ -84,11 +84,6 @@ async function page(
     history,
     routeTree: root.addChildren([
       createRoute({ getParentRoute: () => root, path: "/agents", component: Background }),
-      createRoute({
-        getParentRoute: () => root,
-        path: "/memory",
-        component: () => <p>Memory background</p>,
-      }),
       createRoute({ getParentRoute: () => root, path: "/prior-page", component: () => null }),
     ]),
   });
@@ -174,15 +169,15 @@ it("does not return to a stale background after the current page changes", async
   await userEvent.click(screen.getByRole("button", { name: "Open settings" }));
   await screen.findByRole("dialog", { name: "Settings" });
   await router.navigate({
-    href: "/memory?scope=local#settings",
+    href: "/agents?scope=local#settings",
     replace: true,
     state: (previous) => previous,
   });
   await userEvent.click(screen.getByRole("button", { name: "Close" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(router.state.location.href).toBe("/memory?scope=local");
+  expect(router.state.location.href).toBe("/agents?scope=local");
   expect(router.state.location.state.desktopSettingsBackground).toBeUndefined();
-  expect(screen.getByText("Memory background")).toBeVisible();
+  expect(screen.getByRole("textbox", { name: "Background draft" })).toBeVisible();
 });
 
 it("opens only the exact settings fragment", async () => {

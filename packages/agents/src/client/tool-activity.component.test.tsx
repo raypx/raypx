@@ -108,3 +108,22 @@ it("surfaces waiting and failure on the collapsed summary", () => {
   );
   expect(screen.getByRole("button")).toHaveTextContent("Waiting for approval");
 });
+
+it.each(["en", "zh"] as const)("names memory tools plainly in activity in %s", (language) => {
+  const strings = { en, zh }[language].agents;
+  render(
+    <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+      <ToolActivity
+        runId={call.runId}
+        activity={[
+          { ...call, toolName: "agent_memory_save" },
+          { ...call, toolCallId: "call-update", toolName: "agent_memory_update" },
+        ]}
+      />
+    </BrowserLanguageProvider>,
+  );
+  fireEvent.click(screen.getByRole("button"));
+  expect(screen.getByText(strings.tools.saveMemory)).toBeVisible();
+  expect(screen.getByText(strings.tools.updateMemory)).toBeVisible();
+  expect(screen.queryByText("agent_memory_save")).toBeNull();
+});

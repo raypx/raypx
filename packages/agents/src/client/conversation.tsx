@@ -13,7 +13,6 @@ import {
 } from "react";
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { cn } from "@raypx/ui/lib/utils";
-import { Sheet, SheetContent } from "@raypx/ui/components/ui/sheet";
 import { ReplyMarkdown } from "@raypx/blocks/markdown";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -46,6 +45,9 @@ import {
   type ApprovalCardView,
   type ApprovalPort,
 } from "../model.js";
+import { CapabilitySheet } from "./capability-sheet.js";
+import { CapabilityPanels } from "./capability-panel.js";
+import type { AgentsWorkspacePort } from "../model.js";
 import { ComputerIndicator, ComputerPanel } from "./computer.js";
 import { ApprovalCard, toolLabelKeys } from "./approval-card.js";
 import { ToolActivity } from "./tool-activity.js";
@@ -65,6 +67,7 @@ const errorKeys = {
 } as const;
 
 interface AgentConversationProps {
+  capabilities?: Pick<AgentsWorkspacePort, "routines" | "spaceMemory"> | undefined;
   item: AgentConversationView;
   port: ConversationPort;
   computerPort: ComputerPort;
@@ -83,6 +86,7 @@ interface AgentConversationProps {
 }
 
 export function AgentConversation({
+  capabilities,
   item,
   port,
   computerPort,
@@ -148,6 +152,8 @@ export function AgentConversation({
   return (
     <ConversationContents
       item={item}
+      capabilities={capabilities}
+      origin={origin}
       controller={controllers.conversation}
       computer={controllers.computer}
       accountId={accountId}
@@ -162,6 +168,8 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  capabilities,
+  origin,
   item,
   controller,
   computer,
@@ -174,6 +182,8 @@ function ConversationContents({
   onComputerOpen,
 }: {
   item: AgentConversationView;
+  capabilities: Pick<AgentsWorkspacePort, "routines" | "spaceMemory"> | undefined;
+  origin: string;
   controller: ConversationController;
   computer: ComputerController;
   accountId: string;
@@ -188,6 +198,8 @@ function ConversationContents({
   const id = useId();
   const panelId = useId();
   const computerTrigger = useRef<HTMLButtonElement>(null);
+  const capabilityMenuTrigger = useRef<HTMLButtonElement>(null);
+  const computerMenuOpener = useRef<HTMLButtonElement | null>(null);
   const [computerOpen, setComputerOpen] = useState(false);
   const wide = useSyncExternalStore(subscribeWide, isWide, () => false);
   const computerState = useSyncExternalStore(
@@ -195,9 +207,19 @@ function ConversationContents({
     computer.getSnapshot,
     computer.getSnapshot,
   );
+  function openComputer(opener: HTMLButtonElement | null = computerTrigger.current) {
+    computerMenuOpener.current = opener === computerTrigger.current ? null : opener;
+    setComputerOpen(true);
+    onComputerOpen?.();
+  }
+  function computerFinalFocus() {
+    const inline = window.matchMedia?.("(min-width: 640px)").matches ?? true;
+    if (!inline && computerMenuOpener.current) return computerMenuOpener.current;
+    return computerTrigger.current ?? false;
+  }
   function closeComputer() {
     setComputerOpen(false);
-    computerTrigger.current?.focus();
+    if (wide) computerTrigger.current?.focus();
   }
   const editor = useRef<HTMLTextAreaElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
@@ -207,6 +229,7 @@ function ConversationContents({
   const anchor = useRef<{ node: HTMLElement; offset: number } | null>(null);
   const composing = useRef(false);
   const [away, setAway] = useState(false);
+  const [targetRun, setTargetRun] = useState<string | null>(null);
   const [stopping, setStopping] = useState<RunId | null>(null);
   const [announcement, setAnnouncement] = useState({ revision: 0, text: "" });
   const observed = useRef(new Map<RunId, string>());
@@ -235,6 +258,25 @@ function ConversationContents({
       state.cards,
     ],
   );
+  useLayoutEffect(() => {
+    if (!targetRun) return;
+    const node = [...(history.current?.querySelectorAll<HTMLElement>("[data-run-id]") ?? [])].find(
+      (row) => row.dataset.runId === targetRun,
+    );
+    if (!node) return;
+    follow.current = false;
+    node.scrollIntoView?.({ block: "center", behavior: "instant" });
+    node.focus({ preventScroll: true });
+    anchor.current = {
+      node,
+      offset:
+        node.getBoundingClientRect().top - (history.current?.getBoundingClientRect().top ?? 0),
+    };
+  }, [targetRun, rows]);
+  function openRun(runId: string) {
+    setTargetRun(runId);
+    controller.reconnect();
+  }
   const pendingCards = useMemo(
     () =>
       state.cards.filter(
@@ -394,7 +436,10 @@ function ConversationContents({
         className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-4 overflow-clip"
       >
         <ShellToolbar>
-          <header data-conversation-header className="flex min-w-0 flex-1 items-center gap-2">
+          <header
+            data-conversation-header
+            className="flex h-full min-w-0 flex-1 flex-row flex-nowrap items-center gap-2"
+          >
             <h1
               ref={title}
               tabIndex={-1}
@@ -403,7 +448,22 @@ function ConversationContents({
             >
               {item.agent.name}
             </h1>
-            <div className="flex shrink-0 flex-col items-end gap-1 whitespace-nowrap @sm/main:flex-row @sm/main:items-center">
+            <div
+              data-conversation-actions
+              className="flex shrink-0 flex-row flex-nowrap items-center gap-1 whitespace-nowrap"
+            >
+              {capabilities && (
+                <CapabilityPanels
+                  item={item}
+                  client={capabilities}
+                  accountId={accountId}
+                  origin={origin}
+                  onOpenRun={openRun}
+                  onOpen={() => setComputerOpen(false)}
+                  onOpenComputer={openComputer}
+                  menuTrigger={capabilityMenuTrigger}
+                />
+              )}
               <ComputerIndicator
                 ref={computerTrigger}
                 state={computerState}
@@ -411,29 +471,26 @@ function ConversationContents({
                 panelId={panelId}
                 onOpen={() => {
                   if (computerOpen) closeComputer();
-                  else {
-                    setComputerOpen(true);
-                    onComputerOpen?.();
-                  }
+                  else openComputer();
                 }}
               />
-              {state.connection !== "live" && state.error !== "load" && (
-                <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                  <span role="status">{t(connectionKeys[state.connection])}</span>
-                  {state.connection === "reconnecting" && (
-                    <IconButton
-                      size="icon-sm"
-                      label={t("refresh")}
-                      onClick={() => controller.reconnect()}
-                    >
-                      <RefreshIcon aria-hidden="true" />
-                    </IconButton>
-                  )}
-                </div>
-              )}
             </div>
           </header>
         </ShellToolbar>
+        {state.connection !== "live" && state.error !== "load" && (
+          <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+            <span role="status">{t(connectionKeys[state.connection])}</span>
+            {state.connection === "reconnecting" && (
+              <IconButton
+                size="icon-sm"
+                label={t("refresh")}
+                onClick={() => controller.reconnect()}
+              >
+                <RefreshIcon aria-hidden="true" />
+              </IconButton>
+            )}
+          </div>
+        )}
         {state.error && (
           <Alert>
             <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
@@ -543,10 +600,24 @@ function ConversationContents({
                   <article
                     key={row.id}
                     data-message-row={row.id}
+                    data-run-id={run?.id}
+                    tabIndex={-1}
                     aria-busy={producing}
                     className="flex min-w-0 flex-col pr-6"
                   >
                     <div className="flex w-fit min-w-0 max-w-[90%] flex-col gap-2">
+                      {run?.trigger && run.trigger !== "message" && (
+                        <p className="text-xs text-muted-foreground" data-run-origin>
+                          {run.inboundProvenance?.kind === "repository"
+                            ? t("origins.repository")
+                            : t(`origins.${run.trigger}`)}
+                        </p>
+                      )}
+                      {run?.inboundProvenance && (
+                        <p className="text-xs text-muted-foreground" data-untrusted-input>
+                          {t("untrustedInput")}
+                        </p>
+                      )}
                       {showSender && (
                         <h3
                           title={item.agent.name}
@@ -726,29 +797,26 @@ function ConversationContents({
         </aside>
       )}
       {!wide && (
-        <Sheet
+        <CapabilitySheet
+          id={panelId}
           open={computerOpen}
-          onOpenChange={(open) => {
-            if (!open) closeComputer();
-          }}
+          onClose={closeComputer}
+          title={t("computerTitle")}
+          closeLabel={t("computerClose")}
+          finalFocus={computerFinalFocus}
+          bodyClassName="p-0"
+          // Keep the file surface inside the viewport during the sheet's opacity transition.
+          className="max-w-[calc(100vw-3rem)] data-[side=right]:data-ending-style:translate-x-0 data-[side=right]:data-starting-style:translate-x-0"
         >
-          <SheetContent
-            id={panelId}
-            showCloseButton={false}
-            finalFocus={computerTrigger}
-            // Keep the file surface inside the viewport during the sheet's opacity transition.
-            className="max-w-[calc(100vw-3rem)] data-[side=right]:data-ending-style:translate-x-0 data-[side=right]:data-starting-style:translate-x-0 motion-reduce:transform-none motion-reduce:transition-none"
-          >
-            <ComputerPanel
-              sheet
-              controller={computer}
-              onClose={closeComputer}
-              activity={activity ?? state.toolActivity}
-              approvalPort={approvalPort}
-              selection={{ spaceId: item.agent.spaceId, conversationId: item.conversation.id }}
-            />
-          </SheetContent>
-        </Sheet>
+          <ComputerPanel
+            sheet
+            controller={computer}
+            onClose={closeComputer}
+            activity={activity ?? state.toolActivity}
+            approvalPort={approvalPort}
+            selection={{ spaceId: item.agent.spaceId, conversationId: item.conversation.id }}
+          />
+        </CapabilitySheet>
       )}
     </div>
   );

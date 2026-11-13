@@ -1,12 +1,34 @@
+import { createContext, useContext } from "react";
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 import { cn } from "#lib/utils";
 
-function TooltipProvider({ delay = 0, ...props }: TooltipPrimitive.Provider.Props) {
-  return <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />;
+const EscapeKeyBubblesContext = createContext(false);
+
+function TooltipProvider({
+  delay = 0,
+  escapeKeyBubbles,
+  ...props
+}: TooltipPrimitive.Provider.Props & { escapeKeyBubbles?: boolean }) {
+  const inherited = useContext(EscapeKeyBubblesContext);
+  return (
+    <EscapeKeyBubblesContext.Provider value={escapeKeyBubbles ?? inherited}>
+      <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />
+    </EscapeKeyBubblesContext.Provider>
+  );
 }
 
-function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
+function Tooltip({ onOpenChange, ...props }: TooltipPrimitive.Root.Props) {
+  const escapeKeyBubbles = useContext(EscapeKeyBubblesContext);
+  return (
+    <TooltipPrimitive.Root
+      data-slot="tooltip"
+      {...props}
+      onOpenChange={(open, details) => {
+        if (escapeKeyBubbles && details.reason === "escape-key") details.allowPropagation();
+        onOpenChange?.(open, details);
+      }}
+    />
+  );
 }
 
 function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
