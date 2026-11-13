@@ -10,7 +10,8 @@
     "eas-build-post-install": "bun scripts/configure-native-build.ts",
     "check": "tsc --noEmit --project tsconfig.json",
     "test": "bun --bun vitest run",
-    "test:unit": "bun --bun vitest run"
+    "test:component": "bun --bun vitest run .component.test.",
+    "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\""
   },
   "dependencies": {
     "@better-auth/expo": "catalog:mobile",
