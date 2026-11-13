@@ -1,0 +1,1545 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "2f3eade3-d691-47da-9d9b-07578dce9db7",
+  "prevIds": ["6d0a554b-5bcd-4289-8abf-6c5b4f2d952d"],
+  "ddl": [
+    {
+      "name": "activity",
+      "entityType": "tables"
+    },
+    {
+      "name": "agent_meta",
+      "entityType": "tables"
+    },
+    {
+      "name": "commands",
+      "entityType": "tables"
+    },
+    {
+      "name": "deleted_documents",
+      "entityType": "tables"
+    },
+    {
+      "name": "desktop_sessions",
+      "entityType": "tables"
+    },
+    {
+      "name": "documents",
+      "entityType": "tables"
+    },
+    {
+      "name": "host_authorizations",
+      "entityType": "tables"
+    },
+    {
+      "name": "instance_credentials",
+      "entityType": "tables"
+    },
+    {
+      "name": "job_deliveries",
+      "entityType": "tables"
+    },
+    {
+      "name": "job_webhook_keys",
+      "entityType": "tables"
+    },
+    {
+      "name": "jobs",
+      "entityType": "tables"
+    },
+    {
+      "name": "journal",
+      "entityType": "tables"
+    },
+    {
+      "name": "meta",
+      "entityType": "tables"
+    },
+    {
+      "name": "outbox",
+      "entityType": "tables"
+    },
+    {
+      "name": "pi_contexts",
+      "entityType": "tables"
+    },
+    {
+      "name": "projects",
+      "entityType": "tables"
+    },
+    {
+      "name": "receipts",
+      "entityType": "tables"
+    },
+    {
+      "name": "requests",
+      "entityType": "tables"
+    },
+    {
+      "name": "roots",
+      "entityType": "tables"
+    },
+    {
+      "name": "runs",
+      "entityType": "tables"
+    },
+    {
+      "name": "task_effects",
+      "entityType": "tables"
+    },
+    {
+      "name": "task_events",
+      "entityType": "tables"
+    },
+    {
+      "name": "tasks",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_project",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_receipt",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_request",
+      "entityType": "tables"
+    },
+    {
+      "name": "terminal_session",
+      "entityType": "tables"
+    },
+    {
+      "name": "versions",
+      "entityType": "tables"
+    },
+    {
+      "table": "activity",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "activity",
+      "name": "binding",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "activity",
+      "name": "task_id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "activity",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "agent_meta",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "agent_meta",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "commands",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "commands",
+      "name": "payload",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "commands",
+      "name": "result",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "deleted_documents",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "deleted_documents",
+      "name": "owner",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "deleted_documents",
+      "name": "revision",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "origin",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "version",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "encrypted",
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "documents",
+      "name": "owner",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "documents",
+      "name": "id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "documents",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "host_authorizations",
+      "name": "api_url",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "host_authorizations",
+      "name": "account_id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "host_authorizations",
+      "name": "device_id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "host_authorizations",
+      "name": "epoch",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "host_authorizations",
+      "name": "authorization",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "instance_credentials",
+      "name": "instance_id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "instance_credentials",
+      "name": "private_key",
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "job_deliveries",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "job_deliveries",
+      "name": "digest",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "job_deliveries",
+      "name": "receivedAt",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "job_webhook_keys",
+      "name": "jobId",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "job_webhook_keys",
+      "name": "secret",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "jobs",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "jobs",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "journal",
+      "name": "sequence",
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "journal",
+      "name": "id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "journal",
+      "name": "binding",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "journal",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "meta",
+      "name": "key",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "meta",
+      "name": "value",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "outbox",
+      "name": "sequence",
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "outbox",
+      "name": "id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "outbox",
+      "name": "binding",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "outbox",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "context_id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "revision",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "projects",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "projects",
+      "name": "providers",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "receipts",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "requests",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "requests",
+      "name": "binding",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "requests",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "roots",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "roots",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "runs",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "runs",
+      "name": "jobId",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "runs",
+      "name": "startedAt",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "runs",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "binding",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "task_id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "type",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "status",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "created_at",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_effects",
+      "name": "settled_at",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_events",
+      "name": "sequence",
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_events",
+      "name": "id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_events",
+      "name": "binding",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_events",
+      "name": "task_id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_events",
+      "name": "type",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "task_events",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "tasks",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "tasks",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_project",
+      "name": "path",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_project",
+      "name": "id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_receipt",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_receipt",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_request",
+      "name": "id",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_request",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_session",
+      "name": "key",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "terminal_session",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "versions",
+      "name": "owner",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "versions",
+      "name": "id",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "versions",
+      "name": "revision",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "versions",
+      "name": "value",
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "activity",
+      "name": "activity_task",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "task_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "activity",
+      "name": "activity_task_active",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "task_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"activity\".\"value\",'$.status') IN ('streaming','running','queued','sending')",
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "commands",
+      "name": "commands_binding",
+      "columns": [
+        {
+          "value": "json_extract(\"payload\",'$.binding')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "documents",
+      "name": "documents_canonical_idx",
+      "columns": [
+        {
+          "value": "lower(\"id\")",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "job_deliveries",
+      "name": "job_deliveries_received_at",
+      "columns": [
+        {
+          "value": "receivedAt",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "journal",
+      "name": "journal_binding",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "sequence",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "journal",
+      "name": "journal_task",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "json_extract(\"value\",'$.taskId')",
+          "isExpression": true
+        },
+        {
+          "value": "sequence",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "requests",
+      "name": "requests_binding_task",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "json_extract(\"value\",'$.taskId')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "requests",
+      "name": "requests_binding_pending",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "json_extract(\"value\",'$.expiresAt')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"requests\".\"value\",'$.status') IN ('pending','decided')",
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "task_effects",
+      "name": "task_effects_task",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "task_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "task_effects",
+      "name": "task_effects_open",
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "task_effects",
+      "name": "task_effects_settled",
+      "columns": [
+        {
+          "value": "settled_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "task_events",
+      "name": "task_events_task",
+      "columns": [
+        {
+          "value": "binding",
+          "isExpression": false
+        },
+        {
+          "value": "task_id",
+          "isExpression": false
+        },
+        {
+          "value": "sequence",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "tasks",
+      "name": "tasks_binding_created",
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.binding')",
+          "isExpression": true
+        },
+        {
+          "value": "json_extract(\"value\",'$.task.createdAt') DESC",
+          "isExpression": true
+        },
+        {
+          "value": "\"id\" ASC",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "tasks",
+      "name": "tasks_binding_active",
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.binding')",
+          "isExpression": true
+        },
+        {
+          "value": "json_extract(\"value\",'$.task.createdAt') DESC",
+          "isExpression": true
+        },
+        {
+          "value": "\"id\" ASC",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"tasks\".\"value\",'$.task.status') IN ('pending','running','waiting','cancelling')",
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "tasks",
+      "name": "tasks_binding_cursor",
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.binding')",
+          "isExpression": true
+        },
+        {
+          "value": "(json_extract(\"value\",'$.task.createdAt') || ':' || \"id\") DESC",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "tasks",
+      "name": "tasks_active_session",
+      "columns": [
+        {
+          "value": "json_extract(\"value\",'$.task.provider')",
+          "isExpression": true
+        },
+        {
+          "value": "json_extract(\"value\",'$.sessionId')",
+          "isExpression": true
+        }
+      ],
+      "isUnique": false,
+      "where": "json_extract(\"tasks\".\"value\",'$.task.status') IN ('pending','running','waiting','cancelling')",
+      "origin": "manual",
+      "entityType": "indexes"
+    },
+    {
+      "table": "documents",
+      "name": "documents_pk",
+      "columns": ["owner", "id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "host_authorizations",
+      "name": "host_authorizations_pk",
+      "columns": ["api_url", "account_id", "device_id", "epoch"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "versions",
+      "name": "versions_pk",
+      "columns": ["owner", "id", "revision"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "activity",
+      "name": "activity_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "agent_meta",
+      "name": "agent_meta_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "commands",
+      "name": "commands_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "deleted_documents",
+      "name": "deleted_documents_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "desktop_sessions_pk",
+      "columns": ["origin"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "instance_credentials",
+      "name": "instance_credentials_pk",
+      "columns": ["instance_id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "job_deliveries",
+      "name": "job_deliveries_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "job_webhook_keys",
+      "name": "job_webhook_keys_pk",
+      "columns": ["jobId"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "jobs",
+      "name": "jobs_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "journal",
+      "name": "journal_pk",
+      "columns": ["sequence"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "meta",
+      "name": "meta_pk",
+      "columns": ["key"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "outbox",
+      "name": "outbox_pk",
+      "columns": ["sequence"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "pi_contexts_pk",
+      "columns": ["context_id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "projects",
+      "name": "projects_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "receipts",
+      "name": "receipts_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "requests",
+      "name": "requests_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "roots",
+      "name": "roots_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "runs",
+      "name": "runs_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "task_effects",
+      "name": "task_effects_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "task_events",
+      "name": "task_events_pk",
+      "columns": ["sequence"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "tasks",
+      "name": "tasks_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "terminal_project",
+      "name": "terminal_project_pk",
+      "columns": ["path"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "terminal_receipt",
+      "name": "terminal_receipt_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "terminal_request",
+      "name": "terminal_request_pk",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "terminal_session",
+      "name": "terminal_session_pk",
+      "columns": ["key"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "journal",
+      "name": "journal_id_unique",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "uniques"
+    },
+    {
+      "table": "outbox",
+      "name": "outbox_id_unique",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "uniques"
+    },
+    {
+      "table": "task_events",
+      "name": "task_events_id_unique",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "uniques"
+    },
+    {
+      "table": "terminal_project",
+      "name": "terminal_project_id_unique",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "uniques"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "desktop_session_version",
+      "value": "\"version\" > 0",
+      "entityType": "checks"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "desktop_session_size",
+      "value": "length(\"encrypted\") BETWEEN 28 AND 262172",
+      "entityType": "checks"
+    },
+    {
+      "table": "host_authorizations",
+      "name": "host_epoch_positive",
+      "value": "\"epoch\" > 0",
+      "entityType": "checks"
+    },
+    {
+      "table": "instance_credentials",
+      "name": "instance_key_size",
+      "value": "length(\"private_key\") BETWEEN 1 AND 4096",
+      "entityType": "checks"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "revision_positive",
+      "value": "\"revision\" > 0",
+      "entityType": "checks"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "revision_integer",
+      "value": "typeof(\"revision\") = 'integer'",
+      "entityType": "checks"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "context_id_text",
+      "value": "typeof(\"context_id\") = 'text'",
+      "entityType": "checks"
+    },
+    {
+      "table": "pi_contexts",
+      "name": "value_text",
+      "value": "typeof(\"value\") = 'text'",
+      "entityType": "checks"
+    }
+  ],
+  "renames": []
+}

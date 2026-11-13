@@ -16,16 +16,98 @@ export const jobActionSchema = z.discriminatedUnion("type", [
     path: z.string().default(""),
   }),
   z.object({ type: z.literal("command.run"), command: commandSchema }),
+  z.strictObject({
+    type: z.literal("agent.run"),
+    prompt: z.string().trim().min(1).max(32_000),
+  }),
 ]);
-export const jobInputSchema = z.object({
-  projectId: z.uuid().optional(),
-  name: z.string().min(1).max(120),
-  cron: z.string().min(1),
-  timezone: z.string().min(1),
-  enabled: z.boolean().default(true),
-  action: jobActionSchema,
+export const githubJobEvents = ["push", "issues", "pull_request"] as const;
+export const fileJobIntervals = [5, 15, 30, 60, 360, 1440] as const;
+const jobTriggersSchema = z.strictObject({
+  webhook: z.literal(true).optional(),
+  email: z
+    .strictObject({
+      sender: z.string().trim().toLowerCase().pipe(z.email().max(254)),
+    })
+    .optional(),
+  github: z
+    .strictObject({
+      repository: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .max(200)
+        .regex(/^[a-z0-9-]+\/[a-z0-9_.-]+$/),
+      events: z
+        .array(z.enum(githubJobEvents))
+        .min(1)
+        .max(githubJobEvents.length)
+        .refine((events) => new Set(events).size === events.length),
+    })
+    .optional(),
+  files: z
+    .strictObject({
+      path: z
+        .string()
+        .trim()
+        .max(1024)
+        .transform((value) => value.replaceAll("\\", "/"))
+        .refine(
+          (value) =>
+            !value.startsWith("/") &&
+            !value.includes(":") &&
+            !value.includes("\0") &&
+            !value.split("/").includes(".."),
+          "Use a project-relative path",
+        )
+        .transform((value) =>
+          value
+            .split("/")
+            .filter((part) => part && part !== ".")
+            .join("/"),
+        ),
+      intervalMinutes: z.literal(fileJobIntervals),
+    })
+    .optional(),
 });
-export const jobDefinitionSchema = jobInputSchema.extend({
+export const jobInputSchema = z
+  .object({
+    projectId: z.uuid().optional(),
+    name: z.string().min(1).max(120),
+    cron: z.string().min(1).optional(),
+    timezone: z.string().min(1).optional(),
+    triggers: jobTriggersSchema.optional(),
+    enabled: z.boolean().default(true),
+    action: jobActionSchema,
+  })
+  .superRefine((job, ctx) => {
+    const additional = Boolean(job.triggers && Object.values(job.triggers).some(Boolean));
+    if (job.action.type === "agent.run" && !job.projectId)
+      ctx.addIssue({
+        code: "custom",
+        path: ["projectId"],
+        message: "A Pi automation requires a project",
+      });
+    if (additional && job.action.type !== "agent.run")
+      ctx.addIssue({
+        code: "custom",
+        path: ["triggers"],
+        message: "Additional triggers require Pi",
+      });
+    if (job.triggers?.files && job.cron)
+      ctx.addIssue({
+        code: "custom",
+        path: ["cron"],
+        message: "File changes and Cron cannot be combined",
+      });
+    if (Boolean(job.cron) !== Boolean(job.timezone) || (!job.cron && !additional))
+      ctx.addIssue({
+        code: "custom",
+        path: ["cron"],
+        message: "Choose at least one complete trigger",
+      });
+  });
+export const jobDefinitionSchema = jobInputSchema.safeExtend({
   id: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -39,6 +121,9 @@ export const jobRunSchema = z.object({
   status: z.enum(["running", "success", "failed", "cancelled", "interrupted", "skipped"]),
   output: z.string(),
   exitCode: z.number().nullable(),
+  scheduledFor: z.iso.datetime().optional(),
+  trigger: z.enum(["webhook", "email", "github", "files"]).optional(),
+  session: z.object({ taskId: z.uuid(), projectId: z.uuid(), deviceId: z.uuid() }).optional(),
 });
 export type JobInput = z.infer<typeof jobInputSchema>;
 export type JobDefinition = z.infer<typeof jobDefinitionSchema>;

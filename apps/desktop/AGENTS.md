@@ -56,7 +56,10 @@ the local branch; job-finished events refresh only the active Jobs route. These 
 changes. Local schedule presets and previews use `@raypx/core/jobs` calendar rules; invalid
 Cron/time zones stay in the form and never submit. Local automation history follows the latest
 selection, ignores responses after close/removal/unmount, and refreshes on matching job
-completion or engine readiness. Local reads use the route loader; mutations invalidate it. Keep root errors
+start, completion or engine readiness. Pi automations require a project and history links to
+the device-owned session for approvals, cancellation and results. The trigger details panel uses
+private IPC for Webhook and GitHub keys and email addresses. File watches use project-relative paths.
+Local reads use the route loader; mutations invalidate it. Keep root errors
 silent and successful lists during reload failure. Cloud state is account/client-keyed,
 aborts on identity change and never loads before login. Validated
 `/tasks?scope=remote&taskId=...` links read projections without executing tasks.

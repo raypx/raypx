@@ -90,6 +90,12 @@ export const localResults = {
   "jobs.delete": z.object({ deleted: z.literal(true) }),
   "jobs.run": jobRunSchema,
   "jobs.history": z.array(jobRunSchema),
+  "jobs.triggerInfo": z.object({
+    webhook: z.object({ url: z.url(), key: z.string() }).nullable(),
+    github: z.object({ url: z.url(), key: z.string() }).nullable().optional(),
+    email: z.email().nullable(),
+  }),
+  "jobs.rotateWebhook": z.object({ url: z.url(), key: z.string() }),
   "tools.run": z.object({
     id: z.string(),
     exitCode: z.number(),

@@ -260,11 +260,17 @@ export function createLocalRouter({
       case "jobs.delete":
         return jobs.delete(localParams[method].parse(raw).id);
       case "jobs.run":
-        return jobs.run(localParams[method].parse(raw).id);
+        return jobs.runNow(localParams[method].parse(raw).id);
       case "jobs.history":
         return jobs
           .history(localParams[method].parse(raw).id)
           .map((run) => ({ ...run, output: run.output.slice(0, 8_192) }));
+      case "jobs.triggerInfo":
+        return jobs.triggerInfo(localParams[method].parse(raw).id);
+      case "jobs.rotateWebhook": {
+        const { id, trigger } = localParams[method].parse(raw);
+        return jobs.rotateWebhook(id, trigger);
+      }
       case "tools.run": {
         const p = localParams[method].parse(raw);
         return processes.run(p, signal, p.id);

@@ -98,6 +98,14 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
   disconnects one client and cancels its tools/PTYs, preserving Agent tasks and scheduling.
   Missed Cron triggers are skipped. Job history reads and scheduler startup repair abandoned
   runs only under the job lease; storage failures must release execution and scheduler leases.
+  A Pi automation uses the ordinary device-owned Agent command and approval path. Each scheduled
+  occurrence keeps one history identity and links to its session. Manual Pi runs return after
+  recording the start and continue in the execution host.
+  `[routine_ingress]` enables a dedicated daemon loopback listener for Webhook, GitHub
+  and email delivery. GitHub has a separate signature key. Project file watches keep a
+  metadata-only baseline in SQLite and advance it with run admission. Only Pi jobs accept
+  additional triggers. Persist receipt and run admission together.
+  Keep delivery data out of diagnostics and reuse normal project grants and tool approvals.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
 - Formal production packaging (ADR 0047) uses stable Bun 1.4.4: VP builds `src/main.ts` directly with Bun compile, ESM/minify and depth-0 bytecode. Keep the embedded Bun runtime and shims; disabling all bytecode trades little further size for slower startup. One identity is embedded and recorded in `dist/runtime.json`; Desktop, archives, smoke and Strobe share the complete signed payload. `RAYPX_CLI_PAYLOAD` consumers verify and never rebuild.
 

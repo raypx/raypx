@@ -45,7 +45,7 @@ const operations = {
     create: { method: "jobs.create", description: "Create a local job" },
     update: { method: "jobs.update", description: "Update a local job" },
     delete: { method: "jobs.delete", description: "Delete a job definition" },
-    run: { method: "jobs.run", description: "Run a job once and wait for its result" },
+    run: { method: "jobs.run", description: "Run a job once or start a background Pi session" },
     history: { method: "jobs.history", description: "Read a job's recent runs" },
   },
   tools: {
@@ -248,7 +248,22 @@ async function executeOperation(
   };
   const removeSignals = onShutdown(stop);
   try {
-    const result = await runtime.request(operation.method, params);
+    const result = await runtime.request(operation.method, params).catch(async (error: unknown) => {
+      if (
+        operation.method !== "jobs.run" ||
+        !(error instanceof LocalError) ||
+        error.code !== "DAEMON_REQUIRED"
+      )
+        throw error;
+      await runtime.close();
+      const { createDaemonClient } = await import("../transport/daemon-client.js");
+      const client = await createDaemonClient(options);
+      try {
+        return await client.request("jobs.run", localParams["jobs.run"].parse(params));
+      } finally {
+        await client.close();
+      }
+    });
     console.log(JSON.stringify(result, null, invocation.json ? undefined : 2));
   } finally {
     await runtime.close();

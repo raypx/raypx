@@ -5,7 +5,7 @@ import { instanceKeys } from "./instances/keys.js";
 import { join } from "node:path";
 import { type LocalMethod } from "@raypx/contracts/local";
 import { MemoryRuntime } from "./memory/index.js";
-import { AgentRuntime } from "./agents/index.js";
+import { AgentRuntime, readLocalTask } from "./agents/index.js";
 import { FileRuntime } from "./files/index.js";
 import { JobRuntime } from "./jobs/index.js";
 import { ProcessRuntime } from "./process/index.js";
@@ -78,9 +78,13 @@ export function createRuntime(options: RuntimeOptions = {}) {
     state.directory,
   );
   const pi = new PiHost(state, files, processes);
-  const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic, () =>
-    instanceAccess.assert(),
-  );
+  const jobs = new JobRuntime(state, files, processes, emit, {
+    record: options.recordDiagnostic,
+    ingress: options.routineIngress,
+    assertInstance: () => instanceAccess.assert(),
+    runPi: (...args) => getAgents().runPiAutomation(...args),
+    readPi: (id) => readLocalTask(state, id),
+  });
   let memory: MemoryRuntime | undefined;
   const getMemory = (): MemoryRuntime =>
     (memory ??= new MemoryRuntime(state.db, (target) => getAgents().validateProject(target)));

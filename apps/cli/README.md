@@ -24,13 +24,26 @@ raypx files roots --json
 raypx files list '{"rootId":"ROOT_ID","path":""}' --json
 raypx files write '{"rootId":"ROOT_ID","path":"note.txt","text":"hello","version":null}' --json
 raypx jobs create '{"name":"Hourly scan","cron":"0 * * * *","timezone":"Asia/Singapore","enabled":true,"action":{"type":"directory.scan","rootId":"ROOT_ID","path":""}}' --json
+raypx jobs create '{"name":"Daily project summary","projectId":"PROJECT_ID","cron":"0 9 * * 1-5","timezone":"Asia/Shanghai","action":{"type":"agent.run","prompt":"Summarize the current project status."}}' --json
 raypx jobs run '{"id":"JOB_ID"}' --json
+raypx jobs history '{"id":"JOB_ID"}' --json
 raypx tools run '{"executable":"/absolute/program","args":[],"cwd":"/absolute/directory"}' --json
 ```
 
 Use the current file `version` when editing, moving or deleting. Deletion prompts on an interactive terminal; automation must explicitly pass `--yes`. Built-in file APIs reject traversal and symbolic links. External commands have ordinary OS user permissions and are not restricted by file grants.
 
-`--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent; run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Busy tasks are recorded as skipped; missed triggers and interrupted commands are never replayed automatically. Scheduler startup and history reads mark abandoned runs as interrupted only after acquiring their job lease, preserving runs still owned by another process.
+`--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent. Run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Each scheduled occurrence has one run record. Busy tasks are recorded as skipped. Missed and interrupted occurrences are skipped after restart. Under the job lease, startup and history reads recover the result of a completed Pi session or mark the abandoned run as interrupted.
+
+Enable Pi for the granted project and configure a device model before running a Pi automation.
+`jobs run` returns immediately for Pi and the daemon continues the session in the background.
+Use `jobs history` for the session ID, `tasks get` for its result and `tasks approvals list`
+for pending decisions. See [managed Pi automations](../../docs/development/ai.md#local-pi-automations).
+Local Pi automations also accept `triggers: { webhook: true, email: { sender: "owner@example.com" } }`.
+Use either trigger, or both, and include `cron` and `timezone` only if it also runs on a schedule.
+Configure the [daemon receiver](../../docs/development/ai.md#webhook-and-email-triggers) before sending events.
+`triggers.github` accepts a `repository` such as `owner/repo` and an `events` list containing
+`push`, `issues`, or `pull_request`. `triggers.files` accepts a project-relative `path` and an
+`intervalMinutes` of 5, 15, 30, 60, 360, or 1440. Omit Cron for file watching.
 
 Build through Turbo with root `bun run build:cli`, or run the workspace build with
 `bun run --cwd apps/cli build`. The build checks the SQLite journal and pinned Bun

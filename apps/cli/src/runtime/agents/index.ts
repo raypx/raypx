@@ -1,4 +1,5 @@
 import type { PiExecutionServices } from "./pi/ports.js";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { createProviderRegistry } from "./infrastructure/providers/builtins.js";
 import type { ProviderRegistry } from "./application/providers.js";
 import { ClaudeApprovalServer } from "./infrastructure/claude-hook.js";
@@ -30,8 +31,16 @@ import manifest from "../../../package.json";
 
 import { AgentCommandService } from "./application/commands.js";
 import { AgentQueries } from "./application/queries.js";
+import { TaskRecords } from "./infrastructure/store/tasks.js";
 import { cryptoIds, systemClock, type Clock, type Ids } from "./domain/ports.js";
 import { DecisionRejected } from "./domain/decider.js";
+
+export function readLocalTask(state: StateStore, id: string) {
+  const local = new TaskRecords(state.db).get(id);
+  if (local?.binding === desktopBinding(LOCAL_WORKSPACE_ID) && local.task.provider === "pi")
+    return local.task;
+}
+
 export class AgentRuntime {
   readonly instanceId: string;
   private readonly clock: Clock;
@@ -177,6 +186,39 @@ export class AgentRuntime {
       request,
       expiresAt: new Date(this.clock.now().getTime() + 15_000).toISOString(),
     });
+  }
+  async runPiAutomation(
+    id: string,
+    projectId: string,
+    prompt: string,
+    signal: AbortSignal,
+    onStarted: (deviceId: string) => void,
+  ) {
+    signal.throwIfAborted();
+    const binding = desktopBinding(LOCAL_WORKSPACE_ID);
+    const deviceId = this.store.deviceId(binding);
+    const cancel = () => this.execution.get(id)?.cancel();
+    try {
+      const receipt = await this.localExecute(LOCAL_WORKSPACE_ID, id, {
+        method: "tasks.create",
+        input: { id, deviceId, projectId, provider: "pi", mode: "run", prompt },
+      });
+      if (!receipt.ok) throw new LocalError(receipt.code, receipt.code);
+      signal.addEventListener("abort", cancel, { once: true });
+      if (signal.aborted) cancel();
+      onStarted(deviceId);
+      await this.execution.get(id)?.waitForFinish();
+    } catch (error) {
+      cancel();
+      await this.execution.get(id)?.waitForFinish();
+      throw error;
+    } finally {
+      signal.removeEventListener("abort", cancel);
+    }
+    const task = this.store.get(id)?.task;
+    if (!task || activeTaskStatuses.includes(task.status))
+      throw new LocalError("TASK_STOPPED", "Pi session did not reach a final status");
+    return task;
   }
   // Local history has no cloud copy, so finished tasks are removed only on request.
   localClear(accountId: string) {

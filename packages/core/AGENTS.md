@@ -11,6 +11,9 @@ adapters, execution hosts and product views. Schemas are the single source of in
 - `/jobs` owns local/cloud schedule schemas, domain errors and pure calendar
   calculations. Cron instances stay paused and are stopped after calculation;
   runtime timers and scheduling remain with the execution/server owners.
+  Local Pi jobs require a project. They can combine Webhook, email and GitHub with
+  either Cron or a project file watch.
+  Local history can identify the occurrence or delivery source and link to the device-owned session.
 - `/auth` exports public account/session types, social provider identifiers and
   trusted-origin normalization shared by Auth, API, Control, Relay and Web.
 - `/permissions` exports the framework-free role names and application permission

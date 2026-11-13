@@ -1,4 +1,5 @@
 import { useTranslations } from "../../i18n.js";
+import { Link } from "@tanstack/react-router";
 import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -37,26 +38,45 @@ export function LocalJobHistory({
       ) : (
         history.runs.map((jobRun) => (
           <Collapsible className="border-b border-border" key={jobRun.id}>
-            <CollapsibleTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  className="group h-auto w-full flex-wrap justify-start gap-4 rounded-none px-0 py-3"
+            <div className="flex flex-wrap items-center gap-x-4">
+              <CollapsibleTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    className="group h-auto min-w-0 flex-1 flex-wrap justify-start gap-4 rounded-none px-0 py-3"
+                  />
+                }
+              >
+                <ChevronRightIcon
+                  aria-hidden="true"
+                  className="group-data-panel-open:rotate-90 motion-safe:transition-transform motion-safe:duration-200 group-focus-visible:transition-none"
                 />
-              }
-            >
-              <ChevronRightIcon
-                aria-hidden="true"
-                className="group-data-panel-open:rotate-90 motion-safe:transition-transform motion-safe:duration-200 group-focus-visible:transition-none"
-              />
-              <span className="text-xs tabular-nums">{date(jobRun.startedAt)}</span>
-              <Badge variant={jobRun.status === "failed" ? "destructive" : "secondary"}>
-                {c(jobRun.status)}
-              </Badge>
-              <span className="text-xs">
-                {jobRun.exitCode !== null && `${t("local.exit")}: ${jobRun.exitCode}`}
-              </span>
-            </CollapsibleTrigger>
+                <span className="text-xs tabular-nums">
+                  {date(jobRun.scheduledFor ?? jobRun.startedAt)}
+                </span>
+                {jobRun.trigger && <span className="text-xs">{t(`local.${jobRun.trigger}`)}</span>}
+                <Badge variant={jobRun.status === "failed" ? "destructive" : "secondary"}>
+                  {c(jobRun.status)}
+                </Badge>
+                <span className="text-xs">
+                  {jobRun.exitCode !== null && `${t("local.exit")}: ${jobRun.exitCode}`}
+                </span>
+              </CollapsibleTrigger>
+              {jobRun.session && (
+                <Link
+                  to="/tasks"
+                  search={{
+                    scope: "local",
+                    project: jobRun.session.projectId,
+                    device: jobRun.session.deviceId,
+                    taskId: jobRun.session.taskId,
+                  }}
+                  className="text-sm underline underline-offset-4"
+                >
+                  {t("local.viewSession")}
+                </Link>
+              )}
+            </div>
             <CollapsibleContent animated>
               <div className="pb-4 pl-6">
                 {jobRun.output && (

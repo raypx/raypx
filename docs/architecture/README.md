@@ -267,7 +267,18 @@ normal OS permissions. PTY output is bytes encoded as base64; dates are ISO stri
 
 SQLite stores profiles, roots, schedules and bounded run history. A profile has
 one scheduling owner and per-job execution locks. Cron uses five fields and an
-IANA zone, skips missed triggers, and never retries interrupted commands on restart.
+IANA zone and skips missed triggers. Scheduled occurrences use a durable identity
+derived from the job and due time. A local Pi automation opens a device-owned
+session through the usual Agent command path and holds its job lease through
+approvals and completion. The history record links to that session and can recover
+its terminal status if the daemon stopped before writing the final history record.
+Restart skips unfinished occurrences.
+An optional daemon-owned loopback listener receives keyed Webhook JSON, signed GitHub
+events and normalized messages from an authenticated inbound mail relay. File checks
+use metadata fingerprints and commit baseline updates with run admission. They share the existing local Pi
+execution path. Webhook secrets and delivery digests stay in profile SQLite. Private
+Desktop IPC returns trigger details for configuration. Public ingress has no access
+to private IPC, remote Host grants, terminal methods or task reads.
 On macOS and Windows, the independent CLI daemon owns scheduling; GUI Quit cleans
 its Desktop owner's tools and terminals while preserving Agent work. Connection
 loss or rebootstrap preserves accepted tools and terminals. Stopping the daemon

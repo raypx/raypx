@@ -51,6 +51,162 @@ each invocation and never rewrites it. `RAYPX_HOME` can select another absolute
 configuration directory. Local tool profiles and the selected account-server
 profile do not change AI model selection.
 
+## Local Pi automations
+
+In Desktop, open an authorized project, enable Pi, and choose **Automations → New automation**.
+Select **Run a Pi session**, enter the instructions, and set the schedule and time zone.
+The daemon starts one session per occurrence using the device's configured model. **Run now**
+tests the same path, including while the schedule is paused. Open **Run history** to reach the
+session and answer its approval requests. Pause affects future automatic runs. Cancel an active
+run from its session. Missed occurrences are skipped.
+
+### Webhook and email triggers
+
+Choose **Webhook** or **Email** under **When to run** for a local Pi automation.
+You can combine either with Cron or turn off the schedule. **Trigger details** shows
+the URL and key for Webhook and the routine's address for Email. The key can be
+rotated from that panel. The run history identifies the delivery source.
+
+Enable the receiver in `~/.raypx/config.toml` and restart the daemon. The `profile`
+defaults to `default`; use the profile that owns the routines. Choose an unused
+loopback port. `public_url` is the HTTPS origin of your reverse proxy. Omit it
+for same-machine Webhooks. For remote delivery, proxy the enabled paths
+`POST /routines/webhook/*`, `POST /routines/github/*`, or `POST /routines/email`
+to the configured loopback port.
+
+```toml
+[routine_ingress]
+profile = "default"
+port = 49321
+public_url = "https://routines.example.com"
+# Configure both fields below to receive email.
+email_domain = "routines.example.com"
+email_relay_key = "REPLACE_WITH_A_RANDOM_BASE64URL_SECRET"
+```
+
+#### Webhook
+
+Send JSON to the URL in **Trigger details** with `Authorization: Bearer <webhook key>`
+and an `Idempotency-Key` of 1–128 letters, digits, underscores, periods, colons,
+or hyphens. Use the same key and JSON for each retry of one event. Rotating the
+Webhook key immediately invalidates the previous one without changing the URL.
+
+#### Email
+
+Use an inbound mail relay for `email_domain`. Set the routine's **Allowed sender address**
+and give the relay its generated recipient address. The relay must authenticate and align
+the message's `From` domain before asserting the `from` address. Use trusted results
+from the receiving service, such as a DMARC pass from Cloudflare Email Routing's
+own authentication header. Preserve the SMTP envelope recipient as `to` and supply
+only the parsed `To` and `Cc` addresses as `recipients`. [Cloudflare authentication results](https://developers.cloudflare.com/email-service/api/route-emails/email-handler/#authentication-results)
+
+The relay sends `POST /routines/email` with `Authorization: Bearer <email relay key>`,
+`Content-Type: application/json`, and the following fields. Use a stable `messageId`
+for each delivery and its retries. The relay credential is separate from the Webhook keys.
+
+```json
+{
+  "to": "<routine UUID>@routines.example.com",
+  "from": "owner@example.com",
+  "recipients": ["<routine UUID>@routines.example.com"],
+  "messageId": "<report-42@example.com>",
+  "subject": "Daily report",
+  "text": "The build is green."
+}
+```
+
+The recipient must appear in To or Cc, and the authenticated sender must match the
+configured address. The session receives the sender, subject and plain text. Attachments
+and HTML are outside this integration.
+
+Both endpoints return `202` for accepted deliveries and matching retries. Email that
+does not match a routine's admission rules returns `202` with `accepted: false`.
+Retry `503` with the same delivery ID. This covers a busy routine or unavailable
+daemon. `409` signals a reused ID with different data. Oversized bodies return `413`.
+The HTTP body limit is 64 KiB, Webhook JSON and email text have a 16,000-character
+limit, and the combined session instruction and delivery must fit the 32,000-character
+session budget. Delivery receipts persist for at least seven days. An accepted event
+can be inspected in run history. If the daemon stops mid-run, it records the
+interruption and skips replay. Pause blocks new automatic events and leaves manual
+testing available. Pi's usual approvals apply to changes and commands.
+
+For a Cloudflare Email Routing Worker, parse the incoming MIME with `postal-mime`
+and forward only authenticated messages. Set `RAYPX_ROUTINE_EMAIL_URL` to the full
+HTTPS email endpoint and set `RAYPX_ROUTINE_EMAIL_RELAY_KEY` as a Worker secret.
+Use a receiving domain whose mail provider controls who may send from the configured
+mailbox. [Cloudflare Email Worker API](https://developers.cloudflare.com/email-service/api/route-emails/email-handler/) · [PostalMime Email object](https://postal-mime.postalsys.com/docs/api/email/)
+
+```js
+import PostalMime, { addressParser } from "postal-mime";
+
+export default {
+  async email(message, env) {
+    const auth = message.headers.get("authentication-results") ?? "";
+    const results = auth.split(";");
+    if (results.shift()?.trim() !== "mx.cloudflare.net") return;
+    if (!results.some((result) => /^\s*dmarc=pass(?:\s|$)/i.test(result))) return;
+    if (message.rawSize > 1024 * 1024) return;
+
+    const mail = await PostalMime.parse(message.raw);
+    const from = mail.headers.filter((header) => header.key === "from");
+    const senders = from.length === 1 ? addressParser(from[0].value) : [];
+    if (senders.length !== 1 || !senders[0].address || !mail.messageId) return;
+    const recipients = [...(mail.to ?? []), ...(mail.cc ?? [])]
+      .flatMap((entry) => entry.group ?? [entry])
+      .flatMap((entry) => (entry.address ? [entry.address] : []));
+    const response = await fetch(env.RAYPX_ROUTINE_EMAIL_URL, {
+      method: "POST",
+      redirect: "error",
+      headers: {
+        authorization: `Bearer ${env.RAYPX_ROUTINE_EMAIL_RELAY_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        to: message.to,
+        from: senders[0].address,
+        recipients,
+        messageId: mail.messageId,
+        subject: mail.subject ?? "",
+        text: mail.text ?? "",
+      }),
+    });
+    if (response.status === 413) message.setReject("Routine input too large");
+    else if (!response.ok) throw new Error(`Routine receiver HTTP ${response.status}`);
+  },
+};
+```
+
+### GitHub events
+
+Enable **GitHub events** in the routine, enter `owner/repository`, and choose
+pushes, issues, or pull requests. Save and copy the GitHub URL and secret from
+**Trigger details**. In the repository's **Settings → Webhooks**, add the URL,
+select `application/json`, paste the secret, and subscribe to the same events.
+GitHub must be able to reach the configured HTTPS origin. If you rotate the
+secret, update it in GitHub too. [GitHub webhook setup](https://docs.github.com/en/webhooks/using-webhooks/creating-webhooks)
+
+The daemon verifies the signature over the original request bytes before parsing
+JSON, and deduplicates by GitHub's delivery ID. Ping and unselected events do
+not start a session. Payloads up to 1 MiB are accepted. Pi receives the repository,
+event, and push ref and revisions, or the issue/PR number, action, title, link and
+a short body excerpt. If a delivery fails while the daemon is unavailable or busy,
+redeliver it from GitHub's delivery log. [GitHub webhook signature validation](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries)
+
+### Project file changes
+
+Enable **Project file changes**, enter a path relative to the authorized project,
+and choose a check interval from five minutes to one day. Leave the path empty to
+check the whole project recursively. File watching replaces the Cron schedule for
+that routine. Webhook, email and GitHub triggers can stay enabled.
+
+The first check establishes a baseline. Later checks compare file names, sizes
+and timestamps and start one session for a changed snapshot. Pi receives the
+configured relative path and whether the target was created, modified or deleted.
+The watcher reads metadata only. It skips symbolic links, `.git` and `node_modules`
+and checks up to 20,000 entries. If a check fails, the previous baseline is retained.
+The baseline survives daemon restart, and resuming a paused watch takes a fresh
+baseline. If the routine is busy, changes can be picked up at the next check.
+
 ## Compatible endpoints
 
 Use explicit protocol and model metadata for a proxy or local inference server:

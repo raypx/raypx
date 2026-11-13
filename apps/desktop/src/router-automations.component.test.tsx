@@ -15,6 +15,138 @@ import {
 import userEvent from "@testing-library/user-event";
 
 describe("Desktop local file routes", () => {
+  it("saves GitHub events and a project file watch with no Cron schedule", async () => {
+    const user = userEvent.setup();
+    const id = crypto.randomUUID();
+    mocks.localRequest.mockImplementation(async (method, params) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
+      if (method === "jobs.list") return [];
+      if (method === "roots.list") return grants;
+      if (method === "jobs.create") return { ...(params as JobDefinition), id, nextRuns: [] };
+      if (method === "jobs.triggerInfo")
+        return {
+          webhook: null,
+          email: null,
+          github: {
+            url: `https://routines.example.com/routines/github/${id}`,
+            key: "fixture-github-key",
+          },
+        };
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/automations?scope=local&project=work");
+    await user.click(screen.getByRole("button", { name: "New automation" }));
+    await user.click(screen.getByRole("combobox", { name: "Action" }));
+    await user.click(screen.getByRole("option", { name: "Run a Pi session" }));
+    await user.click(screen.getByRole("checkbox", { name: "GitHub events" }));
+    await user.click(screen.getByRole("checkbox", { name: "Issues" }));
+    await user.click(screen.getByRole("checkbox", { name: "Project file changes" }));
+    expect(screen.getByRole("checkbox", { name: "On a schedule" })).not.toBeChecked();
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Project activity" } });
+    fireEvent.change(screen.getByLabelText("GitHub repository"), {
+      target: { value: "owner/repo" },
+    });
+    fireEvent.change(screen.getByLabelText("File or folder to watch"), {
+      target: { value: "src" },
+    });
+    fireEvent.change(screen.getByLabelText("Session instructions"), {
+      target: { value: "Summarize" },
+    });
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByLabelText("GitHub webhook URL")).toHaveValue(
+      `https://routines.example.com/routines/github/${id}`,
+    );
+    expect(screen.getByLabelText("GitHub webhook secret")).toHaveAttribute("type", "password");
+    expect(mocks.localRequest.mock.calls.find(([method]) => method === "jobs.create")?.[1]).toEqual(
+      {
+        name: "Project activity",
+        projectId: "work",
+        enabled: true,
+        action: { type: "agent.run", prompt: "Summarize" },
+        triggers: {
+          github: { repository: "owner/repo", events: ["push", "pull_request"] },
+          files: { path: "src", intervalMinutes: 5 },
+        },
+      },
+    );
+  });
+  it("saves a Pi routine with webhook and email triggers without a schedule", async () => {
+    const user = userEvent.setup();
+    const id = crypto.randomUUID();
+    mocks.localRequest.mockImplementation(async (method, params) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
+      if (method === "jobs.list") return [];
+      if (method === "roots.list") return grants;
+      if (method === "jobs.create") return { ...(params as JobDefinition), id, nextRuns: [] };
+      if (method === "jobs.triggerInfo")
+        return {
+          webhook: {
+            url: "https://routines.example.com/routines/webhook/example",
+            key: "fixture-key",
+          },
+          email: "example@routines.example.com",
+        };
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/automations?scope=local&project=work");
+    await user.click(screen.getByRole("button", { name: "New automation" }));
+    await user.click(screen.getByRole("combobox", { name: "Action" }));
+    await user.click(screen.getByRole("option", { name: "Run a Pi session" }));
+    await user.click(screen.getByRole("checkbox", { name: "On a schedule" }));
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    await user.click(screen.getByRole("checkbox", { name: "Webhook" }));
+    await user.click(screen.getByRole("checkbox", { name: "Email" }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Inbound" } });
+    fireEvent.change(screen.getByLabelText("Allowed sender address"), {
+      target: { value: "owner@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Session instructions"), {
+      target: { value: "Summarize" },
+    });
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByLabelText("Routine email address")).toHaveValue(
+      "example@routines.example.com",
+    );
+    expect(screen.getByLabelText("Webhook key")).toHaveAttribute("type", "password");
+    expect(mocks.localRequest.mock.calls.find(([method]) => method === "jobs.create")?.[1]).toEqual(
+      {
+        projectId: "work",
+        name: "Inbound",
+        enabled: true,
+        action: { type: "agent.run", prompt: "Summarize" },
+        triggers: { webhook: true, email: { sender: "owner@example.com" } },
+      },
+    );
+  });
+  it("creates a local Pi automation with instructions for the selected project", async () => {
+    const user = userEvent.setup();
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method.startsWith("instance.")) return { state: "registered" };
+      if (method === "jobs.list") return [];
+      if (method === "roots.list") return grants;
+      if (method === "jobs.create") return job();
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/automations?scope=local&project=work");
+    await user.click(screen.getByRole("button", { name: "New automation" }));
+    await user.click(screen.getByRole("combobox", { name: "Action" }));
+    await user.click(screen.getByRole("option", { name: "Run a Pi session" }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Pi routine" } });
+    fireEvent.change(screen.getByLabelText("Session instructions"), {
+      target: { value: "  Summarize the project status  " },
+    });
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() =>
+      expect(mocks.localRequest).toHaveBeenCalledWith(
+        "jobs.create",
+        expect.objectContaining({
+          projectId: "work",
+          action: { type: "agent.run", prompt: "Summarize the project status" },
+        }),
+      ),
+    );
+  });
+
   it("loads jobs and roots in parallel through browser history and contains auxiliary roots failures", async () => {
     const jobs = deferred<JobDefinition[]>();
     const roots = deferred<RootGrant[]>();

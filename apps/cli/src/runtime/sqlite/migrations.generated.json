@@ -18,5 +18,15 @@
     "name": "20261110150843_nappy_golden_guardian",
     "timestamp": 1794323323000,
     "sql": "CREATE TABLE `desktop_sessions` (\n\t`origin` text PRIMARY KEY,\n\t`version` integer NOT NULL,\n\t`encrypted` blob NOT NULL,\n\tCONSTRAINT \"desktop_session_version\" CHECK(\"version\" > 0),\n\tCONSTRAINT \"desktop_session_size\" CHECK(length(\"encrypted\") BETWEEN 28 AND 262172)\n);\n"
+  },
+  {
+    "name": "20261113063242_omniscient_wind_dancer",
+    "timestamp": 1794551562000,
+    "sql": "CREATE TABLE `job_deliveries` (\n\t`id` text PRIMARY KEY,\n\t`digest` text NOT NULL,\n\t`receivedAt` integer NOT NULL\n);\n--> statement-breakpoint\nCREATE TABLE `job_webhook_keys` (\n\t`jobId` text PRIMARY KEY,\n\t`secret` text NOT NULL\n);\n--> statement-breakpoint\nCREATE INDEX `job_deliveries_received_at` ON `job_deliveries` (`receivedAt`);"
+  },
+  {
+    "name": "20261113065025_robust_odin",
+    "timestamp": 1794552625000,
+    "sql": "CREATE TABLE `job_file_watches` (\n\t`jobId` text PRIMARY KEY,\n\t`digest` text NOT NULL\n);\n"
   }
 ]

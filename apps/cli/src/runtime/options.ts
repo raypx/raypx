@@ -2,6 +2,7 @@ import type { AgentProvider } from "@raypx/core/tasks";
 import type { LocalEvent } from "@raypx/contracts/local";
 import type { RecordDiagnostic } from "../diagnostics.js";
 import type { InstanceAccess } from "./instances/index.js";
+import type { RoutineIngressSettings } from "./jobs/ingress.js";
 
 export type ExecutionMode = "command" | "tui" | "stdio" | "daemon";
 export interface RuntimeOptions {
@@ -13,4 +14,5 @@ export interface RuntimeOptions {
   emit?: (event: LocalEvent) => void;
   agentExecutables?: Partial<Record<AgentProvider, string>>;
   recordDiagnostic?: RecordDiagnostic;
+  routineIngress?: RoutineIngressSettings | undefined;
 }

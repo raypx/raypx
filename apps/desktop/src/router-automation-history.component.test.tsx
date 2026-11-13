@@ -24,6 +24,33 @@ function readHistory(name: string) {
   );
 }
 
+it("links a running Pi automation to its original project session", async () => {
+  const taskId = crypto.randomUUID(),
+    deviceId = crypto.randomUUID(),
+    projectId = crypto.randomUUID();
+  let runs = [run];
+  mocks.localRequest.mockImplementation(async (method) => {
+    if (method === "roots.list") return grants;
+    if (method === "jobs.list") return [first];
+    if (method === "jobs.history") return runs;
+    throw new Error(`Unexpected local request: ${method}`);
+  });
+  await page("/automations");
+  readHistory(first.name);
+  await screen.findByRole("button", { name: /Running/ });
+  runs = [{ ...run, session: { taskId, deviceId, projectId } }];
+  await act(async () => emit("job.started", { jobId: first.id }));
+  const link = await screen.findByRole("link", { name: "Open Pi session" });
+  const url = new URL(link.getAttribute("href")!, "http://localhost");
+  expect(url.pathname).toBe("/tasks");
+  expect(Object.fromEntries(url.searchParams)).toEqual({
+    scope: "local",
+    taskId,
+    device: deviceId,
+    project: projectId,
+  });
+});
+
 it.each(["success", "failure"])(
   "ignores an older history %s after selecting another automation",
   async (outcome) => {

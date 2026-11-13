@@ -21,6 +21,7 @@ export function LocalJobList({
   onToggle,
   onEdit,
   onRemove,
+  onTriggers,
 }: {
   jobs: JobDefinition[];
   roots: RootGrant[];
@@ -31,9 +32,15 @@ export function LocalJobList({
   onToggle: (job: JobDefinition) => void;
   onEdit: (job: JobDefinition) => void;
   onRemove: (job: JobDefinition) => void;
+  onTriggers: (job: JobDefinition) => void;
 }) {
   const t = useTranslations("automations");
   const c = useTranslations("common");
+  const actionLabel = {
+    "directory.scan": t("local.scan"),
+    "command.run": t("local.command"),
+    "agent.run": t("local.agent"),
+  };
   function association(job: JobDefinition) {
     if (!job.projectId) return t("local.globalAutomation");
     return roots.find((root) => root.id === job.projectId)?.name ?? c("projectUnavailable");
@@ -59,11 +66,19 @@ export function LocalJobList({
               </Badge>
             </div>
             <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <code>{job.cron}</code>
-              <span>·</span>
-              {job.timezone}
-              <span>·</span>
-              {t(job.action.type === "directory.scan" ? "local.scan" : "local.command")}
+              {job.cron && (
+                <>
+                  <code>{job.cron}</code>
+                  <span>·</span>
+                  {job.timezone}
+                  <span>·</span>
+                </>
+              )}
+              {actionLabel[job.action.type]}
+              {job.triggers?.webhook && <span>· {t("local.webhook")}</span>}
+              {job.triggers?.email && <span>· {t("local.email")}</span>}
+              {job.triggers?.github && <span>· {t("local.github")}</span>}
+              {job.triggers?.files && <span>· {t("local.files")}</span>}
             </p>
             {job.nextRuns[0] && job.enabled && (
               <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -79,6 +94,11 @@ export function LocalJobList({
             <Button variant="ghost" disabled={busy} onClick={() => onHistory(job)}>
               {t("history")}
             </Button>
+            {(job.triggers?.webhook || job.triggers?.email || job.triggers?.github) && (
+              <Button variant="ghost" disabled={busy} onClick={() => onTriggers(job)}>
+                {t("local.triggerDetails")}
+              </Button>
+            )}
             <IconButton
               disabled={busy}
               label={`${t(job.enabled ? "pause" : "enable")}: ${job.name}`}

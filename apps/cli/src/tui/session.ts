@@ -156,14 +156,17 @@ export async function runSession(
   async function detail(job: JobDefinition) {
     while (!closing()) {
       write(`\n${label(job.name)}\n${label(job.id)}`);
-      write(
-        `${copy().schedule}: ${label(job.cron)}  ${label(job.timezone)} (${job.enabled ? copy().enabled : copy().disabled})`,
-      );
-      write(`${copy().next}: ${job.enabled ? label(job.nextRuns[0] ?? "?") : copy().disabled}`);
-      const action =
-        job.action.type === "command.run"
-          ? `${job.action.command.executable} ${JSON.stringify(job.action.command.args)} (${job.action.command.cwd})`
-          : `${job.action.type} (${job.action.rootId}/${job.action.path})`;
+      if (job.cron && job.timezone) {
+        write(
+          `${copy().schedule}: ${label(job.cron)}  ${label(job.timezone)} (${job.enabled ? copy().enabled : copy().disabled})`,
+        );
+        write(`${copy().next}: ${job.enabled ? label(job.nextRuns[0] ?? "?") : copy().disabled}`);
+      }
+      let action: string = job.action.type;
+      if (job.action.type === "command.run")
+        action = `${job.action.command.executable} ${JSON.stringify(job.action.command.args)} (${job.action.command.cwd})`;
+      if (job.action.type === "directory.scan")
+        action = `${job.action.type} (${job.action.rootId}/${job.action.path})`;
       write(`${copy().action}: ${label(action)}`);
       write(copy().detail);
       const answer = await read(copy().prompt);

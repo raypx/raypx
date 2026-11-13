@@ -69,6 +69,10 @@ export class ManagedExecution {
   private readonly pending = new Map<string, Pending>();
   private cancelled = false;
   private finished = false;
+  private complete = () => {};
+  private readonly finishedExecution = new Promise<void>((resolve) => {
+    this.complete = resolve;
+  });
   private summary = "";
   private awaitingPlan = false;
   private planRequestHandled = false;
@@ -531,6 +535,9 @@ export class ManagedExecution {
     this.cancelled = true;
     this.finish("cancelled");
   }
+  waitForFinish() {
+    return this.finishedExecution;
+  }
   finish(status: AgentTask["status"], summary = "") {
     if (this.finished) return;
     this.finished = true;
@@ -548,6 +555,7 @@ export class ManagedExecution {
       this.effects.ended();
       this.effects.status(status, summary);
     })();
+    void completion.then(this.complete, this.complete);
     this.effects.track(completion);
   }
 }

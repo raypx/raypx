@@ -45,18 +45,25 @@ backup and restore separately from process recovery. Follow the
 [Agent acceptance guide](development/agent-quality.md) and
 [Desktop release guide](development/desktop.md#build-and-release).
 
-## Then: local Pi automations
+## Local Pi automations
 
-Local Cron jobs currently run directory scans or process commands. Connect a
-scheduled Pi trigger to the same `AgentRuntime` used by interactive sessions.
-Reuse project grants, tool approvals, frozen context and the existing journal.
+Local Cron jobs can start a Pi session with a saved instruction in an authorized
+project. They support pause and resume, manual tests, one run per scheduled
+occurrence and history links to the session. Webhook, authenticated inbound email,
+GitHub repository events and project file changes can trigger the same routine.
+The daemon uses the interactive execution and approval path. Missed scheduled
+occurrences are skipped.
 
-Acceptance requires:
+The rest of the automation phase covers creating a routine from a session,
+choosing its model and frozen references, and verifying live delivery and provider
+execution. Slack triggers depend on the Slack connection in the messaging phase.
 
-- Idempotent trigger delivery and a visible link from the schedule to its Run.
-- Pause/resume, timezone handling and an explicit missed-trigger policy.
-- Bounded catch-up, traceable attempts and safe cancellation.
-- Deterministic offline tests before separate live-provider acceptance.
+## Named Agents and project artifacts
+
+Give a project multiple named Agents with their own instructions, model,
+sessions, memory and automations. Add MCP connections and reusable Skills with
+project-scoped permissions. Start with private reports and dashboards that a
+routine can update, then add explicit link sharing and revocation.
 
 ## Later: explicit server ownership
 
@@ -73,6 +80,17 @@ local project, using scoped, revocable grants and acknowledged cursor recovery.
 An unavailable Host must wait or fail explicitly rather than switching workspaces.
 The server owns the migrated Run; the paired Host owns only its granted local
 execution. These are future capabilities, separate from current remote access.
+
+Extend this phase with browser and desktop viewing and user takeover, private
+sandbox computers, and Web and mobile session access. Keep the same execution and
+approval semantics across clients.
+
+## Team work and messaging
+
+Add shared spaces with explicit membership, project grants and audit history.
+Add group chat, Agent delegation, shared computer access and a ticket board as
+consumers of those boundaries. Connect messaging channels and voice once the
+shared session and approval flows can be recovered across clients.
 
 ## Later: clients and extensibility
 

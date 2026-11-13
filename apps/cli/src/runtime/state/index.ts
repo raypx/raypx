@@ -10,7 +10,15 @@ import type { RootGrant } from "@raypx/contracts/local";
 import type { JobInput, JobRun } from "@raypx/core/jobs";
 import { LocalError } from "../errors.js";
 import { type ProfileStorage, type LocalDatabase } from "../sqlite/index.js";
-import { jobs, meta, roots, runs } from "../sqlite/schema.js";
+import {
+  jobDeliveries,
+  jobFileWatches,
+  jobs,
+  jobWebhookKeys,
+  meta,
+  roots,
+  runs,
+} from "../sqlite/schema.js";
 
 export function profilePath(options: { dataDir?: string; profile?: string } = {}) {
   const profile = options.profile ?? "default";
@@ -28,7 +36,7 @@ export function profilePath(options: { dataDir?: string; profile?: string } = {}
         : join(process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"), "raypx"));
   return resolve(base, "profiles", profile);
 }
-const storedJobSchema = jobInputSchema.extend({
+const storedJobSchema = jobInputSchema.safeExtend({
   id: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -91,9 +99,9 @@ export class StateStore {
       .map((row) => storedRecord(storedJobSchema, row.value));
   }
   job(id: string) {
-    const job = this.jobs().find((entry) => entry.id === id);
-    if (!job) throw new LocalError("JOB_NOT_FOUND", "Task does not exist");
-    return job;
+    const row = this.db.select({ value: jobs.value }).from(jobs).where(eq(jobs.id, id)).get();
+    if (!row) throw new LocalError("JOB_NOT_FOUND", "Task does not exist");
+    return storedRecord(storedJobSchema, row.value);
   }
   putJob(job: JobInput & { id: string; createdAt: string; updatedAt: string }) {
     this.db.run(
@@ -103,8 +111,72 @@ export class StateStore {
     return job;
   }
   deleteJob(id: string) {
-    this.db.delete(jobs).where(eq(jobs.id, id)).run();
-    this.touch();
+    this.db.transaction(() => {
+      this.db.delete(jobs).where(eq(jobs.id, id)).run();
+      this.clearWebhookKey(id);
+      this.clearWebhookKey(id, "github");
+      this.clearFileWatch(id);
+      this.touch();
+    });
+  }
+  webhookKey(id: string, trigger: "webhook" | "github" = "webhook") {
+    return this.db
+      .select({ secret: jobWebhookKeys.secret })
+      .from(jobWebhookKeys)
+      .where(eq(jobWebhookKeys.jobId, trigger === "github" ? `github:${id}` : id))
+      .get()?.secret;
+  }
+  setWebhookKey(id: string, secret: string, trigger: "webhook" | "github" = "webhook") {
+    this.db
+      .insert(jobWebhookKeys)
+      .values({ jobId: trigger === "github" ? `github:${id}` : id, secret })
+      .onConflictDoUpdate({ target: jobWebhookKeys.jobId, set: { secret } })
+      .run();
+  }
+  clearWebhookKey(id: string, trigger: "webhook" | "github" = "webhook") {
+    this.db
+      .delete(jobWebhookKeys)
+      .where(eq(jobWebhookKeys.jobId, trigger === "github" ? `github:${id}` : id))
+      .run();
+  }
+  fileWatch(id: string) {
+    return this.db
+      .select({ digest: jobFileWatches.digest })
+      .from(jobFileWatches)
+      .where(eq(jobFileWatches.jobId, id))
+      .get()?.digest;
+  }
+  setFileWatch(id: string, digest: string) {
+    this.db
+      .insert(jobFileWatches)
+      .values({ jobId: id, digest })
+      .onConflictDoUpdate({ target: jobFileWatches.jobId, set: { digest } })
+      .run();
+  }
+  clearFileWatch(id: string) {
+    this.db.delete(jobFileWatches).where(eq(jobFileWatches.jobId, id)).run();
+  }
+  claimDelivery(id: string, digest: string) {
+    const now = Date.now();
+    this.db
+      .delete(jobDeliveries)
+      .where(lt(jobDeliveries.receivedAt, now - 7 * 86_400_000))
+      .run();
+    const previous = this.db
+      .select({ digest: jobDeliveries.digest })
+      .from(jobDeliveries)
+      .where(eq(jobDeliveries.id, id))
+      .get();
+    if (previous) {
+      if (previous.digest !== digest)
+        throw new LocalError(
+          "DELIVERY_CONFLICT",
+          "Delivery ID already used with a different payload",
+        );
+      return false;
+    }
+    this.db.insert(jobDeliveries).values({ id, digest, receivedAt: now }).run();
+    return true;
   }
   putRun(run: JobRun) {
     this.db
@@ -150,6 +222,10 @@ export class StateStore {
       .limit(100)
       .all()
       .map((row) => storedRecord(jobRunSchema, row.value));
+  }
+  run(id: string): JobRun | undefined {
+    const row = this.db.select({ value: runs.value }).from(runs).where(eq(runs.id, id)).get();
+    return row && storedRecord(jobRunSchema, row.value);
   }
 }
 export function acquireLock(directory: string, name: string): (() => void) | null {

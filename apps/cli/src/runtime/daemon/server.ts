@@ -22,6 +22,7 @@ import { refreshStableCli } from "./connectors.js";
 import { privateSocketDirectory } from "../terminal/socket.js";
 import { foreignLoopbackRequest, loopbackTransport, type LocalAddress } from "../local-http.js";
 import { DesktopGateway } from "./desktop/gateway.js";
+import { loadRoutineIngress, startRoutineIngress } from "../jobs/ingress.js";
 
 type Client = {
   stream: ReadableStreamDefaultController<Uint8Array>;
@@ -36,6 +37,9 @@ export async function startDaemon(
     agentExecutables?: Partial<Record<AgentProvider, string>>;
   } = {},
 ) {
+  const settings = loadRoutineIngress();
+  const routineIngress =
+    settings?.profile === (options.profile ?? "default") ? settings : undefined;
   const directory = profilePath(options);
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   chmodSync(directory, 0o700);
@@ -71,6 +75,7 @@ export async function startDaemon(
   let runtime: LocalRuntime | undefined,
     control: DaemonControl | undefined,
     server: ReturnType<typeof Bun.serve> | undefined;
+  let ingress: ReturnType<typeof startRoutineIngress> | undefined;
   let stopping = false;
   const backgroundFailure = reportBackgroundFailure("daemon.background");
   let heartbeat: ReturnType<typeof setInterval> | undefined;
@@ -120,27 +125,34 @@ export async function startDaemon(
       try {
         for (const id of clients.keys()) releaseClient(id);
         try {
-          await desktop?.close();
-          await host?.close();
+          try {
+            await ingress?.stop(true);
+          } finally {
+            await desktop?.close();
+          }
         } finally {
-          await server?.stop(true);
+          await host?.close();
         }
       } finally {
         try {
-          if (readDaemon(directory).epoch === endpoint.epoch)
-            rmSync(endpointFile(directory), { force: true });
-        } catch {
-          /* Not our metadata. */
+          await server?.stop(true);
+        } finally {
+          try {
+            if (readDaemon(directory).epoch === endpoint.epoch)
+              rmSync(endpointFile(directory), { force: true });
+          } catch {
+            /* Not our metadata. */
+          }
+          if (socketDirectory) rmSync(socketDirectory, { recursive: true, force: true });
+          unlock();
+          resolveStopped();
         }
-        if (socketDirectory) rmSync(socketDirectory, { recursive: true, force: true });
-        unlock();
-        resolveStopped();
       }
     })());
   };
   try {
     refreshStableCli();
-    host = createExecutionOwner({ ...options, mode: "daemon", emit });
+    host = createExecutionOwner({ ...options, mode: "daemon", emit, routineIngress });
     ({ runtime, terminal, control } = host);
     desktop = new DesktopGateway(host, directory);
     server = Bun.serve({
@@ -301,6 +313,15 @@ export async function startDaemon(
       temporary = `${file}.${endpoint.epoch}.tmp`;
     writeFileSync(temporary, JSON.stringify(endpoint), { flag: "wx", mode: 0o600 });
     renameSync(temporary, file);
+    if (routineIngress) {
+      const jobs = runtime.jobs;
+      const state = runtime.state;
+      ingress = startRoutineIngress(
+        routineIngress,
+        (id, trigger) => state.webhookKey(id, trigger),
+        (id, delivery) => jobs.deliver(id, delivery),
+      );
+    }
     host.restore();
     return { endpoint, runtime, control, terminal, emit, close, stopped };
   } catch (error) {

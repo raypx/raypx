@@ -10,12 +10,20 @@ import { EmptyState } from "@raypx/ui/empty-state";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useFormatter } from "@raypx/i18n/browser";
 import type { RootGrant } from "@raypx/contracts/local";
-import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/core/jobs";
+import {
+  fileJobIntervals,
+  githubJobEvents,
+  nextJobRuns,
+  type JobDefinition,
+  type JobInput,
+  type JobRun,
+} from "@raypx/core/jobs";
 import { LocalJobForm } from "./local-form.js";
 import { LocalJobHistory } from "./local-history.js";
 import { LocalJobList } from "./local-list.js";
 import { localRequest, onLocalEvent } from "../../lib/desktop.js";
 import { Link } from "@tanstack/react-router";
+import { LocalJobTriggers } from "./local-triggers.js";
 
 export function LocalJobsPage({
   data,
@@ -45,7 +53,8 @@ export function LocalJobsPage({
   const [status, setStatus] = useState("all");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<JobDefinition | null | false>(false);
-  const [action, setAction] = useState("directory.scan");
+  const [triggerJob, setTriggerJob] = useState<JobDefinition | null>(null);
+  const [action, setAction] = useState<JobInput["action"]["type"]>("directory.scan");
   const [selectedRoot, setRootId] = useState<string | null>(null);
   const [association, setAssociation] = useState(projectId ?? "");
   const rootId = selectedRoot ?? roots[0]?.id ?? null;
@@ -65,6 +74,7 @@ export function LocalJobsPage({
     setHistory(null);
   }
   function edit(job: JobDefinition | null) {
+    setTriggerJob(null);
     setEditing(job);
     setAction(job?.action.type ?? "directory.scan");
     setRootId(
@@ -81,45 +91,101 @@ export function LocalJobsPage({
     const formData = new FormData(event.currentTarget);
     const value = (key: string) => formText(formData, key).trim();
     try {
-      nextJobRuns({ cron: value("cron"), timezone: value("timezone") });
+      if (formData.has("cron")) nextJobRuns({ cron: value("cron"), timezone: value("timezone") });
     } catch {
       event.currentTarget.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
       return;
     }
-    let input: JobInput;
-    try {
-      const args: unknown = JSON.parse(value("args") || "[]");
-      if (!Array.isArray(args) || args.some((entry) => typeof entry !== "string"))
-        throw new Error("arguments");
-      input = {
-        ...(association ? { projectId: association } : {}),
-        name: value("name"),
-        cron: value("cron"),
-        timezone: value("timezone"),
-        enabled: editing ? editing.enabled : true,
-        action:
-          action === "directory.scan"
-            ? { type: "directory.scan", rootId: value("rootId"), path: value("path") }
-            : {
-                type: "command.run",
-                command: {
-                  executable: value("executable"),
-                  args,
-                  cwd: value("cwd"),
-                  timeoutMs: 600000,
-                },
-              },
-      };
-    } catch {
-      setError(commandText("invalidArguments"));
-      return;
+    let jobAction: JobInput["action"];
+    switch (action) {
+      case "directory.scan":
+        jobAction = { type: action, rootId: value("rootId"), path: value("path") };
+        break;
+      case "agent.run": {
+        if (!roots.some((root) => root.id === association)) {
+          setError(t("local.chooseProject"));
+          return;
+        }
+        const prompt = value("prompt");
+        if (!prompt || prompt.length > 32_000) {
+          setError(t("local.invalidPrompt"));
+          return;
+        }
+        jobAction = { type: action, prompt };
+        break;
+      }
+      case "command.run":
+        try {
+          const args: unknown = JSON.parse(value("args") || "[]");
+          if (!Array.isArray(args) || args.some((entry) => typeof entry !== "string"))
+            throw new Error("arguments");
+          jobAction = {
+            type: action,
+            command: {
+              executable: value("executable"),
+              args,
+              cwd: value("cwd"),
+              timeoutMs: 600_000,
+            },
+          };
+        } catch {
+          setError(commandText("invalidArguments"));
+          return;
+        }
+        break;
     }
+    const triggers: NonNullable<JobInput["triggers"]> = {};
+    if (action === "agent.run") {
+      if (formData.has("webhook")) triggers.webhook = true;
+      if (value("emailSender")) triggers.email = { sender: value("emailSender") };
+      if (formData.has("github")) {
+        const repository = value("githubRepository");
+        const events = githubJobEvents.filter((kind) => formData.has(kind));
+        if (!/^[a-z0-9-]+\/[a-z0-9_.-]+$/i.test(repository) || !events.length) {
+          setError(t("local.invalidGitHub"));
+          return;
+        }
+        triggers.github = { repository, events };
+      }
+      if (formData.has("files")) {
+        const path = value("watchPath").replaceAll("\\", "/");
+        const intervalMinutes = fileJobIntervals.find(
+          (interval) => String(interval) === value("watchInterval"),
+        );
+        if (
+          !intervalMinutes ||
+          path.startsWith("/") ||
+          path.includes(":") ||
+          path.includes("\0") ||
+          path.split("/").includes("..")
+        ) {
+          setError(t("local.invalidWatchPath"));
+          return;
+        }
+        triggers.files = { path, intervalMinutes };
+      }
+      if (!formData.has("cron") && !Object.keys(triggers).length) {
+        setError(t("local.invalidTrigger"));
+        return;
+      }
+    }
+    const input: JobInput = {
+      ...(association ? { projectId: association } : {}),
+      name: value("name"),
+      ...(formData.has("cron") ? { cron: value("cron"), timezone: value("timezone") } : {}),
+      ...(Object.keys(triggers).length ? { triggers } : {}),
+      enabled: editing ? editing.enabled : true,
+      action: jobAction,
+    };
     setBusy(true);
     setError("");
     try {
-      if (editing) await localRequest("jobs.update", { ...input, id: editing.id });
-      else await localRequest("jobs.create", input);
+      const saved = editing
+        ? await localRequest("jobs.update", { ...input, id: editing.id })
+        : await localRequest("jobs.create", input);
       setEditing(false);
+      if (saved.triggers?.webhook || saved.triggers?.email || saved.triggers?.github)
+        setTriggerJob(saved);
       await refresh();
     } catch {
       setError(c("error"));
@@ -154,6 +220,7 @@ export function LocalJobsPage({
     try {
       await localRequest("jobs.delete", { id: job.id });
       if (history?.job.id === job.id || historyTarget.current?.id === job.id) closeHistory();
+      if (triggerJob?.id === job.id) setTriggerJob(null);
       await refresh();
     } catch {
       setError(c("error"));
@@ -181,7 +248,8 @@ export function LocalJobsPage({
       const job = historyTarget.current;
       if (
         job &&
-        ((event.event === "job.finished" && event.data.jobId === job.id) ||
+        (((event.event === "job.finished" || event.event === "job.started") &&
+          event.data.jobId === job.id) ||
           (event.event === "engine.status" && event.data.status === "ready"))
       )
         void showHistory(job);
@@ -250,6 +318,7 @@ export function LocalJobsPage({
       )}
       {editing !== false && (
         <LocalJobForm
+          key={editing?.id ?? "new"}
           editing={editing}
           busy={busy}
           roots={roots}
@@ -291,6 +360,14 @@ export function LocalJobsPage({
           onToggle={(job) => void update(job)}
           onEdit={edit}
           onRemove={(job) => void remove(job)}
+          onTriggers={setTriggerJob}
+        />
+      )}
+      {triggerJob && desktopAvailable && (
+        <LocalJobTriggers
+          key={triggerJob.id}
+          job={triggerJob}
+          onClose={() => setTriggerJob(null)}
         />
       )}
       {dialog}

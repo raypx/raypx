@@ -10,6 +10,7 @@ import { LocalTerminalControl } from "./daemon/terminal-control.js";
 import type { HostVault } from "./daemon/vault.js";
 import { backgroundFailure as reportBackgroundFailure } from "./background.js";
 import { LocalError } from "./errors.js";
+import type { RoutineIngressSettings } from "./jobs/ingress.js";
 
 /** Shared execution, terminal and cloud ownership behind each local transport. */
 export function createHost(options: {
@@ -21,6 +22,7 @@ export function createHost(options: {
   recordDiagnostic?: RecordDiagnostic;
   agentExecutables?: Partial<Record<AgentProvider, string>>;
   vault?: HostVault;
+  routineIngress?: RoutineIngressSettings | undefined;
 }) {
   let control: DaemonControl | undefined;
   const backgroundFailure = reportBackgroundFailure(`${options.owner}.background`);
