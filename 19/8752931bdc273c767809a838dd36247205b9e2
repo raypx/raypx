@@ -1,0 +1,150 @@
+docs/architecture/domain.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 61-67
+apps/api/tests/postgres/node/replies.test.ts
+  s_dda1ab33da75c1::t_f08d4f011e3dc6 1-3,15-23,26-35,40,57-58,62-66,74,80-85,99,104,125-130,135-138,143-145,148-151,155-157,161-166,169-173,184,189-190,194-195,199-200,224,279
+  s_dda1ab33da75c1::t_577f6b26f82bc9 4-14,24-25,36-39,41-56,59-61,67-73,75-79,86-98,100-103,131-134,139-142,146-147,152-154,158-160,167-168,174-183,185-188,191-193,196-198,201,213-214,223,225,234
+  s_dda1ab33da75c1::t_82bac3f00ce61c 105-124,235-278
+  s_dda1ab33da75c1::t_5628f4ecc9b299 202-212,215-222,226-233
+packages/agents/src/server.ts
+  s_dda1ab33da75c1::t_b025d14cde995d 18-19,26-27
+docs/architecture/events.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 79-80,90-94,97,99,130-156
+apps/api/src/conversations/stream.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 11-15,207-208,218-221,231-236
+  s_dda1ab33da75c1::t_dd49d0d5ccc52e 25-26,44,53,62-66,125,222-224,226-230,237-238,245-246
+  s_dda1ab33da75c1::t_739f4eb95d587d 27,225
+packages/core/AGENTS.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 15
+apps/api/src/conversations/models.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 5-63
+  s_dda1ab33da75c1::t_7a309cbb99212a 1-4,64-69
+packages/contracts/AGENTS.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 16-18
+.env.example
+  s_dda1ab33da75c1::t_8e3d19afb94d12 48-51
+apps/api/src/runtime/shared.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 150-153,155-157
+  s_dda1ab33da75c1::t_a9f0e8d2f75576 154
+  s_dda1ab33da75c1::t_d5a0c3a508bb3e 1-2,49,158-159,162
+apps/api/tests/helpers/replies.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 1-137
+  s_dda1ab33da75c1::t_0001c7b83178c8 138
+packages/agents/src/conversations.ts
+  s_dda1ab33da75c1::t_b025d14cde995d 15,23-24,28,49-58,66
+  s_dda1ab33da75c1::t_577f6b26f82bc9 2-10,59-64
+  s_dda1ab33da75c1::t_c24b1a007e8430 65
+apps/api/src/routers/rpc/spaces.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 40-48
+apps/api/src/logging/events.ts
+  s_dda1ab33da75c1::t_a9f0e8d2f75576 22-24
+  s_dda1ab33da75c1::t_577f6b26f82bc9 61-70
+  s_dda1ab33da75c1::t_064d028d5c0981 25
+packages/contracts/src/conversation.test.ts
+  s_dda1ab33da75c1::t_7bd29f2c595fdb 2-7,43-71
+  s_dda1ab33da75c1::t_7b9f589f1e711f 72
+packages/core/src/conversation.test.ts
+  s_dda1ab33da75c1::t_7bd29f2c595fdb 6,51-107
+packages/agents/package.json
+  s_dda1ab33da75c1::t_e750f50bcc8949 16
+docs/development/deployment.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 47-50
+apps/api/AGENTS.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 25-31
+packages/agents/AGENTS.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 20-27
+deploy/compose.yaml
+  s_dda1ab33da75c1::t_8e3d19afb94d12 69-70
+packages/ai/AGENTS.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 5,11
+apps/api/tests/helpers/conversations.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 101-103,125-129
+  s_dda1ab33da75c1::t_59174f1b3cfac8 130
+apps/api/tests/postgres/node/conversation.test.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 201-207,211
+  s_dda1ab33da75c1::t_af44bc8d064e76 198,220
+apps/api/tests/helpers/model.ts
+  s_dda1ab33da75c1::t_6fa09dd9e8d25d 11,55-56
+  s_dda1ab33da75c1::t_577f6b26f82bc9 21-50,54,60,62-69,71
+  s_dda1ab33da75c1::t_2ae1693d2fa82c 1-10,12-20,51-53,57-59,61,70,72-79
+packages/agents/src/runner.ts
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 72,88,128,194,210,221-224
+  s_dda1ab33da75c1::t_6fa09dd9e8d25d 16,186-193,195
+  s_dda1ab33da75c1::t_dd49d0d5ccc52e 1-2,9,15,17,22-35,39-51,56-63,68,71,79-87,89-97,102-104,115,124-127,134-135,142-151,159-160,162-169,177-178,211-212,214-217,225-228,240-243
+  s_dda1ab33da75c1::t_20041be31da105 161,179
+  s_dda1ab33da75c1::t_577f6b26f82bc9 3-8,10-14,18-21,36-38,52-55,64-67,69-70,73-78,98-101,105-114,116-123,129-133,136-141,152-158,170-175,180-185,203,219-220,229-239
+  s_dda1ab33da75c1::t_7bd29f2c595fdb 176,197-201,204-207,209
+  s_dda1ab33da75c1::t_aeb2cdf098e981 196,202,208,213,218
+apps/api/src/conversations/replies.test.ts
+  s_dda1ab33da75c1::t_82bac3f00ce61c 198-211
+  s_dda1ab33da75c1::t_577f6b26f82bc9 12-14,19-24,27-31,33-37,42-59,71-72,79-80,91-94,101-105,108-110,122-123,131-132,140-142,148-156,165-169,174-176,185-187,193-196
+  s_dda1ab33da75c1::t_6fa09dd9e8d25d 212-221
+  s_dda1ab33da75c1::t_20041be31da105 1-11,15-17,32,39-41,60-67,69-70,73-78,81-85,87-90,95-100,106,111-121,124-130,133-139,143-147,157-164,170-173,177-183,189-192,197
+  s_dda1ab33da75c1::t_5b5b9e0a79b552 18,25-26,38,68,86,107,184,188
+apps/api/package.json
+  s_dda1ab33da75c1::t_577f6b26f82bc9 32
+packages/core/src/conversation.ts
+  s_dda1ab33da75c1::t_884904687723fc 2,26-28,37,59-78,102-110
+  s_dda1ab33da75c1::t_577f6b26f82bc9 29-36,82,85-96
+  s_dda1ab33da75c1::t_7bd29f2c595fdb 38-58
+  s_dda1ab33da75c1::t_85f08324e5d175 111
+apps/api/tests/integration/conversation-stream.test.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 15-17,42-51,150-153,161-166,177-184
+  s_dda1ab33da75c1::t_f08d4f011e3dc6 2-3,33,39-41,52,144-149,154-160,167-176,185-188
+  s_dda1ab33da75c1::t_f4f7a6502e8fcd 189
+packages/database/AGENTS.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 24-27
+docs/roadmap.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 6-8
+apps/api/src/logging/policy.ts
+  s_dda1ab33da75c1::t_a9f0e8d2f75576 6
+deploy/.env.example
+  s_dda1ab33da75c1::t_8e3d19afb94d12 18-21
+docs/architecture/execution.md
+  s_dda1ab33da75c1::t_1d7efc1dcab84e 6-62
+packages/contracts/src/conversation.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 19-24
+  s_dda1ab33da75c1::t_7bd29f2c595fdb 66-69
+  s_dda1ab33da75c1::t_884904687723fc 6-9,37-38,43
+  s_dda1ab33da75c1::t_d48b7bceae5b3e 65
+packages/database/src/schema.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 167-256,286-313
+  s_dda1ab33da75c1::t_884904687723fc 257,264-266,726-727
+  s_dda1ab33da75c1::t_91987349515f68 267-268
+packages/agents/src/server/conversations.ts
+  s_dda1ab33da75c1::t_577f6b26f82bc9 27-31,55-65,112-117,119-124,130-133,142-145,148-152,161-170,172-183,185-189,192-221,223-238,245-253,260-263,282-290,333-350,377-382,397-398,403-407,431-444
+  s_dda1ab33da75c1::t_5628f4ecc9b299 266-281
+  s_dda1ab33da75c1::t_b025d14cde995d 5-7,19-22,53-54,66-73,77,110-111,118,125-129,134-136,138-141,146-147,153-160,171,184,190-191,239-244,254-256,259,265,291-294,332,351,367,369,394-396,399,401-402,409-411
+  s_dda1ab33da75c1::t_f73966f8d93561 222,257-258,264,383-384,400
+apps/api/src/env.contract.ts
+  s_dda1ab33da75c1::t_fcdc24f38c78da 5-6
+apps/api/src/env.ts
+  s_dda1ab33da75c1::t_0175f0d839dfde 7-8
+apps/api/src/runtime/server.ts
+  s_dda1ab33da75c1::t_f45694ab0e37c7 73
+bun.lock
+  s_dda1ab33da75c1::t_3e3ce66f8388d9 35,354
+docs/architecture/README.md
+  s_dda1ab33da75c1::t_517cbb63610e1a 12-17
+packages/agents/tests/postgres/conversation-events.test.ts
+  s_dda1ab33da75c1::t_f1a930401be4ca 67,93,96,99,101,104,107,154,177
+packages/database/drizzle-foundation/20261113131347_conversation-runs/migration.sql
+  s_dda1ab33da75c1::t_9e7aeab3c18aeb 1-53
+packages/database/drizzle-foundation/20261113131347_conversation-runs/snapshot.json
+  s_dda1ab33da75c1::t_0bffe466fd7eda 1-1214
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "198752931bdc273c767809a838dd36247205b9e2",
+  "prompts": {},
+  "sessions": {
+    "s_dda1ab33da75c1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d502-672f-7eb2-a6ab-fb468a736787",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
