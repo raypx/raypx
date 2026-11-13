@@ -1,0 +1,33 @@
+packages/agents/src/client/computer.tsx
+  s_cb023ecd10024e::t_897002c5f1a241 64
+packages/agents/src/client/computer-indicator.component.test.tsx
+  s_cb023ecd10024e::t_c4dd6ab9291562 1
+  s_cb023ecd10024e::t_d406a4bf98922d 46-51
+packages/agents/src/client/workspace.component.test.tsx
+  s_cb023ecd10024e::t_5e383700b825db 1089-1099,1101-1145,1147-1172,1174-1175
+  s_cb023ecd10024e::t_c4dd6ab9291562 1082,1084,1086,1088,1146,1173
+apps/web/e2e/agents.spec.ts
+  s_cb023ecd10024e::t_5e383700b825db 27-29,36-37
+  s_cb023ecd10024e::t_4a8a8a7b95d64b 1,6-26,30-35,38-52,101-111,121-134
+packages/agents/src/client/conversation.tsx
+  s_cb023ecd10024e::t_897002c5f1a241 292,295,297,302,306,406,408,481
+  s_cb023ecd10024e::t_5e383700b825db 409-412,414-415,417-454
+packages/agents/src/client/workspace.tsx
+  s_cb023ecd10024e::t_897002c5f1a241 252,359,363,434-435
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "474df31cc16f892b4c7fb8f3a7e736d06ed4be69",
+  "prompts": {},
+  "sessions": {
+    "s_cb023ecd10024e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d59f-c36a-79b1-87d8-68f9443fce98",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
