@@ -1,0 +1,78 @@
+packages/providers/src/pi/adapter.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 36,43,49-57,74,77
+apps/cli/src/runtime/agents/harness/execution.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 1,64,268,281-313,322,324,326-327,561-585,602-606
+packages/core/src/tasks.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 89-99
+apps/cli/AGENTS.md
+  s_652cc4f0b5d7e1::t_26410db1423362 109-110
+packages/providers/src/pi/context.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 165-167
+apps/cli/src/runtime/agents/domain/state.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 2,20
+apps/cli/src/runtime/agents/infrastructure/projects.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 9-10,48-49
+packages/contracts/src/client.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 16,127
+apps/cli/src/runtime/agents/application/coordinator.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 6,9,15,42-45,218-224,245-296,332-345,350,360,411-415
+apps/cli/src/runtime/agents/infrastructure/review.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 1-90
+packages/tasks/src/client/task-review.tsx
+  s_652cc4f0b5d7e1::t_26410db1423362 1-62
+docs/roadmap.md
+  s_652cc4f0b5d7e1::t_26410db1423362 21-25
+packages/tasks/src/model/port.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 7,23
+packages/providers/src/core/index.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 7
+apps/cli/src/runtime/host.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 76-79
+packages/tasks/locales/zh/tasks.json
+  s_652cc4f0b5d7e1::t_db6b56e3005b5c 60-66
+packages/providers/src/pi/runner.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 38-43,64,69,118-137,143,187-188,229,249,251,257-324,339,451-465,470-475,487-492,498,550-551,569
+apps/cli/tests/integration/runtime/agents/pi-managed.test.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 5,9-10,374-472
+  s_652cc4f0b5d7e1::t_fa0ae7523aeb15 473
+apps/cli/src/commands/tasks.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 41,112-118
+apps/cli/src/runtime/router.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 58
+apps/cli/src/runtime/agents/index.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 54,141-162,410-412
+docs/development/ai.md
+  s_652cc4f0b5d7e1::t_26410db1423362 343-358
+packages/providers/src/core/transport.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 24
+apps/cli/src/runtime/agents/application/queries.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 69
+apps/cli/src/runtime/agents/harness/ports.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 46-47
+packages/tasks/src/client/task-detail.tsx
+  s_652cc4f0b5d7e1::t_26410db1423362 7,260
+apps/cli/src/runtime/agents/pi/host.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 1,47,57-85,90,94-96,100-105,122-126,163,177
+apps/cli/src/runtime/agents/pi/ports.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 1,11-12
+apps/cli/src/runtime/agents/pi/tools.ts
+  s_652cc4f0b5d7e1::t_26410db1423362 130,141-143
+packages/tasks/locales/en/tasks.json
+  s_652cc4f0b5d7e1::t_db6b56e3005b5c 60-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "bea2a4ce6b4ff3ea45fb16b12b527e053c88cad2",
+  "prompts": {},
+  "sessions": {
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
