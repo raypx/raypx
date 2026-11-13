@@ -1,0 +1,32 @@
+docs/architecture/README.md
+  s_f9cc0d01f49051::t_288c723f36d02b 342-347,393
+GLOSSARY.md
+  s_f9cc0d01f49051::t_1c8c633e46028b 23-30
+docs/roadmap.md
+  s_f9cc0d01f49051::t_56cb1bc71dba1e 143-181,184,206,222-226,240-244,246,248-253,261-268,271-272,274-277,279
+  s_f9cc0d01f49051::t_1c8c633e46028b 14-24
+  s_f9cc0d01f49051::t_288c723f36d02b 296
+docs/README.md
+  s_f9cc0d01f49051::t_1c8c633e46028b 23
+docs/architecture/0065-spaces-and-sandbox-computers.md
+  s_f9cc0d01f49051::t_1c8c633e46028b 87-91
+  s_f9cc0d01f49051::t_8e705d4c31d129 1-86,92-173
+PRODUCT.md
+  s_f9cc0d01f49051::t_288c723f36d02b 49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "25d9e4aeff2b36cb19db5e012107dd5468796a80",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
