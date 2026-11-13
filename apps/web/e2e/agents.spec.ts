@@ -27,6 +27,7 @@ test(
       "browser-fixture",
     );
     await dialog.getByRole("button", { name: "Create Agent", exact: true }).click();
+    await expect(page.getByRole("button", { name: /^Computer:/ })).toBeVisible();
     await page.getByRole("textbox", { name: "Message", exact: true }).fill(prompt);
     await page.getByRole("button", { name: "Send", exact: true }).click();
     await expect(page.getByText(prompt, { exact: true })).toHaveCount(1);

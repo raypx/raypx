@@ -34,6 +34,7 @@ export {
   type AgentsPageState,
 } from "./model/page.js";
 export type {
+  ComputerPort,
   ConversationSelection,
   ConversationOwner,
   ConversationSnapshot,
@@ -46,3 +47,4 @@ export type {
   AgentConversationView,
   OfferedModel,
 } from "./model/port.js";
+export { ComputerController, type ComputerView } from "./model/computer.js";

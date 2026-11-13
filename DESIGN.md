@@ -34,7 +34,8 @@ gutters. Sidebar navigation rows share a 36px minimum height and
 20px icons; touch navigation keeps a 44px minimum.
 
 Agents is the signed-in home in Web and Desktop. Web keeps its public landing
-page at `/`; account details live at `/account`. Guests sign in before opening
+page at `/`; account details use the footer menu in Web and `/account` on Desktop.
+Guests sign in before opening
 conversations; there is no guest task editor or draft handoff. Preserve validated
 return destinations for account and administration flows. Conversations need a
 reachable server. The earlier CLI/native runtime remains during the transition,
@@ -63,7 +64,9 @@ motion. Conversation examples do not autoplay. Authentication and legal pages
 render without entrances or loops. Label sample content and never invent usage,
 customer results, testimonials or pricing.
 
-Both sidebars lead to Agents and retain reachable account/security, device
+Both sidebars put the sole Space switcher in their header and make Create Agent
+the primary action. An empty Agent list offers one clear first-Agent action.
+They lead to Agents and retain reachable account/security, device
 preferences and permission-filtered administration/configuration. Retained Memory
 views manage the earlier device/account records; do not imply they are Agent/Space
 memory. Remove navigation for features whose required pages are gone. Do not show
@@ -136,7 +139,12 @@ accurately, with explicit stop and retry editing. Announce Run lifecycle changes
 without announcing every streamed token. A failed-Run retry restores text for a
 new explicit Send; an uncertain delivery retains its receipt identity.
 
-Phase 1 has no tools, computers, approval cards or recovery. Do not add ornamental
+The initial Computer slice adds a compact conversation-header state indicator,
+opening a sheet on narrow screens and a side panel on wide screens. Show lifecycle
+state, failure reasons and guarded start/stop controls; confirm Stop. An
+unconfigured server shows one quiet explicit state with no controls. Keep future
+files, output and approvals out of the panel until implemented.
+Phase 1 replies have no tools, approval cards or recovery. Do not add ornamental
 activity, fake progress or controls for later capabilities. When those phases
 arrive, chat keeps useful progress and results while tool lifecycle belongs in the
 activity view. Keep failures, unavailable states and uncertain outcomes explicit.

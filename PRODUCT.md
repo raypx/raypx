@@ -34,8 +34,10 @@ PostgreSQL is the one authority for Agents, conversations, Runs and events. Clie
 express intent and render the backend's state. Pi runs inside the backend for
 phase 1 replies; it uses deployment-configured models and credentials. The target
 keeps the Agent runtime and credentials outside computers and uses provider-neutral
-ports for optional services. See the [architecture](docs/architecture/README.md)
-and [roadmap](docs/roadmap.md).
+ports for optional services. The Computer port and providers live in
+`@raypx/providers`; `@raypx/computers` owns Space-scoped lifecycle and persistence,
+and `infra/sandbox` owns the private Docker supervisor. See the
+[architecture](docs/architecture/README.md) and [roadmap](docs/roadmap.md).
 
 Conversation content is stored on the server. A self-hosted deployment keeps that
 content under the operator's control. The earlier device-owned runtime remains in
@@ -63,12 +65,20 @@ acknowledged reconnect/replay, streamed reply text, committed reply segments,
 queued Runs and explicit stop. Models come from the backend's offered catalog;
 an unavailable model or missing configuration is an explicit state.
 
-Replies execute in one API-enabled process. There are no tools, attempts, leases,
-fencing, steering, automatic retries or crash recovery. A second message queues
-another Run. Closing a client does not own or cancel a backend reply, but a backend
-crash can leave work unfinished. Durable execution is phase 2, not a phase 1 claim.
+Replies execute in one API-enabled process. Runs have no tools, attempts, execution
+leases, fencing, steering, automatic retries or crash recovery. A second message
+queues another Run. Closing a client does not own or cancel a backend reply, but
+a backend crash can leave work unfinished. Durable execution is phase 2, not a
+phase 1 claim.
 
-Computers, sandbox tools, approvals/effects, routines, Agent/Space memory, maintained
+The initial Computer slice lets members start and stop their Space's team computer
+from the Agent interface. A compact header indicator opens its state and controls;
+stop requires confirmation. State follows backend events and refreshes on reconnect.
+A server without a configured provider shows an explicit unavailable state with
+no controls. Computer lifecycle leases do not make Runs durable, and no Agent tool
+or approval workflow uses the computer yet.
+
+Agent tools, approvals/effects, routines, Agent/Space memory, maintained
 Pages, model/app connections, MCP, skills, invitations, group conversations,
 delegation, the device connector and full Mobile workflows are later phases.
 Their target designs do not make them available in the current Agents workspace.

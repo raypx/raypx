@@ -16,6 +16,9 @@ account, Space and Conversation; restoration never sends. The native
 `eventsOpen/Read/Send/Close` bridge reaches only the configured origin's `/events`.
 The daemon owns cookies; the renderer applies and ACKs events. Browser previews
 use the authenticated browser WebSocket.
+The shared Space menu and New Agent action occupy sidebar slots. The conversation
+header opens the shared team-computer lifecycle panel; its API reads and commands
+use the existing daemon-authenticated client without exposing credentials.
 
 The phase 1 renderer has no project/session editor, Waiting inbox, Automations,
 Files, Terminal or local onboarding screen. Their native/CLI implementations remain

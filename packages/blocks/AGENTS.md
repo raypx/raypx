@@ -37,6 +37,9 @@ Code outside `src/components/` stays private.
   `ShellToolbar` (start) and `ShellActions` (end) portal page context, tabs, actions and
   scope switches into the top bar; a start toolbar replaces the page title. Outside an
   AppShell they render inline, so isolated views and tests keep their controls.
+  `ShellSidebarHeader` portals the feature-owned Space control below the brand;
+  `ShellPrimaryAction` places its primary action below that control in either frame.
+  Applications and features own their data, accessible names and collapsed-rail content.
   `ShellProjectToolbar` groups a project and optional computer label with the
   application's tool links and back action. The application owns link selection.
   `layout` selects the page template that owns content width, gutters and vertical

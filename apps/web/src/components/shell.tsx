@@ -112,7 +112,6 @@ export function WebShell() {
         brand={{ to: "/agents", label: siteName }}
         actions={actions}
         navigation={[navigation.filter((item) => canAccessWebPage(access, item.to))]}
-        navigationLabels={[c("workspace")]}
         secondaryNavigation={secondaryNavigation.filter((item) =>
           canAccessWebPage(access, item.to),
         )}

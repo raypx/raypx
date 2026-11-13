@@ -18,10 +18,11 @@ uses Tailwind utilities, translated copy and icons from `@raypx/icons`.
   the existing ports and authoritative request state.
 - Applications own routes, authentication/session loading and platform adapters.
 
-The additive `/agents` workspace follows the same split: `@raypx/agents/model`
+The `/agents` workspace follows the same split: `@raypx/agents/model`
 owns page selection, event/cursor convergence and injected command, stream and
 draft ports; `/client` owns the shared Space/Agent forms and bounded transcript.
 The shell renders one title. The directory and conversation fill the tool layout;
+the sidebar header owns the sole Space switcher and the primary Create Agent action.
 Agent rows truncate names, show models and keep actions in a row menu. Narrow
 layouts use Back navigation. The transcript scrolls independently of its growing
 composer, follows output only near the bottom and offers a jump back to latest.
@@ -37,6 +38,13 @@ retry, reconnect/snapshot recovery and stale account completions. The Web
 streaming before commit and identical history after reload.
 Native Mobile uses a separate RN implementation; only pure tokens and brand
 assets cross from UI into Native.
+
+The conversation header's compact computer indicator opens a narrow-screen sheet
+or wide-screen side panel. Its model consumes the Space-scoped lifecycle contracts,
+applies `computer.state` events and refreshes on reconnect. Show real lifecycle
+state and failure reasons, guard repeated activation and confirm Stop. An
+unconfigured provider has no controls. The panel contains no placeholder files,
+command output or approvals; Agent tools and approvals remain unimplemented.
 
 ## Authentication composition
 
@@ -58,7 +66,7 @@ acceptance.
 ## Installable Web app
 
 On HTTPS, browsers that support PWA installation can add Raypx from the browser
-menu or install control. The installed window opens `/projects` and uses the
+menu or install control. The installed window opens `/agents` and uses the
 existing Web sign-in and preference flows. Apple devices use the same Raypx mark
 through the touch icon.
 
@@ -71,7 +79,7 @@ respects reduced motion. [ReUI Empty](https://reui.io/docs/empty) ·
 The production service worker returns the current document from the network.
 If a navigation cannot reach the network, it displays a standalone retry page
 in the browser's language. The worker keeps Cache Storage empty and leaves API
-requests, assets and draft storage to their existing owners. Web project access
+requests, assets and draft storage to their existing owners. Web conversation access
 requires a connection.
 
 ## Adapting external source

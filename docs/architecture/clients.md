@@ -1,7 +1,8 @@
 # Clients
 
-Web, Desktop and Mobile show the same Agents and the same state through shared
-contracts. A workflow works on every client or degrades for a stated reason.
+Web and Desktop show the same Agents and state through shared contracts. Mobile
+shares Core and contracts; its Agent views remain roadmap work. An implemented
+workflow works on each client or degrades for a stated reason.
 
 ## Shared layers
 
@@ -16,16 +17,38 @@ contracts. A workflow works on every client or degrades for a stated reason.
   Restoring a draft never sends it.
 
 `@raypx/agents/model` owns Space/Agent page selection, the conversation projection,
-the applied cursor and injected read, command, stream and draft ports.
+the applied cursor, Space computer state and injected read, command, stream and
+draft ports.
 `@raypx/agents/client` adapts them to React for `/agents`, the signed-in home in
 Web and Desktop. Project/session pages, Waiting, New session and guest task drafts
 are removed, together with dependent Automations and Desktop project tools.
 Account/security, administration/configuration, authentication, public Web pages,
 device preferences and the standalone earlier Memory library remain. That Memory
 is device/account-owned; phase 1 replies do not recall it.
-The Space picker appears after a second Space exists; a labelled New Space action
-is always available. Agent forms use the backend's offered model names and show
-an explicit unavailable state when that catalog is empty.
+The sidebar header owns Space selection and its New Space menu. An account without
+a Space first gets a New Space action. Navigation
+contains Agents, the retained Memory view, account controls and administration
+for administrators. The primary action creates an Agent; a first-run empty state
+offers one clear action to create the first Agent. Search and keyboard shortcuts
+target only available destinations. Agent forms use the backend's offered model
+names and show an explicit unavailable state when that catalog is empty.
+
+The conversation header has a compact computer-state indicator. It opens a sheet
+below 1280px and a side panel beside the conversation at wider widths.
+The panel shows the current Space's team computer: stopped, starting, running,
+stopping, failed with its reason, or not configured on this server. Start is
+available when stopped, failures offer retry, and Stop requires confirmation.
+Pending commands and lifecycle transitions disable controls and guard repeated
+activation. `not-configured` is a quiet explicit state without controls.
+
+Computer reads and commands use `computers.get/start/stop`. The model applies
+`computer.state` events, reads failure details through `get`, and refreshes on
+reconnect; changing Space discards
+the previous Space's state. The backend resolves current membership for every
+request. No provider credentials or execution port enter either renderer.
+The panel has structure for additional sections when implemented, with no empty
+files, output or approval placeholders. Agent tools and approvals are not yet
+implemented.
 
 Conversation history and its cursor live together in component memory. Reload
 starts from an authoritative snapshot; reconnect resumes the existing projection.
@@ -65,8 +88,8 @@ remote socket. Browser previews use the ordinary cookie-authenticated WebSocket.
 
 - The Expo app shares Core, contracts and message catalogs. It keeps its own
   Expo-supported React version.
-- Mobile covers conversations, approvals, routines and notifications first. A
-  workflow that is not available says so.
+- Mobile currently provides account/sign-in. Agent conversations, approvals,
+  routines and notifications remain roadmap work.
 - Mobile uses native controls for navigation, pickers and alerts.
 
 ## Interface rules

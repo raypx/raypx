@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
@@ -23,6 +23,7 @@ it("mounts the shared Agent workspace for a confirmed member without a deploymen
   expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
   expect(screen.queryByRole("link", { name: "New session" })).toBeNull();
   expect(screen.getByRole("link", { name: "Agents" })).toBeVisible();
+  expect(screen.queryByRole("group", { name: "Workspace" })).toBeNull();
 });
 
 it("does not mount private conversation reads while the session is unavailable", async () => {
@@ -31,4 +32,19 @@ it("does not mount private conversation reads while the session is unavailable",
   await page("/agents");
   expect(await screen.findByRole("alert")).toBeVisible();
   expect(mocks.agentsSpaces).not.toHaveBeenCalled();
+});
+
+it("searches only existing member destinations through the command shortcut", async () => {
+  signIn();
+  await page("/agents");
+  await screen.findByRole("heading", { name: "Agents", level: 1 });
+  fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+  const palette = within(await screen.findByRole("dialog", { name: "Search" }));
+  expect(palette.getByRole("option", { name: "Agents" })).toBeVisible();
+  expect(palette.getByRole("option", { name: "Settings" })).toBeVisible();
+  expect(palette.getByRole("option", { name: "Memory and templates" })).toBeVisible();
+  expect(
+    palette.queryByRole("option", { name: /Projects|Waiting|Automations|New session/ }),
+  ).toBeNull();
+  expect(palette.queryByRole("option", { name: "Administration console" })).toBeNull();
 });

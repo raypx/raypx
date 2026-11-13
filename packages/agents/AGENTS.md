@@ -1,9 +1,13 @@
 # @raypx/agents
 
 `/model` owns pure Space/Agent page selection, the conversation projection and its
-injected RPC, stream and draft ports. Applied state and cursor advance together;
+injected RPC, stream and draft ports. ComputerController owns the Space computer
+lifecycle projection, guarded commands and refreshes from events/reconnects. Applied state and cursor advance together;
 React lives only in `/client`. Web and Desktop consume that shared workspace. The shell owns its single title;
 list/detail panes fill the tool layout, with a scrolling transcript and fixed composer.
+Space selection and New Agent mount into sidebar slots. The conversation header
+opens the lifecycle-only computer panel: a sheet below 1280px, an inline side panel
+at wider widths. Stop requires confirmation; tools and approvals remain unimplemented.
 Model conversation rows keep reply identity/order stable from queue through commit.
 The client reuses Blocks Markdown, keeps reading anchors, and announces Run lifecycle
 changes only. Enter sends, Shift+Enter inserts a newline, and IME owns composition.
@@ -38,7 +42,7 @@ serializes each Agent's queued Runs. Stop commits cancellation before aborting;
 segment output and first-response time commit together. No tools, leases,
 attempts, retries or recovery exist yet. API owns credentials and configuration.
 Deletion still cascades synchronously; active Run status checks abort deleted work.
-Add resumable deletion before computers or stored objects become dependents.
+Computer owner references restrict deletion until a resumable workflow releases them.
 
 Use public workspace entries and `.js` relative specifiers. Unit tests live beside
 source. Run `bun run --cwd packages/agents check` and `test`. `test:postgres`

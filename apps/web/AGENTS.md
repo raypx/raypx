@@ -14,6 +14,9 @@ Waiting and Automations have been removed from this renderer. Do not restore the
   `@raypx/agents/model` owns selection and conversation state; `/client` renders it.
   Agent drafts stay scoped by origin, account, Space and conversation. Restoring
   drafts or uncertain-send receipts never sends a message automatically.
+  The shared workspace places its Space menu and New Agent action in sidebar slots;
+  Space selection has no second page control. Its conversation-header computer
+  indicator opens the shared lifecycle panel through the existing API client.
 - Memory still edits the earlier account reference library through the API. It has
   no project navigation and is not Agent/Space memory. That arrives in a later phase.
 - The `(app)` loader resolves account context through a router-owned QueryClient.
@@ -62,8 +65,8 @@ The public logo palette stays decorative. The workbench remains neutral.
 Auth uses one bordered 16px panel, a single column on narrow screens and numbered
 phase-1 product facts alongside it above 1024px. Shared Auth owns fields, errors,
 submission state and completion/recovery states. App layouts own gutters. Language
-switching preserves credentials and return destinations. Do not imply future
-computers, tools, approvals or durable Run recovery are already available.
+switching preserves credentials and return destinations. A Space's team computer
+can be started and stopped; Agent tools, approvals and durable Run recovery remain unavailable.
 
 ## Boundaries and persistence
 

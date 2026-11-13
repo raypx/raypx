@@ -1,5 +1,5 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ShellToolbar } from "@raypx/blocks/shell";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ShellToolbar, ShellSidebarHeader, ShellPrimaryAction } from "@raypx/blocks/shell";
 import { Avatar, AvatarFallback } from "@raypx/ui/components/ui/avatar";
 import { Empty, EmptyHeader, EmptyTitle, EmptyMedia } from "@raypx/ui/components/ui/empty";
 import { Alert, AlertDescription, AlertAction } from "@raypx/ui/components/ui/alert";
@@ -9,19 +9,22 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
 } from "@raypx/ui/components/ui/dropdown-menu";
 import { cn } from "@raypx/ui/lib/utils";
 import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
 import type { AgentInput } from "@raypx/core/agents";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { IconButton } from "@raypx/ui/icon-button";
-import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { AgentIcon } from "@raypx/icons/agent";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { DeleteIcon } from "@raypx/icons/delete";
 import { EditIcon } from "@raypx/icons/edit";
+import { FolderIcon } from "@raypx/icons/folder";
+import { ChevronsUpDownIcon } from "@raypx/icons/chevrons-up-down";
 import { PlusIcon } from "@raypx/icons/plus";
 import {
   applyAgents,
@@ -33,6 +36,7 @@ import {
   type AgentsWorkspacePort,
   type ConversationDraftStore,
   type ConversationPort,
+  type ComputerPort,
   type ConversationSocketPort,
 } from "../model.js";
 import { AgentForm } from "./agent-form.js";
@@ -69,7 +73,6 @@ function AgentsWorkspaceContents({
   drafts,
 }: AgentsWorkspaceProps) {
   const t = useTranslations("agents");
-  const id = useId();
   const [page, setPage] = useState(createAgentsPageState);
   const current = useRef(page);
   const mounted = useRef(true);
@@ -99,6 +102,14 @@ function AgentsWorkspaceContents({
       snapshot: (input) => client.conversations.snapshot(input),
       send: (input) => client.conversations.send(input),
       stop: (input) => client.conversations.stop(input),
+    }),
+    [client],
+  );
+  const computerPort = useMemo<ComputerPort>(
+    () => ({
+      get: (input) => client.computers.get(input),
+      start: (input) => client.computers.start(input),
+      stop: (input) => client.computers.stop(input),
     }),
     [client],
   );
@@ -242,33 +253,66 @@ function AgentsWorkspaceContents({
       <ShellToolbar>
         <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
       </ShellToolbar>
-      <header className="flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
-        {page.spaces.length > 1 && (
-          <Field orientation="horizontal" className="mr-auto w-auto min-w-0 flex-1">
-            <FieldLabel htmlFor={id} className="sr-only">
-              {t("space")}
-            </FieldLabel>
-            <SelectField
-              id={id}
-              value={page.spaceId ?? ""}
-              options={page.spaces.map(({ space }) => ({ value: space.id, label: space.name }))}
-              className="w-full max-w-64"
-              onValueChange={chooseSpace}
-            />
-          </Field>
-        )}
+      <ShellSidebarHeader>
         {(page.spaces.length > 0 || loading) && (
-          <IconButton label={t("newSpace")} onClick={() => setNewSpace(true)}>
-            <PlusIcon aria-hidden="true" />
-          </IconButton>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  aria-label={t("space")}
+                  disabled={loading}
+                  className="w-full min-w-0 justify-start sidebar-icon:justify-center sidebar-icon:px-0"
+                />
+              }
+            >
+              <FolderIcon aria-hidden="true" className="size-5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
+                {page.spaces.find(({ space }) => space.id === page.spaceId)?.space.name ??
+                  t("space")}
+              </span>
+              <ChevronsUpDownIcon
+                aria-hidden="true"
+                className="size-4 shrink-0 sidebar-icon:hidden"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-52">
+              {page.spaces.length > 1 && (
+                <>
+                  <DropdownMenuRadioGroup value={page.spaceId ?? ""} onValueChange={chooseSpace}>
+                    {page.spaces.map(({ space }) => (
+                      <DropdownMenuRadioItem key={space.id} value={space.id}>
+                        {space.name}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => setNewSpace(true)}>
+                  <PlusIcon aria-hidden="true" />
+                  {t("newSpace")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
-        {page.agents.length > 0 && (
-          <Button disabled={!page.spaceId || loading} onClick={() => setForm("new")}>
+      </ShellSidebarHeader>
+      {page.agents.length > 0 && (
+        <ShellPrimaryAction>
+          <Button
+            disabled={!page.spaceId || loading}
+            onClick={() => setForm("new")}
+            className="w-full min-w-0 sidebar-icon:px-0"
+            aria-label={t("newAgent")}
+            title={t("newAgent")}
+          >
             <AgentIcon data-icon="inline-start" aria-hidden="true" />
-            {t("newAgent")}
+            <span className="truncate sidebar-icon:hidden">{t("newAgent")}</span>
           </Button>
-        )}
-      </header>
+        </ShellPrimaryAction>
+      )}
       {failed && (
         <Alert>
           <AlertDescription>{t("directoryError")}</AlertDescription>
@@ -398,6 +442,7 @@ function AgentsWorkspaceContents({
                 key={JSON.stringify([accountId, origin, selected.conversation.id])}
                 item={selected}
                 port={conversationPort}
+                computerPort={computerPort}
                 socket={eventSocket}
                 drafts={draftStore}
                 origin={origin}

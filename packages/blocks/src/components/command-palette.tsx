@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogTitle } from "@raypx/ui/components/ui/dial
 export interface CommandItem {
   id: string;
   label: string;
-  /** Secondary text such as a session's project; the search matches it too. */
+  /** Secondary context; the search matches it too. */
   detail?: string | undefined;
   icon?: ReactNode;
   onSelect: () => void;
@@ -48,7 +48,7 @@ export function useCommandShortcut() {
 
 /**
  * A ⌘K / Ctrl+K search over application commands: the host supplies grouped items
- * (pages, actions, projects, sessions) and owns the open state so other controls can
+ * (available pages and actions) and owns the open state so other controls can
  * open it too. Selecting an item closes the palette before running it.
  */
 export function CommandPalette({

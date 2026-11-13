@@ -129,6 +129,11 @@ function fixture({
     async () => snapshot ?? { conversation, messages: [], runs: [], segments: [], cursor: 0 },
   );
   const client: AgentsWorkspacePort = {
+    computers: {
+      get: async () => ({ status: "not-configured" }),
+      start: async () => ({ status: "not-configured" }),
+      stop: async () => ({ status: "not-configured" }),
+    },
     spaces: {
       list: async () => memberships,
       create: async ({ name }) => ({
@@ -180,18 +185,30 @@ function fixture({
   };
 }
 
-it("hides a single Space selector and creates a Space before showing it", async () => {
+it("uses one Space menu to create and switch Spaces", async () => {
   const test = fixture();
   test.mount();
   await screen.findByRole("button", { name: "Writing Agent" });
-  expect(screen.queryByRole("combobox", { name: "Space" })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "New Space" }));
+  expect(screen.getAllByRole("button", { name: "Space" })).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "Space" }));
+  expect(screen.queryByRole("menuitemradio")).not.toBeInTheDocument();
+  fireEvent.click(await screen.findByRole("menuitem", { name: "New Space" }));
   fireEvent.change(await screen.findByRole("textbox", { name: "Space name" }), {
     target: { value: "Team Space" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Create Space" }));
-  await screen.findByRole("combobox", { name: "Space" });
-  expect(screen.getByRole("combobox", { name: "Space" })).toHaveTextContent("Team Space");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Space" })).toHaveTextContent("Team Space"),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Space" }));
+  expect(await screen.findByRole("menuitemradio", { name: "Team Space" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "Private Space" }));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Space" })).toHaveTextContent("Private Space"),
+  );
 });
 
 it("shows the backend's empty model state without an empty picker", async () => {
@@ -1058,4 +1075,49 @@ it("shows draft storage failure without sending or clearing the editor", async (
   expect(editor).toHaveValue("Keep this on screen");
   expect(test.send).not.toHaveBeenCalled();
   expect(screen.queryByText("sensitive diagnostic")).not.toBeInTheDocument();
+});
+
+it.each([
+  [375, "en"],
+  [1280, "en"],
+  [375, "zh"],
+  [1280, "zh"],
+] as const)("opens and closes the computer at %ipx in %s", async (width, language) => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => ({
+      matches: query === "(min-width: 1280px)" && width >= 1280,
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    })),
+  );
+  try {
+    const view = fixture({ language }).mount(true);
+    const trigger = await screen.findByRole("button", {
+      name:
+        language === "en" ? "Computer: Not configured on this server" : "电脑：此服务器未配置电脑",
+    });
+    fireEvent.click(trigger);
+    const heading = await screen.findByRole("heading", {
+      name: language === "en" ? "Team computer" : "团队电脑",
+    });
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    const panel = screen.getByRole(width === 375 ? "dialog" : "complementary", {
+      name: language === "en" ? "Team computer" : "团队电脑",
+    });
+    expect(panel).toContainElement(heading);
+    expect(panel.classList.contains("motion-reduce:transition-none")).toBe(width === 375);
+    expect(width === 1280 && document.activeElement === heading).toBe(width === 1280);
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: language === "en" ? "Close computer panel" : "关闭电脑面板",
+      }),
+    );
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+    await waitFor(() => expect(trigger).toHaveFocus());
+    view.unmount();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });

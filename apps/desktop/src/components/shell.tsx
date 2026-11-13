@@ -96,7 +96,6 @@ export function DesktopShell() {
           frame="window"
           brand={{ to: "/agents", label: "Raypx" }}
           actions={actions}
-          navigationLabels={[c("workspace")]}
           navigation={[[pages[0], pages[1], pages[2]]]}
           accountAction={
             <Tooltip>

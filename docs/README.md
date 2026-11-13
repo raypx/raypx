@@ -5,7 +5,9 @@ conversation, memory, routines and a computer. The
 [target architecture](architecture/README.md) on this branch is server-owned, with
 PostgreSQL as the one authority. Phase 1 makes Agents the signed-in Web/Desktop
 home, with Space selection, Agent management, conversations and process-local
-streamed replies. Tools and durable recovery arrive later. The earlier CLI/daemon,
+streamed replies. The initial Computer slice adds explicit start/stop for a Space's
+team computer and its live state panel. Agent tools, approvals and durable recovery
+arrive later. The earlier CLI/daemon,
 native host and device stores remain; the development guides below describe that
 retained code until its [roadmap](roadmap.md) phase replaces it.
 

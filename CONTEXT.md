@@ -8,14 +8,21 @@ The [roadmap](docs/roadmap.md) separates delivered behavior from later work.
   the signed-in home in Web and the Desktop renderer.
 - Space: the authorization boundary. Resolve membership on every request and
   scope every repository operation; deployment administration grants no bypass.
-- Authority: PostgreSQL holds Agents, conversations, messages, Runs and events.
+- Authority: PostgreSQL holds Agents, conversations, messages, Runs, computers and
+  events.
   Clients express intent and render authoritative state. Drafts are device-local,
   keyed by server origin, account, Space and conversation; restoration never sends.
 - Phase 1: Space selection/creation, Agent management, one direct Conversation,
   member messages, ordered events, snapshots, acknowledged replay, transient reply
   text, committed segments, queued backend Runs and stop. Model access uses Pi
   and deployment configuration in one API-enabled process.
-- Later phases: durable Runs, attempts, leases, steering and recovery; computers,
+- Computer slice: members explicitly start/stop a Space's team computer from a
+  compact conversation-header panel. State follows `computer.state` and refreshes
+  on reconnect; an unconfigured server shows `not-configured` without controls.
+  `@raypx/computers` owns lifecycle/persistence; `@raypx/providers` owns the Computer
+  port and in-memory/Docker adapters; `infra/sandbox` is the private supervisor.
+  Agent tools and approvals are not implemented.
+- Later phases: durable Runs, attempts, execution leases, steering and recovery;
   tools, approvals and effects; routines and Agent/Space memory; Pages and
   connections; invitations, groups and delegation; the device connector and full
   Mobile. None is implied by the phase 1 conversation UI.
@@ -43,7 +50,7 @@ The [roadmap](docs/roadmap.md) separates delivered behavior from later work.
 - Current backend roles: `api|relay|both`, with direct calls in `both` and a private
   Redis broker for split roles. The target adds `worker` and default `all`, with
   PostgreSQL coordination. Phase 1 does not implement that topology or recovery.
-- Target computer boundary: tools use one Computer port; the Agent runtime and
+- Computer boundary: future Agent tools use one Computer port; the Agent runtime and
   credentials stay outside computers. Only the supervisor holds the Docker socket.
   A granted device retains the user's OS permissions and is not a sandbox.
 - Transition rule: replace earlier code in its owning phase. Add no compatibility

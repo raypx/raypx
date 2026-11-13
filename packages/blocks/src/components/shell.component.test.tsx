@@ -2,13 +2,19 @@ import { BrowserLanguageProvider } from "../../tests/i18n.js";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppShell, type ShellAction, type ShellLinkProps } from "./shell.js";
+import {
+  AppShell,
+  ShellSidebarHeader,
+  ShellPrimaryAction,
+  type ShellAction,
+  type ShellLinkProps,
+} from "./shell.js";
 
-type Path = "/" | "/tasks" | "/settings";
+type Path = "/" | "/agents" | "/settings";
 
 function TestLink({ to, markActive, exact: _exact, children, ...props }: ShellLinkProps<Path>) {
   return (
-    <a href={to} {...(markActive && to === "/tasks" ? { "aria-current": "page" } : {})} {...props}>
+    <a href={to} {...(markActive && to === "/agents" ? { "aria-current": "page" } : {})} {...props}>
       {children}
     </a>
   );
@@ -24,16 +30,22 @@ function renderShell(frame?: "document" | "window", actions?: ShellAction[]) {
         navigation={[
           [{ to: "/", label: "Account", icon: <svg />, exact: true }],
           [
-            { to: "/tasks", label: "Tasks", icon: <svg />, badge: <span>3</span> },
+            { to: "/agents", label: "Agents", icon: <svg />, badge: <span>3</span> },
             { to: "/settings", label: "Settings", icon: <svg /> },
           ],
         ]}
-        breadcrumbs={["Acme", "Tasks"]}
+        breadcrumbs={["Acme", "Agents"]}
         layout="workbench"
         notice={<p role="alert">Offline</p>}
         account={<button type="button">Menu</button>}
         LinkComponent={TestLink}
       >
+        <ShellSidebarHeader>
+          <button type="button">Space: Product</button>
+        </ShellSidebarHeader>
+        <ShellPrimaryAction>
+          <button type="button">New Agent</button>
+        </ShellPrimaryAction>
         <p>Content</p>
       </AppShell>
     </BrowserLanguageProvider>,
@@ -55,14 +67,14 @@ describe("AppShell", () => {
     const navigation = screen.getByRole("navigation", { name: "Acme" });
     expect([...navigation.querySelectorAll("a")].map((link) => link.getAttribute("href"))).toEqual([
       "/",
-      "/tasks",
+      "/agents",
       "/settings",
     ]);
-    expect(screen.getByRole("link", { name: /Tasks/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: /Agents/ }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByRole("link", { name: "Acme" }).hasAttribute("aria-current")).toBe(false);
     expect(screen.getByText("3")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Menu" })).toBeTruthy();
-    expect(screen.getByRole("banner").textContent).toBe("Acme/Tasks");
+    expect(screen.getByRole("banner").textContent).toBe("Acme/Agents");
     expect(screen.getByRole("alert").textContent).toBe("Offline");
     const main = screen.getByRole("main");
     expect(main.id).toBe("main");
@@ -88,9 +100,9 @@ describe("AppShell", () => {
         onSelect: onSearch,
       },
       {
-        label: "New session",
+        label: "Create another Agent",
         icon: <svg />,
-        render: <a href="/tasks?compose=true" aria-label="New session" />,
+        render: <a href="/agents" aria-label="Create another Agent" />,
       },
     ]);
     const header = within(screen.getByRole("banner"));
@@ -100,8 +112,8 @@ describe("AppShell", () => {
     expect(search.getAttribute("aria-keyshortcuts")).toBe("Meta+K");
     fireEvent.click(search);
     expect(onSearch).toHaveBeenCalledOnce();
-    expect(header.getByRole("link", { name: "New session" }).getAttribute("href")).toBe(
-      "/tasks?compose=true",
+    expect(header.getByRole("link", { name: "Create another Agent" }).getAttribute("href")).toBe(
+      "/agents",
     );
     expect(
       within(screen.getByRole("complementary")).queryByRole("button", { name: "Search" }),
@@ -116,6 +128,36 @@ describe("AppShell", () => {
     expect(within(screen.getByRole("banner")).queryByRole("button", { name: "Search" })).toBe(null);
   });
 
+  it.each(["document", "window"] as const)(
+    "keeps one Space control and primary Agent action in the %s sidebar header",
+    (frame) => {
+      renderShell(frame);
+      const sidebar = within(screen.getByRole("complementary"));
+      expect(sidebar.getByRole("button", { name: "Space: Product" })).toBeTruthy();
+      expect(sidebar.getByRole("button", { name: "New Agent" })).toBeTruthy();
+      expect(screen.getAllByRole("button", { name: "Space: Product" })).toHaveLength(1);
+      expect(within(screen.getByRole("main")).queryByRole("button")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+      expect(sidebar.getByRole("button", { name: "Space: Product" })).toBeTruthy();
+      expect(sidebar.getByRole("button", { name: "New Agent" })).toBeTruthy();
+    },
+  );
+
+  it("keeps feature controls available outside an application shell", () => {
+    render(
+      <>
+        <ShellSidebarHeader>
+          <button type="button">Space</button>
+        </ShellSidebarHeader>
+        <ShellPrimaryAction>
+          <button type="button">New Agent</button>
+        </ShellPrimaryAction>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "Space" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "New Agent" })).toBeTruthy();
+  });
+
   it("toggles the sidebar without removing navigation names, selection or badges", () => {
     renderShell();
     const collapse = screen.getByRole("button", { name: "Collapse sidebar" });
@@ -124,7 +166,7 @@ describe("AppShell", () => {
     fireEvent.click(collapse);
     const expand = screen.getByRole("button", { name: "Expand sidebar" });
     expect(expand.getAttribute("aria-expanded")).toBe("false");
-    expect(screen.getByRole("link", { name: /Tasks/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: /Agents/ }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByText("3")).toBeTruthy();
     fireEvent.click(expand);
     expect(

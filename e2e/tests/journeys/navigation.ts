@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.js";
 import { capture } from "../helpers/capture.js";
 import {
@@ -8,15 +8,39 @@ import {
   webShellFixture,
 } from "../helpers/account-fixture.js";
 
+/** The first Agent belongs to an existing Space; no conversation or provider is fabricated. */
+async function emptyAgentsSpace(page: Page, accountId: string) {
+  const spaceId = "11111111-1111-4111-8111-111111111111";
+  const createdAt = "2026-11-13T00:00:00.000Z";
+  await page.route("**/rpc/spaces/list", (route) =>
+    authResponse(route, {
+      json: [
+        {
+          space: { id: spaceId, name: "Personal", createdAt, updatedAt: createdAt },
+          member: { spaceId, accountId, role: "owner", createdAt },
+        },
+      ],
+    }),
+  );
+  await page.route("**/rpc/agents/list", (route) => authResponse(route, { json: [] }));
+  await page.route("**/rpc/agents/models", (route) =>
+    authResponse(route, { json: [{ modelId: "fixture", name: "Fixture model" }] }),
+  );
+  await page.route("**/rpc/computers/get", (route) =>
+    authResponse(route, { json: { status: "not-configured" } }),
+  );
+}
+
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {
-  test(`groups sidebar menus and keeps collapsed navigation accessible`, async ({
+  test(`keeps current sidebar destinations and collapsed navigation accessible`, async ({
     page,
     surface,
     base,
   }) => {
     if (surface === "Web") await webShellFixture(page);
-    await signedInAccount(page);
+    const user = await signedInAccount(page);
+    await emptyAgentsSpace(page, user.id);
     await page.goto(`${base}/agents`);
     await test.step("shows the skip link only on keyboard focus", async () => {
       const skip = page.getByRole("link", { name: "Skip navigation", exact: true });
@@ -30,14 +54,20 @@ export function registerTests() {
     });
     const sidebar = page.getByRole("complementary");
     const navigation = sidebar.getByRole("navigation", { name: "Raypx", exact: true });
-    const workspace = navigation.getByRole("group", { name: "Workspace", exact: true });
-    await expect(workspace.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Space", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Space", exact: true })).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "New Agent", exact: true })).toHaveCount(1);
     await expect(
-      workspace.getByRole("link", { name: "Memory and templates", exact: true }),
+      page.getByRole("main").getByRole("button", { name: "New Agent", exact: true }),
+    ).toBeVisible();
+    await expect(navigation.getByRole("group", { name: "Workspace", exact: true })).toHaveCount(0);
+    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
+    await expect(
+      navigation.getByRole("link", { name: "Memory and templates", exact: true }),
     ).toBeVisible();
     for (const name of ["Projects", "Waiting", "Automations", "New session"])
       await expect(sidebar.getByRole("link", { name, exact: true })).toHaveCount(0);
-    await expect(workspace.getByRole("link", { name: "Agents", exact: true })).toHaveAttribute(
+    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -45,7 +75,7 @@ export function registerTests() {
     await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
     const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
     await expect(expand).toHaveAttribute("aria-expanded", "false");
-    await expect(workspace.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
+    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
     await page.reload();
     await expect(expand).toHaveAttribute("aria-expanded", "false");
     const account = sidebar.getByRole("button", { name: "Account menu", exact: true });
@@ -77,19 +107,27 @@ export function registerTests() {
       base,
     }) => {
       if (surface === "Web") await webShellFixture(page);
-      await signedInAccount(page);
+      const user = await signedInAccount(page);
+      await emptyAgentsSpace(page, user.id);
       await page.addInitScript(
         (language) => localStorage.setItem("raypx_locale", language),
         locale,
       );
       await page.goto(`${base}/agents`);
       const title = locale === "zh" ? "智能体" : "Agents";
+      const space = locale === "zh" ? "空间" : "Space";
+      const newAgent = locale === "zh" ? "新建智能体" : "New Agent";
       for (const width of [375, 1280]) {
         await page.setViewportSize({ width, height: 812 });
         await expect(page.getByRole("heading", { name: title, exact: true })).toHaveCount(1);
         await expect(
           page.getByRole("complementary").getByRole("link", { name: title, exact: true }),
         ).toBeVisible();
+        await expect(page.getByRole("button", { name: space, exact: true })).toHaveCount(1);
+        await expect(
+          page.getByRole("complementary").getByRole("button", { name: space, exact: true }),
+        ).toBeVisible();
+        await expect(page.getByRole("button", { name: newAgent, exact: true })).toHaveCount(1);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
           true,
         );

@@ -8,6 +8,13 @@ import type {
   RunId,
 } from "@raypx/core/conversation";
 import type { Space, SpaceId, SpaceInput, SpaceMember } from "@raypx/core/spaces";
+import type { SpaceComputer } from "@raypx/core/computers";
+
+export interface ComputerPort {
+  get(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
+  start(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
+  stop(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
+}
 
 export interface ConversationSelection {
   spaceId: SpaceId;
@@ -63,6 +70,7 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  computers: ComputerPort;
   spaces: {
     list(input: Record<string, never>): Promise<SpaceMembership[]>;
     create(input: SpaceInput): Promise<SpaceMembership>;

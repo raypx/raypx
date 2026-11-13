@@ -10,6 +10,7 @@ import {
   useSyncExternalStore,
   type FormEvent,
 } from "react";
+import { Sheet, SheetContent } from "@raypx/ui/components/ui/sheet";
 import { ReplyMarkdown } from "@raypx/blocks/markdown";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -30,6 +31,8 @@ import { StopIcon } from "@raypx/icons/stop";
 import type { RunId } from "@raypx/core/conversation";
 import {
   ConversationController,
+  ComputerController,
+  type ComputerPort,
   activeConversationRun,
   conversationRows,
   type AgentConversationView,
@@ -37,6 +40,7 @@ import {
   type ConversationSocketPort,
   type ConversationPort,
 } from "../model.js";
+import { ComputerIndicator, ComputerPanel } from "./computer.js";
 import { useTranslations } from "./i18n.js";
 
 const connectionKeys = {
@@ -54,6 +58,7 @@ const errorKeys = {
 interface AgentConversationProps {
   item: AgentConversationView;
   port: ConversationPort;
+  computerPort: ComputerPort;
   socket: ConversationSocketPort;
   drafts: ConversationDraftStore;
   origin: string;
@@ -63,19 +68,26 @@ interface AgentConversationProps {
 export function AgentConversation({
   item,
   port,
+  computerPort,
   socket,
   drafts,
   origin,
   accountId,
 }: AgentConversationProps) {
   const t = useTranslations("agents");
-  const [controller, setController] = useState<ConversationController | null>(null);
+  const [controllers, setControllers] = useState<{
+    conversation: ConversationController;
+    computer: ComputerController;
+  } | null>(null);
   useEffect(() => {
     let cancelled = false;
     let next: ConversationController | undefined;
+    let computer: ComputerController | undefined;
     queueMicrotask(() => {
       if (cancelled) return;
+      computer = new ComputerController(item.agent.spaceId, computerPort);
       next = new ConversationController({
+        computer,
         selection: { spaceId: item.agent.spaceId, conversationId: item.conversation.id },
         owner: { origin, accountId },
         port,
@@ -83,34 +95,67 @@ export function AgentConversation({
         drafts,
         key: () => crypto.randomUUID(),
       });
-      setController(next);
+      setControllers({ conversation: next, computer });
+      void computer.refresh();
       void next.start();
     });
     return () => {
       cancelled = true;
       next?.dispose();
+      computer?.dispose();
     };
-  }, [item.agent.spaceId, item.conversation.id, origin, accountId, port, socket, drafts]);
-  if (!controller)
+  }, [
+    item.agent.spaceId,
+    item.conversation.id,
+    origin,
+    accountId,
+    port,
+    computerPort,
+    socket,
+    drafts,
+  ]);
+  if (!controllers)
     return (
       <Empty role="status">
         <EmptyTitle>{t("loading")}</EmptyTitle>
       </Empty>
     );
-  return <ConversationContents item={item} controller={controller} accountId={accountId} />;
+  return (
+    <ConversationContents
+      item={item}
+      controller={controllers.conversation}
+      computer={controllers.computer}
+      accountId={accountId}
+    />
+  );
 }
 
 function ConversationContents({
   item,
   controller,
+  computer,
   accountId,
 }: {
   item: AgentConversationView;
   controller: ConversationController;
+  computer: ComputerController;
   accountId: string;
 }) {
   const t = useTranslations("agents");
   const id = useId();
+  const panelId = useId();
+  const computerTrigger = useRef<HTMLButtonElement>(null);
+  const [computerOpen, setComputerOpen] = useState(false);
+  const wide = useSyncExternalStore(subscribeWide, isWide, () => false);
+  const computerState = useSyncExternalStore(
+    computer.subscribe,
+    computer.getSnapshot,
+    computer.getSnapshot,
+  );
+  function closeComputer() {
+    setComputerOpen(false);
+    computerTrigger.current?.focus();
+  }
   const editor = useRef<HTMLTextAreaElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
   const history = useRef<HTMLDivElement>(null);
@@ -244,233 +289,285 @@ function ConversationContents({
   }
 
   return (
-    <section
-      aria-label={t("conversation")}
-      className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden"
-    >
-      <header className="flex min-w-0 shrink-0 items-center justify-between gap-2 border-b pb-3">
-        <h2
-          ref={title}
-          tabIndex={-1}
-          title={item.agent.name}
-          className="min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {item.agent.name}
-        </h2>
-        {state.connection !== "live" && state.error !== "load" && (
-          <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-            <span role="status">{t(connectionKeys[state.connection])}</span>
-            {state.connection === "reconnecting" && (
-              <IconButton
-                size="icon-sm"
-                label={t("refresh")}
-                onClick={() => controller.reconnect()}
-              >
-                <RefreshIcon aria-hidden="true" />
-              </IconButton>
+    <div className="flex min-h-0 min-w-0 flex-1 gap-4 overflow-hidden">
+      <section
+        aria-label={t("conversation")}
+        className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden"
+      >
+        <header className="flex min-w-0 shrink-0 items-center justify-between gap-2 border-b pb-3">
+          <h2
+            ref={title}
+            tabIndex={-1}
+            title={item.agent.name}
+            className="min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {item.agent.name}
+          </h2>
+          <div className="flex min-w-0 flex-col items-end gap-1 @sm/main:flex-row @sm/main:items-center">
+            <ComputerIndicator
+              ref={computerTrigger}
+              state={computerState}
+              open={computerOpen}
+              panelId={panelId}
+              onOpen={() => {
+                if (computerOpen) closeComputer();
+                else setComputerOpen(true);
+              }}
+            />
+            {state.connection !== "live" && state.error !== "load" && (
+              <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                <span role="status">{t(connectionKeys[state.connection])}</span>
+                {state.connection === "reconnecting" && (
+                  <IconButton
+                    size="icon-sm"
+                    label={t("refresh")}
+                    onClick={() => controller.reconnect()}
+                  >
+                    <RefreshIcon aria-hidden="true" />
+                  </IconButton>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </header>
-      {state.error && (
-        <Alert>
-          <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
-          {state.error === "load" && (
-            <AlertAction>
-              <Button size="sm" variant="outline" onClick={() => controller.reconnect()}>
-                {t("refresh")}
-              </Button>
-            </AlertAction>
-          )}
-        </Alert>
-      )}
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <div
-          ref={history}
-          role="log"
-          aria-live="off"
-          aria-label={t("conversation")}
-          tabIndex={0}
-          className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring [overflow-anchor:none]"
-          onScroll={trackReading}
-        >
-          <div ref={content} className="flex min-h-full min-w-0 flex-col gap-4 pb-4">
-            {state.loading && (
-              <Empty role="status">
-                <EmptyTitle>{t("loading")}</EmptyTitle>
-              </Empty>
-            )}
-            {rows.length === 0 && !state.loading && state.error !== "load" && (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <AgentIcon aria-hidden="true" />
-                  </EmptyMedia>
-                  <EmptyTitle>{t("emptyConversation")}</EmptyTitle>
-                </EmptyHeader>
-                <Button variant="outline" onClick={() => editor.current?.focus()}>
-                  {t("focusMessage")}
+        </header>
+        {state.error && (
+          <Alert>
+            <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
+            {state.error === "load" && (
+              <AlertAction>
+                <Button size="sm" variant="outline" onClick={() => controller.reconnect()}>
+                  {t("refresh")}
                 </Button>
-              </Empty>
+              </AlertAction>
             )}
-            {rows.map((row, index) => {
-              const showSender = index === 0 || rows[index - 1]?.sender !== row.sender;
-              if (row.kind === "member")
+          </Alert>
+        )}
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          <div
+            ref={history}
+            role="log"
+            aria-live="off"
+            aria-label={t("conversation")}
+            tabIndex={0}
+            className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring [overflow-anchor:none]"
+            onScroll={trackReading}
+          >
+            <div ref={content} className="flex min-h-full min-w-0 flex-col gap-4 pb-4">
+              {state.loading && (
+                <Empty role="status">
+                  <EmptyTitle>{t("loading")}</EmptyTitle>
+                </Empty>
+              )}
+              {rows.length === 0 && !state.loading && state.error !== "load" && (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <AgentIcon aria-hidden="true" />
+                    </EmptyMedia>
+                    <EmptyTitle>{t("emptyConversation")}</EmptyTitle>
+                  </EmptyHeader>
+                  <Button variant="outline" onClick={() => editor.current?.focus()}>
+                    {t("focusMessage")}
+                  </Button>
+                </Empty>
+              )}
+              {rows.map((row, index) => {
+                const showSender = index === 0 || rows[index - 1]?.sender !== row.sender;
+                if (row.kind === "member")
+                  return (
+                    <article
+                      key={row.id}
+                      data-message-row={row.id}
+                      className="flex min-w-0 flex-col items-end gap-1 pl-6"
+                    >
+                      {showSender && (
+                        <h3 className="text-xs font-medium text-muted-foreground">
+                          {row.sender === `member:${accountId}` ? t("you") : t("member")}
+                        </h3>
+                      )}
+                      <p className="max-w-[90%] rounded-lg bg-muted px-3 py-2 text-sm whitespace-pre-wrap wrap-anywhere">
+                        {row.text}
+                      </p>
+                    </article>
+                  );
+                const run = row.run;
+                const producing = run?.state === "running" || run?.state === "queued";
+                const retryMessage = state.messages.find(
+                  (message) => message.id === run?.messageId,
+                );
+                const retryDisabled =
+                  state.pending !== null ||
+                  (state.draft !== "" && state.draft !== retryMessage?.text);
                 return (
                   <article
                     key={row.id}
                     data-message-row={row.id}
-                    className="flex min-w-0 flex-col items-end gap-1 pl-6"
+                    aria-busy={producing}
+                    className="flex min-w-0 flex-col gap-2 pr-6"
                   >
                     {showSender && (
-                      <h3 className="text-xs font-medium text-muted-foreground">
-                        {row.sender === `member:${accountId}` ? t("you") : t("member")}
+                      <h3 title={item.agent.name} className="truncate text-xs font-medium">
+                        {item.agent.name}
                       </h3>
                     )}
-                    <p className="max-w-[90%] rounded-lg bg-muted px-3 py-2 text-sm whitespace-pre-wrap wrap-anywhere">
-                      {row.text}
-                    </p>
+                    <div className="min-w-0 rounded-lg border px-3 py-3 text-sm">
+                      {row.text && (
+                        <ReplyMarkdown
+                          copyLabel={t("copyCode")}
+                          copiedLabel={t("codeCopied")}
+                          copyErrorLabel={t("copyCodeError")}
+                        >
+                          {row.text}
+                        </ReplyMarkdown>
+                      )}
+                      {run && run.state !== "succeeded" && (
+                        <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span className={row.text ? "mt-2" : undefined}>
+                            {run.state === "running" ? t("replying") : t(run.state)}
+                          </span>
+                          {run.failureCode && (
+                            <span className="wrap-anywhere">{t(run.failureCode)}</span>
+                          )}
+                          {run.state === "failed" && retryMessage && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={retryDisabled}
+                                onClick={() => {
+                                  if (controller.prepareRetry(run.id)) editor.current?.focus();
+                                }}
+                              >
+                                {t("retry")}
+                              </Button>
+                              {retryDisabled && (
+                                <HelpHint label={t("retry")} description={t("retryDraftHint")} />
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </article>
                 );
-              const run = row.run;
-              const producing = run?.state === "running" || run?.state === "queued";
-              const retryMessage = state.messages.find((message) => message.id === run?.messageId);
-              const retryDisabled =
-                state.pending !== null ||
-                (state.draft !== "" && state.draft !== retryMessage?.text);
-              return (
-                <article
-                  key={row.id}
-                  data-message-row={row.id}
-                  aria-busy={producing}
-                  className="flex min-w-0 flex-col gap-2 pr-6"
-                >
-                  {showSender && (
-                    <h3 title={item.agent.name} className="truncate text-xs font-medium">
-                      {item.agent.name}
-                    </h3>
-                  )}
-                  <div className="min-w-0 rounded-lg border px-3 py-3 text-sm">
-                    {row.text && (
-                      <ReplyMarkdown
-                        copyLabel={t("copyCode")}
-                        copiedLabel={t("codeCopied")}
-                        copyErrorLabel={t("copyCodeError")}
-                      >
-                        {row.text}
-                      </ReplyMarkdown>
-                    )}
-                    {run && run.state !== "succeeded" && (
-                      <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span className={row.text ? "mt-2" : undefined}>
-                          {run.state === "running" ? t("replying") : t(run.state)}
-                        </span>
-                        {run.failureCode && (
-                          <span className="wrap-anywhere">{t(run.failureCode)}</span>
-                        )}
-                        {run.state === "failed" && retryMessage && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={retryDisabled}
-                              onClick={() => {
-                                if (controller.prepareRetry(run.id)) editor.current?.focus();
-                              }}
-                            >
-                              {t("retry")}
-                            </Button>
-                            {retryDisabled && (
-                              <HelpHint label={t("retry")} description={t("retryDraftHint")} />
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
+              })}
+            </div>
           </div>
+          {away && (
+            <div className="absolute inset-x-0 bottom-2 flex justify-center">
+              <Button size="sm" variant="outline" onClick={latest}>
+                <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
+                {t("latest")}
+              </Button>
+            </div>
+          )}
         </div>
-        {away && (
-          <div className="absolute inset-x-0 bottom-2 flex justify-center">
-            <Button size="sm" variant="outline" onClick={latest}>
-              <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
-              {t("latest")}
+        <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {announcement}
+        </p>
+        {state.pending && !state.sending && (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <p className="text-xs text-muted-foreground">{t("pendingDelivery")}</p>
+            <Button variant="outline" size="sm" onClick={() => void retryDelivery()}>
+              {t("retryDelivery")}
             </Button>
           </div>
         )}
-      </div>
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {announcement}
-      </p>
-      {state.pending && !state.sending && (
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <p className="text-xs text-muted-foreground">{t("pendingDelivery")}</p>
-          <Button variant="outline" size="sm" onClick={() => void retryDelivery()}>
-            {t("retryDelivery")}
-          </Button>
-        </div>
+        <form onSubmit={submit} className="shrink-0">
+          <Field>
+            <FieldLabel htmlFor={id} className="sr-only">
+              {t("message")}
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupTextarea
+                ref={editor}
+                id={id}
+                value={state.draft}
+                rows={1}
+                maxLength={32_000}
+                placeholder={t("message")}
+                className="max-h-48 min-h-16 overflow-y-auto"
+                onChange={(event) => controller.setDraft(event.target.value)}
+                onCompositionStart={() => {
+                  composing.current = true;
+                }}
+                onCompositionEnd={() => {
+                  composing.current = false;
+                }}
+                onKeyDown={(event) => {
+                  if (
+                    event.key !== "Enter" ||
+                    event.shiftKey ||
+                    composing.current ||
+                    event.nativeEvent.isComposing ||
+                    event.keyCode === 229
+                  )
+                    return;
+                  event.preventDefault();
+                  void send();
+                }}
+              />
+              <InputGroupAddon align="block-end" className="justify-end">
+                {active ? (
+                  <IconButton
+                    variant="default"
+                    label={t("stop")}
+                    disabled={stopping !== null}
+                    onClick={() => void stop(active.id)}
+                  >
+                    <StopIcon aria-hidden="true" />
+                  </IconButton>
+                ) : (
+                  <IconButton
+                    type="submit"
+                    variant="default"
+                    label={state.sending ? t("sending") : t("send")}
+                    disabled={sendDisabled}
+                  >
+                    <SendIcon aria-hidden="true" />
+                  </IconButton>
+                )}
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+        </form>
+      </section>
+      {wide && computerOpen && (
+        <aside
+          id={panelId}
+          aria-label={t("computerTitle")}
+          className="flex w-72 min-w-0 shrink-0 flex-col border-l"
+        >
+          <ComputerPanel controller={computer} onClose={closeComputer} />
+        </aside>
       )}
-      <form onSubmit={submit} className="shrink-0">
-        <Field>
-          <FieldLabel htmlFor={id} className="sr-only">
-            {t("message")}
-          </FieldLabel>
-          <InputGroup>
-            <InputGroupTextarea
-              ref={editor}
-              id={id}
-              value={state.draft}
-              rows={1}
-              maxLength={32_000}
-              placeholder={t("message")}
-              className="max-h-48 min-h-16 overflow-y-auto"
-              onChange={(event) => controller.setDraft(event.target.value)}
-              onCompositionStart={() => {
-                composing.current = true;
-              }}
-              onCompositionEnd={() => {
-                composing.current = false;
-              }}
-              onKeyDown={(event) => {
-                if (
-                  event.key !== "Enter" ||
-                  event.shiftKey ||
-                  composing.current ||
-                  event.nativeEvent.isComposing ||
-                  event.keyCode === 229
-                )
-                  return;
-                event.preventDefault();
-                void send();
-              }}
-            />
-            <InputGroupAddon align="block-end" className="justify-end">
-              {active ? (
-                <IconButton
-                  variant="default"
-                  label={t("stop")}
-                  disabled={stopping !== null}
-                  onClick={() => void stop(active.id)}
-                >
-                  <StopIcon aria-hidden="true" />
-                </IconButton>
-              ) : (
-                <IconButton
-                  type="submit"
-                  variant="default"
-                  label={state.sending ? t("sending") : t("send")}
-                  disabled={sendDisabled}
-                >
-                  <SendIcon aria-hidden="true" />
-                </IconButton>
-              )}
-            </InputGroupAddon>
-          </InputGroup>
-        </Field>
-      </form>
-    </section>
+      {!wide && (
+        <Sheet
+          open={computerOpen}
+          onOpenChange={(open) => {
+            if (!open) closeComputer();
+          }}
+        >
+          <SheetContent
+            id={panelId}
+            showCloseButton={false}
+            finalFocus={computerTrigger}
+            className="max-w-[calc(100vw-3rem)] motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            <ComputerPanel sheet controller={computer} onClose={closeComputer} />
+          </SheetContent>
+        </Sheet>
+      )}
+    </div>
   );
+}
+
+const wideQuery = "(min-width: 1280px)";
+function subscribeWide(listener: () => void) {
+  const media = window.matchMedia?.(wideQuery);
+  media?.addEventListener("change", listener);
+  return () => media?.removeEventListener("change", listener);
+}
+function isWide() {
+  return window.matchMedia?.(wideQuery).matches ?? false;
 }

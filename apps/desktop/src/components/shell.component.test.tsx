@@ -89,11 +89,15 @@ it.each([
     expect(nav.getByRole("link", { name: agents }).getAttribute("href")).toBe("/agents");
     expect(nav.getByRole("link", { name: memory }).getAttribute("href")).toBe("/memory");
     expect(nav.getByRole("link", { name: account }).getAttribute("href")).toBe("/account");
+    expect(nav.queryByRole("group", { name: /Workspace|工作区/ })).toBeNull();
     expect(nav.queryByRole("link", { name: removed })).toBeNull();
     expect(screen.getAllByRole("heading")).toHaveLength(1);
     expect(screen.getByRole("button", { name: settings })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: search }));
     const palette = await screen.findByRole("dialog", { name: search });
     expect(within(palette).queryByRole("option", { name: removed })).toBeNull();
+    expect(within(palette).getByRole("option", { name: agents })).toBeTruthy();
+    expect(within(palette).getByRole("option", { name: memory })).toBeTruthy();
+    expect(within(palette).getByRole("option", { name: account })).toBeTruthy();
   },
 );

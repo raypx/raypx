@@ -11,6 +11,8 @@ Read the nearest workspace AGENTS.md, docs/README.md and DESIGN.md before change
 Phase 1 makes `/agents` the signed-in home in Web and Desktop: Space selection,
 Agent management, messages, streamed replies, committed segments and stop. Its
 backend Runs are process-local: no tools, attempts, leases, steering or recovery.
+The initial Computer slice adds explicit start/stop for a Space's team computer,
+with live state in the Agent interface. Agent tools and approvals remain unimplemented.
 Do not describe later roadmap capabilities as implemented. The earlier CLI/daemon,
 SQLite profiles, native enrollment and remote projections still exist until their
 replacement phases. Do not extend them as a second authority for the new product.
@@ -43,6 +45,10 @@ archived in `raypx/raypx-tauri`; do not reintroduce it.
 - Keep new Agent execution in the backend, separate from the retained private CLI
   harness. Vendor SDKs stay in adapters. Add packages only for established
   responsibilities and actual consumers; do not create speculative entries.
+- `@raypx/computers` owns Space-scoped computer lifecycle and persistence.
+  `@raypx/providers/computer` owns the Computer port and its providers;
+  `infra/sandbox` is the private supervisor and alone holds the Docker socket.
+  Clients consume lifecycle contracts, never provider credentials or execution ports.
 - Remote and local device contracts have separate public entries. Desktop launches
   its bundled CLI by absolute path and never imports CLI source. Preserve existing
   enrollment/account/origin isolation while that device runtime remains; it does

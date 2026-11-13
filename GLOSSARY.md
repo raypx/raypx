@@ -7,8 +7,8 @@ The [roadmap](docs/roadmap.md) distinguishes phase 1 from later capabilities.
 
 **Agent / 智能体**:
 A persistent identity in one Space, with a name, instructions and a model choice.
-Each Agent has one direct Conversation. Memory, routines and a computer extend it
-in later phases.
+Each Agent has one direct Conversation. Its Space's team computer has explicit
+start/stop controls; Agent tools, memory and routines arrive later.
 _Avoid_: Bot, preset, or a new Agent for each request
 
 **Conversation / 对话**:
@@ -20,8 +20,8 @@ _Avoid_: Session or task as a synonym for the new conversation
 **Space / 空间**:
 The authorization boundary holding Agents and conversations. Accounts receive a
 private Space and can create more. Membership records exist; invitations, member
-management and sharing workflows arrive later. Memory, routines, pages and
-computers will also belong to a Space.
+management and sharing workflows arrive later. A Space has one team computer;
+memory, routines and pages arrive later.
 _Avoid_: Workspace, organization or team as synonyms for Space
 
 **Message / 消息**:
@@ -35,10 +35,13 @@ queued, running, succeeded, failed and cancelled Runs. A second message queues
 another Run. Attempts, steering, leases, checkpoints and recovery arrive later.
 _Avoid_: Session as a synonym for Run, or durable execution as a phase 1 claim
 
-**Computer / 电脑** (later phase):
-The durable place where a Run's tools execute, behind one Computer port: a Docker
-container, a hosted sandbox or an explicitly granted device. The Agent runtime and
-credentials stay outside it. Phase 1 replies have no computer or tools.
+**Computer / 电脑**:
+A Space's durable execution environment. Members can start and stop the team
+computer; current Agent replies do not use tools or approvals. `@raypx/computers`
+owns lifecycle and persistence, and `@raypx/providers` owns the Computer port,
+an in-memory provider and the Docker supervisor adapter. `infra/sandbox` alone
+holds the Docker socket. Hosted sandboxes and granted devices are later providers.
+The Agent runtime and credentials stay outside the computer.
 _Avoid_: Sandbox as a synonym for a granted device, which gives no isolation
 
 **Routine / 例行任务** (later phase):

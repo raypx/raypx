@@ -1,6 +1,7 @@
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import type { RunId } from "@raypx/core/conversation";
 import { ConversationState, type ConversationView } from "./conversation.js";
+import type { ComputerController } from "./computer.js";
 import {
   conversationDraftKey,
   MAX_CONVERSATION_DRAFT,
@@ -28,6 +29,7 @@ export interface ConversationControllerView extends ConversationView {
   pending: PendingMessage | null;
 }
 export interface ConversationControllerOptions {
+  computer?: ComputerController;
   selection: ConversationSelection;
   owner: ConversationOwner;
   port: ConversationPort;
@@ -197,7 +199,10 @@ export class ConversationController {
         ...this.options.selection,
         after: this.view.cursor,
       });
-      if (subscribed) this.update({ connection: "live", error: null });
+      if (subscribed) {
+        this.update({ connection: "live", error: null });
+        void this.options.computer?.refresh();
+      }
       return;
     }
     if (frame.type === "event") {
@@ -207,6 +212,8 @@ export class ConversationController {
         return;
       }
       if (applied === "ignored") return;
+      if (applied === "applied" && frame.entry.event.kind === "computer.state")
+        this.options.computer?.applyEvent(frame.entry.event);
       this.update();
       this.sendFrame({
         type: "ack",

@@ -5,12 +5,19 @@ Web or Desktop, choose a Space, create an Agent and follow its streamed replies.
 Spaces are the authorization boundary; PostgreSQL is the one authority.
 
 Phase 1 provides conversation and process-local backend replies with queued Runs
-and stop. It has no tools or crash recovery. Durable Runs, computers, approvals,
+and stop. Members can also start and stop their Space's team computer from the
+Agent interface. It has no Agent tools, approvals or crash recovery. Durable Runs,
 routines, Agent/Space memory and shared Spaces arrive in later phases. The earlier
 CLI/daemon and native device runtime remain in the repository during that
 transition; they do not own the new conversations. See the
 [architecture](docs/architecture/README.md), [roadmap](docs/roadmap.md) and
 [product](PRODUCT.md).
+
+`@raypx/computers` owns Space-scoped computer lifecycle and persistence. The
+Computer port and providers live in `@raypx/providers`; `infra/sandbox` is the
+private Docker supervisor. The Agent runtime and credentials stay outside the
+computer. A server without a configured provider shows `not-configured` and
+allocates nothing. See [computers](docs/architecture/computers.md).
 
 ## Requirements
 
