@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { ContextError } from "@raypx/core/memory";
 import type { ContextLibraryService } from "@raypx/memory/server";
 import type { AccountContext } from "../../middleware/rpc.js";
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 
 type Status = "NOT_FOUND" | "BAD_REQUEST" | "UNAUTHORIZED" | "SERVICE_UNAVAILABLE";
 const statuses: Readonly<Record<string, Status>> = {
@@ -20,7 +20,7 @@ export function createMemoryHandlers({
   requireTrustedOrigin,
   limitAccount,
 }: Pick<
-  RpcBoundary,
+  RpcSetup,
   "os" | "options" | "withRpcPermission" | "requireTrustedOrigin" | "limitAccount"
 >) {
   async function memoryCall<T>(

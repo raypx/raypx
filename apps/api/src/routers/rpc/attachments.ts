@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { AttachmentError } from "../../storage/types.js";
 import { ControlError } from "@raypx/control";
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 
 type Status = "TOO_MANY_REQUESTS" | "SERVICE_UNAVAILABLE";
 const statuses: Readonly<Record<string, Status>> = {
@@ -18,7 +18,7 @@ export function createAttachmentHandlers({
   options,
   withRpcPermission,
   requireTrustedOrigin,
-}: Pick<RpcBoundary, "os" | "options" | "withRpcPermission" | "requireTrustedOrigin">) {
+}: Pick<RpcSetup, "os" | "options" | "withRpcPermission" | "requireTrustedOrigin">) {
   return {
     status: os.attachments.status.use(withRpcPermission()).handler(async () => {
       try {

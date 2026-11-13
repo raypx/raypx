@@ -8,12 +8,9 @@ import {
   configurationSnapshotSchema,
   type ConfigurationSnapshot,
 } from "@raypx/contracts/api";
-import type { ConfigurationRepository } from "./types.js";
+import type { ConfigRepository } from "./types.js";
 
-export function createConfigurationRepository(
-  db: Database,
-  audit?: AuditService,
-): ConfigurationRepository {
+export function createConfigRepository(db: Database, audit?: AuditService): ConfigRepository {
   const snapshot = (row: typeof systemConfiguration.$inferSelect): ConfigurationSnapshot =>
     configurationSnapshotSchema.parse({
       values: {
@@ -44,7 +41,7 @@ export function createConfigurationRepository(
             source: "service",
           },
           async () => {
-            const result = await createConfigurationRepository(db, audit).update(
+            const result = await createConfigRepository(db, audit).update(
               values,
               revision,
               actorId,

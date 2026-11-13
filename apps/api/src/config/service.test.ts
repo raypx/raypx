@@ -1,10 +1,10 @@
 import { expect, it, vi } from "vitest";
 import type { AuthSession } from "@raypx/core/auth";
 import { configurationDefaults } from "@raypx/contracts/api";
-import { createConfigurationReads, type ConfigurationNotifications } from "./reads.js";
-import { createConfigurationService } from "./service.js";
+import { createConfigReads, type ConfigNotifications } from "./reads.js";
+import { createConfigService } from "./service.js";
 import { createAccessPolicy } from "../access.js";
-import type { ConfigurationReader, ConfigurationRepository } from "./types.js";
+import type { ConfigReader, ConfigRepository } from "./types.js";
 
 function fixture() {
   const auth: AuthSession = {
@@ -18,7 +18,7 @@ function fixture() {
     session: { id: "session", userId: "admin", expiresAt: new Date(Date.now() + 60000) },
   };
   const snapshot = { values: { ...configurationDefaults }, revision: 0, updatedAt: null };
-  const repository: ConfigurationRepository = {
+  const repository: ConfigRepository = {
     read: vi.fn(async () => structuredClone(snapshot)),
     update: vi.fn(async (values, revision) => ({
       values,
@@ -30,7 +30,7 @@ function fixture() {
     auth,
     snapshot,
     repository,
-    service: createConfigurationService({
+    service: createConfigService({
       repository,
       access: createAccessPolicy(),
     }),
@@ -39,7 +39,7 @@ function fixture() {
 
 it("injects a reader that observes subsequent changes without caching or leaking mutable values", async () => {
   const f = fixture();
-  const consumer = (configuration: ConfigurationReader) => async () =>
+  const consumer = (configuration: ConfigReader) => async () =>
     (await configuration.read()).values.siteName;
   const readName = consumer(f.service);
   expect(await readName()).toBe("Raypx");
@@ -104,8 +104,8 @@ it("sanitizes injected storage failures and refuses malformed storage results", 
 it("serves brief cached reads, refreshes them after saves and never caches failures", async () => {
   const f = fixture();
   let time = 0;
-  const subscribers = new Set<Parameters<ConfigurationNotifications["subscribe"]>[0]>();
-  const notifications: ConfigurationNotifications = {
+  const subscribers = new Set<Parameters<ConfigNotifications["subscribe"]>[0]>();
+  const notifications: ConfigNotifications = {
     publish(change) {
       for (const receive of subscribers) receive(change);
     },
@@ -114,10 +114,10 @@ it("serves brief cached reads, refreshes them after saves and never caches failu
       return () => subscribers.delete(receive);
     },
   };
-  const service = createConfigurationService({
+  const service = createConfigService({
     repository: f.repository,
     access: createAccessPolicy(),
-    reads: createConfigurationReads(notifications, () => time),
+    reads: createConfigReads(notifications, () => time),
   });
   expect((await service.readCached()).values.siteName).toBe("Raypx");
   f.snapshot.values.siteName = "Elsewhere";
@@ -125,10 +125,10 @@ it("serves brief cached reads, refreshes them after saves and never caches failu
   expect((await service.readCached()).values.siteName).toBe("Raypx");
   expect((await service.read()).values.siteName).toBe("Elsewhere");
   // Each runtime loads its own copy, then receives committed changes from its peer.
-  const sibling = createConfigurationService({
+  const sibling = createConfigService({
     repository: f.repository,
     access: createAccessPolicy(),
-    reads: createConfigurationReads(notifications, () => time),
+    reads: createConfigReads(notifications, () => time),
   });
   expect((await sibling.readCached()).values.siteName).toBe("Elsewhere");
   time = 5000;

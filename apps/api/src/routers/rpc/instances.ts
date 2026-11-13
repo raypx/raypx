@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { InstanceError } from "@raypx/instances";
 import type { InstanceService } from "@raypx/instances/server";
 import type { AccountContext, RpcContext } from "../../middleware/rpc.js";
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 export function createInstancesHandlers({
   os,
   options,
@@ -11,7 +11,7 @@ export function createInstancesHandlers({
   withPublicRpcAccess,
   requireTrustedOrigin,
 }: Pick<
-  RpcBoundary,
+  RpcSetup,
   | "os"
   | "options"
   | "enforceLimit"

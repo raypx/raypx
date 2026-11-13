@@ -6,7 +6,7 @@ import type { ReadReadiness } from "../../src/app/readiness.js";
 const services = [
   "instances",
   "administration",
-  "configuration",
+  "config",
   "storageSettings",
   "resendSettings",
   "control",

@@ -5,7 +5,7 @@ import { TimeoutHandlerPlugin } from "@orpc/server/plugins";
 import { createRpcLoggingPlugin } from "../../logging.js";
 import { procedureRequest, type ApiRouterEnv } from "../request.js";
 import { createAdministrationHandlers } from "./admin.js";
-import { createRpcBoundary } from "./boundary.js";
+import { createRpcSetup } from "./setup.js";
 import type { ApiAppOptions } from "../../app/options.js";
 import type { ReadReadiness } from "../../app/readiness.js";
 import { createInstancesHandlers } from "./instances.js";
@@ -13,7 +13,7 @@ import { createMemoryHandlers } from "./memory.js";
 import { createJobsHandlers } from "./jobs.js";
 import { createHostsHandlers } from "./hosts.js";
 import { createObservedHandlers } from "./observed.js";
-import { createConfigurationHandlers } from "./config.js";
+import { createConfigHandlers } from "./config.js";
 import { createDevicesHandlers } from "./devices.js";
 import { createTasksHandlers } from "./tasks.js";
 import { createApprovalsHandlers } from "./approvals.js";
@@ -24,21 +24,21 @@ import { createAttachmentHandlers } from "./attachments.js";
 export const rpcPrefix = "/rpc";
 
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
-  const boundary = createRpcBoundary(options);
-  return boundary.implementer.router({
-    admin: createAdministrationHandlers(boundary, readReadiness),
-    attachments: createAttachmentHandlers(boundary),
-    instances: createInstancesHandlers(boundary),
-    memory: createMemoryHandlers(boundary),
-    jobs: createJobsHandlers(boundary),
-    hosts: createHostsHandlers(boundary),
-    observed: createObservedHandlers(boundary),
-    configuration: createConfigurationHandlers(boundary),
-    devices: createDevicesHandlers(boundary),
-    tasks: createTasksHandlers(boundary),
-    approvals: createApprovalsHandlers(boundary),
-    relay: createRelayHandlers(boundary),
-    account: createAccountHandlers(boundary),
+  const setup = createRpcSetup(options);
+  return setup.implementer.router({
+    admin: createAdministrationHandlers(setup, readReadiness),
+    attachments: createAttachmentHandlers(setup),
+    instances: createInstancesHandlers(setup),
+    memory: createMemoryHandlers(setup),
+    jobs: createJobsHandlers(setup),
+    hosts: createHostsHandlers(setup),
+    observed: createObservedHandlers(setup),
+    configuration: createConfigHandlers(setup),
+    devices: createDevicesHandlers(setup),
+    tasks: createTasksHandlers(setup),
+    approvals: createApprovalsHandlers(setup),
+    relay: createRelayHandlers(setup),
+    account: createAccountHandlers(setup),
   });
 }
 

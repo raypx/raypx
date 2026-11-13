@@ -1,10 +1,10 @@
-import { ConfigurationError } from "../../config/service.js";
-import type { ConfigurationService } from "../../config/types.js";
+import { ConfigError } from "../../config/service.js";
+import type { ConfigService } from "../../config/types.js";
 import type { RpcContext } from "../../middleware/rpc.js";
 import { ORPCError } from "@orpc/server";
 import { hasPermission } from "@raypx/account/access";
-import type { RpcBoundary } from "./boundary.js";
-export function createConfigurationHandlers({
+import type { RpcSetup } from "./setup.js";
+export function createConfigHandlers({
   os,
   withRpcPermission,
   withPublicRpcAccess,
@@ -12,21 +12,21 @@ export function createConfigurationHandlers({
   options,
   access,
 }: Pick<
-  RpcBoundary,
+  RpcSetup,
   "os" | "withRpcPermission" | "withPublicRpcAccess" | "requireTrustedOrigin" | "options" | "access"
 >) {
   async function configurationCall<T>(
     context: RpcContext,
-    run: (service: ConfigurationService) => Promise<T>,
+    run: (service: ConfigService) => Promise<T>,
   ) {
     try {
-      return await run(options.configuration);
+      return await run(options.config);
     } catch (error) {
       return configurationFailure(error, context);
     }
   }
   function configurationFailure(error: unknown, context: RpcContext): never {
-    if (!(error instanceof ConfigurationError)) throw error;
+    if (!(error instanceof ConfigError)) throw error;
     const status =
       error.code === "CONFIGURATION_CONFLICT"
         ? "CONFLICT"

@@ -2,10 +2,10 @@ import type { AuditService } from "../admin/audit.js";
 import { hasPermission } from "@raypx/account/access";
 import type { AccessPolicy } from "../access.js";
 import { configurationSnapshotSchema, configurationUpdateSchema } from "@raypx/contracts/api";
-import { createConfigurationReads, type ConfigurationReads } from "./reads.js";
-import type { ConfigurationRepository, ConfigurationService } from "./types.js";
+import { createConfigReads, type ConfigReads } from "./reads.js";
+import type { ConfigRepository, ConfigService } from "./types.js";
 
-export class ConfigurationError extends Error {
+export class ConfigError extends Error {
   constructor(
     readonly code:
       | "CONFIGURATION_UNAVAILABLE"
@@ -19,34 +19,33 @@ export class ConfigurationError extends Error {
   }
 }
 
-export interface ConfigurationServiceOptions {
-  repository: ConfigurationRepository;
+export interface ConfigServiceOptions {
+  repository: ConfigRepository;
   audit?: AuditService;
   access: AccessPolicy;
-  reads?: ConfigurationReads;
+  reads?: ConfigReads;
 }
 
-export function createConfigurationService({
+export function createConfigService({
   repository,
   audit,
   access,
-  reads = createConfigurationReads(),
-}: ConfigurationServiceOptions): ConfigurationService {
+  reads = createConfigReads(),
+}: ConfigServiceOptions): ConfigService {
   async function read() {
     try {
       return configurationSnapshotSchema.parse(await repository.read());
     } catch {
-      throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
+      throw new ConfigError("CONFIGURATION_UNAVAILABLE");
     }
   }
-  const service: ConfigurationService = {
+  const service: ConfigService = {
     ...reads.source("site", read, (snapshot) => structuredClone(snapshot)),
     async update(input, auth) {
-      if (!auth) throw new ConfigurationError("UNAUTHORIZED");
-      if (!hasPermission(access(auth), "configuration.update"))
-        throw new ConfigurationError("FORBIDDEN");
+      if (!auth) throw new ConfigError("UNAUTHORIZED");
+      if (!hasPermission(access(auth), "configuration.update")) throw new ConfigError("FORBIDDEN");
       const parsed = configurationUpdateSchema.safeParse(input);
-      if (!parsed.success) throw new ConfigurationError("INVALID_INPUT");
+      if (!parsed.success) throw new ConfigError("INVALID_INPUT");
       let saved;
       try {
         const result = await repository.update(
@@ -56,9 +55,9 @@ export function createConfigurationService({
         );
         saved = result === null ? null : configurationSnapshotSchema.parse(result);
       } catch {
-        throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
+        throw new ConfigError("CONFIGURATION_UNAVAILABLE");
       }
-      if (!saved) throw new ConfigurationError("CONFIGURATION_CONFLICT");
+      if (!saved) throw new ConfigError("CONFIGURATION_CONFLICT");
       reads.committed("site", saved.revision);
       return saved;
     },

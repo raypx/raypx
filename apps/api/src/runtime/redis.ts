@@ -1,12 +1,12 @@
 import { Redis } from "ioredis";
 import type { AuthSecondaryStorage } from "@raypx/auth/server";
 import type { RateLimiter } from "../rate-limit/types.js";
-import { configurationScopes, type ConfigurationNotifications } from "../config/reads.js";
+import { configScopes, type ConfigNotifications } from "../config/reads.js";
 
 export interface RedisResources {
   secondaryStorage: AuthSecondaryStorage;
   rateLimit: RateLimiter;
-  configurationNotifications: ConfigurationNotifications;
+  configNotifications: ConfigNotifications;
   ping(): Promise<unknown>;
   close(): Promise<void>;
 }
@@ -54,7 +54,7 @@ export function connectRedis(url: string, prefix = "raypx:"): RedisResources {
     },
     // Fixed windows: the first request of a window sets the expiry.
     rateLimit: async (key, rule) => (await increment(`rate:${key}`, rule.window)) <= rule.max,
-    configurationNotifications: {
+    configNotifications: {
       publish({ scope, revision }) {
         if (client.status === "ready")
           void client.publish(configurationChannel, `${scope}:${revision}`).catch(() => {});
@@ -74,7 +74,7 @@ export function connectRedis(url: string, prefix = "raypx:"): RedisResources {
         subscriber.on("message", (channel, value) => {
           if (channel !== configurationChannel || value.length > 24) return;
           const [name, revision, extra] = value.split(":");
-          const scope = configurationScopes.find((candidate) => candidate === name);
+          const scope = configScopes.find((candidate) => candidate === name);
           if (scope && revision && extra === undefined && /^[1-9]\d{0,9}$/.test(revision))
             receive({ scope, revision: Number(revision) });
         });

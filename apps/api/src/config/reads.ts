@@ -1,10 +1,10 @@
-export const configurationScopes = ["site", "storage", "resend"] as const;
-export type ConfigurationScope = (typeof configurationScopes)[number];
-type ConfigurationChange = { scope: ConfigurationScope; revision: number };
+export const configScopes = ["site", "storage", "resend"] as const;
+export type ConfigScope = (typeof configScopes)[number];
+type ConfigChange = { scope: ConfigScope; revision: number };
 
-export interface ConfigurationNotifications {
-  publish(change: ConfigurationChange): void;
-  subscribe(receive: (change: ConfigurationChange) => void, resubscribed: () => void): () => void;
+export interface ConfigNotifications {
+  publish(change: ConfigChange): void;
+  subscribe(receive: (change: ConfigChange) => void, resubscribed: () => void): () => void;
 }
 
 const ttlMs = 5_000;
@@ -42,11 +42,11 @@ function createReader<T>(load: () => Promise<T>, copy: (value: T) => T, now: () 
 }
 
 /** One reader per configuration scope in each API runtime. */
-export function createConfigurationReads(
-  notifications?: ConfigurationNotifications,
+export function createConfigReads(
+  notifications?: ConfigNotifications,
   now = () => performance.now(),
 ) {
-  const invalidate = new Map<ConfigurationScope, () => void>();
+  const invalidate = new Map<ConfigScope, () => void>();
   const unsubscribe = notifications?.subscribe(
     ({ scope }) => invalidate.get(scope)?.(),
     () => {
@@ -54,13 +54,13 @@ export function createConfigurationReads(
     },
   );
   return {
-    source<T>(scope: ConfigurationScope, load: () => Promise<T>, copy = (value: T) => value) {
+    source<T>(scope: ConfigScope, load: () => Promise<T>, copy = (value: T) => value) {
       if (invalidate.has(scope)) throw new Error(`Configuration reader already exists: ${scope}`);
       const reader = createReader(load, copy, now);
       invalidate.set(scope, reader.invalidate);
       return { read: reader.read, readCached: reader.readCached };
     },
-    committed(scope: ConfigurationScope, revision: number) {
+    committed(scope: ConfigScope, revision: number) {
       invalidate.get(scope)?.();
       notifications?.publish({ scope, revision });
     },
@@ -71,4 +71,4 @@ export function createConfigurationReads(
   };
 }
 
-export type ConfigurationReads = ReturnType<typeof createConfigurationReads>;
+export type ConfigReads = ReturnType<typeof createConfigReads>;

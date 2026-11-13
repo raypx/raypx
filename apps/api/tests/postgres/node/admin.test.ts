@@ -10,8 +10,8 @@ import { createApiApp } from "../../helpers/app.js";
 import { AuditService } from "../../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../../src/admin/repository.js";
 import { createAuditedAuthAdapter } from "../../../src/admin/auth-adapter.js";
-import { createConfigurationRepository } from "../../../src/config/repository.js";
-import { createConfigurationService } from "../../../src/config/service.js";
+import { createConfigRepository } from "../../../src/config/repository.js";
+import { createConfigService } from "../../../src/config/service.js";
 import { createAccessPolicy } from "../../../src/access.js";
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
@@ -20,8 +20,8 @@ const connection = connectDatabase(url),
   db = connection.db;
 const repository = createAdministrationRepository(db),
   audit = new AuditService(repository);
-const configuration = createConfigurationService({
-  repository: createConfigurationRepository(db, audit),
+const config = createConfigService({
+  repository: createConfigRepository(db, audit),
   audit,
   access: createAccessPolicy(),
 });
@@ -45,7 +45,7 @@ const options = {
   },
   audit,
   administration: repository,
-  configuration,
+  config,
   authHandler: (request: Request) => auth.handler(request),
   readSession: (headers: Headers) => readAuthSession(auth, headers),
   allowedOrigins: ["http://localhost:3000"],
@@ -144,7 +144,7 @@ it("commits role and configuration changes with safe durable audit and records r
   expect((await readAuthSession(auth, new Headers({ cookie: memberCookie })))?.user.role).toBe(
     "admin",
   );
-  const snapshot = await configuration.read();
+  const snapshot = await config.read();
   await client().configuration.update({
     values: { ...configurationDefaults, siteName: "Audited site" },
     revision: snapshot.revision,
@@ -193,7 +193,7 @@ it("blocks mutations when intent storage is unavailable", async () => {
   expect(await result.json()).toMatchObject({ code: "AUDIT_UNAVAILABLE" });
   const [row] = await db.select().from(user).where(eq(user.id, member));
   expect(row?.role).toBe("admin");
-  const current = await configuration.read();
+  const current = await config.read();
   const deniedClient = createApiClient({
     baseUrl: "http://localhost:3002",
     headers: { cookie: adminCookie, origin: "http://localhost:3000" },
@@ -208,7 +208,7 @@ it("blocks mutations when intent storage is unavailable", async () => {
     code: "SERVICE_UNAVAILABLE",
     data: { error: { code: "AUDIT_UNAVAILABLE" } },
   });
-  expect((await configuration.read()).revision).toBe(current.revision);
+  expect((await config.read()).revision).toBe(current.revision);
 });
 it("rolls back actual role writes if the success audit cannot commit", async () => {
   await db.execute(
@@ -223,14 +223,14 @@ it("rolls back actual role writes if the success audit cannot commit", async () 
     ).toBeGreaterThanOrEqual(500);
     const [row] = await db.select().from(user).where(eq(user.id, member));
     expect(row?.role).toBe("admin");
-    const current = await configuration.read();
+    const current = await config.read();
     await expect(
-      configuration.update(
+      config.update(
         { values: configurationDefaults, revision: current.revision },
         await readAuthSession(auth, new Headers({ cookie: adminCookie })),
       ),
     ).rejects.toBeDefined();
-    expect((await configuration.read()).revision).toBe(current.revision);
+    expect((await config.read()).revision).toBe(current.revision);
   } finally {
     await db.execute(sql`drop trigger audit_test_reject on public.admin_audit`);
     await db.execute(sql`drop function public.audit_test_reject()`);

@@ -2,7 +2,7 @@ import type { Database } from "@raypx/database/connection";
 import { rateLimit, session, sessionAttachment, verification } from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
-import type { ConfigurationReader } from "../config/types.js";
+import type { ConfigReader } from "../config/types.js";
 import { contextCommandPrune } from "@raypx/control/postgres";
 
 export function createCleanupJob({
@@ -13,7 +13,7 @@ export function createCleanupJob({
 }: {
   db: Database;
   logger: ApiLogging;
-  configuration: ConfigurationReader;
+  configuration: ConfigReader;
   enabled: boolean;
 }): () => Promise<CleanupResult> {
   return () => runCleanupJob(db, logger, enabled, configuration);
@@ -102,7 +102,7 @@ export async function runCleanupJob(
   db: Database,
   logger: ApiLogging,
   enabled: boolean,
-  configuration?: ConfigurationReader,
+  configuration?: ConfigReader,
 ): Promise<CleanupResult> {
   const event = logger.createLogger({ operation: "job.cleanup" });
   try {

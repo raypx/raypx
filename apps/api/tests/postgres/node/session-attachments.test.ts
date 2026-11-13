@@ -14,7 +14,7 @@ import { createControlRepository } from "@raypx/control/postgres";
 import { connected, controlAuth } from "@raypx/control/testing";
 import { createApiClient } from "@raypx/client/api";
 import { createApiApp } from "../../helpers/app.js";
-import { createConfigurationReads } from "../../../src/config/reads.js";
+import { createConfigReads } from "../../../src/config/reads.js";
 import { AuditService } from "../../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../../src/admin/repository.js";
 import { cleanupExpired } from "../../../src/jobs/cleanup.js";
@@ -63,7 +63,7 @@ it("audits storage changes atomically without returning credentials and rejects 
   const administration = createAdministrationRepository(db);
   const audit = new AuditService(administration);
   let current: AuthSession = auth;
-  const reads = createConfigurationReads();
+  const reads = createConfigReads();
   const storage = databaseStorage(db, key, reads);
   const app = createApiApp({
     audit,
@@ -183,7 +183,7 @@ it("loads encrypted S3 settings from PostgreSQL and routes private attachment co
     const storage = databaseStorage(
       db,
       key,
-      createConfigurationReads(undefined, () => now),
+      createConfigReads(undefined, () => now),
     );
     const attachments = createSessionAttachments(db, storage, seed.projects);
     const resolve = withSessionAttachments(db, async () => ({

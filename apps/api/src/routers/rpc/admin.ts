@@ -1,9 +1,9 @@
 import { ORPCError } from "@orpc/server";
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 import type { ReadReadiness } from "../../app/readiness.js";
 
 export function createAdministrationHandlers(
-  { os, options, withRpcPermission }: Pick<RpcBoundary, "os" | "options" | "withRpcPermission">,
+  { os, options, withRpcPermission }: Pick<RpcSetup, "os" | "options" | "withRpcPermission">,
   readReadiness: ReadReadiness,
 ) {
   return {
