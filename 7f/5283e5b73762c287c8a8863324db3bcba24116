@@ -1,0 +1,239 @@
+apps/api/AGENTS.md
+  s_f9cc0d01f49051::t_3930822cd1533b 378-385
+apps/api/src/app/options.ts
+  s_f9cc0d01f49051::t_d2e051b501e2df 22-24
+apps/api/src/conversations/memory-loop.test.ts
+  s_f9cc0d01f49051::t_898134322bcb80 1-163
+apps/api/src/conversations/memory-tools.test.ts
+  s_f9cc0d01f49051::t_18a6f1ece8ec04 1-325
+apps/api/src/conversations/memory-tools.ts
+  s_f9cc0d01f49051::t_00db3a99e8820e 1-73
+apps/api/src/conversations/secrets.test.ts
+  s_f9cc0d01f49051::t_3c302100185c3e 115-129
+apps/api/src/conversations/secrets.ts
+  s_f9cc0d01f49051::t_398f2421616f45 6,28-67,78,86
+apps/api/src/env.contract.ts
+  s_f9cc0d01f49051::t_5af83f0fa5d065 19-20
+apps/api/src/env.test.ts
+  s_f9cc0d01f49051::t_929f168f412be1 140-162
+apps/api/src/env.ts
+  s_f9cc0d01f49051::t_baf59fe6ddfd65 33-43,128-142,216
+apps/api/src/logging/events.ts
+  s_f9cc0d01f49051::t_d5957449fb56c2 32-33,67-77,92-94
+apps/api/src/logging/policy.ts
+  s_f9cc0d01f49051::t_1b7db59c7c7c8f 7-12
+apps/api/src/routers/index.ts
+  s_f9cc0d01f49051::t_aecbf1a699acf8 11,23-31
+apps/api/src/routers/rpc/index.ts
+  s_f9cc0d01f49051::t_a294c7b2e267a2 25-26,33-34
+apps/api/src/routers/rpc/routines.test.ts
+  s_f9cc0d01f49051::t_9b316db557de15 1-136
+apps/api/src/routers/rpc/routines.ts
+  s_f9cc0d01f49051::t_706041cbc4a7c8 1-119
+apps/api/src/routers/rpc/space-memory.ts
+  s_f9cc0d01f49051::t_827e2c30c06dff 1-95
+apps/api/src/routines/http.test.ts
+  s_f9cc0d01f49051::t_d97f55f01e5415 1-213
+apps/api/src/routines/http.ts
+  s_f9cc0d01f49051::t_2ddaf84193d8f7 1-151
+apps/api/src/routines/service-http.test.ts
+  s_f9cc0d01f49051::t_cfd1688db7095c 1-235
+apps/api/src/routines/worker.test.ts
+  s_f9cc0d01f49051::t_a74e7a494e049b 1-19
+apps/api/src/routines/worker.ts
+  s_f9cc0d01f49051::t_6d3a186cad1761 1-40
+apps/api/src/runtime/agents.ts
+  s_f9cc0d01f49051::t_546dd595c1f270 13-19,28-29,71-79,97,100-122,124-126
+apps/api/src/runtime/computers.ts
+  s_f9cc0d01f49051::t_571b36ee4f20f3 31
+apps/api/src/runtime/server.ts
+  s_f9cc0d01f49051::t_0d07a97e7f4ce6 122-125
+apps/api/src/runtime/shared.ts
+  s_f9cc0d01f49051::t_4d63044a2d5b55 154-156,159,162-164,168-171,195-199
+apps/api/src/runtime/worker.ts
+  s_f9cc0d01f49051::t_bfeebed2bdec67 41,51,58-63,67-70
+apps/api/tests/helpers/app.ts
+  s_f9cc0d01f49051::t_ecde9885291ef0 7-8
+apps/api/tests/integration/routine-ingress.test.ts
+  s_f9cc0d01f49051::t_10d3e79c18e727 1-95
+apps/api/tests/postgres/node/routines-memory.test.ts
+  s_f9cc0d01f49051::t_27c33e39ef07c1 1-197
+apps/mobile/src/agents/approval-card.tsx
+  s_f9cc0d01f49051::t_f1fb33a49b4773 19-20
+bun.lock
+  s_f9cc0d01f49051::t_69c0349e374176 754,764,796,806
+deploy/.env.example
+  s_f9cc0d01f49051::t_4d68fb1d497518 24-26
+deploy/compose.split.yaml
+  s_f9cc0d01f49051::t_29569314477e9d 53
+deploy/compose.yaml
+  s_f9cc0d01f49051::t_b3a6eab7a9d81d 83-84,117
+docs/architecture/approvals.md
+  s_f9cc0d01f49051::t_6f8133c9e448d8 133-140
+docs/architecture/capabilities.md
+  s_f9cc0d01f49051::t_be3b472c00b833 108-175
+docs/architecture/domain.md
+  s_f9cc0d01f49051::t_f9cc9f31debd4d 98-114
+docs/architecture/events.md
+  s_f9cc0d01f49051::t_cff880a6e244a3 102-103,213-230
+docs/architecture/execution.md
+  s_f9cc0d01f49051::t_34c3e2310cd91c 215-253
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_3a3cb862f26d75 81-92
+docs/roadmap.md
+  s_f9cc0d01f49051::t_59b92e7ec9be5c 134-140
+infra/railway/Caddyfile
+  s_f9cc0d01f49051::t_3446e5811936ec 23
+packages/agents/AGENTS.md
+  s_f9cc0d01f49051::t_37db7b73ef5594 40-41,74-93
+packages/agents/locales/en/agents.json
+  s_f9cc0d01f49051::t_51a0c4ded823e0 96-98
+packages/agents/locales/zh/agents.json
+  s_f9cc0d01f49051::t_a11bfe51dc96bf 96-98
+packages/agents/src/approvals.test.ts
+  s_f9cc0d01f49051::t_0f5a52f70ae5a3 536-578
+packages/agents/src/approvals.ts
+  s_f9cc0d01f49051::t_9e331ad05cc83b 151-152,154,158-160,266-270,296-300,308-314
+packages/agents/src/client/approval-card.tsx
+  s_f9cc0d01f49051::t_0eb3281498d13a 20-21
+packages/agents/src/client/approval-settings.tsx
+  s_f9cc0d01f49051::t_ed6421b3177784 37-38
+packages/agents/src/computer-tools.ts
+  s_f9cc0d01f49051::t_57485d06db0e09 56-57,66,246
+packages/agents/src/conversations.ts
+  s_f9cc0d01f49051::t_eedb02b3453ad4 65-66,87-93
+packages/agents/src/model/approvals.ts
+  s_f9cc0d01f49051::t_a092f4e8785dca 46-47
+packages/agents/src/routine-context.test.ts
+  s_f9cc0d01f49051::t_16f0dcddccce2a 1-39
+packages/agents/src/runner.test.ts
+  s_f9cc0d01f49051::t_1a934504406c08 790-832
+packages/agents/src/runner.ts
+  s_f9cc0d01f49051::t_5752b330e2b4b6 63-66,75-90,163-165,183-184,217,336-339,507-537,582
+packages/agents/src/server/approvals.ts
+  s_f9cc0d01f49051::t_79bf377edd3a5f 12,377-389
+packages/agents/src/server/conversations.ts
+  s_f9cc0d01f49051::t_880a22f4c0289c 14,56-61,97-100,110,126,129,134,143,158,162,180-189,192-193,200-204,214-216,220-229,238,240,246,254-357,359,364-386,399-405,416-437,457-464,488,493-495,500,539-542,608-609,616-618,709-717,721-739,746,786-788,810,851,1159,1251,1315,1321,1356
+packages/agents/src/server/fence.ts
+  s_f9cc0d01f49051::t_55cc87f54c65f6 3,25
+packages/agents/src/server/postgres.ts
+  s_f9cc0d01f49051::t_5cfc4e45c58bf0 19-26
+packages/agents/src/server/tool-events.ts
+  s_f9cc0d01f49051::t_56562303af0748 39,49,86,110,135
+packages/agents/src/views.test.ts
+  s_f9cc0d01f49051::t_d45da9b0257420 13,23
+packages/agents/src/views.ts
+  s_f9cc0d01f49051::t_1e25286d10dd4f 11
+packages/agents/tests/postgres/approvals.test.ts
+  s_f9cc0d01f49051::t_6e6d957f75971a 689,719,727,860-897
+packages/agents/tests/postgres/departed-actors.test.ts
+  s_f9cc0d01f49051::t_b74a112e1dddbc 1-261
+packages/agents/tests/postgres/durable-runs.test.ts
+  s_f9cc0d01f49051::t_07e4520c2ce62d 18-20,781-902
+packages/agents/tests/postgres/memory-pins.test.ts
+  s_f9cc0d01f49051::t_56ddcb1cabb503 1-323
+packages/contracts/AGENTS.md
+  s_f9cc0d01f49051::t_4e3b1558f6423a 151-155
+packages/contracts/src/api.test.ts
+  s_f9cc0d01f49051::t_0ed62bc5394bcf 15-16
+packages/contracts/src/api.ts
+  s_f9cc0d01f49051::t_193bcd71130d4e 30-31,64-65
+packages/contracts/src/routines.ts
+  s_f9cc0d01f49051::t_4ac4f6a5336763 1-42
+packages/contracts/src/space-memory.ts
+  s_f9cc0d01f49051::t_ad026ac543293f 1-43
+packages/core/AGENTS.md
+  s_f9cc0d01f49051::t_a71b1963bba026 69-74
+packages/core/package.json
+  s_f9cc0d01f49051::t_a729e0eb7f5ce5 21-23
+packages/core/src/agents.ts
+  s_f9cc0d01f49051::t_d0267e40a050cb 16
+packages/core/src/approvals.ts
+  s_f9cc0d01f49051::t_13ce328fee8230 11-12
+packages/core/src/conversation.test.ts
+  s_f9cc0d01f49051::t_cb64efee3dbdfa 73,83-84
+packages/core/src/conversation.ts
+  s_f9cc0d01f49051::t_d71c76c5146cae 64,74-84
+packages/core/src/routines.test.ts
+  s_f9cc0d01f49051::t_226b15d24696cf 1-40
+packages/core/src/routines.ts
+  s_f9cc0d01f49051::t_d1f2570b0d5850 1-127
+packages/core/src/space-memory.test.ts
+  s_f9cc0d01f49051::t_b2a8dfb5dda9ab 1-67
+packages/core/src/space-memory.ts
+  s_f9cc0d01f49051::t_58ddbd42694f44 1-126
+packages/database/AGENTS.md
+  s_f9cc0d01f49051::t_2439c8d28a6fa4 46-47,49-51,147-164
+packages/database/drizzle-foundation/20261113192144_silky_vance_astro/migration.sql
+  s_f9cc0d01f49051::t_c5c055fe73f80a 1-183
+packages/database/drizzle-foundation/20261113192144_silky_vance_astro/snapshot.json
+  s_f9cc0d01f49051::t_ddf0b1e585ae60 1-4298
+packages/database/src/schema.test.ts
+  s_f9cc0d01f49051::t_6c374eb5232b04 5-15,169-173,176,179,182,185,198-262
+packages/database/src/schema.ts
+  s_f9cc0d01f49051::t_2e1449973f150f 78,195-196,238-250,254,284-289,293-294,308-315,329-332,342-345,418-421,673,706-711,730-736,739-745,749,796,837,877,881,1311-1638,1640-1648
+packages/dev-cli/src/validation/deployment.test.ts
+  s_f9cc0d01f49051::t_2af1d3cc75f61d 37-47
+packages/jobs/AGENTS.md
+  s_f9cc0d01f49051::t_346669317870b1 43-56
+packages/jobs/package.json
+  s_f9cc0d01f49051::t_24b605f22f9b16 12-14,20-21,29,39
+packages/jobs/src/routines.ts
+  s_f9cc0d01f49051::t_7e5148f7495135 1-3
+packages/jobs/src/routines/postgres.ts
+  s_f9cc0d01f49051::t_5f37861f665cd9 1-606
+packages/jobs/src/routines/service.test.ts
+  s_f9cc0d01f49051::t_22bab09f4de9e1 1-199
+packages/jobs/src/routines/service.ts
+  s_f9cc0d01f49051::t_8c7dfab28c8b80 1-300
+packages/jobs/src/routines/types.ts
+  s_f9cc0d01f49051::t_b375b4498907dd 1-137
+packages/jobs/tests/postgres/routines.test.ts
+  s_f9cc0d01f49051::t_7328c86de94932 1-571
+packages/jobs/tsconfig.json
+  s_f9cc0d01f49051::t_68dbd07ad103dd 3-6
+packages/jobs/vitest.config.ts
+  s_f9cc0d01f49051::t_9e8534bb909c3b 4-16
+packages/memory/AGENTS.md
+  s_f9cc0d01f49051::t_809767f227e27b 9-24
+packages/memory/package.json
+  s_f9cc0d01f49051::t_52104fbfea35b5 12-14,20-21,28,38
+packages/memory/src/space-server.ts
+  s_f9cc0d01f49051::t_03ba3c39131cb4 1-16
+packages/memory/src/space-server/postgres.ts
+  s_f9cc0d01f49051::t_25b8a52ba2d26c 1-315
+packages/memory/src/space-server/service.test.ts
+  s_f9cc0d01f49051::t_5dea8898230b07 1-90
+packages/memory/src/space-server/service.ts
+  s_f9cc0d01f49051::t_bdbf9c8bc45318 1-77
+packages/memory/src/space-server/tools.test.ts
+  s_f9cc0d01f49051::t_84266e2cb54229 1-100
+packages/memory/src/space-server/tools.ts
+  s_f9cc0d01f49051::t_04bd13612efdde 1-122
+packages/memory/src/space-server/types.ts
+  s_f9cc0d01f49051::t_5dd27d21359072 1-116
+packages/memory/tests/postgres/space-memory.test.ts
+  s_f9cc0d01f49051::t_f9e9d8bb693086 1-304
+packages/memory/tsconfig.json
+  s_f9cc0d01f49051::t_88363c82a7cdae 3-6
+packages/memory/vitest.config.ts
+  s_f9cc0d01f49051::t_01a2c103db6612 4-16
+packages/tooling/src/build/deployment.ts
+  s_f9cc0d01f49051::t_0dcaf0c4f86d2e 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7f5283e5b73762c287c8a8863324db3bcba24116",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
