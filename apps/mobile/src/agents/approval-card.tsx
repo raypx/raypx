@@ -18,6 +18,9 @@ const toolKeys = {
   computer_run_command: "agents.tools.runCommand",
   agent_memory_save: "agents.tools.saveMemory",
   agent_memory_update: "agents.tools.updateMemory",
+  agent_send_message: "agents.tools.messageAgent",
+  agent_delegate: "agents.tools.delegateTask",
+  agent_wait: "agents.tools.waitForChildren",
 } as const;
 
 export interface ApprovalCardProps {

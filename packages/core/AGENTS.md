@@ -1,5 +1,10 @@
 # @raypx/core
 
+`/agents` includes named groups, participant/default-responder inputs and an
+off-by-default cross-Space-message setting. `/conversation` includes structural
+mentions, Agent authors, the `agent` trigger, parent-Run attribution and bounded
+Agent-message refusal codes. Existing Run states and failures remain unchanged.
+
 ## Purpose
 
 Platform-neutral task and account domain models and pure rules shared by transport
@@ -75,3 +80,7 @@ and five-field Cron validation. `/space-memory` owns Agent/shared memory revisio
 attribution, provenance and deterministic whole-document recall budgeting. These
 entries are independent of retained account/device `/jobs` and `/memory`.
 Computer approval names also cover the memory save/update change tools.
+
+Conversation schemas also describe named groups, explicit Agent mentions, Agent
+authors and optional Agent/parent Run attribution on events, segments and live text.
+Group mutation and Agent messaging refusals are separate from Run failure unions.

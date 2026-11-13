@@ -1,4 +1,5 @@
 import { ComputerFilesError, ComputerOperationError } from "@raypx/computers/server";
+import { GroupConversationError } from "@raypx/core/agents";
 import { InvalidConversationCursor } from "@raypx/core/conversation";
 import { ORPCError } from "@orpc/server";
 import { SpaceMutationError, SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
@@ -17,6 +18,10 @@ export function createSpaceHandlers({
     try {
       return await run();
     } catch (error) {
+      if (error instanceof GroupConversationError)
+        throw new ORPCError("BAD_REQUEST", {
+          data: { error: { code: error.code }, requestId: context.requestId },
+        });
       if (error instanceof SpaceMutationError) {
         const status = {
           SPACE_OWNER_REQUIRED: "FORBIDDEN",
@@ -98,6 +103,78 @@ export function createSpaceHandlers({
         ),
     },
     conversations: {
+      createGroup: os.conversations.createGroup
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.createGroup!(scope, input),
+          ),
+        ),
+      listGroups: os.conversations.listGroups
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.listGroups!(scope, input.limit),
+          ),
+        ),
+      getGroup: os.conversations.getGroup
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.getGroup!(scope, input.conversationId),
+          ),
+        ),
+      renameGroup: os.conversations.renameGroup
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.renameGroup!(scope, input.conversationId, input.name),
+          ),
+        ),
+      addGroupAgent: os.conversations.addGroupAgent
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.addGroupAgent!(scope, input.conversationId, input.agentId),
+          ),
+        ),
+      removeGroupAgent: os.conversations.removeGroupAgent
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.removeGroupAgent!(scope, input.conversationId, input.agentId),
+          ),
+        ),
+      setGroupDefaultResponder: os.conversations.setGroupDefaultResponder
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.setGroupDefaultResponder!(
+              scope,
+              input.conversationId,
+              input.agentId,
+            ),
+          ),
+        ),
+      deleteGroup: os.conversations.deleteGroup
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.deleteGroup!(scope, input.conversationId),
+          ),
+        ),
       stop: os.conversations.stop
         .use(write)
         .use(requireTrustedOrigin)

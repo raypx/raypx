@@ -177,9 +177,11 @@ single-use seven-day invitations, owner approval-mode overrides, append-only Spa
 audit, live Space events and resumable claimed Space deletion are implemented.
 Removal revokes admission/streams, cancels active Runs and approvals, pauses owned
 routines and clears connection selections while retaining conversation history.
-Group conversations, delegation and membership UI remain separate work. PostgreSQL
-and loopback acceptance are authored but remain separate, unrun gates in a sandbox
-that cannot host a database or listener.
+The backend group/delegation slice adds structural mentions, optional group default
+responders, concurrent Agent replies, bounded Agent messaging and durable child
+Runs with inherited authority, cancellation and recovery. Membership/group UI
+remains separate work. PostgreSQL and loopback acceptance are authored but remain
+separate, unrun gates in a sandbox that cannot host a database or listener.
 
 Acceptance:
 

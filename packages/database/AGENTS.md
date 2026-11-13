@@ -1,5 +1,12 @@
 # @raypx/database
 
+Groups retain participant and message-mention relations with composite Space
+foreign keys. Agent tombstones preserve group attribution after deletion. Child
+Runs reference parents/origin messages in their Conversation; delegation rows
+retain keyed intents and results. Only top-level active Runs use the per-Agent
+unique index; `computer_held` coordinates child/parent Computer operations under
+current execution leases and fences.
+
 ## Purpose
 
 PostgreSQL persistence for the new account foundation.
@@ -172,3 +179,9 @@ membership grants. `conversation_run_memory_pins` binds the checkpoint and exact
 memory revision with two Space-scoped FKs. Logical memory removal retains pins;
 physical source deletion cascades only pin relations, preserving accepted context.
 Checkpoint JSON cannot contain copied pin arrays. All tables are exposed by `/schema`.
+
+Groups retain Agent participants and normalized message mentions with composite
+Space foreign keys. Agent tombstones preserve message and Run attribution after
+Agent deletion. Direct Conversation uniqueness is partial by kind. Run parent and
+origin-message references and delegation intents/results remain in their original
+Space/conversation, cascade with Space deletion and carry attempt fences.

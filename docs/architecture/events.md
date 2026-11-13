@@ -256,3 +256,40 @@ Removal actively aborts all affected open sockets, including conversation-only
 subscriptions and idle ACK waiters. A deletion claim likewise closes the Space's
 subscribers. Both use 4003; the internal deletion hint is not a public event kind.
 The repair poll remains a fallback when notifications are missed.
+
+## Group conversations
+
+The backend supports named groups of 2–32 Agents from one Space. Every current
+Space member is a human participant. `conversations.createGroup/listGroups/getGroup`,
+`renameGroup`, `addGroupAgent`, `removeGroupAgent`, `setGroupDefaultResponder` and
+`deleteGroup` use the same fresh session membership boundary as direct conversations.
+Each Agent retains its direct conversation and can participate in multiple groups.
+
+`conversations.send.message.mentions` is an optional array of Agent IDs, validated
+against current group participants. Names in text have no routing meaning. An
+empty or absent array starts no work unless the optional default responder is set.
+Each selected Agent gets its own Run, or its own active top-level Run in that group
+receives steering. Runs belonging to other Agents are unaffected. New Runs use the
+sending member's connections and approval settings; steering retains the existing
+Run's actor and labels a different member's instructions as untrusted input.
+
+Group history includes visible member messages and top-level Agent reply segments,
+ordered by the conversation sequence, with explicit member/Agent identifiers.
+The newest context is bounded to 64,000 UTF-16 units and at most 100 messages plus
+100 segments. Other Agents' content is labelled untrusted and cannot grant authority.
+The accepted context and provenance are checkpointed for recovery.
+
+Run-related events and transient replies add `agentId` and nullable `parentRunId`;
+committed segments carry the same attribution. Each live Run has independent
+prefix/delta offsets. All writers still lock the conversation's single counter,
+so concurrent Agents share one gapless durable sequence and the existing snapshot,
+cursor, retention and ACK protocol. Child Runs produce activity under their parent,
+without independent visible reply segments or live text.
+
+`agent_send_message` routes a structural mention within the current group. It
+creates an `agent`-triggered Run under the originating member, marks its inbound
+content untrusted and deduplicates by sending Run/tool-call ID. Chains permit four
+hops and at most sixteen Agent-initiated Runs per originating member message.
+Refusals return stable tool-result codes. `allowCrossSpaceMessages` defaults to
+false; enabling it records intent only. Cross-Space delivery remains unavailable
+and is explicitly refused.

@@ -1,5 +1,10 @@
 # @raypx/contracts
 
+`conversations` also exposes named group CRUD, Agent participation and optional
+default-responder settings. Sends accept structural `mentions`; existing event
+variants add optional Agent/parent-Run attribution. No stream version or public
+Run-state/failure union changes accompany groups and delegation.
+
 ## Purpose
 
 Pure transport schemas shared by their consumers. Task domain models and rules
@@ -159,3 +164,8 @@ have bounded strings and page sizes, with server-validated date windows and curs
 admission and explicit renderer exposure. They do not replace retained `jobs.*`
 or `memory.*`. Only routine create/update/rotation can return a freshly issued
 key; list/get/history/events never return a credential or secret reference.
+
+`conversations.createGroup/listGroups/getGroup/renameGroup/addGroupAgent/
+removeGroupAgent/setGroupDefaultResponder/deleteGroup` expose named Space groups.
+Member sends accept structural Agent mentions; existing outputs gain optional
+Agent/parent attribution. No procedure accepts a member authority selector.

@@ -6,9 +6,11 @@ import {
   type Tool,
   type ToolCall,
 } from "@raypx/ai";
+import { z } from "zod";
 import type { ConversationId } from "@raypx/core/agents";
 import {
   MAX_REPLY_TEXT,
+  AgentMessageError,
   type LiveReply,
   type Run,
   type RunFailure,
@@ -16,6 +18,7 @@ import {
 import type { SpaceScope } from "@raypx/spaces/server";
 import {
   StaleRunFenceError,
+  AgentInteractionError,
   type ConversationFanout,
   type ConversationRunRepository,
   type ConversationsRepository,
@@ -93,7 +96,12 @@ export class LiveReplies {
   private readonly replies = new Map<string, LiveReply>();
   private readonly listeners = new Set<(conversationId: string) => void>();
   read(spaceId: string, conversationId: string) {
-    return this.replies.get(JSON.stringify([spaceId, conversationId]));
+    return this.readAll(spaceId, conversationId)[0];
+  }
+  readAll(spaceId: string, conversationId: string) {
+    return [...this.replies.values()].filter(
+      (reply) => reply.spaceId === spaceId && reply.conversationId === conversationId,
+    );
   }
   subscribe(listener: (conversationId: string) => void) {
     this.listeners.add(listener);
@@ -102,11 +110,11 @@ export class LiveReplies {
     };
   }
   set(reply: LiveReply) {
-    this.replies.set(JSON.stringify([reply.spaceId, reply.conversationId]), reply);
+    this.replies.set(JSON.stringify([reply.spaceId, reply.conversationId, reply.runId]), reply);
     for (const listener of this.listeners) listener(reply.conversationId);
   }
   clear(run: Run) {
-    this.replies.delete(JSON.stringify([run.spaceId, run.conversationId]));
+    this.replies.delete(JSON.stringify([run.spaceId, run.conversationId, run.id]));
     for (const listener of this.listeners) listener(run.conversationId);
   }
 }
@@ -151,6 +159,66 @@ function interruptible<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> 
     void promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
   });
 }
+const agentToolSchemas = {
+  agent_send_message: z.strictObject({
+    agentId: z.string().min(1).max(128),
+    text: z.string().trim().min(1).max(32_000),
+    spaceId: z.string().min(1).max(128).optional(),
+  }),
+  agent_delegate: z.strictObject({
+    task: z.string().trim().min(1).max(32_000),
+    agentId: z.string().min(1).max(128).optional(),
+  }),
+  agent_wait: z.strictObject({}),
+};
+type AgentToolName = keyof typeof agentToolSchemas;
+function isAgentTool(name: string): name is AgentToolName {
+  return Object.hasOwn(agentToolSchemas, name);
+}
+function prepareAgentTool(call: ToolCall) {
+  if (!call.id || call.id.length > 128 || call.id.includes("\0") || call.argumentsError)
+    throw new ComputerToolsError("INVALID_ARGUMENTS");
+  if (call.name === "agent_send_message")
+    return {
+      name: "agent_send_message" as const,
+      arguments: agentToolSchemas.agent_send_message.parse(call.arguments),
+    };
+  if (call.name === "agent_delegate")
+    return {
+      name: "agent_delegate" as const,
+      arguments: agentToolSchemas.agent_delegate.parse(call.arguments),
+    };
+  if (call.name === "agent_wait")
+    return {
+      name: "agent_wait" as const,
+      arguments: agentToolSchemas.agent_wait.parse(call.arguments),
+    };
+  throw new ComputerToolsError("INVALID_TOOL");
+}
+const agentToolDefinitions: Tool[] = [
+  {
+    name: "agent_send_message",
+    description:
+      "Send untrusted context to another participating Agent in this group. Carries the initiating member's authority and bounded chain budget.",
+    parameters: z.toJSONSchema(agentToolSchemas.agent_send_message),
+  },
+  {
+    name: "agent_delegate",
+    description:
+      "Start a child Run of this Agent or another participating group Agent. Returns immediately; use agent_wait for results. Grants no additional permissions.",
+    parameters: z.toJSONSchema(agentToolSchemas.agent_delegate),
+  },
+  {
+    name: "agent_wait",
+    description:
+      "Wait for pending children. New member instructions interrupt this wait; superseded results are discarded.",
+    parameters: z.toJSONSchema(agentToolSchemas.agent_wait),
+  },
+];
+
+function pause(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 function key(scope: SpaceScope, id: ConversationId) {
   return JSON.stringify([scope.spaceId, id]);
 }
@@ -185,6 +253,9 @@ export class ConversationRunner {
   private readonly tasks = new Map<string, { dirty: boolean; done: Promise<void> }>();
   private readonly retryTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly active = new Map<string, ActiveAttempt>();
+  private readonly executing = new Set<Promise<void>>();
+  private readonly runTasks = new Map<string, Promise<void>>();
+  private readonly scheduledTasks = new Map<ReturnType<typeof setTimeout>, () => void>();
   private closed = false;
   private accepting = true;
   private workerTimer: ReturnType<typeof setInterval> | undefined;
@@ -235,12 +306,36 @@ export class ConversationRunner {
       stop: async (scope, id, runId) => {
         const run = await repository.stop(scope, id, runId);
         if (run.state === "cancelled") {
-          const active = this.active.get(runId);
-          if (active) {
-            Object.assign(active.run, run);
+          const cancelled = new Set<string>([runId]);
+          for (;;) {
+            let found = false;
+            for (const active of this.active.values()) {
+              if (
+                active.run.spaceId === scope.spaceId &&
+                active.run.conversationId === id &&
+                active.run.parentRunId &&
+                cancelled.has(active.run.parentRunId) &&
+                !cancelled.has(active.run.id)
+              ) {
+                cancelled.add(active.run.id);
+                found = true;
+              }
+            }
+            if (!found) break;
+          }
+          const stopped = [...this.active.values()].filter((active) =>
+            cancelled.has(active.run.id),
+          );
+          for (const active of stopped) {
+            if (active.run.id === runId) Object.assign(active.run, run);
             active.controller.abort("cancelled");
           }
-          await this.toolRuntime?.tools.cancel(scope, run);
+          await Promise.all(
+            stopped.map(async (active) => {
+              await this.toolRuntime?.tools.cancel(active.scope, active.run);
+            }),
+          );
+          if (!this.active.has(runId)) await this.toolRuntime?.tools.cancel(scope, run);
         }
         this.wake(scope, id);
         return run;
@@ -323,7 +418,13 @@ export class ConversationRunner {
     const task = { dirty: true, done: Promise.resolve() };
     this.tasks.set(taskKey, task);
     // A separate task, independent of the HTTP request and its AbortSignal.
-    task.done = new Promise<void>((resolve) => setTimeout(resolve, 0))
+    task.done = new Promise<void>((resolve) => {
+      const timer = setTimeout(() => {
+        this.scheduledTasks.delete(timer);
+        resolve();
+      }, 0);
+      this.scheduledTasks.set(timer, resolve);
+    })
       .then(async () => {
         while (task.dirty && this.accepting && !this.closed) {
           task.dirty = false;
@@ -341,7 +442,30 @@ export class ConversationRunner {
               await this.repository.release(execution.scope, execution.run);
               break;
             }
-            await this.execute(execution.scope, execution);
+            const previous = this.runTasks.get(execution.run.id);
+            if (previous) {
+              const active = this.active.get(execution.run.id);
+              active?.controller.abort("lease-lost");
+              if (active)
+                active.cancellation = Promise.resolve()
+                  .then(() => this.toolRuntime?.tools.cancel(active.scope, active.run))
+                  .catch(() => this.diagnostic("EXECUTION_FAILED"));
+              await previous;
+              if (!this.accepting || this.closed) {
+                await this.repository.release(execution.scope, execution.run);
+                break;
+              }
+            }
+            const pending = this.execute(execution.scope, execution)
+              .catch(() => this.diagnostic("EXECUTION_FAILED"))
+              .finally(() => {
+                this.executing.delete(pending);
+                if (this.runTasks.get(execution.run.id) === pending)
+                  this.runTasks.delete(execution.run.id);
+                this.wake(execution.scope, id);
+              });
+            this.executing.add(pending);
+            this.runTasks.set(execution.run.id, pending);
           }
         }
       })
@@ -372,8 +496,12 @@ export class ConversationRunner {
         if (part.type !== "toolCall") return part;
         const callIndex = index++;
         try {
-          if (!this.toolRuntime) throw new ComputerToolsError("INVALID_TOOL");
-          this.toolRuntime.tools.prepare(part);
+          if (!this.toolRuntime && !isAgentTool(part.name))
+            throw new ComputerToolsError("INVALID_TOOL");
+          if (isAgentTool(part.name)) {
+            this.toolRuntime?.tools.guardInput?.(part);
+            prepareAgentTool(part);
+          } else this.toolRuntime!.tools.prepare(part);
           return part;
         } catch (error) {
           const code = error instanceof ComputerToolsError ? error.code : "INVALID_ARGUMENTS";
@@ -389,6 +517,13 @@ export class ConversationRunner {
     };
   }
   private toolSummary(call: ToolCall): ToolSummary {
+    if (isAgentTool(call.name))
+      return {
+        toolCallId: call.id,
+        toolName: call.name,
+        target: "conversation",
+        argumentSummary: call.name,
+      };
     const prepared = this.prepared(call);
     return {
       toolCallId: call.id,
@@ -403,6 +538,7 @@ export class ConversationRunner {
     call: ToolCall,
     controller: AbortController,
   ): Promise<ModelMessage> {
+    if (isAgentTool(call.name)) return this.agentToolResult(scope, run, call, controller);
     const prepared = this.prepared(call);
     await this.repository.beginTool(scope, run, this.toolSummary(call));
     let output: string;
@@ -424,6 +560,10 @@ export class ConversationRunner {
         try {
           const operation = () =>
             this.toolRuntime!.tools.execute(scope, run, prepared, controller.signal);
+          const drive = (execute: () => Promise<string>) =>
+            this.toolRuntime!.tools.withDriver
+              ? this.toolRuntime!.tools.withDriver(scope, run, prepared, controller.signal, execute)
+              : execute();
           const result = prepared.changes
             ? this.toolRuntime.approvals.executeEffect(
                 scope,
@@ -431,8 +571,9 @@ export class ConversationRunner {
                 prepared,
                 operation,
                 controller.signal,
+                drive,
               )
-            : operation();
+            : drive(operation);
           const active = this.active.get(run.id);
           if (active) active.pendingWork = result;
           void result.then(
@@ -465,6 +606,74 @@ export class ConversationRunner {
       toolCallId: call.id,
       toolName: call.name,
       content: [{ type: "text", text: output }],
+      isError,
+      timestamp: Date.now(),
+    };
+  }
+  private async agentToolResult(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    call: ToolCall,
+    controller: AbortController,
+  ): Promise<ModelMessage> {
+    await this.repository.beginTool(scope, run, this.toolSummary(call));
+    let result: Record<string, unknown>;
+    let isError = false;
+    try {
+      this.toolRuntime?.tools.guardInput?.(call);
+      const prepared = prepareAgentTool(call);
+      if (prepared.name === "agent_send_message") {
+        if (!this.repository.sendAgent) throw new ComputerToolsError("INVALID_TOOL");
+        const sent = await this.repository.sendAgent(scope, run, {
+          toolCallId: call.id,
+          agentId: prepared.arguments.agentId,
+          text: prepared.arguments.text,
+          ...(prepared.arguments.spaceId ? { targetSpaceId: prepared.arguments.spaceId } : {}),
+        });
+        this.wake(scope, run.conversationId);
+        result = { state: "succeeded", messageId: sent.id };
+      } else if (prepared.name === "agent_delegate") {
+        if (!this.repository.delegate) throw new ComputerToolsError("INVALID_TOOL");
+        const child = await this.repository.delegate(scope, run, {
+          toolCallId: call.id,
+          task: prepared.arguments.task,
+          ...(prepared.arguments.agentId ? { agentId: prepared.arguments.agentId } : {}),
+        });
+        this.wake(scope, run.conversationId);
+        result = { state: "succeeded", ...child, pending: true };
+      } else {
+        for (;;) {
+          const pending = await this.repository.hasPendingDelegations?.(scope, run);
+          if (!pending) break;
+          await interruptible(pause(25), controller.signal);
+        }
+        result = {
+          state: "succeeded",
+          instruction:
+            "Finished child results follow as structured tool results. Changed instructions supersede prior children.",
+        };
+      }
+    } catch (error) {
+      if (error instanceof StaleRunFenceError || error instanceof AttemptInterrupted) throw error;
+      let code: string;
+      if (
+        error instanceof AgentInteractionError ||
+        error instanceof ComputerToolsError ||
+        error instanceof AgentMessageError
+      )
+        code = error.code;
+      else if (error instanceof z.ZodError) code = "INVALID_ARGUMENTS";
+      else throw error;
+      result = { state: "refused", code };
+      isError = true;
+    }
+    return {
+      role: "toolResult",
+      toolCallId: call.id,
+      toolName: call.name,
+      content: [
+        { type: "text", text: JSON.stringify({ source: "agent", trust: "untrusted", ...result }) },
+      ],
       isError,
       timestamp: Date.now(),
     };
@@ -563,7 +772,13 @@ export class ConversationRunner {
         storing = false;
         run.connectionId = model.connectionId;
       }
-      const definitions = this.toolRuntime?.tools.definitions(run) ?? [];
+      const definitions = [
+        ...(this.toolRuntime?.tools.definitions(run) ?? []),
+        ...agentToolDefinitions.filter((tool) => {
+          if (tool.name === "agent_send_message") return this.repository.sendAgent !== undefined;
+          return this.repository.delegate !== undefined;
+        }),
+      ];
       for (;;) {
         if (controller.signal.aborted) throw new AttemptInterrupted();
         await this.toolRuntime?.approvals.assertContinuable(scope, run);
@@ -589,7 +804,19 @@ export class ConversationRunner {
         }
         storing = true;
         checkpoint = await this.repository.consumeSteering(scope, run, checkpoint);
+        run.untrustedInput ||= checkpoint.untrustedInput ?? false;
         storing = false;
+        if (this.repository.consumeDelegations) {
+          storing = true;
+          const children = await this.repository.consumeDelegations(scope, run, checkpoint);
+          storing = false;
+          checkpoint = children.checkpoint;
+          run.untrustedInput ||= checkpoint.untrustedInput ?? false;
+          if (checkpoint.completed && children.pending) {
+            await interruptible(pause(25), controller.signal);
+            continue;
+          }
+        }
         if (checkpoint.completed) {
           // finish checks steering under the same lock as send, closing the last-turn race.
           storing = true;
@@ -605,13 +832,15 @@ export class ConversationRunner {
         let text = "";
         let firstResponseAt: string | undefined;
         const segmentId = crypto.randomUUID();
-        this.live.set({
-          spaceId: run.spaceId,
-          conversationId: run.conversationId,
-          runId: run.id,
-          segmentId,
-          text,
-        });
+        if (!run.parentRunId)
+          this.live.set({
+            agentId: run.agentId,
+            spaceId: run.spaceId,
+            conversationId: run.conversationId,
+            runId: run.id,
+            segmentId,
+            text,
+          });
         const iterator = stream[Symbol.asyncIterator]();
         for (;;) {
           const item = await interruptible(iterator.next(), controller.signal);
@@ -626,13 +855,15 @@ export class ConversationRunner {
             controller.abort("reply-too-large");
             throw new AttemptInterrupted();
           }
-          this.live.set({
-            spaceId: run.spaceId,
-            conversationId: run.conversationId,
-            runId: run.id,
-            segmentId,
-            text,
-          });
+          if (!run.parentRunId)
+            this.live.set({
+              agentId: run.agentId,
+              spaceId: run.spaceId,
+              conversationId: run.conversationId,
+              runId: run.id,
+              segmentId,
+              text,
+            });
         }
         const result = await interruptible(stream.result(), controller.signal);
         if (result.stopReason === "error" || result.stopReason === "aborted")
@@ -646,8 +877,7 @@ export class ConversationRunner {
           break;
         }
         const calls = result.content.filter((part) => part.type === "toolCall");
-        if (calls.length && (!this.toolRuntime || definitions.length === 0))
-          throw new AiError("AI_REQUEST_FAILED");
+        if (calls.length && definitions.length === 0) throw new AiError("AI_REQUEST_FAILED");
         if (
           calls.length &&
           (++checkpoint.rounds > (this.toolRuntime?.maxToolRounds ?? 8) || calls.length > 16)
@@ -708,7 +938,11 @@ export class ConversationRunner {
       clearInterval(heartbeat);
       clearTimeout(deadline);
       try {
-        if (controller.signal.reason === "handover" || controller.signal.reason === "timeout")
+        if (
+          controller.signal.reason === "handover" ||
+          controller.signal.reason === "timeout" ||
+          controller.signal.reason === "lease-lost"
+        )
           await this.settleCancelledWork(active);
         if (!terminal) {
           if (errorCode) {
@@ -741,6 +975,11 @@ export class ConversationRunner {
     clearInterval(this.workerTimer);
     for (const timer of this.retryTimers.values()) clearTimeout(timer);
     this.retryTimers.clear();
+    for (const [timer, resolve] of this.scheduledTasks) {
+      clearTimeout(timer);
+      resolve();
+    }
+    this.scheduledTasks.clear();
   }
   close(): Promise<void> {
     return (this.closing ??= this.closeOwned());
@@ -763,6 +1002,7 @@ export class ConversationRunner {
       }),
     );
     await Promise.all([...this.tasks.values()].map((task) => task.done));
+    await Promise.all(this.executing);
     this.models.close();
   }
 }

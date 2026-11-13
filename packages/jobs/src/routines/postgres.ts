@@ -136,7 +136,9 @@ export function createRoutinesRepository(
     const [agent] = await tx
       .select()
       .from(agents)
-      .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, agentId)));
+      .where(
+        and(eq(agents.spaceId, scope.spaceId), eq(agents.id, agentId), isNull(agents.deletedAt)),
+      );
     if (!agent) throw new RoutineError("NOT_FOUND");
   }
   function emit(committed: RoutineEvent[]) {
@@ -243,11 +245,23 @@ export function createRoutinesRepository(
       [conversation] = await tx
         .select()
         .from(conversations)
-        .where(and(eq(conversations.spaceId, row.spaceId), eq(conversations.agentId, row.agentId)));
+        .where(
+          and(
+            eq(conversations.spaceId, row.spaceId),
+            eq(conversations.agentId, row.agentId),
+            eq(conversations.kind, "direct"),
+          ),
+        );
       [agent] = await tx
         .select()
         .from(agents)
-        .where(and(eq(agents.spaceId, row.spaceId), eq(agents.id, row.agentId)));
+        .where(
+          and(
+            eq(agents.spaceId, row.spaceId),
+            eq(agents.id, row.agentId),
+            isNull(agents.deletedAt),
+          ),
+        );
       if (!conversation || !agent) throw new RoutineError("NOT_FOUND");
       conversationId = conversation.id;
       await tx

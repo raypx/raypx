@@ -36,6 +36,9 @@ const toolKeys = {
   computer_run_command: "tools.runCommand",
   agent_memory_save: "tools.saveMemory",
   agent_memory_update: "tools.updateMemory",
+  agent_send_message: "tools.messageAgent",
+  agent_delegate: "tools.delegateTask",
+  agent_wait: "tools.waitForChildren",
 } as const;
 
 function ruleKey(rule: ApprovalRule) {

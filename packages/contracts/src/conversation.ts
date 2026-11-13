@@ -1,6 +1,11 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
-import { conversationIdSchema, conversationSchema } from "@raypx/core/agents";
+import {
+  agentIdSchema,
+  groupConversationInputSchema,
+  conversationIdSchema,
+  conversationSchema,
+} from "@raypx/core/agents";
 import {
   conversationEventSchema,
   toolActivitySchema,
@@ -43,6 +48,31 @@ export const conversationSnapshotSchema = z.strictObject({
 });
 const session = oc.meta(exposeApiTo("renderer"), rpcAccess("session"));
 export const conversationsContract = {
+  createGroup: session
+    .input(groupConversationInputSchema.extend({ spaceId: spaceIdSchema }))
+    .output(conversationSchema),
+  listGroups: session
+    .input(
+      z.strictObject({
+        spaceId: spaceIdSchema,
+        limit: z.number().int().min(1).max(100).default(50),
+      }),
+    )
+    .output(z.array(conversationSchema)),
+  getGroup: session.input(selection).output(conversationSchema),
+  renameGroup: session
+    .input(selection.extend({ name: groupConversationInputSchema.shape.name }))
+    .output(conversationSchema),
+  addGroupAgent: session
+    .input(selection.extend({ agentId: agentIdSchema }))
+    .output(conversationSchema),
+  removeGroupAgent: session
+    .input(selection.extend({ agentId: agentIdSchema }))
+    .output(conversationSchema),
+  setGroupDefaultResponder: session
+    .input(selection.extend({ agentId: agentIdSchema.nullable() }))
+    .output(conversationSchema),
+  deleteGroup: session.input(selection).output(z.strictObject({ deleted: z.literal(true) })),
   stop: session.input(selection.extend({ runId: runIdSchema })).output(runSchema),
   send: session
     .input(selection.extend({ message: memberMessageInputSchema }))

@@ -19,6 +19,9 @@ export const toolLabelKeys = {
   computer_run_command: "tools.runCommand",
   agent_memory_save: "tools.saveMemory",
   agent_memory_update: "tools.updateMemory",
+  agent_send_message: "tools.messageAgent",
+  agent_delegate: "tools.delegateTask",
+  agent_wait: "tools.waitForChildren",
 } as const;
 
 /** A timer updates presentation only; the server decides when a request resolves. */

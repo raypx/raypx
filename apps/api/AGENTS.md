@@ -1,5 +1,11 @@
 # api
 
+Group procedures reuse fresh session/Space admission and trusted mutation
+Origins. The runner exposes bounded Agent messaging and durable delegation tools;
+runtime composes a PostgreSQL per-Agent Computer-use gate. `/events` tracks
+concurrent live prefixes/deltas independently by Run while retaining one ordered
+conversation cursor. These capabilities add no environment variables.
+
 ## Purpose
 
 The Bun HTTP composition root for authentication, account and administrator RPC,

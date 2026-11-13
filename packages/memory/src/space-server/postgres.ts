@@ -52,7 +52,7 @@ async function requireAgent(
   const [row] = await tx
     .select({ id: agents.id })
     .from(agents)
-    .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id)));
+    .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id), isNull(agents.deletedAt)));
   if (!row) throw new SpaceMemoryError("MEMORY_NOT_FOUND");
 }
 async function requireDocument(

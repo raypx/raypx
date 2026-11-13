@@ -147,6 +147,7 @@ export interface ApprovalsService {
     call: ApprovalCall,
     operation: () => Promise<string>,
     signal: AbortSignal,
+    gate?: (operation: () => Promise<string>) => Promise<string>,
   ): Promise<string>;
 }
 function matchingRule(rule: ApprovalRule, call: ApprovalCall) {
@@ -311,7 +312,14 @@ export function createApprovalsService(
       if (current.state === "pending") throw new Error("INVALID_APPROVAL_STATE");
       return current.state;
     },
-    async executeEffect(scope, run, call, operation, signal) {
+    executeEffect: async function executeEffect(
+      scope,
+      run,
+      call,
+      operation,
+      signal,
+      gate,
+    ): Promise<string> {
       if (signal.aborted) return computerToolResult("cancelled", "The action was cancelled.");
       if (
         approvalDisposition(
@@ -323,6 +331,16 @@ export function createApprovalsService(
         return computerToolResult("refused", "BLOCKED");
       const argumentHash = await digest(canonicalJson(call.arguments));
       const key = await digest(canonicalJson([run.id, call.id, call.name, argumentHash]));
+      if (gate) {
+        const known = (await repository.listEffects(scope, run.id, now(), run)).find(
+          (effect) => effect.key === key,
+        );
+        if (known?.state === "unknown") throw new EffectUnknownError();
+        if (known?.state === "intent")
+          throw new EffectInProgressError(Date.parse(known.createdAt) + EFFECT_INTENT_TIMEOUT_MS);
+        if (known) return known.result ?? computerToolResult("failed", "TOOL_FAILED");
+        return gate(() => executeEffect(scope, run, call, operation, signal, undefined));
+      }
       const intent: Effect = {
         spaceId: run.spaceId,
         conversationId: run.conversationId,

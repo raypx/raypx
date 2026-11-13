@@ -13,6 +13,7 @@ import {
   ApprovalOperationError,
   ApprovalSettingsConflictError,
   EffectUnknownError,
+  approvalDisposition,
   type ApprovalCall,
   type ApprovalsRepository,
 } from "./approvals.js";
@@ -75,6 +76,45 @@ const command: ApprovalCall = {
   target: ".",
   changes: true,
 };
+
+it.each(["ask", "auto"] as const)(
+  "requires %s approval for another Agent's content even with an exact Allow rule",
+  (mode) => {
+    expect(
+      approvalDisposition(
+        { mode, rules: [{ toolName: write.name, executable: null, decision: "allow" }] },
+        write,
+        true,
+      ),
+    ).toBe("ask");
+  },
+);
+
+it("addresses an Agent-triggered child's approval to its originating member", async () => {
+  const { service, requests } = fixture();
+  await service.updateSettings("owner", {
+    expectedRevision: 0,
+    mode: "ask",
+    rules: [{ toolName: write.name, executable: null, decision: "allow" }],
+  });
+  const child: ExecutionRun = {
+    ...run,
+    id: "agent-child" as ExecutionRun["id"],
+    trigger: "agent",
+    parentRunId: run.id,
+    untrustedInput: true,
+  };
+  const pending = service.authorize(scope, child, write, new AbortController().signal);
+  await vi.advanceTimersByTimeAsync(1);
+  const request = [...requests.values()][0]!;
+  expect(request).toMatchObject({ runId: child.id, memberAccountId: "owner" });
+  await expect(service.answer(other, request.id, { decision: "approved" })).rejects.toMatchObject({
+    code: "NOT_ADDRESSED",
+  });
+  await service.answer(scope, request.id, { decision: "approved" });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await pending).toBe("approved");
+});
 
 function fixture() {
   const requests = new Map<string, ApprovalRequest>();
@@ -504,6 +544,21 @@ it("treats a lost tool response as unknown even without cancellation", async () 
   await expect(
     service.executeEffect(scope, run, write, operation, new AbortController().signal),
   ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
+  expect(operation).toHaveBeenCalledTimes(1);
+});
+
+it("reuses a completed effect without acquiring a computer driver", async () => {
+  const { service } = fixture();
+  const signal = new AbortController().signal;
+  const operation = vi.fn(async () => computerToolResult("succeeded", "Saved"));
+  await service.executeEffect(scope, run, write, operation, signal);
+  const gate = vi.fn(async () => {
+    throw new Error("The computer is occupied");
+  });
+  expect(await service.executeEffect(scope, run, write, operation, signal, gate)).toContain(
+    "Saved",
+  );
+  expect(gate).not.toHaveBeenCalled();
   expect(operation).toHaveBeenCalledTimes(1);
 });
 

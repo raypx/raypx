@@ -95,7 +95,10 @@
     "writeFile": "Write a file",
     "runCommand": "Run a command",
     "saveMemory": "Save memory",
-    "updateMemory": "Update memory"
+    "updateMemory": "Update memory",
+    "messageAgent": "Message Agent",
+    "delegateTask": "Delegate task",
+    "waitForChildren": "Wait for delegated work"
   },
   "approval": {
     "answeredBy": "Answered by {member}",
@@ -267,7 +270,8 @@
     "routine": "Routine",
     "webhook": "Webhook",
     "email": "Email",
-    "repository": "Repository event"
+    "repository": "Repository event",
+    "agent": "From another Agent"
   },
   "untrustedInput": "This Run received untrusted external input.",
   "allowSharedMemory": "Allow this Agent to save shared Space memory",

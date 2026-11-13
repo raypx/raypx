@@ -16,6 +16,7 @@ export const eventSequenceSchema = z.number().int().min(1).max(Number.MAX_SAFE_I
 export const messageIdSchema = z.string().min(1).max(128).brand<"MessageId">();
 export const memberMessageInputSchema = z.strictObject({
   idempotencyKey: z.string().min(1).max(128),
+  mentions: z.array(agentIdSchema).max(32).optional(),
   text: z
     .string()
     .min(1)
@@ -28,7 +29,12 @@ export const messageSchema = z.strictObject({
   spaceId: spaceIdSchema,
   conversationId: conversationIdSchema,
   sequence: eventSequenceSchema,
-  author: z.strictObject({ kind: z.literal("member"), accountId: z.string().min(1).max(128) }),
+  author: z.strictObject({
+    kind: z.enum(["member", "agent"]),
+    accountId: z.string().min(1).max(128),
+    agentId: agentIdSchema.optional(),
+  }),
+  mentions: z.array(agentIdSchema).optional(),
   text: memberMessageInputSchema.shape.text,
   createdAt: z.iso.datetime(),
 });
@@ -61,7 +67,8 @@ export const runSchema = z
     spaceId: spaceIdSchema,
     conversationId: conversationIdSchema,
     agentId: agentIdSchema,
-    trigger: z.enum(["message", "routine", "webhook", "email"]),
+    trigger: z.enum(["message", "routine", "webhook", "email", "agent"]),
+    parentRunId: runIdSchema.nullable().optional(),
     messageId: messageIdSchema,
     memberAccountId: z.string().min(1).max(128),
     model: agentModelChoiceSchema,
@@ -96,12 +103,16 @@ export const replySegmentSchema = z.strictObject({
   spaceId: spaceIdSchema,
   conversationId: conversationIdSchema,
   runId: runIdSchema,
+  agentId: agentIdSchema.optional(),
+  parentRunId: runIdSchema.nullable().optional(),
   sequence: eventSequenceSchema,
   text: z.string().min(1).max(MAX_REPLY_TEXT),
   createdAt: z.iso.datetime(),
 });
 export type ReplySegment = z.infer<typeof replySegmentSchema>;
 const eventFields = {
+  agentId: agentIdSchema.optional(),
+  parentRunId: runIdSchema.nullable().optional(),
   spaceId: spaceIdSchema,
   conversationId: conversationIdSchema,
   sequence: eventSequenceSchema,
@@ -117,6 +128,8 @@ export const toolLifecycleFields = {
 };
 export const toolActivitySchema = z.strictObject({
   ...toolLifecycleFields,
+  agentId: agentIdSchema.optional(),
+  parentRunId: runIdSchema.nullable().optional(),
   startedAt: z.iso.datetime(),
   finishedAt: z.iso.datetime().nullable(),
   outcome: toolOutcomeSchema.nullable(),
@@ -187,6 +200,8 @@ export const liveReplySchema = z.strictObject({
   conversationId: conversationIdSchema,
   runId: runIdSchema,
   segmentId: z.string().min(1).max(128),
+  agentId: agentIdSchema.optional(),
+  parentRunId: runIdSchema.nullable().optional(),
   text: z.string().max(MAX_REPLY_TEXT),
 });
 export type LiveReply = z.infer<typeof liveReplySchema>;
@@ -204,3 +219,20 @@ export class InvalidConversationCursor extends Error {
     this.name = "InvalidConversationCursor";
   }
 }
+
+export class AgentMessageError extends Error {
+  constructor(
+    readonly code:
+      | "AGENT_MESSAGE_CROSS_SPACE_DISABLED"
+      | "AGENT_MESSAGE_CROSS_SPACE_UNSUPPORTED"
+      | "AGENT_MESSAGE_TARGET_INVALID"
+      | "AGENT_MESSAGE_DEPTH_LIMIT"
+      | "AGENT_MESSAGE_BUDGET_LIMIT",
+  ) {
+    super(code);
+    this.name = "AgentMessageError";
+  }
+}
+export const MAX_AGENT_MESSAGE_DEPTH = 4;
+export const MAX_AGENT_MESSAGE_RUNS = 16;
+export const GROUP_HISTORY_BUDGET = 64_000;

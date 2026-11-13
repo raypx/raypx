@@ -18,7 +18,9 @@ the request process starts the Run directly, independently of the HTTP request's
 AbortSignal. A running or approval-waiting Run receives later messages as durable
 steering instead of creating another Run. Messages arriving before any Run has
 started can still create queued Runs; the earliest trigger starts first. A partial
-unique index keeps one running or waiting Run per Space/Agent.
+unique index keeps one running or waiting top-level Run per Space/Agent. Child
+Runs may perform model work concurrently; a separate fenced gate serializes
+their computer operations with the parent's operations.
 
 The first claim pins the Agent's opaque model ID and instructions. Model access
 pins a connection fingerprint over the deployment provider, exact model and
@@ -183,6 +185,42 @@ Recovery is never on the path a new Run takes.
   no authority the parent lacks and bypasses no approval.
 - Results return to the parent. The parent accounts for changed instructions and
   cancellation before it acts on a late result.
+
+### Implemented child Runs
+
+The backend's `agent_delegate` tool accepts `{ task, agentId? }`. Omitted
+`agentId` selects the same Agent; another target must be a current participant
+of the same group. The child keeps the parent's Conversation, originating member
+and provenance. It gains no shared-memory access that the parent lacked. The
+child's own Run ID identifies its approvals and activity; requests remain
+addressed to the parent's member. Same-Agent children preserve the parent's
+model and instructions.
+
+The tool immediately returns the child Run ID. The parent can continue or call
+`agent_wait` with `{}`. Waiting yields model work without blocking member sends;
+steering interrupts the wait. A parent with outstanding work remains recoverable
+until its children settle. Results are bounded structured tool results, delivered
+with a matched `agent_wait` call/result pair in the canonical continuation.
+
+`conversation_delegations` binds the parent/tool-call identity to exactly one
+child. Creation, backup dispatch and the child activity event commit together.
+Result acceptance and the parent checkpoint commit together, preventing a
+recovered parent from re-delegating or redelivering a result. A recovered child
+uses its existing Run, lease, attempts and checkpoint. Parent cancellation cascades
+to descendants, pending cards and open tools. New steering advances an instruction
+revision: children under an older revision are cancelled and their results are
+discarded. A cancelled parent accepts no result.
+
+Each parent permits four concurrent children, sixteen children in total and three
+levels of nesting. Limit refusals are stable tool-result codes. Model work runs
+independently; only Computer port operations acquire the per-Agent driver gate.
+The gate uses the current Run lease/fence and an Agent-row lock, so it also
+coordinates separate executor processes and conversations. Approval and result
+waits hold no computer slot. Waiting for this gate adds no new public Run state.
+Execution timing starts after resource validation, before any later tool wait.
+New effect intents are recorded after driver acquisition; recorded outcomes replay
+without that gate. Another attempt's young computer effect keeps the driver
+unavailable until its uncertainty deadline, including after lease loss.
 
 ## Models
 

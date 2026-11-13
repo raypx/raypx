@@ -30,8 +30,8 @@ Agent/Conversation creation is atomic. The shared Agents client provides Space c
 Agent forms and direct conversations in Web and Desktop. Member messages and their
 stream are described in [the conversation guide](events.md#implemented-conversation-slice).
 Phase 6's backend membership slice adds the member directory, invitations, owner
-settings, audit and claimed Space deletion. Membership UI, group conversations and
-Agent delegation are separate work.
+settings, audit and claimed Space deletion. The backend also supports group
+conversations, Agent messages and child Runs; membership/group UI is separate work.
 
 ## Spaces
 
@@ -165,4 +165,12 @@ selectors and confer no access; audit rows cascade only with their Space.
 `space.member.joined`, `space.member.removed`, `space.member.role_changed` and
 `space.renamed` records. PostgreSQL notifications actively close removed members'
 open streams, including conversation-only subscriptions, without waiting for a
-delivery or poll. Existing conversation event payloads stay unchanged.
+delivery or poll. Existing conversation event payloads retain their fields.
+
+Group participation is a retained same-Space relation. Removing an Agent from a
+group cancels its Runs there, including descendants, while preserving message
+attribution. Removing a member cancels all Runs they started in groups as well as
+direct conversations. Agent deletion retains its historical identity; groups that
+would have fewer than two participants are deleted. Cross-Space Agent messaging
+is disabled by default and remains unavailable even when its receiving-Agent
+setting is enabled.

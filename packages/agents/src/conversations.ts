@@ -1,4 +1,9 @@
-import type { Conversation, ConversationId } from "@raypx/core/agents";
+import type {
+  AgentId,
+  GroupConversationInput,
+  Conversation,
+  ConversationId,
+} from "@raypx/core/agents";
 import type {
   ConversationEvent,
   MemberMessageInput,
@@ -30,6 +35,19 @@ export interface ConversationSnapshot {
   toolActivityTruncated?: boolean;
 }
 export interface ConversationsRepository {
+  createGroup?(scope: SpaceScope, input: GroupConversationInput): Promise<Conversation>;
+  listGroups?(scope: SpaceScope, limit: number): Promise<Conversation[]>;
+  getGroup?(scope: SpaceScope, id: ConversationId): Promise<Conversation>;
+  renameGroup?(scope: SpaceScope, id: ConversationId, name: string): Promise<Conversation>;
+  addGroupAgent?(scope: SpaceScope, id: ConversationId, agentId: AgentId): Promise<Conversation>;
+  removeGroupAgent?(scope: SpaceScope, id: ConversationId, agentId: AgentId): Promise<Conversation>;
+  setGroupDefaultResponder?(
+    scope: SpaceScope,
+    id: ConversationId,
+    agentId: AgentId | null,
+  ): Promise<Conversation>;
+  deleteGroup?(scope: SpaceScope, id: ConversationId): Promise<{ deleted: true }>;
+
   stop(scope: SpaceScope, id: ConversationId, runId: RunId): Promise<Run>;
   send(scope: SpaceScope, id: ConversationId, input: MemberMessageInput): Promise<Message>;
   events(
@@ -64,6 +82,11 @@ export interface ExecutionRun extends Run {
   computerGeneration: number | null;
   allowSharedMemory?: boolean;
   untrustedInput?: boolean;
+  originMessageId?: string | null;
+  agentChainDepth?: number;
+  delegationDepth?: number;
+  instructionRevision?: number;
+  delegationTask?: string | null;
 }
 export class StaleRunFenceError extends Error {
   constructor() {
@@ -121,7 +144,43 @@ export interface ToolCompletion {
   outcome: ToolOutcome;
   exitStatus: number | null;
 }
+export interface DelegationInput {
+  toolCallId: string;
+  task: string;
+  agentId?: string;
+}
+export interface AgentMessageInput {
+  toolCallId: string;
+  agentId: string;
+  text: string;
+  targetSpaceId?: string;
+}
+export class AgentInteractionError extends Error {
+  constructor(
+    readonly code:
+      | "DELEGATION_DEPTH_LIMIT"
+      | "DELEGATION_CONCURRENT_LIMIT"
+      | "DELEGATION_TOTAL_LIMIT"
+      | "AGENT_TARGET_UNAVAILABLE",
+  ) {
+    super(code);
+    this.name = "AgentInteractionError";
+  }
+}
 export interface ConversationRunRepository {
+  sendAgent?(scope: SpaceScope, run: ExecutionRun, input: AgentMessageInput): Promise<Message>;
+  delegate?(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    input: DelegationInput,
+  ): Promise<{ runId: RunId }>;
+  consumeDelegations?(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    checkpoint: RunCheckpoint,
+  ): Promise<{ checkpoint: RunCheckpoint; pending: boolean }>;
+  hasPendingDelegations?(scope: SpaceScope, run: ExecutionRun): Promise<boolean>;
+
   beginTool(scope: SpaceScope, run: ExecutionRun, tool: ToolSummary): Promise<void>;
   claimNext(
     scope: SpaceScope,

@@ -8,6 +8,7 @@ import {
 import {
   createConversationsRepository,
   createApprovalsRepository,
+  createComputerUseQueue,
   cancelSpaceRuns,
 } from "@raypx/agents/server/postgres";
 import { createSpaceManagement } from "@raypx/spaces/server/postgres";
@@ -78,6 +79,7 @@ export async function composeAgents(
       computerProvider,
       () => [...deploymentSecrets, ...modelConnections.protectedValues()],
       repository.pinResources,
+      createComputerUseQueue(db),
     ),
     spaceMemory,
     () => [...deploymentSecrets, ...modelConnections.protectedValues()],

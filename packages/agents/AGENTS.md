@@ -1,5 +1,12 @@
 # @raypx/agents
 
+Backend groups use explicit mentions, retained participants and one gapless
+conversation counter across concurrent Agents. Native `agent_send_message`,
+`agent_delegate` and `agent_wait` tools keep the originating member's authority;
+delegation intent/results and instruction revisions are durable. Child Runs
+produce parent-tagged activity, without visible child replies. Per-Agent Computer
+operations use a fenced gate independently of concurrent model work.
+
 `/model` owns pure Space/Agent page selection, the conversation projection and its
 injected RPC, stream and draft ports. ComputerController owns the Space computer
 lifecycle projection, guarded commands and refreshes from events/reconnects. Applied state and cursor advance together;
@@ -103,3 +110,12 @@ Memory revision references are stored in `conversation_run_memory_pins`, with
 same-Space checkpoint/revision FKs. Checkpoint JSON stores accepted context and
 provenance only; claims hydrate ordered pins. Later checkpoints cannot replace
 accepted memory or recreate references removed by physical source deletion.
+
+Group conversations expose create/list/get/rename, Agent participation, default responder
+and delete procedures. Explicit mentions route member sends per Agent; unaddressed
+group messages create no Run. Participating Agents share the counter, with bounded
+attributed history and untrusted provenance for other speakers. Agent messages retain
+the originating member, message root and bounded chain/budget. Agent identities and
+participant rows are retained as tombstones for historical same-Space references.
+Delegation is a durable Run child in the same conversation, with fenced, deduplicated
+intents and checkpointed result delivery. Child text stays in activity, not replies.

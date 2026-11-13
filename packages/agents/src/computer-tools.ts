@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Tool, ToolCall } from "@raypx/ai";
 import type { ComputersService } from "@raypx/computers/server";
+import { ComputerOperationError } from "@raypx/computers/server";
 import { MAX_TOOL_RESULT, type ComputerToolName } from "@raypx/core/approvals";
 import type { Run } from "@raypx/core/conversation";
 import type { SpaceScope } from "@raypx/spaces/server";
@@ -93,6 +94,14 @@ export interface PreparedComputerCall {
 }
 export interface ComputerTools {
   definitions(run?: ExecutionRun): Tool[];
+  guardInput?(call: ToolCall): void;
+  withDriver?(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    call: PreparedComputerCall,
+    signal: AbortSignal,
+    operation: () => Promise<string>,
+  ): Promise<string>;
   initialize?(scope: SpaceScope, run: ExecutionRun, signal: AbortSignal): Promise<void>;
   prepare(call: ToolCall): PreparedComputerCall;
   execute(
@@ -103,6 +112,22 @@ export interface ComputerTools {
   ): Promise<string>;
   cancel(scope: SpaceScope, run: Run): Promise<void>;
   release(run: ExecutionRun): void;
+}
+export interface ComputerUseQueue {
+  acquire(scope: SpaceScope, run: ExecutionRun): Promise<boolean>;
+  release(scope: SpaceScope, run: ExecutionRun): Promise<void>;
+}
+function waitForComputer(signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    const finish = () => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", finish);
+      resolve();
+    };
+    const timer = setTimeout(finish, 25);
+    signal.addEventListener("abort", finish, { once: true });
+    if (signal.aborted) finish();
+  });
 }
 function clip(text: string, limit: number): string {
   const prefix = text.slice(0, limit);
@@ -163,6 +188,7 @@ export function createComputerTools(
     run: ExecutionRun,
     pins: { computerId?: string; computerGeneration?: number },
   ) => Promise<void>,
+  queue?: ComputerUseQueue,
 ): ComputerTools {
   const secrets = () =>
     (typeof knownSecrets === "function" ? knownSecrets() : knownSecrets).filter(Boolean);
@@ -171,6 +197,8 @@ export function createComputerTools(
   const cancelled = new Set<string>();
   const withoutComputer = new Set<string>();
   const starting = new Map<string, Promise<ComputerRef>>();
+  const drivers = new Map<string, Promise<void>>();
+  const heldCalls = new Set<string>();
   async function computer(
     scope: SpaceScope,
     run: ExecutionRun,
@@ -189,7 +217,18 @@ export function createComputerTools(
     const start = (async () => {
       // A durable pin is a resource identity, never permission to switch generations.
       // Resume validates it without provisioning a replacement computer.
-      const state = run.computerId ? await computers.get(scope) : await computers.start(scope);
+      const state = await (async () => {
+        for (;;) {
+          if (signal.aborted || cancelled.has(runKey)) throw new Error("CANCELLED");
+          try {
+            return run.computerId ? await computers.get(scope) : await computers.start(scope);
+          } catch (error) {
+            if (!(error instanceof ComputerOperationError) || error.code !== "COMPUTER_BUSY")
+              throw error;
+            await waitForComputer(signal);
+          }
+        }
+      })();
       if (signal.aborted || cancelled.has(runKey)) throw new Error("CANCELLED");
       if (
         state.status !== "available" ||
@@ -273,7 +312,11 @@ export function createComputerTools(
       changes: name === "computer_write_file",
     };
   }
-  return {
+  const tools: ComputerTools = {
+    guardInput(call) {
+      if (containsSecret([call.id, call.name, call.arguments], secrets()))
+        throw new ComputerToolsError("SECRET_INPUT");
+    },
     definitions: (run) =>
       provider && (!run || !withoutComputer.has(attemptKey(run)))
         ? structuredClone(definitions)
@@ -415,6 +458,67 @@ export function createComputerTools(
       refs.delete(attemptKey(run));
       cancelled.delete(runKey);
       withoutComputer.delete(attemptKey(run));
+    },
+  };
+  async function withDriver(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    prepared: PreparedComputerCall,
+    signal: AbortSignal,
+    operation: () => Promise<string>,
+  ): Promise<string> {
+    const callKey = JSON.stringify([attemptKey(run), prepared.id]);
+    if (!Object.hasOwn(schemas, prepared.name) || heldCalls.has(callKey)) return operation();
+    // Model work, approvals and delegation never hold this slot. It covers the
+    // provider operation only, and is shared by all conversations of an Agent.
+    const driverKey = JSON.stringify([scope.spaceId, run.agentId]);
+    const previous = drivers.get(driverKey) ?? Promise.resolve();
+    let unlock!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      unlock = resolve;
+    });
+    const tail = previous.then(() => gate);
+    drivers.set(driverKey, tail);
+    let acquired = false;
+    let ready = false;
+    void previous.then(() => {
+      ready = true;
+    });
+    try {
+      await Promise.resolve();
+      while (!signal.aborted && !cancelled.has(key(run))) {
+        if (ready) break;
+        await waitForComputer(signal);
+      }
+      if (signal.aborted || cancelled.has(key(run)))
+        return computerToolResult("cancelled", "CANCELLED");
+      if (queue) {
+        while (!signal.aborted && !cancelled.has(key(run))) {
+          acquired = await queue.acquire(scope, run);
+          if (acquired) break;
+          await waitForComputer(signal);
+        }
+        if (!acquired) return computerToolResult("cancelled", "CANCELLED");
+      }
+      heldCalls.add(callKey);
+      return await operation();
+    } finally {
+      heldCalls.delete(callKey);
+      try {
+        if (acquired) await queue!.release(scope, run);
+      } finally {
+        unlock();
+        if (drivers.get(driverKey) === tail) drivers.delete(driverKey);
+      }
+    }
+  }
+  return {
+    ...tools,
+    withDriver,
+    execute(scope, run, prepared, signal) {
+      return withDriver(scope, run, prepared, signal, () =>
+        tools.execute(scope, run, prepared, signal),
+      );
     },
   };
 }

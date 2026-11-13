@@ -128,3 +128,11 @@ and must equal the Run's source ID. External delivery IDs remain external values
 Memory revision identities in checkpoints live in a relation with composite FKs
 to the checkpoint and source revision. Immutable copied context/attribution is
 never used as a live resource selector.
+
+Groups add retained `conversation_participants` and normalized message-mention
+relations. References to the group, message and Agent include `space_id`.
+Runs add same-Conversation composite parent/origin references; durable delegation
+rows bind parent and child Runs in that Conversation and retain pending results.
+Deleting a Space or Conversation cascades these records. Removing a membership or
+account cancels execution while retaining historical actors and delegation keys.
+Agent deletion retains an identity tombstone for surviving group attribution.

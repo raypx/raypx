@@ -57,6 +57,13 @@ across a replacement.
 - A Run's computer is fixed when the Run first starts. An unavailable computer is a
   waiting or failed state. A Run never moves to another computer by itself.
 
+Child Runs share their Agent's driver gate with the parent and all its other
+conversations. PostgreSQL serializes acquisition on the Agent row and validates
+the current Run lease/fence. Computer calls queue at this gate; concurrent model
+turns, pending approvals and delegation-result waits hold no driver slot.
+Different Agents can use a team computer concurrently. An expired or cancelled
+attempt cannot release a newer attempt's slot.
+
 ## Homes
 
 - The home is a volume the supervisor owns, mounted into the container.

@@ -9,10 +9,20 @@ export function agentView(row: typeof agents.$inferSelect): Agent {
     instructions: row.instructions,
     model: { modelId: row.modelId },
     allowSharedMemory: row.allowSharedMemory,
+    allowCrossSpaceMessages: row.allowCrossSpaceMessages,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   });
 }
 export function conversationView(row: typeof conversations.$inferSelect): Conversation {
-  return conversationSchema.parse({ ...row, createdAt: row.createdAt.toISOString() });
+  return conversationSchema.parse({
+    id: row.id,
+    spaceId: row.spaceId,
+    agentId: row.agentId,
+    kind: row.kind,
+    ...(row.kind === "group"
+      ? { name: row.name, defaultResponderAgentId: row.defaultResponderAgentId }
+      : {}),
+    createdAt: row.createdAt.toISOString(),
+  });
 }

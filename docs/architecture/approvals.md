@@ -142,3 +142,11 @@ change in an inbound Run; the same policy requires Ask for Auto if that mode is
 configured in a later slice. Auto itself remains unavailable without a review
 model. Saving/updating memory uses the same policy, addressed request, effect and
 fence checks as other changes. Memory tool summaries contain no memory text.
+
+Group context from another Agent, Agent-message triggers and different-member
+steering persist the same untrusted-input flag. Ask therefore requires a card for
+changes even with an exact Allow rule; the policy would do the same in Auto.
+Delegation inherits this flag and the originating member. Child requests use the
+child Run ID in the same Conversation, and remain answerable only by that member.
+Delegating or messaging an Agent provides no additional credentials, approval
+mode or access to another member's connections.

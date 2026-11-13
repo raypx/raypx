@@ -1,6 +1,13 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
-import { agents, conversations } from "@raypx/database/schema";
+import {
+  agents,
+  conversations,
+  computers,
+  routines,
+  spaceMemoryDocuments,
+  spaces,
+} from "@raypx/database/schema";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { SpaceNotFound } from "@raypx/core/spaces";
 import {
@@ -20,12 +27,18 @@ function values(input: AgentInput) {
     name: parsed.name,
     instructions: parsed.instructions,
     modelId: parsed.model.modelId,
+    ...(parsed.allowCrossSpaceMessages === undefined
+      ? {}
+      : { allowCrossSpaceMessages: parsed.allowCrossSpaceMessages }),
     ...(parsed.allowSharedMemory === undefined
       ? {}
       : { allowSharedMemory: parsed.allowSharedMemory }),
   };
 }
-type AgentDatabase = Pick<Database, "select" | "insert" | "update" | "delete" | "transaction">;
+type AgentDatabase = Pick<
+  Database,
+  "select" | "insert" | "update" | "delete" | "execute" | "transaction"
+>;
 export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
   async function get(scope: SpaceScope, id: AgentId): Promise<AgentConversation> {
     const [row] = await db
@@ -33,9 +46,13 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
       .from(agents)
       .innerJoin(
         conversations,
-        and(eq(conversations.spaceId, agents.spaceId), eq(conversations.agentId, agents.id)),
+        and(
+          eq(conversations.spaceId, agents.spaceId),
+          eq(conversations.agentId, agents.id),
+          eq(conversations.kind, "direct"),
+        ),
       )
-      .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id)))
+      .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id), isNull(agents.deletedAt)))
       .limit(1);
     if (!row) throw new SpaceNotFound();
     return { agent: agentView(row.agent), conversation: conversationView(row.conversation) };
@@ -48,9 +65,13 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
         .from(agents)
         .innerJoin(
           conversations,
-          and(eq(conversations.spaceId, agents.spaceId), eq(conversations.agentId, agents.id)),
+          and(
+            eq(conversations.spaceId, agents.spaceId),
+            eq(conversations.agentId, agents.id),
+            eq(conversations.kind, "direct"),
+          ),
         )
-        .where(eq(agents.spaceId, scope.spaceId))
+        .where(and(eq(agents.spaceId, scope.spaceId), isNull(agents.deletedAt)))
         .orderBy(asc(agents.createdAt), asc(agents.id))
         .limit(Math.max(1, Math.min(100, limit)));
       return rows.map((row) => ({
@@ -85,29 +106,74 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
         const [row] = await tx
           .update(agents)
           .set({ ...values(input), updatedAt: new Date() })
-          .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id)))
+          .where(
+            and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id), isNull(agents.deletedAt)),
+          )
           .returning();
         if (!row) throw new SpaceNotFound();
         const [conversation] = await tx
           .select()
           .from(conversations)
-          .where(and(eq(conversations.spaceId, scope.spaceId), eq(conversations.agentId, id)))
+          .where(
+            and(
+              eq(conversations.spaceId, scope.spaceId),
+              eq(conversations.agentId, id),
+              eq(conversations.kind, "direct"),
+            ),
+          )
           .limit(1);
         if (!conversation) throw new SpaceNotFound();
         return { agent: agentView(row), conversation: conversationView(conversation) };
       });
     },
     async delete(scope: SpaceScope, id: AgentId): Promise<{ deleted: true }> {
-      const [row] = await db
-        .delete(agents)
-        .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id)))
-        .returning({ id: agents.id });
-      if (!row) throw new SpaceNotFound();
-      return { deleted: true };
+      return db.transaction(async (tx) => {
+        const [space] = await tx
+          .select({ id: spaces.id })
+          .from(spaces)
+          .where(and(eq(spaces.id, scope.spaceId), isNull(spaces.deletionClaimedAt)))
+          .for("update");
+        if (!space) throw new SpaceNotFound();
+        const [row] = await tx
+          .update(agents)
+          .set({ deletedAt: new Date() })
+          .where(
+            and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id), isNull(agents.deletedAt)),
+          )
+          .returning({ id: agents.id });
+        if (!row) throw new SpaceNotFound();
+        await tx
+          .delete(computers)
+          .where(and(eq(computers.spaceId, scope.spaceId), eq(computers.agentId, id)));
+        await tx
+          .delete(routines)
+          .where(and(eq(routines.spaceId, scope.spaceId), eq(routines.agentId, id)));
+        await tx
+          .delete(spaceMemoryDocuments)
+          .where(
+            and(
+              eq(spaceMemoryDocuments.spaceId, scope.spaceId),
+              eq(spaceMemoryDocuments.agentId, id),
+            ),
+          );
+        await tx
+          .delete(conversations)
+          .where(
+            and(
+              eq(conversations.spaceId, scope.spaceId),
+              eq(conversations.agentId, id),
+              eq(conversations.kind, "direct"),
+            ),
+          );
+        await createConversationsRepository(tx).removeDeletedAgent(scope, id);
+        return { deleted: true };
+      });
     },
   };
 }
 
+import { createConversationsRepository } from "./conversations.js";
 export { createConversationsRepository, cancelSpaceRuns } from "./conversations.js";
+export { createComputerUseQueue } from "./computer-queue.js";
 export { createConversationFanout } from "./fanout.js";
 export { createApprovalsRepository } from "./approvals.js";

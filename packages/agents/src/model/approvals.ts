@@ -45,6 +45,9 @@ export function approvalExtraSummary(
     computer_run_command: ["Run command", "Run a command", "运行命令"],
     agent_memory_save: ["Save memory", "保存记忆"],
     agent_memory_update: ["Update memory", "更新记忆"],
+    agent_send_message: ["Message Agent", "向智能体发消息"],
+    agent_delegate: ["Delegate task", "委派任务"],
+    agent_wait: ["Wait for delegated work", "等待委派任务"],
   };
   const summary = card.argumentSummary.trim();
   const redundant = labels[card.toolName].some(

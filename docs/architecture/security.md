@@ -64,6 +64,12 @@ them; these guards are released when the execution attempt settles.
 - A Run that received untrusted content keeps asking for writes in Ask and Auto.
   See [approvals](approvals.md#untrusted-input).
 
+Agent-to-Agent messages keep the originating Run's member and are refused across
+Spaces. Delegated children inherit the member and untrusted provenance, with
+shared-memory access restricted by the parent's permission. Group participation
+does not expose another member's connections. Cancellation and steering revisions
+prevent a late child result from becoming fresh model input after supersession.
+
 ## Logging and audit
 
 - Logs carry no credentials, tokens, cookies, passwords, prompts, private paths or

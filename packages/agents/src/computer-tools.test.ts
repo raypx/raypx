@@ -8,6 +8,8 @@ import type { ExecutionRun } from "./conversations.js";
 import { createMemoryComputerProvider } from "@raypx/providers/computer";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { computerToolResult, createComputerTools } from "./computer-tools.js";
+import type { ComputerUseQueue } from "./computer-tools.js";
+import { deferred } from "../tests/support/computer-fixture.js";
 
 const scope = { spaceId: "space", member: { accountId: "member" } } as SpaceScope;
 const run: ExecutionRun = {
@@ -87,6 +89,86 @@ function fixture(knownSecrets: string[] | (() => readonly string[]) = []) {
   return { tools, provider, service, repository, prepare, execute, row: () => row };
 }
 
+it("queues children's computer calls across executor ports while other Agents proceed", async () => {
+  const f = fixture();
+  const holders = new Map<string, string>();
+  const queue: ComputerUseQueue = {
+    async acquire(_, selected) {
+      if (holders.has(selected.agentId)) return false;
+      holders.set(selected.agentId, selected.id);
+      return true;
+    },
+    async release(_, selected) {
+      expect(holders.get(selected.agentId)).toBe(selected.id);
+      holders.delete(selected.agentId);
+    },
+  };
+  const first = createComputerTools(f.service, f.provider, [], undefined, queue);
+  const second = createComputerTools(f.service, f.provider, [], undefined, queue);
+  const signal = new AbortController().signal;
+  await first.initialize!(scope, run, signal);
+  const child = { ...run, id: "child" as ExecutionRun["id"], parentRunId: run.id };
+  const otherAgent = {
+    ...child,
+    id: "other-child" as ExecutionRun["id"],
+    agentId: "other-agent" as ExecutionRun["agentId"],
+  };
+  const started = deferred<void>();
+  const unblock = deferred<void>();
+  const originalWrite = f.provider.write.bind(f.provider);
+  const paths: string[] = [];
+  vi.spyOn(f.provider, "write").mockImplementation(async (ref, path, bytes) => {
+    paths.push(path);
+    if (path === "first") {
+      started.resolve();
+      await unblock.promise;
+    }
+    return originalWrite(ref, path, bytes);
+  });
+  const call = (id: string, path: string) =>
+    first.prepare({
+      type: "toolCall",
+      id,
+      name: "computer_write_file",
+      arguments: { path, content: path },
+    });
+  const parentCall = first.execute(scope, run, call("one", "first"), signal);
+  await started.promise;
+  const childCall = second.execute(scope, child, call("two", "second"), signal);
+  await second.execute(scope, otherAgent, call("three", "other"), signal);
+  expect(paths).toEqual(["first", "other"]);
+  unblock.resolve();
+  await Promise.all([parentCall, childCall]);
+  expect(paths).toEqual(["first", "other", "second"]);
+  expect(holders.size).toBe(0);
+});
+
+it("cancels a child queued for a computer without invoking the provider", async () => {
+  const f = fixture();
+  const tools = createComputerTools(f.service, f.provider, [], undefined, {
+    acquire: async () => false,
+    release: async () => {
+      throw new Error("No slot was acquired");
+    },
+  });
+  const write = vi.spyOn(f.provider, "write");
+  const controller = new AbortController();
+  const result = tools.execute(
+    scope,
+    run,
+    tools.prepare({
+      type: "toolCall",
+      id: "queued",
+      name: "computer_write_file",
+      arguments: { path: "unused", content: "unused" },
+    }),
+    controller.signal,
+  );
+  controller.abort("cancelled");
+  expect(JSON.parse(await result)).toMatchObject({ state: "cancelled" });
+  expect(write).not.toHaveBeenCalled();
+});
+
 it("checks request-owned credentials before returning any tool result", async () => {
   const values: string[] = [];
   const f = fixture(() => values);
@@ -98,6 +180,14 @@ it("checks request-owned credentials before returning any tool result", async ()
   const secret = "member-credential-private-value";
   await f.provider.write(ref, "private.txt", Buffer.from(secret).toString("base64"));
   values.push(secret);
+  expect(() =>
+    tools.guardInput!({
+      type: "toolCall",
+      id: "delegate",
+      name: "agent_delegate",
+      arguments: { task: secret },
+    }),
+  ).toThrow("SECRET_INPUT");
   await expect(f.execute("computer_read_file", { path: "private.txt" })).rejects.toThrow(
     "SECRET_OUTPUT",
   );

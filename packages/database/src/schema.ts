@@ -216,6 +216,8 @@ export const agents = pgTable(
     instructions: text("instructions").notNull(),
     modelId: text("model_id").notNull(),
     allowSharedMemory: boolean("allow_shared_memory").notNull().default(false),
+    allowCrossSpaceMessages: boolean("allow_cross_space_messages").notNull().default(false),
+    deletedAt: date("deleted_at"),
     ...timestamps(),
   },
   (table) => [primaryKey({ columns: [table.spaceId, table.id] })],
@@ -293,17 +295,52 @@ export const conversations = pgTable(
       .references(() => spaces.id, { onDelete: "cascade" }),
     id: text("id").notNull(),
     agentId: text("agent_id").notNull(),
-    kind: text("kind", { enum: ["direct"] }).notNull(),
+    kind: text("kind", { enum: ["direct", "group"] }).notNull(),
+    name: text("name"),
+    defaultResponderAgentId: text("default_responder_agent_id"),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.id] }),
-    uniqueIndex("conversations_direct_agent_idx").on(table.spaceId, table.agentId),
+    uniqueIndex("conversations_direct_agent_idx")
+      .on(table.spaceId, table.agentId)
+      .where(sql`${table.kind} = 'direct'`),
+    foreignKey({
+      columns: [table.spaceId, table.defaultResponderAgentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
     foreignKey({
       columns: [table.spaceId, table.agentId],
       foreignColumns: [agents.spaceId, agents.id],
     }).onDelete("cascade"),
-    check("conversations_kind_check", sql`${table.kind} = 'direct'`),
+    check("conversations_kind_check", sql`${table.kind} in ('direct', 'group')`),
+    check(
+      "conversations_group_name_check",
+      sql`${table.kind} <> 'group' or ${table.name} is not null`,
+    ),
+  ],
+);
+
+export const conversationParticipants = pgTable(
+  "conversation_participants",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    agentId: text("agent_id").notNull(),
+    removedAt: date("removed_at"),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.conversationId, t.agentId] }),
+    index("conversation_participants_agent_idx").on(t.spaceId, t.agentId),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
   ],
 );
 
@@ -337,12 +374,17 @@ export const conversationMessages = pgTable(
     sequence: bigint("sequence", { mode: "number" }).notNull(),
     // Historical attribution must not delete a middle section of the event stream.
     authorAccountId: text("author_account_id").notNull(),
+    authorAgentId: text("author_agent_id"),
     idempotencyKey: text("idempotency_key").notNull(),
     text: text("text").notNull(),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
+    foreignKey({
+      columns: [table.spaceId, table.authorAgentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
     uniqueIndex("conversation_messages_sequence_idx").on(
       table.spaceId,
       table.conversationId,
@@ -370,6 +412,31 @@ export const conversationMessages = pgTable(
     ),
   ],
 );
+export const conversationMessageMentions = pgTable(
+  "conversation_message_mentions",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    messageId: text("message_id").notNull(),
+    agentId: text("agent_id").notNull(),
+    position: integer("position").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.conversationId, t.messageId, t.agentId] }),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId, t.messageId],
+      foreignColumns: [
+        conversationMessages.spaceId,
+        conversationMessages.conversationId,
+        conversationMessages.id,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+  ],
+);
 export const conversationRuns = pgTable(
   "conversation_runs",
   {
@@ -378,6 +445,15 @@ export const conversationRuns = pgTable(
     id: text("id").notNull(),
     agentId: text("agent_id").notNull(),
     trigger: text("trigger").notNull().default("message"),
+    parentRunId: text("parent_run_id"),
+    delegationDepth: integer("delegation_depth").notNull().default(0),
+    delegationTask: text("delegation_task"),
+    delegatedAllowSharedMemory: boolean("delegated_allow_shared_memory"),
+    instructionRevision: integer("instruction_revision").notNull().default(0),
+    computerHeld: boolean("computer_held").notNull().default(false),
+    originMessageId: text("origin_message_id"),
+    agentChainDepth: integer("agent_chain_depth").notNull().default(0),
+    untrustedInput: boolean("untrusted_input").notNull().default(false),
     // Stable identity rows outlive the active routine definition.
     routineId: text("routine_id"),
     routineDueAt: date("routine_due_at"),
@@ -419,11 +495,21 @@ export const conversationRuns = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
-    uniqueIndex("conversation_runs_message_idx").on(
-      table.spaceId,
-      table.conversationId,
-      table.messageId,
-    ),
+    uniqueIndex("conversation_runs_message_idx")
+      .on(table.spaceId, table.conversationId, table.messageId, table.agentId)
+      .where(sql`${table.parentRunId} is null`),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.parentRunId],
+      foreignColumns: [table.spaceId, table.conversationId, table.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.originMessageId],
+      foreignColumns: [
+        conversationMessages.spaceId,
+        conversationMessages.conversationId,
+        conversationMessages.id,
+      ],
+    }).onDelete("cascade"),
     uniqueIndex("conversation_runs_actor_idx").on(
       table.spaceId,
       table.conversationId,
@@ -432,7 +518,7 @@ export const conversationRuns = pgTable(
     ),
     uniqueIndex("conversation_runs_active_agent_idx")
       .on(table.spaceId, table.agentId)
-      .where(sql`${table.state} in ('running', 'waiting')`),
+      .where(sql`${table.state} in ('running', 'waiting') and ${table.parentRunId} is null`),
     index("conversation_runs_routine_idx").on(table.spaceId, table.routineId),
     index("conversation_runs_inbound_routine_idx").on(table.spaceId, table.inboundRoutineId),
     index("conversation_runs_queue_idx").on(
@@ -471,7 +557,7 @@ export const conversationRuns = pgTable(
     ),
     check(
       "conversation_runs_trigger_check",
-      sql`${table.trigger} in ('message', 'routine', 'webhook', 'email')`,
+      sql`${table.trigger} in ('message', 'routine', 'webhook', 'email', 'agent')`,
     ),
     check(
       "conversation_runs_lease_check",
@@ -568,6 +654,49 @@ export const conversationRunCheckpoints = pgTable(
     ),
   ],
 );
+export const conversationDelegations = pgTable(
+  "conversation_delegations",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    parentRunId: text("parent_run_id").notNull(),
+    toolCallId: text("tool_call_id").notNull(),
+    childRunId: text("child_run_id").notNull(),
+    instructionRevision: integer("instruction_revision").notNull().default(0),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
+    state: text("state", { enum: ["pending", "ready", "delivered", "discarded"] })
+      .notNull()
+      .default("pending"),
+    result: jsonb("result"),
+    createdAt: date("created_at").notNull().defaultNow(),
+    completedAt: date("completed_at"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.parentRunId, t.toolCallId] }),
+    uniqueIndex("conversation_delegations_child_idx").on(t.spaceId, t.conversationId, t.childRunId),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId, t.parentRunId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId, t.childRunId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_delegations_state_check",
+      sql`${t.state} in ('pending', 'ready', 'delivered', 'discarded')`,
+    ),
+  ],
+);
+
 export const conversationRunSteering = pgTable(
   "conversation_run_steering",
   {

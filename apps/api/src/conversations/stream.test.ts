@@ -3,10 +3,59 @@ import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/co
 import { conversationFixture } from "../../tests/helpers/conversations.js";
 import { spaceStreamFixture } from "../../tests/helpers/space-stream.js";
 import { ConversationStream } from "./stream.js";
+import { LiveReplies } from "@raypx/agents/server";
+import { liveReplySchema } from "@raypx/core/conversation";
 
 const cleanups: Array<() => Promise<void>> = [];
 afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();
+});
+
+it("streams concurrent group replies with independent Run prefixes and offsets", async () => {
+  const f = conversationFixture();
+  const live = new LiveReplies();
+  const stream = new ConversationStream({ ...f, live, pollMs: 10 });
+  await stream.start();
+  cleanups.push(() => stream.shutdown());
+  const frames: ConversationServerFrame[] = [];
+  const close = vi.fn();
+  stream.open("group", "member", new Headers(), { send: (frame) => frames.push(frame), close });
+  const first = liveReplySchema.parse({
+    spaceId: f.spaceId,
+    conversationId: f.conversationId,
+    runId: "first-run",
+    agentId: "first-agent",
+    segmentId: "first-segment",
+    text: "one",
+  });
+  const second = liveReplySchema.parse({
+    ...first,
+    runId: "second-run",
+    agentId: "second-agent",
+    segmentId: "second-segment",
+    text: "two",
+  });
+  live.set(first);
+  live.set(second);
+  stream.receive(
+    "group",
+    JSON.stringify({
+      type: "subscribe",
+      version: 1,
+      spaceId: f.spaceId,
+      conversationId: f.conversationId,
+      after: 0,
+    }),
+  );
+  await expect.poll(() => frames.filter((frame) => frame.type === "reply.prefix").length).toBe(2);
+  live.set({ ...first, text: "one!" });
+  live.set({ ...second, text: "two?" });
+  await expect.poll(() => frames.filter((frame) => frame.type === "reply.delta").length).toBe(2);
+  expect(frames.filter((frame) => frame.type === "reply.delta")).toEqual([
+    { ...first, type: "reply.delta", offset: 3, text: "!" },
+    { ...second, type: "reply.delta", offset: 3, text: "?" },
+  ]);
+  expect(close).not.toHaveBeenCalled();
 });
 async function fixture() {
   const f = conversationFixture();

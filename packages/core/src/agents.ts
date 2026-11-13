@@ -14,6 +14,7 @@ export const agentInputSchema = z.strictObject({
   instructions: z.string().max(32_000),
   model: agentModelChoiceSchema,
   allowSharedMemory: z.boolean().optional(),
+  allowCrossSpaceMessages: z.boolean().optional(),
 });
 export type AgentInput = z.infer<typeof agentInputSchema>;
 export const agentSchema = agentInputSchema.extend({
@@ -27,7 +28,10 @@ export const conversationSchema = z.strictObject({
   id: conversationIdSchema,
   spaceId: spaceIdSchema,
   agentId: agentIdSchema,
-  kind: z.literal("direct"),
+  kind: z.enum(["direct", "group"]),
+  name: z.string().trim().min(1).max(120).optional(),
+  agentIds: z.array(agentIdSchema).optional(),
+  defaultResponderAgentId: agentIdSchema.nullable().optional(),
   createdAt: z.iso.datetime(),
 });
 export type Conversation = z.infer<typeof conversationSchema>;
@@ -40,4 +44,23 @@ export function directConversation(agent: Agent, id: ConversationId): Conversati
     kind: "direct",
     createdAt: agent.createdAt,
   };
+}
+
+export const groupConversationInputSchema = z.strictObject({
+  name: z.string().trim().min(1).max(120),
+  agentIds: z
+    .array(agentIdSchema)
+    .min(2)
+    .max(32)
+    .refine((ids) => new Set(ids).size === ids.length),
+  defaultResponderAgentId: agentIdSchema.nullable().optional(),
+});
+export type GroupConversationInput = z.infer<typeof groupConversationInputSchema>;
+export class GroupConversationError extends Error {
+  constructor(
+    readonly code: "GROUP_MIN_AGENTS" | "GROUP_AGENT_NOT_PARTICIPANT" | "GROUP_AGENT_LIMIT",
+  ) {
+    super(code);
+    this.name = "GroupConversationError";
+  }
 }

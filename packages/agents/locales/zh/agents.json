@@ -95,7 +95,10 @@
     "writeFile": "写入文件",
     "runCommand": "运行命令",
     "saveMemory": "保存记忆",
-    "updateMemory": "更新记忆"
+    "updateMemory": "更新记忆",
+    "messageAgent": "向智能体发消息",
+    "delegateTask": "委派任务",
+    "waitForChildren": "等待委派任务"
   },
   "approval": {
     "answeredBy": "由{member}处理",
@@ -267,7 +270,8 @@
     "routine": "例行任务",
     "webhook": "Webhook",
     "email": "邮件",
-    "repository": "仓库事件"
+    "repository": "仓库事件",
+    "agent": "来自其他智能体"
   },
   "untrustedInput": "此运行接收了不可信的外部输入。",
   "allowSharedMemory": "允许此智能体保存空间共享记忆",

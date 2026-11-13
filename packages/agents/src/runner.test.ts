@@ -9,10 +9,16 @@ import { createMemoryComputerProvider } from "@raypx/providers/computer";
 import type { ComputersService } from "@raypx/computers/server";
 import { approvalRequestSchema, type ApprovalRequest, type Effect } from "@raypx/core/approvals";
 import { createApprovalsService, type ApprovalsRepository } from "./approvals.js";
-import { createComputerTools } from "./computer-tools.js";
+import { ComputerToolsError, createComputerTools } from "./computer-tools.js";
 import { computerRecord } from "../tests/support/computer-fixture.js";
 import { conversationIdSchema } from "@raypx/core/agents";
-import { messageSchema, runSchema, type Run, type RunFailure } from "@raypx/core/conversation";
+import {
+  messageSchema,
+  runSchema,
+  runIdSchema,
+  type Run,
+  type RunFailure,
+} from "@raypx/core/conversation";
 import type { SpaceScope } from "@raypx/spaces/server";
 import {
   StaleRunFenceError,
@@ -150,6 +156,14 @@ function store() {
         (candidate) =>
           candidate.run.conversationId === conversationId &&
           ["queued", "running", "waiting"].includes(candidate.run.state) &&
+          (candidate.run.parentRunId ||
+            !rows.some(
+              (other) =>
+                other !== candidate &&
+                other.run.agentId === candidate.run.agentId &&
+                !other.run.parentRunId &&
+                ["running", "waiting"].includes(other.run.state),
+            )) &&
           candidate.nextAt <= Date.now() &&
           (!candidate.ownerId || candidate.leaseUntil <= Date.now()),
       );
@@ -244,7 +258,7 @@ function store() {
       row.checkpoint = structuredClone(turn.checkpoint);
       for (const tool of turn.tools ?? []) await repository.beginTool(scope, run, tool);
       const first = !!turn.text && !row.run.firstResponseAt;
-      if (turn.text) {
+      if (turn.text && !run.parentRunId) {
         visible.push(turn.text);
         row.run.firstResponseAt ??= turn.firstResponseAt!;
       }
@@ -315,13 +329,14 @@ function store() {
 function model() {
   const calls: Array<{
     input: ModelTurn;
+    run: Run;
     signal: AbortSignal;
     complete(text?: string, tools?: ToolCall[]): void;
     fail(error: AiError): void;
   }> = [];
   let missing = false;
   const models: ModelAccess = {
-    async resolve() {
+    async resolve(run) {
       if (missing) throw new AiError("AI_MODEL_NOT_FOUND");
       return {
         connectionId: "fixture-connection",
@@ -346,6 +361,7 @@ function model() {
           });
           let rejected: AiError | undefined;
           calls.push({
+            run: structuredClone(run),
             input: structuredClone(input),
             signal,
             complete(text = "", tools = []) {
@@ -830,6 +846,363 @@ it("pins recalled revisions and the original late-start annotation across handov
   expect(db.rows[0]!.checkpoint.routineTiming).toEqual(saved.routineTiming);
   expect(b.calls[0]!.input.history).toEqual(a.calls[0]!.input.history);
   b.calls[0]!.complete("Resumed with original context");
+  await advance();
+  expect(db.rows[0]!.run.state).toBe("succeeded");
+});
+
+function delegationStore() {
+  const db = store();
+  const delegations = new Map<
+    string,
+    { parentId: string; childId: string; delivered: boolean; revision: number }
+  >();
+  const revisions = new Map<string, number>();
+  const sendMember = db.repository.send.bind(db.repository);
+  db.repository.send = async (...args) => {
+    const message = await sendMember(...args);
+    const parent = db.rows.find(
+      (row) =>
+        row.run.conversationId === args[1] &&
+        !row.run.parentRunId &&
+        ["running", "waiting"].includes(row.run.state),
+    );
+    if (parent) revisions.set(parent.run.id, (revisions.get(parent.run.id) ?? 0) + 1);
+    return message;
+  };
+  db.repository.delegate = async (_scope, run, input) => {
+    const parent = db.owned(run);
+    const key = `${run.id}:${input.toolCallId}`;
+    const existing = delegations.get(key);
+    if (existing) return { runId: db.rows.find((row) => row.run.id === existing.childId)!.run.id };
+    const child = structuredClone(parent);
+    child.run.id = runIdSchema.parse(crypto.randomUUID());
+    child.run.parentRunId = run.id;
+    child.run.state = "queued";
+    child.run.startedAt = null;
+    child.run.firstResponseAt = null;
+    child.run.finishedAt = null;
+    child.ownerId = null;
+    child.fence = 0;
+    child.attempts = 0;
+    child.leaseUntil = 0;
+    child.checkpoint = blank();
+    child.steering = [];
+    db.rows.push(child);
+    delegations.set(key, {
+      parentId: run.id,
+      childId: child.run.id,
+      delivered: false,
+      revision: revisions.get(run.id) ?? 0,
+    });
+    return { runId: child.run.id };
+  };
+  db.repository.hasPendingDelegations = async (_scope, run) => {
+    db.owned(run);
+    return [...delegations.values()].some(
+      (entry) =>
+        entry.parentId === run.id &&
+        !entry.delivered &&
+        entry.revision === (revisions.get(run.id) ?? 0) &&
+        ["queued", "running", "waiting"].includes(
+          db.rows.find((row) => row.run.id === entry.childId)!.run.state,
+        ),
+    );
+  };
+  db.repository.consumeDelegations = async (_scope, run, checkpoint) => {
+    const parent = db.owned(run);
+    const next = structuredClone(checkpoint);
+    let pending = false;
+    for (const entry of delegations.values()) {
+      if (entry.parentId !== run.id || entry.delivered) continue;
+      if (entry.revision !== (revisions.get(run.id) ?? 0)) {
+        entry.delivered = true;
+        const child = db.rows.find((candidate) => candidate.run.id === entry.childId)!;
+        if (["queued", "running", "waiting"].includes(child.run.state))
+          await db.repository.stop(scope, run.conversationId, child.run.id);
+        continue;
+      }
+      const child = db.rows.find((row) => row.run.id === entry.childId)!;
+      if (["queued", "running", "waiting"].includes(child.run.state)) {
+        pending = true;
+        continue;
+      }
+      entry.delivered = true;
+      next.completed = false;
+      const template = next.continuation
+        .slice()
+        .reverse()
+        .find((message) => message.role === "assistant")!;
+      const toolCallId = `child-result:${child.run.id}`;
+      next.continuation.push({
+        ...template,
+        content: [{ type: "toolCall", id: toolCallId, name: "agent_wait", arguments: {} }],
+        stopReason: "toolUse",
+        timestamp: Date.now(),
+      });
+      next.continuation.push({
+        role: "toolResult",
+        toolCallId,
+        toolName: "agent_wait",
+        content: [
+          { type: "text", text: JSON.stringify({ state: child.run.state, runId: child.run.id }) },
+        ],
+        isError: child.run.state !== "succeeded",
+        timestamp: Date.now(),
+      });
+    }
+    parent.checkpoint = structuredClone(next);
+    return { checkpoint: next, pending };
+  };
+  const stop = db.repository.stop.bind(db.repository);
+  db.repository.stop = async (...args) => {
+    const stopped = await stop(...args);
+    for (const child of db.rows.filter((candidate) => candidate.run.parentRunId === stopped.id))
+      await stop(args[0], args[1], child.run.id);
+    return stopped;
+  };
+  return { ...db, delegations };
+}
+const delegateCall: ToolCall = {
+  type: "toolCall",
+  id: "delegate-one",
+  name: "agent_delegate",
+  arguments: { task: "Compute an independent result" },
+};
+
+it("delegates without blocking parent steering and returns one structured child result", async () => {
+  const db = delegationStore();
+  const m = model();
+  const r = runner(db, m.models);
+  await send(r);
+  await advance();
+  m.calls[0]!.complete("", [delegateCall]);
+  await advance(2);
+  expect(db.rows).toHaveLength(2);
+  const parentCall = m.calls
+    .slice()
+    .reverse()
+    .find((call) => !call.run.parentRunId)!;
+  const childCall = m.calls.find((call) => call.run.parentRunId)!;
+  expect(parentCall).not.toBe(m.calls[0]);
+  expect(childCall).toBeDefined();
+  childCall.complete("Child finished");
+  parentCall.complete("Continuing parent");
+  await advance(30);
+  const resumed = m.calls
+    .slice()
+    .reverse()
+    .find((call) => !call.run.parentRunId)!;
+  expect(
+    resumed.input.continuation?.filter(
+      (entry) => entry.role === "toolResult" && entry.toolName === "agent_wait",
+    ),
+  ).toHaveLength(1);
+  const continuation = resumed.input.continuation ?? [];
+  const callIds = continuation.flatMap((message) =>
+    message.role === "assistant"
+      ? message.content.filter((part) => part.type === "toolCall").map((part) => part.id)
+      : [],
+  );
+  const resultIds = continuation
+    .filter((message) => message.role === "toolResult")
+    .map((message) => message.toolCallId);
+  expect(new Set(resultIds).size).toBe(resultIds.length);
+  expect(resultIds.every((resultId) => callIds.includes(resultId))).toBe(true);
+  resumed.complete("Parent uses the result");
+  await advance();
+  expect(db.visible).toEqual(["Continuing parent", "Parent uses the result"]);
+  expect(db.delegations.size).toBe(1);
+});
+
+it("new messages interrupt waiting for children and supersede their late results", async () => {
+  const db = delegationStore();
+  const m = model();
+  const r = runner(db, m.models);
+  await send(r);
+  await advance();
+  m.calls[0]!.complete("", [delegateCall]);
+  await advance(2);
+  m.calls
+    .slice()
+    .reverse()
+    .find((call) => !call.run.parentRunId)!
+    .complete("", [{ type: "toolCall", id: "wait-one", name: "agent_wait", arguments: {} }]);
+  await advance();
+  await send(r, "Changed instructions");
+  await advance(30);
+  const resumed = m.calls
+    .slice()
+    .reverse()
+    .find((call) => !call.run.parentRunId)!;
+  expect(
+    resumed.input.continuation?.some(
+      (entry) => entry.role === "user" && entry.content === "Changed instructions",
+    ),
+  ).toBe(true);
+  m.calls.find((call) => call.run.parentRunId)!.complete("Obsolete child");
+  resumed.complete("Handled changed instructions");
+  await advance(30);
+  expect(db.rows[0]!.run.state).toBe("succeeded");
+  expect(
+    db.rows[0]!.checkpoint.continuation.filter(
+      (entry) => entry.role === "toolResult" && entry.toolName === "agent_delegate",
+    ),
+  ).toHaveLength(1);
+});
+
+it("cancelling a parent cascades and never resumes its model with a late child result", async () => {
+  const db = delegationStore();
+  const m = model();
+  const r = runner(db, m.models);
+  await send(r);
+  await advance();
+  m.calls[0]!.complete("", [delegateCall]);
+  await advance(2);
+  const child = m.calls.find((call) => call.run.parentRunId)!;
+  await r.conversations.stop(scope, id, db.rows[0]!.run.id);
+  expect(child.signal.aborted).toBe(true);
+  child.complete("Too late");
+  await advance(20);
+  expect(db.rows.map((row) => row.run.state)).toEqual(["cancelled", "cancelled"]);
+  expect(m.calls.filter((call) => !call.run.parentRunId)).toHaveLength(2);
+  expect(db.visible).toEqual([]);
+});
+
+it("two runners recover parent and child checkpoints without recreating a delegated Run", async () => {
+  const db = delegationStore();
+  const a = model();
+  const first = runner(db, a.models);
+  await send(first);
+  await advance();
+  a.calls[0]!.complete("", [delegateCall]);
+  await advance(2);
+  expect(db.rows).toHaveLength(2);
+  await first.close();
+  const b = model();
+  const second = runner(db, b.models);
+  await second.startWorker();
+  await advance();
+  expect(db.rows).toHaveLength(2);
+  expect(db.delegations.size).toBe(1);
+  const parent = b.calls.find((call) => !call.run.parentRunId)!;
+  const child = b.calls.find((call) => call.run.parentRunId)!;
+  expect(parent).toBeDefined();
+  expect(child).toBeDefined();
+  child.complete("Recovered child");
+  parent.complete("Wait for recovered child");
+  await advance(30);
+  b.calls
+    .slice()
+    .reverse()
+    .find((call) => !call.run.parentRunId)!
+    .complete("Recovered parent result");
+  await advance();
+  expect(db.rows.map((row) => row.attempts)).toEqual([2, 2]);
+  expect(db.rows.map((row) => row.run.state)).toEqual(["succeeded", "succeeded"]);
+  expect(db.delegations.size).toBe(1);
+});
+
+it("a recovered parent receives a finished child's stored result once", async () => {
+  const db = delegationStore();
+  const a = model();
+  const first = runner(db, a.models);
+  await send(first);
+  await advance();
+  a.calls[0]!.complete("", [delegateCall]);
+  await advance(2);
+  a.calls.find((call) => call.run.parentRunId)!.complete("Durable finished child");
+  await advance();
+  expect(db.rows[1]!.run.state).toBe("succeeded");
+  await first.close();
+  const b = model();
+  const second = runner(db, b.models);
+  await second.startWorker();
+  await advance();
+  expect(b.calls).toHaveLength(1);
+  expect(
+    b.calls[0]!.input.continuation?.filter(
+      (message) => message.role === "toolResult" && message.toolName === "agent_wait",
+    ),
+  ).toHaveLength(1);
+  expect(db.rows[1]!.attempts).toBe(1);
+  b.calls[0]!.complete("Used stored result");
+  await advance();
+  expect(db.rows).toHaveLength(2);
+  expect(
+    db.rows[0]!.checkpoint.continuation.filter(
+      (message) => message.role === "toolResult" && message.toolName === "agent_wait",
+    ),
+  ).toHaveLength(1);
+});
+
+it("guards native delegation input before it enters a checkpoint or starts a child", async () => {
+  const db = delegationStore();
+  const fixture = await toolFixture(db);
+  const m = model();
+  const guardInput = vi.fn(() => {
+    throw new ComputerToolsError("SECRET_INPUT");
+  });
+  const r = runner(db, m.models, {
+    tools: { ...fixture.tools(), guardInput },
+    approvals: fixture.approvals,
+  });
+  await send(r);
+  await advance();
+  m.calls[0]!.complete("", [
+    {
+      ...delegateCall,
+      arguments: { task: "protected-native-input" },
+    },
+  ]);
+  await advance(2);
+  expect(guardInput).toHaveBeenCalledOnce();
+  expect(db.rows).toHaveLength(1);
+  expect(JSON.stringify(db.rows[0]!.checkpoint)).not.toContain("protected-native-input");
+  expect(JSON.stringify(m.calls[1]!.input.continuation)).toContain("SECRET_INPUT");
+  m.calls[1]!.complete("Refused safely");
+  await advance();
+});
+
+it("waits for the computer driver before creating an effect intent", async () => {
+  const db = store();
+  const fixture = await toolFixture(db);
+  const m = model();
+  let unlock!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    unlock = resolve;
+  });
+  const r = runner(
+    db,
+    m.models,
+    {
+      tools: {
+        ...fixture.tools(),
+        async withDriver(_scope, _run, _call, _signal, operation) {
+          await gate;
+          return operation();
+        },
+      },
+      approvals: fixture.approvals,
+    },
+    { heartbeatMs: 1_000, leaseMs: 5_000, attemptTimeoutMs: 180_000 },
+  );
+  await send(r);
+  await advance();
+  m.calls[0]!.complete("", [writeCall]);
+  try {
+    await advance(95_000);
+    expect(fixture.effects.size).toBe(0);
+    expect(fixture.writes).not.toHaveBeenCalled();
+    expect(db.rows[0]!.run.state).toBe("running");
+  } finally {
+    unlock();
+  }
+  await vi.waitFor(() => expect(fixture.writes).toHaveBeenCalledOnce(), { interval: 1 });
+  await vi.waitFor(() => expect([...fixture.effects.values()][0]!.state).toBe("succeeded"), {
+    interval: 1,
+  });
+  await vi.waitFor(() => expect(m.calls).toHaveLength(2), { interval: 1 });
+  m.calls[1]!.complete("Executed after acquiring the driver");
   await advance();
   expect(db.rows[0]!.run.state).toBe("succeeded");
 });

@@ -11,6 +11,8 @@ it("projects SQL dates and the opaque model choice into the domain records", () 
       instructions: "Keep\n whitespace",
       modelId: "chosen-model",
       allowSharedMemory: false,
+      allowCrossSpaceMessages: false,
+      deletedAt: null,
       createdAt: date,
       updatedAt: date,
     }),
@@ -21,10 +23,19 @@ it("projects SQL dates and the opaque model choice into the domain records", () 
     instructions: "Keep\n whitespace",
     model: { modelId: "chosen-model" },
     allowSharedMemory: false,
+    allowCrossSpaceMessages: false,
     createdAt: date.toISOString(),
     updatedAt: date.toISOString(),
   });
   expect(
-    conversationView({ id: "c", spaceId: "s", agentId: "a", kind: "direct", createdAt: date }),
+    conversationView({
+      id: "c",
+      spaceId: "s",
+      agentId: "a",
+      kind: "direct",
+      name: null,
+      defaultResponderAgentId: null,
+      createdAt: date,
+    }),
   ).toEqual({ id: "c", spaceId: "s", agentId: "a", kind: "direct", createdAt: date.toISOString() });
 });

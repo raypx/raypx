@@ -32,9 +32,8 @@ interface Subscription {
   controller: AbortController;
   running: boolean;
   dirty: boolean;
-  liveSegment?: string;
-  liveOffset: number;
-  committedSegment?: string;
+  liveOffsets: Map<string, { segmentId: string; offset: number }>;
+  committedSegments: Map<string, string>;
 }
 interface Connection {
   accountId: string;
@@ -191,7 +190,8 @@ export class ConversationStream {
         controller: new AbortController(),
         running: false,
         dirty: false,
-        liveOffset: 0,
+        liveOffsets: new Map(),
+        committedSegments: new Map(),
       };
       peer.subscriptions.set(key, subscription);
       this.wake(peer, subscription);
@@ -316,7 +316,7 @@ export class ConversationStream {
         // A page can wait on an ACK. Reauthorize before delivering its next event.
         if (!(await this.authorize(peer, subscription))) return;
         if (entry.event.kind === "reply.segment")
-          subscription.committedSegment = entry.event.segment.id;
+          subscription.committedSegments.set(entry.event.segment.runId, entry.event.segment.id);
         await subscription.stream.wait(
           {
             streamId: streamId(subscription.spaceId, subscription.conversationId),
@@ -326,26 +326,41 @@ export class ConversationStream {
           () => peer.send({ type: "event", entry }),
         );
       }
+      const replies =
+        this.options.live?.readAll(subscription.spaceId, subscription.conversationId) ?? [];
+      const active = new Set<string>(replies.map((reply) => reply.runId));
+      for (const runId of subscription.liveOffsets.keys())
+        if (!active.has(runId)) subscription.liveOffsets.delete(runId);
+      for (const runId of subscription.committedSegments.keys())
+        if (!active.has(runId)) subscription.committedSegments.delete(runId);
       if (result.hasMore) {
         subscription.dirty = true;
         continue;
       }
       // Read synchronously after replay and authorization: the prefix and offset form one handoff.
       if (!(await this.authorize(peer, subscription))) return;
-      const live = this.options.live?.read(subscription.spaceId, subscription.conversationId);
-      if (!live || subscription.committedSegment === live.segmentId) continue;
-      if (subscription.liveSegment !== live.segmentId) {
-        peer.send({ ...live, type: "reply.prefix", offset: 0 });
-        subscription.liveSegment = live.segmentId;
-        subscription.liveOffset = live.text.length;
-      } else if (live.text.length > subscription.liveOffset) {
-        peer.send({
-          ...live,
-          type: "reply.delta",
-          offset: subscription.liveOffset,
-          text: live.text.slice(subscription.liveOffset),
-        });
-        subscription.liveOffset = live.text.length;
+      // Capture synchronously after authorization; each Run owns an independent offset.
+      for (const live of this.options.live?.readAll(
+        subscription.spaceId,
+        subscription.conversationId,
+      ) ?? []) {
+        if (subscription.committedSegments.get(live.runId) === live.segmentId) continue;
+        const previous = subscription.liveOffsets.get(live.runId);
+        if (previous?.segmentId !== live.segmentId) {
+          peer.send({ ...live, type: "reply.prefix", offset: 0 });
+          subscription.liveOffsets.set(live.runId, {
+            segmentId: live.segmentId,
+            offset: live.text.length,
+          });
+        } else if (live.text.length > previous.offset) {
+          peer.send({
+            ...live,
+            type: "reply.delta",
+            offset: previous.offset,
+            text: live.text.slice(previous.offset),
+          });
+          previous.offset = live.text.length;
+        }
       }
     }
   }
