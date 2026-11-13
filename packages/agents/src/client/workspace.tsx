@@ -249,7 +249,7 @@ function AgentsWorkspaceContents({
   }
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-clip">
       <ShellToolbar>
         <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
       </ShellToolbar>
@@ -356,11 +356,11 @@ function AgentsWorkspaceContents({
         </Empty>
       )}
       {page.agents.length > 0 && (
-        <div className="flex min-h-0 min-w-0 flex-1 gap-6">
+        <div className="flex min-h-0 min-w-0 flex-1 gap-6 overflow-clip">
           <aside
             aria-label={t("title")}
             className={cn(
-              "min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain @3xl/main:flex @3xl/main:w-72 @3xl/main:shrink-0",
+              "min-h-0 min-w-0 flex-col overflow-x-hidden overflow-y-auto overscroll-contain @3xl/main:flex @3xl/main:w-72 @3xl/main:shrink-0",
               selected ? "hidden" : "flex w-full",
             )}
           >
@@ -431,8 +431,8 @@ function AgentsWorkspaceContents({
             </ul>
           </aside>
           {selected ? (
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden">
-              <div className="flex shrink-0 justify-start @3xl/main:hidden">
+            <div className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-2 overflow-clip">
+              <div className="flex min-w-0 shrink-0 justify-start @3xl/main:hidden">
                 <Button variant="ghost" onClick={back}>
                   <ArrowLeftIcon data-icon="inline-start" aria-hidden="true" />
                   {t("back")}

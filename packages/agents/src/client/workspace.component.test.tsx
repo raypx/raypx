@@ -1079,45 +1079,97 @@ it("shows draft storage failure without sending or clearing the editor", async (
 
 it.each([
   [375, "en"],
+  [1024, "en"],
   [1280, "en"],
+  [1440, "en"],
   [375, "zh"],
+  [1024, "zh"],
   [1280, "zh"],
-] as const)("opens and closes the computer at %ipx in %s", async (width, language) => {
-  vi.stubGlobal(
-    "matchMedia",
-    vi.fn((query: string) => ({
-      matches: query === "(min-width: 1280px)" && width >= 1280,
-      media: query,
-      addEventListener() {},
-      removeEventListener() {},
-    })),
-  );
-  try {
-    const view = fixture({ language }).mount(true);
-    const trigger = await screen.findByRole("button", {
-      name:
-        language === "en" ? "Computer: Not configured on this server" : "电脑：此服务器未配置电脑",
-    });
-    fireEvent.click(trigger);
-    const heading = await screen.findByRole("heading", {
-      name: language === "en" ? "Team computer" : "团队电脑",
-    });
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
-    const panel = screen.getByRole(width === 375 ? "dialog" : "complementary", {
-      name: language === "en" ? "Team computer" : "团队电脑",
-    });
-    expect(panel).toContainElement(heading);
-    expect(panel.classList.contains("motion-reduce:transition-none")).toBe(width === 375);
-    expect(width === 1280 && document.activeElement === heading).toBe(width === 1280);
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: language === "en" ? "Close computer panel" : "关闭电脑面板",
-      }),
+  [1440, "zh"],
+] as const)(
+  "keeps a shrinkable conversation with the computer open and closed at %ipx in %s",
+  async (width, language) => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(min-width: 1280px)" && width >= 1280,
+        media: query,
+        addEventListener() {},
+        removeEventListener() {},
+      })),
     );
-    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
-    await waitFor(() => expect(trigger).toHaveFocus());
-    view.unmount();
-  } finally {
-    vi.unstubAllGlobals();
-  }
-});
+    try {
+      const name = "Conversation fixture 长名称 long-name-".repeat(5);
+      const view = fixture({
+        language,
+        items: [{ agent: { ...agent, name }, conversation }],
+        snapshot: { conversation, messages: [message], runs: [run], segments: [], cursor: 3 },
+      }).mount(true);
+      const trigger = await screen.findByRole("button", {
+        name:
+          language === "en"
+            ? "Computer: Not configured on this server"
+            : "电脑：此服务器未配置电脑",
+      });
+      const pane = screen.getByRole("region", {
+        name: language === "en" ? "Conversation" : "对话",
+      });
+      const title = within(pane).getByRole("heading", { level: 2, name });
+      const sender = within(pane).getByRole("heading", { level: 3, name });
+      const editor = within(pane).getByRole("textbox", {
+        name: language === "en" ? "Message" : "消息",
+      });
+      function expectShrinkableConversation() {
+        // Every flex ancestor must shrink, and clipping must not create scroll containers
+        // that can shift the leading edge when the computer panel receives focus.
+        for (
+          let node: HTMLElement | null = pane;
+          node && node !== view.container;
+          node = node.parentElement
+        ) {
+          expect(node).toHaveClass("min-w-0", "overflow-clip");
+        }
+        expect(pane).toHaveClass("w-0", "flex-1");
+        expect(pane.parentElement?.parentElement).toHaveClass("w-0", "flex-1");
+        expect(title.parentElement).toHaveClass("min-w-0");
+        expect(title).toHaveClass("min-w-0", "flex-1", "truncate");
+        expect(title).toHaveAttribute("title", name);
+        expect(trigger.parentElement).toHaveClass("shrink-0", "whitespace-nowrap");
+        expect(trigger.parentElement).not.toHaveClass("truncate");
+        expect(sender).toHaveClass("min-w-0", "truncate");
+        expect(sender).toHaveAttribute("title", name);
+        expect(sender).toHaveTextContent(name);
+        // The same bounded wrapper sizes the sender and the bubble.
+        expect(sender.parentElement).toHaveClass("min-w-0", "w-full", "max-w-[90%]");
+        expect(sender.nextElementSibling).toHaveClass("min-w-0", "border");
+        expect(editor.closest("form")).toHaveClass("min-w-0");
+      }
+      expect(sender).toHaveAccessibleName(name);
+      expectShrinkableConversation();
+      fireEvent.click(trigger);
+      const heading = await screen.findByRole("heading", {
+        name: language === "en" ? "Team computer" : "团队电脑",
+      });
+      expect(trigger).toHaveAttribute("aria-expanded", "true");
+      const panel = screen.getByRole(width < 1280 ? "dialog" : "complementary", {
+        name: language === "en" ? "Team computer" : "团队电脑",
+      });
+      expect(panel).toContainElement(heading);
+      expect(panel.classList.contains("motion-reduce:transition-none")).toBe(width < 1280);
+      expect(width >= 1280 && document.activeElement === heading).toBe(width >= 1280);
+      expectShrinkableConversation();
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: language === "en" ? "Close computer panel" : "关闭电脑面板",
+        }),
+      );
+      await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+      await waitFor(() => expect(trigger).toHaveFocus());
+      expect(sender).toHaveAccessibleName(name);
+      expectShrinkableConversation();
+      view.unmount();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  },
+);

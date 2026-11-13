@@ -61,7 +61,7 @@ export function ComputerIndicator({
       onClick={onOpen}
     >
       <MonitorIcon data-icon="inline-start" aria-hidden="true" />
-      <span className="max-w-28 truncate text-xs">{status}</span>
+      <span className="shrink-0 text-xs whitespace-nowrap">{status}</span>
     </Button>
   );
 }

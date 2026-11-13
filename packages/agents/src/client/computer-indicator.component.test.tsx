@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import type { ComputerView } from "../model.js";
@@ -43,6 +43,12 @@ it.each(["en", "zh"] as const)(
       expect(button).not.toHaveAttribute("aria-controls");
       expect(button.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
       expect(button).toHaveTextContent(text);
+      expect(button).toHaveClass("shrink-0");
+      expect(button).not.toHaveClass("truncate");
+      const statusText = within(button).getByText(text);
+      expect(statusText).toHaveClass("shrink-0", "whitespace-nowrap");
+      expect(statusText).not.toHaveClass("truncate");
+      expect(statusText).not.toHaveClass("max-w-28");
       fireEvent.click(button);
       view.unmount();
     }

@@ -1,7 +1,54 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { selectOption } from "@raypx/e2e/testing";
 
 const apiUrl = process.env.CONTROL_E2E_API_URL;
+
+async function expectConversationGeometry(page: Page, name: string, sheetOpen = false) {
+  // DOM locators also measure the conversation while the modal sheet makes it inert.
+  const pane = page.locator('section[aria-label="Conversation"]');
+  const heading = pane.locator("header h2");
+  const sender = pane.locator("article h3[title]");
+  const bubble = sender.locator("xpath=following-sibling::div[1]");
+  await expect(heading).toHaveText(name);
+  const paneBox = await pane.boundingBox();
+  const headingBox = await heading.boundingBox();
+  const senderBox = await sender.boundingBox();
+  const bubbleBox = await bubble.boundingBox();
+  expect(headingBox!.x).toBeGreaterThanOrEqual(paneBox!.x);
+  expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(paneBox!.x + paneBox!.width);
+  expect(senderBox!.x).toBeGreaterThanOrEqual(bubbleBox!.x);
+  expect(senderBox!.x + senderBox!.width).toBeLessThanOrEqual(bubbleBox!.x + bubbleBox!.width);
+  await expect(sender).toHaveText(name);
+  await expect(sender).toHaveCSS("text-overflow", "ellipsis");
+  await expect.poll(() => pane.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  await expect.poll(() => pane.evaluate((node) => node.scrollLeft)).toBe(0);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      pane.evaluate((node) => {
+        for (let ancestor = node.parentElement; ancestor; ancestor = ancestor.parentElement) {
+          if (ancestor.scrollWidth > ancestor.clientWidth || ancestor.scrollLeft !== 0)
+            return false;
+        }
+        return true;
+      }),
+    )
+    .toBe(true);
+  if (!sheetOpen) {
+    const indicator = pane.getByRole("button", { name: "Computer: Running", exact: true });
+    await expect(indicator).toBeVisible();
+    expect(await indicator.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+    const status = indicator.getByText("Running", { exact: true });
+    expect(await status.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+    await expect(sender).toHaveAccessibleName(name);
+  }
+}
 
 test(
   "Conversation Agent streams a deterministic reply and preserves history after reload",
@@ -51,8 +98,17 @@ test(
     await expect(page.getByText(prompt, { exact: true })).toHaveCount(1);
     await expect(page.getByText("Fixture reply completed.", { exact: true })).toHaveCount(1);
     // Both mounts use a bounded log and a composer at the bottom of the shell.
-    for (const width of [375, 1280]) {
-      await page.setViewportSize({ width, height: 812 });
+    for (const viewport of [
+      { width: 1440, height: 860 },
+      { width: 1280, height: 800 },
+      { width: 1024, height: 768 },
+      { width: 375, height: 812 },
+    ]) {
+      const { width } = viewport;
+      await page.setViewportSize(viewport);
+      if (width >= 1280) {
+        await expect(page.locator('[data-slot="sidebar"][data-state="expanded"]')).toBeVisible();
+      }
       const log = page.getByRole("log", { name: "Conversation", exact: true });
       const editor = page.getByRole("textbox", { name: "Message", exact: true });
       await expect(log).toBeVisible();
@@ -62,10 +118,20 @@ test(
       expect(history!.height).toBeGreaterThan(200);
       expect(history!.y + history!.height).toBeLessThanOrEqual(composer!.y);
       expect(main!.y + main!.height - composer!.y - composer!.height).toBeLessThan(64);
-      expect(
-        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-      ).toBe(true);
-      if (width === 1280) {
+      await expectConversationGeometry(page, name);
+      await computer.click();
+      const panel = page.getByRole(width < 1280 ? "dialog" : "complementary", {
+        name: "Team computer",
+        exact: true,
+      });
+      await expect(panel).toBeVisible();
+      await expectConversationGeometry(page, name, width < 1280);
+      expect(await panel.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+      await panel.getByRole("button", { name: "Close computer panel", exact: true }).click();
+      await expect(panel).toBeHidden();
+      // The indicator returns to the accessibility tree after the narrow sheet closes.
+      await expectConversationGeometry(page, name);
+      if (width >= 1280) {
         const row = page.getByRole("button", { name, exact: true });
         await expect(row).toBeVisible();
         await expect(row).toHaveAttribute("title", name);

@@ -289,21 +289,21 @@ function ConversationContents({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 gap-4 overflow-hidden">
+    <div className="flex min-h-0 min-w-0 flex-1 gap-4 overflow-clip">
       <section
         aria-label={t("conversation")}
-        className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden"
+        className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-4 overflow-clip"
       >
-        <header className="flex min-w-0 shrink-0 items-center justify-between gap-2 border-b pb-3">
+        <header className="flex min-w-0 shrink-0 items-center gap-2 border-b pb-3">
           <h2
             ref={title}
             tabIndex={-1}
             title={item.agent.name}
-            className="min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="min-w-0 flex-1 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {item.agent.name}
           </h2>
-          <div className="flex min-w-0 flex-col items-end gap-1 @sm/main:flex-row @sm/main:items-center">
+          <div className="flex shrink-0 flex-col items-end gap-1 whitespace-nowrap @sm/main:flex-row @sm/main:items-center">
             <ComputerIndicator
               ref={computerTrigger}
               state={computerState}
@@ -403,50 +403,55 @@ function ConversationContents({
                     key={row.id}
                     data-message-row={row.id}
                     aria-busy={producing}
-                    className="flex min-w-0 flex-col gap-2 pr-6"
+                    className="flex min-w-0 flex-col pr-6"
                   >
-                    {showSender && (
-                      <h3 title={item.agent.name} className="truncate text-xs font-medium">
-                        {item.agent.name}
-                      </h3>
-                    )}
-                    <div className="min-w-0 rounded-lg border px-3 py-3 text-sm">
-                      {row.text && (
-                        <ReplyMarkdown
-                          copyLabel={t("copyCode")}
-                          copiedLabel={t("codeCopied")}
-                          copyErrorLabel={t("copyCodeError")}
+                    <div className="flex w-full min-w-0 max-w-[90%] flex-col gap-2">
+                      {showSender && (
+                        <h3
+                          title={item.agent.name}
+                          className="min-w-0 truncate text-xs font-medium"
                         >
-                          {row.text}
-                        </ReplyMarkdown>
+                          {item.agent.name}
+                        </h3>
                       )}
-                      {run && run.state !== "succeeded" && (
-                        <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <span className={row.text ? "mt-2" : undefined}>
-                            {run.state === "running" ? t("replying") : t(run.state)}
-                          </span>
-                          {run.failureCode && (
-                            <span className="wrap-anywhere">{t(run.failureCode)}</span>
-                          )}
-                          {run.state === "failed" && retryMessage && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={retryDisabled}
-                                onClick={() => {
-                                  if (controller.prepareRetry(run.id)) editor.current?.focus();
-                                }}
-                              >
-                                {t("retry")}
-                              </Button>
-                              {retryDisabled && (
-                                <HelpHint label={t("retry")} description={t("retryDraftHint")} />
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )}
+                      <div className="min-w-0 rounded-lg border px-3 py-3 text-sm">
+                        {row.text && (
+                          <ReplyMarkdown
+                            copyLabel={t("copyCode")}
+                            copiedLabel={t("codeCopied")}
+                            copyErrorLabel={t("copyCodeError")}
+                          >
+                            {row.text}
+                          </ReplyMarkdown>
+                        )}
+                        {run && run.state !== "succeeded" && (
+                          <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className={row.text ? "mt-2" : undefined}>
+                              {run.state === "running" ? t("replying") : t(run.state)}
+                            </span>
+                            {run.failureCode && (
+                              <span className="wrap-anywhere">{t(run.failureCode)}</span>
+                            )}
+                            {run.state === "failed" && retryMessage && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={retryDisabled}
+                                  onClick={() => {
+                                    if (controller.prepareRetry(run.id)) editor.current?.focus();
+                                  }}
+                                >
+                                  {t("retry")}
+                                </Button>
+                                {retryDisabled && (
+                                  <HelpHint label={t("retry")} description={t("retryDraftHint")} />
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </article>
                 );
@@ -473,7 +478,7 @@ function ConversationContents({
             </Button>
           </div>
         )}
-        <form onSubmit={submit} className="shrink-0">
+        <form onSubmit={submit} className="min-w-0 shrink-0">
           <Field>
             <FieldLabel htmlFor={id} className="sr-only">
               {t("message")}
