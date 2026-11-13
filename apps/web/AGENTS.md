@@ -242,13 +242,13 @@ Source-map upload is an explicit release step; ship those same injected assets.
 ## Administrator configuration
 
 `/admin/settings` and `features/configuration/` provide the Web-only configuration
-center with separate Site and Object storage tabs. `features/auth/access.ts` declares each Web page's
+center with Site, Object storage and Email tabs. `features/auth/access.ts` declares each Web page's
 permission. Account-scoped `account.access` reads filter sidebar entries and gate
 private page mounts through `PermissionBoundary`, including direct navigation.
 Loading, failed reads and identity changes never reuse another account's grants.
 Guests retain public pages and contextual sign-in gates; Desktop local tools require first-time instance enrollment and then stay available offline. API permissions remain authoritative on every request and save.
 Keep editable drafts through network failures and revision conflicts, with explicit
-reload/discard actions. Object storage credentials are write-only, stay in the
+reload/discard actions. Object storage and Resend credentials are write-only, stay in the
 form until save or discard, and are absent from responses. Public settings supply
 the shell label and signup availability.
 

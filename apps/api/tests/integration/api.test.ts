@@ -40,7 +40,7 @@ describe("HTTP foundation", () => {
   it("rejects unavailable authentication mail actions before dispatch without blocking health or sign-in", async () => {
     let dispatched = 0;
     const unavailable = createApiApp({
-      mailAvailable: false,
+      mailAvailable: async () => false,
       allowedOrigins: [],
       readSession: async () => null,
       authHandler: async () => {

@@ -1,7 +1,11 @@
 import type { AuditService } from "../administration/audit.js";
 import type { AdministrationQueries } from "../administration/types.js";
 import type { InstanceService } from "@raypx/instances/server";
-import type { ConfigurationService, StorageSettingsService } from "../configuration/types.js";
+import type {
+  ConfigurationService,
+  ResendSettingsService,
+  StorageSettingsService,
+} from "../configuration/types.js";
 import type { ControlService, ResolveTaskContext } from "@raypx/control";
 import type { SessionAttachments } from "../storage/types.js";
 import type { AuthSession } from "@raypx/core/auth";
@@ -17,6 +21,7 @@ export interface ApiAppOptions {
   access?: AccessPolicy;
   configuration?: ConfigurationService;
   storageSettings?: StorageSettingsService;
+  resendSettings?: ResendSettingsService;
   jobsEnabled?: boolean;
   control?: ControlService;
   cloudJobs?: CloudJobsService;
@@ -27,7 +32,7 @@ export interface ApiAppOptions {
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;
   allowedOrigins: string[];
-  mailAvailable?: boolean;
+  mailAvailable?: () => Promise<boolean>;
   logger?: ApiLogging;
   rateLimit?: RateLimiter;
   /** Platform-owned, sanitized client address header, never a fallback header supplied by callers. */

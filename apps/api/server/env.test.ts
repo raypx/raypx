@@ -49,7 +49,6 @@ it("treats unconfigured optional Compose settings as absent", () => {
   });
   expect(environment.REDIS_URL).toBeUndefined();
   expect(environment.AUTH_DOMAIN).toBeUndefined();
-  expect(environment.MAIL_DEFAULT_LOCALE).toBe("en");
 });
 
 it.each(["GOOGLE", "GITHUB"] as const)("requires complete %s OAuth credentials", (provider) => {

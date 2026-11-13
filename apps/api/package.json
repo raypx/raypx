@@ -6,6 +6,7 @@
   "scripts": {
     "auth:bootstrap-admins": "bun server/administration/bootstrap.ts",
     "storage:configure": "bun server/storage/configure.ts",
+    "mail:configure": "bun server/configuration/configure-resend.ts",
     "dev": "bun --bun vp dev --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "tsc --noEmit --project tsconfig.json",

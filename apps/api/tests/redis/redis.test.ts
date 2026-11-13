@@ -1,4 +1,5 @@
-import { afterAll, expect, it } from "vitest";
+import { afterAll, expect, it, vi } from "vitest";
+import { Redis } from "ioredis";
 import { connectRedis } from "../../server/runtime/redis.js";
 
 const url = process.env.TEST_REDIS_URL;
@@ -38,13 +39,41 @@ it("admits exactly the RPC limit under concurrent requests", async () => {
   expect(results.filter(Boolean)).toHaveLength(3);
 });
 
-it("stores, expires and deletes application cache values in milliseconds", async () => {
-  const { cache } = redis;
-  await cache.set("value", "1", 60_000);
-  expect(await cache.get("value")).toBe("1");
-  await cache.delete("value");
-  expect(await cache.get("value")).toBeNull();
-  await cache.set("short", "1", 200);
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  expect(await cache.get("short")).toBeNull();
+it("notifies a second API process of each configuration scope and reports reconnects", async () => {
+  const prefix = `raypx-test:${crypto.randomUUID()}:`;
+  const subscriber = connectRedis(url, prefix);
+  const publisher = connectRedis(url, prefix);
+  const control = new Redis(url);
+  const receive = vi.fn();
+  const resubscribed = vi.fn();
+  const unsubscribe = subscriber.configurationNotifications.subscribe(receive, resubscribed);
+  try {
+    await publisher.ping();
+    await vi.waitFor(() => expect(resubscribed).toHaveBeenCalledTimes(1));
+    await redis.ping();
+    redis.configurationNotifications.publish({ scope: "site", revision: 99 });
+    publisher.configurationNotifications.publish({ scope: "site", revision: 1 });
+    publisher.configurationNotifications.publish({ scope: "storage", revision: 2 });
+    await vi.waitFor(() =>
+      expect(receive.mock.calls).toEqual([
+        [{ scope: "site", revision: 1 }],
+        [{ scope: "storage", revision: 2 }],
+      ]),
+    );
+    const clients = await control.client("LIST", "TYPE", "PUBSUB");
+    if (typeof clients !== "string") throw new Error("Redis returned an invalid client list");
+    const client = clients.split("\n").find((line) => line.includes(` name=${prefix}`));
+    const id = /^id=(\d+) /.exec(client ?? "")?.[1];
+    if (!id) throw new Error("Configuration test subscriber is missing");
+    expect(await control.client("KILL", "ID", id)).toBe(1);
+    await vi.waitFor(() => expect(resubscribed).toHaveBeenCalledTimes(2));
+    publisher.configurationNotifications.publish({ scope: "resend", revision: 3 });
+    await vi.waitFor(() =>
+      expect(receive).toHaveBeenLastCalledWith({ scope: "resend", revision: 3 }),
+    );
+  } finally {
+    unsubscribe();
+    control.disconnect();
+    await Promise.all([subscriber.close(), publisher.close()]);
+  }
 });

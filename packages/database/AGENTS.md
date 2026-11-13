@@ -46,6 +46,7 @@ explicit domain projections. Changes require generated foundation migrations.
 and last-editor metadata. API owns validation, permissions and compare-and-swap.
 
 `storage_configuration` stores the S3 endpoint, bucket and encrypted credentials.
+`mail_configuration` stores the revisioned Resend sender, locale, delivery switch and encrypted key.
 `session_attachment` stores account- and project-scoped text projections with
 publication and expiry metadata. API owns encryption, object writes and admission.
 

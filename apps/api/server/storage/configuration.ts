@@ -10,6 +10,8 @@ import {
 } from "@raypx/contracts/api";
 import type { StorageSettingsService } from "../configuration/types.js";
 import { ConfigurationError } from "../configuration/service.js";
+import { createConfigurationReads, type ConfigurationReads } from "../configuration/reads.js";
+import { configurationCipher } from "../configuration/credentials.js";
 import { AuditUnavailable, type AuditService } from "../administration/audit.js";
 import { writeAuditSuccess } from "../administration/repository.js";
 
@@ -34,26 +36,11 @@ export const storageConfigSchema = safeStorageLocationSchema.extend({
 });
 
 const id = "s3";
-const encoder = new TextEncoder();
-const decoder = new TextDecoder("utf-8", { fatal: true });
-const context = encoder.encode("raypx/storage-configuration/v1");
+const purpose = "raypx/storage-configuration/v1";
 type Location = { endpoint: string; bucket: string; region: string };
 
-async function encryptionKey(secret: string) {
-  const material = await crypto.subtle.importKey("raw", encoder.encode(secret), "HKDF", false, [
-    "deriveKey",
-  ]);
-  return crypto.subtle.deriveKey(
-    { name: "HKDF", hash: "SHA-256", salt: context, info: encoder.encode(id) },
-    material,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"],
-  );
-}
-
 function associatedData({ endpoint, bucket, region }: Location) {
-  return encoder.encode(JSON.stringify([endpoint, bucket, region]));
+  return JSON.stringify([endpoint, bucket, region]);
 }
 
 async function sealCredentials(
@@ -61,13 +48,10 @@ async function sealCredentials(
   location: Location,
   credentials: z.infer<typeof storageCredentialsSchema>,
 ) {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const sealed = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, additionalData: associatedData(location) },
-    await encryptionKey(secret),
-    encoder.encode(JSON.stringify(credentials)),
+  return configurationCipher(secret, purpose, id).seal(
+    JSON.stringify(credentials),
+    associatedData(location),
   );
-  return Buffer.concat([iv, new Uint8Array(sealed)]).toString("base64");
 }
 
 export async function saveStorageConfiguration(
@@ -93,8 +77,8 @@ export async function saveStorageConfiguration(
 }
 
 /** Each upload observes the current database configuration. Credentials stay in the API process. */
-export function databaseStorage(db: Database, secret: string) {
-  return async () => {
+export function databaseStorage(db: Database, secret: string, reads = createConfigurationReads()) {
+  return reads.source("storage", async () => {
     const [row] = await db
       .select()
       .from(storageConfiguration)
@@ -102,15 +86,13 @@ export function databaseStorage(db: Database, secret: string) {
     if (!row?.enabled) return null;
     const { endpoint, bucket, region } = row;
     const location = { endpoint, bucket, region };
-    const bytes = Uint8Array.from(Buffer.from(row.credentials, "base64"));
-    const cleartext = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: bytes.subarray(0, 12), additionalData: associatedData(location) },
-      await encryptionKey(secret),
-      bytes.subarray(12),
+    const cleartext = await configurationCipher(secret, purpose, id).open(
+      row.credentials,
+      associatedData(location),
     );
-    const credentials = storageCredentialsSchema.parse(JSON.parse(decoder.decode(cleartext)));
+    const credentials = storageCredentialsSchema.parse(JSON.parse(cleartext));
     return createS3Storage(storageConfigSchema.parse({ ...location, ...credentials }));
-  };
+  });
 }
 
 type StorageSummary = Pick<
@@ -142,6 +124,7 @@ export function createStorageSettings(
   db: Database,
   secret: string,
   audit: AuditService,
+  reads: ConfigurationReads,
 ): StorageSettingsService {
   return {
     async read() {
@@ -169,8 +152,9 @@ export function createStorageSettings(
       const scope = audit.current();
       if (!scope || scope.action !== "configuration.update") throw new AuditUnavailable();
       scope.mutationStarted = true;
+      let result: StorageSettingsSnapshot;
       try {
-        const result = await db.transaction(async (tx) => {
+        result = await db.transaction(async (tx) => {
           const [previous] = await tx
             .select()
             .from(storageConfiguration)
@@ -216,12 +200,13 @@ export function createStorageSettings(
           });
           return snapshot(row);
         });
-        scope.committed = true;
-        return result;
       } catch (error) {
         if (error instanceof ConfigurationError || error instanceof AuditUnavailable) throw error;
         throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
       }
+      scope.committed = true;
+      reads.committed("storage", result.revision);
+      return result;
     },
   };
 }

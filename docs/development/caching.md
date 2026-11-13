@@ -1,47 +1,22 @@
 # Server caching
 
-`apps/api/server/cache/` gives API features one cache on Bun. It is an optimization only: every cached value must also be
-loadable from its source of truth, and authoritative decisions read that source.
+## Runtime configuration
 
-## Stores
+`configuration/reads.ts` registers one typed PostgreSQL loader per scope in each
+API runtime. Site, S3 and Resend share the same five-second TTL and coalesce
+concurrent misses. Site snapshots are copied for readers. Resend and S3 can
+reuse their process-local provider instances. Missing or paused settings can be
+cached for the same interval. Read or decryption failures are retried on demand.
 
-| Runtime            | Store                           | Scope                       |
-| ------------------ | ------------------------------- | --------------------------- |
-| Bun with REDIS_URL | Memory in front of Redis/Valkey | Shared by every API process |
-| Bun without Redis  | Memory (`cache/memory.ts`)      | One process                 |
+| Read method    | Callers                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `read()`       | Administrator settings, authoritative registration, cleanup, and S3 upload admission            |
+| `readCached()` | Public site projection, signup pre-check, mail site name, S3 upload status, and Resend delivery |
 
-`CacheStore` is the raw port: string values with a millisecond TTL. The memory store
-is bounded (1000 entries, least recently used evicted first).
-
-With Redis, `cache/tiered.ts` keeps a process-local copy of each value for up to one
-second (`NEAR_CACHE_TTL_MS` in `runtime/adapters.ts`) in front of Redis. Hot keys skip
-the network, and a Redis outage costs one failed read per key per second instead of
-one per request. Changes saved by another process apply here within that second.
-
-## Using the cache
-
-`createRuntime` builds one `Cache` and exposes it as `runtime.cache`. Pass it to
-feature services instead of creating private holders:
-
-```ts
-const profile = await cache.getOrLoad(
-  `public-profile:${userId}`,
-  { ttlMs: 30_000, parse: (value) => publicProfileSchema.parse(value) },
-  () => repository.readPublicProfile(userId),
-);
-// After a write, store the saved value (or delete the key).
-await cache.set(`public-profile:${userId}`, saved, 30_000);
-```
-
-- Values are JSON. Every read is parsed by the caller's schema, so a stale shape or a
-  corrupted entry becomes a miss, and callers always receive their own copy.
-- Concurrent misses in one process share a load. Failed loads are never stored.
-  A `set`/`delete` supersedes loads already in flight.
-- Store outages degrade to misses and dropped writes; requests still reach the loader.
-- Keys live under `cache:` (Redis adds its `raypx:` prefix). Prefix keys with the
-  feature name and never put credentials, tokens or private file content in keys or
-  values.
-
-Invalidation reaches every process only with Redis, within the one-second local copy.
-Without it, other processes and isolates see changes once their TTL expires, so keep
-TTLs to what the feature can tolerate. Site configuration uses this cache for `readCached()` with a 5-second TTL.
+After a settings transaction commits, the writer clears its local cache for that
+scope and broadcasts the scope and revision on a deployment-scoped Redis
+channel. Subscribers clear that scope, or clear all scopes after resubscribing.
+Any superseded in-flight read reloads before returning. Redis carries only
+notifications. PostgreSQL stores settings and encrypted provider credentials.
+The TTL covers operator initialization, disconnections and missed notifications.
+Already dispatched mail or uploads continue with the provider used at dispatch.

@@ -21,6 +21,8 @@ export interface CreateMailerOptions {
   defaultLocale?: MailLocale;
   transport?: MailTransport;
 }
+const deliveryTimeoutMs = 8_000;
+
 export class MailUnavailableError extends Error {
   readonly code = "MAIL_NOT_CONFIGURED";
   constructor() {
@@ -44,8 +46,13 @@ export function createMailer(
       return;
     }
     if (!resend || !options.from?.trim()) throw new MailUnavailableError();
-    const { error } = await resend.emails.send(message);
-    if (error) throw new Error("Authentication email delivery failed");
+    const delivered = await resend.emails
+      .send(message, { signal: AbortSignal.timeout(deliveryTimeoutMs) })
+      .then(
+        ({ error }) => !error,
+        () => false,
+      );
+    if (!delivered) throw new Error("Authentication email delivery failed");
   }
   return {
     available,

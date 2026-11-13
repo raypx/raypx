@@ -1,8 +1,7 @@
 import { expect, it, vi } from "vitest";
 import type { AuthSession } from "@raypx/core/auth";
 import { configurationDefaults } from "@raypx/contracts/api";
-import { createCache } from "../cache/cache.js";
-import { createMemoryStore } from "../cache/memory.js";
+import { createConfigurationReads, type ConfigurationNotifications } from "./reads.js";
 import { createConfigurationService } from "./service.js";
 import { createAccessPolicy } from "../access.js";
 import type { ConfigurationReader, ConfigurationRepository } from "./types.js";
@@ -105,35 +104,46 @@ it("sanitizes injected storage failures and refuses malformed storage results", 
 it("serves brief cached reads, refreshes them after saves and never caches failures", async () => {
   const f = fixture();
   let time = 0;
-  const cache = createCache(createMemoryStore({ now: () => time }));
+  const subscribers = new Set<Parameters<ConfigurationNotifications["subscribe"]>[0]>();
+  const notifications: ConfigurationNotifications = {
+    publish(change) {
+      for (const receive of subscribers) receive(change);
+    },
+    subscribe(receive) {
+      subscribers.add(receive);
+      return () => subscribers.delete(receive);
+    },
+  };
   const service = createConfigurationService({
     repository: f.repository,
     access: createAccessPolicy(),
-    cache,
-    cacheTtlMs: 1000,
+    reads: createConfigurationReads(notifications, () => time),
   });
   expect((await service.readCached()).values.siteName).toBe("Raypx");
   f.snapshot.values.siteName = "Elsewhere";
   (await service.readCached()).values.siteName = "Local mutation";
   expect((await service.readCached()).values.siteName).toBe("Raypx");
   expect((await service.read()).values.siteName).toBe("Elsewhere");
-  // Another service sharing the cache, as per-request Worker runtimes do, reuses it.
+  // Each runtime loads its own copy, then receives committed changes from its peer.
   const sibling = createConfigurationService({
     repository: f.repository,
     access: createAccessPolicy(),
-    cache,
-    cacheTtlMs: 1000,
+    reads: createConfigurationReads(notifications, () => time),
   });
-  expect((await sibling.readCached()).values.siteName).toBe("Raypx");
-  time = 1001;
+  expect((await sibling.readCached()).values.siteName).toBe("Elsewhere");
+  time = 5000;
   expect((await service.readCached()).values.siteName).toBe("Elsewhere");
+  vi.mocked(f.repository.update).mockImplementationOnce(async (values) => {
+    f.snapshot.values = values;
+    return structuredClone({ ...f.snapshot, revision: 1 });
+  });
   await service.update(
     { values: { ...configurationDefaults, siteName: "Saved" }, revision: 0 },
     f.auth,
   );
   expect((await sibling.readCached()).values.siteName).toBe("Saved");
-  time = 3000;
+  time = 10000;
   vi.mocked(f.repository.read).mockRejectedValueOnce(new Error("offline"));
   await expect(service.readCached()).rejects.toThrow(/^CONFIGURATION_UNAVAILABLE$/);
-  expect((await service.readCached()).values.siteName).toBe("Elsewhere");
+  expect((await service.readCached()).values.siteName).toBe("Saved");
 });

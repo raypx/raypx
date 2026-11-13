@@ -160,6 +160,8 @@ export const apiExposure = {
     update: "renderer",
     storage: "web",
     updateStorage: "web",
+    resend: "web",
+    updateResend: "web",
   },
   jobs: {
     list: "renderer",

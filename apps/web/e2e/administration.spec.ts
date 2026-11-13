@@ -88,6 +88,23 @@ test(
       storageWrites.push(input);
       return authResponse(route, { json: { ...storage, values: input.values, revision: 3 } });
     });
+    const mail = {
+      values: { from: "Raypx <notify@example.test>", defaultLocale: "zh", enabled: true },
+      revision: 3,
+      updatedAt: null,
+    };
+    const mailWrites: unknown[] = [];
+    await page.route("**/rpc/configuration/resend", (route) =>
+      route.request().method() === "OPTIONS"
+        ? authResponse(route, null, 204)
+        : authResponse(route, { json: mail }),
+    );
+    await page.route("**/rpc/configuration/updateResend", (route) => {
+      if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
+      const input = route.request().postDataJSON()?.json;
+      mailWrites.push(input);
+      return authResponse(route, { json: { ...mail, values: input.values, revision: 4 } });
+    });
     const entry = {
       id: "00000000-0000-4000-8000-000000000001",
       requestId: "server-request",
@@ -173,6 +190,21 @@ test(
         { revision: 2, values: { ...storage.values, enabled: false } },
       ]);
       await capture(page, { path: test.info().outputPath("admin-storage.png"), fullPage: true });
+    });
+    await test.step("rotate the Resend key and save email settings on a narrow screen", async () => {
+      await page.getByRole("tab", { name: "邮件", exact: true }).click();
+      const panel = page.getByRole("tabpanel", { name: "邮件", exact: true });
+      const key = panel.getByLabel("Resend API Key", { exact: true });
+      await expect(key).toHaveValue("");
+      await key.fill("re_browser_fixture");
+      await panel.getByRole("switch", { name: "发送账户邮件", exact: true }).click();
+      await panel.getByRole("button", { name: "保存修改", exact: true }).click();
+      await expect(panel.getByText("已暂停发送", { exact: true })).toBeVisible();
+      await expect(key).toHaveValue("");
+      expect(mailWrites).toEqual([
+        { values: { ...mail.values, enabled: false }, revision: 3, apiKey: "re_browser_fixture" },
+      ]);
+      await capture(page, { path: test.info().outputPath("admin-email.png"), fullPage: true });
     });
     expect(privateReads).toBe(0);
   },

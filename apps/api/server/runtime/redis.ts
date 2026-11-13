@@ -1,24 +1,30 @@
 import { Redis } from "ioredis";
 import type { AuthSecondaryStorage } from "@raypx/auth/server";
 import type { RateLimiter } from "../rate-limit/types.js";
-import type { CacheStore } from "../cache/types.js";
+import { configurationScopes, type ConfigurationNotifications } from "../configuration/reads.js";
 
 export interface RedisResources {
   secondaryStorage: AuthSecondaryStorage;
   rateLimit: RateLimiter;
-  cache: CacheStore;
+  configurationNotifications: ConfigurationNotifications;
   ping(): Promise<unknown>;
   close(): Promise<void>;
 }
 
 /**
- * Optional process cache for Better Auth sessions, rate limits and application values,
- * shared across processes. Workers never import
- * this module: they keep PostgreSQL as the shared store.
+ * Optional Redis adapters for Better Auth sessions, rate limits and configuration
+ * notifications. Workers keep PostgreSQL as the shared store.
  */
 export function connectRedis(url: string, prefix = "raypx:"): RedisResources {
-  // Fail requests quickly instead of queueing them while the server is unreachable.
-  const client = new Redis(url, { maxRetriesPerRequest: 1, keyPrefix: prefix });
+  // Bound connection and command waits, including configuration Pub/Sub.
+  const client = new Redis(url, {
+    connectTimeout: 3_000,
+    commandTimeout: 3_000,
+    maxRetriesPerRequest: 1,
+    keyPrefix: prefix,
+  });
+  // Pub/Sub ignores keyPrefix and Redis logical databases.
+  const configurationChannel = `${prefix}db:${client.options.db}:configuration`;
   // ioredis reconnects on its own; without a listener an outage would crash the process.
   client.on("error", () => {});
   // MULTI keeps INCR and the first expiry atomic; EXPIRE NX needs Redis 7+ or Valkey.
@@ -48,14 +54,32 @@ export function connectRedis(url: string, prefix = "raypx:"): RedisResources {
     },
     // Fixed windows: the first request of a window sets the expiry.
     rateLimit: async (key, rule) => (await increment(`rate:${key}`, rule.window)) <= rule.max,
-    cache: {
-      get: (key) => client.get(key),
-      set: async (key, value, ttlMs) => {
-        if (ttlMs > 0) await client.set(key, value, "PX", Math.ceil(ttlMs));
-        else await client.del(key);
+    configurationNotifications: {
+      publish({ scope, revision }) {
+        if (client.status === "ready")
+          void client.publish(configurationChannel, `${scope}:${revision}`).catch(() => {});
       },
-      delete: async (key) => {
-        await client.del(key);
+      subscribe(receive, resubscribed) {
+        const subscriber = client.duplicate({
+          lazyConnect: true,
+          autoResubscribe: false,
+          enableOfflineQueue: false,
+          connectionName: configurationChannel,
+        });
+        subscriber.on("error", () => {});
+        subscriber.on("ready", () => {
+          // Invalidate after acknowledgement to cover saves made while disconnected.
+          void subscriber.subscribe(configurationChannel).then(resubscribed, () => {});
+        });
+        subscriber.on("message", (channel, value) => {
+          if (channel !== configurationChannel || value.length > 24) return;
+          const [name, revision, extra] = value.split(":");
+          const scope = configurationScopes.find((candidate) => candidate === name);
+          if (scope && revision && extra === undefined && /^[1-9]\d{0,9}$/.test(revision))
+            receive({ scope, revision: Number(revision) });
+        });
+        void subscriber.connect().catch(() => {});
+        return () => subscriber.disconnect();
       },
     },
     ping: () => client.ping(),

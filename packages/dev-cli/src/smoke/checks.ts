@@ -23,7 +23,7 @@ export async function checkApi(
   });
   const unavailable = (await signup.json()) as { code?: string };
   if (signup.status !== 503 || unavailable.code !== "MAIL_NOT_CONFIGURED")
-    throw new Error("Unconfigured mail must reject signup before any database or delivery attempt");
+    throw new Error("Unavailable mail must reject signup before account creation");
   if (!options.gateway && !options.relay) {
     if ((await fetch(`${base}/relay`)).status !== 404)
       throw new Error("The API artifact must not host Relay sockets");

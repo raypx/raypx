@@ -2,9 +2,7 @@ import type { AuditService } from "../administration/audit.js";
 import { hasPermission } from "@raypx/account/access";
 import type { AccessPolicy } from "../access.js";
 import { configurationSnapshotSchema, configurationUpdateSchema } from "@raypx/contracts/api";
-import { createCache } from "../cache/cache.js";
-import { createMemoryStore } from "../cache/memory.js";
-import type { Cache } from "../cache/types.js";
+import { createConfigurationReads, type ConfigurationReads } from "./reads.js";
 import type { ConfigurationRepository, ConfigurationService } from "./types.js";
 
 export class ConfigurationError extends Error {
@@ -25,20 +23,14 @@ export interface ConfigurationServiceOptions {
   repository: ConfigurationRepository;
   audit?: AuditService;
   access: AccessPolicy;
-  /** Pass a longer-lived or shared cache; defaults to one private to this service. */
-  cache?: Cache;
-  /** How long readCached() may serve a snapshot; changes elsewhere apply within it. */
-  cacheTtlMs?: number;
+  reads?: ConfigurationReads;
 }
-
-const CACHE_KEY = "configuration:snapshot";
 
 export function createConfigurationService({
   repository,
   audit,
   access,
-  cache = createCache(createMemoryStore()),
-  cacheTtlMs = 5_000,
+  reads = createConfigurationReads(),
 }: ConfigurationServiceOptions): ConfigurationService {
   async function read() {
     try {
@@ -48,13 +40,7 @@ export function createConfigurationService({
     }
   }
   const service: ConfigurationService = {
-    read,
-    readCached: () =>
-      cache.getOrLoad(
-        CACHE_KEY,
-        { ttlMs: cacheTtlMs, parse: (value) => configurationSnapshotSchema.parse(value) },
-        read,
-      ),
+    ...reads.source("site", read, (snapshot) => structuredClone(snapshot)),
     async update(input, auth) {
       if (!auth) throw new ConfigurationError("UNAUTHORIZED");
       if (!hasPermission(access(auth), "configuration.update"))
@@ -73,7 +59,7 @@ export function createConfigurationService({
         throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
       }
       if (!saved) throw new ConfigurationError("CONFIGURATION_CONFLICT");
-      await cache.set(CACHE_KEY, saved, cacheTtlMs);
+      reads.committed("site", saved.revision);
       return saved;
     },
   };

@@ -14,6 +14,7 @@ import { createControlRepository } from "@raypx/control/postgres";
 import { connected, controlAuth } from "@raypx/control/testing";
 import { createApiClient } from "@raypx/client/api";
 import { createApiApp } from "../../../server/api.js";
+import { createConfigurationReads } from "../../../server/configuration/reads.js";
 import { AuditService } from "../../../server/administration/audit.js";
 import { createAdministrationRepository } from "../../../server/administration/repository.js";
 import { cleanupExpired } from "../../../server/jobs/cleanup.js";
@@ -62,9 +63,11 @@ it("audits storage changes atomically without returning credentials and rejects 
   const administration = createAdministrationRepository(db);
   const audit = new AuditService(administration);
   let current: AuthSession = auth;
+  const reads = createConfigurationReads();
+  const storage = databaseStorage(db, key, reads);
   const app = createApiApp({
     audit,
-    storageSettings: createStorageSettings(db, key, audit),
+    storageSettings: createStorageSettings(db, key, audit, reads),
     authHandler: async () => new Response(null, { status: 404 }),
     readSession: async () => current,
     allowedOrigins: [origin],
@@ -111,6 +114,7 @@ it("audits storage changes atomically without returning credentials and rejects 
     });
     const configured = await client().storage({});
     expect(configured).toEqual({ values, revision: 1, updatedAt: expect.any(String) });
+    expect(await storage.readCached()).toMatchObject({ available: true });
     const [before] = await db
       .select()
       .from(storageConfiguration)
@@ -123,7 +127,7 @@ it("audits storage changes atomically without returning credentials and rejects 
       values: { ...values, enabled: false },
     });
     expect(disabled).toMatchObject({ revision: 2, values: { enabled: false } });
-    expect(await databaseStorage(db, key)()).toBeNull();
+    expect(await storage.readCached()).toBeNull();
     const [after] = await db
       .select()
       .from(storageConfiguration)
@@ -175,7 +179,12 @@ it("loads encrypted S3 settings from PostgreSQL and routes private attachment co
   try {
     const project = await connected(seed, auth);
     const target = { deviceId: project.grant.deviceId, projectId: project.input.projectId };
-    const storage = databaseStorage(db, key);
+    let now = 0;
+    const storage = databaseStorage(
+      db,
+      key,
+      createConfigurationReads(undefined, () => now),
+    );
     const attachments = createSessionAttachments(db, storage, seed.projects);
     const resolve = withSessionAttachments(db, async () => ({
       capturedAt: new Date().toISOString(),
@@ -223,9 +232,11 @@ it("loads encrypted S3 settings from PostgreSQL and routes private attachment co
       .where(eq(storageConfiguration.endpoint, endpoint));
     expect(row?.credentials).toBeTruthy();
     expect(row?.credentials).not.toContain("fixture-secret");
-    await expect(databaseStorage(db, "wrong deployment secret")()).rejects.toMatchObject({
+    await expect(databaseStorage(db, "wrong deployment secret").read()).rejects.toMatchObject({
       name: "OperationError",
     });
+    expect(await client().status({})).toEqual({ enabled: false });
+    now = 5_000;
     expect(await client().status({})).toEqual({ enabled: true });
     await expect(
       client().upload({ ...input, projectId: crypto.randomUUID() }),

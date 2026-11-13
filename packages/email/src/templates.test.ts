@@ -50,6 +50,25 @@ it("injects an in-memory transport", async () => {
   expect(seen).toHaveLength(1);
 });
 
+it("passes a deadline to Resend and reports a failed send without provider details", async () => {
+  const timeout = vi.spyOn(AbortSignal, "timeout");
+  const request = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(Response.json({ message: "private provider details" }, { status: 500 }));
+  try {
+    const mailer = createMailer({ apiKey: "re_test", from: "notify@example.com" });
+    await expect(
+      mailer.sendVerification({ email: "u@example.com", url: "https://example.com/verify" }),
+    ).rejects.toThrow(/^Authentication email delivery failed$/);
+    expect(timeout).toHaveBeenCalledWith(8_000);
+    expect(request).toHaveBeenCalledOnce();
+    expect(request.mock.calls[0]?.[1]?.signal).toBe(timeout.mock.results.at(-1)?.value);
+  } finally {
+    request.mockRestore();
+    timeout.mockRestore();
+  }
+});
+
 it("rejects unconfigured verification and reset delivery without logging private input", async () => {
   const log = vi.spyOn(console, "info").mockImplementation(() => {});
   const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

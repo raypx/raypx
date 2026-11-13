@@ -42,9 +42,9 @@ railway variable set --skip-deploys; never commit decrypted variables.
 | web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                  |
 | api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                          |
 
-Optional mail, administrator, storage and analytics settings remain explicit
-per-environment settings. Without RESEND_API_KEY and a verified MAIL_FROM, mail
-actions retain the MAIL_NOT_CONFIGURED guard. Never bypass verification for real users.
+Mail and storage live in each environment's database. Seed existing Resend
+credentials before upgrading, using the [configuration center guide](configuration.md#resend-email).
+Unconfigured mail actions return `MAIL_NOT_CONFIGURED`.
 Both Dockerfiles declare `RAILWAY_GIT_COMMIT_SHA` as a build argument. Manual builds
 outside Git must supply it or `VITE_APP_RELEASE`; no unversioned production fallback
 is generated. Client assets record the resolved version for later SourceMap upload.

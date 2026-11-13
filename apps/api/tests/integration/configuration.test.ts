@@ -46,7 +46,7 @@ function fixture() {
     readSession: async () => auth,
     allowedOrigins: ["https://web.example.test/", "invalid"],
     jobsEnabled: false,
-    mailAvailable: true,
+    mailAvailable: async () => true,
   });
   const client = (origin: string = "https://web.example.test") =>
     createApiClient({

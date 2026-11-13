@@ -13,6 +13,7 @@ import { PageHeader } from "@raypx/ui/page-header";
 import { authClient } from "../../auth/client.js";
 import { configurationClient, configurationError, type Configuration } from "../client.js";
 import { StorageSettings } from "./storage.js";
+import { ResendSettings } from "./resend.js";
 
 const row =
   "grid items-start gap-4 border-b border-border py-5 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] @xl/main:items-center @xl/main:gap-x-8";
@@ -96,12 +97,16 @@ export function ConfigurationSettings() {
           <TabsList aria-label={t("title")}>
             <TabsTrigger value="site">{t("siteTab")}</TabsTrigger>
             <TabsTrigger value="storage">{t("storage.title")}</TabsTrigger>
+            <TabsTrigger value="resend">{t("mail.title")}</TabsTrigger>
           </TabsList>
           <TabsContent value="site" keepMounted>
             {content()}
           </TabsContent>
           <TabsContent value="storage" keepMounted>
             <StorageSettings key={accountId} accountId={accountId} active={tab === "storage"} />
+          </TabsContent>
+          <TabsContent value="resend" keepMounted>
+            <ResendSettings key={accountId} accountId={accountId} active={tab === "resend"} />
           </TabsContent>
         </Tabs>
       ) : (
@@ -285,7 +290,6 @@ export function ConfigurationForm({
       >
         <h2 className="text-sm font-medium text-foreground">{t("deployment")}</h2>
         <p>{t("deploymentHint")}</p>
-        <p>{t(saved.deployment.mailConfigured ? "mailReady" : "mailMissing")}</p>
       </section>
     </form>
   );

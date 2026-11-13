@@ -1,45 +1,11 @@
 import type { Database } from "@raypx/database/connection";
-import { createMailer } from "@raypx/email/server";
 import { sql } from "drizzle-orm";
-import { createCache } from "../cache/cache.js";
-import { createMemoryStore } from "../cache/memory.js";
-import { createTieredStore } from "../cache/tiered.js";
 import type { ApiEnvironment } from "../env.js";
 import { createRateLimiter } from "../rate-limit.js";
-import type { Cache } from "../cache/types.js";
 import type { RedisResources } from "./redis.js";
 
-/** Process-local copies in front of Redis; changes from other processes apply within it. */
-const NEAR_CACHE_TTL_MS = 1_000;
-
-export interface AdapterOverrides {
-  cache?: Cache;
-  redis?: RedisResources;
-}
-
-/**
- * Chooses runtime adapters with injected providers first, then Redis or the
- * PostgreSQL and memory defaults.
- */
-export function createAdapters(
-  environment: ApiEnvironment,
-  overrides: AdapterOverrides,
-  db: Database,
-) {
-  const { redis } = overrides;
+export function createAdapters(environment: ApiEnvironment, db: Database, redis?: RedisResources) {
   return {
-    mailer: createMailer({
-      defaultLocale: environment.MAIL_DEFAULT_LOCALE,
-      ...(environment.RESEND_API_KEY ? { apiKey: environment.RESEND_API_KEY } : {}),
-      ...(environment.MAIL_FROM ? { from: environment.MAIL_FROM } : {}),
-    }),
-    cache:
-      overrides.cache ??
-      createCache(
-        redis
-          ? createTieredStore(createMemoryStore(), redis.cache, { nearTtlMs: NEAR_CACHE_TTL_MS })
-          : createMemoryStore(),
-      ),
     ...(redis ? { secondaryStorage: redis.secondaryStorage } : {}),
     ...(environment.NODE_ENV === "production"
       ? { rateLimit: redis?.rateLimit ?? createRateLimiter(db) }

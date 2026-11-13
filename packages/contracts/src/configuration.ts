@@ -52,6 +52,40 @@ const storageSettingsUpdateSchema = z.strictObject({
 });
 export type StorageSettingsSnapshot = z.infer<typeof storageSettingsSnapshotSchema>;
 export type StorageSettingsUpdate = z.infer<typeof storageSettingsUpdateSchema>;
+const addressSchema = z.email();
+const resendSenderSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(320)
+  .refine((value) => {
+    if (/[\r\n\t]/.test(value)) return false;
+    const mailbox = /^[^<>]+ <([^<>]+)>$/.exec(value);
+    return addressSchema.safeParse(mailbox?.[1] ?? value).success;
+  });
+const resendValuesSchema = z.strictObject({
+  from: resendSenderSchema,
+  defaultLocale: z.enum(["en", "zh"]),
+  enabled: z.boolean(),
+});
+const resendSnapshotSchema = z.strictObject({
+  values: resendValuesSchema.nullable(),
+  revision: z.number().int().nonnegative(),
+  updatedAt: z.iso.datetime().nullable(),
+});
+export const resendUpdateSchema = z.strictObject({
+  values: resendValuesSchema,
+  apiKey: z
+    .string()
+    .trim()
+    .min(1)
+    .max(512)
+    .regex(/^[!-~]+$/)
+    .optional(),
+  revision: z.number().int().nonnegative(),
+});
+export type ResendSettingsSnapshot = z.infer<typeof resendSnapshotSchema>;
+export type ResendSettingsUpdate = z.infer<typeof resendUpdateSchema>;
 export const configurationContract = {
   public: oc.input(z.object({})).output(publicConfigurationSchema),
   access: oc.input(z.object({})).output(z.object({ allowed: z.boolean() })),
@@ -63,4 +97,6 @@ export const configurationContract = {
   update: oc.input(configurationUpdateSchema).output(configurationSnapshotSchema),
   storage: oc.input(z.strictObject({})).output(storageSettingsSnapshotSchema),
   updateStorage: oc.input(storageSettingsUpdateSchema).output(storageSettingsSnapshotSchema),
+  resend: oc.input(z.strictObject({})).output(resendSnapshotSchema),
+  updateResend: oc.input(resendUpdateSchema).output(resendSnapshotSchema),
 };

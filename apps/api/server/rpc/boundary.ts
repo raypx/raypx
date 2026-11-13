@@ -27,6 +27,7 @@ const rpcLimits = {
   "relay.ticket": { window: 60, max: 60 },
   "configuration.update": { window: 60, max: 10 },
   "configuration.updateStorage": { window: 60, max: 10 },
+  "configuration.updateResend": { window: 60, max: 10 },
   "attachments.upload": { window: 60, max: 10 },
   "jobs.list": { window: 60, max: 60 },
   "jobs.history": { window: 60, max: 60 },

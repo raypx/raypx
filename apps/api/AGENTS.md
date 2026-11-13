@@ -34,7 +34,7 @@ mode of `vitest.config.ts` for real-database tests. Shared fixtures stay in `tes
 Nitro owns the platform entry. Hono owns the shared Fetch application.
 Platform entry modules live in `app/`; runtime composition and adapters live in `runtime/`.
 `runtime/shared.ts` composes services from the injected database, logger and providers.
-`runtime/adapters.ts` picks cache and rate-limit adapters and builds the auth config.
+`runtime/adapters.ts` picks session and rate-limit adapters and builds the auth config.
 `runtime/lifecycle.ts` closes
 owned resources in reverse order, every one even after a failure, and only once.
 `runtime/server.ts` initializes one process runtime, closed by `runtime/plugin.ts` through Nitro's close hook.
@@ -101,7 +101,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   digest (6/min); never use a caller-selected forwarding header or raw bearer key.
 - Optional `REDIS_URL` (Bun runtime, `server/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
-  stores `runtime.cache` values.
+  broadcasts configuration changes.
   Sessions are still written to PostgreSQL. Requires
   Redis 7+ or Valkey (`EXPIRE NX`, `GETDEL`).
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
@@ -202,11 +202,15 @@ encrypted with the API's deployment secret. `attachments.upload` verifies the ac
 and project before storing an original in the private bucket. The split relay
 reads bounded text projections from PostgreSQL. `RuntimeProviders.storage`
 overrides the provider for tests. See `docs/development/object-storage.md`.
-`server/cache/` owns the runtime cache (`runtime.cache`, `RuntimeProviders.cache`):
-Redis behind a one-second process-local copy when configured, else memory per process
-with values JSON
-parsed by the caller's schema; store failures become misses. Cache only data that
-has a loader, and keep authoritative checks on the source. See `docs/development/caching.md`.
+`configuration.resend/updateResend` use the same authorization and audit gates.
+Site, S3 and Resend use `configuration/reads.ts` for typed fresh and cached reads.
+Each save clears its scope after commit and publishes its revision over Redis.
+A five-second TTL covers missed notifications. Keep administrator reads,
+registration admission and S3 uploads on the authoritative path.
+The Resend API key is write-only and encrypted with the
+deployment secret. `mail:configure` seeds a missing row
+explicitly before the first administrator signup or when upgrading.
+See `docs/development/caching.md` for the configuration reader.
 Run the migration before deploying: signup fails closed without the table. Jobs combine the
 stored cleanup switch with deployment `JOBS_ENABLED`; disabled deployments do not
 query configuration on schedule. API responses exclude secrets and arbitrary env keys.

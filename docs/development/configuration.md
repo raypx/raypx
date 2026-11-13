@@ -7,10 +7,11 @@ server or configuration package.
 ## First setup
 
 1. Create the PostgreSQL database and configure `DATABASE_URL`, authentication,
-   origins and the mail provider in the API environment.
+   and origins in the API environment.
 2. Run `bun run db:migrate` against that database. This creates all foundation
    tables, including `system_configuration`; the migration does not create a database.
-3. Register the intended administrator accounts and verify their emails.
+3. Initialize Resend with the operator command below, then register the intended
+   administrator accounts and verify their emails.
 4. Set explicit `DATABASE_URL` and `ADMIN_EMAILS=owner@example.com` (comma-separated
    for multiple accounts), then run `bun run --cwd apps/api auth:bootstrap-admins`.
    This is an operator command, never a startup action. Database roles remain
@@ -31,8 +32,9 @@ succeeded or fall back to browser-only persistence.
 
 The **Site** tab manages the settings below. The **Object storage** tab manages
 attachment upload availability, the S3 location and write-only credentials.
-Each tab has its own revision and saves independently. Storage changes reuse
-the administration audit and record only the enabled state. See [S3 configuration](object-storage.md).
+The **Email** tab manages Resend. Each tab has its own revision and saves
+independently. Provider changes record only the enabled state in the audit.
+See [S3 configuration](object-storage.md).
 
 | Setting            | Initial value | Effect                                                                  |
 | ------------------ | ------------- | ----------------------------------------------------------------------- |
@@ -50,12 +52,11 @@ The singleton stores explicit non-secret columns, a revision, the last editor's
 user ID and update timestamp. Defaults apply only when the migrated table has no
 row. Missing tables or failed queries return a safe unavailable error.
 
-The public projection, the sign-up pre-check and mail site names read through a
-5-second [server cache](caching.md): Redis when configured, otherwise memory per Bun
-process, so other replicas apply a change within that window.
-Failed reads are never cached, and a save refreshes the cache it uses (every Bun
-process within a second with Redis, otherwise only the instance that handled it). Admin reads, saves, cleanup runs and the
-Better Auth user-create hook always read the database. That hook is the
+The public projection, signup pre-check and mail site names use the
+[configuration reader](caching.md#runtime-configuration) with a five-second
+process-local TTL. A committed save clears local state and notifies other
+replicas over Redis. Admin reads, saves, cleanup runs and the Better Auth
+user-create hook always read the database. That hook is the
 authoritative registration gate for every sign-in method, so a closed policy
 cannot be bypassed by a stale cache or a future provider. Web refreshes the public
 projection on navigation/focus; saving also invalidates it immediately for that
@@ -71,9 +72,38 @@ reject extra configuration keys.
 
 The public projection contains only site name and registration availability.
 Database URLs, encryption secrets, administrator email lists and stored provider
-credentials never enter API responses. The Site tab displays non-secret deployment
-flags for cleanup and mail availability. To recover from a closed registration policy,
+credentials never enter API responses. The Site tab displays deployment
+availability for cleanup. To recover from a closed registration policy,
 an existing verified administrator can sign in and re-enable it.
+
+## Resend email
+
+In **Configuration center → Email**, enter a sender from a domain verified in
+Resend, a sending API key and the default template language. The account
+request's language takes precedence when available. Save to enable registration
+verification and password-reset emails. Pausing delivery preserves the key.
+Leave the key field blank when updating the other settings. A replacement is
+encrypted with the deployment's `AUTH_SECRET`; the key is never returned.
+Saves immediately clear the current process's Resend client. Redis notifies other
+API replicas to reload on their next mail request. A five-second process-local
+TTL covers missed notifications and deployments without Redis. Saving does not
+send a test email or verify the key with Resend.
+
+For a new deployment without a verified administrator, or before upgrading from
+environment-based mail delivery, apply the foundation migrations and run the
+following from the repository with the target `DATABASE_URL`, `AUTH_SECRET`,
+`RESEND_API_KEY` and `MAIL_FROM` supplied securely to the command's environment.
+`MAIL_DEFAULT_LOCALE` is optional and defaults to `en`.
+
+```sh
+bun run --cwd apps/api mail:configure
+```
+
+The explicit command only creates the Resend row if it is missing. Use the
+configuration center for later changes. After seeding the row, the API no longer
+needs those three mail environment variables. Keep the same deployment secret
+across replicas. With delivery paused or unconfigured, mail actions return
+`MAIL_NOT_CONFIGURED`; existing verified users can still sign in.
 
 ## Server-side injection (IoC)
 
@@ -101,10 +131,12 @@ const registrationAllowed = createRegistrationPolicy(runtime.configuration);
 const allowed = await registrationAllowed();
 ```
 
-The cleanup job is an actual reader consumer via `createCleanupJob`. HTTP and jobs
-receive the same service within a runtime. Each `read()` goes back to storage rather
-than capturing values at construction time. Pass `cache` in `RuntimeProviders` to
-share `readCached()` across explicitly composed runtimes.
+The cleanup job receives the site reader via `createCleanupJob`. API composition
+registers the site snapshot, S3 provider and Resend client with one
+`createConfigurationReads` per runtime. For a new configuration scope, register
+its typed PostgreSQL loader in `source()`, use `read()` where policy requires
+fresh values, and call `committed(scope, revision)` after the settings and audit
+transaction commits. API and Web contracts keep their existing typed projections.
 
 Direct writes use the same validation, administrator policy, audit editor and revision
 checks as the GUI. Resolve the session from the server's authentication adapter for

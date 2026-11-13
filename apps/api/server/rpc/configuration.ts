@@ -45,7 +45,7 @@ export function createConfigurationHandlers({
         ...(await service.read()),
         deployment: {
           jobsEnabled: options.jobsEnabled ?? false,
-          mailConfigured: options.mailAvailable ?? false,
+          mailConfigured: (await options.mailAvailable?.()) ?? false,
         },
       }));
     }),
@@ -69,6 +69,25 @@ export function createConfigurationHandlers({
       if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
       try {
         return await options.storageSettings.update(input);
+      } catch (error) {
+        return configurationFailure(error, context);
+      }
+    }),
+    resend: os.configuration.resend.handler(async ({ context }) => {
+      await requirePermission(context, "configuration.read");
+      if (!options.resendSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
+      try {
+        return await options.resendSettings.read();
+      } catch (error) {
+        return configurationFailure(error, context);
+      }
+    }),
+    updateResend: os.configuration.updateResend.handler(async ({ context, input }) => {
+      await requirePermission(context, "configuration.update", "configuration.updateResend");
+      requireOrigin(context);
+      if (!options.resendSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
+      try {
+        return await options.resendSettings.update(input);
       } catch (error) {
         return configurationFailure(error, context);
       }

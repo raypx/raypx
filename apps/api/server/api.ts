@@ -81,7 +81,11 @@ export function createApiApp(options: ApiAppOptions) {
         ? null
         : path === "/api/auth/admin/set-role"
           ? "user.role.update"
-          : path === "/rpc/configuration/update" || path === "/rpc/configuration/updateStorage"
+          : [
+                "/rpc/configuration/update",
+                "/rpc/configuration/updateStorage",
+                "/rpc/configuration/updateResend",
+              ].includes(path)
             ? "configuration.update"
             : null;
     if (!action || !options.audit) return next();
@@ -136,13 +140,13 @@ export function createApiApp(options: ApiAppOptions) {
   app.on(["GET", "POST"], "/api/auth/*", async (c) => {
     const path = decodeURIComponent(c.req.path).replace(/\/+$/, "");
     if (
-      options.mailAvailable === false &&
       c.req.method === "POST" &&
       [
         "/api/auth/sign-up/email",
         "/api/auth/send-verification-email",
         "/api/auth/request-password-reset",
-      ].includes(path)
+      ].includes(path) &&
+      (await options.mailAvailable?.()) === false
     ) {
       return c.json(
         { code: "MAIL_NOT_CONFIGURED", message: "Authentication email is unavailable" },

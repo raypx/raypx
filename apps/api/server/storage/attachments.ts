@@ -17,12 +17,15 @@ const textDecoder = new TextDecoder("utf-8", { fatal: true });
 
 export function createSessionAttachments(
   db: Database,
-  storage: () => Promise<ObjectStorage | null>,
+  storage: {
+    read(): Promise<ObjectStorage | null>;
+    readCached(): Promise<ObjectStorage | null>;
+  },
   projects: ControlProjects,
 ): SessionAttachments {
   return {
     async enabled() {
-      return (await storage())?.available === true;
+      return (await storage.readCached())?.available === true;
     },
     async upload(owner: string, input: SessionAttachmentInput) {
       const bytes = Buffer.from(input.data, "base64");
@@ -39,7 +42,7 @@ export function createSessionAttachments(
       )
         throw new AttachmentError("ATTACHMENT_INVALID");
       await projects.validateContextProject(owner, input);
-      const bucket = await storage();
+      const bucket = await storage.read();
       if (!bucket?.available) throw new AttachmentError("STORAGE_UNAVAILABLE");
       const id = crypto.randomUUID();
       const key = `session-attachments/${id}`;

@@ -125,6 +125,16 @@ export const storageConfiguration = foundation.table("storage_configuration", {
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
 
+export const mailConfiguration = foundation.table("mail_configuration", {
+  id: text("id").primaryKey(),
+  from: text("sender").notNull(),
+  defaultLocale: text("default_locale", { enum: ["en", "zh"] }).notNull(),
+  enabled: boolean("enabled").notNull(),
+  credentials: text("credentials").notNull(),
+  revision: integer("revision").notNull(),
+  updatedAt: date("updated_at").notNull().defaultNow(),
+});
+
 export const sessionAttachment = foundation.table(
   "session_attachment",
   {
@@ -395,6 +405,7 @@ export const schema = {
   cloudJobRun,
   systemConfiguration,
   storageConfiguration,
+  mailConfiguration,
   sessionAttachment,
   user,
   session,

@@ -4,8 +4,9 @@ import { createInstanceRepository } from "../instances/repository.js";
 import { createConfigurationRepository } from "../configuration/repository.js";
 import { createAccessPolicy } from "../access.js";
 import { createConfigurationService } from "../configuration/service.js";
+import { createConfigurationReads } from "../configuration/reads.js";
+import { createResendSettings, databaseMailer } from "../configuration/resend.js";
 import type { ConfigurationRepository } from "../configuration/types.js";
-import type { Cache } from "../cache/types.js";
 import type { ObjectStorage } from "@raypx/storage";
 import { createControlRepository } from "@raypx/control/postgres";
 import { createContextRepository } from "@raypx/memory/server/postgres";
@@ -44,11 +45,6 @@ export interface RuntimeProviders {
   createAdministrationRepository?: (db: Database) => AdministrationRepository;
   createJobsRepository?: (db: Database) => CloudJobsRepository;
   createContextRepository?: (db: Database) => ContextLibraryRepository;
-  /**
-   * Application cache that should outlive per-request runtimes. Defaults to Redis when
-   * configured, otherwise to memory owned by this runtime.
-   */
-  cache?: Cache;
   /** Override the database-configured S3 provider for attachments. */
   storage?: ObjectStorage;
 }
@@ -62,7 +58,7 @@ export interface RuntimeResources extends RuntimeProviders {
   relayReadiness?: () => Promise<void>;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
-  /** Owned by the runtime: sessions, rate limits and cache values; PostgreSQL is used without it. */
+  /** Owned by the runtime: sessions, rate limits and configuration notifications. */
   redis?: RedisResources;
 }
 
@@ -76,11 +72,10 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const connection = resources.connect();
     lifecycle.own(() => connection.close());
     const { db } = connection;
-    const { mailer, cache, secondaryStorage, rateLimit, readiness } = createAdapters(
-      environment,
-      resources,
-      db,
-    );
+    const { secondaryStorage, rateLimit, readiness } = createAdapters(environment, db, redis);
+    const reads = createConfigurationReads(redis?.configurationNotifications);
+    lifecycle.own(async () => reads.close());
+    const mailer = databaseMailer(db, environment.AUTH_SECRET, reads);
     const signer = createInstanceSigner(environment.AUTH_SECRET);
     const instances = new InstanceService({
       origin: environment.AUTH_URL,
@@ -102,7 +97,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       ),
       audit,
       access,
-      cache,
+      reads,
     });
     const repository = createControlRepository(db);
     const projects = new ControlProjects(repository);
@@ -111,10 +106,13 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       scope: "account",
       validateProject: (owner, target) => projects.validateContextProject(owner, target),
     });
-    const storage = resources.storage;
+    const injectedStorage = resources.storage;
+    const readInjectedStorage = async () => injectedStorage ?? null;
     const attachments = createSessionAttachments(
       db,
-      storage ? async () => storage : databaseStorage(db, environment.AUTH_SECRET),
+      injectedStorage
+        ? { read: readInjectedStorage, readCached: readInjectedStorage }
+        : databaseStorage(db, environment.AUTH_SECRET, reads),
       projects,
     );
     const resolveContext = withSessionAttachments(db, (owner, selection, target, prompt) =>
@@ -154,7 +152,6 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       auth,
       audit,
       administration,
-      cache,
       attachments,
       control,
       configuration,
@@ -172,7 +169,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,
-        storageSettings: createStorageSettings(db, environment.AUTH_SECRET, audit),
+        storageSettings: createStorageSettings(db, environment.AUTH_SECRET, audit, reads),
+        resendSettings: createResendSettings(db, environment.AUTH_SECRET, audit, reads),
         jobsEnabled: environment.JOBS_ENABLED,
         control,
         cloudJobs,

@@ -87,9 +87,9 @@ Do not add another task runner. Web and API run under Bun in dev, build, preview
 and production: scripts call `bun --bun vp`, and each output starts with
 `bun .output/server/index.mjs`. Nitro's `bun` preset traces Bun export conditions.
 
-Actual verification/reset emails require RESEND_API_KEY and MAIL_FROM. Without a
-configured mail transport those actions return MAIL_NOT_CONFIGURED instead of
-claiming delivery. Tests inject an explicit in-memory mail transport.
+Actual verification/reset emails require [Resend setup](configuration.md#resend-email).
+Unconfigured mail actions return `MAIL_NOT_CONFIGURED`. Tests inject an
+in-memory mail transport.
 
 Bun uses the isolated install layout: each workspace resolves only the packages it
 declares, so a missing dependency fails at install or build time instead of

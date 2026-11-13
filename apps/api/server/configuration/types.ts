@@ -2,6 +2,8 @@ import type { AuthSession } from "@raypx/core/auth";
 import type {
   ConfigurationSnapshot,
   ConfigurationValues,
+  ResendSettingsSnapshot,
+  ResendSettingsUpdate,
   StorageSettingsSnapshot,
   StorageSettingsUpdate,
 } from "@raypx/contracts/api";
@@ -9,6 +11,11 @@ import type {
 export interface StorageSettingsService {
   read(): Promise<StorageSettingsSnapshot>;
   update(input: StorageSettingsUpdate): Promise<StorageSettingsSnapshot>;
+}
+
+export interface ResendSettingsService {
+  read(): Promise<ResendSettingsSnapshot>;
+  update(input: ResendSettingsUpdate): Promise<ResendSettingsSnapshot>;
 }
 
 /** Inject this capability into consumers that only need to read settings. */

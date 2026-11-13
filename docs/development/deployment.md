@@ -31,9 +31,9 @@ Never discover another project's volume, reuse a retired database or run these
 migrations against an operator database. New projects use their own isolated
 volume and credentials.
 
-`RESEND_API_KEY` and a verified `MAIL_FROM` enable account mail; unconfigured mail
-retains `MAIL_NOT_CONFIGURED`. Optional OAuth, storage, analytics, cookie domain
-and locale settings are explicit in the template. `JOBS_ENABLED` enables server
+Account mail and storage are set in the [configuration center](configuration.md).
+Optional OAuth, analytics and cookie domain settings are explicit in the template.
+`JOBS_ENABLED` enables server
 maintenance and cloud scheduling. Empty optional values disable integrations.
 A configured Redis outage fails readiness and closes cluster peers; it never
 falls back to local routing or queues uncertain execution for retry.
@@ -177,7 +177,7 @@ The opt-in native and browser gates described in [testing](testing.md) accept
 `https://raypx.com` through their explicit HTTPS settings despite their `beta`
 command names. Use a dedicated acceptance account and remove it after testing.
 
-Mail requires an explicitly configured `RESEND_API_KEY` and verified `MAIL_FROM`.
+Mail requires a Resend key and verified sender in the [configuration center](configuration.md#resend-email).
 Until configured, registration verification and password-reset mail remain
 unavailable behind the `MAIL_NOT_CONFIGURED` guard. Existing-account login is
 independent of mail availability; never bypass verification for real users.
