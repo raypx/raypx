@@ -68,7 +68,7 @@ vi.mock("../../src/features/auth/client.js", () => ({
     signOut: mocks.signOut,
   },
 }));
-vi.mock("../../src/features/configuration/client.js", () => ({
+vi.mock("../../src/features/config/client.js", () => ({
   configurationClient: { get: mocks.configurationGet },
   publicConfigurationQuery: () => ({
     queryKey: ["configuration", "public"],

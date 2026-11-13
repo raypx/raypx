@@ -117,6 +117,8 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon. Host grants
   have pre-lookup limits by platform-owned client address (120/min) and credential
   digest (6/min); never use a caller-selected forwarding header or raw bearer key.
+  Host revocation shares the address limit. Unauthenticated instance polls and checks
+  are limited by address (300/min) before the per-ID window, since callers choose the ID.
 - Optional `REDIS_URL` (Bun runtime, `src/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
   broadcasts configuration changes.
@@ -283,8 +285,10 @@ across concurrent requests and direct-service/operator calls. Custom configurati
 repository factories receive AuditService and must keep this atomic contract.
 The Hono boundary audits admitted, identified role/configuration requests including
 refusals and applies an admission quota through `hono-rate-limiter` using the
-runtime's shared rate limiter. Configuration mutations declare permission, account
-quota and trusted Origin checks as oRPC middleware.
-`admin.*` reads require fresh permissions. Dependency checks reuse `/ready` probes;
+runtime's shared rate limiter. The `admin.*` and `configuration.*` handlers
+use oRPC middleware to enforce the access declared on each procedure. The
+middleware rejects a missing declaration. Configuration mutations check the
+account permission, quota and trusted Origin in that order.
+Dependency checks reuse `/ready` probes;
 statistics and audit expose no task content, addresses, secrets or raw HTTP bodies.
 Audit records survive account deletion and are never removed by cleanup jobs.

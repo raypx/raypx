@@ -1,7 +1,7 @@
 import { oc } from "@orpc/contract";
 import { describe, expect, it } from "vitest";
-import { collectApiExposure, exposeApiTo } from "./api-exposure.js";
-import { accountProfileSchema, apiContract, apiExposure } from "./api.js";
+import { collectApiExposure, exposeApiTo } from "./exposure.js";
+import { accountProfileSchema, apiContract, apiExposure, getRpcAccess } from "./api.js";
 
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
@@ -56,5 +56,13 @@ describe("foundation contract", () => {
       account: { get: oc.meta(exposeApiTo("renderer")), undeclared: oc },
     });
     expect(exposure).toEqual({ account: { get: "renderer" } });
+  });
+
+  it("declares access for every administration and configuration procedure", () => {
+    for (const group of [apiContract.admin, apiContract.configuration]) {
+      for (const procedure of Object.values(group)) {
+        expect(getRpcAccess(procedure)).toBeDefined();
+      }
+    }
   });
 });

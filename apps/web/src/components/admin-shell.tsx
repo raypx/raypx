@@ -17,7 +17,7 @@ import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { BookOpenIcon } from "@raypx/icons/book-open";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { authClient } from "../features/auth/client.js";
-import { publicConfigurationQuery } from "../features/configuration/client.js";
+import { publicConfigurationQuery } from "../features/config/client.js";
 import { PermissionBoundary } from "../features/auth/components/permission-boundary.js";
 import { accountAccessQuery, canAccessWebPage, type WebPath } from "../features/auth/access.js";
 import { UserButton } from "./user-button.js";

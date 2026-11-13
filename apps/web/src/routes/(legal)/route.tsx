@@ -6,7 +6,7 @@ import { IconButton } from "@raypx/ui/icon-button";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { LegalFooter } from "../../components/legal-footer.js";
 import { PublicBackdrop, PublicHeader } from "../../components/public-chrome.js";
-import { publicConfigurationQuery } from "../../features/configuration/client.js";
+import { publicConfigurationQuery } from "../../features/config/client.js";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 
 export const Route = createFileRoute("/(legal)")({ component: LegalLayout });

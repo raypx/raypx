@@ -125,3 +125,39 @@ it("shares dependency results between public readiness and authorized administra
   });
   expect(database).toHaveBeenCalledOnce();
 });
+
+it("checks the declared admin permission for overview, health and audit", async () => {
+  let session: AuthSession | null = null;
+  const rateLimit = vi.fn(async () => true);
+  const app = createApiApp({
+    access: (auth) =>
+      auth?.user.role === "admin"
+        ? { ...accessForRole("admin", auth.user.id), permissions: ["admin.read"] }
+        : accessForRole("member", auth?.user.id ?? null),
+    authHandler: async () => Response.json({}),
+    readSession: async () => session,
+    allowedOrigins: [],
+    rateLimit,
+  });
+  const client = createApiClient({
+    baseUrl: "https://api.example.test",
+    fetch: async (input, init) => app.fetch(new Request(input, init)),
+  });
+  const reads = [
+    () => client.admin.overview({}),
+    () => client.admin.health({}),
+    () => client.admin.audit({}),
+  ];
+  for (const read of reads) await expect(read()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  session = { ...admin, user: { ...admin.user, role: "member" } };
+  for (const read of reads) await expect(read()).rejects.toMatchObject({ code: "FORBIDDEN" });
+  expect(rateLimit).not.toHaveBeenCalled();
+
+  session = admin;
+  await expect(client.admin.health({})).resolves.toHaveProperty("checks");
+  await expect(client.admin.audit({})).rejects.toMatchObject({ code: "FORBIDDEN" });
+  expect(rateLimit).toHaveBeenCalledExactlyOnceWith("rpc:admin:admin.health", {
+    window: 60,
+    max: 60,
+  });
+});

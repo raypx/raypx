@@ -1,7 +1,8 @@
-import { collectApiExposure, exposeApiTo } from "./api-exposure.js";
-import { administrationContract } from "./administration.js";
+import { collectApiExposure, exposeApiTo } from "./exposure.js";
+export { getRpcAccess } from "./policy.js";
+import { administrationContract } from "./admin.js";
 import { sessionAttachmentContract } from "./attachments.js";
-export * from "./administration.js";
+export * from "./admin.js";
 export * from "./attachments.js";
 import { instancesContract } from "./instances.js";
 import { oc } from "@orpc/contract";
@@ -18,8 +19,8 @@ import {
   taskActivitySchema,
 } from "@raypx/core/tasks";
 export * from "./tasks.js";
-export * from "./configuration.js";
-import { configurationContract } from "./configuration.js";
+export * from "./config.js";
+import { configurationContract } from "./config.js";
 import { jobsContract } from "./jobs.js";
 export * from "./jobs.js";
 import { memoryContract } from "./memory.js";

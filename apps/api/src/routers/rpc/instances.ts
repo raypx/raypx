@@ -25,6 +25,9 @@ export function createInstancesHandlers({
     const address = options.clientIpHeader
       ? (context.headers.get(options.clientIpHeader) ?? "unknown")
       : "unknown";
+    // The caller chooses the device ID, so it only narrows a limit the address already has.
+    if (!auth && deviceId)
+      await enforceLimit(context, `instance:${address}:peer`, { window: 60, max: 300 });
     await enforceLimit(
       context,
       `instance:${auth?.user.id ?? (deviceId ? address + ":" + deviceId : address)}:${owner ? "owner" : "device"}`,

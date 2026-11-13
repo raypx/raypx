@@ -92,7 +92,14 @@ describe("administrator configuration", () => {
       ).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
     f.setAuth(null);
+    expect(await f.client().access({})).toEqual({ allowed: false });
     await expect(f.client().get({})).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    const publicConfig = await f.app.request("/api/v1/configuration");
+    expect(publicConfig.status).toBe(200);
+    expect(await publicConfig.json()).toEqual({
+      siteName: configurationDefaults.siteName,
+      registrationEnabled: configurationDefaults.registrationEnabled,
+    });
     expect(f.repository.update).not.toHaveBeenCalled();
   });
 

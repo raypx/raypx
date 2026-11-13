@@ -9,7 +9,7 @@
     "./local": "./src/local.ts",
     "./tasks": "./src/tasks.ts",
     "./terminal": "./src/terminal.ts",
-    "./local-client": "./src/local-client.ts",
+    "./local-client": "./src/client.ts",
     "./desktop": "./src/desktop.ts"
   },
   "scripts": {

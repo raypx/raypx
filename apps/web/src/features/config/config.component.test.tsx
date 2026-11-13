@@ -1,14 +1,14 @@
 /** @vitest-environment happy-dom */
-import { BrowserLanguageProvider } from "../i18n.js";
+import { BrowserLanguageProvider } from "../../i18n.js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { ConfigurationForm, ConfigurationSettings } from "./configuration/components/settings.js";
-import { configurationClient, type Configuration } from "./configuration/client.js";
+import { ConfigurationForm, ConfigurationSettings } from "./components/settings.js";
+import { configurationClient, type Configuration } from "./client.js";
 
 const auth = vi.hoisted(() => ({ error: null as Error | null, refetch: vi.fn() }));
-vi.mock("./auth/client.js", () => ({
+vi.mock("../auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   authClient: {
     useSession: () => ({
@@ -19,8 +19,8 @@ vi.mock("./auth/client.js", () => ({
     }),
   },
 }));
-vi.mock("./configuration/client.js", async (original) => ({
-  ...(await original<typeof import("./configuration/client.js")>()),
+vi.mock("./client.js", async (original) => ({
+  ...(await original<typeof import("./client.js")>()),
   configurationClient: { get: vi.fn(), update: vi.fn(), storage: vi.fn(), updateStorage: vi.fn() },
 }));
 const config: Configuration = {

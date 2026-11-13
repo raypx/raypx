@@ -1,5 +1,5 @@
 import { expect, expectTypeOf, it, vi } from "vitest";
-import { createLocalClient, type LocalClient } from "./local-client.js";
+import { createLocalClient, type LocalClient } from "./client.js";
 import { LOCAL_WORKSPACE_ID, localParams } from "./local.js";
 
 // This function is checked by the workspace typecheck, never executed.

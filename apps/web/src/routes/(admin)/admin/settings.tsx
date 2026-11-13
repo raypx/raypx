@@ -3,7 +3,7 @@ import { webPageGuard, PageAccessFeedback } from "../../../features/auth/route-g
 import { createFileRoute } from "@tanstack/react-router";
 import { SessionBoundary, SignInGate } from "../../../features/auth/components/session-boundary.js";
 
-import { ConfigurationSettings } from "../../../features/configuration/components/settings.js";
+import { ConfigurationSettings } from "../../../features/config/components/settings.js";
 
 export const Route = createFileRoute("/(admin)/admin/settings")({
   beforeLoad: webPageGuard("/admin/settings"),

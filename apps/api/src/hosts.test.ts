@@ -47,6 +47,32 @@ it("limits host grants before credential lookup without retaining bearer secrets
   expect(JSON.stringify(rateLimit.mock.calls)).not.toContain(credential);
   expect(hostGrant).not.toHaveBeenCalled();
 });
+it("limits host revocation by peer address before credential lookup", async () => {
+  const revokeHost = vi.fn(),
+    rateLimit = vi.fn(async (_key: string, _rule: { window: number; max: number }) => false);
+  const app = createApiApp({
+    control: { credentials: { revokeHost } } as unknown as ControlService,
+    rateLimit,
+    clientIpHeader: "cf-connecting-ip",
+    allowedOrigins: [],
+    readSession: async () => null,
+    authHandler: async () => new Response(null),
+  });
+  const credential = "synthetic-host-secret-".repeat(3);
+  const api = createApiClient({
+    baseUrl: "https://api.example.test",
+    headers: { "cf-connecting-ip": "203.0.113.7" },
+    fetch: async (input, init) => app.fetch(new Request(input, init)),
+  });
+  await expect(api.hosts.revoke({ credential })).rejects.toMatchObject({
+    code: "TOO_MANY_REQUESTS",
+  });
+  expect(revokeHost).not.toHaveBeenCalled();
+  expect(rateLimit).toHaveBeenCalledExactlyOnceWith(
+    `rpc:hosts.revoke:peer:${createHash("sha256").update("203.0.113.7").digest("hex")}`,
+    { window: 60, max: 120 },
+  );
+});
 it("rejects credentials missing bootstrap attribution before grants or relay access", async () => {
   const repository = memoryControlRepository(),
     service = new ControlService(repository),

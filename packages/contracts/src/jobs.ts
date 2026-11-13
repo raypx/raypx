@@ -1,4 +1,4 @@
-import { exposeApiTo } from "./api-exposure.js";
+import { exposeApiTo } from "./exposure.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { httpRead } from "./http.js";

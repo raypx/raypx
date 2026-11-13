@@ -1,5 +1,5 @@
 import { useTranslations } from "../i18n.js";
-import { publicConfigurationQuery } from "../features/configuration/client.js";
+import { publicConfigurationQuery } from "../features/config/client.js";
 import {
   accountAccessQuery,
   canAccessWebPage,

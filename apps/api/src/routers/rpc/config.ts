@@ -6,21 +6,14 @@ import { hasPermission } from "@raypx/account/access";
 import type { RpcBoundary } from "./boundary.js";
 export function createConfigurationHandlers({
   os,
-  requirePermission,
-  withPermission,
-  limitAccount,
+  withRpcPermission,
+  withPublicRpcAccess,
   requireTrustedOrigin,
   options,
   access,
 }: Pick<
   RpcBoundary,
-  | "os"
-  | "requirePermission"
-  | "withPermission"
-  | "limitAccount"
-  | "requireTrustedOrigin"
-  | "options"
-  | "access"
+  "os" | "withRpcPermission" | "withPublicRpcAccess" | "requireTrustedOrigin" | "options" | "access"
 >) {
   async function configurationCall<T>(
     context: RpcContext,
@@ -48,22 +41,21 @@ export function createConfigurationHandlers({
     });
   }
 
-  const canUpdateConfiguration = withPermission("configuration.update");
+  const canReadConfiguration = withRpcPermission();
   return {
-    public: os.configuration.public.handler(({ context }) =>
+    public: os.configuration.public.use(withPublicRpcAccess).handler(({ context }) =>
       configurationCall(context, async (service) => {
         const { values } = await service.readCached();
         return { siteName: values.siteName, registrationEnabled: values.registrationEnabled };
       }),
     ),
-    access: os.configuration.access.handler(async ({ context }) => ({
+    access: os.configuration.access.use(withPublicRpcAccess).handler(async ({ context }) => ({
       allowed: hasPermission(
         access(await options.readSession(context.headers)),
         "configuration.read",
       ),
     })),
-    get: os.configuration.get.handler(async ({ context }) => {
-      await requirePermission(context, "configuration.read");
+    get: os.configuration.get.use(canReadConfiguration).handler(async ({ context }) => {
       return configurationCall(context, async (service) => ({
         ...(await service.read()),
         deployment: {
@@ -73,14 +65,12 @@ export function createConfigurationHandlers({
       }));
     }),
     update: os.configuration.update
-      .use(canUpdateConfiguration)
-      .use(limitAccount({ procedure: "configuration.update", window: 60, max: 10 }))
+      .use(withRpcPermission({ procedure: "configuration.update", window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(({ context, input }) =>
         configurationCall(context, (service) => service.update(input, context.auth)),
       ),
-    storage: os.configuration.storage.handler(async ({ context }) => {
-      await requirePermission(context, "configuration.read");
+    storage: os.configuration.storage.use(canReadConfiguration).handler(async ({ context }) => {
       if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
       try {
         return await options.storageSettings.read();
@@ -89,8 +79,7 @@ export function createConfigurationHandlers({
       }
     }),
     updateStorage: os.configuration.updateStorage
-      .use(canUpdateConfiguration)
-      .use(limitAccount({ procedure: "configuration.updateStorage", window: 60, max: 10 }))
+      .use(withRpcPermission({ procedure: "configuration.updateStorage", window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(async ({ context, input }) => {
         if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
@@ -100,8 +89,7 @@ export function createConfigurationHandlers({
           return configurationFailure(error, context);
         }
       }),
-    resend: os.configuration.resend.handler(async ({ context }) => {
-      await requirePermission(context, "configuration.read");
+    resend: os.configuration.resend.use(canReadConfiguration).handler(async ({ context }) => {
       if (!options.resendSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
       try {
         return await options.resendSettings.read();
@@ -110,8 +98,7 @@ export function createConfigurationHandlers({
       }
     }),
     updateResend: os.configuration.updateResend
-      .use(canUpdateConfiguration)
-      .use(limitAccount({ procedure: "configuration.updateResend", window: 60, max: 10 }))
+      .use(withRpcPermission({ procedure: "configuration.updateResend", window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(async ({ context, input }) => {
         if (!options.resendSettings) throw new ORPCError("SERVICE_UNAVAILABLE");

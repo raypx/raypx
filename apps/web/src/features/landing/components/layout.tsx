@@ -3,7 +3,7 @@ import { UserButton } from "../../../components/user-button.js";
 import { Outlet } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
-import { publicConfigurationQuery } from "../../configuration/client.js";
+import { publicConfigurationQuery } from "../../config/client.js";
 import { LanguageMenu, ThemeToggle } from "@raypx/blocks/preference-controls";
 import { LegalFooter } from "../../../components/legal-footer.js";
 import { PublicBackdrop, PublicHeader } from "../../../components/public-chrome.js";

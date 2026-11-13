@@ -1,4 +1,5 @@
-import { exposeApiTo } from "./api-exposure.js";
+import { exposeApiTo } from "./exposure.js";
+import { rpcAccess } from "./policy.js";
 import { oc, type InferRouterContractOutputs } from "@orpc/contract";
 import { z } from "zod";
 
@@ -42,7 +43,7 @@ export type AuditEntry = z.infer<typeof auditEntrySchema>;
 export type AuditFilter = z.infer<typeof auditFilterSchema>;
 export const administrationContract = {
   overview: oc
-    .meta(exposeApiTo("web"))
+    .meta(exposeApiTo("web"), rpcAccess("admin.read"))
     .input(z.strictObject({ days: z.union([z.literal(7), z.literal(30)]).default(30) }))
     .output(
       z.strictObject({
@@ -57,7 +58,7 @@ export const administrationContract = {
       }),
     ),
   health: oc
-    .meta(exposeApiTo("web"))
+    .meta(exposeApiTo("web"), rpcAccess("admin.read"))
     .input(z.strictObject({}))
     .output(
       z.strictObject({
@@ -70,7 +71,7 @@ export const administrationContract = {
       }),
     ),
   audit: oc
-    .meta(exposeApiTo("web"))
+    .meta(exposeApiTo("web"), rpcAccess("audit.read"))
     .input(auditFilterSchema)
     .output(
       z.strictObject({

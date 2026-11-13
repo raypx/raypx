@@ -2,7 +2,7 @@ import { authPageGuard } from "../../features/auth/auth-guard.js";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { safeReturnTo } from "../../features/auth/return-to.js";
 import { useQuery } from "@tanstack/react-query";
-import { publicConfigurationQuery } from "../../features/configuration/client.js";
+import { publicConfigurationQuery } from "../../features/config/client.js";
 import { AuthFormSection } from "../../features/auth/components/auth-form-section.js";
 
 export const Route = createFileRoute("/(auth)")({

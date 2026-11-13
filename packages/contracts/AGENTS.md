@@ -20,6 +20,9 @@ administrative daemon router. The daemon derives renderer local admission from
 Declare each procedure's consumer with `.meta(exposeApiTo(...))`. The daemon
 derives Desktop RPC admission from the generated map. A missing declaration
 omits the procedure from the map and fails the contract test.
+The `admin` and `configuration` RPC groups declare account access with
+`rpcAccess(...)`. Use a permission for protected procedures and `public` for
+procedures that accept anonymous calls.
 `/local`: versioned local CLI/Desktop protocol. There is no root entry and no
 `./jobs` or `./memory` entry. Transport entries compose Core's domain schemas,
 and domain consumers import Core directly.

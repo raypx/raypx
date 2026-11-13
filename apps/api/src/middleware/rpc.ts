@@ -1,6 +1,6 @@
-import { implement, ORPCError, type MiddlewareNext } from "@orpc/server";
+import { implement, ORPCError } from "@orpc/server";
 import has from "lodash-es/has.js";
-import { apiContract } from "@raypx/contracts/api";
+import { apiContract, getRpcAccess } from "@raypx/contracts/api";
 import { hasPermission, type AccountPermission } from "@raypx/account/access";
 import type { AuthSession } from "@raypx/core/auth";
 import type { AccessPolicy } from "../access.js";
@@ -89,24 +89,18 @@ export function createRpcMiddleware(
   ) {
     return enforceLimit(context, `rpc:${auth.user.id}:${procedure}`, { window, max });
   }
-  function withPermission(permission: AccountPermission) {
-    return implementer.middleware(async ({ context, next }) => {
-      const auth = await requirePermission(context, permission);
+  function withRpcPermission(limit?: AccountRateLimit) {
+    return implementer.middleware(async ({ context, next, procedure }) => {
+      const permission = getRpcAccess(procedure);
+      if (permission === undefined || permission === "public") throw new ORPCError("FORBIDDEN");
+      const auth = await requirePermission(context, permission, limit);
       return next({ context: { auth } });
     });
   }
-  function limitAccount(limit: AccountRateLimit) {
-    return async function accountLimit<Output>({
-      context,
-      next,
-    }: {
-      context: RpcContext & { auth: AuthSession };
-      next: MiddlewareNext<Output>;
-    }) {
-      await enforceAccountLimit(context, context.auth, limit);
-      return next();
-    };
-  }
+  const withPublicRpcAccess = implementer.middleware(({ procedure, next }) => {
+    if (getRpcAccess(procedure) !== "public") throw new ORPCError("FORBIDDEN");
+    return next();
+  });
   function checkTrustedOrigin(context: RpcContext) {
     const origin = context.headers.get("origin");
     if (!origin || !allowedOrigins.includes(origin))
@@ -123,8 +117,8 @@ export function createRpcMiddleware(
     enforceLimit,
     enforceAccountLimit,
     requirePermission,
-    withPermission,
-    limitAccount,
+    withRpcPermission,
+    withPublicRpcAccess,
     checkTrustedOrigin,
     requireTrustedOrigin,
   };

@@ -1,4 +1,4 @@
-import { exposeApiTo } from "./api-exposure.js";
+import { exposeApiTo } from "./exposure.js";
 import { oc } from "@orpc/contract";
 import { taskContextTargetSchema } from "@raypx/core/tasks";
 import { z } from "zod";

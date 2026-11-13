@@ -7,7 +7,7 @@ import type { IconComponent } from "@raypx/icons";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { AuthForm } from "../../features/auth/components/auth-form.js";
-import { publicConfigurationQuery } from "../../features/configuration/client.js";
+import { publicConfigurationQuery } from "../../features/config/client.js";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { AlertCircleIcon } from "@raypx/icons/alert-circle";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";

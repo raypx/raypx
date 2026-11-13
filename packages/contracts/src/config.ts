@@ -1,4 +1,5 @@
-import { exposeApiTo } from "./api-exposure.js";
+import { exposeApiTo } from "./exposure.js";
+import { rpcAccess } from "./policy.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { httpRead } from "./http.js";
@@ -90,15 +91,15 @@ export type ResendSettingsSnapshot = z.infer<typeof resendSnapshotSchema>;
 export type ResendSettingsUpdate = z.infer<typeof resendUpdateSchema>;
 export const configurationContract = {
   public: httpRead("/configuration", "configuration", "Read public site settings", "public")
-    .meta(exposeApiTo("renderer"))
+    .meta(exposeApiTo("renderer"), rpcAccess("public"))
     .input(z.object({}))
     .output(publicConfigurationSchema),
   access: oc
-    .meta(exposeApiTo("renderer"))
+    .meta(exposeApiTo("renderer"), rpcAccess("public"))
     .input(z.object({}))
     .output(z.object({ allowed: z.boolean() })),
   get: oc
-    .meta(exposeApiTo("renderer"))
+    .meta(exposeApiTo("renderer"), rpcAccess("configuration.read"))
     .input(z.object({}))
     .output(
       configurationSnapshotSchema.extend({
@@ -106,17 +107,23 @@ export const configurationContract = {
       }),
     ),
   update: oc
-    .meta(exposeApiTo("renderer"))
+    .meta(exposeApiTo("renderer"), rpcAccess("configuration.update"))
     .input(configurationUpdateSchema)
     .output(configurationSnapshotSchema),
   storage: oc
-    .meta(exposeApiTo("web"))
+    .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
     .input(z.strictObject({}))
     .output(storageSettingsSnapshotSchema),
   updateStorage: oc
-    .meta(exposeApiTo("web"))
+    .meta(exposeApiTo("web"), rpcAccess("configuration.update"))
     .input(storageSettingsUpdateSchema)
     .output(storageSettingsSnapshotSchema),
-  resend: oc.meta(exposeApiTo("web")).input(z.strictObject({})).output(resendSnapshotSchema),
-  updateResend: oc.meta(exposeApiTo("web")).input(resendUpdateSchema).output(resendSnapshotSchema),
+  resend: oc
+    .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
+    .input(z.strictObject({}))
+    .output(resendSnapshotSchema),
+  updateResend: oc
+    .meta(exposeApiTo("web"), rpcAccess("configuration.update"))
+    .input(resendUpdateSchema)
+    .output(resendSnapshotSchema),
 };

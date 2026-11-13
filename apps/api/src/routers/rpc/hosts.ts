@@ -1,4 +1,5 @@
 import { ORPCError } from "@orpc/server";
+import type { RpcContext } from "../../middleware/rpc.js";
 import type { RpcBoundary } from "./boundary.js";
 export function createHostsHandlers({
   os,
@@ -17,6 +18,17 @@ export function createHostsHandlers({
       (byte) => byte.toString(16).padStart(2, "0"),
     ).join("");
 
+  // The server entry replaces the private header from its socket; Workers supply the
+  // edge-owned CF header. No limit stores the bearer credential.
+  const limitPeer = async (context: RpcContext, procedure: string) => {
+    const peer =
+      (options.clientIpHeader ? context.headers.get(options.clientIpHeader) : null) ?? "unknown";
+    await enforceLimit(context, `rpc:${procedure}:peer:${await digest(peer)}`, {
+      window: 60,
+      max: 120,
+    });
+  };
+
   return {
     authorize: os.hosts.authorize.handler(({ input, context }) => {
       const origin = context.headers.get("origin");
@@ -33,14 +45,7 @@ export function createHostsHandlers({
     }),
     grant: os.hosts.grant.handler(async ({ input, context }) => {
       if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
-      // The server entry replaces the private header from its socket; Workers supply the
-      // edge-owned CF header. Neither limit stores the bearer credential.
-      const peer =
-        (options.clientIpHeader ? context.headers.get(options.clientIpHeader) : null) ?? "unknown";
-      await enforceLimit(context, `rpc:hosts.grant:peer:${await digest(peer)}`, {
-        window: 60,
-        max: 120,
-      });
+      await limitPeer(context, "hosts.grant");
       await enforceLimit(context, `rpc:hosts.grant:credential:${await digest(input.credential)}`, {
         window: 60,
         max: 6,
@@ -53,6 +58,7 @@ export function createHostsHandlers({
     }),
     revoke: os.hosts.revoke.handler(async ({ input, context }) => {
       if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
+      await limitPeer(context, "hosts.revoke");
       try {
         return await options.control.credentials.revokeHost(input.credential);
       } catch (error) {

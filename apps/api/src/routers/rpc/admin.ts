@@ -1,0 +1,48 @@
+import { ORPCError } from "@orpc/server";
+import type { RpcBoundary } from "./boundary.js";
+import type { ReadReadiness } from "../../app/readiness.js";
+
+export function createAdministrationHandlers(
+  { os, options, withRpcPermission }: Pick<RpcBoundary, "os" | "options" | "withRpcPermission">,
+  readReadiness: ReadReadiness,
+) {
+  return {
+    overview: os.admin.overview
+      .use(withRpcPermission({ procedure: "admin.overview", window: 60, max: 60 }))
+      .handler(async ({ input }) => {
+        if (!options.administration) throw new ORPCError("SERVICE_UNAVAILABLE");
+        try {
+          return await options.administration.overview(input.days);
+        } catch {
+          throw new ORPCError("SERVICE_UNAVAILABLE");
+        }
+      }),
+    health: os.admin.health
+      .use(withRpcPermission({ procedure: "admin.health", window: 60, max: 60 }))
+      .handler(async () => {
+        const checks = await readReadiness();
+        return {
+          observedAt: new Date().toISOString(),
+          checks: {
+            database: checks.database ?? ("not-configured" as const),
+            redis: checks.redis ?? ("not-configured" as const),
+            relay: checks.relay ?? ("not-configured" as const),
+          },
+        };
+      }),
+    audit: os.admin.audit
+      .use(withRpcPermission({ procedure: "admin.audit", window: 60, max: 60 }))
+      .handler(async ({ input }) => {
+        if (!options.administration) throw new ORPCError("SERVICE_UNAVAILABLE");
+        try {
+          return await options.administration.list(input);
+        } catch (error) {
+          throw new ORPCError(
+            error instanceof Error && error.message === "INVALID_INPUT"
+              ? "BAD_REQUEST"
+              : "SERVICE_UNAVAILABLE",
+          );
+        }
+      }),
+  };
+}

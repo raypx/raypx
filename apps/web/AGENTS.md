@@ -241,7 +241,7 @@ Source-map upload is an explicit release step; ship those same injected assets.
 
 ## Administrator configuration
 
-`/admin/settings` and `features/configuration/` provide the Web-only configuration
+`/admin/settings` and `features/config/` provide the Web-only configuration
 center with Site, Object storage and Email tabs. `features/auth/access.ts` declares each Web page's
 permission. Account-scoped `account.access` reads filter sidebar entries and gate
 private page mounts through `PermissionBoundary`, including direct navigation.
@@ -275,7 +275,7 @@ before loading; feature guards and live boundaries remain authoritative for moun
 Never mount task clients, remote project navigation or pending counts in this shell.
 Public configuration reads stay in their existing lightweight module. Account menus
 link to one console entry and preserve account-dialog return history.
-`features/administration` owns account/origin-keyed overview, dependency and audit
+`features/admin` owns account/origin-keyed overview, dependency and audit
 queries. Statistics distinguish failed reads from zeroes and use explicit UTC dates.
 Audit searches are bounded by date range and use server cursor pagination; there are
 no edit/delete/export actions. Unknown outcomes remain unknown until the server
