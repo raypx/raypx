@@ -3,12 +3,14 @@ import {
   type ConversationsRepository,
   type ConversationRunRepository,
   type RunTools,
+  type ExecutionRun,
+  type RunCheckpoint,
+  StaleRunFenceError,
 } from "@raypx/agents/server";
 import {
   runSchema,
   messageSchema,
   type ConversationEvent,
-  type Run,
   type ReplySegment,
 } from "@raypx/core/conversation";
 import { conversationFixture } from "./conversations.js";
@@ -18,10 +20,14 @@ import { modelFixture } from "./model.js";
 export function replyFixture(toolRuntime?: RunTools) {
   const f = conversationFixture();
   const model = modelFixture();
-  const runs: Run[] = [];
+  const runs: ExecutionRun[] = [];
   const messages: ReturnType<typeof messageSchema.parse>[] = [];
   const segments: ReplySegment[] = [];
   const receipts = new Map<string, ReturnType<typeof messageSchema.parse>>();
+  const checkpoints = new Map<string, RunCheckpoint>();
+  const leases = new Map<string, number>();
+  const steering = new Map<string, typeof messages>();
+  const backupJobs = new Map<string, number>();
   const now = () => new Date().toISOString();
   function publish(payload: object, message?: ReturnType<typeof messageSchema.parse>) {
     const event = {
@@ -34,8 +40,19 @@ export function replyFixture(toolRuntime?: RunTools) {
     f.publish({ event, ...(message ? { message } : {}) });
     return event.sequence;
   }
-  function state(run: Run) {
+  function state(run: ExecutionRun) {
     publish({ kind: "run.state", runId: run.id, state: run.state, failureCode: run.failureCode });
+  }
+  function active(run: ExecutionRun) {
+    const stored = runs.find((candidate) => candidate.id === run.id)!;
+    if (
+      stored.fence !== run.fence ||
+      stored.ownerId !== run.ownerId ||
+      (leases.get(run.id) ?? 0) <= Date.now() ||
+      (stored.state !== "running" && stored.state !== "waiting")
+    )
+      throw new StaleRunFenceError();
+    return stored;
   }
   const repository: ConversationsRepository & ConversationRunRepository = {
     ...f.conversations,
@@ -54,34 +71,79 @@ export function replyFixture(toolRuntime?: RunTools) {
       receipts.set(input.idempotencyKey, message);
       messages.push(message);
       publish({ kind: "message.created", messageId: message.id }, message);
-      const run = runSchema.parse({
-        id: crypto.randomUUID(),
-        spaceId: f.spaceId,
-        conversationId: f.conversationId,
-        agentId: "agent",
-        trigger: "message",
-        messageId: message.id,
-        memberAccountId: "member",
-        model: { modelId: "fixture" },
-        state: "queued",
-        failureCode: null,
-        createdAt: now(),
-        startedAt: null,
-        firstResponseAt: null,
-        finishedAt: null,
-      });
+      const current = runs.find((run) => run.state === "running" || run.state === "waiting");
+      if (current) {
+        const pending = steering.get(current.id) ?? [];
+        pending.push(message);
+        steering.set(current.id, pending);
+        return message;
+      }
+      const run: ExecutionRun = {
+        ...runSchema.parse({
+          id: crypto.randomUUID(),
+          spaceId: f.spaceId,
+          conversationId: f.conversationId,
+          agentId: "agent",
+          trigger: "message",
+          messageId: message.id,
+          memberAccountId: "member",
+          model: { modelId: "fixture" },
+          state: "queued",
+          failureCode: null,
+          createdAt: now(),
+          startedAt: null,
+          firstResponseAt: null,
+          finishedAt: null,
+        }),
+        ownerId: "",
+        fence: 0,
+        attemptId: "",
+        attemptNumber: 0,
+        timeoutAt: now(),
+        connectionId: null,
+        computerId: null,
+        computerGeneration: null,
+      };
       runs.push(run);
+      backupJobs.set(run.id, Date.now() + 330_000);
       state(run);
       return message;
     },
-    async claimNext() {
-      if (runs.some((run) => run.state === "running" || run.state === "waiting")) return undefined;
-      const run = runs.find((candidate) => candidate.state === "queued");
+    async claimNext(_scope, _id, options) {
+      const current = runs.find((run) => run.state === "running" || run.state === "waiting");
+      if (current && (leases.get(current.id) ?? 0) > Date.now()) return undefined;
+      const run = current ?? runs.find((candidate) => candidate.state === "queued");
       if (!run) return undefined;
-      run.state = "running";
-      run.startedAt = now();
-      state(run);
-      return { run, instructions: "Be helpful", history: [] };
+      const first = run.state === "queued";
+      if (run.state === "queued") run.state = "running";
+      run.ownerId = options.ownerId;
+      run.fence++;
+      run.attemptId = crypto.randomUUID();
+      run.attemptNumber++;
+      run.timeoutAt = new Date(Date.now() + options.timeoutMs).toISOString();
+      leases.set(run.id, Date.now() + options.leaseMs);
+      backupJobs.set(run.id, Date.now() + options.timeoutMs + options.backupMarginMs);
+      if (first) state(run);
+      const checkpoint = checkpoints.get(run.id) ?? {
+        continuation: [],
+        pendingCalls: [],
+        rounds: 0,
+        completed: false,
+      };
+      checkpoints.set(run.id, structuredClone(checkpoint));
+      return {
+        scope: f.scope,
+        run: { ...run },
+        instructions: "Be helpful",
+        history: [],
+        checkpoint: structuredClone(checkpoint),
+      };
+    },
+    async executionStarted(_scope, run) {
+      const stored = active(run);
+      stored.startedAt ??= now();
+      run.startedAt = stored.startedAt;
+      return stored.startedAt;
     },
     async getRun(_scope, _id, id) {
       return runs.find((candidate) => candidate.id === id)!;
@@ -92,31 +154,111 @@ export function replyFixture(toolRuntime?: RunTools) {
         run.state = "cancelled";
         run.finishedAt = now();
         state(run);
+        leases.delete(run.id);
+        backupJobs.delete(run.id);
       }
-      return run;
+      return runSchema.parse({
+        id: run.id,
+        spaceId: run.spaceId,
+        conversationId: run.conversationId,
+        agentId: run.agentId,
+        trigger: run.trigger,
+        messageId: run.messageId,
+        memberAccountId: run.memberAccountId,
+        model: run.model,
+        state: run.state,
+        failureCode: run.failureCode,
+        createdAt: run.createdAt,
+        startedAt: run.startedAt,
+        firstResponseAt: run.firstResponseAt,
+        finishedAt: run.finishedAt,
+      });
     },
-    async finish(_scope, run, failure) {
-      if (run.state !== "running") return;
-      run.state = failure ? "failed" : "succeeded";
-      run.failureCode = failure;
-      run.finishedAt = now();
-      state(run);
+    async finish(_scope, run, failure, retryAt) {
+      const stored = active(run);
+      if (!failure && steering.get(run.id)?.length) return false;
+      if (retryAt) {
+        stored.ownerId = "";
+        leases.delete(run.id);
+        backupJobs.set(run.id, retryAt.getTime());
+        return true;
+      }
+      stored.state = failure ? "failed" : "succeeded";
+      stored.failureCode = failure;
+      stored.finishedAt = now();
+      leases.delete(run.id);
+      backupJobs.delete(run.id);
+      state(stored);
+      return true;
     },
-    async commitSegment(_scope, run, id, text, firstResponseAt) {
-      if (run.state !== "running") return false;
+    async commitTurn(_scope, run, turn) {
+      const stored = active(run);
+      checkpoints.set(run.id, structuredClone(turn.checkpoint));
+      if (!turn.text || !turn.segmentId) return false;
       const segment: ReplySegment = {
-        id,
+        id: turn.segmentId,
         spaceId: f.spaceId,
         conversationId: f.conversationId,
         runId: run.id,
         sequence: f.log.length + 1,
-        text,
+        text: turn.text,
         createdAt: now(),
       };
       segments.push(segment);
-      run.firstResponseAt ??= firstResponseAt;
+      const firstResponse = !stored.firstResponseAt;
+      stored.firstResponseAt ??= turn.firstResponseAt ?? now();
       publish({ kind: "reply.segment", segment });
-      return true;
+      return firstResponse;
+    },
+    async heartbeat(_scope, run, leaseMs) {
+      try {
+        active(run);
+        leases.set(run.id, Date.now() + leaseMs);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    async release(_scope, run) {
+      active(run);
+      leases.delete(run.id);
+    },
+    async saveCheckpoint(_scope, run, checkpoint) {
+      active(run);
+      checkpoints.set(run.id, structuredClone(checkpoint));
+    },
+    async consumeSteering(_scope, run, checkpoint) {
+      active(run);
+      const next = structuredClone(checkpoint);
+      for (const message of steering.get(run.id) ?? [])
+        next.continuation.push({
+          role: "user",
+          content: message.text,
+          timestamp: Date.parse(message.createdAt),
+        });
+      if (steering.get(run.id)?.length) next.completed = false;
+      steering.delete(run.id);
+      checkpoints.set(run.id, structuredClone(next));
+      return next;
+    },
+    async pinResources(_scope, run, pins) {
+      const stored = active(run);
+      Object.assign(stored, pins);
+      Object.assign(run, pins);
+    },
+    async scanRunnable() {
+      return runs.some(
+        (run) =>
+          ["queued", "running", "waiting"].includes(run.state) &&
+          (leases.get(run.id) ?? 0) <= Date.now(),
+      )
+        ? [{ scope: f.scope, id: f.conversationId }]
+        : [];
+    },
+    async claimBackupJobs() {
+      return [...backupJobs.values()].some((at) => at <= Date.now())
+        ? [{ scope: f.scope, id: f.conversationId }]
+        : [];
     },
     async snapshot() {
       throw new Error("Unused");
@@ -129,6 +271,7 @@ export function replyFixture(toolRuntime?: RunTools) {
     (code) => diagnostics.push(code),
     undefined,
     toolRuntime,
+    { maxAttempts: 1 },
   );
   return {
     ...f,
@@ -141,5 +284,7 @@ export function replyFixture(toolRuntime?: RunTools) {
     messages,
     segments,
     diagnostics,
+    checkpoints,
+    backupJobs,
   };
 }

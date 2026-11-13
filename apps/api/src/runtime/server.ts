@@ -25,6 +25,7 @@ type ServerRuntime = ApiRuntime & {
   hub: RelayHub | undefined;
   allowedOrigins: string[];
   clientIp: ReturnType<typeof createClientIpReader>;
+  start(): Promise<void>;
 };
 
 export async function createApiRuntime(
@@ -37,6 +38,8 @@ export async function createApiRuntime(
     sink: errorReports(environment, createStreamDrain()),
   });
   let relay: ServerRuntime["relay"];
+  // Preserve the existing explicit combined deployment setting while all is the new default.
+  const combined = environment.SERVER_ROLE !== "api";
   // Without AUTH_IP_HEADERS a direct deployment limits by socket address.
   const runtime = await createRuntime(
     { ...environment, ipAddressHeaders: [CLIENT_IP_HEADER], trustedProxies: [] },
@@ -52,16 +55,17 @@ export async function createApiRuntime(
         }),
       connect: () => connectRuntimeDatabase(environment.DATABASE_URL),
       closeLogger: () => logger.close(),
-      relayReadiness: async () => {
-        if (!relay?.ready()) throw new Error("Relay unavailable");
-      },
+      ...(combined || environment.REDIS_URL
+        ? {
+            relayReadiness: async () => {
+              if (!relay?.ready()) throw new Error("Relay unavailable");
+            },
+          }
+        : {}),
       ...(environment.REDIS_URL ? { redis: connectRedis(environment.REDIS_URL) } : {}),
     },
   );
-  const hub =
-    environment.SERVER_ROLE === "both"
-      ? new RelayHub(async (use) => use(runtime.control))
-      : undefined;
+  const hub = combined ? new RelayHub(async (use) => use(runtime.control)) : undefined;
   const cluster = environment.REDIS_URL ? new RedisRelayCluster(environment.REDIS_URL) : undefined;
   const fanout =
     providers.createConversationFanout?.() ?? createConversationFanout(environment.DATABASE_URL);
@@ -114,6 +118,9 @@ export async function createApiRuntime(
     hub,
     allowedOrigins: environment.allowedOrigins,
     clientIp: createClientIpReader(environment.ipAddressHeaders, environment.trustedProxies),
+    start: async () => {
+      if (combined) await runtime.runner.startWorker(fanout);
+    },
     close: () =>
       (closing ??= (async () => {
         try {

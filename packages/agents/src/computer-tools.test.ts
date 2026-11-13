@@ -4,28 +4,42 @@ import { createComputersService, type ComputersRepository } from "@raypx/compute
 import { MAX_TOOL_RESULT } from "@raypx/core/approvals";
 import { computerSchema, type Computer } from "@raypx/core/computers";
 import { runSchema } from "@raypx/core/conversation";
+import type { ExecutionRun } from "./conversations.js";
 import { createMemoryComputerProvider } from "@raypx/providers/computer";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { computerToolResult, createComputerTools } from "./computer-tools.js";
 
 const scope = { spaceId: "space", member: { accountId: "member" } } as SpaceScope;
-const run = runSchema.parse({
-  id: "run",
-  spaceId: "space",
-  conversationId: "conversation",
-  agentId: "agent",
-  trigger: "message",
-  messageId: "message",
-  memberAccountId: "member",
-  model: { modelId: "fixture" },
-  state: "running",
-  failureCode: null,
-  createdAt: new Date(0).toISOString(),
-  startedAt: new Date(0).toISOString(),
-  firstResponseAt: null,
-  finishedAt: null,
-});
+const run: ExecutionRun = {
+  ...runSchema.parse({
+    id: "run",
+    spaceId: "space",
+    conversationId: "conversation",
+    agentId: "agent",
+    trigger: "message",
+    messageId: "message",
+    memberAccountId: "member",
+    model: { modelId: "fixture" },
+    state: "running",
+    failureCode: null,
+    createdAt: new Date(0).toISOString(),
+    startedAt: new Date(0).toISOString(),
+    firstResponseAt: null,
+    finishedAt: null,
+  }),
+  ownerId: "fixture",
+  fence: 1,
+  attemptId: "attempt",
+  attemptNumber: 1,
+  timeoutAt: new Date(900_000).toISOString(),
+  connectionId: null,
+  computerId: null,
+  computerGeneration: null,
+};
 function fixture(knownSecrets: string[] = []) {
+  run.computerId = null;
+  run.computerGeneration = null;
+  run.startedAt = null;
   let row: Computer | null = null;
   const repository: ComputersRepository = {
     get: vi.fn(async () => row),
@@ -239,4 +253,92 @@ it("never changes a Run's pinned computer generation after replacement", async (
   await f.provider.provision({ ...ref, generation: ref.generation + 1 });
   const result = await f.execute("computer_write_file", { path: "stale", content: "refused" });
   expect(result).toMatchObject({ state: "failed", content: "COMPUTER_STALE_GENERATION" });
+});
+
+it("persists the first computer pin and validates it on a new executor without replacement", async () => {
+  const f = fixture();
+  const pin = vi.fn(async () => {});
+  const first = createComputerTools(f.service, f.provider, [], pin);
+  await first.initialize!(scope, run, new AbortController().signal);
+  expect(pin).toHaveBeenCalledWith(scope, run, {
+    computerId: run.computerId,
+    computerGeneration: run.computerGeneration,
+  });
+  const resumed = { ...run, attemptId: "resumed", fence: 2 };
+  const next = createComputerTools(f.service, f.provider, [], pin);
+  await next.initialize!(scope, resumed, new AbortController().signal);
+  expect(f.repository.claim).toHaveBeenCalledTimes(1);
+  await f.service.stop(scope);
+  const missing = createComputerTools(f.service, f.provider, [], pin);
+  await expect(
+    missing.initialize!(scope, resumed, new AbortController().signal),
+  ).rejects.toMatchObject({
+    code: "COMPUTER_UNAVAILABLE",
+  });
+  expect(f.repository.claim).toHaveBeenCalledTimes(2);
+  const unconfigured = createComputerTools(f.service, null, [], pin);
+  await expect(
+    unconfigured.initialize!(scope, resumed, new AbortController().signal),
+  ).rejects.toMatchObject({
+    code: "COMPUTER_UNAVAILABLE",
+  });
+});
+
+it("keeps the absence of a computer pinned when a provider appears after first start", async () => {
+  const f = fixture();
+  run.startedAt = new Date(0).toISOString();
+  const tools = createComputerTools(f.service, f.provider);
+  await tools.initialize!(scope, run, new AbortController().signal);
+  expect(tools.definitions(run)).toEqual([]);
+  expect(f.repository.claim).not.toHaveBeenCalled();
+});
+
+it("fails a missing supervisor computer even when its persisted lifecycle still says running", async () => {
+  const f = fixture();
+  await f.tools.initialize!(scope, run, new AbortController().signal);
+  const pinned = { id: run.computerId!, generation: run.computerGeneration! };
+  await f.provider.destroy(pinned);
+  const resumed = createComputerTools(f.service, f.provider);
+  await expect(
+    resumed.initialize!(
+      scope,
+      { ...run, attemptId: "next", fence: 2 },
+      new AbortController().signal,
+    ),
+  ).rejects.toMatchObject({
+    code: "COMPUTER_UNAVAILABLE",
+  });
+  expect(f.repository.claim).toHaveBeenCalledTimes(1);
+});
+
+it("revalidates a removed computer when a new attempt reuses the same tools instance", async () => {
+  const f = fixture();
+  await f.tools.initialize!(scope, run, new AbortController().signal);
+  const resumed = { ...run, attemptId: "resumed", fence: run.fence + 1 };
+  vi.mocked(f.repository.get).mockResolvedValue(null);
+  await expect(
+    f.tools.initialize!(scope, resumed, new AbortController().signal),
+  ).rejects.toMatchObject({
+    code: "COMPUTER_UNAVAILABLE",
+  });
+  expect(f.repository.get).toHaveBeenCalledTimes(2);
+  expect(f.repository.claim).toHaveBeenCalledTimes(1);
+});
+
+it("releasing an older attempt preserves a newer attempt's validated computer cache", async () => {
+  const f = fixture();
+  await f.tools.initialize!(scope, run, new AbortController().signal);
+  const resumed = { ...run, attemptId: "resumed", fence: run.fence + 1 };
+  await f.tools.initialize!(scope, resumed, new AbortController().signal);
+  f.tools.release(run);
+  const get = vi.mocked(f.repository.get);
+  get.mockClear();
+  const result = await f.tools.execute(
+    scope,
+    resumed,
+    f.prepare("computer_list_files", {}),
+    new AbortController().signal,
+  );
+  expect(JSON.parse(result)).toMatchObject({ state: "succeeded" });
+  expect(get).not.toHaveBeenCalled();
 });

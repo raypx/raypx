@@ -18,6 +18,7 @@ export default defineConfig({
   plugins: [
     nitro({
       ...nitroTarget(),
+      serverEntry: "./src/app/entry.ts",
       features: { websocket: true },
       serverAssets: [
         {

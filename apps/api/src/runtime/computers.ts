@@ -1,8 +1,10 @@
 import type { ComputerProvider } from "@raypx/providers/computer";
-import type { ApiEnvironment } from "../env.js";
+import type { ApiEnvironment, WorkerEnvironment } from "../env.js";
+export type AgentEnvironment = Omit<WorkerEnvironment, "_schema"> &
+  Partial<Omit<ApiEnvironment, "_schema">>;
 
 /** Known deployment secrets stay in the backend and fail closed at the tool boundary. */
-export function knownComputerSecrets(environment: ApiEnvironment): string[] {
+export function knownComputerSecrets(environment: AgentEnvironment): string[] {
   let credentials: unknown;
   try {
     credentials = JSON.parse(environment.AGENT_MODEL_CREDENTIALS);
@@ -37,7 +39,10 @@ export function knownComputerSecrets(environment: ApiEnvironment): string[] {
 }
 /** Only this configured branch loads the HTTP adapter; no Engine transport enters API. */
 export async function configuredComputerProvider(
-  environment: ApiEnvironment,
+  environment: Pick<
+    WorkerEnvironment,
+    "COMPUTER_PROVIDER" | "SANDBOX_SUPERVISOR_URL" | "SANDBOX_SUPERVISOR_TOKEN"
+  >,
 ): Promise<ComputerProvider | null> {
   if (environment.COMPUTER_PROVIDER === "none") return null;
   const { createDockerComputerProvider } = await import("@raypx/providers/computer/docker");

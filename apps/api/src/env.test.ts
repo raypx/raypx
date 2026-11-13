@@ -1,16 +1,56 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { getApiEnvironment, getServerRole } from "./env.js";
+import {
+  getApiEnvironment,
+  getRelayEnvironment,
+  getServerRole,
+  getWorkerEnvironment,
+} from "./env.js";
 afterEach(() => vi.unstubAllEnvs());
-it("defaults to a combined backend and requires a broker for split API", () => {
-  expect(getApiEnvironment({}).SERVER_ROLE).toBe("both");
-  expect(() => getApiEnvironment({ SERVER_ROLE: "api" })).toThrow("requires REDIS_URL");
-  expect(
-    getApiEnvironment({ SERVER_ROLE: "api", REDIS_URL: "redis://localhost:6380" }).SERVER_ROLE,
-  ).toBe("api");
+it("defaults to every role and allows PostgreSQL-only split API and worker roles", () => {
+  expect(getApiEnvironment({}).SERVER_ROLE).toBe("all");
+  expect(getServerRole({})).toBe("all");
+  expect(getApiEnvironment({ SERVER_ROLE: "api" }).SERVER_ROLE).toBe("api");
   expect(getServerRole({ SERVER_ROLE: "relay" })).toBe("relay");
-  expect(() => getServerRole({ SERVER_ROLE: "worker" })).toThrow("Invalid option");
+  expect(getServerRole({ SERVER_ROLE: "worker" })).toBe("worker");
+  expect(getServerRole({ SERVER_ROLE: "both" })).toBe("both");
+  expect(getApiEnvironment({ SERVER_ROLE: "both" }).SERVER_ROLE).toBe("both");
+  expect(() => getServerRole({ SERVER_ROLE: "unknown" })).toThrow("Invalid option");
   expect(() => getApiEnvironment({ SERVER_ROLE: "relay" })).toThrow(
     "Invalid environment variables",
+  );
+});
+it("worker and relay do not require or parse API authentication or mail settings", () => {
+  const environment = getWorkerEnvironment({
+    NODE_ENV: "production",
+    DATABASE_URL: "postgres://fixture:fixture@db.example.test:5432/raypx_test",
+    AUTH_SECRET: "invalid",
+    APP_KEY: "invalid",
+    AUTH_URL: "invalid",
+    RESEND_API_KEY: "invalid",
+  });
+  expect(environment).not.toHaveProperty("AUTH_SECRET");
+  expect(environment).not.toHaveProperty("AUTH_URL");
+  expect(environment).not.toHaveProperty("REDIS_URL");
+  expect(environment.RUN_RECOVERY_INTERVAL_MS).toBe(5_000);
+  expect(
+    getRelayEnvironment({
+      DATABASE_URL: environment.DATABASE_URL,
+      ALLOWED_ORIGINS: "https://app.example.test",
+    }).REDIS_URL,
+  ).toBeUndefined();
+});
+it("validates lease heartbeat headroom and recovery bounds", () => {
+  expect(() => getWorkerEnvironment({ RUN_RECOVERY_INTERVAL_MS: "0" })).toThrow(
+    "Invalid environment variables",
+  );
+  expect(() => getWorkerEnvironment({ RUN_LEASE_MS: "100", RUN_HEARTBEAT_MS: "75" })).toThrow(
+    "at least two heartbeats",
+  );
+  expect(() => getApiEnvironment({ RUN_LEASE_MS: "100", RUN_HEARTBEAT_MS: "75" })).toThrow(
+    "at least two heartbeats",
+  );
+  expect(getWorkerEnvironment({ RUN_RECOVERY_INTERVAL_MS: "250" }).RUN_RECOVERY_INTERVAL_MS).toBe(
+    250,
   );
 });
 it("uses only explicit runtime inputs without inheriting deployment connections", () => {

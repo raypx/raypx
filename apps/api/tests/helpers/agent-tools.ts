@@ -270,7 +270,14 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
     },
   };
   const computers = createComputersService(computerRepository, provider, "memory");
-  const tools = createComputerTools(computers, provider, ["fixture-known-secret"]);
+  const tools = createComputerTools(
+    computers,
+    provider,
+    ["fixture-known-secret"],
+    async (scope, run, pins): Promise<void> => {
+      await f.repository.pinResources(scope, run, pins);
+    },
+  );
   const f = replyFixture({
     tools,
     approvals: agentApprovals,

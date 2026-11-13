@@ -163,5 +163,7 @@
     "discardReload": "放弃更改并重新加载"
   },
   "running": "运行中",
-  "succeeded": "已完成"
+  "succeeded": "已完成",
+  "CONNECTION_UNAVAILABLE": "此运行使用的连接不可用。",
+  "COMPUTER_UNAVAILABLE": "此运行使用的电脑不可用。"
 }

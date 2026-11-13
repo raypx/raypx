@@ -18,10 +18,20 @@ interface RequestFields {
   code: string;
   durationMs: number;
 }
+interface RunTimingFields {
+  status: number;
+  code: string;
+  runId: string;
+  durationMs: number;
+  waitBeforeCreationMs?: number;
+  waitBeforeStartMs?: number;
+  firstResponseMs?: number;
+  totalMs?: number;
+}
 interface ApiEventFields {
-  "run.execution_started": { status: number; code: string; runId: string; durationMs: number };
-  "run.first_response": { status: number; code: string; runId: string; durationMs: number };
-  "run.finished": { status: number; code: string; runId: string; durationMs: number };
+  "run.execution_started": RunTimingFields;
+  "run.first_response": RunTimingFields;
+  "run.finished": RunTimingFields;
   "run.execution": { status: number; code: "EXECUTION_FAILED" };
   "http.request": RequestFields;
   "rpc.request": RequestFields & { rpc: { system: string; method: string } };

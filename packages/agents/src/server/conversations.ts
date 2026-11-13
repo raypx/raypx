@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   conversations,
@@ -9,6 +9,13 @@ import {
   conversationMessages as messages,
   conversationEvents as events,
   approvalRequests,
+  conversationRunAttempts as attempts,
+  conversationRunCheckpoints as checkpoints,
+  conversationRunSteering as steering,
+  conversationRunBackupJobs as backupJobs,
+  conversationEffects as effects,
+  computers,
+  spaceMembers,
 } from "@raypx/database/schema";
 import type { ConversationId } from "@raypx/core/agents";
 import {
@@ -23,14 +30,20 @@ import {
   type RunId,
 } from "@raypx/core/conversation";
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import { SpaceNotFound } from "@raypx/core/spaces";
-import type { SpaceScope } from "@raypx/spaces/server";
+import { SpaceNotFound, spaceMemberSchema } from "@raypx/core/spaces";
+import { resolveSpaceScope, type SpaceScope } from "@raypx/spaces/server";
 import type {
   ConversationsRepository,
   ConversationRunRepository,
   ConversationNotice,
+  ExecutionRun,
+  RunCheckpoint,
+  RunExecution,
+  RunnableConversation,
 } from "../conversations.js";
+import { RunResourceUnavailableError } from "../conversations.js";
 import { conversationView } from "../views.js";
+import { assertRunFence } from "./fence.js";
 
 export const conversationChannel = "raypx_conversation_events";
 /** Called inside the committing transaction: PostgreSQL delivers only after commit. */
@@ -70,12 +83,28 @@ function runView(row: typeof runs.$inferSelect) {
   });
 }
 function segmentView(row: typeof segments.$inferSelect) {
-  return replySegmentSchema.parse({ ...row, createdAt: row.createdAt.toISOString() });
+  const { fence: _fence, ...publicRow } = row;
+  return replySegmentSchema.parse({ ...publicRow, createdAt: row.createdAt.toISOString() });
 }
 export function createConversationsRepository(
   db: Database,
   publish = publishConversationNotice,
+  options: { timeoutMs?: number; backupMarginMs?: number } = {},
 ): ConversationsRepository & ConversationRunRepository {
+  const timeoutMs = options.timeoutMs ?? 300_000;
+  const backupMarginMs = options.backupMarginMs ?? 30_000;
+  const runnable = () =>
+    and(
+      inArray(runs.state, ["queued", "running", "waiting"]),
+      lte(runs.nextAttemptAt, sql`clock_timestamp()`),
+      or(isNull(runs.leaseOwner), lte(runs.leaseExpiresAt, sql`clock_timestamp()`)),
+    );
+  const checkpointSelection = (scope: SpaceScope, run: Run) =>
+    and(
+      eq(checkpoints.spaceId, scope.spaceId),
+      eq(checkpoints.conversationId, run.conversationId),
+      eq(checkpoints.runId, run.id),
+    );
   function selection(scope: SpaceScope, id: ConversationId) {
     return and(eq(conversations.spaceId, scope.spaceId), eq(conversations.id, id));
   }
@@ -115,6 +144,7 @@ export function createConversationsRepository(
     scope: SpaceScope,
     run: Run,
     sequence: number,
+    fence = 0,
   ) {
     await tx.insert(events).values({
       spaceId: scope.spaceId,
@@ -122,6 +152,7 @@ export function createConversationsRepository(
       sequence,
       kind: "run.state",
       runId: run.id,
+      fence,
       data: { state: run.state, failureCode: run.failureCode },
     });
     await tx.update(counters).set({ sequence }).where(counterSelection(scope, run.conversationId));
@@ -140,6 +171,7 @@ export function createConversationsRepository(
     scope: SpaceScope,
     run: Run,
     sequence: number,
+    fence = 0,
   ) {
     const cancelled = await tx
       .update(approvalRequests)
@@ -153,6 +185,9 @@ export function createConversationsRepository(
         ),
       )
       .returning();
+    cancelled.sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
+    );
     for (const request of cancelled) {
       sequence++;
       await tx.insert(events).values({
@@ -161,6 +196,7 @@ export function createConversationsRepository(
         sequence,
         kind: "card.resolved",
         runId: run.id,
+        fence,
         requestId: request.id,
         data: {
           toolName: request.toolName,
@@ -181,6 +217,69 @@ export function createConversationsRepository(
       await publish(tx, { conversationId: run.conversationId, sequence });
     }
   }
+  async function writeCheckpoint(
+    tx: Pick<Database, "select" | "update">,
+    scope: SpaceScope,
+    run: ExecutionRun,
+    checkpoint: RunCheckpoint,
+  ) {
+    const open = await tx
+      .select({ key: effects.key })
+      .from(effects)
+      .where(
+        and(
+          eq(effects.spaceId, scope.spaceId),
+          eq(effects.conversationId, run.conversationId),
+          eq(effects.runId, run.id),
+          inArray(effects.state, ["intent", "unknown"]),
+        ),
+      )
+      .orderBy(asc(effects.createdAt), asc(effects.key));
+    const data = { ...checkpoint, openEffects: open.map((effect) => effect.key) };
+    await tx
+      .update(checkpoints)
+      .set({
+        attemptId: run.attemptId,
+        fence: run.fence,
+        revision: sql`${checkpoints.revision} + 1`,
+        data: normalizeTaskJson(data),
+        updatedAt: sql`clock_timestamp()`,
+      })
+      .where(checkpointSelection(scope, run));
+    return data;
+  }
+  async function targets(
+    rows: Array<{ spaceId: string; conversationId: string; memberAccountId: string }>,
+  ): Promise<RunnableConversation[]> {
+    const seen = new Set<string>();
+    const result: RunnableConversation[] = [];
+    for (const row of rows) {
+      const key = JSON.stringify([row.spaceId, row.conversationId]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      try {
+        const [member] = await db
+          .select()
+          .from(spaceMembers)
+          .where(
+            and(
+              eq(spaceMembers.spaceId, row.spaceId),
+              eq(spaceMembers.accountId, row.memberAccountId),
+            ),
+          );
+        if (!member) continue;
+        const scope = resolveSpaceScope(
+          spaceMemberSchema.parse({ ...member, createdAt: member.createdAt.toISOString() }),
+          row.memberAccountId,
+          row.spaceId as SpaceScope["spaceId"],
+        );
+        result.push({ scope, id: row.conversationId as ConversationId });
+      } catch (error) {
+        if (!(error instanceof SpaceNotFound)) throw error;
+      }
+    }
+    return result;
+  }
   return {
     getRun,
     async stop(scope, id, runId) {
@@ -195,20 +294,45 @@ export function createConversationsRepository(
           return runView(row);
         const [updated] = await tx
           .update(runs)
-          .set({ state: "cancelled", finishedAt: new Date() })
+          .set({
+            state: "cancelled",
+            finishedAt: sql`clock_timestamp()`,
+            leaseOwner: null,
+            leaseExpiresAt: null,
+          })
           .where(runSelection(scope, id, runId))
           .returning();
         const run = runView(updated!);
+        await tx
+          .update(attempts)
+          .set({ state: "cancelled", finishedAt: sql`clock_timestamp()` })
+          .where(
+            and(
+              eq(attempts.spaceId, scope.spaceId),
+              eq(attempts.conversationId, id),
+              eq(attempts.runId, run.id),
+              eq(attempts.state, "running"),
+            ),
+          );
+        await tx
+          .delete(backupJobs)
+          .where(
+            and(
+              eq(backupJobs.spaceId, scope.spaceId),
+              eq(backupJobs.conversationId, id),
+              eq(backupJobs.runId, run.id),
+            ),
+          );
         await appendState(tx, scope, run, counter.sequence + 1);
         await cancelPendingRequests(tx, scope, run, counter.sequence + 1);
         return run;
       });
     },
-    async claimNext(scope, id) {
+    async claimNext(scope, id, claim) {
       return db.transaction(async (tx) => {
         const counter = await lock(tx, scope, id);
         const [active] = await tx
-          .select({ id: runs.id })
+          .select()
           .from(runs)
           .where(
             and(
@@ -216,117 +340,480 @@ export function createConversationsRepository(
               eq(runs.conversationId, id),
               inArray(runs.state, ["running", "waiting"]),
             ),
-          );
-        if (active) return undefined;
-        const [next] = await tx
+          )
+          .orderBy(asc(runs.messageSequence), asc(runs.id))
+          .limit(1);
+        const [queued] = active
+          ? []
+          : await tx
+              .select()
+              .from(runs)
+              .where(
+                and(
+                  eq(runs.spaceId, scope.spaceId),
+                  eq(runs.conversationId, id),
+                  eq(runs.state, "queued"),
+                ),
+              )
+              .orderBy(asc(runs.messageSequence), asc(runs.id))
+              .limit(1);
+        const next = active ?? queued;
+        if (!next) return undefined;
+        const [actor] = await tx
           .select()
-          .from(runs)
+          .from(spaceMembers)
           .where(
             and(
-              eq(runs.spaceId, scope.spaceId),
-              eq(runs.conversationId, id),
-              eq(runs.state, "queued"),
+              eq(spaceMembers.spaceId, scope.spaceId),
+              eq(spaceMembers.accountId, next.memberAccountId),
             ),
           )
-          .orderBy(asc(runs.messageSequence))
-          .limit(1);
-        if (!next) return undefined;
-        const [row] = await tx
-          .update(runs)
-          .set({ state: "running", startedAt: new Date() })
-          .where(runSelection(scope, id, next.id as RunId))
-          .returning();
-        const run = runView(row!);
-        await appendState(tx, scope, run, counter.sequence + 1);
-        const inputs = await tx
+          .for("key share");
+        if (!actor) return undefined;
+        const actorScope = resolveSpaceScope(
+          spaceMemberSchema.parse({ ...actor, createdAt: actor.createdAt.toISOString() }),
+          next.memberAccountId,
+          scope.spaceId,
+        );
+        const [agent] = await tx
           .select()
-          .from(messages)
-          .where(
-            and(
-              eq(messages.spaceId, scope.spaceId),
-              eq(messages.conversationId, id),
-              lte(messages.sequence, next.messageSequence),
-            ),
-          );
-        const outputs = await tx
-          .select()
-          .from(segments)
-          .where(
-            and(
-              eq(segments.spaceId, scope.spaceId),
-              eq(segments.conversationId, id),
-              lte(segments.sequence, counter.sequence),
-            ),
-          );
-        const priorRuns = await tx
-          .select()
-          .from(runs)
-          .where(
-            and(
-              eq(runs.spaceId, scope.spaceId),
-              eq(runs.conversationId, id),
-              lte(runs.messageSequence, next.messageSequence),
-            ),
-          );
-        // Pair each member input with its reply. Arrival order can put queued inputs before earlier replies.
-        const history = inputs
-          .sort((a, b) => a.sequence - b.sequence)
-          .flatMap((m) => {
-            const owner = priorRuns.find((r) => r.messageId === m.id);
-            const replies = outputs
-              .filter((s) => s.runId === owner?.id)
-              .sort((a, b) => a.sequence - b.sequence);
-            return [
-              { role: "user" as const, text: m.text, createdAt: m.createdAt.toISOString() },
-              ...replies.map((s) => ({
-                role: "assistant" as const,
-                text: s.text,
-                createdAt: s.createdAt.toISOString(),
-              })),
-            ];
-          });
-        return { run, instructions: next.instructions, history };
-      });
-    },
-    async finish(scope, run, failure) {
-      await db.transaction(async (tx) => {
-        const counter = await lock(tx, scope, run.conversationId);
+          .from(agents)
+          .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, next.agentId)));
+        if (!agent) throw new SpaceNotFound();
+        // The sole ownership transition: one conditional UPDATE writes owner,
+        // expiration and the next fence together. Counter serialization also
+        // protects the Agent's one-active-Run invariant and event order.
         const [row] = await tx
           .update(runs)
           .set({
-            state: failure ? "failed" : "succeeded",
-            failureCode: failure,
-            finishedAt: new Date(),
+            leaseOwner: claim.ownerId,
+            leaseExpiresAt: sql`clock_timestamp() + ${claim.leaseMs} * interval '1 millisecond'`,
+            fence: sql`${runs.fence} + 1`,
+            attemptCount: sql`${runs.attemptCount} + 1`,
+            state: next.state === "waiting" ? "waiting" : "running",
+            modelId: next.attemptCount === 0 ? agent.modelId : next.modelId,
+            instructions: next.attemptCount === 0 ? agent.instructions : next.instructions,
+            failureCode: null,
+            finishedAt: null,
           })
+          .where(and(runSelection(scope, id, next.id as RunId), runnable()))
+          .returning();
+        if (!row) return undefined;
+        const attemptId = crypto.randomUUID();
+        const [attempt] = await tx
+          .insert(attempts)
+          .values({
+            spaceId: scope.spaceId,
+            conversationId: id,
+            runId: row.id,
+            id: attemptId,
+            ownerId: claim.ownerId,
+            fence: row.fence,
+            number: row.attemptCount,
+            timeoutAt: sql`clock_timestamp() + ${claim.timeoutMs} * interval '1 millisecond'`,
+          })
+          .returning();
+        await tx
+          .update(attempts)
+          .set({ state: "abandoned", finishedAt: sql`clock_timestamp()` })
           .where(
             and(
-              runSelection(scope, run.conversationId, run.id),
-              inArray(runs.state, ["running", "waiting"]),
+              eq(attempts.spaceId, scope.spaceId),
+              eq(attempts.conversationId, id),
+              eq(attempts.runId, row.id),
+              eq(attempts.state, "running"),
+              sql`${attempts.fence} < ${row.fence}`,
             ),
-          )
-          .returning();
-        if (row) {
-          await appendState(tx, scope, runView(row), counter.sequence + 1);
-          await cancelPendingRequests(tx, scope, runView(row), counter.sequence + 1);
+          );
+        const run: ExecutionRun = {
+          ...runView(row),
+          ownerId: claim.ownerId,
+          fence: row.fence,
+          attemptId,
+          attemptNumber: row.attemptCount,
+          timeoutAt: attempt!.timeoutAt.toISOString(),
+          connectionId: row.connectionId,
+          computerId: row.computerId,
+          computerGeneration: row.computerGeneration,
+        };
+        const [saved] = await tx.select().from(checkpoints).where(checkpointSelection(scope, run));
+        let history: RunExecution["history"];
+        let checkpoint: RunCheckpoint;
+        if (saved) {
+          history = saved.history as RunExecution["history"];
+          checkpoint = saved.data as RunCheckpoint;
+        } else {
+          const priorRuns = await tx
+            .select()
+            .from(runs)
+            .where(
+              and(
+                eq(runs.spaceId, scope.spaceId),
+                eq(runs.conversationId, id),
+                lte(runs.messageSequence, row.messageSequence),
+              ),
+            )
+            .orderBy(asc(runs.messageSequence), asc(runs.id));
+          const inputs = await tx
+            .select()
+            .from(messages)
+            .where(
+              and(
+                eq(messages.spaceId, scope.spaceId),
+                eq(messages.conversationId, id),
+                inArray(
+                  messages.id,
+                  priorRuns.map((prior) => prior.messageId),
+                ),
+              ),
+            )
+            .orderBy(asc(messages.sequence));
+          const priorRunIds = priorRuns
+            .filter((prior) => prior.id !== run.id)
+            .map((prior) => prior.id);
+          const outputs = priorRunIds.length
+            ? await tx
+                .select()
+                .from(segments)
+                .where(
+                  and(
+                    eq(segments.spaceId, scope.spaceId),
+                    eq(segments.conversationId, id),
+                    inArray(segments.runId, priorRunIds),
+                  ),
+                )
+                .orderBy(asc(segments.sequence))
+            : [];
+          const steeringInputs = priorRunIds.length
+            ? await tx
+                .select({ runId: steering.runId, message: messages })
+                .from(steering)
+                .innerJoin(
+                  messages,
+                  and(
+                    eq(messages.spaceId, steering.spaceId),
+                    eq(messages.conversationId, steering.conversationId),
+                    eq(messages.id, steering.messageId),
+                  ),
+                )
+                .where(
+                  and(
+                    eq(steering.spaceId, scope.spaceId),
+                    eq(steering.conversationId, id),
+                    inArray(steering.runId, priorRunIds),
+                  ),
+                )
+                .orderBy(asc(steering.sequence))
+            : [];
+          // Group queued triggers by Run, but preserve each prior Run's visible
+          // turn boundaries. Steering can arrive after this Run's trigger while
+          // the preceding Run still owns the Agent, so a trigger cursor is not a
+          // valid cutoff for that preceding Run's context.
+          history = priorRuns.flatMap((prior) => {
+            const input = inputs.find((candidate) => candidate.id === prior.messageId)!;
+            const timeline: Array<RunExecution["history"][number] & { sequence: number }> = [
+              ...outputs
+                .filter((segment) => segment.runId === prior.id)
+                .map((segment) => ({
+                  role: "assistant" as const,
+                  text: segment.text,
+                  createdAt: segment.createdAt.toISOString(),
+                  sequence: segment.sequence,
+                })),
+              ...steeringInputs
+                .filter((entry) => entry.runId === prior.id)
+                .map(({ message: steeringMessage }) => ({
+                  role: "user" as const,
+                  text: steeringMessage.text,
+                  createdAt: steeringMessage.createdAt.toISOString(),
+                  sequence: steeringMessage.sequence,
+                })),
+            ];
+            timeline.sort((a, b) => a.sequence - b.sequence);
+            return [
+              { role: "user" as const, text: input.text, createdAt: input.createdAt.toISOString() },
+              ...timeline.map(({ sequence: _sequence, ...entry }) => entry),
+            ];
+          });
+          checkpoint = {
+            continuation: [],
+            pendingCalls: [],
+            rounds: 0,
+            completed: false,
+            openEffects: [],
+          };
+          await tx.insert(checkpoints).values({
+            spaceId: scope.spaceId,
+            conversationId: id,
+            runId: run.id,
+            attemptId,
+            fence: run.fence,
+            history,
+            data: checkpoint,
+          });
         }
+        await tx
+          .insert(backupJobs)
+          .values({
+            spaceId: scope.spaceId,
+            conversationId: id,
+            runId: run.id,
+            runAt: sql`${attempt!.timeoutAt}::timestamptz + ${claim.backupMarginMs} * interval '1 millisecond'`,
+          })
+          .onConflictDoUpdate({
+            target: [backupJobs.spaceId, backupJobs.conversationId, backupJobs.runId],
+            set: {
+              runAt: sql`${attempt!.timeoutAt}::timestamptz + ${claim.backupMarginMs} * interval '1 millisecond'`,
+              lockedBy: null,
+              lockedUntil: null,
+            },
+          });
+        if (next.state === "queued")
+          await appendState(tx, scope, run, counter.sequence + 1, run.fence);
+        return { scope: actorScope, run, instructions: row.instructions, history, checkpoint };
       });
     },
-    async commitSegment(scope, run, segmentId, text, firstResponseAt) {
+    async executionStarted(scope, run) {
+      const startedAt = await db.transaction(async (tx) => {
+        await lock(tx, scope, run.conversationId);
+        await assertRunFence(tx, scope, run);
+        const [row] = await tx
+          .update(runs)
+          .set({
+            startedAt: sql`coalesce(${runs.startedAt}, clock_timestamp())`,
+          })
+          .where(runSelection(scope, run.conversationId, run.id))
+          .returning({ startedAt: runs.startedAt });
+        return row!.startedAt!.toISOString();
+      });
+      run.startedAt = startedAt;
+      return startedAt;
+    },
+    async heartbeat(scope, run, leaseMs) {
+      const [renewed] = await db
+        .update(runs)
+        .set({
+          leaseExpiresAt: sql`clock_timestamp() + ${leaseMs} * interval '1 millisecond'`,
+        })
+        .where(
+          and(
+            runSelection(scope, run.conversationId, run.id),
+            eq(runs.leaseOwner, run.ownerId),
+            eq(runs.fence, run.fence),
+            gt(runs.leaseExpiresAt, sql`clock_timestamp()`),
+            inArray(runs.state, ["running", "waiting"]),
+          ),
+        )
+        .returning({ id: runs.id });
+      return renewed !== undefined;
+    },
+    async release(scope, run) {
+      await db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, run.conversationId);
+        await assertRunFence(tx, scope, run);
+        await tx
+          .update(runs)
+          .set({ leaseOwner: null, leaseExpiresAt: null })
+          .where(runSelection(scope, run.conversationId, run.id));
+        await tx
+          .update(attempts)
+          .set({ state: "released", finishedAt: sql`clock_timestamp()` })
+          .where(
+            and(
+              eq(attempts.spaceId, scope.spaceId),
+              eq(attempts.conversationId, run.conversationId),
+              eq(attempts.runId, run.id),
+              eq(attempts.id, run.attemptId),
+              eq(attempts.fence, run.fence),
+            ),
+          );
+        await tx
+          .update(backupJobs)
+          .set({ runAt: sql`clock_timestamp()`, lockedBy: null, lockedUntil: null })
+          .where(
+            and(
+              eq(backupJobs.spaceId, scope.spaceId),
+              eq(backupJobs.conversationId, run.conversationId),
+              eq(backupJobs.runId, run.id),
+            ),
+          );
+        // A hint with the current cursor wakes recovery without inventing a visible state transition.
+        await publish(tx, { conversationId: run.conversationId, sequence: counter.sequence });
+      });
+    },
+    async scanRunnable(limit = 100) {
+      const rows = await db
+        .select({
+          spaceId: runs.spaceId,
+          conversationId: runs.conversationId,
+          memberAccountId: runs.memberAccountId,
+        })
+        .from(runs)
+        .innerJoin(
+          spaceMembers,
+          and(
+            eq(spaceMembers.spaceId, runs.spaceId),
+            eq(spaceMembers.accountId, runs.memberAccountId),
+          ),
+        )
+        .where(runnable())
+        .orderBy(asc(runs.nextAttemptAt), asc(runs.createdAt), asc(runs.id))
+        .limit(limit);
+      return targets(rows);
+    },
+    async claimBackupJobs(ownerId, leaseMs, limit = 100) {
+      const rows = await db.transaction(async (tx) => {
+        const due = await tx
+          .select()
+          .from(backupJobs)
+          .where(
+            and(
+              lte(backupJobs.runAt, sql`clock_timestamp()`),
+              or(
+                isNull(backupJobs.lockedUntil),
+                lte(backupJobs.lockedUntil, sql`clock_timestamp()`),
+              ),
+            ),
+          )
+          .orderBy(
+            asc(backupJobs.runAt),
+            asc(backupJobs.spaceId),
+            asc(backupJobs.conversationId),
+            asc(backupJobs.runId),
+          )
+          .limit(limit)
+          .for("update", { skipLocked: true });
+        const claimedTargets: Array<{
+          spaceId: string;
+          conversationId: string;
+          memberAccountId: string;
+        }> = [];
+        for (const job of due) {
+          const [run] = await tx
+            .select()
+            .from(runs)
+            .where(
+              and(
+                eq(runs.spaceId, job.spaceId),
+                eq(runs.conversationId, job.conversationId),
+                eq(runs.id, job.runId),
+              ),
+            );
+          if (!run || !["queued", "running", "waiting"].includes(run.state)) {
+            await tx
+              .delete(backupJobs)
+              .where(
+                and(
+                  eq(backupJobs.spaceId, job.spaceId),
+                  eq(backupJobs.conversationId, job.conversationId),
+                  eq(backupJobs.runId, job.runId),
+                ),
+              );
+            continue;
+          }
+          await tx
+            .update(backupJobs)
+            .set({
+              lockedBy: ownerId,
+              lockedUntil: sql`clock_timestamp() + ${leaseMs} * interval '1 millisecond'`,
+              deliveries: sql`${backupJobs.deliveries} + 1`,
+            })
+            .where(
+              and(
+                eq(backupJobs.spaceId, job.spaceId),
+                eq(backupJobs.conversationId, job.conversationId),
+                eq(backupJobs.runId, job.runId),
+              ),
+            );
+          claimedTargets.push({
+            spaceId: run.spaceId,
+            conversationId: run.conversationId,
+            memberAccountId: run.memberAccountId,
+          });
+        }
+        return claimedTargets;
+      });
+      return targets(rows);
+    },
+    async finish(scope, run, failure, retryAt) {
       return db.transaction(async (tx) => {
         const counter = await lock(tx, scope, run.conversationId);
-        const [active] = await tx
-          .select()
-          .from(runs)
-          .where(and(runSelection(scope, run.conversationId, run.id), eq(runs.state, "running")));
-        if (!active) return false;
+        const active = await assertRunFence(tx, scope, run);
+        if (!failure) {
+          const [pending] = await tx
+            .select({ id: steering.messageId })
+            .from(steering)
+            .where(
+              and(
+                eq(steering.spaceId, scope.spaceId),
+                eq(steering.conversationId, run.conversationId),
+                eq(steering.runId, run.id),
+                isNull(steering.consumedAt),
+              ),
+            )
+            .orderBy(asc(steering.sequence))
+            .limit(1);
+          if (pending) return false;
+        }
+        const state = failure ? "failed" : "succeeded";
+        let nextState: "succeeded" | "failed" | "queued" | "waiting" = state;
+        if (retryAt) nextState = active.state === "waiting" ? "waiting" : "queued";
+        const [row] = await tx
+          .update(runs)
+          .set({
+            state: nextState,
+            failureCode: retryAt ? null : failure,
+            finishedAt: retryAt ? null : sql`clock_timestamp()`,
+            leaseOwner: null,
+            leaseExpiresAt: null,
+            ...(retryAt ? { nextAttemptAt: retryAt } : {}),
+          })
+          .where(runSelection(scope, run.conversationId, run.id))
+          .returning();
+        await tx
+          .update(attempts)
+          .set({ state, failureCode: failure, finishedAt: sql`clock_timestamp()` })
+          .where(
+            and(
+              eq(attempts.spaceId, scope.spaceId),
+              eq(attempts.conversationId, run.conversationId),
+              eq(attempts.runId, run.id),
+              eq(attempts.id, run.attemptId),
+              eq(attempts.fence, run.fence),
+            ),
+          );
+        const jobSelection = and(
+          eq(backupJobs.spaceId, scope.spaceId),
+          eq(backupJobs.conversationId, run.conversationId),
+          eq(backupJobs.runId, run.id),
+        );
+        if (retryAt)
+          await tx
+            .update(backupJobs)
+            .set({ runAt: retryAt, lockedBy: null, lockedUntil: null })
+            .where(jobSelection);
+        else await tx.delete(backupJobs).where(jobSelection);
+        await appendState(tx, scope, runView(row!), counter.sequence + 1, run.fence);
+        if (!retryAt) await cancelPendingRequests(tx, scope, run, counter.sequence + 1, run.fence);
+        Object.assign(run, runView(row!));
+        return true;
+      });
+    },
+    async commitTurn(scope, run, turn) {
+      return db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, run.conversationId);
+        const active = await assertRunFence(tx, scope, run);
+        await writeCheckpoint(tx, scope, run, turn.checkpoint);
+        if (!turn.text || !turn.segmentId) return false;
         const sequence = counter.sequence + 1;
         await tx.insert(segments).values({
           spaceId: scope.spaceId,
           conversationId: run.conversationId,
-          id: segmentId,
+          id: turn.segmentId,
           runId: run.id,
+          fence: run.fence,
           sequence,
-          text: normalizeTaskJson(text),
+          text: normalizeTaskJson(turn.text),
         });
         await tx.insert(events).values({
           spaceId: scope.spaceId,
@@ -334,20 +821,116 @@ export function createConversationsRepository(
           sequence,
           kind: "reply.segment",
           runId: run.id,
-          segmentId,
+          fence: run.fence,
+          segmentId: turn.segmentId,
         });
-        if (!active.firstResponseAt)
+        const first = !active.firstResponseAt;
+        if (first)
           await tx
             .update(runs)
-            .set({ firstResponseAt: new Date(firstResponseAt) })
+            .set({ firstResponseAt: new Date(turn.firstResponseAt ?? new Date().toISOString()) })
             .where(runSelection(scope, run.conversationId, run.id));
         await tx
           .update(counters)
           .set({ sequence })
           .where(counterSelection(scope, run.conversationId));
         await publish(tx, { conversationId: run.conversationId, sequence });
-        return true;
+        return first;
       });
+    },
+    async saveCheckpoint(scope, run, checkpoint) {
+      await db.transaction(async (tx) => {
+        await lock(tx, scope, run.conversationId);
+        await assertRunFence(tx, scope, run);
+        await writeCheckpoint(tx, scope, run, checkpoint);
+      });
+    },
+    async consumeSteering(scope, run, checkpoint) {
+      return db.transaction(async (tx) => {
+        await lock(tx, scope, run.conversationId);
+        await assertRunFence(tx, scope, run);
+        const pending = await tx
+          .select({ message: messages })
+          .from(steering)
+          .innerJoin(
+            messages,
+            and(
+              eq(messages.spaceId, steering.spaceId),
+              eq(messages.conversationId, steering.conversationId),
+              eq(messages.id, steering.messageId),
+            ),
+          )
+          .where(
+            and(
+              eq(steering.spaceId, scope.spaceId),
+              eq(steering.conversationId, run.conversationId),
+              eq(steering.runId, run.id),
+              isNull(steering.consumedAt),
+            ),
+          )
+          .orderBy(asc(steering.sequence));
+        if (!pending.length) return checkpoint;
+        const next: RunCheckpoint = {
+          ...checkpoint,
+          completed: false,
+          continuation: [
+            ...checkpoint.continuation,
+            ...pending.map(({ message: inputMessage }) => ({
+              role: "user" as const,
+              content: inputMessage.text,
+              timestamp: inputMessage.createdAt.getTime(),
+            })),
+          ],
+        };
+        await tx
+          .update(steering)
+          .set({ consumedAt: sql`clock_timestamp()`, consumedFence: run.fence })
+          .where(
+            and(
+              eq(steering.spaceId, scope.spaceId),
+              eq(steering.conversationId, run.conversationId),
+              eq(steering.runId, run.id),
+              isNull(steering.consumedAt),
+            ),
+          );
+        return writeCheckpoint(tx, scope, run, next);
+      });
+    },
+    async pinResources(scope, run, pins) {
+      await db.transaction(async (tx) => {
+        await lock(tx, scope, run.conversationId);
+        const active = await assertRunFence(tx, scope, run);
+        if (
+          pins.connectionId !== undefined &&
+          active.connectionId &&
+          active.connectionId !== pins.connectionId
+        )
+          throw new RunResourceUnavailableError("CONNECTION_UNAVAILABLE");
+        if (pins.computerId !== undefined) {
+          if (
+            active.computerId &&
+            (active.computerId !== pins.computerId ||
+              active.computerGeneration !== pins.computerGeneration)
+          )
+            throw new RunResourceUnavailableError("COMPUTER_UNAVAILABLE");
+          const [computer] = await tx
+            .select({ id: computers.id })
+            .from(computers)
+            .where(
+              and(
+                eq(computers.spaceId, scope.spaceId),
+                eq(computers.id, pins.computerId),
+                eq(computers.generation, pins.computerGeneration ?? -1),
+              ),
+            );
+          if (!computer) throw new RunResourceUnavailableError("COMPUTER_UNAVAILABLE");
+        }
+        await tx
+          .update(runs)
+          .set(pins)
+          .where(runSelection(scope, run.conversationId, run.id));
+      });
+      Object.assign(run, pins);
     },
     async send(scope, id, input) {
       const values = memberMessageInputSchema.parse(input);
@@ -386,6 +969,30 @@ export function createConversationsRepository(
           messageId: row!.id,
           createdAt: row!.createdAt,
         });
+        const [active] = await tx
+          .select()
+          .from(runs)
+          .where(
+            and(
+              eq(runs.spaceId, scope.spaceId),
+              eq(runs.conversationId, id),
+              inArray(runs.state, ["running", "waiting"]),
+            ),
+          )
+          .orderBy(asc(runs.messageSequence), asc(runs.id))
+          .limit(1);
+        if (active) {
+          await tx.insert(steering).values({
+            spaceId: scope.spaceId,
+            conversationId: id,
+            runId: active.id,
+            messageId: row!.id,
+            sequence,
+          });
+          await tx.update(counters).set({ sequence }).where(counterSelection(scope, id));
+          await publish(tx, { conversationId: id, sequence });
+          return message(row!);
+        }
         const conversation = await requireConversation(tx, scope, id);
         const [agent] = await tx
           .select()
@@ -405,6 +1012,12 @@ export function createConversationsRepository(
             instructions: agent!.instructions,
           })
           .returning();
+        await tx.insert(backupJobs).values({
+          spaceId: scope.spaceId,
+          conversationId: id,
+          runId: run!.id,
+          runAt: sql`clock_timestamp() + ${timeoutMs + backupMarginMs} * interval '1 millisecond'`,
+        });
         await appendState(tx, scope, runView(run!), sequence + 1);
         return message(row!);
       });

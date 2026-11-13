@@ -9,6 +9,7 @@ import type {
   ReplySegment,
 } from "@raypx/core/conversation";
 import type { SpaceScope } from "@raypx/spaces/server";
+import type { Message as ModelMessage, ToolCall } from "@raypx/ai";
 
 export interface ConversationEventEntry {
   event: ConversationEvent;
@@ -47,20 +48,108 @@ export interface ConversationFanout {
   close(): Promise<void>;
 }
 
+/** Private executor capability. Never serialized into the public Run projection. */
+export interface ExecutionRun extends Run {
+  ownerId: string;
+  fence: number;
+  attemptId: string;
+  attemptNumber: number;
+  timeoutAt: string;
+  connectionId: string | null;
+  computerId: string | null;
+  computerGeneration: number | null;
+}
+export class StaleRunFenceError extends Error {
+  constructor() {
+    super("STALE_RUN_FENCE");
+    this.name = "StaleRunFenceError";
+  }
+}
+export class RunResourceUnavailableError extends Error {
+  constructor(readonly code: "CONNECTION_UNAVAILABLE" | "COMPUTER_UNAVAILABLE") {
+    super(code);
+    this.name = "RunResourceUnavailableError";
+  }
+}
+export interface RunCheckpoint {
+  continuation: ModelMessage[];
+  pendingCalls: ToolCall[];
+  rounds: number;
+  completed: boolean;
+  /** Snapshot for inspection; effect rows remain authoritative for replay. */
+  openEffects?: string[];
+}
 export interface RunExecution {
-  run: Run;
+  /** Fresh admission for the Run's initiating member, independent of who woke it. */
+  scope: SpaceScope;
+  run: ExecutionRun;
   instructions: string;
   history: Array<{ role: "user" | "assistant"; text: string; createdAt: string }>;
+  checkpoint: RunCheckpoint;
+}
+export interface RunClaimOptions {
+  ownerId: string;
+  leaseMs: number;
+  timeoutMs: number;
+  backupMarginMs: number;
+}
+export interface RunnableConversation {
+  scope: SpaceScope;
+  id: ConversationId;
 }
 export interface ConversationRunRepository {
-  claimNext(scope: SpaceScope, id: ConversationId): Promise<RunExecution | undefined>;
-  getRun(scope: SpaceScope, id: ConversationId, runId: RunId): Promise<Run>;
-  finish(scope: SpaceScope, run: Run, failure: RunFailure | null): Promise<void>;
-  commitSegment(
+  claimNext(
     scope: SpaceScope,
-    run: Run,
-    segmentId: string,
-    text: string,
-    firstResponseAt: string,
+    id: ConversationId,
+    options: RunClaimOptions,
+  ): Promise<RunExecution | undefined>;
+  getRun(scope: SpaceScope, id: ConversationId, runId: RunId): Promise<Run>;
+  /** First execution clock starts after the pinned computer has been acquired. */
+  executionStarted(scope: SpaceScope, run: ExecutionRun): Promise<string>;
+  heartbeat(scope: SpaceScope, run: ExecutionRun, leaseMs: number): Promise<boolean>;
+  release(scope: SpaceScope, run: ExecutionRun): Promise<void>;
+  scanRunnable(limit?: number): Promise<RunnableConversation[]>;
+  claimBackupJobs(
+    ownerId: string,
+    leaseMs: number,
+    limit?: number,
+  ): Promise<RunnableConversation[]>;
+  finish(
+    this: void,
+    scope: SpaceScope,
+    run: ExecutionRun,
+    failure: RunFailure | null,
+    retryAt?: Date,
   ): Promise<boolean>;
+  commitTurn(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    turn: {
+      checkpoint: RunCheckpoint;
+      segmentId?: string;
+      text?: string;
+      firstResponseAt?: string;
+    },
+  ): Promise<boolean>;
+  saveCheckpoint(
+    this: void,
+    scope: SpaceScope,
+    run: ExecutionRun,
+    checkpoint: RunCheckpoint,
+  ): Promise<void>;
+  consumeSteering(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    checkpoint: RunCheckpoint,
+  ): Promise<RunCheckpoint>;
+  pinResources(
+    this: void,
+    scope: SpaceScope,
+    run: ExecutionRun,
+    pins: {
+      connectionId?: string;
+      computerId?: string;
+      computerGeneration?: number;
+    },
+  ): Promise<void>;
 }

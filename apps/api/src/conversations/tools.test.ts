@@ -69,9 +69,9 @@ it("waits for Ask approval, accepts another message, resumes with a tool result 
     memberAccountId: "member",
   });
   expect(writeFile).not.toHaveBeenCalled();
-  expect(f.computer()).toBeNull();
+  expect(f.computer()).toMatchObject({ state: "running" });
   await f.send("while-pending");
-  expect(f.runs.map((run) => run.state)).toEqual(["waiting", "queued"]);
+  expect(f.runs.map((run) => run.state)).toEqual(["waiting"]);
   const approved = await f.rpc.approvals.answer({
     spaceId: f.spaceId,
     requestId: pending[0]!.id,
@@ -79,6 +79,9 @@ it("waits for Ask approval, accepts another message, resumes with a tool result 
   });
   expect(approved.state).toBe("approved");
   await expect.poll(() => f.calls.length).toBe(2);
+  expect(f.calls[1]!.input.continuation).toContainEqual(
+    expect.objectContaining({ role: "user", content: "Do the fixture task" }),
+  );
   expect(result(f).value).toMatchObject({ trust: "untrusted", state: "succeeded" });
   expect(writeFile).toHaveBeenCalledTimes(1);
   const effects = await f.rpc.approvals.effects({ spaceId: f.spaceId, runId: f.runs[0]!.id });
@@ -89,9 +92,7 @@ it("waits for Ask approval, accepts another message, resumes with a tool result 
   expect(cards.map((entry) => entry.event.kind)).toEqual(["card.created", "card.resolved"]);
   expect(JSON.stringify(cards)).not.toContain("Private file content");
   f.calls[1]!.complete("Written");
-  await expect.poll(() => f.calls.length).toBe(3);
-  f.calls[2]!.complete("Next message");
-  await expect.poll(() => f.runs.map((run) => run.state)).toEqual(["succeeded", "succeeded"]);
+  await expect.poll(() => f.runs.map((run) => run.state)).toEqual(["succeeded"]);
 });
 
 it("returns a denial to the model without executing the change", async () => {
@@ -125,7 +126,7 @@ it.each(["ask", "never"] as const)(
     expect(result(f).value).toMatchObject({ state: "blocked", refused: true });
     expect(f.requests).toEqual([]);
     expect(f.effects).toEqual([]);
-    expect(f.computer()).toBeNull();
+    expect(f.computer()).toMatchObject({ state: "running" });
     f.calls[1]!.complete();
   },
 );

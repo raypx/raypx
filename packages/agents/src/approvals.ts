@@ -8,9 +8,11 @@ import {
   type ComputerToolName,
   type Effect,
 } from "@raypx/core/approvals";
-import type { Run, RunId } from "@raypx/core/conversation";
+import type { RunId } from "@raypx/core/conversation";
+import { StaleRunFenceError, type ExecutionRun } from "./conversations.js";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { computerToolResult } from "./computer-tools.js";
+import { EFFECT_INTENT_TIMEOUT_MS } from "./tool-limits.js";
 
 export class ApprovalOperationError extends Error {
   constructor(
@@ -31,6 +33,14 @@ export class EffectUnknownError extends Error {
   constructor() {
     super("EFFECT_UNKNOWN");
     this.name = "EffectUnknownError";
+  }
+}
+/** A previous attempt may still have computer work in flight. Never infer or replay yet. */
+export class EffectInProgressError extends Error {
+  readonly code = "EFFECT_IN_PROGRESS";
+  constructor(readonly retryAt: number) {
+    super("EFFECT_IN_PROGRESS");
+    this.name = "EffectInProgressError";
   }
 }
 /** Prepared by the one computer-tool definition, before policy or execution. */
@@ -64,17 +74,27 @@ export interface ApprovalsRepository {
   ): Promise<ApprovalRequest>;
   createRequest(
     scope: SpaceScope,
-    run: Run,
+    run: ExecutionRun,
     call: ApprovalCall,
     expiresAt: Date,
     createdAt: Date,
   ): Promise<ApprovalRequest>;
-  pollRequest(scope: SpaceScope, run: Run, id: string, now: Date): Promise<ApprovalRequest>;
-  cancelRequest(scope: SpaceScope, run: Run, id: string, now: Date): Promise<void>;
-  listEffects(scope: SpaceScope, runId: RunId, now: Date): Promise<Effect[]>;
+  pollRequest(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    id: string,
+    now: Date,
+  ): Promise<ApprovalRequest>;
+  cancelRequest(scope: SpaceScope, run: ExecutionRun, id: string, now: Date): Promise<void>;
+  listEffects(
+    scope: SpaceScope,
+    runId: RunId,
+    now: Date,
+    execution?: ExecutionRun,
+  ): Promise<Effect[]>;
   beginEffect(
     scope: SpaceScope,
-    run: Run,
+    run: ExecutionRun,
     effect: Effect,
     now: Date,
   ): Promise<{ created: boolean; effect: Effect }>;
@@ -84,6 +104,7 @@ export interface ApprovalsRepository {
     state: "succeeded" | "failed" | "unknown",
     result: string | null,
     now: Date,
+    run: ExecutionRun,
   ): Promise<void>;
 }
 export interface ApprovalsService {
@@ -93,15 +114,15 @@ export interface ApprovalsService {
   answer(scope: SpaceScope, id: string, answer: ApprovalAnswer): Promise<ApprovalRequest>;
   authorize(
     scope: SpaceScope,
-    run: Run,
+    run: ExecutionRun,
     call: ApprovalCall,
     signal: AbortSignal,
   ): Promise<ApprovalOutcome>;
-  assertContinuable(scope: SpaceScope, run: Run): Promise<void>;
+  assertContinuable(scope: SpaceScope, run: ExecutionRun): Promise<void>;
   listEffects(scope: SpaceScope, runId: RunId): Promise<Effect[]>;
   executeEffect(
     scope: SpaceScope,
-    run: Run,
+    run: ExecutionRun,
     call: ApprovalCall,
     operation: () => Promise<string>,
     signal: AbortSignal,
@@ -186,13 +207,12 @@ export function createApprovalsService(
   async function settings(accountId: string) {
     return repository.getSettings(accountId, defaultMode);
   }
-  async function assertContinuable(scope: SpaceScope, run: Run) {
-    if (
-      (await repository.listEffects(scope, run.id, now())).some(
-        (effect) => effect.state === "unknown",
-      )
-    )
-      throw new EffectUnknownError();
+  async function assertContinuable(scope: SpaceScope, run: ExecutionRun) {
+    const effects = await repository.listEffects(scope, run.id, now(), run);
+    if (effects.some((effect) => effect.state === "unknown")) throw new EffectUnknownError();
+    const pending = effects.find((effect) => effect.state === "intent");
+    if (pending)
+      throw new EffectInProgressError(Date.parse(pending.createdAt) + EFFECT_INTENT_TIMEOUT_MS);
   }
   return {
     getSettings: settings,
@@ -225,7 +245,8 @@ export function createApprovalsService(
         if (!signal.aborted) current = await repository.pollRequest(scope, run, request.id, now());
       }
       if (signal.aborted) {
-        await repository.cancelRequest(scope, run, request.id, now());
+        if (!["handover", "lease-lost", "timeout"].includes(signal.reason))
+          await repository.cancelRequest(scope, run, request.id, now());
         return "cancelled";
       }
       // A member may have blocked the action while the request was open.
@@ -259,7 +280,10 @@ export function createApprovalsService(
       const begun = await repository.beginEffect(scope, run, intent, now());
       if (!begun.created) {
         if (begun.effect.state === "unknown") throw new EffectUnknownError();
-        if (begun.effect.state === "intent") throw new Error("EFFECT_IN_PROGRESS");
+        if (begun.effect.state === "intent")
+          throw new EffectInProgressError(
+            Date.parse(begun.effect.createdAt) + EFFECT_INTENT_TIMEOUT_MS,
+          );
         return begun.effect.result ?? computerToolResult("failed", "TOOL_FAILED");
       }
       let result: string;
@@ -272,22 +296,24 @@ export function createApprovalsService(
           result = boundedResult(await operation());
           if (failedResult(result)) state = "failed";
         }
-      } catch {
+      } catch (error) {
+        if (error instanceof StaleRunFenceError) throw error;
         // A thrown call has no confirmed outcome. A lost response may follow a
         // completed change; only a returned result establishes failure/cancellation.
         try {
-          await repository.completeEffect(scope, key, "unknown", null, now());
+          await repository.completeEffect(scope, key, "unknown", null, now(), run);
         } catch {
           // A later read will age the retained intent if storage is unavailable too.
         }
         throw new EffectUnknownError();
       }
       try {
-        await repository.completeEffect(scope, key, state, result, now());
-      } catch {
+        await repository.completeEffect(scope, key, state, result, now(), run);
+      } catch (error) {
+        if (error instanceof StaleRunFenceError) throw error;
         // A completed computer call without a durable outcome is uncertain too.
         try {
-          await repository.completeEffect(scope, key, "unknown", null, now());
+          await repository.completeEffect(scope, key, "unknown", null, now(), run);
         } catch {
           // A later read will age the remaining intent into unknown.
         }

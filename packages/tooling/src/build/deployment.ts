@@ -11,6 +11,7 @@ export const apiIngress = {
   paths: [
     "/.well-known/openid-configuration",
     "/.well-known/oauth-authorization-server",
+    "/events",
     deploymentServices.api.health,
     deploymentServices.api.ready,
   ],

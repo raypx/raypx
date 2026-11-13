@@ -21,11 +21,21 @@ starts. Each missing capability is an explicit state in the product.
 ## Roles
 
 - `SERVER_ROLE=all` is the default: `api`, `worker` and `relay` in one process.
-- Split roles use the same artifact. They need no broker; they coordinate through
-  PostgreSQL. See [ADR 0066](0066-server-owned-agent-platform.md).
+  Existing explicit `SERVER_ROLE=both` deployments keep that combined behavior,
+  including recovery; existing environment files continue to work.
+- Split roles use the same artifact. Durable Run API/worker coordination needs no
+  broker: leases, attempts, checkpoints, steering and backup jobs are PostgreSQL
+  records, and content-free `LISTEN/NOTIFY` hints wake recovery. The retained
+  device Relay transport still uses optional Redis when API and Relay are split.
+  See [ADR 0066](0066-server-owned-agent-platform.md).
 - Run any number of `api` and `worker` processes. A Run executes once because of
   its lease. See [execution](execution.md#ownership).
-- The `relay` role starts without sign-in or mail configuration and exposes no RPC.
+- The `worker` and `relay` roles start without sign-in or mail configuration and
+  expose no RPC. Worker starts scans only after runtime construction and needs the
+  same configured model and Computer resources as API.
+- `RUN_RECOVERY_INTERVAL_MS` defaults to five seconds; leases last 15 seconds and
+  heartbeat every five seconds. Attempt timeout defaults to five minutes and the
+  keyed backup job is due 30 seconds later. See [execution](execution.md#deployment-timing).
 
 ## Capacity
 

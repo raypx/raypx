@@ -253,6 +253,15 @@ export const conversationRuns = pgTable(
     startedAt: date("started_at"),
     firstResponseAt: date("first_response_at"),
     finishedAt: date("finished_at"),
+    leaseOwner: text("lease_owner"),
+    leaseExpiresAt: date("lease_expires_at"),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
+    nextAttemptAt: date("next_attempt_at").notNull().defaultNow(),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    connectionId: text("connection_id"),
+    // Historical selectors survive resource removal, so a resume can fail explicitly.
+    computerId: text("computer_id"),
+    computerGeneration: integer("computer_generation"),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
@@ -270,6 +279,9 @@ export const conversationRuns = pgTable(
       table.state,
       table.messageSequence,
     ),
+    index("conversation_runs_recovery_idx")
+      .on(table.nextAttemptAt, table.leaseExpiresAt)
+      .where(sql`${table.state} in ('queued', 'running', 'waiting')`),
     foreignKey({
       columns: [table.spaceId, table.agentId],
       foreignColumns: [agents.spaceId, agents.id],
@@ -288,6 +300,160 @@ export const conversationRuns = pgTable(
       sql`${table.state} in ('queued', 'running', 'waiting', 'succeeded', 'failed', 'cancelled')`,
     ),
     check("conversation_runs_trigger_check", sql`${table.trigger} = 'message'`),
+    check(
+      "conversation_runs_lease_check",
+      sql`(${table.leaseOwner} is null) = (${table.leaseExpiresAt} is null)`,
+    ),
+    check("conversation_runs_fence_check", sql`${table.fence} >= 0 and ${table.attemptCount} >= 0`),
+    check(
+      "conversation_runs_computer_pin_check",
+      sql`(${table.computerId} is null) = (${table.computerGeneration} is null)`,
+    ),
+  ],
+);
+export const conversationRunAttempts = pgTable(
+  "conversation_run_attempts",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    id: text("id").notNull(),
+    ownerId: text("owner_id").notNull(),
+    fence: bigint("fence", { mode: "number" }).notNull(),
+    number: integer("number").notNull(),
+    state: text("state", {
+      enum: ["running", "succeeded", "failed", "cancelled", "released", "abandoned"],
+    })
+      .notNull()
+      .default("running"),
+    failureCode: text("failure_code"),
+    startedAt: date("started_at").notNull().defaultNow(),
+    timeoutAt: date("timeout_at").notNull(),
+    finishedAt: date("finished_at"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.runId, table.id] }),
+    uniqueIndex("conversation_run_attempts_fence_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.runId,
+      table.fence,
+    ),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_run_attempts_state_check",
+      sql`${table.state} in ('running', 'succeeded', 'failed', 'cancelled', 'released', 'abandoned')`,
+    ),
+    check(
+      "conversation_run_attempts_bounds_check",
+      sql`${table.fence} > 0 and ${table.number} > 0 and ${table.timeoutAt} > ${table.startedAt}`,
+    ),
+  ],
+);
+export const conversationRunCheckpoints = pgTable(
+  "conversation_run_checkpoints",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    attemptId: text("attempt_id").notNull(),
+    fence: bigint("fence", { mode: "number" }).notNull(),
+    revision: integer("revision").notNull().default(0),
+    history: jsonb("history").notNull(),
+    data: jsonb("data").notNull(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.runId] }),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId, table.attemptId],
+      foreignColumns: [
+        conversationRunAttempts.spaceId,
+        conversationRunAttempts.conversationId,
+        conversationRunAttempts.runId,
+        conversationRunAttempts.id,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_run_checkpoints_data_check",
+      sql`jsonb_typeof(${table.history}) = 'array' and jsonb_typeof(${table.data}) = 'object' and ${table.fence} > 0 and ${table.revision} >= 0`,
+    ),
+  ],
+);
+export const conversationRunSteering = pgTable(
+  "conversation_run_steering",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    messageId: text("message_id").notNull(),
+    sequence: bigint("sequence", { mode: "number" }).notNull(),
+    consumedFence: bigint("consumed_fence", { mode: "number" }),
+    consumedAt: date("consumed_at"),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.runId, table.messageId] }),
+    index("conversation_run_steering_pending_idx")
+      .on(table.spaceId, table.conversationId, table.runId, table.sequence)
+      .where(sql`${table.consumedAt} is null`),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.messageId, table.sequence],
+      foreignColumns: [
+        conversationMessages.spaceId,
+        conversationMessages.conversationId,
+        conversationMessages.id,
+        conversationMessages.sequence,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_run_steering_consumed_check",
+      sql`(${table.consumedAt} is null) = (${table.consumedFence} is null)`,
+    ),
+  ],
+);
+export const conversationRunBackupJobs = pgTable(
+  "conversation_run_backup_jobs",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    runAt: date("run_at").notNull(),
+    lockedBy: text("locked_by"),
+    lockedUntil: date("locked_until"),
+    deliveries: integer("deliveries").notNull().default(0),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.runId] }),
+    index("conversation_run_backup_jobs_due_idx").on(table.runAt, table.lockedUntil),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_run_backup_jobs_lock_check",
+      sql`(${table.lockedBy} is null) = (${table.lockedUntil} is null)`,
+    ),
   ],
 );
 export const conversationReplySegments = pgTable(
@@ -297,6 +463,7 @@ export const conversationReplySegments = pgTable(
     conversationId: text("conversation_id").notNull(),
     id: text("id").notNull(),
     runId: text("run_id").notNull(),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
     sequence: bigint("sequence", { mode: "number" }).notNull(),
     text: text("text").notNull(),
     createdAt: date("created_at").notNull().defaultNow(),
@@ -363,6 +530,7 @@ export const approvalRequests = pgTable(
     conversationId: text("conversation_id").notNull(),
     id: text("id").notNull(),
     runId: text("run_id").notNull(),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
     memberAccountId: text("member_account_id").notNull(),
     toolCallId: text("tool_call_id").notNull(),
     toolName: text("tool_name").notNull(),
@@ -430,6 +598,7 @@ export const conversationEffects = pgTable(
     key: text("key").notNull(),
     conversationId: text("conversation_id").notNull(),
     runId: text("run_id").notNull(),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
     toolCallId: text("tool_call_id").notNull(),
     toolName: text("tool_name").notNull(),
     argumentHash: text("argument_hash").notNull(),
@@ -489,6 +658,7 @@ export const conversationEvents = pgTable(
     messageId: text("message_id"),
     data: jsonb("data"),
     runId: text("run_id"),
+    fence: bigint("fence", { mode: "number" }).notNull().default(0),
     segmentId: text("segment_id"),
     computerId: text("computer_id"),
     requestId: text("request_id"),
@@ -528,7 +698,7 @@ export const conversationEvents = pgTable(
     foreignKey({
       columns: [table.spaceId, table.computerId],
       foreignColumns: [computers.spaceId, computers.id],
-    }),
+    }).onDelete("cascade"),
     foreignKey({
       columns: [table.spaceId, table.conversationId, table.requestId],
       foreignColumns: [
@@ -965,6 +1135,10 @@ export const {
 export const schema = {
   computers,
   conversationRuns,
+  conversationRunAttempts,
+  conversationRunCheckpoints,
+  conversationRunSteering,
+  conversationRunBackupJobs,
   conversationReplySegments,
   conversationCounters,
   conversationMessages,

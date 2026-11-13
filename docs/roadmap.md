@@ -70,6 +70,15 @@ and device preferences remain reachable.
 Leases, attempts, checkpoints, steering, stop and recovery. See
 [execution](architecture/execution.md).
 
+Implemented backend: PostgreSQL execution leases with fencing and heartbeats,
+attempts and canonical turn checkpoints, direct dispatch with a keyed backup
+queue, worker startup/interval recovery, graceful handover, pinned resources and
+steering during running/approval-waiting Runs. Runtime construction performs no
+recovery I/O. Default `SERVER_ROLE=all` combines API, worker and Relay; API/worker
+coordination needs PostgreSQL only. Client UI is a separate slice. PostgreSQL and
+loopback `/events` acceptance remain separate gates; implementation does not claim
+an unrun database or listener check passed.
+
 Acceptance:
 
 - Two processes that start the same Run execute it once.

@@ -24,23 +24,28 @@ import type { SpaceScope } from "@raypx/spaces/server";
 import {
   ApprovalOperationError,
   EffectUnknownError,
+  EffectInProgressError,
   type ApprovalsRepository,
 } from "../approvals.js";
 import { publishConversationNotice } from "./conversations.js";
 import { EFFECT_INTENT_TIMEOUT_MS } from "../tool-limits.js";
+import type { ExecutionRun } from "../conversations.js";
+import { assertRunFence } from "./fence.js";
 
 type Transaction = Pick<Database, "select" | "insert" | "update" | "delete" | "execute">;
 function requestView(row: typeof requests.$inferSelect): ApprovalRequest {
+  const { fence: _fence, ...request } = row;
   return approvalRequestSchema.parse({
-    ...row,
+    ...request,
     createdAt: row.createdAt.toISOString(),
     expiresAt: row.expiresAt.toISOString(),
     resolvedAt: row.resolvedAt?.toISOString() ?? null,
   });
 }
 function effectView(row: typeof effects.$inferSelect) {
+  const { fence: _fence, ...effect } = row;
   return effectSchema.parse({
-    ...row,
+    ...effect,
     createdAt: row.createdAt.toISOString(),
     completedAt: row.completedAt?.toISOString() ?? null,
   });
@@ -112,6 +117,7 @@ export function createApprovalsRepository(
     request: ApprovalRequest,
     sequence: number,
     kind: "card.created" | "card.resolved",
+    fence = 0,
   ) {
     const data =
       kind === "card.created"
@@ -126,6 +132,7 @@ export function createApprovalsRepository(
       conversationId: request.conversationId,
       sequence,
       kind,
+      fence,
       runId: request.runId,
       requestId: request.id,
       data,
@@ -146,12 +153,14 @@ export function createApprovalsRepository(
     request: ApprovalRequest,
     state: "running" | "waiting",
     sequence: number,
+    fence = 0,
   ) {
     await tx.insert(events).values({
       spaceId: scope.spaceId,
       conversationId: request.conversationId,
       sequence,
       kind: "run.state",
+      fence,
       runId: request.runId,
       data: { state, failureCode: null },
     });
@@ -164,6 +173,7 @@ export function createApprovalsRepository(
     answeredByAccountId: string | null,
     now: Date,
     sequence: number,
+    fence = 0,
   ) {
     const [row] = await tx
       .update(requests)
@@ -172,7 +182,7 @@ export function createApprovalsRepository(
       .returning();
     if (!row) return current;
     const request = requestView(row);
-    await appendCard(tx, scope, request, sequence, "card.resolved");
+    await appendCard(tx, scope, request, sequence, "card.resolved", fence);
     // Stop changes the Run first; this conditional transition cannot revive it.
     const [resumed] = await tx
       .update(runs)
@@ -188,7 +198,7 @@ export function createApprovalsRepository(
       .returning({ id: runs.id });
     if (resumed) {
       sequence++;
-      await appendRunState(tx, scope, request, "running", sequence);
+      await appendRunState(tx, scope, request, "running", sequence, fence);
     }
     await finishEvents(tx, scope, request.conversationId, sequence);
     return request;
@@ -199,18 +209,38 @@ export function createApprovalsRepository(
     id: string,
     now: Date,
     cancel = false,
+    execution?: ExecutionRun,
   ) {
     return db.transaction(async (tx) => {
       const before = await findRequest(tx, scope, id);
       const counter = await lock(tx, scope, before.conversationId);
+      if (execution) await assertRunFence(tx, scope, execution);
       const current = await findRequest(tx, scope, id);
       if (current.runId !== run.id || current.memberAccountId !== run.memberAccountId)
         throw new ApprovalOperationError("NOT_FOUND");
       if (current.state !== "pending") return current;
       if (cancel)
-        return resolveRequest(tx, scope, current, "cancelled", null, now, counter.sequence + 1);
+        return resolveRequest(
+          tx,
+          scope,
+          current,
+          "cancelled",
+          null,
+          now,
+          counter.sequence + 1,
+          execution?.fence,
+        );
       if (Date.parse(current.expiresAt) <= now.getTime())
-        return resolveRequest(tx, scope, current, "expired", null, now, counter.sequence + 1);
+        return resolveRequest(
+          tx,
+          scope,
+          current,
+          "expired",
+          null,
+          now,
+          counter.sequence + 1,
+          execution?.fence,
+        );
       return current;
     });
   }
@@ -269,6 +299,7 @@ export function createApprovalsRepository(
             lte(requests.expiresAt, now),
           ),
         )
+        .orderBy(asc(requests.expiresAt), asc(requests.id))
         .limit(100);
       for (const row of expired)
         await poll(
@@ -364,7 +395,7 @@ export function createApprovalsRepository(
     async createRequest(scope, run, call, expiresAt, createdAt) {
       return db.transaction(async (tx) => {
         const counter = await lock(tx, scope, run.conversationId);
-        const active = await requireRun(tx, scope, run.id);
+        const active = await assertRunFence(tx, scope, run);
         if (
           active.conversationId !== run.conversationId ||
           active.memberAccountId !== run.memberAccountId
@@ -392,6 +423,7 @@ export function createApprovalsRepository(
           .values({
             spaceId: scope.spaceId,
             conversationId: run.conversationId,
+            fence: run.fence,
             id: crypto.randomUUID(),
             runId: run.id,
             memberAccountId: run.memberAccountId,
@@ -415,19 +447,22 @@ export function createApprovalsRepository(
               eq(runs.id, run.id),
             ),
           );
-        await appendCard(tx, scope, request, counter.sequence + 1, "card.created");
-        await appendRunState(tx, scope, request, "waiting", counter.sequence + 2);
+        await appendCard(tx, scope, request, counter.sequence + 1, "card.created", run.fence);
+        await appendRunState(tx, scope, request, "waiting", counter.sequence + 2, run.fence);
         await finishEvents(tx, scope, run.conversationId, counter.sequence + 2);
         return request;
       });
     },
-    pollRequest: (scope, run, id, now) => poll(scope, run, id, now),
+    pollRequest: (scope, run, id, now) => poll(scope, run, id, now, false, run),
     async cancelRequest(scope, run, id, now) {
-      await poll(scope, run, id, now, true);
+      await poll(scope, run, id, now, true, run);
     },
-    async listEffects(scope, runId, now) {
+    async listEffects(scope, runId, now, execution) {
       return db.transaction(async (tx) => {
-        await requireRun(tx, scope, runId);
+        if (execution) {
+          await lock(tx, scope, execution.conversationId);
+          await assertRunFence(tx, scope, execution);
+        } else await requireRun(tx, scope, runId);
         await expireIntents(tx, scope, runId, now);
         const rows = await tx
           .select()
@@ -441,16 +476,16 @@ export function createApprovalsRepository(
     async beginEffect(scope, run, effect, now) {
       const result = await db.transaction(async (tx) => {
         await lock(tx, scope, run.conversationId);
-        const active = await requireRun(tx, scope, run.id);
+        const active = await assertRunFence(tx, scope, run);
         await expireIntents(tx, scope, run.id, now);
         const [existing] = await tx
           .select()
           .from(effects)
           .where(and(eq(effects.spaceId, scope.spaceId), eq(effects.key, effect.key)));
         if (existing) return { created: false, effect: effectView(existing) };
-        if (active.state !== "running") throw new Error("RUN_NOT_ACTIVE");
+        if (active.state !== "running") return { inactive: true };
         const [open] = await tx
-          .select({ state: effects.state })
+          .select({ state: effects.state, createdAt: effects.createdAt })
           .from(effects)
           .where(
             and(
@@ -459,29 +494,42 @@ export function createApprovalsRepository(
               inArray(effects.state, ["unknown", "intent"]),
             ),
           )
-          .orderBy(desc(eq(effects.state, "unknown")))
+          .orderBy(desc(eq(effects.state, "unknown")), asc(effects.createdAt), asc(effects.key))
           .limit(1);
         // Return the refusal so a stale-intent transition commits before throwing.
-        if (open) return open.state;
-        await tx
-          .insert(effects)
-          .values({ ...effect, createdAt: new Date(effect.createdAt), completedAt: null });
+        if (open)
+          return {
+            blocked: open.state,
+            retryAt: open.createdAt.getTime() + EFFECT_INTENT_TIMEOUT_MS,
+          };
+        await tx.insert(effects).values({
+          ...effect,
+          fence: run.fence,
+          createdAt: new Date(effect.createdAt),
+          completedAt: null,
+        });
         return { created: true, effect };
       });
-      if (typeof result === "string") {
-        if (result === "unknown") throw new EffectUnknownError();
-        throw new Error("EFFECT_IN_PROGRESS");
+      if ("inactive" in result) throw new Error("RUN_NOT_ACTIVE");
+      if ("blocked" in result) {
+        if (result.blocked === "unknown") throw new EffectUnknownError();
+        throw new EffectInProgressError(result.retryAt!);
       }
       return result;
     },
-    async completeEffect(scope, key, state, result, now) {
+    async completeEffect(scope, key, state, result, now, run) {
       const updated = await db.transaction(async (tx) => {
+        await lock(tx, scope, run.conversationId);
+        await assertRunFence(tx, scope, run);
         const [effect] = await tx
-          .select({ runId: effects.runId })
+          .select({ runId: effects.runId, fence: effects.fence })
           .from(effects)
           .where(and(eq(effects.spaceId, scope.spaceId), eq(effects.key, key)));
-        if (!effect) return false;
+        if (!effect || effect.runId !== run.id) return false;
+        // The current owner may observe an intent left by another attempt.
+        // Persist its uncertainty before refusing that attempt's late outcome.
         await expireIntents(tx, scope, effect.runId as RunId, now);
+        if (effect.fence !== run.fence) return false;
         const [row] = await tx
           .update(effects)
           .set({ state, result, completedAt: state === "unknown" ? null : now })

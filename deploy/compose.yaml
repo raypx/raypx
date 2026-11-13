@@ -55,7 +55,7 @@ services:
     init: true
     environment:
       NODE_ENV: production
-      SERVER_ROLE: ${SERVER_ROLE:-both}
+      SERVER_ROLE: ${SERVER_ROLE:-all}
       DATABASE_MIGRATE_ON_START: "false"
       DATABASE_URL: postgres://${POSTGRES_RUNTIME_USER:-raypx_runtime}:${POSTGRES_RUNTIME_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       AUTH_URL: https://${APP_HOST:?Set the application hostname}
@@ -75,6 +75,11 @@ services:
       AGENT_MODEL_CREDENTIALS: ${AGENT_MODEL_CREDENTIALS:-}
       APPROVAL_DEFAULT_MODE: ${APPROVAL_DEFAULT_MODE:-ask}
       APPROVAL_REQUEST_TTL_MS: ${APPROVAL_REQUEST_TTL_MS:-600000}
+      RUN_RECOVERY_INTERVAL_MS: ${RUN_RECOVERY_INTERVAL_MS:-5000}
+      RUN_LEASE_MS: ${RUN_LEASE_MS:-15000}
+      RUN_HEARTBEAT_MS: ${RUN_HEARTBEAT_MS:-5000}
+      RUN_ATTEMPT_TIMEOUT_MS: ${RUN_ATTEMPT_TIMEOUT_MS:-300000}
+      RUN_BACKUP_MARGIN_MS: ${RUN_BACKUP_MARGIN_MS:-30000}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       AUTH_IP_HEADERS: ${AUTH_IP_HEADERS:-x-forwarded-for}
       AUTH_TRUSTED_PROXIES: ${AUTH_TRUSTED_PROXIES:?Set the trusted proxy CIDRs}
@@ -93,6 +98,7 @@ services:
     networks: [backend, proxy, sandbox-control]
     mem_limit: ${API_MEMORY:-768m}
     cpus: ${API_CPUS:-1}
+    stop_grace_period: 30s
     healthcheck:
       test:
         - CMD
@@ -106,7 +112,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/.well-known/openid-configuration`) || Path(`/.well-known/oauth-authorization-server`) || Path(`/health`) || Path(`/ready`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/.well-known/openid-configuration`) || Path(`/.well-known/oauth-authorization-server`) || Path(`/events`) || Path(`/health`) || Path(`/ready`))"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.priority=100"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"

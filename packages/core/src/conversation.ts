@@ -52,6 +52,8 @@ export const runFailureSchema = z.enum([
   "EXECUTION_FAILED",
   "TOOL_ROUND_LIMIT",
   "EFFECT_UNKNOWN",
+  "CONNECTION_UNAVAILABLE",
+  "COMPUTER_UNAVAILABLE",
 ]);
 export const runSchema = z
   .strictObject({

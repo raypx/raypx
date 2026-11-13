@@ -89,6 +89,7 @@ export function createAiClient(
     ]);
     active.add(controller);
     let status = 0;
+    let retryAt: number | undefined;
     const failure = (error: unknown) => {
       if (deadline.signal.aborted) return new AiError("AI_TIMEOUT");
       if (signal.aborted) return new AiError("AI_ABORTED");
@@ -108,8 +109,8 @@ export function createAiClient(
         (error instanceof ModelsError && ["auth", "oauth"].includes(error.code))
       )
         return new AiError("AI_AUTH_REQUIRED");
-      if (httpStatus === 429) return new AiError("AI_RATE_LIMITED");
-      return new AiError("AI_REQUEST_FAILED");
+      if (httpStatus === 429) return new AiError("AI_RATE_LIMITED", retryAt);
+      return new AiError("AI_REQUEST_FAILED", retryAt);
     };
     const finish = () => {
       clearTimeout(timer);
@@ -130,6 +131,15 @@ export function createAiClient(
           maxTokens: request.maxTokens ?? Math.min(model.maxTokens, 4096),
           onResponse: (response) => {
             status = response.status;
+            const retryAfter = Object.entries(response.headers).find(
+              ([name]) => name.toLowerCase() === "retry-after",
+            )?.[1];
+            if (retryAfter) {
+              const delay = /^\d+(?:\.\d+)?$/.test(retryAfter.trim())
+                ? Number(retryAfter) * 1000
+                : Date.parse(retryAfter) - Date.now();
+              if (Number.isFinite(delay) && delay >= 0) retryAt = Date.now() + delay;
+            }
           },
         });
       })(),

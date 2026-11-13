@@ -3,65 +3,91 @@
 A Run is one unit of Agent work. Pi executes it inside the backend process. This
 guide covers how a Run starts, how one process owns it, and how it recovers.
 
-## Implemented phase 1 reply slice
+## Implemented durable backend
 
-The sections below describe the target execution system. The current Conversation
-slice implements message-triggered Runs inside the backend, with `queued`,
-`running`, `waiting`, `succeeded`, `failed` and `cancelled` states. It has no Attempt,
-lease, fence, checkpoint, backup job, retry or crash recovery. A crashed process
-can leave queued/running records; no startup scan resumes them in this slice.
+The backend implements message-triggered Runs with `queued`, `running`, `waiting`,
+`succeeded`, `failed` and `cancelled` states. PostgreSQL stores their leases,
+increasing fences, execution attempts, canonical checkpoints, steering messages
+and keyed backup jobs. `@raypx/agents/server` owns the runner and injected ports;
+`/server/postgres` owns their transactional persistence. API and worker roles use
+that same runner. Nothing imports the retained private CLI harness.
 
-A send transaction pins the opaque model ID and Agent instructions, links the
-trigger message and the initiating Space member, and writes the queued state
-alongside the message. `@raypx/agents/server` owns the process-local runner and
-member-aware model access port. API supplies deployment configuration and the
-existing `@raypx/ai` Pi transport. Nothing imports the CLI harness.
+A send transaction locks the conversation counter, commits the member message,
+creates its Run and backup job, and publishes a content-free notice. After commit
+the request process starts the Run directly, independently of the HTTP request's
+AbortSignal. A running or approval-waiting Run receives later messages as durable
+steering instead of creating another Run. Messages arriving before any Run has
+started can still create queued Runs; the earliest trigger starts first. A partial
+unique index keeps one running or waiting Run per Space/Agent.
 
-A task takes the conversation counter lock, refuses to start when a Run is already
-running or waiting, and starts the earliest queued trigger. A partial unique index on
-Space/Agent enforces one running or waiting Run. On completion it drains the next queued Run.
-A second message queues its own Run; it does not steer the current one. Context
-pairs each prior member message with its committed reply, then adds the triggering
-message. Inputs queued later are excluded. Each Run's pinned instructions become
-the system prompt.
+The first claim pins the Agent's opaque model ID and instructions. Model access
+pins a connection fingerprint over the deployment provider, exact model and
+credential selector, without storing the key. Rotating the key under that same
+selector is allowed; removing or remapping a pinned connection fails with
+`CONNECTION_UNAVAILABLE`. A configured Computer provider starts and pins the
+Space team computer and generation before execution; recovery validates that
+identity without provisioning a replacement. A missing pin fails with
+`COMPUTER_UNAVAILABLE`; a missing model fails with `MODEL_UNAVAILABLE`.
+Computer pins are historical scalar ID/generation pairs, validated against the
+same Space when pinned, rather than foreign keys that prevent deleting a selected
+resource. A later missing resource therefore reaches that explicit failure.
 
-`conversations.stop` takes Space, Conversation and Run IDs through the usual fresh
-membership, Origin and quota gates. It atomically cancels queued, running or waiting work,
-publishes `run.state`, then aborts the local model request. Repeated stops return
-the existing terminal state. A one-second active-Run status check also observes a
-stop committed by another process. Conditional output/state writes prevent late
-model completion from replacing cancellation. Graceful runtime close cancels and
-aborts active model calls before closing the database or model transport.
+Every claim is a conditional atomic update of owner, lease expiry and fence. It
+adds a new Attempt and refreshes the backup job in the same transaction. Each
+process has a unique instance ID. Heartbeats extend only an unexpired matching
+lease. All attempt mutations lock and validate the Space/Run owner, fence and
+expiry, including events, checkpoints, effects, approval creation and resource
+pins. Member stop/approval answers remain separate authorized intents. An older
+attempt cannot overwrite a newer attempt or revive cancellation.
 
-Missing model IDs fail with `MODEL_UNAVAILABLE`; absent deployment credentials use
-`MODEL_NOT_CONFIGURED`. Auth, rate-limit, deadline and other model failures map to
-stable domain codes. There is one request attempt and no model fallback. Raw
-provider errors, prompts and credentials reach neither events nor logs. Only Run
-IDs, stable codes and millisecond timings enter execution diagnostics. The
-first-response timestamp persists atomically with the completed segment and event.
+After a model turn, one transaction stores its completed reply segment, ordered
+event, first-response time and canonical checkpoint. The checkpoint contains the
+canonical continuation, pending calls, round count and open-effect keys; effect
+rows remain authoritative. Each completed tool result advances the checkpoint.
+Recovery reuses completed effect outcomes if a crash preceded that advancement.
+An unfinished intent remains blocked until the existing tool deadline plus margin
+classifies it as `unknown`; unknown outcomes fail with `EFFECT_UNKNOWN` and are
+never replayed automatically. Approval requests and their exact arguments stay
+durable. A resumed pending call reuses its existing request, so an answered card
+continues after executor replacement without asking again.
 
-### Implemented computer tool loop
+`conversations.stop` cancels the Run and pending cards atomically, then aborts
+model calls and Computer work. Heartbeats also detect stop committed by another
+process. Shutdown instead stops claims, aborts in-flight calls, preserves pending
+cards/checkpoints and releases leases with a fanout notice; it does not record
+`cancelled`. Another worker can claim immediately. A crashed owner is eligible
+when its lease expires. Startup scans belong to worker `start()`, never runtime
+construction. Fanout hints wake scans; the interval repairs missed notifications.
 
-When a Computer provider is configured, the backend offers four JSON Schema tools
-for listing, reading, writing and executable/argv/cwd commands. The model transport
-never executes them. The runner validates calls, applies account approval policy,
-records effects for changes, invokes only the Computer port and appends bounded
-tool results to its process-local model history before another turn. A Run allows
-eight tool rounds and at most sixteen calls per round; excess fails with
-`TOOL_ROUND_LIMIT`. Each complete serialized result is at most 16,384 UTF-16 code
-units, includes an untrusted-data label and reports truncation. Commands have a
-60-second execution deadline and a combined 32,768-byte capture budget. No implicit
-shell or backend-host execution is introduced. No configured provider means no
-offered tools; ordinary replies still work.
+The backup queue is a Space-owned PostgreSQL table keyed by Run, claimed in due
+order with `FOR UPDATE SKIP LOCKED` and a bounded job lease. It is separate from
+`@raypx/jobs`, whose retained account/device schedules do not provide a general
+keyed delayed retry queue. It is never normal dispatch. Terminal completion
+removes the job. A transient model error releases the attempt and moves the job
+to the provider's retry time, otherwise exponential backoff of 1–60 seconds, with
+transient retry allowed only while the execution attempt count is below five.
+Handover and crash recovery also add attempts. The original process schedules the direct
+retry timer. Crashes leave the backup due at the attempt deadline plus margin.
 
-The first executed tool lazily starts and pins the Space team computer generation.
-Approval waits keep the Agent's queue slot, so new messages are accepted and queued
-while only one Run can use that Agent's computer. Completed text on each model turn
-commits as a reply segment before any tool calls. Tool arguments and results are
-not conversation events. Stop resolves pending cards and aborts model access and
-in-flight command execution through the Computer cancellation port. Unknown effects
-block continuation; there are still no checkpoints, attempts or crash recovery.
-See [approvals](approvals.md#implemented-backend-computer-slice).
+The bounded Computer loop still offers only list, read, write and executable/argv/
+cwd commands. It permits eight tool rounds and sixteen calls per round. Results
+are bounded untrusted data, commands have a 60-second deadline, and no backend
+host execution or implicit shell is introduced. No configured provider means no
+tools. Steering is consumed in message-sequence order at the next model boundary,
+including after an approval's pending calls finish. Stop discards further work.
+
+### Deployment timing
+
+- `RUN_RECOVERY_INTERVAL_MS`: 5,000 by default; startup and periodic worker scans.
+- `RUN_LEASE_MS`: 15,000 by default.
+- `RUN_HEARTBEAT_MS`: 5,000 by default, at most half the lease duration.
+- `RUN_ATTEMPT_TIMEOUT_MS`: 300,000 by default, including approval waits.
+- `RUN_BACKUP_MARGIN_MS`: 30,000 by default, added to the attempt deadline.
+
+A process cannot declare another owner dead before its lease expires. Clean
+handover explicitly clears ownership; a lost direct start has no lease and is
+eligible immediately. Recovery latency after a crash is the remaining lease plus
+at most the scan interval. No global worker slot or scan sits on direct dispatch.
 
 ### Deployment model configuration
 
@@ -82,6 +108,10 @@ a Run using an unconfigured ID fails visibly. Malformed JSON or duplicate opaque
 IDs reject startup with a generic configuration error that contains no raw input.
 Ambient provider keys are never consulted. A later member-owned Connection
 adapter can implement the same port using the Run's Space and member identity.
+
+The remaining sections describe the broader execution architecture. Routines,
+inbound triggers, delegation, member-owned Connections and additional model roles
+remain future capabilities; phase 2 implements only the backend slice above.
 
 ## Dispatch
 
@@ -170,7 +200,12 @@ and backoff. It is never the normal path for starting a Run or a model call.
 ## Timing
 
 Structured logs record `run.execution_started`, `run.first_response` and
-`run.finished` with durations in milliseconds: wait before creation, wait before
-the first start, time to the first visible response, and total time. The first
-response time is committed with its output and survives resumes. Logs carry no
-message content.
+`run.finished` with durations in milliseconds. `waitBeforeCreationMs` is zero for
+current message triggers; `waitBeforeStartMs` measures creation to the original
+first start. `firstResponseMs` measures that first start to the first visible
+response, and `totalMs` measures that first start to terminal completion, including
+resumes and retry waits. `durationMs` retains the operation's corresponding wait,
+first-response or total duration. Execution-start logging follows Computer
+acquisition. The first-response timestamp commits with its event and checkpoint
+and is not replaced on resume. Logs carry identifiers and durations only, never
+message, prompt, tool result, arguments, file contents or credentials.

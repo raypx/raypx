@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { AiError, createAiClient, type Message } from "@raypx/ai";
-import type { ModelAccess } from "@raypx/agents/server";
+import { RunResourceUnavailableError, type ModelAccess } from "@raypx/agents/server";
 import type { SpaceScope } from "@raypx/spaces/server";
 
 export interface ConversationModels extends ModelAccess {
@@ -44,10 +44,23 @@ export function createDeploymentModels(
       const apiKey = Object.hasOwn(credentials, entry.credentialId)
         ? credentials[entry.credentialId]
         : undefined;
+      // Pin only selectors, never credentials. Rotation of a key under the same
+      // deployment connection is allowed; remapping the connection is explicit.
+      const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(JSON.stringify([entry.provider, entry.model, entry.credentialId])),
+      );
+      const connectionId = Array.from(new Uint8Array(digest), (byte) =>
+        byte.toString(16).padStart(2, "0"),
+      ).join("");
+      const pinned = "connectionId" in run ? run.connectionId : null;
+      if (pinned && (pinned !== connectionId || !apiKey))
+        throw new RunResourceUnavailableError("CONNECTION_UNAVAILABLE");
       if (!apiKey) throw new AiError("AI_INVALID_CONFIG");
       const selection = { provider: entry.provider, model: entry.model };
       const model = client.resolveModel(selection);
       return {
+        connectionId,
         stream(input, signal) {
           const messages: Message[] = input.history.map((item) => {
             if (item.role === "user")

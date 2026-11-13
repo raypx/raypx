@@ -19,12 +19,17 @@ const server = {
     .optional(),
   COMPUTERS_PER_MEMBER: computerLimit("10"),
   COMPUTERS_PER_SPACE: computerLimit("1"),
-  SERVER_ROLE: z.enum(["api", "both"]).default("both"),
+  SERVER_ROLE: z.enum(["api", "both", "all"]).default("all"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   AGENT_MODELS: z.string().default("[]"),
   AGENT_MODEL_CREDENTIALS: z.string().default("{}"),
   APPROVAL_DEFAULT_MODE: z.enum(["ask", "never"]).default("ask"),
   APPROVAL_REQUEST_TTL_MS: z.coerce.number().int().min(1).max(86_400_000).default(600_000),
+  RUN_RECOVERY_INTERVAL_MS: z.coerce.number().int().min(10).max(60_000).default(5_000),
+  RUN_LEASE_MS: z.coerce.number().int().min(100).max(300_000).default(15_000),
+  RUN_HEARTBEAT_MS: z.coerce.number().int().min(10).max(60_000).default(5_000),
+  RUN_ATTEMPT_TIMEOUT_MS: z.coerce.number().int().min(100).max(86_400_000).default(300_000),
+  RUN_BACKUP_MARGIN_MS: z.coerce.number().int().min(1).max(300_000).default(30_000),
   ADMIN_EMAILS: z
     .string()
     .default("")
@@ -108,8 +113,7 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
     if ([env.AUTH_SECRET, env.APP_KEY].includes(env.SANDBOX_SUPERVISOR_TOKEN))
       throw new Error("SANDBOX_SUPERVISOR_TOKEN must be dedicated");
   }
-  if (env.SERVER_ROLE === "api" && !env.REDIS_URL)
-    throw new Error("The api role requires REDIS_URL; use both for a single backend");
+  validateRunTiming(env);
   if (env.NODE_ENV === "production") {
     if (
       !runtimeEnv.DATABASE_URL ||
@@ -151,8 +155,54 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
 export type ApiEnvironment = ReturnType<typeof getApiEnvironment>;
 
 export function getServerRole(runtimeEnv: Record<string, string | undefined> = process.env) {
-  return z.enum(["api", "relay", "both"]).parse(runtimeEnv.SERVER_ROLE || "both");
+  return z.enum(["api", "worker", "relay", "both", "all"]).parse(runtimeEnv.SERVER_ROLE || "all");
 }
+
+function validateRunTiming(environment: { RUN_HEARTBEAT_MS: number; RUN_LEASE_MS: number }) {
+  if (environment.RUN_HEARTBEAT_MS * 2 > environment.RUN_LEASE_MS)
+    throw new Error("RUN_LEASE_MS must allow at least two heartbeats");
+}
+
+/** Worker configuration has no authentication, cookies, mail, signer or broker dependency. */
+export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
+  const environment = defineEnv({
+    isServer: true,
+    runtimeEnv,
+    server: {
+      NODE_ENV: server.NODE_ENV,
+      DATABASE_URL: server.DATABASE_URL,
+      DATABASE_MIGRATE_ON_START: server.DATABASE_MIGRATE_ON_START,
+      COMPUTER_PROVIDER: server.COMPUTER_PROVIDER,
+      SANDBOX_SUPERVISOR_URL: server.SANDBOX_SUPERVISOR_URL,
+      SANDBOX_SUPERVISOR_TOKEN: server.SANDBOX_SUPERVISOR_TOKEN,
+      COMPUTERS_PER_MEMBER: server.COMPUTERS_PER_MEMBER,
+      COMPUTERS_PER_SPACE: server.COMPUTERS_PER_SPACE,
+      AGENT_MODELS: server.AGENT_MODELS,
+      AGENT_MODEL_CREDENTIALS: server.AGENT_MODEL_CREDENTIALS,
+      APPROVAL_DEFAULT_MODE: server.APPROVAL_DEFAULT_MODE,
+      APPROVAL_REQUEST_TTL_MS: server.APPROVAL_REQUEST_TTL_MS,
+      RUN_RECOVERY_INTERVAL_MS: server.RUN_RECOVERY_INTERVAL_MS,
+      RUN_LEASE_MS: server.RUN_LEASE_MS,
+      RUN_HEARTBEAT_MS: server.RUN_HEARTBEAT_MS,
+      RUN_ATTEMPT_TIMEOUT_MS: server.RUN_ATTEMPT_TIMEOUT_MS,
+      RUN_BACKUP_MARGIN_MS: server.RUN_BACKUP_MARGIN_MS,
+    },
+  });
+  validateRunTiming(environment);
+  if (environment.NODE_ENV === "production" && !runtimeEnv.DATABASE_URL)
+    throw new Error("Production worker requires DATABASE_URL");
+  if (!/^postgres(?:ql)?:$/.test(new URL(environment.DATABASE_URL).protocol))
+    throw new Error("Invalid worker database protocol");
+  if (
+    environment.COMPUTER_PROVIDER === "docker" &&
+    (!environment.SANDBOX_SUPERVISOR_URL || !environment.SANDBOX_SUPERVISOR_TOKEN)
+  )
+    throw new Error(
+      "COMPUTER_PROVIDER=docker requires SANDBOX_SUPERVISOR_URL and SANDBOX_SUPERVISOR_TOKEN",
+    );
+  return environment;
+}
+export type WorkerEnvironment = ReturnType<typeof getWorkerEnvironment>;
 
 /** Relay intentionally never parses authentication, mail or signing configuration. */
 export function getRelayEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
@@ -162,13 +212,13 @@ export function getRelayEnvironment(runtimeEnv: Record<string, string | undefine
     server: {
       NODE_ENV: server.NODE_ENV,
       DATABASE_URL: z.url(),
-      REDIS_URL: z.url(),
+      REDIS_URL: z.url().optional(),
       ALLOWED_ORIGINS: z.string().min(1),
     },
   });
   if (!/^postgres(?:ql)?:$/.test(new URL(env.DATABASE_URL).protocol))
     throw new Error("Invalid Relay database protocol");
-  if (!/^rediss?:$/.test(new URL(env.REDIS_URL).protocol))
+  if (env.REDIS_URL && !/^rediss?:$/.test(new URL(env.REDIS_URL).protocol))
     throw new Error("Invalid Relay broker protocol");
   if (env.ALLOWED_ORIGINS.includes("*")) throw new Error("Relay requires exact allowed origins");
   const allowedOrigins = normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(","));

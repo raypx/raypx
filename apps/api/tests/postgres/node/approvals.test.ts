@@ -51,7 +51,7 @@ const computerService = createComputersService(
   provider,
   "memory",
 );
-const tools = createComputerTools(computerService, provider);
+const tools = createComputerTools(computerService, provider, [], repository.pinResources);
 const model = modelFixture();
 const runner = new ConversationRunner(repository, model.models, undefined, undefined, {
   tools,
@@ -163,7 +163,7 @@ function toolResult(index: number) {
   return JSON.parse(text) as { state: string; refused?: boolean; trust?: string };
 }
 
-it("waits for the addressed member, accepts a queued message, and resumes exactly after approval", async () => {
+it("waits for the addressed member, accepts steering, and resumes the same Run after approval", async () => {
   const f = await start();
   expect(model.calls[f.before]!.input.tools?.map((tool) => tool.name)).toContain(
     "computer_write_file",
@@ -176,14 +176,16 @@ it("waits for the addressed member, accepts a queued message, and resumes exactl
     arguments: write.arguments,
   });
   expect((await repository.snapshot(scope, f.id)).runs[0]!.state).toBe("waiting");
-  expect(await computerService.get(scope)).toEqual({ status: "available", computer: null });
+  expect(await computerService.get(scope)).toMatchObject({
+    status: "available",
+    computer: { state: "running" },
+  });
   await ownerClient.conversations.send({
     ...f.selection,
     message: { idempotencyKey: "second", text: "Another message" },
   });
   expect((await repository.snapshot(scope, f.id)).runs.map((run) => run.state)).toEqual([
     "waiting",
-    "queued",
   ]);
   expect(model.calls).toHaveLength(f.before + 1);
   expect(await memberClient.approvals.pending({ spaceId: scope.spaceId })).toEqual([]);
@@ -219,6 +221,9 @@ it("waits for the addressed member, accepts a queued message, and resumes exactl
     }),
   ).rejects.toMatchObject({ code: "CONFLICT" });
   await expect.poll(() => model.calls.length).toBe(f.before + 2);
+  expect(model.calls[f.before + 1]!.input.continuation).toContainEqual(
+    expect.objectContaining({ role: "user", content: "Another message" }),
+  );
   expect(toolResult(f.before + 1)).toMatchObject({ state: "succeeded", trust: "untrusted" });
   expect(await ownerClient.approvals.settings({})).toMatchObject({
     mode: "ask",
@@ -246,11 +251,9 @@ it("waits for the addressed member, accepts a queued message, and resumes exactl
     Array.from({ length: page.events.length }, (_, index) => index + 1),
   );
   model.calls[f.before + 1]!.complete("Written");
-  await expect.poll(() => model.calls.length).toBe(f.before + 3);
-  model.calls[f.before + 2]!.complete("Received");
   await expect
     .poll(async () => (await repository.snapshot(scope, f.id)).runs.map((run) => run.state))
-    .toEqual(["succeeded", "succeeded"]);
+    .toEqual(["succeeded"]);
 });
 
 it("returns denial and expiry as explicit refused tool results", async () => {
@@ -321,7 +324,12 @@ it("does not execute a recorded effect twice and exposes interrupted intent as u
   await ownerClient.approvals.updateSettings({ mode: "never", rules: [] });
   const saved = await agents.create(scope, definition);
   await repository.send(scope, saved.conversation.id, { idempotencyKey: "effect", text: "Effect" });
-  const execution = (await repository.claimNext(scope, saved.conversation.id))!;
+  const execution = (await repository.claimNext(scope, saved.conversation.id, {
+    ownerId: "effect-test",
+    leaseMs: 15_000,
+    timeoutMs: 300_000,
+    backupMarginMs: 30_000,
+  }))!;
   const call = tools.prepare(write);
   let executions = 0;
   const operation = async () => {

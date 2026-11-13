@@ -11,6 +11,7 @@ import {
   type ComputerProvider,
   type ComputerRef,
 } from "@raypx/providers/computer";
+import { RunResourceUnavailableError, type ExecutionRun } from "./conversations.js";
 import { TOOL_DEADLINE_MS } from "./tool-limits.js";
 
 const MAX_ARGUMENTS = 40_000;
@@ -90,16 +91,17 @@ export interface PreparedComputerCall {
   changes: boolean;
 }
 export interface ComputerTools {
-  definitions(): Tool[];
+  definitions(run?: ExecutionRun): Tool[];
+  initialize?(scope: SpaceScope, run: ExecutionRun, signal: AbortSignal): Promise<void>;
   prepare(call: ToolCall): PreparedComputerCall;
   execute(
     scope: SpaceScope,
-    run: Run,
+    run: ExecutionRun,
     call: PreparedComputerCall,
     signal: AbortSignal,
   ): Promise<string>;
   cancel(scope: SpaceScope, run: Run): Promise<void>;
-  release(run: Run): void;
+  release(run: ExecutionRun): void;
 }
 function clip(text: string, limit: number): string {
   const prefix = text.slice(0, limit);
@@ -145,27 +147,45 @@ export function computerToolResult(
 function key(run: Run) {
   return JSON.stringify([run.spaceId, run.id]);
 }
+function attemptKey(run: ExecutionRun) {
+  return JSON.stringify([run.spaceId, run.id, run.fence, run.attemptId]);
+}
 
 export function createComputerTools(
   computers: ComputersService,
   provider: ComputerProvider | null,
   knownSecrets: readonly string[] = [],
+  pinResources?: (
+    scope: SpaceScope,
+    run: ExecutionRun,
+    pins: { computerId?: string; computerGeneration?: number },
+  ) => Promise<void>,
 ): ComputerTools {
   const secrets = knownSecrets.filter(Boolean);
   const refs = new Map<string, ComputerRef>();
   const processes = new Map<string, ComputerProcess>();
   const cancelled = new Set<string>();
+  const withoutComputer = new Set<string>();
   const starting = new Map<string, Promise<ComputerRef>>();
-  async function computer(scope: SpaceScope, run: Run, signal: AbortSignal): Promise<ComputerRef> {
-    if (!provider || scope.spaceId !== run.spaceId)
+  async function computer(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    signal: AbortSignal,
+  ): Promise<ComputerRef> {
+    if (!provider || scope.spaceId !== run.spaceId || withoutComputer.has(attemptKey(run)))
       throw new ComputerToolsError("COMPUTER_UNAVAILABLE");
     const runKey = key(run);
-    const pinned = refs.get(runKey);
+    // A recovered attempt must revalidate its durable pin against both storage
+    // and the provider, even when it reuses this process's ComputerTools port.
+    const cacheKey = attemptKey(run);
+    const pinned = refs.get(cacheKey);
     if (pinned) return pinned;
-    const existing = starting.get(runKey);
+    const existing = starting.get(cacheKey);
     if (existing) return existing;
     const start = (async () => {
-      const state = await computers.start(scope);
+      // A durable pin is a resource identity, never permission to switch generations.
+      // Resume validates it without provisioning a replacement computer.
+      const state = run.computerId ? await computers.get(scope) : await computers.start(scope);
       if (signal.aborted || cancelled.has(runKey)) throw new Error("CANCELLED");
       if (
         state.status !== "available" ||
@@ -175,14 +195,35 @@ export function createComputerTools(
       )
         throw new ComputerToolsError("COMPUTER_UNAVAILABLE");
       const ref = { id: state.computer.id, generation: state.computer.generation };
-      refs.set(runKey, ref);
+      if (
+        run.computerId !== null &&
+        (run.computerId !== ref.id || run.computerGeneration !== ref.generation)
+      )
+        throw new RunResourceUnavailableError("COMPUTER_UNAVAILABLE");
+      const actual = await provider.get(ref);
+      if (
+        actual.id !== ref.id ||
+        actual.generation !== ref.generation ||
+        actual.state !== "running"
+      )
+        throw new RunResourceUnavailableError("COMPUTER_UNAVAILABLE");
+      if (signal.aborted) throw new Error("CANCELLED");
+      if (run.computerId === null) {
+        await pinResources?.(scope, run, {
+          computerId: ref.id,
+          computerGeneration: ref.generation,
+        });
+        run.computerId = ref.id;
+        run.computerGeneration = ref.generation;
+      }
+      refs.set(cacheKey, ref);
       return ref;
     })();
-    starting.set(runKey, start);
+    starting.set(cacheKey, start);
     try {
       return await start;
     } finally {
-      starting.delete(runKey);
+      starting.delete(cacheKey);
     }
   }
   function prepare(call: ToolCall): PreparedComputerCall {
@@ -229,7 +270,24 @@ export function createComputerTools(
     };
   }
   return {
-    definitions: () => (provider ? structuredClone(definitions) : []),
+    definitions: (run) =>
+      provider && (!run || !withoutComputer.has(attemptKey(run)))
+        ? structuredClone(definitions)
+        : [],
+    async initialize(scope, run, signal) {
+      // startedAt is committed only after resource initialization. A started Run
+      // with no computer pinned chose no computer; a new provider cannot change it.
+      if (run.computerId === null && (run.startedAt !== null || !provider)) {
+        withoutComputer.add(attemptKey(run));
+        return;
+      }
+      try {
+        await computer(scope, run, signal);
+      } catch (error) {
+        if (signal.aborted) throw error;
+        throw new RunResourceUnavailableError("COMPUTER_UNAVAILABLE");
+      }
+    },
     prepare,
     async execute(scope, run, prepared, signal) {
       // Validate again at the execution boundary; callers cannot bypass the schemas or secret gate.
@@ -248,7 +306,8 @@ export function createComputerTools(
       } catch (error) {
         if (signal.aborted || cancelled.has(runKey))
           return computerToolResult("cancelled", "CANCELLED");
-        if (error instanceof ComputerToolsError) throw error;
+        if (error instanceof ComputerToolsError || error instanceof RunResourceUnavailableError)
+          throw error;
         throw new ComputerToolsError("COMPUTER_UNAVAILABLE");
       }
       if (signal.aborted || cancelled.has(runKey))
@@ -347,8 +406,9 @@ export function createComputerTools(
     },
     release(run) {
       const runKey = key(run);
-      refs.delete(runKey);
+      refs.delete(attemptKey(run));
       cancelled.delete(runKey);
+      withoutComputer.delete(attemptKey(run));
     },
   };
 }

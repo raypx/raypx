@@ -11,7 +11,11 @@ const messages = {
 
 export type AiErrorCode = keyof typeof messages;
 export class AiError extends Error {
-  constructor(public readonly code: AiErrorCode) {
+  constructor(
+    public readonly code: AiErrorCode,
+    /** Absolute provider retry time; contains no response body or headers. */
+    public readonly retryAt?: number,
+  ) {
     super(messages[code]);
     this.name = "AiError";
   }

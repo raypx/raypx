@@ -17,12 +17,16 @@ export type {
   ConversationsRepository,
   ConversationRunRepository,
   RunExecution,
+  ExecutionRun,
+  RunCheckpoint,
   ConversationEventEntry,
   ConversationEvents,
   ConversationSnapshot,
   ConversationFanout,
   ConversationNotice,
 } from "./conversations.js";
+
+export { RunResourceUnavailableError, StaleRunFenceError } from "./conversations.js";
 
 export {
   ConversationRunner,
@@ -35,6 +39,7 @@ export {
   createApprovalsService,
   ApprovalOperationError,
   EffectUnknownError,
+  EffectInProgressError,
   type ApprovalsService,
   type ApprovalsRepository,
   type ApprovalCall,

@@ -12,7 +12,7 @@ import {
   user,
 } from "@raypx/database/schema";
 import type { Effect } from "@raypx/core/approvals";
-import type { Run } from "@raypx/core/conversation";
+import type { ExecutionRun, RunClaimOptions } from "../../src/conversations.js";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import { createApprovalsService, type ApprovalCall } from "../../src/approvals.js";
@@ -34,8 +34,17 @@ const approvals = createApprovalsRepository(first.db),
 const conversations = createConversationsRepository(first.db);
 const owner = `approvals-${crypto.randomUUID()}`,
   member = `approvals-member-${crypto.randomUUID()}`;
-let scope: SpaceScope, other: SpaceScope, foreignScope: SpaceScope, run: Run;
+let scope: SpaceScope, other: SpaceScope, foreignScope: SpaceScope, run: ExecutionRun;
 const extraSpaces: string[] = [];
+const claimOptions: RunClaimOptions = {
+  ownerId: "approval-fixture",
+  leaseMs: 60_000,
+  timeoutMs: 300_000,
+  backupMarginMs: 30_000,
+};
+function uniqueEffectKey() {
+  return crypto.randomUUID().replaceAll("-", "").repeat(2);
+}
 const call: ApprovalCall = {
   id: "write-call",
   name: "computer_write_file",
@@ -71,7 +80,7 @@ beforeEach(async () => {
     text: "Write a file",
     idempotencyKey: "start",
   });
-  run = (await conversations.claimNext(scope, conversation.id))!.run;
+  run = (await conversations.claimNext(scope, conversation.id, claimOptions))!.run;
   await approvals.updateSettings(owner, { mode: "ask", rules: [] });
 });
 afterAll(async () => {
@@ -85,7 +94,7 @@ afterAll(async () => {
     await Promise.all([first.close(), second.close()]);
   }
 });
-it("commits a bounded card and waiting state together, accepts another message and holds the Agent queue", async () => {
+it("commits a bounded card and waiting state together and steers the same Run", async () => {
   const before = await conversations.snapshot(scope, run.conversationId);
   const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
   expect((await conversations.getRun(scope, run.conversationId, run.id)).state).toBe("waiting");
@@ -106,13 +115,21 @@ it("commits a bounded card and waiting state together, accepts another message a
     idempotencyKey: "while-waiting",
   });
   expect(message.text).toBe("Continue chatting");
-  expect(await conversations.claimNext(scope, run.conversationId)).toBeUndefined();
+  expect(await conversations.claimNext(scope, run.conversationId, claimOptions)).toBeUndefined();
   await approvals.answer(scope, request.id, { decision: "approved" }, createdAt);
   expect((await conversations.getRun(scope, run.conversationId, run.id)).state).toBe("running");
-  await conversations.finish(scope, run, null);
-  expect((await conversations.claimNext(scope, run.conversationId))!.run.messageId).toBe(
-    message.id,
+  const steered = await conversations.consumeSteering(scope, run, {
+    continuation: [],
+    pendingCalls: [],
+    rounds: 0,
+    completed: false,
+  });
+  expect(steered.continuation).toContainEqual(
+    expect.objectContaining({ role: "user", content: message.text }),
   );
+  await conversations.finish(scope, run, null);
+  expect(await conversations.claimNext(scope, run.conversationId, claimOptions)).toBeUndefined();
+  expect((await conversations.snapshot(scope, run.conversationId)).runs).toHaveLength(1);
 });
 it("serializes concurrent answers and limits answers to the addressed member in the selected Space", async () => {
   const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
@@ -150,7 +167,9 @@ it("expires requests explicitly and commits expiry even when a late answer is re
 it("stop atomically cancels a pending request and repeated stop appends no event", async () => {
   const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
   expect((await conversations.stop(other, run.conversationId, run.id)).state).toBe("cancelled");
-  expect((await approvals.pollRequest(scope, run, request.id, createdAt)).state).toBe("cancelled");
+  expect(
+    (await approvals.listPending(scope, createdAt)).some((item) => item.id === request.id),
+  ).toBe(false);
   const before = await conversations.snapshot(scope, run.conversationId);
   await conversations.stop(scope, run.conversationId, run.id);
   expect((await conversations.snapshot(scope, run.conversationId)).cursor).toBe(before.cursor);
@@ -307,7 +326,7 @@ it("persists and reuses effect outcomes while interrupted intents become unknown
     "not found",
   );
   await expect(
-    approvals.completeEffect(scope, interrupted.key, "succeeded", "late outcome", createdAt),
+    approvals.completeEffect(scope, interrupted.key, "succeeded", "late outcome", createdAt, run),
   ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
 });
 
@@ -330,7 +349,9 @@ it("leaves a young intent unchanged across repository instances and allows its o
   const observedAt = new Date(createdAt.getTime() + EFFECT_INTENT_TIMEOUT_MS - 1);
   const service = createApprovalsService(nextRepository, { now: () => observedAt });
   expect((await service.listEffects(scope, run.id))[0]!.state).toBe("intent");
-  await expect(service.assertContinuable(scope, run)).resolves.toBeUndefined();
+  await expect(service.assertContinuable(scope, run)).rejects.toMatchObject({
+    code: "EFFECT_IN_PROGRESS",
+  });
   expect((await nextRepository.beginEffect(scope, run, intent, observedAt)).effect.state).toBe(
     "intent",
   );
@@ -350,17 +371,78 @@ it("leaves a young intent unchanged across repository instances and allows its o
         )
     )[0]!.state,
   ).toBe("intent");
-  await approvals.completeEffect(scope, intent.key, "succeeded", "written", observedAt);
+  await approvals.completeEffect(scope, intent.key, "succeeded", "written", observedAt, run);
   expect((await service.listEffects(scope, run.id))[0]!.state).toBe("succeeded");
 });
 
-it("commits lazy expiry when a new effect or a late outcome is refused", async () => {
+it.each(["current", "older"])(
+  "commits lazy expiry when a new effect or a late %s-fence outcome is refused",
+  async (originFence) => {
+    const lateKey = uniqueEffectKey();
+    const intent: Effect = {
+      spaceId: scope.spaceId,
+      conversationId: run.conversationId,
+      runId: run.id,
+      key: uniqueEffectKey(),
+      argumentHash: "5".repeat(64),
+      toolCallId: call.id,
+      toolName: call.name,
+      state: "intent",
+      result: null,
+      createdAt: createdAt.toISOString(),
+      completedAt: null,
+    };
+    await approvals.beginEffect(scope, run, intent, createdAt);
+    const observedAt = new Date(createdAt.getTime() + EFFECT_INTENT_TIMEOUT_MS + 1);
+    await expect(
+      competing.beginEffect(scope, run, { ...intent, key: uniqueEffectKey() }, observedAt),
+    ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
+    expect(
+      (
+        await first.db
+          .select()
+          .from(conversationEffects)
+          .where(
+            and(
+              eq(conversationEffects.spaceId, scope.spaceId),
+              eq(conversationEffects.key, intent.key),
+            ),
+          )
+      )[0]!.state,
+    ).toBe("unknown");
+    await first.db.insert(conversationEffects).values({
+      ...intent,
+      key: lateKey,
+      fence: originFence === "current" ? run.fence : run.fence - 1,
+      createdAt,
+      completedAt: null,
+    });
+    await expect(
+      competing.completeEffect(scope, lateKey, "succeeded", "late", observedAt, run),
+    ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
+    expect(
+      (
+        await first.db
+          .select()
+          .from(conversationEffects)
+          .where(
+            and(
+              eq(conversationEffects.spaceId, scope.spaceId),
+              eq(conversationEffects.key, lateKey),
+            ),
+          )
+      )[0]!.state,
+    ).toBe("unknown");
+  },
+);
+
+it("commits lazy expiry when waiting work refuses a new effect", async () => {
   const intent: Effect = {
     spaceId: scope.spaceId,
     conversationId: run.conversationId,
     runId: run.id,
-    key: "4".repeat(64),
-    argumentHash: "5".repeat(64),
+    key: uniqueEffectKey(),
+    argumentHash: "9".repeat(64),
     toolCallId: call.id,
     toolName: call.name,
     state: "intent",
@@ -369,45 +451,18 @@ it("commits lazy expiry when a new effect or a late outcome is refused", async (
     completedAt: null,
   };
   await approvals.beginEffect(scope, run, intent, createdAt);
+  await approvals.createRequest(scope, run, call, expiresAt, createdAt);
   const observedAt = new Date(createdAt.getTime() + EFFECT_INTENT_TIMEOUT_MS + 1);
   await expect(
-    competing.beginEffect(scope, run, { ...intent, key: "6".repeat(64) }, observedAt),
-  ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
-  expect(
-    (
-      await first.db
-        .select()
-        .from(conversationEffects)
-        .where(
-          and(
-            eq(conversationEffects.spaceId, scope.spaceId),
-            eq(conversationEffects.key, intent.key),
-          ),
-        )
-    )[0]!.state,
-  ).toBe("unknown");
-  await first.db.insert(conversationEffects).values({
-    ...intent,
-    key: "7".repeat(64),
-    createdAt,
-    completedAt: null,
-  });
-  await expect(
-    competing.completeEffect(scope, "7".repeat(64), "succeeded", "late", observedAt),
-  ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
-  expect(
-    (
-      await first.db
-        .select()
-        .from(conversationEffects)
-        .where(
-          and(
-            eq(conversationEffects.spaceId, scope.spaceId),
-            eq(conversationEffects.key, "7".repeat(64)),
-          ),
-        )
-    )[0]!.state,
-  ).toBe("unknown");
+    competing.beginEffect(scope, run, { ...intent, key: uniqueEffectKey() }, observedAt),
+  ).rejects.toThrow("RUN_NOT_ACTIVE");
+  const [stored] = await first.db
+    .select()
+    .from(conversationEffects)
+    .where(
+      and(eq(conversationEffects.spaceId, scope.spaceId), eq(conversationEffects.key, intent.key)),
+    );
+  expect(stored!.state).toBe("unknown");
 });
 
 it("deletes a Space containing pending/resolved requests and effect history", async () => {
@@ -424,7 +479,7 @@ it("deletes a Space containing pending/resolved requests and effect history", as
       text: "Write",
       idempotencyKey: "delete",
     });
-    const execution = (await conversations.claimNext(selected, conversation.id))!;
+    const execution = (await conversations.claimNext(selected, conversation.id, claimOptions))!;
     const request = await approvals.createRequest(
       selected,
       execution.run,
@@ -469,7 +524,7 @@ it("removes a member's requests while retaining the Space and Run/effect history
     text: "Write",
     idempotencyKey: "member-delete",
   });
-  const execution = (await conversations.claimNext(other, conversation.id))!;
+  const execution = (await conversations.claimNext(other, conversation.id, claimOptions))!;
   const request = await approvals.createRequest(other, execution.run, call, expiresAt, createdAt);
   const effectKey = "e".repeat(64);
   await first.db.insert(conversationEffects).values({
@@ -524,7 +579,11 @@ it("rejects cross-Space approval, effect and card foreign keys in PostgreSQL", a
     text: "Foreign input",
     idempotencyKey: "foreign",
   });
-  const foreignRun = (await conversations.claimNext(foreignScope, foreign.conversation.id))!.run;
+  const foreignRun = (await conversations.claimNext(
+    foreignScope,
+    foreign.conversation.id,
+    claimOptions,
+  ))!.run;
   await expect(
     first.db.insert(approvalRequests).values({
       spaceId: foreignScope.spaceId,

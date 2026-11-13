@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
 import { replyFixture } from "../helpers/replies.js";
-import type { LiveReplies } from "@raypx/agents/server";
+import { ConversationRunner, type LiveReplies } from "@raypx/agents/server";
 import { Hono } from "hono";
 import { conversationServerFrameSchema, type ConversationServerFrame } from "@raypx/contracts/api";
 import { ConversationStream } from "../../src/conversations/stream.js";
@@ -186,4 +186,56 @@ it("streams a fixture reply on the loopback socket and a mid-segment subscriber 
   }
   expect(first.frames.some((frame) => frame.type === "reply.delta")).toBe(true);
   expect(reply.segments).toHaveLength(1);
+});
+
+it("replays committed output once after a worker resumes a handed-over Run with steering", async () => {
+  const reply = replyFixture();
+  cleanups.push(() => reply.runner.close());
+  const f = await fixture(reply);
+  const first = await f.connect(0, true);
+  await reply.conversations.send(reply.scope, reply.conversationId, {
+    text: "Begin",
+    idempotencyKey: "handover",
+  });
+  await expect.poll(() => reply.calls.length).toBe(1);
+  await reply.conversations.send(reply.scope, reply.conversationId, {
+    text: "Continue with details",
+    idempotencyKey: "steering",
+  });
+  reply.calls[0]!.complete("Committed before handover");
+  await expect.poll(() => reply.calls.length).toBe(2);
+  await expect.poll(() => first.sequences().length).toBe(reply.log.length);
+  const cursor = first.sequences().at(-1)!;
+  await reply.runner.close();
+  first.socket.close();
+  const worker = new ConversationRunner(
+    reply.repository,
+    reply.models,
+    undefined,
+    undefined,
+    undefined,
+    {
+      ownerId: "stream-worker",
+      scanIntervalMs: 10,
+      maxAttempts: 1,
+    },
+  );
+  cleanups.push(() => worker.close());
+  await worker.startWorker(reply.fanout);
+  await expect.poll(() => reply.calls.length).toBe(3);
+  reply.calls[2]!.complete("Committed after handover");
+  const reconnected = await f.connect(cursor, true);
+  await expect.poll(() => reply.runs[0]!.state).toBe("succeeded");
+  await expect.poll(() => reconnected.sequences().at(-1)).toBe(reply.log.length);
+  const segments = reconnected.frames.flatMap((frame) =>
+    frame.type === "event" && frame.entry.event.kind === "reply.segment"
+      ? [frame.entry.event.segment.text]
+      : [],
+  );
+  expect(segments).toEqual(["Committed after handover"]);
+  expect(reply.segments.map((segment) => segment.text)).toEqual([
+    "Committed before handover",
+    "Committed after handover",
+  ]);
+  expect(reply.runs).toHaveLength(1);
 });

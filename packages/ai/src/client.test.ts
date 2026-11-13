@@ -161,3 +161,23 @@ it("rejects invalid models, deadlines, pre-aborted requests and a closed client"
   client.close();
   await expect(client.complete(selection, context)).rejects.toMatchObject({ code: "AI_CLOSED" });
 });
+
+it("retains only the provider retry time on sanitized rate-limit failures", async () => {
+  const { client, faux, selection } = fixture();
+  faux.setResponses([
+    async (_context, options, _state, model) => {
+      await options?.onResponse?.(
+        { status: 429, headers: { "Retry-After": "30", "private-header": "secret" } },
+        model,
+      );
+      return fauxAssistantMessage("", { stopReason: "error", errorMessage: "private response" });
+    },
+  ]);
+  const before = Date.now();
+  const error = await client.complete(selection, context).catch((value: unknown) => value);
+  expect(error).toBeInstanceOf(AiError);
+  expect(error).toMatchObject({ code: "AI_RATE_LIMITED" });
+  expect((error as AiError).retryAt).toBeGreaterThanOrEqual(before + 30_000);
+  expect(JSON.stringify(error)).not.toMatch(/private|secret/);
+  expect(faux.state.callCount).toBe(1);
+});

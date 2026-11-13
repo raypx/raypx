@@ -1,6 +1,7 @@
 import type { Space, SpaceId, SpaceInput, SpaceMember } from "@raypx/core/spaces";
 import type { SpaceScope } from "./scope.js";
 export type { SpaceScope } from "./scope.js";
+export { resolveSpaceScope } from "./scope.js";
 
 export interface SpaceMembership {
   space: Space;

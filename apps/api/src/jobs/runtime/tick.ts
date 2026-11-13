@@ -6,7 +6,8 @@ export default {
   async run() {
     try {
       const runtime = await getBackendRuntime();
-      if (runtime.role === "relay") return { result: { enabled: false } };
+      if (runtime.role === "relay" || runtime.role === "worker")
+        return { result: { enabled: false } };
       return { result: await runtime.jobs.tick() };
     } catch {
       throw new Error("Schedule task failed");

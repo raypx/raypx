@@ -6,6 +6,7 @@ import {
   type Effect,
 } from "@raypx/core/approvals";
 import { runSchema } from "@raypx/core/conversation";
+import type { ExecutionRun } from "./conversations.js";
 import type { SpaceScope } from "@raypx/spaces/server";
 import {
   createApprovalsService,
@@ -30,22 +31,32 @@ const other = {
   ...scope,
   member: { ...scope.member, accountId: "other", role: "member" },
 } as SpaceScope;
-const run = runSchema.parse({
-  id: "run",
-  spaceId: scope.spaceId,
-  conversationId: "conversation",
-  agentId: "agent",
-  trigger: "message",
-  messageId: "message",
-  memberAccountId: "owner",
-  model: { modelId: "fixture" },
-  state: "running",
-  failureCode: null,
-  createdAt: "2026-01-01T00:00:00Z",
-  startedAt: "2026-01-01T00:00:00Z",
-  firstResponseAt: null,
-  finishedAt: null,
-});
+const run: ExecutionRun = {
+  ...runSchema.parse({
+    id: "run",
+    spaceId: scope.spaceId,
+    conversationId: "conversation",
+    agentId: "agent",
+    trigger: "message",
+    messageId: "message",
+    memberAccountId: "owner",
+    model: { modelId: "fixture" },
+    state: "running",
+    failureCode: null,
+    createdAt: "2026-01-01T00:00:00Z",
+    startedAt: "2026-01-01T00:00:00Z",
+    firstResponseAt: null,
+    finishedAt: null,
+  }),
+  ownerId: "fixture",
+  fence: 1,
+  attemptId: "attempt",
+  attemptNumber: 1,
+  timeoutAt: new Date(900_000).toISOString(),
+  connectionId: null,
+  computerId: null,
+  computerGeneration: null,
+};
 const write: ApprovalCall = {
   id: "write",
   name: "computer_write_file",
@@ -375,7 +386,9 @@ it("leaves a live intent unchanged when another service is created and reads it"
   );
   const secondService = createApprovalsService(repository);
   expect((await secondService.listEffects(scope, run.id))[0]!.state).toBe("intent");
-  await expect(secondService.assertContinuable(scope, run)).resolves.toBeUndefined();
+  await expect(secondService.assertContinuable(scope, run)).rejects.toMatchObject({
+    code: "EFFECT_IN_PROGRESS",
+  });
   const duplicate = vi.fn(async () => "duplicate");
   await expect(
     secondService.executeEffect(scope, run, write, duplicate, new AbortController().signal),
@@ -431,3 +444,17 @@ it("treats a lost tool response as unknown even without cancellation", async () 
   ).rejects.toMatchObject({ code: "EFFECT_UNKNOWN" });
   expect(operation).toHaveBeenCalledTimes(1);
 });
+
+it.each(["handover", "lease-lost", "timeout"])(
+  "preserves a pending approval on %s",
+  async (reason) => {
+    const { service, requests } = fixture();
+    const controller = new AbortController();
+    const pending = service.authorize(scope, run, write, controller.signal);
+    await vi.advanceTimersByTimeAsync(1);
+    const request = [...requests.values()][0]!;
+    controller.abort(reason);
+    await expect(pending).resolves.toBe("cancelled");
+    expect(requests.get(request.id)!.state).toBe("pending");
+  },
+);

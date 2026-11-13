@@ -163,5 +163,7 @@
     "discardReload": "Discard changes and reload"
   },
   "running": "Running",
-  "succeeded": "Completed"
+  "succeeded": "Completed",
+  "CONNECTION_UNAVAILABLE": "The connection used by this Run is unavailable.",
+  "COMPUTER_UNAVAILABLE": "The computer used by this Run is unavailable."
 }

@@ -21,6 +21,8 @@ Resolve credentials only for requests. Listing models/providers is offline and
 must not read secrets. Credentials, raw provider failures and diagnostics never
 enter output or logs. Keep provider SDK imports lazy; do not import Pi's all-provider
 or compat entrypoints into the standalone binary. Do not execute returned tools.
+AiError optionally carries only a parsed absolute Retry-After timestamp for the
+backend retry scheduler; response headers and raw bodies remain private.
 Use one request attempt, SSE, a bounded deadline and caller cancellation. Closing
 or abandoning a stream aborts its request. Keep settings/filesystem ownership in CLI.
 Custom HTTP endpoints are loopback-only; HTTPS endpoints must not contain credentials.

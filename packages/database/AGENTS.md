@@ -42,6 +42,15 @@ effects cascade with their Run. Run actor identity references the account, so
 membership removal does not erase Run/effect history. The active Run index includes
 `waiting` as well as `running`.
 
+Durable Runs add lease owner/expiry, monotonically increasing fences and immutable
+model/connection/computer selectors. Historical resource selectors survive removal
+so recovery can fail explicitly. `conversation_run_attempts` stores each execution;
+`conversation_run_checkpoints` stores the latest canonical history, pending calls
+and open effects. Steering receipts and keyed delayed backup jobs are Space-owned
+children of Runs. Their composite references cascade on Space deletion. Attempts
+guard every write under a current lease/fence; backup claims use `SKIP LOCKED` and
+never replace direct dispatch. Runtime construction does not query these tables.
+
 ## Constraints
 
 Use postgres.js and Drizzle. Application tables and `public.__drizzle_migrations`

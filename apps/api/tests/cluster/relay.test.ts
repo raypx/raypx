@@ -199,8 +199,8 @@ it("owns broker readiness per API runtime and closes one without stopping the ot
   });
 });
 
-it.each(["api", "both"] as const)(
-  "dispatches and revokes in the %s role (both needs no Redis)",
+it.each(["api", "all"] as const)(
+  "dispatches and revokes in the %s role (all needs no Redis)",
   async (role) => {
     const auth = controlAuth(`independent-${crypto.randomUUID()}`);
     await database.db.insert(user).values(auth.user);
@@ -223,7 +223,7 @@ it.each(["api", "both"] as const)(
       }),
     );
     cleanups.push(runtime.close);
-    expect(runtime.hub === runtime.relay).toBe(role === "both");
+    expect(runtime.hub === runtime.relay).toBe(role === "all");
     expect(runtime.relay.ready()).toBe(true);
     const f = await connected(runtime.control, auth);
     const credential = await runtime.control.credentials.authorizeHost(auth, f.grant);
@@ -231,7 +231,7 @@ it.each(["api", "both"] as const)(
     const listener = serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
     const port = listener.port!;
     await listener.stop(true);
-    if (role === "both") {
+    if (role === "all") {
       const local = serveBackend(runtime, port);
       cleanups.push(async () => {
         await local.stop(true);
@@ -274,7 +274,7 @@ it.each(["api", "both"] as const)(
         { timeout: 10_000 },
       )
       .toBe(200);
-    expect((await runtime.app.request("/relay")).status).toBe(role === "both" ? 426 : 404);
+    expect((await runtime.app.request("/relay")).status).toBe(role === "all" ? 426 : 404);
     const device = await wire({ url: `ws://127.0.0.1:${port}/relay` }, "device", host.grant.token);
     device.send(f.announce);
     await device.take("resume");

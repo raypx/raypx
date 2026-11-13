@@ -105,3 +105,15 @@ it("ignores build-stage settings and checks the inherited Railway runtime", () =
   );
   expect(checkDeployment(inherited)).toContain("apps/api/Dockerfile: runtime port must be 3002");
 });
+
+it("requires all by default and a worker in the optional split topology", () => {
+  const root = fixture();
+  replace(root, "deploy/compose.yaml", "SERVER_ROLE: ${SERVER_ROLE:-all}", "SERVER_ROLE: api");
+  replace(root, "deploy/compose.split.yaml", "SERVER_ROLE: worker", "SERVER_ROLE: api");
+  expect(checkDeployment(root)).toEqual(
+    expect.arrayContaining([
+      "deploy/compose.yaml: default backend role must be all",
+      "deploy/compose.split.yaml: split roles must share the backend image and declare api, worker and relay",
+    ]),
+  );
+});

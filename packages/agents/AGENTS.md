@@ -35,23 +35,24 @@ counter, reuse a member/conversation idempotency receipt, then atomically insert
 message and immutable event, advance the counter and publish a content-free hint.
 Snapshot and cursor reads use repeatable-read transactions. Prefix retention keeps
 messages and advances the replay floor atomically. API owns socket lifecycle,
-ACKs and fresh membership checks. Sends also create a pinned queued Run and state
-event. `/server` owns ConversationRunner, the injectable member-aware ModelAccess
-port and process-local LiveReplies prefixes. It uses the public AI transport and
-serializes each Agent's queued Runs, including a Run waiting for approval. The
-bounded model/tool loop uses the injected Computer port; no provider means no
-offered tools. Account approval settings and exact tool/executable rules gate
-changes; pending requests bind exact arguments to the initiating member. Card
-events carry bounded summaries and omit file contents. Effect intents precede
-changes, completed outcomes are reused, and unknown outcomes block continuation.
-Runtime construction performs no effect I/O. Reads and effect decisions atomically
-age intents into unknown after TOOL_DEADLINE_MS plus the shared safety margin;
-young intents remain in progress. There is no startup scan or Run recovery.
-Stop commits cancellation and pending-card resolution before aborting model
-and computer work; segment output and first-response time commit together. No
-leases, attempts, retries or recovery exist yet. API owns credentials and configuration.
-Deletion still cascades synchronously; active Run status checks abort deleted work.
-Computer owner references restrict deletion until a resumable workflow releases them.
+ACKs and fresh membership checks. Sends also record a queued Run and keyed delayed backup job in the message
+transaction, then dispatch directly through ConversationRunner. Messages received
+while a Run is running or waiting steer that Run at the next model boundary.
+`/server` owns the injectable member-aware ModelAccess port and process-local
+LiveReplies prefixes. PostgreSQL owns execution leases, monotonically increasing
+fences, attempts, canonical checkpoints, steering receipts and backup jobs.
+Every attempt mutation holds the conversation counter and verifies the current
+unexpired owner/fence under the Run lock. Turn output and checkpoint commit together.
+The worker starts scans explicitly; runtime construction performs no database I/O.
+Graceful close cancels local requests and computer work, preserves approval cards,
+releases leases and publishes a content-free fanout hint. Stop instead commits
+cancelled and resolves pending cards. Resume validates the pinned deployment
+connection and computer generation. Unknown effects block; young intents wait for
+the shared uncertainty deadline without replay. Completed effect outcomes are reused.
+The bounded tool loop uses only the Computer port; account approval settings and
+exact tool/executable rules gate changes. API owns credentials and configuration.
+Deletion cascades durable Run records with their Space. Computer pin identities
+remain historical selectors so a missing computer produces an explicit failure.
 
 Use public workspace entries and `.js` relative specifiers. Unit tests live beside
 source. Run `bun run --cwd packages/agents check` and `test`. `test:postgres`

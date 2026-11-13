@@ -5,6 +5,8 @@
 bootstrap. API supplies the current session account ID. `resolve` checks
 the selected Space's member row on every request and returns an opaque SpaceScope;
 never deserialize or cache a scope across requests. Deployment roles grant nothing.
+`resolveSpaceScope` also admits trusted, freshly read membership rows for backend
+Run recovery, without invoking account bootstrap or impersonating the wake-up caller.
 
 Content repositories require SpaceScope and filter in SQL. Account-scoped discovery
 and private-Space creation are the necessary entry into this boundary: no global

@@ -36,8 +36,10 @@ The rules below apply to the Compose host workflow.
   or reuse another project's volume automatically.
 - Only Traefik publishes application traffic. Database and application containers
   have no published host ports; the management panel stays behind SSH.
-- Default to one combined backend without Redis. compose.split.yaml selects api/relay roles
-  from the same image; both split roles require Redis. update.sh --split selects that topology.
+- Default to `SERVER_ROLE=all`: API, recovery worker and Relay in one backend without Redis.
+  compose.split.yaml selects api/worker/relay roles from the same image; new Run
+  coordination uses PostgreSQL only. Optional Redis routes the retained device
+  transport across API/Relay processes. update.sh --split selects that topology.
 - Run additive, backward-compatible migrations against that environment's isolated database before replacing API or Relay. Use update.sh; migration failure must preserve the old API and Relay.
 - Require a digest-pinned PostgreSQL image and a project-private Traefik ingress network. Trust exact proxy addresses, never a shared container subnet.
 - Build versioned images sequentially with a bounded container builder. Preserve

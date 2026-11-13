@@ -34,8 +34,8 @@ export function checkDeployment(root: string): string[] {
     }
     if (services.relay)
       findings.push("deploy/compose.yaml: default topology must use one combined backend");
-    if (!environment.SERVER_ROLE?.includes("both"))
-      findings.push("deploy/compose.yaml: default backend role must be both");
+    if (!environment.SERVER_ROLE?.includes("all"))
+      findings.push("deploy/compose.yaml: default backend role must be all");
     if (environment.REDIS_URL?.includes(":?"))
       findings.push("deploy/compose.yaml: the combined backend must not require Redis");
     for (const app of ["api", "web"] as const) {
@@ -122,10 +122,11 @@ export function checkDeployment(root: string): string[] {
       split.services.api?.environment?.SERVER_ROLE !== "api" ||
       split.services.relay?.environment?.SERVER_ROLE !== "relay" ||
       !split.services.relay.image?.startsWith("raypx/api:") ||
-      !split.services.api.environment.REDIS_URL?.includes(":?")
+      split.services.worker?.environment?.SERVER_ROLE !== "worker" ||
+      !split.services.worker.image?.startsWith("raypx/api:")
     )
       findings.push(
-        "deploy/compose.split.yaml: split roles must share the backend image and require Redis",
+        "deploy/compose.split.yaml: split roles must share the backend image and declare api, worker and relay",
       );
   } catch {
     findings.push(

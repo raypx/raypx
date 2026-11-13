@@ -2,10 +2,13 @@ import { Hono } from "hono";
 import { relayHeaders } from "../../middleware/relay-headers.js";
 import type { ReadReadiness } from "../../app/readiness.js";
 
-export function createRelayHttpApp(readReadiness: ReadReadiness) {
+export function createRelayHttpApp(
+  readReadiness: ReadReadiness,
+  service: "relay" | "worker" = "relay",
+) {
   const app = new Hono();
   app.use(relayHeaders);
-  app.get("/health", (context) => context.json({ status: "ok", service: "relay" }));
+  app.get("/health", (context) => context.json({ status: "ok", service }));
   app.get("/ready", async (context) => {
     const checks = await readReadiness();
     const ready = Object.values(checks).every((value) => value === "ok");

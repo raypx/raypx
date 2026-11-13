@@ -1,5 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { AiError } from "@raypx/ai";
+import { ConversationRunner } from "@raypx/agents/server";
+import { agentToolsFixture } from "../../tests/helpers/agent-tools.js";
 import { createApiClient } from "@raypx/client/api";
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import { createApiApp } from "../../tests/helpers/app.js";
@@ -111,22 +113,25 @@ it("returns the HTTP send before completion; streams deltas, joins mid-segment a
   expect(text(first)).toBe(text(middle));
   expect(first.some((frame) => frame.type === "reply.delta")).toBe(true);
 });
-it("queues a second message without concurrent execution and preserves idempotent send", async () => {
+it("steers a running Run at its next turn boundary and preserves idempotent send", async () => {
   const f = fixture();
   const first = await f.send();
   await expect.poll(() => f.calls.length).toBe(1);
   await f.send("second");
   expect(await f.send()).toEqual(first);
-  expect(f.runs.map((run) => run.state)).toEqual(["running", "queued"]);
+  expect(f.runs.map((run) => run.state)).toEqual(["running"]);
   expect(f.calls).toHaveLength(1);
   f.calls[0]!.delta("First");
   f.calls[0]!.complete();
   await expect.poll(() => f.calls.length).toBe(2);
-  expect(f.runs.map((run) => run.state)).toEqual(["succeeded", "running"]);
+  expect(f.runs.map((run) => run.state)).toEqual(["running"]);
+  expect(f.calls[1]!.input.continuation).toContainEqual(
+    expect.objectContaining({ role: "user", content: "Private member input" }),
+  );
   f.calls[1]!.complete();
-  await expect.poll(() => f.runs[1]!.state).toBe("succeeded");
+  await expect.poll(() => f.runs[0]!.state).toBe("succeeded");
 });
-it("stop commits cancelled, aborts the request, discards the open segment and starts the next Run", async () => {
+it("stop commits cancelled, aborts its request and steering, and permits a fresh Run", async () => {
   const f = fixture();
   await f.send();
   await expect.poll(() => f.calls.length).toBe(1);
@@ -135,6 +140,8 @@ it("stop commits cancelled, aborts the request, discards the open segment and st
   const result = await f.client.conversations.stop({ ...f.selection, runId: f.runs[0]!.id });
   expect(result.state).toBe("cancelled");
   expect(f.calls[0]!.signal.aborted).toBe(true);
+  expect(f.calls).toHaveLength(1);
+  await f.send("after-stop");
   await expect.poll(() => f.calls.length).toBe(2);
   expect(f.segments).toHaveLength(0);
   expect(
@@ -198,12 +205,12 @@ it("passes stable AI failure codes without provider details", async () => {
 
 it("stopping a queued Run is idempotent and never invokes a second request", async () => {
   const f = fixture();
-  await f.send();
-  await expect.poll(() => f.calls.length).toBe(1);
-  await f.send("queued");
+  await f.repository.send(f.scope, f.conversationId, { idempotencyKey: "first", text: "First" });
+  await f.repository.send(f.scope, f.conversationId, { idempotencyKey: "queued", text: "Queued" });
   const selection = { ...f.selection, runId: f.runs[1]!.id };
   const stopped = await f.client.conversations.stop(selection);
   expect(await f.client.conversations.stop(selection)).toEqual(stopped);
+  await expect.poll(() => f.calls.length).toBe(1);
   f.calls[0]!.complete();
   await expect.poll(() => f.runs[0]!.state).toBe("succeeded");
   expect(f.calls).toHaveLength(1);
@@ -218,4 +225,89 @@ it("commits authoritative final text even when the model finishes without text d
   await expect.poll(() => f.runs[0]!.state).toBe("succeeded");
   expect(f.segments[0]!.text).toBe("Final reply");
   expect(f.runs[0]!.firstResponseAt).not.toBeNull();
+});
+
+it("replays approval handover from the applied cursor without gaps or duplicate events", async () => {
+  const f = agentToolsFixture();
+  cleanups.push(() => f.runner.close());
+  const stream = new ConversationStream({ ...f, pollMs: 10 });
+  await stream.start();
+  cleanups.push(() => stream.shutdown());
+  const selection = { version: 1 as const, spaceId: f.spaceId, conversationId: f.conversationId };
+  function connect(id: string, after: number) {
+    const frames: ConversationServerFrame[] = [];
+    stream.open(id, "member", new Headers(), {
+      send(frame) {
+        frames.push(frame);
+        if (frame.type === "event")
+          queueMicrotask(() =>
+            stream.receive(
+              id,
+              JSON.stringify({ ...selection, type: "ack", sequence: frame.entry.event.sequence }),
+            ),
+          );
+      },
+      close() {},
+    });
+    stream.receive(id, JSON.stringify({ ...selection, type: "subscribe", after }));
+    return () => frames.flatMap((frame) => (frame.type === "event" ? [frame.entry.event] : []));
+  }
+  const first = connect("first", 0);
+  await f.conversations.send(f.scope, f.conversationId, {
+    idempotencyKey: "approval-handover",
+    text: "Write a file",
+  });
+  await expect.poll(() => f.calls.length).toBe(1);
+  f.calls[0]!.toolCalls([
+    {
+      type: "toolCall",
+      id: "write",
+      name: "computer_write_file",
+      arguments: { path: "note.txt", content: "Fixture content" },
+    },
+  ]);
+  await expect
+    .poll(() => first().some((event) => event.kind === "run.state" && event.state === "waiting"))
+    .toBe(true);
+  const cursor = first().at(-1)!.sequence;
+  stream.close("first");
+  await f.conversations.send(f.scope, f.conversationId, {
+    idempotencyKey: "steering",
+    text: "Mention the file name",
+  });
+  await f.runner.close();
+  const replacement = new ConversationRunner(
+    f.repository,
+    f.models,
+    undefined,
+    undefined,
+    { tools: f.tools, approvals: f.agentApprovals },
+    { ownerId: "replacement-worker", scanIntervalMs: 10, maxAttempts: 1 },
+  );
+  cleanups.push(() => replacement.close());
+  await replacement.startWorker(f.fanout);
+  const [pending] = await f.agentApprovals.listPending(f.scope);
+  await f.agentApprovals.answer(f.scope, pending!.id, { decision: "approved" });
+  await expect
+    .poll(() => ({
+      calls: f.calls.length,
+      state: f.runs[0]!.state,
+      failureCode: f.runs[0]!.failureCode,
+    }))
+    .toEqual({ calls: 2, state: "running", failureCode: null });
+  f.calls[1]!.complete("File written");
+  await expect.poll(() => f.runs[0]!.state).toBe("succeeded");
+  const expected = f.log.filter(({ event }) => event.sequence > cursor).map(({ event }) => event);
+  expect(f.log.map(({ event }) => event.sequence)).toEqual(
+    Array.from({ length: f.log.length }, (_, index) => index + 1),
+  );
+  const resumed = connect("resumed", cursor);
+  await expect.poll(() => resumed()).toEqual(expected);
+  expect(resumed().map((event) => event.sequence)).toEqual(
+    Array.from({ length: expected.length }, (_, index) => cursor + index + 1),
+  );
+  expect(resumed().filter((event) => event.kind === "card.resolved")).toHaveLength(1);
+  expect(resumed().some((event) => event.kind === "card.created")).toBe(false);
+  expect(f.runs).toHaveLength(1);
+  expect(f.diagnostics).toEqual([]);
 });

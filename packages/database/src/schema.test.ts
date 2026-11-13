@@ -8,6 +8,10 @@ import {
   approvalRules,
   approvalRequests,
   conversationEffects,
+  conversationRunAttempts,
+  conversationRunCheckpoints,
+  conversationRunSteering,
+  conversationRunBackupJobs,
   schema,
   user,
 } from "./schema.js";
@@ -30,6 +34,40 @@ it("uses the public schema with Better Auth Admin fields", () => {
   expect(config.columns.map((c) => c.name)).toEqual(
     expect.arrayContaining(["role", "banned", "ban_reason", "ban_expires"]),
   );
+});
+it("keeps durable execution records within their Space and cascades every owned reference", () => {
+  for (const table of [
+    conversationRunAttempts,
+    conversationRunCheckpoints,
+    conversationRunSteering,
+    conversationRunBackupJobs,
+  ]) {
+    const config = getTableConfig(table);
+    expect(config.primaryKeys[0]?.columns[0]?.name).toBe("space_id");
+    for (const key of config.foreignKeys) {
+      const reference = key.reference();
+      expect(reference.columns[0]?.name).toBe("space_id");
+      expect(reference.foreignColumns[0]?.name).toBe("space_id");
+      expect(key.onDelete).toBe("cascade");
+    }
+  }
+  expect(getTableConfig(conversationRuns).columns.map((column) => column.name)).toEqual(
+    expect.arrayContaining([
+      "lease_owner",
+      "lease_expires_at",
+      "fence",
+      "connection_id",
+      "computer_id",
+      "computer_generation",
+      "attempt_count",
+      "next_attempt_at",
+    ]),
+  );
+  expect(
+    getTableConfig(conversationEvents).foreignKeys.find((key) =>
+      key.reference().columns.some((column) => column.name === "computer_id"),
+    )?.onDelete,
+  ).toBe("cascade");
 });
 
 it("keeps Computer references fenced by the same Space in the database metadata", () => {

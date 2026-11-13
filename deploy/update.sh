@@ -21,7 +21,11 @@ compose config --quiet
 previous_api=$(compose ps -q api)
 previous_web=$(compose ps -q web)
 previous_relay=
-if [ "$split" = true ]; then previous_relay=$(compose ps -a -q relay); fi
+previous_worker=
+if [ "$split" = true ]; then
+  previous_relay=$(compose ps -a -q relay)
+  previous_worker=$(compose ps -a -q worker)
+fi
 rollback=$(mktemp "${TMPDIR:-/tmp}/raypx-rollback.XXXXXXXX")
 phase=prepare
 restore_services=
@@ -49,10 +53,13 @@ finish() {
       if [ -n "$previous_relay" ]; then
         compose start relay || printf '%s\n' 'Unable to restart the previous Relay; follow deployment recovery documentation.' >&2
       fi
+      if [ -n "$previous_worker" ]; then
+        compose start worker || printf '%s\n' 'Unable to restart the previous worker; follow deployment recovery documentation.' >&2
+      fi
     elif [ "$phase" = replace ]; then
       # Stop a failed first deployment too, rather than leaving it restarting.
       compose stop api web || true
-      if [ "$split" = true ]; then compose stop relay || true; fi
+      if [ "$split" = true ]; then compose stop relay worker || true; fi
       if [ -n "$restore_services" ]; then
         # Deliberately split only the fixed service names captured above.
         # shellcheck disable=SC2086
@@ -69,14 +76,15 @@ trap 'exit 143' HUP TERM
 printf 'services:\n' > "$rollback"
 capture_image api "$previous_api"
 capture_image relay "$previous_relay"
+capture_image worker "$previous_worker"
 capture_image web "$previous_web"
 compose up -d postgres
 phase=migrate
 compose stop api
-if [ "$split" = true ]; then compose stop relay; fi
+if [ "$split" = true ]; then compose stop relay worker; fi
 compose run --rm migrate
 phase=replace
-if [ "$split" = true ]; then compose up -d --no-deps --wait relay; fi
+if [ "$split" = true ]; then compose up -d --no-deps --wait relay worker; fi
 compose up -d --no-deps --wait api
 compose up -d --no-deps --wait web
 phase=complete

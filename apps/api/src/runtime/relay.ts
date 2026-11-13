@@ -15,7 +15,8 @@ export async function createRelayRuntime(environment: RelayEnvironment) {
   const hub = new RelayHub(async (use) => use(control));
   try {
     // The cluster keeps reconnecting; `/ready` reports the relay unavailable until it attaches.
-    await hub.attachCluster(new RedisRelayCluster(environment.REDIS_URL)).catch(() => {});
+    if (environment.REDIS_URL)
+      await hub.attachCluster(new RedisRelayCluster(environment.REDIS_URL)).catch(() => {});
     let closing: Promise<void> | undefined;
     const readReadiness = createReadinessCheck({
       database: () => connection.db.execute(sql`select 1`),

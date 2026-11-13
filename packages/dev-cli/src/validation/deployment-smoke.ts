@@ -319,7 +319,7 @@ export async function smokeDeployment(root: string, args: string[]) {
               ALLOWED_ORIGINS: origin,
               JOBS_ENABLED: "false",
               HOST: profile === "railway" ? "::" : "0.0.0.0",
-              SERVER_ROLE: "both",
+              SERVER_ROLE: "all",
               ...(profile === "railway" ? { REDIS_URL: `redis://${project}-redis:6379` } : {}),
             },
             ["--memory", "768m"],

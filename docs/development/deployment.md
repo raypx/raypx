@@ -1,9 +1,11 @@
 # Compose deployment and environments
 
 The default topology is Web + one Bun backend + PostgreSQL. `apps/api` builds a
-single Nitro artifact; `SERVER_ROLE=both` hosts HTTP and `/relay` together, with
-direct scheduling/revocation calls. Redis is optional for shared caches and
-multi-node routing. See ADR 0051.
+single Nitro artifact; `SERVER_ROLE=all` is the default and hosts API, durable Run
+recovery and `/relay` together. New Runs start directly in the committing process;
+workers recover lost starts, expired leases and handed-over attempts through
+PostgreSQL only. Redis is optional for caches and the retained device Relay
+transport. See the [execution guide](../architecture/execution.md).
 
 ## Project boundaries and configuration
 
@@ -47,7 +49,10 @@ Optional OAuth, analytics and cookie domain settings are explicit in the templat
 `AGENT_MODELS` and protected `AGENT_MODEL_CREDENTIALS` configure the initial backend
 reply executor; both default to empty JSON containers. See the
 [execution guide](../architecture/execution.md#deployment-model-configuration).
-Conversation live replies currently require one API-enabled process.
+Any number of API and worker processes can execute Runs using fenced leases.
+Committed reply events reach every API process through PostgreSQL fanout; transient
+prefixes remain local to the executor. A client connected to another process
+receives the committed segment when that model turn finishes.
 `JOBS_ENABLED` enables server
 maintenance and cloud scheduling. Empty optional values disable integrations.
 A configured Redis outage fails readiness and closes cluster peers; it never
@@ -84,7 +89,7 @@ Only Traefik publishes traffic. Keep the management panel behind SSH and block
 public database/application ports. Set APP_HOST, DNS, TLS and the exact project
 TRAEFIK_NETWORK. Attach only this project's containers and Traefik. Trust exact
 proxy /32 or /128 addresses in AUTH_TRUSTED_PROXIES; never trust a shared subnet.
-Traefik sends /api/, /rpc/, /health, /ready and /relay to the backend; other paths
+Traefik sends /api/, /rpc/, /events, /health, /ready and /relay to the backend; other paths
 go to Web. It strips Cookie and Authorization only on the relay route.
 
 Validate without printing resolved secrets:
@@ -216,13 +221,36 @@ new gate, Ubuntu/Linux amd64 or arm64, macOS x64/other Engine configurations,
 Windows, rootless engines or restricted egress is recorded. Compose profile
 syntax/property tests do not establish real deployment or firewall acceptance.
 
+Existing explicit `SERVER_ROLE=both` settings continue to run the combined backend
+with recovery enabled. New environment files use `all`.
+
 ## Optional split roles
 
-`deploy/compose.split.yaml` overlays the default topology. API sets SERVER_ROLE=api;
-Relay sets SERVER_ROLE=relay and uses the **same raypx/api image**, on port 3002.
-Both require the same private REDIS_URL and foundation PostgreSQL. Relay receives
-no AUTH_SECRET, cookie configuration, mail or provider credentials, runs no jobs
-and performs no migrations. Supply the private broker separately.
+`deploy/compose.split.yaml` overlays the default topology with `api`, `worker`
+and `relay`, all using the same backend image. API accepts HTTP/RPC/events and
+starts message work directly. Worker exposes health/readiness only, needs no
+sign-in, mail, cookie, signing or broker configuration, and runs startup and
+periodic recovery scans. The worker receives the same model catalog, credential
+selectors and Computer provider settings as API so pinned resources remain
+available. All roles use the same isolated foundation PostgreSQL and port 3002
+inside their own container; only API/Relay join ingress.
+
+Durable Runs need no Redis. The retained device transport still needs a private
+`REDIS_URL` when API and Relay are separate processes; without that optional
+integration, its remote dispatch is explicitly unavailable. Relay itself accepts
+only database, optional broker and allowed origins, and performs no migrations.
+The Compose migration job runs before every role replacement. `update.sh --split`
+includes worker capture, graceful stop, replacement and image rollback.
+
+`RUN_RECOVERY_INTERVAL_MS=5000`, `RUN_LEASE_MS=15000`,
+`RUN_HEARTBEAT_MS=5000`, `RUN_ATTEMPT_TIMEOUT_MS=300000` and
+`RUN_BACKUP_MARGIN_MS=30000` configure recovery. Keep at least two heartbeat
+intervals in each lease. A crash becomes recoverable after lease expiry; a clean
+stop releases immediately. The backup due time is the attempt deadline plus its
+margin. Configure matching values across roles. The Nitro Bun server allows 25
+seconds to drain HTTP requests (longer than the 15-second RPC deadline). Compose
+allows 30 seconds before forced termination, leaving five seconds for fenced
+lease handover and resource cleanup after the drain.
 
 ```sh
 docker compose --env-file deploy/.env -f deploy/compose.yaml -f deploy/compose.split.yaml config --quiet
@@ -247,7 +275,7 @@ sh deploy/update.sh /absolute/path/to/protected.env
 
 The script validates Compose, captures immutable previous images, waits for
 PostgreSQL, stops backend writers, runs migration, then replaces backend and Web
-with health waits. --split also captures/stops/replaces Relay. Transactional index
+with health waits. --split also captures/stops/replaces Relay and worker. Transactional index
 migrations require a maintenance window; ordinary Compose reconciliation does not
 stop old writers first. Do not run a second writer against this database during
 migration. Database locks have bounded waits.

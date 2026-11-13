@@ -31,7 +31,15 @@ let scope: SpaceScope, foreign: SpaceScope;
 const owned: string[] = [];
 const model = modelFixture();
 const repository = createConversationsRepository(connection.db);
-const runner = new ConversationRunner(repository, model.models);
+const runner = new ConversationRunner(repository, model.models, undefined, undefined, undefined, {
+  maxAttempts: 1,
+});
+const claim = {
+  ownerId: "api-reply-fixture",
+  leaseMs: 15_000,
+  timeoutMs: 300_000,
+  backupMarginMs: 30_000,
+};
 const agents = createAgentsRepository(connection.db);
 const app = createApiApp({
   spaces: access,
@@ -98,19 +106,21 @@ it("atomically persists message, queued Run and gapless events; retries create o
   ).rejects.toThrow("rollback");
   expect(await repository.snapshot(scope, conversation.id)).toEqual(snapshot);
   const claimed = await Promise.all([
-    repository.claimNext(scope, conversation.id),
-    createConversationsRepository(second.db).claimNext(scope, conversation.id),
+    repository.claimNext(scope, conversation.id, claim),
+    createConversationsRepository(second.db).claimNext(scope, conversation.id, {
+      ...claim,
+      ownerId: "other-process",
+    }),
   ]);
   expect(claimed.filter(Boolean)).toHaveLength(1);
   const execution = claimed.find((entry) => entry !== undefined)!;
   await expect(
-    failing.commitSegment(
-      scope,
-      execution.run,
-      "rollback-segment",
-      "Uncommitted",
-      new Date().toISOString(),
-    ),
+    failing.commitTurn(scope, execution.run, {
+      checkpoint: execution.checkpoint,
+      segmentId: "rollback-segment",
+      text: "Uncommitted",
+      firstResponseAt: new Date().toISOString(),
+    }),
   ).rejects.toThrow("rollback");
   const rolledBack = await repository.snapshot(scope, conversation.id);
   expect(rolledBack.segments).toHaveLength(0);
@@ -124,7 +134,7 @@ it("atomically persists message, queued Run and gapless events; retries create o
   ]);
   await repository.stop(scope, conversation.id, snapshot.runs[0]!.id);
 });
-it("HTTP returns before a gated model completes, serializes queued work, commits one segment and first response atomically", async () => {
+it("HTTP returns before a gated model completes, steers its Run and commits first response atomically", async () => {
   const { conversation } = await agents.create(scope, definition);
   const selected = { spaceId: scope.spaceId, conversationId: conversation.id };
   const before = model.calls.length;
@@ -141,11 +151,14 @@ it("HTTP returns before a gated model completes, serializes queued work, commits
     message: { idempotencyKey: "second", text: "Second" },
   });
   const waiting = await repository.snapshot(scope, conversation.id);
-  expect(waiting.runs.map((run) => run.state)).toEqual(["running", "queued"]);
+  expect(waiting.runs.map((run) => run.state)).toEqual(["running"]);
   expect(model.calls).toHaveLength(before + 1);
   call.delta(" world");
   call.complete();
   await expect.poll(() => model.calls.length).toBe(before + 2);
+  expect(model.calls[before + 1]!.input.continuation).toContainEqual(
+    expect.objectContaining({ role: "user", content: "Second" }),
+  );
   const committed = await repository.snapshot(scope, conversation.id);
   expect(committed.segments).toHaveLength(1);
   expect(committed.segments[0]!.text).toBe("Hello world");
@@ -158,7 +171,7 @@ it("HTTP returns before a gated model completes, serializes queued work, commits
   expect(page.events.map((entry) => entry.event.sequence)).toEqual(
     Array.from({ length: page.events.length }, (_, i) => i + 1),
   );
-  const stopped = await client.conversations.stop({ ...selected, runId: committed.runs[1]!.id });
+  const stopped = await client.conversations.stop({ ...selected, runId: committed.runs[0]!.id });
   expect(stopped.state).toBe("cancelled");
   expect(model.calls[before + 1]!.signal.aborted).toBe(true);
   for (const operation of [
@@ -234,7 +247,7 @@ it("missing models and raw provider errors commit safe failed states without fal
   ).rejects.toMatchObject({ cause: { code: "23503" } });
 });
 
-it("pins model/instructions at send and builds queued context as member/reply pairs", async () => {
+it("pins model/instructions at first start and builds queued context as member/reply pairs", async () => {
   const saved = await agents.create(scope, definition);
   const id = saved.conversation.id;
   await repository.send(scope, id, { idempotencyKey: "one", text: "One" });
@@ -245,29 +258,27 @@ it("pins model/instructions at send and builds queued context as member/reply pa
     instructions: "Changed",
     model: { modelId: "changed" },
   });
-  const first = (await repository.claimNext(scope, id))!;
-  expect(first.run.model).toEqual(definition.model);
-  expect(first.instructions).toBe(definition.instructions);
+  const first = (await repository.claimNext(scope, id, claim))!;
+  expect(first.run.model).toEqual({ modelId: "changed" });
+  expect(first.instructions).toBe("Changed");
   expect(first.history.map((entry) => entry.text)).toEqual(["One"]);
-  await repository.commitSegment(
-    scope,
-    first.run,
-    crypto.randomUUID(),
-    "Reply one",
-    new Date().toISOString(),
-  );
+  await repository.commitTurn(scope, first.run, {
+    checkpoint: { ...first.checkpoint, completed: true },
+    segmentId: crypto.randomUUID(),
+    text: "Reply one",
+    firstResponseAt: new Date().toISOString(),
+  });
   await repository.finish(scope, first.run, null);
-  const next = (await repository.claimNext(scope, id))!;
+  const next = (await repository.claimNext(scope, id, claim))!;
   expect(next.history.map((entry) => entry.text)).toEqual(["One", "Reply one", "Two"]);
-  await repository.commitSegment(
-    scope,
-    next.run,
-    crypto.randomUUID(),
-    "Reply two",
-    new Date().toISOString(),
-  );
+  await repository.commitTurn(scope, next.run, {
+    checkpoint: { ...next.checkpoint, completed: true },
+    segmentId: crypto.randomUUID(),
+    text: "Reply two",
+    firstResponseAt: new Date().toISOString(),
+  });
   await repository.finish(scope, next.run, null);
-  const last = (await repository.claimNext(scope, id))!;
+  const last = (await repository.claimNext(scope, id, claim))!;
   expect(last.history.map((entry) => entry.text)).toEqual([
     "One",
     "Reply one",

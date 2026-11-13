@@ -20,8 +20,8 @@ Runtime composes Computer tools and approval/effect services with the runner.
 the addressed account. `approvals.settings/updateSettings` use the session account.
 Mutations require trusted Origin and quotas. Auto review is explicitly unavailable.
 APPROVAL_DEFAULT_MODE defaults to ask; APPROVAL_REQUEST_TTL_MS defaults to 600000.
-Runtime construction performs no effect I/O. Effect reads lazily persist unknown
-only after the shared intent timeout; there is no Run recovery. Known deployment
+Runtime construction performs no effect or recovery I/O. Effect reads lazily
+persist unknown only after the shared intent timeout; worker start owns recovery scans. Known deployment
 secrets are rejected at Computer input/output.
 
 `spaces.*` resolves the account from the current session and delegates first-use
@@ -40,9 +40,16 @@ LISTEN connection, timer and socket shutdown. API also composes ConversationRunn
 and the deployment ModelAccess adapter using optional AGENT_MODELS and protected
 AGENT_MODEL_CREDENTIALS JSON inputs. Empty configuration permits startup; missing
 models fail Runs visibly without fallback. `conversations.stop` uses the same
-membership/Origin/quota admission. Live prefixes/deltas share the executor's API
-process; use one API-enabled process for this slice. Shutdown cancels active calls
-before closing storage. No provider text or credentials enter execution logs. `RuntimeProviders.createConversationFanout`
+membership/Origin/quota admission. `runtime/agents.ts` composes the same fenced runner for direct API dispatch and
+worker recovery. Default `SERVER_ROLE=all` starts API, worker and Relay; `api`
+starts work directly and `worker` scans lost starts/expired leases without Auth or
+RPC. Backend start, separate from runtime construction, starts worker scans and
+fanout subscriptions. Lease, heartbeat, scan interval, attempt timeout and backup
+margin use the RUN_* environment inputs. Run model/connection/computer pins,
+turn checkpoints, steering and keyed backup jobs stay in PostgreSQL. Live
+prefixes/deltas stay in the executor; all API processes replay committed events.
+Shutdown drains HTTP, releases leases and preserves approval requests for another
+worker before closing storage. No provider text or credentials enter execution logs. `RuntimeProviders.createConversationFanout`
 can inject the subscriber for offline runtime tests.
 `agents.models` lists only opaque identifiers and display names after resolving Space
 membership. Configured display names default to the opaque identifier; entries without
@@ -80,7 +87,9 @@ mode of `vitest.config.ts` for real-database tests. Shared fixtures stay in `tes
 
 ## Ownership
 
-Nitro owns the platform entry. Hono owns the shared Fetch application.
+Nitro owns the platform entry. `src/app/entry.ts` sets a 25-second HTTP shutdown
+grace; signal admission stops runner claims before draining, and the close hook
+hands over attempts afterwards. Hono owns the shared Fetch application.
 The Nitro Fetch entry lives in `src/app/`; runtime composition and adapters
 live in `src/runtime/`. Hono and oRPC middleware live in `src/middleware/`.
 `src/routers/index.ts` applies shared HTTP middleware and mounts the auth,
@@ -194,8 +203,8 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   must declare exactly its keys; tooling reads this data without importing API runtime.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
 - Close the PostgreSQL pool idempotently through Nitro's close hook.
-- No old business endpoints, worker or local execution endpoints. API starts one listener;
-  Hono admits `/relay` upgrades in the both/relay roles through Nitro's listener.
+- No local execution endpoints. Each role uses the one Nitro listener. Worker exposes
+  health/readiness only. Hono admits `/events` in API/all and `/relay` in all/relay.
 - Unconfigured mail actions return MAIL_NOT_CONFIGURED before Better Auth dispatch;
   startup, liveness and existing sign-in remain available.
 - Auth preflight errors negotiate `Accept-Language` with Hono and mark the response
@@ -225,11 +234,11 @@ read projections. `/postgres` provides the control/context adapters. Account
 mutations take an exclusive owner lock; device projection transactions take a
 shared security fence and device advisory lock. Read-only reads take neither lock.
 HTTP RPC exposes reads, device management and one-time viewer tickets. Hono routes
-Relay v5 WebSockets in the `both` (default) and `relay` roles. One build supports
+Relay v5 WebSockets in the `all` (default) and `relay` roles. One build supports
 all roles. Combined scheduling/revocation calls RelayHub directly; configured Redis
 attaches cluster routing and shared caches. A broker that does not attach at startup
-keeps reconnecting; API-enabled roles log `relay.cluster` and `/ready` reports the relay. Split api/relay roles require Redis.
-The relay role parses only DB, broker and origins, never constructs Auth, cookies,
+keeps reconnecting; API-enabled roles log `relay.cluster` and `/ready` reports the relay. Retained split device routing requires optional Redis; Durable Run API/worker
+coordination uses PostgreSQL only. The relay role parses only DB, optional broker and origins, never constructs Auth, cookies,
 mail or signer, and skips scheduled jobs and migration. `runtime/backend.ts` owns
 process selection/lifecycle; `runtime/server.ts` composes API-enabled roles.
 PostgreSQL owns connection identity. Never retry uncertain delivery
@@ -353,3 +362,6 @@ statistics and audit expose no task content, addresses, secrets or raw HTTP bodi
 Audit records survive account deletion and are never removed by cleanup jobs.
 
 - Authentication deployment accepts the passkey RP ID, a compromised-password check and paired Turnstile keys for email-code sends.
+
+Existing explicit SERVER_ROLE=both remains a combined API/worker/Relay process;
+all is the default for new configurations. No role requires Redis for Durable Runs.
