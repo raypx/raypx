@@ -37,7 +37,7 @@ export function authPreflight(options: Pick<ApiAppOptions, "mailAvailable" | "co
     ) {
       return authError(c, "MAIL_NOT_CONFIGURED", 503);
     }
-    if (c.req.method === "POST" && path === emailSignupPath && options.configuration) {
+    if (c.req.method === "POST" && path === emailSignupPath) {
       try {
         // Cheap early answer; the auth user-create hook re-checks with a fresh read.
         if (!(await options.configuration.readCached()).values.registrationEnabled)

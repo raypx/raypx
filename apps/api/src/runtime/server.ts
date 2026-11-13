@@ -4,7 +4,7 @@ import {
   createRelayJobExecutor,
   RelayHub,
 } from "@raypx/control/relay";
-import { connectDatabase } from "@raypx/database/connection";
+import { connectRuntimeDatabase } from "./database.js";
 import { createStreamDrain } from "@raypx/logger/stream";
 import { type ApiEnvironment } from "../env.js";
 import { createApiLogging } from "../logging.js";
@@ -47,7 +47,7 @@ export async function createApiRuntime(
           dispatch: (...args) => relay.dispatch(...args),
           sync: (...args) => relay.sync(...args),
         }),
-      connect: () => connectDatabase(environment.DATABASE_URL),
+      connect: () => connectRuntimeDatabase(environment.DATABASE_URL),
       closeLogger: () => logger.close(),
       relayReadiness: async () => {
         if (!relay?.ready()) throw new Error("Relay unavailable");
@@ -63,7 +63,14 @@ export async function createApiRuntime(
   try {
     if (hub) {
       relay = hub;
-      if (cluster) await hub.attachCluster(cluster).catch(() => {});
+      // The broker keeps reconnecting and `/ready` reports the relay state; record the
+      // degraded start instead of running single-node without a trace.
+      if (cluster)
+        await hub.attachCluster(cluster).catch(() => {
+          logger
+            .createLogger({ operation: "relay.cluster" })
+            .emit({ status: 503, code: "RELAY_CLUSTER_UNAVAILABLE" });
+        });
     } else {
       relay = await createRemoteRelay(runtime.control, cluster);
     }

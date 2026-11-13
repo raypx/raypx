@@ -8,9 +8,6 @@ import { createConfigurationReads } from "../config/reads.js";
 import { createResendSettings, databaseMailer } from "../config/resend.js";
 import type { ConfigurationRepository } from "../config/types.js";
 import type { ObjectStorage } from "@raypx/storage";
-import { createControlRepository } from "@raypx/control/postgres";
-import { createContextRepository } from "@raypx/memory/server/postgres";
-import { ControlService, ControlProjects } from "@raypx/control";
 import { createAuditedAuthAdapter } from "../admin/auth-adapter.js";
 import {
   createAdministrationRepository,
@@ -35,9 +32,11 @@ import {
 import { JobError } from "@raypx/core/jobs";
 import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
 import { createScheduleTick } from "../jobs/tick.js";
-import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";
+import type { ContextLibraryRepository } from "@raypx/memory/server";
 import { createStorageSettings, databaseStorage } from "../storage/config.js";
-import { createSessionAttachments, withSessionAttachments } from "../storage/attachments.js";
+import { createSessionAttachments } from "../storage/attachments.js";
+import { composeControl } from "./control.js";
+import type { ControlService } from "@raypx/control";
 
 export interface RuntimeProviders {
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
@@ -75,8 +74,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const { secondaryStorage, rateLimit, readiness } = createAdapters(environment, db, redis);
     const reads = createConfigurationReads(redis?.configurationNotifications);
     lifecycle.own(async () => reads.close());
-    const mailer = databaseMailer(db, environment.AUTH_SECRET, reads);
-    const signer = createInstanceSigner(environment.AUTH_SECRET);
+    const mailer = databaseMailer(db, environment.APP_KEY, reads);
+    const signer = createInstanceSigner(environment.APP_KEY);
     const instances = new InstanceService({
       origin: environment.AUTH_URL,
       repository: createInstanceRepository(db),
@@ -99,26 +98,19 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       access,
       reads,
     });
-    const repository = createControlRepository(db);
-    const projects = new ControlProjects(repository);
-    const memory = new ContextLibraryService({
-      repository: (resources.createContextRepository ?? createContextRepository)(db),
-      scope: "account",
-      validateProject: (owner, target) => projects.validateContextProject(owner, target),
-    });
+    const { control, projects, memory, resolveContext } = composeControl(
+      db,
+      resources.createContextRepository,
+    );
     const injectedStorage = resources.storage;
     const readInjectedStorage = async () => injectedStorage ?? null;
     const attachments = createSessionAttachments(
       db,
       injectedStorage
         ? { read: readInjectedStorage, readCached: readInjectedStorage }
-        : databaseStorage(db, environment.AUTH_SECRET, reads),
+        : databaseStorage(db, environment.APP_KEY, reads),
       projects,
     );
-    const resolveContext = withSessionAttachments(db, (owner, selection, target, prompt) =>
-      memory.resolve(owner, selection, target, prompt),
-    );
-    const control = new ControlService(repository, Date.now, resolveContext, projects);
     const unavailable = async (): Promise<never> => {
       throw new JobError("CONTROL_UNAVAILABLE");
     };
@@ -169,8 +161,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,
-        storageSettings: createStorageSettings(db, environment.AUTH_SECRET, audit, reads),
-        resendSettings: createResendSettings(db, environment.AUTH_SECRET, audit, reads),
+        storageSettings: createStorageSettings(db, environment.APP_KEY, audit, reads),
+        resendSettings: createResendSettings(db, environment.APP_KEY, audit, reads),
         jobsEnabled: environment.JOBS_ENABLED,
         control,
         cloudJobs,

@@ -19,7 +19,6 @@ export function createConfigurationHandlers({
     context: RpcContext,
     run: (service: ConfigurationService) => Promise<T>,
   ) {
-    if (!options.configuration) throw new ORPCError("SERVICE_UNAVAILABLE");
     try {
       return await run(options.configuration);
     } catch (error) {
@@ -71,7 +70,6 @@ export function createConfigurationHandlers({
         configurationCall(context, (service) => service.update(input, context.auth)),
       ),
     storage: os.configuration.storage.use(canReadConfiguration).handler(async ({ context }) => {
-      if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
       try {
         return await options.storageSettings.read();
       } catch (error) {
@@ -82,7 +80,6 @@ export function createConfigurationHandlers({
       .use(withRpcPermission({ window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(async ({ context, input }) => {
-        if (!options.storageSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
         try {
           return await options.storageSettings.update(input);
         } catch (error) {
@@ -90,7 +87,6 @@ export function createConfigurationHandlers({
         }
       }),
     resend: os.configuration.resend.use(canReadConfiguration).handler(async ({ context }) => {
-      if (!options.resendSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
       try {
         return await options.resendSettings.read();
       } catch (error) {
@@ -101,7 +97,6 @@ export function createConfigurationHandlers({
       .use(withRpcPermission({ window: 60, max: 10 }))
       .use(requireTrustedOrigin)
       .handler(async ({ context, input }) => {
-        if (!options.resendSettings) throw new ORPCError("SERVICE_UNAVAILABLE");
         try {
           return await options.resendSettings.update(input);
         } catch (error) {

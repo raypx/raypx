@@ -33,7 +33,7 @@ async function migrate() {
     return;
   }
   const env = process.env;
-  const { DATABASE_URL: url, AUTH_SECRET: secret } = env;
+  const { DATABASE_URL: url, APP_KEY: secret } = env;
   if (!url || !URL.canParse(url) || !["postgres:", "postgresql:"].includes(new URL(url).protocol))
     throw new MigrationInputError("Set DATABASE_URL to the active Raypx foundation database.");
 
@@ -81,7 +81,7 @@ async function migrate() {
       "Provide an S3 endpoint, bucket, and both keys to import storage.",
     );
   if ((mail || storage) && (!secret || secret.length < 32))
-    throw new MigrationInputError("Set the API deployment's AUTH_SECRET to import configuration.");
+    throw new MigrationInputError("Set the API deployment's APP_KEY to import configuration.");
 
   await migrateDatabase(url, migrations, async (tx) => {
     if (mail?.success && mail.data.apiKey)

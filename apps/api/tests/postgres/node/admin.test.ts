@@ -6,7 +6,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { createApiClient } from "@raypx/client/api";
 import { configurationDefaults } from "@raypx/contracts/api";
-import { createApiApp } from "../../../src/routers/index.js";
+import { createApiApp } from "../../helpers/app.js";
 import { AuditService } from "../../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../../src/admin/repository.js";
 import { createAuditedAuthAdapter } from "../../../src/admin/auth-adapter.js";

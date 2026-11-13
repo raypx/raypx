@@ -10,7 +10,6 @@ export function createAdministrationHandlers(
     overview: os.admin.overview
       .use(withRpcPermission({ window: 60, max: 60 }))
       .handler(async ({ input }) => {
-        if (!options.administration) throw new ORPCError("SERVICE_UNAVAILABLE");
         try {
           return await options.administration.overview(input.days);
         } catch {
@@ -31,7 +30,6 @@ export function createAdministrationHandlers(
     audit: os.admin.audit
       .use(withRpcPermission({ window: 60, max: 60 }))
       .handler(async ({ input }) => {
-        if (!options.administration) throw new ORPCError("SERVICE_UNAVAILABLE");
         try {
           return await options.administration.list(input);
         } catch (error) {

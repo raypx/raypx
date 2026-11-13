@@ -308,6 +308,7 @@ export async function smokeDeployment(root: string, args: string[]) {
               DATABASE_URL: database,
               AUTH_URL: origin,
               AUTH_SECRET: password,
+              APP_KEY: `${crypto.randomUUID()}-${crypto.randomUUID()}`,
               ALLOWED_ORIGINS: origin,
               JOBS_ENABLED: "false",
               HOST: profile === "railway" ? "::" : "0.0.0.0",

@@ -1,15 +1,28 @@
 import type { Database } from "@raypx/database/connection";
 import { sql } from "drizzle-orm";
 import type { ApiEnvironment } from "../env.js";
-import { createRateLimiter } from "../rate-limit.js";
+import { createMemoryRateLimiter, createRateLimiter } from "../rate-limit.js";
+import type { RateLimiter } from "../rate-limit/types.js";
 import type { RedisResources } from "./redis.js";
+
+/**
+ * Deployments share one store. Development counts in memory so the limited paths
+ * are exercised locally. Tests stay unlimited unless they inject a limiter.
+ */
+function rateLimiting(
+  environment: ApiEnvironment,
+  db: Database,
+  redis?: RedisResources,
+): { rateLimit?: RateLimiter } {
+  if (environment.NODE_ENV === "production")
+    return { rateLimit: redis?.rateLimit ?? createRateLimiter(db) };
+  return environment.NODE_ENV === "development" ? { rateLimit: createMemoryRateLimiter() } : {};
+}
 
 export function createAdapters(environment: ApiEnvironment, db: Database, redis?: RedisResources) {
   return {
     ...(redis ? { secondaryStorage: redis.secondaryStorage } : {}),
-    ...(environment.NODE_ENV === "production"
-      ? { rateLimit: redis?.rateLimit ?? createRateLimiter(db) }
-      : {}),
+    ...rateLimiting(environment, db, redis),
     readiness: {
       database: () => db.execute(sql`select 1`),
       ...(redis ? { redis: () => redis.ping() } : {}),

@@ -31,6 +31,7 @@ export async function probeApi(root: string): Promise<void> {
         ...(role === "api" ? { REDIS_URL: "redis://127.0.0.1:1" } : {}),
         AUTH_URL: base,
         AUTH_SECRET: "raypx-artifact-test-secret-32-characters",
+        APP_KEY: "raypx-artifact-test-app-key-32-characters",
         ALLOWED_ORIGINS: base,
       }),
       (base) => checkApi(base, { relay: role === "both" }),

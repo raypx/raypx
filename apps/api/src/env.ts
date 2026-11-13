@@ -25,6 +25,8 @@ const server = {
   DATABASE_URL: z.url().default("postgres://postgres:postgres@localhost:5433/raypx_foundation"),
   AUTH_URL: z.url().default("http://localhost:3002"),
   AUTH_SECRET: z.string().min(32).default("raypx-development-only-secret-32-characters"),
+  /** Encrypts stored provider credentials and seeds instance signing; never the auth secret. */
+  APP_KEY: z.string().min(32).default("raypx-development-only-app-key-32-characters"),
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   GITHUB_CLIENT_ID: z.string().min(1).optional(),
@@ -55,13 +57,19 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
       !runtimeEnv.DATABASE_URL ||
       !runtimeEnv.AUTH_URL ||
       !runtimeEnv.AUTH_SECRET ||
+      !runtimeEnv.APP_KEY ||
       !runtimeEnv.ALLOWED_ORIGINS
     )
       throw new Error(
-        "Production requires DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS",
+        "Production requires DATABASE_URL, AUTH_URL, AUTH_SECRET, APP_KEY and ALLOWED_ORIGINS",
       );
     if (env.AUTH_SECRET.startsWith("raypx-development"))
       throw new Error("Production AUTH_SECRET must be explicitly configured");
+    if (env.APP_KEY.startsWith("raypx-development"))
+      throw new Error("Production APP_KEY must be explicitly configured");
+    // Rotating sessions must never invalidate stored credentials or enrolled instances.
+    if (env.APP_KEY === env.AUTH_SECRET)
+      throw new Error("Production APP_KEY must differ from AUTH_SECRET");
     if (new URL(env.AUTH_URL).protocol !== "https:")
       throw new Error("Production AUTH_URL must use HTTPS");
   }

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
 import { createApiClient } from "@raypx/client/api";
 import { createAuthRoutes } from "../../src/routers/auth.js";
-import { createApiApp } from "../../src/routers/index.js";
+import { createApiApp, testAppOptions } from "../helpers/app.js";
 import { ControlService } from "@raypx/control";
 import type { AuthSession } from "@raypx/core/auth";
 
@@ -82,12 +82,7 @@ describe("HTTP foundation", () => {
     );
     const mounted = new Hono().route(
       "/custom/auth",
-      createAuthRoutes({
-        allowedOrigins: [],
-        readSession: async () => null,
-        mailAvailable: async () => false,
-        authHandler,
-      }),
+      createAuthRoutes(testAppOptions({ mailAvailable: async () => false, authHandler })),
     );
     const denied = await mounted.request("/custom/auth/sign-up%2Femail/", { method: "POST" });
     expect(denied.status).toBe(503);

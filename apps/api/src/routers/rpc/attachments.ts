@@ -22,7 +22,7 @@ export function createAttachmentHandlers({
   return {
     status: os.attachments.status.use(withRpcPermission()).handler(async () => {
       try {
-        return { enabled: (await options.attachments?.enabled()) ?? false };
+        return { enabled: await options.attachments.enabled() };
       } catch {
         throw new ORPCError("SERVICE_UNAVAILABLE");
       }
@@ -32,7 +32,6 @@ export function createAttachmentHandlers({
       .use(withRpcPermission({ window: 60, max: 10 }))
       .handler(async ({ context, input }) => {
         try {
-          if (!options.attachments) throw new AttachmentError("STORAGE_UNAVAILABLE");
           return await options.attachments.upload(context.auth.user.id, input);
         } catch (error) {
           const code = failureCode(error);

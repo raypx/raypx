@@ -20,8 +20,11 @@ volumes are scoped to that project. Preserve the project name across updates.
 Choose a new release identifier whenever source or build inputs change.
 
 Use URL-safe `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB`; Compose
-assembles the database URL. `AUTH_SECRET` must be independent per project. All
-production API-enabled roles require explicit database, secret, HTTPS auth URL
+assembles the database URL. `AUTH_SECRET` and `APP_KEY` must be independent per
+project and differ from each other: `AUTH_SECRET` signs sessions, `APP_KEY`
+encrypts stored provider credentials and signs instance receipts, so replacing it
+requires re-entering those credentials and re-enrolling instances. All
+production API-enabled roles require explicit database, both secrets, HTTPS auth URL
 and exact allowed origins. `POSTGRES_IMAGE_DIGEST` must be the verified
 64-character manifest digest for postgres:17-alpine. Keep its prior value for
 rollback. No floating-tag fallback is provided.

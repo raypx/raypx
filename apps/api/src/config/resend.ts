@@ -3,8 +3,8 @@ import type { ResendSettingsSnapshot, ResendSettingsUpdate } from "@raypx/contra
 import type { Database } from "@raypx/database/connection";
 import { mailConfiguration } from "@raypx/database/schema";
 import { createMailer, MailUnavailableError, type Mailer } from "@raypx/email/server";
-import { AuditUnavailable, type AuditService } from "../admin/audit.js";
-import { writeAuditSuccess } from "../admin/repository.js";
+import type { AuditService } from "../admin/audit.js";
+import { writeAuditedSetting } from "./audited-write.js";
 import { configurationCipher } from "./credentials.js";
 import { ConfigurationError } from "./service.js";
 import { createConfigurationReads, type ConfigurationReads } from "./reads.js";
@@ -63,56 +63,45 @@ export function createResendSettings(
         throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
       }
     },
-    async update({ values, apiKey, revision }) {
-      const scope = audit.current();
-      if (!scope || scope.action !== "configuration.update") throw new AuditUnavailable();
-      scope.mutationStarted = true;
-      let result: ResendSettingsSnapshot;
-      try {
-        result = await db.transaction(async (tx) => {
-          const [previous] = await tx
-            .select()
-            .from(mailConfiguration)
-            .where(eq(mailConfiguration.id, id))
-            .for("update");
-          if ((previous?.revision ?? 0) !== revision)
-            throw new ConfigurationError("CONFIGURATION_CONFLICT");
-          if (!previous && !apiKey) throw new ConfigurationError("INVALID_INPUT");
-          let credentials = previous?.credentials ?? "";
-          if (apiKey) credentials = await cipher.seal(apiKey, values.from);
-          else if (previous && previous.from !== values.from)
-            credentials = await cipher.seal(
-              await cipher.open(credentials, previous.from),
-              values.from,
-            );
-          const next = { ...values, credentials, revision: revision + 1, updatedAt: sql`now()` };
-          const [row] = previous
-            ? await tx
-                .update(mailConfiguration)
-                .set(next)
-                .where(and(eq(mailConfiguration.id, id), eq(mailConfiguration.revision, revision)))
-                .returning(summary)
-            : await tx
-                .insert(mailConfiguration)
-                .values({ id, ...next })
-                .onConflictDoNothing()
-                .returning(summary);
-          if (!row) throw new ConfigurationError("CONFIGURATION_CONFLICT");
-          await writeAuditSuccess(tx, scope, {
+    update: ({ values, apiKey, revision }) =>
+      writeAuditedSetting({ db, audit, reads, scope: "resend" }, async (tx) => {
+        const [previous] = await tx
+          .select()
+          .from(mailConfiguration)
+          .where(eq(mailConfiguration.id, id))
+          .for("update");
+        if ((previous?.revision ?? 0) !== revision)
+          throw new ConfigurationError("CONFIGURATION_CONFLICT");
+        if (!previous && !apiKey) throw new ConfigurationError("INVALID_INPUT");
+        let credentials = previous?.credentials ?? "";
+        if (apiKey) credentials = await cipher.seal(apiKey, values.from);
+        else if (previous && previous.from !== values.from)
+          credentials = await cipher.seal(
+            await cipher.open(credentials, previous.from),
+            values.from,
+          );
+        const next = { ...values, credentials, revision: revision + 1, updatedAt: sql`now()` };
+        const [row] = previous
+          ? await tx
+              .update(mailConfiguration)
+              .set(next)
+              .where(and(eq(mailConfiguration.id, id), eq(mailConfiguration.revision, revision)))
+              .returning(summary)
+          : await tx
+              .insert(mailConfiguration)
+              .values({ id, ...next })
+              .onConflictDoNothing()
+              .returning(summary);
+        if (!row) throw new ConfigurationError("CONFIGURATION_CONFLICT");
+        return {
+          snapshot: snapshot(row),
+          changes: {
             targetId: id,
             before: previous ? { mailEnabled: previous.enabled } : null,
             after: { mailEnabled: row.enabled },
-          });
-          return snapshot(row);
-        });
-      } catch (error) {
-        if (error instanceof ConfigurationError || error instanceof AuditUnavailable) throw error;
-        throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
-      }
-      scope.committed = true;
-      reads.committed("resend", result.revision);
-      return result;
-    },
+          },
+        };
+      }),
   };
 }
 

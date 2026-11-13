@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import type { RpcContext } from "../../middleware/rpc.js";
 import type { RpcBoundary } from "./boundary.js";
 export function createHostsHandlers({
@@ -46,7 +45,6 @@ export function createHostsHandlers({
         controlCall(context, (control, auth) => control.credentials.authorizeHost(auth, input)),
       ),
     grant: os.hosts.grant.use(withPublicRpcAccess).handler(async ({ input, context }) => {
-      if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
       await limitPeer(context, "hosts.grant");
       await enforceLimit(context, `rpc:hosts.grant:credential:${await digest(input.credential)}`, {
         window: 60,
@@ -59,7 +57,6 @@ export function createHostsHandlers({
       }
     }),
     revoke: os.hosts.revoke.use(withPublicRpcAccess).handler(async ({ input, context }) => {
-      if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
       await limitPeer(context, "hosts.revoke");
       try {
         return await options.control.credentials.revokeHost(input.credential);

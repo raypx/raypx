@@ -121,7 +121,7 @@ it("rolls back a failed migration and releases its lock for a subsequent startup
 it("imports provider settings explicitly and preserves existing rows on retries", async () => {
   const secret = "synthetic-migration-secret-for-test-only";
   const env = {
-    AUTH_SECRET: secret,
+    APP_KEY: secret,
     RESEND_API_KEY: "re_migration_test_key",
     MAIL_FROM: "Raypx <notify@example.com>",
     MAIL_DEFAULT_LOCALE: "zh",

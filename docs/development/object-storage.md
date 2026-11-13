@@ -23,7 +23,7 @@ location. The page reports the saved configuration state. Actual upload attempts
 verify bucket access.
 
 For a custom S3-compatible endpoint, the deployment operator first runs this
-command with the API's `DATABASE_URL` and `AUTH_SECRET` available in the
+command with the API's `DATABASE_URL` and `APP_KEY` available in the
 environment. Pass JSON on standard input from the deployment secret manager
 or a protected file. Web can manage credentials and settings for that endpoint
 after it is configured.
@@ -44,8 +44,8 @@ bun run db:migrate --storage-stdin < /path/to/protected-storage-config.json
 
 `storage_configuration` stores the endpoint, region and bucket along with both
 keys sealed together using AES-256-GCM. A domain-separated HKDF key is derived
-from the API's `AUTH_SECRET`. Enter both keys in Web or run the command again to
-re-seal them after changing `AUTH_SECRET`. Each upload reads the committed
+from the API's `APP_KEY`. Enter both keys in Web or run the command again to
+re-seal them after changing `APP_KEY`. Each upload reads the committed
 configuration. To initialize a missing row from existing `S3_*` environment
 variables, run `bun run db:migrate --import-config`. Supply `S3_ENDPOINT`,
 `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` together.

@@ -12,8 +12,8 @@ import type { StorageSettingsService } from "../config/types.js";
 import { ConfigurationError } from "../config/service.js";
 import { createConfigurationReads, type ConfigurationReads } from "../config/reads.js";
 import { configurationCipher } from "../config/credentials.js";
-import { AuditUnavailable, type AuditService } from "../admin/audit.js";
-import { writeAuditSuccess } from "../admin/repository.js";
+import type { AuditService } from "../admin/audit.js";
+import { writeAuditedSetting } from "../config/audited-write.js";
 
 const safeStorageLocationSchema = storageLocationSchema.extend({
   endpoint: storageLocationSchema.shape.endpoint.refine((value) => {
@@ -152,64 +152,54 @@ export function createStorageSettings(
       const parsed = safeStorageLocationSchema.safeParse(location);
       if (!parsed.success) throw new ConfigurationError("INVALID_INPUT");
       const values = { ...parsed.data, enabled };
-      const scope = audit.current();
-      if (!scope || scope.action !== "configuration.update") throw new AuditUnavailable();
-      scope.mutationStarted = true;
-      let result: StorageSettingsSnapshot;
-      try {
-        result = await db.transaction(async (tx) => {
-          const [previous] = await tx
-            .select()
-            .from(storageConfiguration)
-            .where(eq(storageConfiguration.id, id))
-            .for("update");
-          if ((previous?.revision ?? 0) !== revision)
-            throw new ConfigurationError("CONFIGURATION_CONFLICT");
-          if (!canSetEndpoint(values.endpoint, previous?.endpoint))
-            throw new ConfigurationError("STORAGE_ENDPOINT_REQUIRES_OPERATOR");
-          const changedLocation =
-            !previous ||
-            values.endpoint !== previous.endpoint ||
-            values.region !== previous.region ||
-            values.bucket !== previous.bucket;
-          if (changedLocation && !credentials) throw new ConfigurationError("INVALID_INPUT");
-          const encrypted = credentials
-            ? await sealCredentials(secret, values, credentials)
-            : previous!.credentials;
-          const next = {
-            ...values,
-            credentials: encrypted,
-            revision: revision + 1,
-            updatedAt: sql`now()`,
-          };
-          const [row] = previous
-            ? await tx
-                .update(storageConfiguration)
-                .set(next)
-                .where(
-                  and(eq(storageConfiguration.id, id), eq(storageConfiguration.revision, revision)),
-                )
-                .returning()
-            : await tx
-                .insert(storageConfiguration)
-                .values({ id, ...next })
-                .onConflictDoNothing()
-                .returning();
-          if (!row) throw new ConfigurationError("CONFIGURATION_CONFLICT");
-          await writeAuditSuccess(tx, scope, {
+      return writeAuditedSetting({ db, audit, reads, scope: "storage" }, async (tx) => {
+        const [previous] = await tx
+          .select()
+          .from(storageConfiguration)
+          .where(eq(storageConfiguration.id, id))
+          .for("update");
+        if ((previous?.revision ?? 0) !== revision)
+          throw new ConfigurationError("CONFIGURATION_CONFLICT");
+        if (!canSetEndpoint(values.endpoint, previous?.endpoint))
+          throw new ConfigurationError("STORAGE_ENDPOINT_REQUIRES_OPERATOR");
+        const changedLocation =
+          !previous ||
+          values.endpoint !== previous.endpoint ||
+          values.region !== previous.region ||
+          values.bucket !== previous.bucket;
+        if (changedLocation && !credentials) throw new ConfigurationError("INVALID_INPUT");
+        const encrypted = credentials
+          ? await sealCredentials(secret, values, credentials)
+          : previous!.credentials;
+        const next = {
+          ...values,
+          credentials: encrypted,
+          revision: revision + 1,
+          updatedAt: sql`now()`,
+        };
+        const [row] = previous
+          ? await tx
+              .update(storageConfiguration)
+              .set(next)
+              .where(
+                and(eq(storageConfiguration.id, id), eq(storageConfiguration.revision, revision)),
+              )
+              .returning()
+          : await tx
+              .insert(storageConfiguration)
+              .values({ id, ...next })
+              .onConflictDoNothing()
+              .returning();
+        if (!row) throw new ConfigurationError("CONFIGURATION_CONFLICT");
+        return {
+          snapshot: snapshot(row),
+          changes: {
             targetId: id,
             before: previous ? { storageEnabled: previous.enabled } : null,
             after: { storageEnabled: row.enabled },
-          });
-          return snapshot(row);
-        });
-      } catch (error) {
-        if (error instanceof ConfigurationError || error instanceof AuditUnavailable) throw error;
-        throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
-      }
-      scope.committed = true;
-      reads.committed("storage", result.revision);
-      return result;
+          },
+        };
+      });
     },
   };
 }

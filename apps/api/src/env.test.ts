@@ -26,6 +26,25 @@ it("requires explicit production configuration", () => {
   expect(() => getApiEnvironment({ NODE_ENV: "production" })).toThrow("Production requires");
   expect(getApiEnvironment({ NODE_ENV: "test" }).DATABASE_URL).toContain(":5433/raypx_foundation");
 });
+it("requires a production application key that is independent of the auth secret", () => {
+  const production = {
+    NODE_ENV: "production",
+    DATABASE_URL: "postgres://fixture:fixture@db.example.test:5432/raypx",
+    AUTH_URL: "https://app.example.test",
+    AUTH_SECRET: "synthetic-auth-secret-for-tests-32-chars",
+    APP_KEY: "synthetic-app-key-for-tests-only-32-chars",
+    ALLOWED_ORIGINS: "https://app.example.test",
+  };
+  expect(getApiEnvironment(production).APP_KEY).toBe(production.APP_KEY);
+  const { APP_KEY: _, ...missing } = production;
+  expect(() => getApiEnvironment(missing)).toThrow("Production requires");
+  expect(() =>
+    getApiEnvironment({ ...production, APP_KEY: "raypx-development-only-app-key-32-characters" }),
+  ).toThrow("APP_KEY must be explicitly configured");
+  expect(() => getApiEnvironment({ ...production, APP_KEY: production.AUTH_SECRET })).toThrow(
+    "APP_KEY must differ from AUTH_SECRET",
+  );
+});
 
 it("migrates on startup by default and accepts only an explicit boolean switch", () => {
   expect(getApiEnvironment({ NODE_ENV: "test" }).DATABASE_MIGRATE_ON_START).toBe(true);

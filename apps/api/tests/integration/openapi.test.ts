@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 import { ControlService } from "@raypx/control";
 import { memoryControlRepository } from "@raypx/control/testing";
 import type { AuthSession } from "@raypx/core/auth";
-import { createApiApp } from "../../src/routers/index.js";
+import { createApiApp } from "../helpers/app.js";
 
 const session: AuthSession = {
   user: {

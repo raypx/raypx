@@ -6,7 +6,7 @@ import { user, schema } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
-import { createApiApp } from "../../src/routers/index.js";
+import { createApiApp } from "./app.js";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
 const url = process.env.TEST_DATABASE_URL;

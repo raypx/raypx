@@ -8,6 +8,7 @@ export default {
   DATABASE_URL: "derived",
   AUTH_URL: "derived",
   AUTH_SECRET: "input",
+  APP_KEY: "input",
   GOOGLE_CLIENT_ID: "input",
   GOOGLE_CLIENT_SECRET: "input",
   GITHUB_CLIENT_ID: "input",

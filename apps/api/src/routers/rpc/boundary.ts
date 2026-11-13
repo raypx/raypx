@@ -31,7 +31,6 @@ export function createRpcBoundary(options: ApiAppOptions) {
     context: AccountContext,
     run: (control: ControlService, auth: AuthSession) => Promise<T>,
   ) {
-    if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
     try {
       return await run(options.control, context.auth);
     } catch (error) {

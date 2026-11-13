@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vitest";
 import type { InstanceService } from "@raypx/instances/server";
 import { createApiClient } from "@raypx/client/api";
-import { createApiApp } from "../index.js";
+import { createApiApp } from "../../../tests/helpers/app.js";
 
 it("limits device polling by address before any caller-chosen ID", async () => {
   const poll = vi.fn(),

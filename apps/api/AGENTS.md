@@ -49,6 +49,11 @@ health, OpenAPI and oRPC subrouters with `app.route()`.
 `src/routers/relay/` owns Relay HTTP probes and the Hono WebSocket route.
 Hono admits upgrades and supplies CrossWS hooks to Nitro's Bun listener.
 `runtime/shared.ts` composes services from the injected database, logger and providers.
+`runtime/control.ts` is the one Control/Memory/attachment composition for every role;
+never assemble `ControlService` elsewhere. `runtime/database.ts` opens runtime pools with a
+12-second `statement_timeout` (below the 15-second RPC deadline) and a 30-second
+idle-transaction bound, so an abandoned request releases its connection. Migrations
+use an unbounded connection.
 `runtime/adapters.ts` picks session and rate-limit adapters and builds the auth config.
 `runtime/lifecycle.ts` closes
 owned resources in reverse order, every one even after a failure, and only once.
@@ -111,7 +116,8 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   deployment account provisioner is a separately prepared test bundle mounted only
   during acceptance; production targets do not build or carry that fixture.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
-- Production rate limits share the `rate_limit` table: Better Auth limits auth routes
+- Development counts RPC limits in process memory so limited paths run locally; tests
+  stay unlimited unless they inject a limiter. Production rate limits share the `rate_limit` table: Better Auth limits auth routes
   by client IP. The Nitro entry overwrites `x-raypx-client-ip` with the socket address
   and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy. `src/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon. Host grants
@@ -141,7 +147,9 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   connections, with a per-response nonce for its bootstrap script.
   `secureHeaders` sends `X-Frame-Options: DENY` and HSTS. Keep
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
-- Production API-enabled roles require explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
+- Production API-enabled roles require explicit DATABASE_URL, AUTH_URL, AUTH_SECRET, APP_KEY and ALLOWED_ORIGINS.
+  `AUTH_SECRET` belongs to Better Auth only. `APP_KEY` encrypts stored provider credentials
+  and seeds instance signing, and must differ so rotating sessions invalidates neither.
   `src/env.contract.ts` is the static deployment input catalog. The runtime schema
   must declare exactly its keys; tooling reads this data without importing API runtime.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
@@ -179,7 +187,8 @@ shared security fence and device advisory lock. Read-only reads take neither loc
 HTTP RPC exposes reads, device management and one-time viewer tickets. Hono routes
 Relay v5 WebSockets in the `both` (default) and `relay` roles. One build supports
 all roles. Combined scheduling/revocation calls RelayHub directly; configured Redis
-attaches cluster routing and shared caches. Split api/relay roles require Redis.
+attaches cluster routing and shared caches. A broker that does not attach at startup
+keeps reconnecting; API-enabled roles log `relay.cluster` and `/ready` reports the relay. Split api/relay roles require Redis.
 The relay role parses only DB, broker and origins, never constructs Auth, cookies,
 mail or signer, and skips scheduled jobs and migration. `runtime/backend.ts` owns
 process selection/lifecycle; `runtime/server.ts` composes API-enabled roles.
@@ -225,17 +234,19 @@ it covers every sign-in method; the email signup route only pre-checks the 5-sec
 `configuration.storage/updateStorage` manage revisioned S3 settings with the same
 permission and audit gates. Reads exclude credentials. The `db:migrate --storage-stdin`
 operator command also supports custom S3 endpoints. PostgreSQL stores credentials
-encrypted with the API's deployment secret. `attachments.upload` verifies the account, origin
+encrypted with the API's `APP_KEY`. `attachments.upload` verifies the account, origin
 and project before storing an original in the private bucket. The split relay
 reads bounded text projections from PostgreSQL. `RuntimeProviders.storage`
 overrides the provider for tests. See `docs/development/object-storage.md`.
 `configuration.resend/updateResend` use the same authorization and audit gates.
 Site, S3 and Resend use `src/config/reads.ts` for typed fresh and cached reads.
+S3 and Resend writes go through `src/config/audited-write.ts`, the one path that
+commits a change with its audit success and then invalidates readers.
 Each save clears its scope after commit and publishes its revision over Redis.
 A five-second TTL covers missed notifications. Keep administrator reads,
 registration admission and S3 uploads on the authoritative path.
 The Resend API key is write-only and encrypted with the
-deployment secret. `db:migrate --import-config` seeds a missing row
+`APP_KEY`. `db:migrate --import-config` seeds a missing row
 explicitly before the first administrator signup or when upgrading.
 See `docs/development/caching.md` for the configuration reader.
 Run the migration before deploying: signup fails closed without the table. Jobs combine the
@@ -273,7 +284,9 @@ a test rejects a served procedure without one. Handlers never resolve sessions o
 name permissions themselves. Each handler declares its quota alongside the
 procedure; the account key is the contract path. Use `limitAccount` when the quota
 must follow the trusted Origin check.
-`src/app/options.ts` owns composition options. RPC handlers
+`src/app/options.ts` owns composition options; every service is required, so handlers
+have no absent-service branch. Tests build partial applications through
+`tests/helpers/app.ts`, whose missing services throw at first use. RPC handlers
 never import the HTTP application entry. Runtime composes project validation
 before Memory and control commands.
 

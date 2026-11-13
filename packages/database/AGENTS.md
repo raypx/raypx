@@ -21,7 +21,9 @@ Generate new migrations with drizzle-kit. Never edit generated SQL or snapshots.
 No reset/drop command or runtime dependency on auth, tooling or apps.
 `studio` (root `db:studio`) opens Drizzle Studio with write access; only point it at the local foundation database.
 Schema generation and Studio run through the private `@raypx/drizzle-kit` workspace.
-Bun defaults to a process pool of ten connections. `/connection` keeps runtime
+Bun defaults to a process pool of ten connections. `statementTimeoutMs` and
+`idleTransactionTimeoutMs` set server-side session bounds; request-serving callers
+set them, the migrator never does. `/connection` keeps runtime
 connections separate from filesystem-based migrations in `migrate.ts`.
 API startup and explicit commands share the migrator's transaction-scoped advisory lock
 before any ledger/schema access. Lock acquisition waits at most 120 seconds; subsequent

@@ -14,7 +14,7 @@ import {
   verifyInstanceReceipt,
 } from "@raypx/instances/crypto";
 import { createInstanceRepository } from "../../../src/instances/repository.js";
-import { createApiApp } from "../../../src/routers/index.js";
+import { createApiApp } from "../../helpers/app.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))

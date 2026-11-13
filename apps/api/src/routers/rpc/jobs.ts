@@ -29,7 +29,6 @@ export function createJobsHandlers({
     context: AccountContext,
     run: (service: CloudJobsService, userId: string) => Promise<T>,
   ) {
-    if (!options.cloudJobs) throw new ORPCError("SERVICE_UNAVAILABLE");
     try {
       return await run(options.cloudJobs, context.auth.user.id);
     } catch (error) {

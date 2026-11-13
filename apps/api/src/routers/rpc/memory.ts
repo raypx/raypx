@@ -27,7 +27,6 @@ export function createMemoryHandlers({
     context: AccountContext,
     run: (service: ContextLibraryService, owner: string) => Promise<T>,
   ) {
-    if (!options.memory) throw new ORPCError("SERVICE_UNAVAILABLE");
     try {
       return await run(options.memory, context.auth.user.id);
     } catch (error) {
@@ -92,10 +91,8 @@ export function createMemoryHandlers({
     resolve: os.memory.resolve
       .use(withRpcPermission({ window: 60, max: 30 }))
       .handler(({ context, input }) =>
-        memoryCall(context, (service, owner) =>
-          options.resolveContext
-            ? options.resolveContext(owner, input.selection, input.target, input.prompt ?? " ")
-            : service.resolve(owner, input.selection, input.target, input.prompt ?? " "),
+        memoryCall(context, (_, owner) =>
+          options.resolveContext(owner, input.selection, input.target, input.prompt ?? " "),
         ),
       ),
   };

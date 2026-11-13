@@ -23,7 +23,6 @@ export function createInstancesHandlers({
     context: RpcContext,
     run: (service: InstanceService) => Promise<T>,
   ): Promise<T> {
-    if (!options.instances) throw new ORPCError("SERVICE_UNAVAILABLE");
     try {
       return await run(options.instances);
     } catch (error) {

@@ -5,7 +5,7 @@ import { createApiClient } from "@raypx/client/api";
 import { controlAuth } from "@raypx/control/testing";
 import { createMailer } from "@raypx/email/server";
 import { eq } from "drizzle-orm";
-import { createApiApp } from "../../../src/routers/index.js";
+import { createApiApp } from "../../helpers/app.js";
 import { createConfigurationReads } from "../../../src/config/reads.js";
 import { AuditService } from "../../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../../src/admin/repository.js";

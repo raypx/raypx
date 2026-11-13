@@ -1,37 +1,20 @@
 import { createRelayHttpApp } from "../routers/relay/http.js";
 import { createRelaySocketRoutes } from "../routers/relay/socket.js";
 import { sql } from "drizzle-orm";
-import { connectDatabase } from "@raypx/database/connection";
-import { ControlService, ControlProjects } from "@raypx/control";
-import { createControlRepository } from "@raypx/control/postgres";
+import { connectRuntimeDatabase } from "./database.js";
 import { RelayHub, RedisRelayCluster } from "@raypx/control/relay";
-import { ContextLibraryService } from "@raypx/memory/server";
-import { createContextRepository } from "@raypx/memory/server/postgres";
 import type { RelayEnvironment } from "../env.js";
 import { createReadinessCheck } from "../app/readiness.js";
 import { createClientIpReader } from "../app/client-ip.js";
-import { withSessionAttachments } from "../storage/attachments.js";
+import { composeControl } from "./control.js";
 
 /** The relay role owns no Auth, cookies, mail, signer, migrations or scheduled jobs. */
 export async function createRelayRuntime(environment: RelayEnvironment) {
-  const connection = connectDatabase(environment.DATABASE_URL);
-  const repository = createControlRepository(connection.db);
-  const projects = new ControlProjects(repository);
-  const memory = new ContextLibraryService({
-    repository: createContextRepository(connection.db),
-    scope: "account",
-    validateProject: (owner, target) => projects.validateContextProject(owner, target),
-  });
-  const control = new ControlService(
-    repository,
-    Date.now,
-    withSessionAttachments(connection.db, (owner, selection, target, prompt) =>
-      memory.resolve(owner, selection, target, prompt),
-    ),
-    projects,
-  );
+  const connection = connectRuntimeDatabase(environment.DATABASE_URL);
+  const { control } = composeControl(connection.db);
   const hub = new RelayHub(async (use) => use(control));
   try {
+    // The cluster keeps reconnecting; `/ready` reports the relay unavailable until it attaches.
     await hub.attachCluster(new RedisRelayCluster(environment.REDIS_URL)).catch(() => {});
     let closing: Promise<void> | undefined;
     const readReadiness = createReadinessCheck({

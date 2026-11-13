@@ -5,7 +5,7 @@ import {
   type RelayServerFrame,
 } from "@raypx/contracts/tasks";
 import { RelayHub } from "@raypx/control/relay";
-import { createApiApp } from "../../src/routers/index.js";
+import { createApiApp } from "./app.js";
 import { ControlService } from "@raypx/control";
 import { controlAuth, memoryControlRepository } from "@raypx/control/testing";
 

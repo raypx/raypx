@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { accessForRole } from "@raypx/account/access";
 import type { AuthSession } from "@raypx/core/auth";
-import { createApiApp } from "../../src/routers/index.js";
+import { createApiApp } from "../helpers/app.js";
 import { createAccessPolicy } from "../../src/access.js";
 
 function fixture() {

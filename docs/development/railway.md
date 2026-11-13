@@ -34,13 +34,13 @@ Runtime variables are deliberately unmanaged by IaC. This preserves secrets and
 operator settings on Railway. Configure references in the dashboard or with
 railway variable set --skip-deploys; never commit decrypted variables.
 
-| Service  | Variables                                                                                                                                                                                                                          |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                         |
-| api      | NODE_ENV=production; SERVER_ROLE=both (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters |
-| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                                         |
-| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                  |
-| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                          |
+| Service  | Variables                                                                                                                                                                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                                              |
+| api      | NODE_ENV=production; SERVER_ROLE=both (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET and APP_KEY are distinct private random values of at least 32 characters |
+| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                                                              |
+| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                                       |
+| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                                               |
 
 Mail and storage live in each environment's database. To seed them on upgrade,
 set `DB_MIGRATE_IMPORT_CONFIG=true` and supply the existing provider environment
@@ -220,7 +220,7 @@ After the domain is ready:
 3. Set Gateway's PUBLIC_ORIGIN to https://raypx.com.
 4. Check the resolved API AUTH_URL, ALLOWED_ORIGINS and Web VITE_API_URL references.
 5. Rebuild Web because VITE_API_URL is baked into browser and SSR output; redeploy
-   API to refresh authentication settings. Keep the same database, Redis and AUTH_SECRET.
+   API to refresh authentication settings. Keep the same database, Redis, AUTH_SECRET and APP_KEY.
 6. Repeat HTTPS, signed-out redirect, login, cookie and Relay checks on raypx.com.
 
 The DNS change alone does not rebuild Web or change its API origin.

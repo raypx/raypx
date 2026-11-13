@@ -13,7 +13,7 @@ import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
 import { connected, controlAuth } from "@raypx/control/testing";
 import { createApiClient } from "@raypx/client/api";
-import { createApiApp } from "../../../src/routers/index.js";
+import { createApiApp } from "../../helpers/app.js";
 import { createConfigurationReads } from "../../../src/config/reads.js";
 import { AuditService } from "../../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../../src/admin/repository.js";

@@ -33,6 +33,8 @@ interface ApiEventFields {
       contextReceipts: string;
     };
   };
+  /** A configured Relay broker did not attach at startup; it keeps reconnecting. */
+  "relay.cluster": { status: number; code: string };
   "job.schedules": {
     status: number;
     code: string;
@@ -51,7 +53,7 @@ type ApiEventStart =
       RequestFields,
       "requestId" | "method" | "route"
     >)
-  | { operation: "job.cleanup" | "job.schedules" };
+  | { operation: "job.cleanup" | "job.schedules" | "relay.cluster" };
 
 export interface ApiEventLogger<Operation extends ApiOperation> {
   set(fields: Partial<ApiEventFields[Operation]>): void;

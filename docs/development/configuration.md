@@ -83,7 +83,7 @@ Resend, a sending API key and the default template language. The account
 request's language takes precedence when available. Save to enable registration
 verification and password-reset emails. Pausing delivery preserves the key.
 Leave the key field blank when updating the other settings. A replacement is
-encrypted with the deployment's `AUTH_SECRET`; the key is never returned.
+encrypted with the deployment's `APP_KEY`; the key is never returned.
 Saves immediately clear the current process's Resend client. Redis notifies other
 API replicas to reload on their next mail request. A five-second process-local
 TTL covers missed notifications and deployments without Redis. Saving does not
@@ -91,7 +91,7 @@ send a test email or verify the key with Resend.
 
 For a new deployment without a verified administrator, or when upgrading from
 environment-based mail delivery, run the following from the repository with
-the target `DATABASE_URL`, `AUTH_SECRET`,
+the target `DATABASE_URL`, `APP_KEY`,
 `RESEND_API_KEY` and `MAIL_FROM` supplied securely to the command's environment.
 `MAIL_DEFAULT_LOCALE` is optional and defaults to `en`.
 

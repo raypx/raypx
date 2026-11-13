@@ -2,7 +2,8 @@ import { expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { ContextError, type ContextDocument, type ContextVersion } from "@raypx/core/memory";
 import type { ContextLibraryService } from "@raypx/memory/server";
-import { createApiApp } from "../../src/routers/index.js";
+import { createApiApp } from "../helpers/app.js";
+import type { ResolveTaskContext } from "@raypx/control";
 import { controlAuth } from "@raypx/control/testing";
 
 function fixture() {
@@ -56,6 +57,8 @@ function fixture() {
   const readSession = vi.fn(async () => (signedIn ? auth : null));
   const app = createApiApp({
     memory: service as unknown as ContextLibraryService,
+    // The runtime resolves through the attachment-aware resolver; here it is the library.
+    resolveContext: service.resolve as unknown as ResolveTaskContext,
     authHandler: async () => new Response(null, { status: 404 }),
     readSession,
     allowedOrigins: ["https://web.example.test", "views://main"],

@@ -1,7 +1,7 @@
 import { call, os, type AnyProcedure } from "@orpc/server";
 import { expect, it, vi } from "vitest";
 import { createAccessPolicy } from "../access.js";
-import { createRpcRouter } from "../routers/rpc/index.js";
+import { createRpcRouter } from "../../tests/helpers/app.js";
 import { createRpcMiddleware, enforcesRpcAccess, type RpcContext } from "./rpc.js";
 
 it("rejects a missing RPC access declaration before reading the session or running the handler", async () => {
