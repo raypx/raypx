@@ -1,3 +1,4 @@
+import { exposeApiTo } from "./api-exposure.js";
 import { oc, type InferRouterContractOutputs } from "@orpc/contract";
 import { z } from "zod";
 
@@ -41,6 +42,7 @@ export type AuditEntry = z.infer<typeof auditEntrySchema>;
 export type AuditFilter = z.infer<typeof auditFilterSchema>;
 export const administrationContract = {
   overview: oc
+    .meta(exposeApiTo("web"))
     .input(z.strictObject({ days: z.union([z.literal(7), z.literal(30)]).default(30) }))
     .output(
       z.strictObject({
@@ -54,22 +56,28 @@ export const administrationContract = {
         ),
       }),
     ),
-  health: oc.input(z.strictObject({})).output(
-    z.strictObject({
-      observedAt: z.iso.datetime(),
-      checks: z.strictObject({
-        database: z.enum(["ok", "unavailable", "not-configured"]),
-        redis: z.enum(["ok", "unavailable", "not-configured"]),
-        relay: z.enum(["ok", "unavailable", "not-configured"]),
+  health: oc
+    .meta(exposeApiTo("web"))
+    .input(z.strictObject({}))
+    .output(
+      z.strictObject({
+        observedAt: z.iso.datetime(),
+        checks: z.strictObject({
+          database: z.enum(["ok", "unavailable", "not-configured"]),
+          redis: z.enum(["ok", "unavailable", "not-configured"]),
+          relay: z.enum(["ok", "unavailable", "not-configured"]),
+        }),
       }),
-    }),
-  ),
-  audit: oc.input(auditFilterSchema).output(
-    z.strictObject({
-      entries: z.array(auditEntrySchema),
-      next: z.strictObject({ startedAt: z.iso.datetime(), id: z.uuid() }).nullable(),
-    }),
-  ),
+    ),
+  audit: oc
+    .meta(exposeApiTo("web"))
+    .input(auditFilterSchema)
+    .output(
+      z.strictObject({
+        entries: z.array(auditEntrySchema),
+        next: z.strictObject({ startedAt: z.iso.datetime(), id: z.uuid() }).nullable(),
+      }),
+    ),
 };
 
 export type AdministrationOutputs = InferRouterContractOutputs<typeof administrationContract>;

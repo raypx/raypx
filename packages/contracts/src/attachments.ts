@@ -1,3 +1,4 @@
+import { exposeApiTo } from "./api-exposure.js";
 import { oc } from "@orpc/contract";
 import { taskContextTargetSchema } from "@raypx/core/tasks";
 import { z } from "zod";
@@ -18,12 +19,18 @@ export const sessionAttachmentInputSchema = taskContextTargetSchema.extend({
 });
 export type SessionAttachmentInput = z.infer<typeof sessionAttachmentInputSchema>;
 export const sessionAttachmentContract = {
-  status: oc.input(z.strictObject({})).output(z.object({ enabled: z.boolean() })),
-  upload: oc.input(sessionAttachmentInputSchema).output(
-    z.object({
-      id: z.uuid(),
-      revision: z.literal(1),
-      attachment: z.string(),
-    }),
-  ),
+  status: oc
+    .meta(exposeApiTo("renderer"))
+    .input(z.strictObject({}))
+    .output(z.object({ enabled: z.boolean() })),
+  upload: oc
+    .meta(exposeApiTo("renderer"))
+    .input(sessionAttachmentInputSchema)
+    .output(
+      z.object({
+        id: z.uuid(),
+        revision: z.literal(1),
+        attachment: z.string(),
+      }),
+    ),
 };

@@ -16,12 +16,17 @@ This entry never describes the
 administrative daemon router. The daemon derives renderer local admission from
 `/local-client` and API admission from `apiExposure`; no second business allowlist.
 
-`/api`: public HTTP account contract and exhaustive native transport exposure policy (`apiExposure`). The daemon derives Desktop RPC admission from this policy. `/local`: versioned local CLI/Desktop protocol. There is no root entry and no `./jobs` or `./memory` entry: transport entries compose Core's domain schemas, and domain consumers import Core directly.
+`/api`: public HTTP account contract and native transport exposure policy (`apiExposure`).
+Declare each procedure's consumer with `.meta(exposeApiTo(...))`. The daemon
+derives Desktop RPC admission from the generated map. A missing declaration
+omits the procedure from the map and fails the contract test.
+`/local`: versioned local CLI/Desktop protocol. There is no root entry and no
+`./jobs` or `./memory` entry. Transport entries compose Core's domain schemas,
+and domain consumers import Core directly.
 Use the private `httpRead` builder beside a procedure's Zod schemas to opt it
 into the versioned OpenAPI transport. Give it a resource path and use `{id}`
 for a resource identifier. The remaining input fields become GET query parameters.
-API uses that oRPC metadata for dispatch and spec generation. `apiExposure`
-remains the native admission policy.
+API uses that oRPC metadata for dispatch and spec generation.
 
 ## Ownership
 

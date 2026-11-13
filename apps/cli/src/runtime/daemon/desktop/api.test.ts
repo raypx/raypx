@@ -19,6 +19,7 @@ it.each([
   request("/rpc/hosts/grant"),
   request("/rpc/instances/poll"),
   request("/rpc/admin/overview"),
+  request("/rpc/account/undeclared"),
   request("/api/auth/sign-in/social"),
   request("/rpc/account/get#fragment"),
   request("/rpc/account/get", { method: "DELETE" }),
@@ -36,6 +37,23 @@ it.each([
     code: "INVALID_API_REQUEST",
   });
   expect(fetch).not.toHaveBeenCalled();
+});
+
+it("admits renderer and native RPCs with a native capability and rejects other procedures", async () => {
+  const fetch = vi.fn(async (_request: Request) => Response.json({}));
+  const api = new DesktopApi(new SessionCookies(origin), fetch);
+  for (const path of ["/rpc/hosts/grant", "/rpc/admin/overview", "/rpc/account/undeclared"]) {
+    await expect(api.request(request(path), "native", signal(), true)).rejects.toMatchObject({
+      code: "INVALID_API_REQUEST",
+    });
+  }
+  for (const path of ["/rpc/account/get", "/rpc/hosts/authorize"]) {
+    await api.request(request(path), "native", signal(), true);
+  }
+  expect(fetch.mock.calls.map(([input]) => new URL(input.url).pathname)).toEqual([
+    "/rpc/account/get",
+    "/rpc/hosts/authorize",
+  ]);
 });
 
 it("keeps cookies and authorization response headers in the daemon and redacts auth body tokens", async () => {

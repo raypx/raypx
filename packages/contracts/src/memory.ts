@@ -1,3 +1,4 @@
+import { exposeApiTo } from "./api-exposure.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { httpRead } from "./http.js";
@@ -22,20 +23,33 @@ import {
 /** Account context documents and immutable revisions; no client-selected owner. */
 export const memoryContract = {
   list: httpRead("/memory/documents", "memory", "List memory documents")
+    .meta(exposeApiTo("renderer"))
     .input(z.strictObject({}))
     .output(z.array(contextDocumentSummarySchema).max(100)),
   get: httpRead("/memory/documents/{id}", "memory", "Read a memory document")
+    .meta(exposeApiTo("renderer"))
     .input(z.strictObject({ id: z.uuid() }))
     .output(contextDocumentSchema),
-  create: oc.input(contextCreateSchema).output(contextDocumentSchema),
-  update: oc.input(contextUpdateSchema).output(contextDocumentSchema),
-  archive: oc.input(contextArchiveSchema).output(contextDocumentSchema),
-  delete: oc.input(contextDeleteSchema).output(contextDeleteResultSchema),
+  create: oc.meta(exposeApiTo("renderer")).input(contextCreateSchema).output(contextDocumentSchema),
+  update: oc.meta(exposeApiTo("renderer")).input(contextUpdateSchema).output(contextDocumentSchema),
+  archive: oc
+    .meta(exposeApiTo("renderer"))
+    .input(contextArchiveSchema)
+    .output(contextDocumentSchema),
+  delete: oc
+    .meta(exposeApiTo("renderer"))
+    .input(contextDeleteSchema)
+    .output(contextDeleteResultSchema),
   history: httpRead("/memory/documents/{id}/revisions", "memory", "Read memory document revisions")
+    .meta(exposeApiTo("renderer"))
     .input(contextHistorySchema)
     .output(z.array(contextVersionSchema).max(20)),
-  restore: oc.input(contextRestoreSchema).output(contextDocumentSchema),
+  restore: oc
+    .meta(exposeApiTo("renderer"))
+    .input(contextRestoreSchema)
+    .output(contextDocumentSchema),
   resolve: oc
+    .meta(exposeApiTo("renderer"))
     .input(
       z.strictObject({
         selection: taskContextSelectionSchema,

@@ -210,7 +210,9 @@ Signing in or up clears the page's verified account without detaching the daemon
 explicit sign-out or a different verified account revokes the Host binding.
 
 The daemon derives renderer method admission from `localResults` and RPC admission
-from `apiExposure`. Account verification and Host authorization use its cookie API.
+from `apiExposure`, which is generated from each procedure's declared consumer.
+A procedure without a declaration is denied by the Desktop proxy. Account
+verification and Host authorization use its cookie API.
 It enforces selected-origin paths/headers, `Origin: views://main`, request/response
 limits, deadlines, cancellation, redirect refusal and atomic cookie persistence.
 Cookies, Set-Cookie and restricted Host credentials never enter renderer replies.

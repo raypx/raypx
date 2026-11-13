@@ -1,3 +1,4 @@
+import { collectApiExposure, exposeApiTo } from "./api-exposure.js";
 import { administrationContract } from "./administration.js";
 import { sessionAttachmentContract } from "./attachments.js";
 export * from "./administration.js";
@@ -57,26 +58,32 @@ export const apiContract = {
   jobs: jobsContract,
   hosts: {
     authorize: oc
+      .meta(exposeApiTo("native"))
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int().positive() }))
       .output(hostAuthorizationSchema),
     grant: oc
+      .meta(exposeApiTo("host"))
       .input(z.object({ credential: z.string().min(64).max(200) }))
       .output(z.object({ accountId: z.string(), grant: deviceGrantSchema })),
     revoke: oc
+      .meta(exposeApiTo("native"))
       .input(z.object({ credential: z.string().min(64).max(200) }))
       .output(z.object({ revoked: z.literal(true) })),
   },
   observed: {
     list: httpRead("/observed-requests", "observed", "List observed terminal requests and sessions")
+      .meta(exposeApiTo("renderer"))
       .input(z.object({}))
       .output(observedProjectionSchema),
     get: httpRead("/observed-requests/{id}", "observed", "Read an observed terminal request")
+      .meta(exposeApiTo("renderer"))
       .input(z.object({ id: z.string().uuid() }))
       .output(terminalRequestSchema),
   },
   configuration: configurationContract,
   devices: {
     register: oc
+      .meta(exposeApiTo("renderer"))
       .input(
         z.object({
           installationId: z.string().uuid(),
@@ -88,17 +95,21 @@ export const apiContract = {
       )
       .output(deviceGrantSchema),
     refreshGrant: oc
+      .meta(exposeApiTo("renderer"))
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
       .output(deviceGrantSchema),
     list: httpRead("/devices", "devices", "List registered computers")
+      .meta(exposeApiTo("renderer"))
       .input(z.object({}))
       .output(z.array(deviceSchema)),
     revoke: oc
+      .meta(exposeApiTo("renderer"))
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int() }))
       .output(z.object({ revoked: z.literal(true) })),
   },
   tasks: {
     list: httpRead("/tasks", "tasks", "List remote tasks")
+      .meta(exposeApiTo("renderer"))
       .input(
         z.object({
           before: z.string().optional(),
@@ -109,6 +120,7 @@ export const apiContract = {
       )
       .output(z.array(taskSchema)),
     get: httpRead("/tasks/{id}", "tasks", "Read a task and its activity")
+      .meta(exposeApiTo("renderer"))
       .input(
         z.object({
           id: z.string().uuid(),
@@ -128,72 +140,26 @@ export const apiContract = {
   },
   approvals: {
     list: httpRead("/approvals", "approvals", "List pending approvals")
+      .meta(exposeApiTo("renderer"))
       .input(z.object({}))
       .output(z.array(humanRequestSchema)),
   },
   relay: {
-    ticket: oc.input(z.object({})).output(z.object({ token: z.string(), expiresAt: z.string() })),
+    ticket: oc
+      .meta(exposeApiTo("renderer"))
+      .input(z.object({}))
+      .output(z.object({ token: z.string(), expiresAt: z.string() })),
   },
   account: {
     get: httpRead("/account", "account", "Read the signed-in account")
+      .meta(exposeApiTo("renderer"))
       .input(z.object({}))
       .output(accountProfileSchema),
     access: httpRead("/account/access", "account", "Read current account permissions", "optional")
+      .meta(exposeApiTo("renderer"))
       .input(z.strictObject({}))
       .output(accountAccessSchema),
   },
 };
 
-/** Native transport policy. Every HTTP procedure must explicitly select its consumer. */
-type NativeExposure<C> = {
-  [Group in keyof C]: { [Method in keyof C[Group]]: "renderer" | "native" | "host" | "web" };
-};
-export const apiExposure = {
-  admin: { overview: "web", health: "web", audit: "web" },
-  attachments: { status: "renderer", upload: "renderer" },
-  instances: {
-    begin: "host",
-    inspect: "renderer",
-    approve: "renderer",
-    poll: "host",
-    check: "host",
-    list: "renderer",
-    revoke: "renderer",
-  },
-  account: { get: "renderer", access: "renderer" },
-  devices: { register: "renderer", refreshGrant: "renderer", list: "renderer", revoke: "renderer" },
-  tasks: { list: "renderer", get: "renderer" },
-  approvals: { list: "renderer" },
-  relay: { ticket: "renderer" },
-  observed: { list: "renderer", get: "renderer" },
-  hosts: { authorize: "native", revoke: "native", grant: "host" },
-  configuration: {
-    public: "renderer",
-    access: "renderer",
-    get: "renderer",
-    update: "renderer",
-    storage: "web",
-    updateStorage: "web",
-    resend: "web",
-    updateResend: "web",
-  },
-  jobs: {
-    list: "renderer",
-    create: "renderer",
-    update: "renderer",
-    remove: "renderer",
-    run: "renderer",
-    history: "renderer",
-  },
-  memory: {
-    list: "renderer",
-    get: "renderer",
-    create: "renderer",
-    update: "renderer",
-    archive: "renderer",
-    delete: "renderer",
-    history: "renderer",
-    restore: "renderer",
-    resolve: "renderer",
-  },
-} as const satisfies NativeExposure<typeof apiContract>;
+export const apiExposure = collectApiExposure(apiContract);

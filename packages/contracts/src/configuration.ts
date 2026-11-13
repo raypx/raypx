@@ -1,3 +1,4 @@
+import { exposeApiTo } from "./api-exposure.js";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { httpRead } from "./http.js";
@@ -89,17 +90,33 @@ export type ResendSettingsSnapshot = z.infer<typeof resendSnapshotSchema>;
 export type ResendSettingsUpdate = z.infer<typeof resendUpdateSchema>;
 export const configurationContract = {
   public: httpRead("/configuration", "configuration", "Read public site settings", "public")
+    .meta(exposeApiTo("renderer"))
     .input(z.object({}))
     .output(publicConfigurationSchema),
-  access: oc.input(z.object({})).output(z.object({ allowed: z.boolean() })),
-  get: oc.input(z.object({})).output(
-    configurationSnapshotSchema.extend({
-      deployment: z.object({ jobsEnabled: z.boolean(), mailConfigured: z.boolean() }),
-    }),
-  ),
-  update: oc.input(configurationUpdateSchema).output(configurationSnapshotSchema),
-  storage: oc.input(z.strictObject({})).output(storageSettingsSnapshotSchema),
-  updateStorage: oc.input(storageSettingsUpdateSchema).output(storageSettingsSnapshotSchema),
-  resend: oc.input(z.strictObject({})).output(resendSnapshotSchema),
-  updateResend: oc.input(resendUpdateSchema).output(resendSnapshotSchema),
+  access: oc
+    .meta(exposeApiTo("renderer"))
+    .input(z.object({}))
+    .output(z.object({ allowed: z.boolean() })),
+  get: oc
+    .meta(exposeApiTo("renderer"))
+    .input(z.object({}))
+    .output(
+      configurationSnapshotSchema.extend({
+        deployment: z.object({ jobsEnabled: z.boolean(), mailConfigured: z.boolean() }),
+      }),
+    ),
+  update: oc
+    .meta(exposeApiTo("renderer"))
+    .input(configurationUpdateSchema)
+    .output(configurationSnapshotSchema),
+  storage: oc
+    .meta(exposeApiTo("web"))
+    .input(z.strictObject({}))
+    .output(storageSettingsSnapshotSchema),
+  updateStorage: oc
+    .meta(exposeApiTo("web"))
+    .input(storageSettingsUpdateSchema)
+    .output(storageSettingsSnapshotSchema),
+  resend: oc.meta(exposeApiTo("web")).input(z.strictObject({})).output(resendSnapshotSchema),
+  updateResend: oc.meta(exposeApiTo("web")).input(resendUpdateSchema).output(resendSnapshotSchema),
 };
