@@ -1,0 +1,116 @@
+apps/api/tests/integration/access.test.ts
+  s_28758cb14041db::t_2b5ecf0f6c694d 151,153
+  s_28758cb14041db::t_00010593d70c66 128-150,152,154-163
+apps/web/AGENTS.md
+  s_28758cb14041db::t_725d5ff2090d97 244,278
+apps/web/src/routes/(auth)/route.tsx
+  s_28758cb14041db::t_725d5ff2090d97 5
+apps/web/src/routes/(admin)/admin/index.tsx
+  s_28758cb14041db::t_725d5ff2090d97 2
+apps/api/src/routers/rpc/instances.ts
+  s_652cc4f0b5d7e1::t_115b3719d7524b 28-30
+apps/web/src/components/admin-shell.tsx
+  s_28758cb14041db::t_725d5ff2090d97 20
+apps/api/src/routers/rpc/hosts.ts
+  s_652cc4f0b5d7e1::t_356cf683af0a68 48
+  s_652cc4f0b5d7e1::t_ae247522ef0826 2
+  s_652cc4f0b5d7e1::t_e6db96cbdb030c 61
+  s_652cc4f0b5d7e1::t_ba522bdbe637c4 21-31
+apps/web/src/features/config/config.component.test.tsx
+  s_28758cb14041db::t_725d5ff2090d97 1-169
+apps/api/src/routers/rpc/index.ts
+  s_28758cb14041db::t_633e584124204b 7,16
+apps/web/src/features/landing/components/layout.tsx
+  s_28758cb14041db::t_725d5ff2090d97 6
+packages/contracts/src/api.ts
+  s_28758cb14041db::t_a4d74025a00f00 2
+  s_28758cb14041db::t_dd5402c740e1bc 1
+  s_28758cb14041db::t_86d9e571bf85b9 3
+apps/api/tests/integration/config.test.ts
+  s_28758cb14041db::t_00010593d70c66 95,97-102
+apps/web/src/routes/(admin)/admin/audit.tsx
+  s_28758cb14041db::t_725d5ff2090d97 3
+packages/contracts/src/admin.ts
+  s_28758cb14041db::t_a4d74025a00f00 2-74
+  s_28758cb14041db::t_9671cb9f11befc 1
+apps/api/src/middleware/rpc.test.ts
+  s_28758cb14041db::t_00010593d70c66 1-16,20-23
+  s_28758cb14041db::t_2b5ecf0f6c694d 17-19
+packages/contracts/src/policy.ts
+  s_28758cb14041db::t_a4d74025a00f00 1-9
+packages/contracts/src/api.test.ts
+  s_28758cb14041db::t_8077f3c99ef4a1 4,60-66
+  s_28758cb14041db::t_9c839123efbf95 3
+  s_28758cb14041db::t_a29dcaeb2a8b1c 67
+apps/web/src/routes/(admin)/admin/settings.tsx
+  s_28758cb14041db::t_725d5ff2090d97 6
+apps/web/src/routes/(legal)/route.tsx
+  s_28758cb14041db::t_725d5ff2090d97 9
+packages/contracts/src/config.ts
+  s_28758cb14041db::t_a4d74025a00f00 2-128
+  s_28758cb14041db::t_a1cd55571d8559 1
+apps/api/src/hosts.test.ts
+  s_652cc4f0b5d7e1::t_b379ab45f38d6a 50-75
+apps/api/src/routers/rpc/instances.test.ts
+  s_652cc4f0b5d7e1::t_807282a50b105a 1-47
+docs/development/configuration.md
+  s_28758cb14041db::t_725d5ff2090d97 197
+apps/web/src/routes/(auth)/signup.tsx
+  s_28758cb14041db::t_725d5ff2090d97 10
+apps/web/tests/helpers/router-auth.tsx
+  s_28758cb14041db::t_725d5ff2090d97 71
+apps/api/src/middleware/rpc.ts
+  s_28758cb14041db::t_3001a66cf5c278 1,3,92-96,100-103,120-121
+apps/web/src/components/shell.tsx
+  s_28758cb14041db::t_725d5ff2090d97 2
+packages/contracts/AGENTS.md
+  s_28758cb14041db::t_00010593d70c66 23-25
+apps/api/AGENTS.md
+  s_28758cb14041db::t_8077f3c99ef4a1 289-290
+  s_28758cb14041db::t_00010593d70c66 288,291-292
+  s_652cc4f0b5d7e1::t_11712b4ed4681e 120-121
+apps/api/src/routers/rpc/admin.ts
+  s_28758cb14041db::t_335dff7edfaa05 6,10-46
+apps/api/src/routers/rpc/config.ts
+  s_28758cb14041db::t_8fbb90908a418d 9-10,16,44,46,52,58,68,73,82,92,101
+packages/contracts/package.json
+  s_28758cb14041db::t_4173b50825ab33 12
+packages/contracts/src/attachments.ts
+  s_28758cb14041db::t_c29b9d2a5344a5 1
+packages/contracts/src/client.test.ts
+  s_28758cb14041db::t_4ec42e59a1f944 2
+packages/contracts/src/composition.test.ts
+  s_28758cb14041db::t_40269d0aaa9a91 6
+packages/contracts/src/desktop.ts
+  s_28758cb14041db::t_fcdf468881bf3b 3
+packages/contracts/src/instances.ts
+  s_28758cb14041db::t_a1dbc32a1cfafa 1
+packages/contracts/src/jobs.ts
+  s_28758cb14041db::t_c93cd4f0347a4f 1
+packages/contracts/src/memory.ts
+  s_28758cb14041db::t_5f6bb945eedf58 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "4dedd13edd35b664f7fd2fada2dabded2765b050",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_652cc4f0b5d7e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a15c1f-b28a-4d9e-b507-2713f4990828",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
