@@ -1,0 +1,392 @@
+apps/api/src/routers/rpc/account.ts
+  s_28758cb14041db::t_46d8f219401bd7 2-7,13-26
+  s_28758cb14041db::t_d27767d776e32c 1,8-12
+apps/api/tests/integration/api.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 6
+  s_28758cb14041db::t_343b39d85bc7b4 3,5,79-94
+  s_28758cb14041db::t_8a6baaff4b3c87 95-96
+  s_28758cb14041db::t_ad762ac9913bfe 97,99-134
+  s_28758cb14041db::t_d1c859bc8586f9 98
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_28758cb14041db::t_04ad5eb5782a25 9,18
+apps/api/src/routers/rpc/index.ts
+  s_28758cb14041db::t_46d8f219401bd7 3-4,6,26,29,44,46-49,52-57,59-61,63-67
+  s_28758cb14041db::t_89d0e69745b0fc 5,9-10
+  s_28758cb14041db::t_99c50ce3484627 2,51
+  s_28758cb14041db::t_9e6d1626545d2c 1,23-25,45,50,58,62
+apps/api/tests/integration/relay-server.test.ts
+  s_28758cb14041db::t_b8e3b48a8eaf74 8
+  s_28758cb14041db::t_89d0e69745b0fc 7
+  s_28758cb14041db::t_194d7e08194e59 66-73
+  s_28758cb14041db::t_0375acc7f33fcf 9,20-24
+  s_28758cb14041db::t_89ef87d572ed6d 19
+packages/dev-cli/src/smoke/checks.ts
+  s_28758cb14041db::t_194d7e08194e59 28-39
+  s_28758cb14041db::t_3862b7414a196d 20-24
+  s_28758cb14041db::t_708fd44f0f4b67 15-19,25-27
+apps/api/locales/zh/index.ts
+  s_28758cb14041db::t_a0befc9c2a8029 1-3
+apps/api/src/runtime/relay.ts
+  s_28758cb14041db::t_89d0e69745b0fc 1,11,37-41
+  s_28758cb14041db::t_1dcc0fcc482ab4 2,45-48
+apps/api/src/routers/request.ts
+  s_28758cb14041db::t_89d0e69745b0fc 2
+  s_28758cb14041db::t_46d8f219401bd7 1,3-6,8-12,14-18,24-25
+  s_28758cb14041db::t_6a7ddd03ef2b15 7
+  s_28758cb14041db::t_680c7771645a3b 19-23
+  s_28758cb14041db::t_f2b1f654ad14d0 13
+apps/api/tests/helpers/control-server.ts
+  s_28758cb14041db::t_46d8f219401bd7 9
+apps/api/src/routers/rpc/configuration.ts
+  s_28758cb14041db::t_aa57097c27a190 10-12,19-21,51,75-76,78-81,91-92,94-102,112-113,115-123
+  s_28758cb14041db::t_46d8f219401bd7 4-9,13-18,22-24,52-74,82-90,103-111,124-125
+  s_28758cb14041db::t_f75be874d862b8 77,93,114
+  s_28758cb14041db::t_239af170cf66e1 1-3,25-34,36-50
+apps/api/vitest.config.ts
+  s_28758cb14041db::t_89d0e69745b0fc 41
+apps/api/locales/en/api.ts
+  s_28758cb14041db::t_a0befc9c2a8029 1-5
+packages/contracts/src/jobs.ts
+  s_28758cb14041db::t_2910e66d68a5b3 3
+  s_28758cb14041db::t_807f6d86cb10a3 13,30
+apps/api/src/middleware/http.ts
+  s_28758cb14041db::t_99c50ce3484627 1,5-10,20-21,54-58
+apps/api/src/routers/rpc/attachments.ts
+  s_28758cb14041db::t_46d8f219401bd7 1,3-23,29-51
+  s_28758cb14041db::t_89d0e69745b0fc 2
+  s_28758cb14041db::t_0a0a8109ebc51e 24-28
+apps/api/Dockerfile
+  s_28758cb14041db::t_04ad5eb5782a25 19
+apps/api/src/storage/configuration.ts
+  s_28758cb14041db::t_04ad5eb5782a25 1-215
+packages/contracts/AGENTS.md
+  s_28758cb14041db::t_d3cedaeee9d374 20
+  s_28758cb14041db::t_f2b1f654ad14d0 21-24
+apps/api/tests/redis/redis.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 3
+apps/api/src/error-reports.test.ts
+  s_28758cb14041db::t_99c50ce3484627 4
+apps/api/tests/integration/configuration-runtime.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 5-7
+apps/api/locales/zh/api.ts
+  s_28758cb14041db::t_a0befc9c2a8029 1-5
+apps/api/locales/en/index.ts
+  s_28758cb14041db::t_a0befc9c2a8029 1-3
+apps/api/vite.app.config.ts
+  s_28758cb14041db::t_89d0e69745b0fc 14,41,44,51
+  s_28758cb14041db::t_961b27a1608f93 4-8,24,27,53-56
+  s_28758cb14041db::t_815c884653f5e4 2,25
+  s_28758cb14041db::t_4ec05f7e9eda0e 3,15
+  s_28758cb14041db::t_31e286d93b8e7b 23,29
+  s_28758cb14041db::t_3ef50dad1f6bf1 26,28
+apps/api/src/middleware/rpc.ts
+  s_28758cb14041db::t_28298448127367 13,71,98
+  s_28758cb14041db::t_26089a4986b94e 110,116-118,128
+  s_28758cb14041db::t_e26483d45774bb 1-11,14-70,72-84,91-97,99-109,111-115,119-120,131
+  s_28758cb14041db::t_f75be874d862b8 12,85-90
+  s_28758cb14041db::t_db6531f366b556 121-127,129-130
+apps/api/tests/postgres/node/configuration.test.ts
+  s_28758cb14041db::t_04ad5eb5782a25 6
+docs/development/deployment.md
+  s_28758cb14041db::t_cae332d2f43a96 136-141
+apps/api/src/app/server.ts
+  s_28758cb14041db::t_1dcc0fcc482ab4 2-6,13-27,29-30,32-35
+  s_28758cb14041db::t_0c16bd09fc2a95 1,7-12,28,31
+apps/api/src/routers/index.ts
+  s_28758cb14041db::t_ae0f1c9db1975a 14
+  s_28758cb14041db::t_89d0e69745b0fc 2-3
+  s_28758cb14041db::t_9e6d1626545d2c 5,8,10,21-25
+  s_28758cb14041db::t_99c50ce3484627 4,7
+  s_28758cb14041db::t_46d8f219401bd7 1,6,9,11-13,15-20,26-33
+apps/api/src/routers/openapi.ts
+  s_28758cb14041db::t_9e6d1626545d2c 1,48,53,105
+  s_28758cb14041db::t_961b27a1608f93 18,93-94
+  s_28758cb14041db::t_0c97ca6275e387 131-133
+  s_28758cb14041db::t_99c50ce3484627 4
+  s_28758cb14041db::t_46d8f219401bd7 5-13,15-17,19-26,29-47,49-52,54-55,60-92,95-104,106,108-125,147,149
+  s_28758cb14041db::t_f2b1f654ad14d0 2,14,107,126-130,134-146,148
+  s_28758cb14041db::t_807f6d86cb10a3 3,27-28,56-59
+apps/api/tests/integration/configuration.test.ts
+  s_28758cb14041db::t_ba24901025ee08 13,119,152,162
+  s_28758cb14041db::t_7c8bc781cb3323 127-132
+  s_28758cb14041db::t_46d8f219401bd7 5
+  s_28758cb14041db::t_89d0e69745b0fc 6,10
+  s_28758cb14041db::t_04ad5eb5782a25 8-9
+  s_28758cb14041db::t_42ebde0aba02f3 11-12,15,53,118,120-126,133-151,153-161,163-184
+  s_28758cb14041db::t_80545c90beb595 185
+packages/dev-cli/src/validation/source-layers.ts
+  s_28758cb14041db::t_b8e3b48a8eaf74 16,39
+docs/development/configuration.md
+  s_28758cb14041db::t_04ad5eb5782a25 112,124
+  s_28758cb14041db::t_89d0e69745b0fc 196
+packages/dev-cli/src/validation/deployment.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 23,41,80-81
+apps/api/src/routers/rpc/boundary.ts
+  s_28758cb14041db::t_da2bee177486e5 2,6,12-14,25-28,35,51,61
+  s_28758cb14041db::t_28298448127367 7-11,40
+  s_28758cb14041db::t_46d8f219401bd7 3-4,30-32,36,38-39,41-43,45-50,52,54-60,62
+  s_28758cb14041db::t_e26483d45774bb 1,29,33-34,37,44,53
+  s_28758cb14041db::t_16f067ee6e2868 15-24
+  s_28758cb14041db::t_89d0e69745b0fc 5
+apps/api/src/routers/relay/socket.ts
+  s_28758cb14041db::t_46d8f219401bd7 3-4,6-10,12-18,21,23-35,37-46,48-52
+  s_28758cb14041db::t_1dcc0fcc482ab4 1-2,5,11,19-20,22,36,47,53-66
+apps/api/src/logging.ts
+  s_28758cb14041db::t_89d0e69745b0fc 6-7,63-69,71
+apps/api/src/middleware/audit.ts
+  s_28758cb14041db::t_99c50ce3484627 1-79
+docs/development/testing.md
+  s_28758cb14041db::t_b8e3b48a8eaf74 234
+  s_28758cb14041db::t_89d0e69745b0fc 233
+apps/api/src/routers/relay/http.ts
+  s_28758cb14041db::t_89d0e69745b0fc 3
+  s_28758cb14041db::t_46d8f219401bd7 1,4-6,8-16
+  s_28758cb14041db::t_99c50ce3484627 2,7
+apps/api/src/routers/rpc/approvals.ts
+  s_28758cb14041db::t_46d8f219401bd7 1-13
+apps/api/src/routers/rpc/relay.ts
+  s_28758cb14041db::t_46d8f219401bd7 1-4,11
+  s_28758cb14041db::t_0a0a8109ebc51e 5-8
+  s_28758cb14041db::t_bf23448ff9351a 9
+packages/contracts/src/memory.ts
+  s_28758cb14041db::t_807f6d86cb10a3 24,27,34
+  s_28758cb14041db::t_2910e66d68a5b3 3,25-26,28-29,35-36
+packages/dev-cli/src/verification/plan.ts
+  s_28758cb14041db::t_89d0e69745b0fc 100
+packages/contracts/src/http.ts
+  s_28758cb14041db::t_2910e66d68a5b3 1-34,41-42,45-55
+  s_28758cb14041db::t_f2c0dd24f4f1b3 35,37-40
+  s_28758cb14041db::t_807f6d86cb10a3 36,43-44
+apps/api/tests/integration/memory.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 5
+apps/api/tests/helpers/relay.ts
+  s_28758cb14041db::t_46d8f219401bd7 8
+apps/api/tests/postgres/node/session-attachments.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 18-20,24,30
+  s_28758cb14041db::t_46d8f219401bd7 16
+  s_28758cb14041db::t_04ad5eb5782a25 17
+apps/api/AGENTS.md
+  s_28758cb14041db::t_da2bee177486e5 266-267
+  s_28758cb14041db::t_815c884653f5e4 28,103,138-140
+  s_28758cb14041db::t_961b27a1608f93 29
+  s_28758cb14041db::t_f2b1f654ad14d0 34-36
+  s_28758cb14041db::t_28298448127367 46-48,270
+  s_28758cb14041db::t_b8e3b48a8eaf74 30,271-272
+  s_28758cb14041db::t_04ad5eb5782a25 201,231
+  s_28758cb14041db::t_fbc3643eac7c47 26-27,33
+  s_28758cb14041db::t_25343233cf15cf 268-269
+  s_28758cb14041db::t_8562a5f8f72243 285-287
+  s_28758cb14041db::t_cae332d2f43a96 126-131
+  s_28758cb14041db::t_5ebb64930d985f 148,177
+  s_28758cb14041db::t_d3cedaeee9d374 31-32
+  s_28758cb14041db::t_89d0e69745b0fc 38,45,116,120,137,143,154,210,276
+  s_28758cb14041db::t_0375acc7f33fcf 49-50
+  s_28758cb14041db::t_ad762ac9913bfe 151-152
+apps/api/src/hosts.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 12
+apps/api/src/middleware/language.ts
+  s_28758cb14041db::t_99c50ce3484627 1-10
+apps/api/src/jobs/cleanup.ts
+  s_28758cb14041db::t_04ad5eb5782a25 1-140
+packages/dev-cli/src/verification/plan.test.ts
+  s_28758cb14041db::t_b8e3b48a8eaf74 163-164,653
+  s_28758cb14041db::t_89d0e69745b0fc 165
+docs/development/server-jobs.md
+  s_28758cb14041db::t_89d0e69745b0fc 3,133,144-145
+apps/api/tests/integration/access.test.ts
+  s_28758cb14041db::t_b2361281ef9a6b 118-123
+  s_28758cb14041db::t_46d8f219401bd7 5
+  s_28758cb14041db::t_cae332d2f43a96 99-117,124-127
+  s_28758cb14041db::t_89d0e69745b0fc 6
+apps/api/src/runtime/redis.ts
+  s_28758cb14041db::t_04ad5eb5782a25 1-90
+apps/api/tests/postgres/node/rate-limit.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 7
+apps/api/src/routers/rpc/instances.ts
+  s_28758cb14041db::t_46d8f219401bd7 5-7,44-75
+  s_28758cb14041db::t_2079802756d0e2 1-4,8-43
+docs/architecture/internationalization.md
+  s_28758cb14041db::t_ad762ac9913bfe 24
+packages/contracts/package.json
+  s_28758cb14041db::t_2910e66d68a5b3 23
+docs/README.md
+  s_28758cb14041db::t_fbc3643eac7c47 50
+apps/api/tests/postgres/node/instances.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 17
+  s_28758cb14041db::t_89d0e69745b0fc 16
+docs/development/openapi.md
+  s_28758cb14041db::t_fbc3643eac7c47 1-2,8-12,16,22-23,25-29,32-33,37,39-41
+  s_28758cb14041db::t_a3b630ec9006b6 38
+  s_28758cb14041db::t_d3cedaeee9d374 17,21
+  s_28758cb14041db::t_f2b1f654ad14d0 13-15,18-20,24,34-36
+  s_28758cb14041db::t_815c884653f5e4 3-7,30-31
+packages/contracts/src/api.ts
+  s_28758cb14041db::t_807f6d86cb10a3 93,101,111,130,138,141
+  s_28758cb14041db::t_a3b630ec9006b6 70,73
+  s_28758cb14041db::t_2910e66d68a5b3 7-8,71-72,74-75,94-95,131-132,139-140,142-143
+apps/api/tests/postgres/node/administration.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 9
+  s_28758cb14041db::t_89d0e69745b0fc 1,10-12,15
+  s_28758cb14041db::t_04ad5eb5782a25 13-14
+packages/dev-cli/src/validation/deployment.ts
+  s_28758cb14041db::t_89d0e69745b0fc 22
+apps/api/src/app/options.ts
+  s_28758cb14041db::t_04ad5eb5782a25 1-44
+apps/api/tests/postgres/node/control.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 12
+apps/api/src/routers/auth.ts
+  s_28758cb14041db::t_9e6d1626545d2c 6
+  s_28758cb14041db::t_a0befc9c2a8029 7
+  s_28758cb14041db::t_46d8f219401bd7 5,10-11
+  s_28758cb14041db::t_89d0e69745b0fc 2
+  s_28758cb14041db::t_99c50ce3484627 4
+  s_28758cb14041db::t_bea8ba2491e599 1,3,8-9
+apps/api/src/routers/rpc/devices.ts
+  s_28758cb14041db::t_46d8f219401bd7 1-12,14-20,22-37
+  s_28758cb14041db::t_f75be874d862b8 13,21
+apps/api/src/routers/rpc/hosts.ts
+  s_28758cb14041db::t_46d8f219401bd7 1-11,13-30,32-63
+  s_28758cb14041db::t_f75be874d862b8 31
+  s_28758cb14041db::t_e5e568c939a9da 12
+apps/api/src/routers/rpc/observed.ts
+  s_28758cb14041db::t_46d8f219401bd7 1-18
+apps/api/tests/postgres/node/cleanup.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 5
+apps/api/tests/postgres/node/resend.test.ts
+  s_28758cb14041db::t_04ad5eb5782a25 9,16
+  s_28758cb14041db::t_89d0e69745b0fc 10-11
+  s_28758cb14041db::t_46d8f219401bd7 8
+apps/api/tests/integration/jobs.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 11
+apps/api/tests/types/logging.ts
+  s_28758cb14041db::t_89d0e69745b0fc 1
+apps/api/tests/integration/logging.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 6
+  s_28758cb14041db::t_89d0e69745b0fc 1,7
+apps/api/tests/postgres/node/context-commands.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 6
+packages/dev-cli/src/smoke/artifacts.ts
+  s_28758cb14041db::t_708fd44f0f4b67 67-70
+apps/api/src/routers/rpc/memory.ts
+  s_28758cb14041db::t_46d8f219401bd7 5-8,12-13,46-47,54-55,62-63,70-71,78-79,85-87,93-95,102-103,109-111,120-123
+  s_28758cb14041db::t_26089a4986b94e 10,14,23
+  s_28758cb14041db::t_0a0a8109ebc51e 48-53,56-61,64-69,72-77,80-84,88-92,96-101,104-108,112-119
+  s_28758cb14041db::t_6c65cfbf1cf01a 2-4
+  s_28758cb14041db::t_62838ff02c7153 9
+  s_28758cb14041db::t_8833c648736d5e 11
+  s_28758cb14041db::t_a9972fbd506ad2 15-17,20-22
+  s_28758cb14041db::t_e6e6526ec6fdec 24-26,43-45
+package.json
+  s_28758cb14041db::t_6e859f60259537 14,19,21
+  s_28758cb14041db::t_807f6d86cb10a3 18
+  s_28758cb14041db::t_1dcc0fcc482ab4 36
+  s_28758cb14041db::t_6a7ddd03ef2b15 40
+  s_28758cb14041db::t_0349b767555e1a 111,130
+apps/api/src/middleware/attachment-limit.ts
+  s_28758cb14041db::t_db6531f366b556 4-17
+  s_28758cb14041db::t_99c50ce3484627 1-3
+knip.json
+  s_28758cb14041db::t_89d0e69745b0fc 11,13-14
+  s_28758cb14041db::t_961b27a1608f93 12
+apps/api/src/runtime/shared.ts
+  s_28758cb14041db::t_04ad5eb5782a25 4,6-9
+  s_28758cb14041db::t_89d0e69745b0fc 24
+apps/api/src/runtime/server.ts
+  s_28758cb14041db::t_0a3b12a4a9867f 78-81
+  s_28758cb14041db::t_1dcc0fcc482ab4 1-77,82-95
+apps/api/src/routers/health.ts
+  s_28758cb14041db::t_89d0e69745b0fc 2
+  s_28758cb14041db::t_46d8f219401bd7 1,3-52
+apps/api/tests/fixtures/backend-server.ts
+  s_28758cb14041db::t_0375acc7f33fcf 2-3,6,8,11-14,17,21-23,26
+apps/api/tests/cluster/relay.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 18,20
+  s_28758cb14041db::t_5ebb64930d985f 277
+apps/api/tests/integration/runtime-providers.test.ts
+  s_28758cb14041db::t_89d0e69745b0fc 6-8,15
+apps/api/src/routers/openapi-paths.ts
+  s_28758cb14041db::t_961b27a1608f93 1-12
+apps/api/tests/fixtures/relay-process.ts
+  s_28758cb14041db::t_89d0e69745b0fc 1
+docs/architecture/README.md
+  s_28758cb14041db::t_fbc3643eac7c47 96-97,100
+  s_28758cb14041db::t_0375acc7f33fcf 98-99
+apps/api/tests/integration/openapi.test.ts
+  s_28758cb14041db::t_46d8f219401bd7 5
+  s_28758cb14041db::t_e30a2512ae2625 8-14,58,74,99-102
+  s_28758cb14041db::t_3ef50dad1f6bf1 175-177
+  s_28758cb14041db::t_815c884653f5e4 157-174,178-179
+  s_28758cb14041db::t_48b48ce41d07b0 45,89
+  s_28758cb14041db::t_433302c4a960ee 185,194-195
+  s_28758cb14041db::t_a3b630ec9006b6 62-63,186-187
+  s_28758cb14041db::t_71f63dca7887b6 182-184
+  s_28758cb14041db::t_0c97ca6275e387 2-3,18-19,22,27-29,35,37,52-53,59-61,64-73,75-80,86-88,90-91,105-109,117,123-156,181,197-198
+  s_28758cb14041db::t_fbc3643eac7c47 1,4,6-7,15-17,20-21,23-26,30-34,36,38-44,46-51,54-57,81-85,92-98,103-104,110-116,118-122,180,188-193,196,199-200
+apps/api/package.json
+  s_28758cb14041db::t_6a7ddd03ef2b15 49
+  s_28758cb14041db::t_6fd98f321d4417 62,64
+  s_28758cb14041db::t_89d0e69745b0fc 7
+  s_28758cb14041db::t_a0befc9c2a8029 38
+  s_28758cb14041db::t_04ad5eb5782a25 8
+  s_28758cb14041db::t_807f6d86cb10a3 26
+  s_28758cb14041db::t_1dcc0fcc482ab4 45
+  s_28758cb14041db::t_6e859f60259537 24,27,29
+apps/api/src/routers/openapi-assets.ts
+  s_28758cb14041db::t_0375acc7f33fcf 2,7-11
+  s_28758cb14041db::t_71072ef2239aad 16
+  s_28758cb14041db::t_0c16bd09fc2a95 18-19
+  s_28758cb14041db::t_961b27a1608f93 1,3-6,12-15,17,20-27
+packages/contracts/src/configuration.ts
+  s_28758cb14041db::t_2910e66d68a5b3 3,92-93
+  s_28758cb14041db::t_807f6d86cb10a3 91
+apps/api/src/routers/rpc/tasks.ts
+  s_28758cb14041db::t_46d8f219401bd7 1-15
+docs/development/caching.md
+  s_28758cb14041db::t_04ad5eb5782a25 5
+apps/api/src/routers/rpc/administration.ts
+  s_28758cb14041db::t_0a0a8109ebc51e 11-15,24-28,40-44
+  s_28758cb14041db::t_46d8f219401bd7 5-8,29
+  s_28758cb14041db::t_89d0e69745b0fc 3
+apps/api/src/routers/rpc/jobs.ts
+  s_28758cb14041db::t_0a0a8109ebc51e 48-50,53-58,61-66,69-74,77-82,85-87
+  s_28758cb14041db::t_26089a4986b94e 10,14,23
+  s_28758cb14041db::t_46d8f219401bd7 5-7,12-13,46-47,51-52,59-60,67-68,75-76,83-84,88-90
+  s_28758cb14041db::t_6a931031e4933a 2-4
+  s_28758cb14041db::t_490826e97c6a4f 8-9
+  s_28758cb14041db::t_98da075c4cad0a 11
+  s_28758cb14041db::t_4e668348399fa3 15-17,20-22
+  s_28758cb14041db::t_f85be7799f5c69 24-26,43-45
+apps/api/tsconfig.json
+  s_28758cb14041db::t_b8e3b48a8eaf74 4
+apps/api/src/middleware/relay-headers.ts
+  s_28758cb14041db::t_99c50ce3484627 1-3
+  s_28758cb14041db::t_db6531f366b556 4-9
+apps/api/tests/postgres/node/auth.test.ts
+  s_28758cb14041db::t_0c97ca6275e387 99
+  s_28758cb14041db::t_cb2bb3442859cb 100-102,135
+  s_28758cb14041db::t_46d8f219401bd7 8
+apps/api/src/app/readiness.test.ts
+  s_28758cb14041db::t_5a7b7013eb71cc 1-66
+apps/api/src/app/readiness.ts
+  s_28758cb14041db::t_884427f42be1af 1-59
+apps/api/src/middleware/auth-preflight.ts
+  s_28758cb14041db::t_57876609c20a0a 1-50
+bun.lock
+  s_28758cb14041db::t_de1e979c791646 27,29-30,32,41,48,52,65,67,455,895,901-902,904,922,927,971,985,1027-1028,1449-1452,1577-1582,1589-1592,1597-1598,1943-1944,2167-2168,2773-2774,3147-3148,3455-3456
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "af5c08902841ecaf25f6d6837c34085b15d7f990",
+  "prompts": {},
+  "sessions": {
+    "s_28758cb14041db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d01b-2056-7431-b546-1b2882e86244",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
