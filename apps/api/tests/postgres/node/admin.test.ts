@@ -10,8 +10,8 @@ import { createApiApp } from "../../helpers/app.js";
 import { AuditService } from "../../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../../src/admin/repository.js";
 import { createAuditedAuthAdapter } from "../../../src/admin/auth-adapter.js";
-import { createConfigurationRepository } from "../../../src/config/repository.js";
-import { createConfigurationService } from "../../../src/config/service.js";
+import { createConfigRepository } from "../../../src/config/repository.js";
+import { createConfigService } from "../../../src/config/service.js";
 import { createAccessPolicy } from "../../../src/access.js";
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
@@ -20,8 +20,8 @@ const connection = connectDatabase(url),
   db = connection.db;
 const repository = createAdministrationRepository(db),
   audit = new AuditService(repository);
-const config = createConfigurationService({
-  repository: createConfigurationRepository(db, audit),
+const config = createConfigService({
+  repository: createConfigRepository(db, audit),
   audit,
   access: createAccessPolicy(),
 });

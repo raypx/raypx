@@ -19,11 +19,11 @@ export interface ResendSettingsService {
 }
 
 /** Inject this capability into consumers that only need to read settings. */
-export interface ConfigurationReader {
+export interface ConfigReader {
   read(this: void): Promise<ConfigurationSnapshot>;
 }
 
-export interface ConfigurationService extends ConfigurationReader {
+export interface ConfigService extends ConfigReader {
   /** Briefly cached read for public pages and pre-checks; authoritative paths use read(). */
   readCached(this: void): Promise<ConfigurationSnapshot>;
   /** Pass a freshly resolved server session, never identity supplied by a client. */
@@ -35,7 +35,7 @@ export interface ConfigurationService extends ConfigurationReader {
 }
 
 /** Storage adapters must atomically compare revisions, returning null on conflict. */
-export interface ConfigurationRepository extends ConfigurationReader {
+export interface ConfigRepository extends ConfigReader {
   update(
     this: void,
     values: ConfigurationValues,

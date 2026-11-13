@@ -6,8 +6,8 @@ import { createMailer, MailUnavailableError, type Mailer } from "@raypx/email/se
 import type { AuditService } from "../admin/audit.js";
 import { writeAuditedSetting } from "./audited-write.js";
 import { configurationCipher } from "./credentials.js";
-import { ConfigurationError } from "./service.js";
-import { createConfigurationReads, type ConfigurationReads } from "./reads.js";
+import { ConfigError } from "./service.js";
+import { createConfigReads, type ConfigReads } from "./reads.js";
 import type { ResendSettingsService } from "./types.js";
 
 const id = "resend";
@@ -48,7 +48,7 @@ export function createResendSettings(
   db: Database,
   secret: string,
   audit: AuditService,
-  reads: ConfigurationReads,
+  reads: ConfigReads,
 ): ResendSettingsService {
   const cipher = configurationCipher(secret, purpose, id);
   return {
@@ -60,7 +60,7 @@ export function createResendSettings(
           .where(eq(mailConfiguration.id, id));
         return snapshot(row);
       } catch {
-        throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
+        throw new ConfigError("CONFIGURATION_UNAVAILABLE");
       }
     },
     update: ({ values, apiKey, revision }) =>
@@ -70,9 +70,8 @@ export function createResendSettings(
           .from(mailConfiguration)
           .where(eq(mailConfiguration.id, id))
           .for("update");
-        if ((previous?.revision ?? 0) !== revision)
-          throw new ConfigurationError("CONFIGURATION_CONFLICT");
-        if (!previous && !apiKey) throw new ConfigurationError("INVALID_INPUT");
+        if ((previous?.revision ?? 0) !== revision) throw new ConfigError("CONFIGURATION_CONFLICT");
+        if (!previous && !apiKey) throw new ConfigError("INVALID_INPUT");
         let credentials = previous?.credentials ?? "";
         if (apiKey) credentials = await cipher.seal(apiKey, values.from);
         else if (previous && previous.from !== values.from)
@@ -92,7 +91,7 @@ export function createResendSettings(
               .values({ id, ...next })
               .onConflictDoNothing()
               .returning(summary);
-        if (!row) throw new ConfigurationError("CONFIGURATION_CONFLICT");
+        if (!row) throw new ConfigError("CONFIGURATION_CONFLICT");
         return {
           snapshot: snapshot(row),
           changes: {
@@ -109,7 +108,7 @@ export function createResendSettings(
 export function databaseMailer(
   db: Database,
   secret: string,
-  reads = createConfigurationReads(),
+  reads = createConfigReads(),
   makeMailer = createMailer,
 ) {
   const cipher = configurationCipher(secret, purpose, id);

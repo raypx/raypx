@@ -1,12 +1,12 @@
 import { InstanceService } from "@raypx/instances/server";
 import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
 import { createInstanceRepository } from "../instances/repository.js";
-import { createConfigurationRepository } from "../config/repository.js";
+import { createConfigRepository } from "../config/repository.js";
 import { createAccessPolicy } from "../access.js";
-import { createConfigurationService } from "../config/service.js";
-import { createConfigurationReads } from "../config/reads.js";
+import { createConfigService } from "../config/service.js";
+import { createConfigReads } from "../config/reads.js";
 import { createResendSettings, databaseMailer } from "../config/resend.js";
-import type { ConfigurationRepository } from "../config/types.js";
+import type { ConfigRepository } from "../config/types.js";
 import type { ObjectStorage } from "@raypx/storage";
 import { createAuditedAuthAdapter } from "../admin/auth-adapter.js";
 import {
@@ -40,7 +40,7 @@ import type { ControlService } from "@raypx/control";
 
 export interface RuntimeProviders {
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
-  createConfigurationRepository?: (db: Database, audit: AuditService) => ConfigurationRepository;
+  createConfigRepository?: (db: Database, audit: AuditService) => ConfigRepository;
   createAdministrationRepository?: (db: Database) => AdministrationRepository;
   createJobsRepository?: (db: Database) => CloudJobsRepository;
   createContextRepository?: (db: Database) => ContextLibraryRepository;
@@ -72,7 +72,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     lifecycle.own(() => connection.close());
     const { db } = connection;
     const { secondaryStorage, rateLimit, readiness } = createAdapters(environment, db, redis);
-    const reads = createConfigurationReads(redis?.configurationNotifications);
+    const reads = createConfigReads(redis?.configNotifications);
     lifecycle.own(async () => reads.close());
     const mailer = databaseMailer(db, environment.APP_KEY, reads);
     const signer = createInstanceSigner(environment.APP_KEY);
@@ -89,11 +89,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       resources.createAdministrationRepository ?? createAdministrationRepository
     )(db);
     const audit = new AuditService(administration);
-    const configuration = createConfigurationService({
-      repository: (resources.createConfigurationRepository ?? createConfigurationRepository)(
-        db,
-        audit,
-      ),
+    const config = createConfigService({
+      repository: (resources.createConfigRepository ?? createConfigRepository)(db, audit),
       audit,
       access,
       reads,
@@ -126,9 +123,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const auth = createAuth({
       revokeHostAuthorizations: (userId, sessionId) =>
         control.credentials.revokeHostAuthorizations(userId, sessionId),
-      registrationAllowed: async () => (await configuration.read()).values.registrationEnabled,
+      registrationAllowed: async () => (await config.read()).values.registrationEnabled,
       siteName: () =>
-        configuration.readCached().then(
+        config.readCached().then(
           (snapshot) => snapshot.values.siteName,
           () => configurationDefaults.siteName,
         ),
@@ -146,12 +143,17 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       administration,
       attachments,
       control,
-      configuration,
+      config,
       cloudJobs,
       memory,
       readSession,
       jobs: {
-        cleanup: createCleanupJob({ db, logger, configuration, enabled: environment.JOBS_ENABLED }),
+        cleanup: createCleanupJob({
+          db,
+          logger,
+          configuration: config,
+          enabled: environment.JOBS_ENABLED,
+        }),
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
@@ -160,7 +162,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         administration,
         access,
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
-        config: configuration,
+        config,
         storageSettings: createStorageSettings(db, environment.APP_KEY, audit, reads),
         resendSettings: createResendSettings(db, environment.APP_KEY, audit, reads),
         jobsEnabled: environment.JOBS_ENABLED,

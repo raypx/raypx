@@ -2,7 +2,7 @@ import type { AuditService } from "../admin/audit.js";
 import type { AdministrationQueries } from "../admin/types.js";
 import type { InstanceService } from "@raypx/instances/server";
 import type {
-  ConfigurationService,
+  ConfigService,
   ResendSettingsService,
   StorageSettingsService,
 } from "../config/types.js";
@@ -20,7 +20,7 @@ export interface ApiAppOptions {
   audit?: AuditService;
   administration: AdministrationQueries;
   access?: AccessPolicy;
-  config: ConfigurationService;
+  config: ConfigService;
   storageSettings: StorageSettingsService;
   resendSettings: ResendSettingsService;
   jobsEnabled?: boolean;

@@ -5,8 +5,8 @@ import type { AuthSession } from "@raypx/core/auth";
 import { createApiApp } from "../helpers/app.js";
 import { createAccessPolicy } from "../../src/access.js";
 import { hasPermission } from "@raypx/account/access";
-import { createConfigurationService } from "../../src/config/service.js";
-import type { ConfigurationRepository } from "../../src/config/types.js";
+import { createConfigService } from "../../src/config/service.js";
+import type { ConfigRepository } from "../../src/config/types.js";
 import { getApiEnvironment } from "../../src/env.js";
 import { AuditService } from "../../src/admin/audit.js";
 import type { ApiAppOptions } from "../../src/app/options.js";
@@ -28,7 +28,7 @@ function fixture(options: Pick<ApiAppOptions, "audit" | "rateLimit"> = {}) {
     },
     session: { id: "session", userId: "admin", expiresAt: new Date(Date.now() + 60000) },
   };
-  const repository: ConfigurationRepository = {
+  const repository: ConfigRepository = {
     read: vi.fn(async () => structuredClone(state)),
     update: vi.fn(async (values, revision) => {
       if (revision !== state.revision) return null;
@@ -37,7 +37,7 @@ function fixture(options: Pick<ApiAppOptions, "audit" | "rateLimit"> = {}) {
     }),
   };
   const access = createAccessPolicy();
-  const config = createConfigurationService({
+  const config = createConfigService({
     repository,
     access,
   });

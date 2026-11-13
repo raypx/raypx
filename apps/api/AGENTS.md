@@ -210,9 +210,9 @@ reset. Materialize the window once before deletion, even with stale device stati
 ## Administrator configuration
 
 `src/config/` owns the typed non-secret site settings and PostgreSQL repository.
-`types.ts` defines the reader, service and repository ports. Inject `ConfigurationReader`
-into read-only consumers; `createRuntime` exposes `configuration` and accepts a
-`createConfigurationRepository(db)` factory scoped to its owned connection.
+`types.ts` defines the reader, service and repository ports. Inject `ConfigReader`
+into read-only consumers; `createRuntime` exposes `config` and accepts a
+`createConfigRepository(db, audit)` factory scoped to its owned connection.
 The runtime constructor accepts these typed providers as a second argument.
 `runtime.readSession(headers)` resolves through the same auth adapter as HTTP on
 each call; consumers must not retain that session between requests. Direct

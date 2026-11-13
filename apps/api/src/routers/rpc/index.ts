@@ -13,7 +13,7 @@ import { createMemoryHandlers } from "./memory.js";
 import { createJobsHandlers } from "./jobs.js";
 import { createHostsHandlers } from "./hosts.js";
 import { createObservedHandlers } from "./observed.js";
-import { createConfigurationHandlers } from "./config.js";
+import { createConfigHandlers } from "./config.js";
 import { createDevicesHandlers } from "./devices.js";
 import { createTasksHandlers } from "./tasks.js";
 import { createApprovalsHandlers } from "./approvals.js";
@@ -33,7 +33,7 @@ export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadi
     jobs: createJobsHandlers(boundary),
     hosts: createHostsHandlers(boundary),
     observed: createObservedHandlers(boundary),
-    configuration: createConfigurationHandlers(boundary),
+    configuration: createConfigHandlers(boundary),
     devices: createDevicesHandlers(boundary),
     tasks: createTasksHandlers(boundary),
     approvals: createApprovalsHandlers(boundary),

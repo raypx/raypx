@@ -10,8 +10,8 @@ import type { AuthMailInput } from "@raypx/auth/server";
 import { ControlService } from "@raypx/control";
 import { createControlRepository } from "@raypx/control/postgres";
 import { createAccessPolicy } from "../../../src/access.js";
-import { createConfigurationRepository } from "../../../src/config/repository.js";
-import { createConfigurationService } from "../../../src/config/service.js";
+import { createConfigRepository } from "../../../src/config/repository.js";
+import { createConfigService } from "../../../src/config/service.js";
 
 const databaseURL = process.env.TEST_DATABASE_URL;
 if (!databaseURL || !new URL(databaseURL).pathname.endsWith("_test"))
@@ -40,8 +40,8 @@ const auth = createAuth({
   },
 });
 const app = createApiApp({
-  config: createConfigurationService({
-    repository: createConfigurationRepository(connection.db),
+  config: createConfigService({
+    repository: createConfigRepository(connection.db),
     access: createAccessPolicy(),
   }),
   control,

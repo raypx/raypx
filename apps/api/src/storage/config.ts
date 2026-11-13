@@ -9,8 +9,8 @@ import {
   type StorageSettingsSnapshot,
 } from "@raypx/contracts/api";
 import type { StorageSettingsService } from "../config/types.js";
-import { ConfigurationError } from "../config/service.js";
-import { createConfigurationReads, type ConfigurationReads } from "../config/reads.js";
+import { ConfigError } from "../config/service.js";
+import { createConfigReads, type ConfigReads } from "../config/reads.js";
 import { configurationCipher } from "../config/credentials.js";
 import type { AuditService } from "../admin/audit.js";
 import { writeAuditedSetting } from "../config/audited-write.js";
@@ -80,7 +80,7 @@ export async function saveStorageConfiguration(
 }
 
 /** Each upload observes the current database configuration. Credentials stay in the API process. */
-export function databaseStorage(db: Database, secret: string, reads = createConfigurationReads()) {
+export function databaseStorage(db: Database, secret: string, reads = createConfigReads()) {
   return reads.source("storage", async () => {
     const [row] = await db
       .select()
@@ -127,7 +127,7 @@ export function createStorageSettings(
   db: Database,
   secret: string,
   audit: AuditService,
-  reads: ConfigurationReads,
+  reads: ConfigReads,
 ): StorageSettingsService {
   return {
     async read() {
@@ -145,12 +145,12 @@ export function createStorageSettings(
           .where(eq(storageConfiguration.id, id));
         return snapshot(row);
       } catch {
-        throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
+        throw new ConfigError("CONFIGURATION_UNAVAILABLE");
       }
     },
     async update({ values: { enabled, ...location }, credentials, revision }) {
       const parsed = safeStorageLocationSchema.safeParse(location);
-      if (!parsed.success) throw new ConfigurationError("INVALID_INPUT");
+      if (!parsed.success) throw new ConfigError("INVALID_INPUT");
       const values = { ...parsed.data, enabled };
       return writeAuditedSetting({ db, audit, reads, scope: "storage" }, async (tx) => {
         const [previous] = await tx
@@ -158,16 +158,15 @@ export function createStorageSettings(
           .from(storageConfiguration)
           .where(eq(storageConfiguration.id, id))
           .for("update");
-        if ((previous?.revision ?? 0) !== revision)
-          throw new ConfigurationError("CONFIGURATION_CONFLICT");
+        if ((previous?.revision ?? 0) !== revision) throw new ConfigError("CONFIGURATION_CONFLICT");
         if (!canSetEndpoint(values.endpoint, previous?.endpoint))
-          throw new ConfigurationError("STORAGE_ENDPOINT_REQUIRES_OPERATOR");
+          throw new ConfigError("STORAGE_ENDPOINT_REQUIRES_OPERATOR");
         const changedLocation =
           !previous ||
           values.endpoint !== previous.endpoint ||
           values.region !== previous.region ||
           values.bucket !== previous.bucket;
-        if (changedLocation && !credentials) throw new ConfigurationError("INVALID_INPUT");
+        if (changedLocation && !credentials) throw new ConfigError("INVALID_INPUT");
         const encrypted = credentials
           ? await sealCredentials(secret, values, credentials)
           : previous!.credentials;
@@ -190,7 +189,7 @@ export function createStorageSettings(
               .values({ id, ...next })
               .onConflictDoNothing()
               .returning();
-        if (!row) throw new ConfigurationError("CONFIGURATION_CONFLICT");
+        if (!row) throw new ConfigError("CONFIGURATION_CONFLICT");
         return {
           snapshot: snapshot(row),
           changes: {

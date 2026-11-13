@@ -46,14 +46,14 @@ it("notifies a second API process of each configuration scope and reports reconn
   const control = new Redis(url);
   const receive = vi.fn();
   const resubscribed = vi.fn();
-  const unsubscribe = subscriber.configurationNotifications.subscribe(receive, resubscribed);
+  const unsubscribe = subscriber.configNotifications.subscribe(receive, resubscribed);
   try {
     await publisher.ping();
     await vi.waitFor(() => expect(resubscribed).toHaveBeenCalledTimes(1));
     await redis.ping();
-    redis.configurationNotifications.publish({ scope: "site", revision: 99 });
-    publisher.configurationNotifications.publish({ scope: "site", revision: 1 });
-    publisher.configurationNotifications.publish({ scope: "storage", revision: 2 });
+    redis.configNotifications.publish({ scope: "site", revision: 99 });
+    publisher.configNotifications.publish({ scope: "site", revision: 1 });
+    publisher.configNotifications.publish({ scope: "storage", revision: 2 });
     await vi.waitFor(() =>
       expect(receive.mock.calls).toEqual([
         [{ scope: "site", revision: 1 }],
@@ -67,7 +67,7 @@ it("notifies a second API process of each configuration scope and reports reconn
     if (!id) throw new Error("Configuration test subscriber is missing");
     expect(await control.client("KILL", "ID", id)).toBe(1);
     await vi.waitFor(() => expect(resubscribed).toHaveBeenCalledTimes(2));
-    publisher.configurationNotifications.publish({ scope: "resend", revision: 3 });
+    publisher.configNotifications.publish({ scope: "resend", revision: 3 });
     await vi.waitFor(() =>
       expect(receive).toHaveBeenLastCalledWith({ scope: "resend", revision: 3 }),
     );

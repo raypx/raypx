@@ -3,14 +3,14 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { systemConfiguration, user } from "@raypx/database/schema";
 import { configurationDefaults } from "@raypx/contracts/api";
 import { eq } from "drizzle-orm";
-import { createConfigurationRepository } from "../../../src/config/repository.js";
+import { createConfigRepository } from "../../../src/config/repository.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("An isolated *_test database is required");
 const connection = connectDatabase(url);
 const actor = `settings-${crypto.randomUUID()}`;
-const repository = createConfigurationRepository(connection.db);
+const repository = createConfigRepository(connection.db);
 beforeAll(async () => {
   await migrateDatabase(url);
   // This gate owns an isolated test database and restores the singleton in afterAll.
@@ -42,7 +42,7 @@ it("allows one concurrent first save, persists it across clients, and protects l
   expect(writes.filter(Boolean)).toHaveLength(1);
   const other = connectDatabase(url);
   try {
-    expect(await createConfigurationRepository(other.db).read()).toEqual(writes.find(Boolean));
+    expect(await createConfigRepository(other.db).read()).toEqual(writes.find(Boolean));
   } finally {
     await other.close();
   }

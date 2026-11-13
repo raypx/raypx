@@ -39,7 +39,7 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
         throw new Error("Unused");
       },
     }),
-    createConfigurationRepository(db, audit) {
+    createConfigRepository(db, audit) {
       ownedDatabases.push(db);
       let snapshot: ConfigurationSnapshot = {
         values: { ...configurationDefaults },
@@ -79,8 +79,8 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
     };
     mocks.readSession.mockResolvedValueOnce(auth).mockResolvedValue(null);
     const headers = new Headers({ cookie: "test-session=fixture" });
-    const initial = await first.configuration.read();
-    const saved = await first.configuration.update(
+    const initial = await first.config.read();
+    const saved = await first.config.update(
       {
         values: { ...initial.values, siteName: "Configured directly" },
         revision: initial.revision,
@@ -89,13 +89,13 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
     );
     // Revocation is observed on the next call even though the process keeps its runtime.
     await expect(
-      first.configuration.update(
+      first.config.update(
         { values: { ...saved.values, siteName: "Must not save" }, revision: saved.revision },
         await first.readSession(headers),
       ),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
-    expect((await first.configuration.read()).values.siteName).toBe("Configured directly");
-    expect((await second.configuration.read()).values.siteName).toBe("Raypx");
+    expect((await first.config.read()).values.siteName).toBe("Configured directly");
+    expect((await second.config.read()).values.siteName).toBe("Raypx");
 
     const client = createApiClient({
       baseUrl: "https://api.example.test",

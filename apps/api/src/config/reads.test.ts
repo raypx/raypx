@@ -1,9 +1,9 @@
 import { expect, it, vi } from "vitest";
-import { createConfigurationReads, type ConfigurationNotifications } from "./reads.js";
+import { createConfigReads, type ConfigNotifications } from "./reads.js";
 
 it("shares a pending load and discards it after a commit while leaving other scopes cached", async () => {
   const publish = vi.fn();
-  const reads = createConfigurationReads({ publish, subscribe: () => () => {} });
+  const reads = createConfigReads({ publish, subscribe: () => () => {} });
   const before = Promise.withResolvers<string>();
   const load = vi.fn(async () => "new").mockReturnValueOnce(before.promise);
   const site = reads.source("site", load);
@@ -26,11 +26,11 @@ it("shares a pending load and discards it after a commit while leaving other sco
 it("invalidates all scopes on resubscription and unsubscribes when the runtime closes", async () => {
   let resubscribed = () => {};
   const unsubscribe = vi.fn();
-  const subscribe: ConfigurationNotifications["subscribe"] = (_, ready) => {
+  const subscribe: ConfigNotifications["subscribe"] = (_, ready) => {
     resubscribed = ready;
     return unsubscribe;
   };
-  const reads = createConfigurationReads({ publish: () => {}, subscribe });
+  const reads = createConfigReads({ publish: () => {}, subscribe });
   const loadSite = vi.fn(async () => "Raypx");
   const loadMailer = vi.fn(async () => null);
   const site = reads.source("site", loadSite);

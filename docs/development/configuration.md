@@ -112,29 +112,29 @@ The configuration module uses factory injection. Its ports live in
 `apps/api/src/config/types.ts`; consumers do not import the PostgreSQL
 adapter. No decorators, global service locator or extra container library is needed.
 
-- `ConfigurationReader` exposes `read()` for business rules and jobs.
-- `ConfigurationService` adds `readCached()` for public, latency-tolerant reads,
+- `ConfigReader` exposes `read()` for business rules and jobs.
+- `ConfigService` adds `readCached()` for public, latency-tolerant reads,
   administrator checks and validated `update()`.
-- `ConfigurationRepository` is the storage port. Its update must atomically compare
+- `ConfigRepository` is the storage port. Its update must atomically compare
   the expected revision and return `null` on conflict, including competing first saves.
 
 Inject the smallest interface a consumer needs. For example, within the API app:
 
 ```ts
-import type { ConfigurationReader } from "../config/types.js";
+import type { ConfigReader } from "../config/types.js";
 
-export function createRegistrationPolicy(configuration: ConfigurationReader) {
+export function createRegistrationPolicy(configuration: ConfigReader) {
   return async () => (await configuration.read()).values.registrationEnabled;
 }
 
 // In the composition root, using the runtime already owned by this request/process:
-const registrationAllowed = createRegistrationPolicy(runtime.configuration);
+const registrationAllowed = createRegistrationPolicy(runtime.config);
 const allowed = await registrationAllowed();
 ```
 
 The cleanup job receives the site reader via `createCleanupJob`. API composition
 registers the site snapshot, S3 provider and Resend client with one
-`createConfigurationReads` per runtime. For a new configuration scope, register
+`createConfigReads` per runtime. For a new configuration scope, register
 its typed PostgreSQL loader in `source()`, use `read()` where policy requires
 fresh values, and call `committed(scope, revision)` after the settings and audit
 transaction commits. API and Web contracts keep their existing typed projections.
@@ -146,14 +146,14 @@ between requests. Expired or mismatched sessions are rejected as well.
 
 ```ts
 const auth = await runtime.readSession(request.headers);
-const current = await runtime.configuration.read();
-const saved = await runtime.configuration.update(
+const current = await runtime.config.read();
+const saved = await runtime.config.update(
   { values: { ...current.values, siteName: "My workspace" }, revision: current.revision },
   auth,
 );
 ```
 
-`ConfigurationError.code` reports `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_INPUT`,
+`ConfigError.code` reports `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_INPUT`,
 `CONFIGURATION_CONFLICT` or `CONFIGURATION_UNAVAILABLE`. Callers must handle a
 conflict explicitly; do not retry with a fresh revision and overwrite another editor.
 Browser-origin checks remain the responsibility of the HTTP boundary.
@@ -163,7 +163,7 @@ resolves the session on every call. The runtime does not retain a user's session
 For a custom adapter or a test double, construct the service directly:
 
 ```ts
-const configuration = createConfigurationService({
+const configuration = createConfigService({
   repository,
   access: createAccessPolicy(),
 });
@@ -175,7 +175,7 @@ second argument. For example, in a custom composition root:
 ```ts
 // Bun: own one runtime for the process and close it on shutdown.
 const runtime = await createApiRuntime(environment, {
-  createConfigurationRepository: (db, audit) => repositoryFor(db, audit),
+  createConfigRepository: (db, audit) => repositoryFor(db, audit),
 });
 ```
 

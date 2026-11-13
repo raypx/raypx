@@ -28,25 +28,25 @@ it("scopes injected repositories to each runtime and shares the service with HTT
         throw new Error("Unused");
       },
     }),
-    createConfigurationRepository: vi.fn<
-      NonNullable<RuntimeResources["createConfigurationRepository"]>
-    >((_db, audit) => {
-      let snapshot = {
-        values: { ...configurationDefaults, cleanupEnabled: false },
-        revision: 0,
-        updatedAt: null as string | null,
-      };
-      return {
-        read: async () => structuredClone(snapshot),
-        update: async (values, revision) => {
-          if (snapshot.revision !== revision) return null;
-          snapshot = { values, revision: revision + 1, updatedAt: new Date().toISOString() };
-          const scope = audit.current();
-          if (scope) scope.committed = true;
-          return structuredClone(snapshot);
-        },
-      };
-    }),
+    createConfigRepository: vi.fn<NonNullable<RuntimeResources["createConfigRepository"]>>(
+      (_db, audit) => {
+        let snapshot = {
+          values: { ...configurationDefaults, cleanupEnabled: false },
+          revision: 0,
+          updatedAt: null as string | null,
+        };
+        return {
+          read: async () => structuredClone(snapshot),
+          update: async (values, revision) => {
+            if (snapshot.revision !== revision) return null;
+            snapshot = { values, revision: revision + 1, updatedAt: new Date().toISOString() };
+            const scope = audit.current();
+            if (scope) scope.committed = true;
+            return structuredClone(snapshot);
+          },
+        };
+      },
+    ),
   };
   const env = getApiEnvironment({
     NODE_ENV: "test",
@@ -56,18 +56,18 @@ it("scopes injected repositories to each runtime and shares the service with HTT
   const first = await createRuntime(env, resources);
   const second = await createRuntime(env, resources);
   try {
-    expect(resources.createConfigurationRepository).toHaveBeenNthCalledWith(
+    expect(resources.createConfigRepository).toHaveBeenNthCalledWith(
       1,
       connections[0],
       expect.anything(),
     );
-    expect(resources.createConfigurationRepository).toHaveBeenNthCalledWith(
+    expect(resources.createConfigRepository).toHaveBeenNthCalledWith(
       2,
       connections[1],
       expect.anything(),
     );
-    const initial = await first.configuration.read();
-    await first.configuration.update(
+    const initial = await first.config.read();
+    await first.config.update(
       { revision: initial.revision, values: { ...initial.values, siteName: "First runtime" } },
       {
         user: {
@@ -80,7 +80,7 @@ it("scopes injected repositories to each runtime and shares the service with HTT
         session: { id: "session", userId: "admin", expiresAt: new Date(Date.now() + 60000) },
       },
     );
-    expect((await second.configuration.read()).values.siteName).toBe("Raypx");
+    expect((await second.config.read()).values.siteName).toBe("Raypx");
     const client = createApiClient({
       baseUrl: "https://api.example.test",
       fetch: async (input, init) => first.app.fetch(new Request(input, init)),

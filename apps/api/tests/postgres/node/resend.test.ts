@@ -6,7 +6,7 @@ import { controlAuth } from "@raypx/control/testing";
 import { createMailer } from "@raypx/email/server";
 import { eq } from "drizzle-orm";
 import { createApiApp } from "../../helpers/app.js";
-import { createConfigurationReads } from "../../../src/config/reads.js";
+import { createConfigReads } from "../../../src/config/reads.js";
 import { AuditService } from "../../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../../src/admin/repository.js";
 import {
@@ -38,11 +38,11 @@ it("applies Resend settings live and keeps keys out of reads and durable audit e
   }
   const makeMailer = vi.fn(createTestMailer);
   const publish = vi.fn();
-  const reads = createConfigurationReads({ publish, subscribe: () => () => {} });
+  const reads = createConfigReads({ publish, subscribe: () => () => {} });
   const mailer = databaseMailer(db, secret, reads, makeMailer);
   let clock = 0;
   const remoteFactory = vi.fn(createTestMailer);
-  const remoteReads = createConfigurationReads(undefined, () => clock);
+  const remoteReads = createConfigReads(undefined, () => clock);
   const remote = databaseMailer(db, secret, remoteReads, remoteFactory);
   const message = { email: "recipient@example.test", url: "https://web.example.test/auth" };
   const app = createApiApp({
