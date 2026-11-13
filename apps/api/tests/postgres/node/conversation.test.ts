@@ -3,7 +3,10 @@ import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { spaces, spaceMembers, user } from "@raypx/database/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
-import { createAgentsRepository } from "@raypx/agents/server/postgres";
+import {
+  createConversationsRepository,
+  createAgentsRepository,
+} from "@raypx/agents/server/postgres";
 import { agentIdSchema } from "@raypx/core/agents";
 import type { AuthSession } from "@raypx/core/auth";
 import { createApiClient } from "@raypx/client/api";
@@ -21,6 +24,7 @@ let actor = owner;
 const app = createApiApp({
   spaces: access,
   agents: createAgentsRepository(connection.db),
+  conversations: createConversationsRepository(connection.db),
   allowedOrigins: ["https://web.example.test"],
   readSession: async (): Promise<AuthSession> => ({
     user: {
@@ -174,4 +178,41 @@ it("Conversation: stays inside its Agent's Space for all projections and mutatio
   await expect(
     client.agents.get({ spaceId: a.space.id, id: saved.agent.id }),
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
+});
+
+it("Message/Event: commits idempotently, snapshots at a cursor and refuses all reads and writes to non-members", async () => {
+  actor = owner;
+  const a = await client.spaces.create({ name: "Messages" });
+  const b = await client.spaces.create({ name: "Other messages" });
+  owned.push(a.space.id, b.space.id);
+  const saved = await client.agents.create({ spaceId: a.space.id, agent });
+  const selection = { spaceId: a.space.id, conversationId: saved.conversation.id };
+  const message = { text: "A member message", idempotencyKey: "retry" };
+  const sent = await client.conversations.send({ ...selection, message });
+  expect(await client.conversations.send({ ...selection, message })).toEqual(sent);
+  expect(sent.author).toEqual({ kind: "member", accountId: owner });
+  expect(await client.conversations.events({ ...selection, limit: 1 })).toMatchObject({
+    status: "events",
+    events: [{ message: sent }],
+    cursor: 1,
+    hasMore: false,
+  });
+  const snapshot = await client.conversations.snapshot(selection);
+  expect(snapshot).toEqual({ conversation: saved.conversation, messages: [sent], cursor: 1 });
+  expect(await client.conversations.events({ ...selection, after: snapshot.cursor })).toEqual({
+    status: "events",
+    events: [],
+    cursor: 1,
+    hasMore: false,
+  });
+  for (const selected of [selection, { ...selection, spaceId: b.space.id }]) {
+    actor = selected.spaceId === a.space.id ? stranger : owner;
+    for (const request of [
+      () => client.conversations.send({ ...selected, message }),
+      () => client.conversations.events(selected),
+      () => client.conversations.snapshot(selected),
+    ])
+      await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
+  }
+  actor = owner;
 });

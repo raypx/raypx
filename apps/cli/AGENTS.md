@@ -177,8 +177,9 @@ never reset the cursor, reconnect or detach for them. Queue each distinct ID thr
 current flush, carry it on every snapshot page and remove it only after its snapshot ACK;
 a request arriving during another snapshot keeps its own authoritative checkpoint.
 
-`daemon/acknowledged-stream.ts` owns exact cursor ACK, committed progress, cancellable
-deadline and reset for both managed replay and observed projections. The Relay
+`daemon/acknowledged-stream.ts` adapts local errors for the shared
+`@raypx/client/relay` AcknowledgedStream: exact cursor ACK, committed progress,
+cancellable deadline and reset for managed replay and observed projections. The Relay
 socket supplies a fresh AbortSignal on every handshake; pending reads and ACK waits
 release on disconnect even if an adapter ignores cancellation. Account selection
 and Host binding have separate scopes. Pass signals through admission, but never

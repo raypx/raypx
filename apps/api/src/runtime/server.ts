@@ -1,3 +1,6 @@
+import { createConversationFanout } from "@raypx/agents/server/postgres";
+import { ConversationStream } from "../conversations/stream.js";
+import { createConversationSocketRoutes } from "../conversations/socket.js";
 import {
   createRemoteRelay,
   RedisRelayCluster,
@@ -60,7 +63,16 @@ export async function createApiRuntime(
       ? new RelayHub(async (use) => use(runtime.control))
       : undefined;
   const cluster = environment.REDIS_URL ? new RedisRelayCluster(environment.REDIS_URL) : undefined;
+  const fanout =
+    providers.createConversationFanout?.() ?? createConversationFanout(environment.DATABASE_URL);
+  const events = new ConversationStream({
+    spaces: runtime.spaces,
+    conversations: runtime.conversations,
+    readSession: runtime.readSession,
+    fanout,
+  });
   try {
+    await events.start();
     if (hub) {
       relay = hub;
       // The broker keeps reconnecting and `/ready` reports the relay state; record the
@@ -75,6 +87,8 @@ export async function createApiRuntime(
       relay = await createRemoteRelay(runtime.control, cluster);
     }
   } catch (error) {
+    await events.shutdown().catch(() => {});
+    await fanout.close().catch(() => {});
     await hub?.shutdown().catch(() => {});
     await runtime.close();
     throw error;
@@ -82,10 +96,19 @@ export async function createApiRuntime(
   let closing: Promise<void> | undefined;
   return {
     ...runtime,
-    app: runtime.app.route(
-      "/relay",
-      createRelaySocketRoutes({ hub, allowedOrigins: environment.allowedOrigins }),
-    ),
+    app: runtime.app
+      .route(
+        "/events",
+        createConversationSocketRoutes({
+          stream: events,
+          allowedOrigins: environment.allowedOrigins,
+          readSession: runtime.readSession,
+        }),
+      )
+      .route(
+        "/relay",
+        createRelaySocketRoutes({ hub, allowedOrigins: environment.allowedOrigins }),
+      ),
     relay,
     hub,
     allowedOrigins: environment.allowedOrigins,
@@ -93,7 +116,10 @@ export async function createApiRuntime(
     close: () =>
       (closing ??= (async () => {
         try {
-          await relay.shutdown();
+          await events
+            .shutdown()
+            .finally(() => fanout.close())
+            .finally(() => relay.shutdown());
         } finally {
           await runtime.close();
         }

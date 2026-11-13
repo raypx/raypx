@@ -26,6 +26,8 @@ import { configurationContract } from "./config.js";
 import { jobsContract } from "./jobs.js";
 export * from "./jobs.js";
 import { memoryContract } from "./memory.js";
+import { conversationsContract } from "./conversation.js";
+export * from "./conversation.js";
 import { spacesContract, agentsContract } from "./spaces.js";
 export * from "./memory.js";
 import {
@@ -57,6 +59,7 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 export const apiContract = {
   spaces: spacesContract,
   agents: agentsContract,
+  conversations: conversationsContract,
   admin: administrationContract,
   attachments: sessionAttachmentContract,
   instances: instancesContract,

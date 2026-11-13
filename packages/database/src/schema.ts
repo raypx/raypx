@@ -100,6 +100,99 @@ export const conversations = pgTable(
   ],
 );
 
+// Transactional counters, never PostgreSQL sequences: rollback consumes no number.
+export const conversationCounters = pgTable(
+  "conversation_counters",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    sequence: bigint("sequence", { mode: "number" }).notNull().default(0),
+    retainedAfter: bigint("retained_after", { mode: "number" }).notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId] }),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+    check(
+      "conversation_counters_bounds",
+      sql`${table.retainedAfter} >= 0 and ${table.retainedAfter} <= ${table.sequence} and ${table.sequence} <= 9007199254740991`,
+    ),
+  ],
+);
+export const conversationMessages = pgTable(
+  "conversation_messages",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    id: text("id").notNull(),
+    sequence: bigint("sequence", { mode: "number" }).notNull(),
+    authorAccountId: text("author_account_id")
+      .notNull()
+      .references(() => user.id),
+    idempotencyKey: text("idempotency_key").notNull(),
+    text: text("text").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
+    uniqueIndex("conversation_messages_sequence_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.sequence,
+    ),
+    uniqueIndex("conversation_messages_event_ref_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.id,
+      table.sequence,
+    ),
+    uniqueIndex("conversation_messages_idempotency_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.authorAccountId,
+      table.idempotencyKey,
+    ),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+    check(
+      "conversation_messages_sequence_check",
+      sql`${table.sequence} > 0 and ${table.sequence} <= 9007199254740991`,
+    ),
+  ],
+);
+export const conversationEvents = pgTable(
+  "conversation_events",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    sequence: bigint("sequence", { mode: "number" }).notNull(),
+    kind: text("kind", { enum: ["message.created"] }).notNull(),
+    messageId: text("message_id").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.conversationId, table.sequence] }),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.messageId, table.sequence],
+      foreignColumns: [
+        conversationMessages.spaceId,
+        conversationMessages.conversationId,
+        conversationMessages.id,
+        conversationMessages.sequence,
+      ],
+    }).onDelete("cascade"),
+    check("conversation_events_kind_check", sql`${table.kind} = 'message.created'`),
+  ],
+);
+
 export const twoFactor = pgTable(
   "two_factor",
   {
@@ -509,6 +602,9 @@ export const {
 } = oauthTables(user, session);
 
 export const schema = {
+  conversationCounters,
+  conversationMessages,
+  conversationEvents,
   spaces,
   spaceMembers,
   agents,

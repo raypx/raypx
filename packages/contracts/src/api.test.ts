@@ -14,6 +14,7 @@ describe("foundation contract", () => {
     expect(Object.keys(apiContract)).toEqual([
       "spaces",
       "agents",
+      "conversations",
       "admin",
       "attachments",
       "instances",

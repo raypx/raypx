@@ -1,0 +1,894 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "a22c4dc9-4e8b-43f7-9d07-23155d192a56",
+  "prevIds": [
+    "2fd10e79-4faf-4999-943e-ae031431ce15"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_counters"
+      ],
+      "writes": [
+        "s|tbl|public.conversation_counters",
+        "n|tbl|public.conversation_counters",
+        "e|tbl|public.conversation_counters",
+        "n|rel|public.conversation_counters",
+        "n|type|public.conversation_counters",
+        "n|rel|public.conversation_counters_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|tbl|public.conversation_events",
+        "n|tbl|public.conversation_events",
+        "e|tbl|public.conversation_events",
+        "n|rel|public.conversation_events",
+        "n|type|public.conversation_events",
+        "n|rel|public.conversation_events_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_messages"
+      ],
+      "writes": [
+        "s|tbl|public.conversation_messages",
+        "n|tbl|public.conversation_messages",
+        "e|tbl|public.conversation_messages",
+        "n|rel|public.conversation_messages",
+        "n|type|public.conversation_messages",
+        "n|rel|public.conversation_messages_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_messages",
+        "conversation_messages_sequence_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_messages_sequence_idx",
+        "n|idx|public.conversation_messages_sequence_idx",
+        "e|idx|public.conversation_messages_sequence_idx",
+        "n|rel|public.conversation_messages_sequence_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "n|col|public.conversation_messages.space_id",
+        "n|col|public.conversation_messages.conversation_id",
+        "n|col|public.conversation_messages.sequence"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_messages",
+        "conversation_messages_event_ref_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_messages_event_ref_idx",
+        "n|idx|public.conversation_messages_event_ref_idx",
+        "e|idx|public.conversation_messages_event_ref_idx",
+        "n|rel|public.conversation_messages_event_ref_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "n|col|public.conversation_messages.space_id",
+        "n|col|public.conversation_messages.conversation_id",
+        "n|col|public.conversation_messages.id",
+        "n|col|public.conversation_messages.sequence"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_messages",
+        "conversation_messages_idempotency_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_messages_idempotency_idx",
+        "n|idx|public.conversation_messages_idempotency_idx",
+        "e|idx|public.conversation_messages_idempotency_idx",
+        "n|rel|public.conversation_messages_idempotency_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "n|col|public.conversation_messages.space_id",
+        "n|col|public.conversation_messages.conversation_id",
+        "n|col|public.conversation_messages.author_account_id",
+        "n|col|public.conversation_messages.idempotency_key"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_counters"
+      ],
+      "writes": [
+        "s|fk|public.conversation_counters.conversation_counters_VRyqPxfEewzC_fkey",
+        "n|fk|public.conversation_counters.conversation_counters_VRyqPxfEewzC_fkey",
+        "e|fk|public.conversation_counters.conversation_counters_VRyqPxfEewzC_fkey",
+        "n|con|public.conversation_counters.conversation_counters_VRyqPxfEewzC_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_counters",
+        "n|sch|public",
+        "n|tbl|public.conversations",
+        "n|sch|public",
+        "n|col|public.conversation_counters.space_id",
+        "n|col|public.conversation_counters.conversation_id",
+        "n|col|public.conversations.space_id",
+        "n|col|public.conversations.id",
+        "e|uniqueness|public.conversations.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|fk|public.conversation_events.conversation_events_xpK9yYjL1Xi2_fkey",
+        "n|fk|public.conversation_events.conversation_events_xpK9yYjL1Xi2_fkey",
+        "e|fk|public.conversation_events.conversation_events_xpK9yYjL1Xi2_fkey",
+        "n|con|public.conversation_events.conversation_events_xpK9yYjL1Xi2_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "n|tbl|public.conversations",
+        "n|sch|public",
+        "n|col|public.conversation_events.space_id",
+        "n|col|public.conversation_events.conversation_id",
+        "n|col|public.conversations.space_id",
+        "n|col|public.conversations.id",
+        "e|uniqueness|public.conversations.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|fk|public.conversation_events.conversation_events_j0xCIsEXuSsQ_fkey",
+        "n|fk|public.conversation_events.conversation_events_j0xCIsEXuSsQ_fkey",
+        "e|fk|public.conversation_events.conversation_events_j0xCIsEXuSsQ_fkey",
+        "n|con|public.conversation_events.conversation_events_j0xCIsEXuSsQ_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "n|col|public.conversation_events.space_id",
+        "n|col|public.conversation_events.conversation_id",
+        "n|col|public.conversation_events.message_id",
+        "n|col|public.conversation_events.sequence",
+        "n|col|public.conversation_messages.space_id",
+        "n|col|public.conversation_messages.conversation_id",
+        "n|col|public.conversation_messages.id",
+        "n|col|public.conversation_messages.sequence",
+        "e|uniqueness|public.conversation_messages.conversation_id.id.sequence.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_messages"
+      ],
+      "writes": [
+        "s|fk|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey",
+        "n|fk|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey",
+        "e|fk|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey",
+        "n|con|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.conversation_messages.author_account_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_messages"
+      ],
+      "writes": [
+        "s|fk|public.conversation_messages.conversation_messages_bn1MB1734ixn_fkey",
+        "n|fk|public.conversation_messages.conversation_messages_bn1MB1734ixn_fkey",
+        "e|fk|public.conversation_messages.conversation_messages_bn1MB1734ixn_fkey",
+        "n|con|public.conversation_messages.conversation_messages_bn1MB1734ixn_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "n|tbl|public.conversations",
+        "n|sch|public",
+        "n|col|public.conversation_messages.space_id",
+        "n|col|public.conversation_messages.conversation_id",
+        "n|col|public.conversations.space_id",
+        "n|col|public.conversations.id",
+        "e|uniqueness|public.conversations.id.space_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "conversation_counters",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "conversation_events",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "conversation_messages",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_counters",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_counters",
+        "name": "conversation_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_counters",
+        "name": "sequence",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_counters",
+        "name": "retained_after",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "conversation_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "sequence",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "kind",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "message_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "sequence",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "author_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "idempotency_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "text",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_messages_sequence_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "sequence",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_messages_event_ref_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "sequence",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_messages_idempotency_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "author_account_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "idempotency_key",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_counters",
+        "name": "conversation_counters_VRyqPxfEewzC_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversations",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "conversation_events_xpK9yYjL1Xi2_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversations",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "conversation_events_j0xCIsEXuSsQ_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "message_id",
+          "sequence"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversation_messages",
+        "columnsTo": [
+          "space_id",
+          "conversation_id",
+          "id",
+          "sequence"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_messages_author_account_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "author_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_messages_bn1MB1734ixn_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversations",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_counters",
+        "name": "conversation_counters_pkey",
+        "columns": [
+          "space_id",
+          "conversation_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "conversation_events_pkey",
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "sequence"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_messages_pkey",
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_counters",
+        "name": "conversation_counters_bounds",
+        "value": "\"retained_after\" >= 0 and \"retained_after\" <= \"sequence\" and \"sequence\" <= 9007199254740991",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "conversation_events_kind_check",
+        "value": "\"kind\" = 'message.created'",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_messages",
+        "name": "conversation_messages_sequence_check",
+        "value": "\"sequence\" > 0 and \"sequence\" <= 9007199254740991",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

@@ -10,8 +10,11 @@ belong to `@raypx/core`; transport adapters compose those same schema instances.
 `/api` composes `spaces.list/create` and `agents.create/list/get/update/delete`
 from Core. They require a session, independently of deployment permissions. A
 `spaceId` selects the requested resource; API resolves membership on every call.
-Agent replies pair the Agent with its one direct Conversation. There are no member
-management, message, model execution or event-stream procedures in this slice.
+Agent replies pair the Agent with its one direct Conversation.
+`conversations.send/events/snapshot` use the same session and Space admission.
+`/api` also composes the version-1 conversation stream subscribe/ACK/unsubscribe
+frames and event/snapshot-required replies. Member management and model execution
+remain outside this slice.
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 
 `/desktop`: bounded API request/reply DTOs, scoped execution list/result/terminal

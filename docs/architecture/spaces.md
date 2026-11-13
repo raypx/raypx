@@ -23,8 +23,9 @@ An Agent's model choice is an opaque `modelId`, without an endpoint, credential 
 vendor field. Updates replace the configuration and preserve the Conversation.
 Agent/Conversation creation is atomic. Deletion removes both synchronously while
 they have no execution or external resources; resumable deletion precedes those
-future dependencies. No Space/member mutation, messages, stream, model execution
-or UI is exposed by this slice. Invitations, membership management and their audit
+future dependencies. Space/member mutation, model execution and UI remain outside
+these slices. Member messages and their stream are described in
+[the implemented conversation slice](events.md#implemented-conversation-slice). Invitations, membership management and their audit
 workflow remain Phase 6 work.
 
 ## Spaces

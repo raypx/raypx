@@ -12,3 +12,12 @@ export interface AgentsRepository {
   update(scope: SpaceScope, id: AgentId, input: AgentInput): Promise<AgentConversation>;
   delete(scope: SpaceScope, id: AgentId): Promise<{ deleted: true }>;
 }
+
+export type {
+  ConversationsRepository,
+  ConversationEventEntry,
+  ConversationEvents,
+  ConversationSnapshot,
+  ConversationFanout,
+  ConversationNotice,
+} from "./conversations.js";

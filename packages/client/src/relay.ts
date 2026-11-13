@@ -1,3 +1,4 @@
+export { AcknowledgedStream, type StreamCursor } from "./acknowledged-stream.js";
 import { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
 import {
   relayServerSchema,

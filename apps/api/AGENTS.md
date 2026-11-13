@@ -16,6 +16,14 @@ resolves that account's member row for the selected Space on every request befor
 calling `@raypx/agents/server`. Missing membership and missing records both answer
 NOT_FOUND, including for deployment administrators. Mutations require trusted
 Origin and account limits. Agent creation and its direct Conversation commit together.
+`conversations.send/events/snapshot` reuse that scope boundary and delegate to the
+Agents conversation repository. `/events` is a session-authenticated, Origin-checked
+CrossWS route on the same listener in API-enabled roles. It multiplexes bounded
+subscriptions, exact event ACKs and snapshot-required recovery; clients persist
+and resubmit their last applied cursor. The stream rechecks sessions/membership
+before delivery and on a one-second poll. Runtime owns the PostgreSQL fanout port,
+LISTEN connection, timer and socket shutdown. `RuntimeProviders.createConversationFanout`
+can inject the subscriber for offline runtime tests.
 The owning feature packages also have separate `test:postgres` modes.
 `deployment:fixture:build --outfile <absolute-path>` bundles the test-only account
 provisioner for `smoke:deployment` as one minified Bun ESM file, without embedding

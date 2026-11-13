@@ -29,6 +29,10 @@ it("the server runtime accepts scoped providers and resolves a fresh session for
   });
   const ownedDatabases: Database[] = [];
   const providers: RuntimeProviders = {
+    createConversationFanout: () => ({
+      subscribe: async () => async () => {},
+      close: async () => {},
+    }),
     createAdministrationRepository: () => ({
       begin: async () => crypto.randomUUID(),
       finish: async () => {},

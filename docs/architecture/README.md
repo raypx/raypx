@@ -6,10 +6,12 @@ implements the earlier device-owned product. Guides under
 [delivery phase](../roadmap.md) replaces it. The earlier architecture and its
 decision records remain in the history of `canary`.
 
-The first additive Phase 1 slice provides Space/member and Agent/Conversation
-schemas, foundation tables, scoped feature repositories and session-authorized
-oRPC. Device functionality remains in place. Messages and execution are not part
-of this slice; see [Spaces](spaces.md#implemented-foundation-slice).
+The additive Phase 1 slices provide Space/member and Agent/Conversation schemas,
+scoped repositories and session-authorized oRPC, followed by member messages,
+ordered conversation logs, snapshots and an acknowledged WebSocket event stream.
+Device functionality remains in place. Model calls and reply generation are not
+yet implemented; see [Spaces](spaces.md#implemented-foundation-slice) and
+[Events](events.md#implemented-conversation-slice).
 
 Raypx is the durable home for persistent Agents. An Agent has an identity, one
 continuing conversation, memory, routines and a computer. It keeps working while

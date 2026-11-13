@@ -11,6 +11,8 @@ adapters, execution hosts and product views. Schemas are the single source of in
 - `/agents` owns persistent Agent configuration and IDs, Conversation IDs and the
   pure direct-Conversation constructor. Model choices are opaque model IDs, with no
   provider vocabulary or credentials. These are separate from device-owned tasks.
+- `/conversation` owns member Message and immutable ConversationEvent schemas, event
+  sequences and pure retention-boundary checks. Only `message.created` has a writer.
 - `/memory` owns document/version schemas, mutation inputs and domain errors.
 - `/jobs` owns local/cloud schedule schemas, domain errors and pure calendar
   calculations. Cron instances stay paused and are stopped after calculation;

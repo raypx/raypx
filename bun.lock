@@ -33,6 +33,7 @@
         "@raypx/account": "workspace:*",
         "@raypx/agents": "workspace:*",
         "@raypx/auth": "workspace:*",
+        "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/control": "workspace:*",
         "@raypx/core": "workspace:*",
@@ -58,7 +59,6 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@raypx/client": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@raypx/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",

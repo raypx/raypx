@@ -1,6 +1,9 @@
 import { InstanceService } from "@raypx/instances/server";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
-import { createAgentsRepository } from "@raypx/agents/server/postgres";
+import {
+  createConversationsRepository,
+  createAgentsRepository,
+} from "@raypx/agents/server/postgres";
 import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
 import { createInstanceRepository } from "../instances/repository.js";
 import { createConfigRepository } from "../config/repository.js";
@@ -41,6 +44,7 @@ import { composeControl } from "./control.js";
 import type { ControlService } from "@raypx/control";
 
 export interface RuntimeProviders {
+  createConversationFanout?: () => import("@raypx/agents/server").ConversationFanout;
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
   createConfigRepository?: (db: Database, audit: AuditService) => ConfigRepository;
   createAdministrationRepository?: (db: Database) => AdministrationRepository;
@@ -139,7 +143,11 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     // Resolve from the same auth adapter for HTTP and direct server callers.
     // Keep sessions request-owned even when the process reuses the runtime.
     const readSession = (headers: Headers) => readAuthSession(auth, headers);
+    const spaces = createSpaceAccess(db);
+    const conversations = createConversationsRepository(db);
     return {
+      spaces,
+      conversations,
       auth,
       audit,
       administration,
@@ -159,7 +167,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
-        spaces: createSpaceAccess(db),
+        spaces,
+        conversations,
         agents: createAgentsRepository(db),
         instances,
         audit,

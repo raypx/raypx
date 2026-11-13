@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
 import { SpaceNotFound, spaceIdSchema, spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
-import { agentIdSchema } from "@raypx/core/agents";
+import { conversationIdSchema, agentIdSchema } from "@raypx/core/agents";
 import type { AuthSession } from "@raypx/core/auth";
 import type { SpaceAccess } from "@raypx/spaces/server";
 import { createApiApp } from "../../../tests/helpers/app.js";
@@ -64,7 +64,16 @@ const agent = { name: "Helper", instructions: "", model: { modelId: "model" } };
 it("resolves membership on every Agent procedure and refuses even deployment administrators", async () => {
   const f = fixture();
   const id = agentIdSchema.parse("agent");
+  const conversationId = conversationIdSchema.parse("conversation");
   for (const request of [
+    () =>
+      f.client().conversations.send({
+        spaceId: f.spaceId,
+        conversationId,
+        message: { text: "Hello", idempotencyKey: "retry" },
+      }),
+    () => f.client().conversations.events({ spaceId: f.spaceId, conversationId }),
+    () => f.client().conversations.snapshot({ spaceId: f.spaceId, conversationId }),
     () => f.client().agents.list({ spaceId: f.spaceId }),
     () => f.client().agents.get({ spaceId: f.spaceId, id }),
     () => f.client().agents.create({ spaceId: f.spaceId, agent }),
@@ -72,8 +81,8 @@ it("resolves membership on every Agent procedure and refuses even deployment adm
     () => f.client().agents.delete({ spaceId: f.spaceId, id }),
   ])
     await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
-  expect(f.resolve).toHaveBeenCalledTimes(5);
-  expect(f.readSession).toHaveBeenCalledTimes(5);
+  expect(f.resolve).toHaveBeenCalledTimes(8);
+  expect(f.readSession).toHaveBeenCalledTimes(8);
   for (const args of f.resolve.mock.calls) expect(args).toEqual(["account", f.spaceId]);
 });
 

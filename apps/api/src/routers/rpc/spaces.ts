@@ -1,3 +1,4 @@
+import { InvalidConversationCursor } from "@raypx/core/conversation";
 import { ORPCError } from "@orpc/server";
 import { SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
@@ -15,6 +16,7 @@ export function createSpaceHandlers({
     try {
       return await run();
     } catch (error) {
+      if (error instanceof InvalidConversationCursor) throw new ORPCError("BAD_REQUEST");
       if (!(error instanceof SpaceNotFound)) throw error;
       throw new ORPCError("NOT_FOUND", {
         data: { error: { code: "NOT_FOUND" }, requestId: context.requestId },
@@ -34,6 +36,31 @@ export function createSpaceHandlers({
   const write = withRpcPermission();
   const quota = limitAccount({ window: 60, max: 30 });
   return {
+    conversations: {
+      send: os.conversations.send
+        .use(write)
+        .use(requireTrustedOrigin)
+        .use(quota)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.send(scope, input.conversationId, input.message),
+          ),
+        ),
+      events: os.conversations.events
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.events(scope, input.conversationId, input.after, input.limit),
+          ),
+        ),
+      snapshot: os.conversations.snapshot
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.snapshot(scope, input.conversationId),
+          ),
+        ),
+    },
     spaces: {
       list: os.spaces.list
         .use(read)

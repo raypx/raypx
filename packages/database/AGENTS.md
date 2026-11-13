@@ -18,6 +18,11 @@ without replacing device records. Space-owned primary keys start with `space_id`
 Conversation references to Agents include it. A unique Space/Agent pair permits
 one direct Conversation. Features own scoped queries, API owns session admission.
 `spaces.private_for` is the unique account bootstrap marker, never a public field.
+`conversation_messages`, `conversation_events` and `conversation_counters` use
+Space/Conversation composite references. Messages retain the member-scoped retry
+key; immutable events reference their content. The locked counter and retention
+floor commit with event writes/pruning. `/connection` also exposes an owned,
+dedicated LISTEN connection; feature adapters choose the channel and payload.
 
 ## Constraints
 

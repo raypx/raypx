@@ -1,9 +1,11 @@
 # Roadmap
 
 This is the delivery order for the [target architecture](architecture/README.md).
-Phase 1's first additive slice implements Spaces, membership records and Agent CRUD
-with one direct Conversation per Agent, through oRPC. The remainder below is not
-implemented. The earlier device-owned product remains until a phase replaces it.
+Phase 1's additive slices implement Spaces, membership records, Agent CRUD with
+one direct Conversation per Agent, and member messages with an ordered event log,
+snapshots and an acknowledged event stream. Model calls, reply generation and UI
+for these records remain to be implemented. The earlier device-owned product
+remains until a phase replaces it.
 
 ## Phase overview
 

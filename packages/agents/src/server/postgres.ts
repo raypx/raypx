@@ -100,3 +100,6 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
     },
   };
 }
+
+export { createConversationsRepository } from "./conversations.js";
+export { createConversationFanout } from "./fanout.js";

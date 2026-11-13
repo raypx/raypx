@@ -32,3 +32,18 @@ export function connectDatabase(databaseUrl: string, options: DatabaseOptions = 
 }
 export type DatabaseConnection = ReturnType<typeof connectDatabase>;
 export type Database = DatabaseConnection["db"];
+
+/** Dedicated process-owned LISTEN connection; callers choose a channel and bounded payload. */
+export function connectDatabaseNotifications(databaseUrl: string) {
+  const client = postgres(databaseUrl, { max: 1, fetch_types: false });
+  let closed: Promise<void> | undefined;
+  return {
+    async listen(channel: string, receive: (payload: string) => void) {
+      const subscription = await client.listen(channel, receive);
+      return async () => {
+        await subscription.unlisten();
+      };
+    },
+    close: () => (closed ??= client.end()),
+  };
+}

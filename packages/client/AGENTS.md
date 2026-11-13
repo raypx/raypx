@@ -11,6 +11,9 @@ the injectable `FetchCallable` and isMissingProcedure. `/relay` exports RelayCon
 relayUrl and the injectable `RelaySocketFactory`, plus `RelayScheduler` and `systemRelayScheduler`, which expose a
 browser-safe clock, timer cancellation and random source; RelayConnection accepts one optional
 scheduler for deterministic retry and heartbeat tests, retaining system defaults at runtime.
+`/relay` also exports the transport-independent AcknowledgedStream and StreamCursor.
+One exact ACK advances a cursor; injected deadlines, aborts and resets cancel
+pending delivery. API and CLI share this primitive; CLI adapts its local errors.
 Each socket attempt owns an AbortSignal, passed to authenticate/message and as the
 third status argument. Close/replacement aborts it before reporting disconnection;
 automatic reconnect creates a new scope. Consumers must scope pending work and
