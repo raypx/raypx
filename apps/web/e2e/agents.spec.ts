@@ -27,7 +27,15 @@ test(
       "browser-fixture",
     );
     await dialog.getByRole("button", { name: "Create Agent", exact: true }).click();
-    await expect(page.getByRole("button", { name: /^Computer:/ })).toBeVisible();
+    const computer = page.getByRole("button", { name: /^Computer:/ });
+    await expect(computer).toBeVisible();
+    await computer.click();
+    await page.getByRole("button", { name: "Start computer", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Stop computer", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Close computer panel", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Computer: Running", exact: true }),
+    ).toBeVisible();
     await page.getByRole("textbox", { name: "Message", exact: true }).fill(prompt);
     await page.getByRole("button", { name: "Send", exact: true }).click();
     await expect(page.getByText(prompt, { exact: true })).toHaveCount(1);

@@ -18,6 +18,9 @@ import {
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import { ConversationStream } from "../../src/conversations/stream.js";
 import { browserModelFixture } from "./browser-model.js";
+import { createComputersService } from "@raypx/computers/server";
+import { createComputersRepository } from "@raypx/computers/server/postgres";
+import { createMemoryComputerProvider } from "@raypx/providers/computer";
 import { AuditService } from "../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../src/admin/repository.js";
 import { createConfigRepository } from "../../src/config/repository.js";
@@ -48,6 +51,12 @@ const auth = createAuth({
   mailer: { async sendVerification() {}, async sendPasswordReset() {} },
 });
 const control = new ControlService(createControlRepository(connection.db));
+// The in-memory provider lets browser journeys start and stop a computer without an Engine.
+const computers = createComputersService(
+  createComputersRepository(connection.db, { perSpace: 10, perMember: 100 }),
+  createMemoryComputerProvider(),
+  "memory",
+);
 // Sign-up reads the registration switch, so the fixture needs the real configuration service.
 const audit = new AuditService(createAdministrationRepository(connection.db));
 const config = createConfigService({
@@ -96,6 +105,7 @@ const app = createApiApp({
   allowedOrigins: ["http://127.0.0.1:4173", "http://127.0.0.1:4174"],
   control,
   config,
+  computers,
   spaces,
   agents: createAgentsRepository(connection.db),
   conversationModels: model.models,
