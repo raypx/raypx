@@ -1,0 +1,299 @@
+apps/desktop/src/features/agents/client.ts
+  s_ab16b2e70b0baf::t_45633da7cf5026 1-3
+  s_ab16b2e70b0baf::t_a8caef881c8b53 4-7
+apps/desktop/src/router-agents.component.test.tsx
+  s_ab16b2e70b0baf::t_d7e6163d354a7e 1,10-12,18-19,30-43,50-51,56,62-64,67-75,77-79
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 2-9,13-17,20-29,44-49,52-55,57-61,65-66
+  s_ab16b2e70b0baf::t_a8caef881c8b53 76
+apps/api/src/app/options.ts
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 19,25
+packages/agents/src/client/styles.css
+  s_ab16b2e70b0baf::t_dd3b5cc1547256 1
+apps/web/src/features/agents/client.ts
+  s_ab16b2e70b0baf::t_45633da7cf5026 1-4
+docs/architecture/README.md
+  s_ab16b2e70b0baf::t_fc282e713fbc2f 14-16
+apps/desktop/src/lib/mygo.ts
+  s_ab16b2e70b0baf::t_378c67b3af6255 9-10,286-291
+apps/web/package.json
+  s_ab16b2e70b0baf::t_b27af188f64550 24
+packages/contracts/src/api.test.ts
+  s_ab16b2e70b0baf::t_5509653655306c 35-40
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 34,41
+packages/agents/locales/en/index.ts
+  s_ab16b2e70b0baf::t_dd3b5cc1547256 1-3
+apps/desktop/locales/zh/index.ts
+  s_ab16b2e70b0baf::t_acafec5b77c0c0 5,23
+apps/api/src/conversations/models.test.ts
+  s_ab16b2e70b0baf::t_38788d95c21b43 33,42
+  s_ab16b2e70b0baf::t_6bca01aeb570bf 1-14,22-32,34-41,43-47
+  s_ab16b2e70b0baf::t_5509653655306c 15-21
+apps/web/src/return-to.test.ts
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 20-22
+packages/agents/AGENTS.md
+  s_ab16b2e70b0baf::t_305ffd7adb6f83 3-12
+packages/contracts/AGENTS.md
+  s_ab16b2e70b0baf::t_edf744c8e008a7 14-15
+  s_ab16b2e70b0baf::t_305ffd7adb6f83 24-27
+apps/cli/src/runtime/daemon/desktop/control.ts
+  s_ab16b2e70b0baf::t_c7051410eefacb 121
+  s_ab16b2e70b0baf::t_5719ce98686567 1,76,82,119-120,122-137,286
+packages/agents/src/model/page.ts
+  s_ab16b2e70b0baf::t_1bfeeae3336472 32-33
+  s_ab16b2e70b0baf::t_799de1f1764af4 1-31,34-57
+apps/cli/src/runtime/daemon/desktop/events.test.ts
+  s_ab16b2e70b0baf::t_0cb85e4b5a11d8 118-126,131,133-141,143,145-151,156-164,172-180,185-194,201-202
+  s_ab16b2e70b0baf::t_2e16de9129f975 78,80,88,93,142,144
+  s_ab16b2e70b0baf::t_6871287c5abcd6 132
+  s_ab16b2e70b0baf::t_bf9b18a02b3076 1-6,13-19,26-30,41-46,51-58,69-77,79,81-87,92,94-106,110-117
+  s_ab16b2e70b0baf::t_d3cdf511b469d1 7-12,20-25,31-40,47-50,59-68,89-91,107-109,127-130,152-155,165-171,181-184,195-200
+apps/desktop/src/features/auth/return-to.test.ts
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 18-20
+docs/architecture/events.md
+  s_ab16b2e70b0baf::t_444f13d1dae6f4 133-139
+apps/desktop/locales/en/index.ts
+  s_ab16b2e70b0baf::t_acafec5b77c0c0 5,23
+packages/agents/src/model/controller.ts
+  s_ab16b2e70b0baf::t_0d9938eeee227b 1-10,19-50,52-60,62,72-74,78-81,89-94,97-98,100-116,122-147,151-158,160-168,174-180,182,186-187,189-192,201-210,217-218,224-232,234-238,244-246,252-264,269-318
+  s_ab16b2e70b0baf::t_1bfeeae3336472 11-18,63-71,75-77,195-199,211-216,219-223,239-243,247-251,265-268
+  s_ab16b2e70b0baf::t_db367517df4c2d 83-88
+  s_ab16b2e70b0baf::t_fd979cdb215b5e 51,61,82,95-96,99,117-121,148-150,159,169-173,181,183-185,188,193-194,200
+  s_ab16b2e70b0baf::t_ed6f83e2fcc0a5 233
+apps/web/src/features/auth/access.ts
+  s_ab16b2e70b0baf::t_1910a389a5aea8 20
+apps/desktop/src/features/agents/socket.ts
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 37-42
+  s_ab16b2e70b0baf::t_d998fff7482f4c 25-28
+  s_ab16b2e70b0baf::t_45633da7cf5026 1-24,29-36,43-52
+apps/api/AGENTS.md
+  s_ab16b2e70b0baf::t_edf744c8e008a7 33-35
+apps/web/src/features/auth/return-to.ts
+  s_ab16b2e70b0baf::t_1910a389a5aea8 7
+packages/agents/src/client/workspace.tsx
+  s_ab16b2e70b0baf::t_306b2796e981e3 43,47-48,73-75,81,191-192,196,202
+  s_ab16b2e70b0baf::t_d44b44ced2bf96 66-68
+  s_ab16b2e70b0baf::t_632398f1fc3786 38
+  s_ab16b2e70b0baf::t_156da6d4694c64 63,65,69-70,164,181,203,205,214,217
+  s_ab16b2e70b0baf::t_2eaadfa30c427c 23,312
+  s_ab16b2e70b0baf::t_5cca5892f07898 85-92
+  s_ab16b2e70b0baf::t_de924864a3c252 1-14,25-37,39-42,59-62,76-80,82-84,93-94,115-119,130,146-163,165-172,182,186-190,193-195,204,206,212,219-225,254-255,266,274,299-300,322-323,332-335
+  s_ab16b2e70b0baf::t_db77be35920cff 15-22,24,44-46,49-58,64,71-72,95-114,120-129,131-145,173-180,183-185,197-201,207-211,213,215-216,218,226-253,256-265,267-273,275-298,301-311,313-321,324-331
+packages/agents/locales/en/agents.json
+  s_ab16b2e70b0baf::t_dd3b5cc1547256 1-27,29-62
+  s_ab16b2e70b0baf::t_2f8c41aa89d868 28
+packages/agents/tsconfig.json
+  s_ab16b2e70b0baf::t_b27af188f64550 2-3
+apps/web/src/components/shell.tsx
+  s_ab16b2e70b0baf::t_2b28502bb5bd3e 38,112
+packages/agents/tests/setup.ts
+  s_ab16b2e70b0baf::t_dd3b5cc1547256 1-12
+apps/api/src/conversations/models.ts
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 4-8,13,36-40
+  s_ab16b2e70b0baf::t_5509653655306c 20-23
+packages/contracts/src/spaces.test.ts
+  s_ab16b2e70b0baf::t_5509653655306c 39-46
+  s_ab16b2e70b0baf::t_926c4ddb01877d 15,33-38
+  s_f9cc0d01f49051::t_d9f9f79da7d478 47
+apps/desktop/package.json
+  s_ab16b2e70b0baf::t_b27af188f64550 43
+packages/contracts/src/spaces.ts
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 30-36
+apps/desktop/src/features/auth/return-to.ts
+  s_ab16b2e70b0baf::t_1910a389a5aea8 6
+apps/desktop/bridge.ts
+  s_ab16b2e70b0baf::t_378c67b3af6255 8,32-35,72-75
+apps/desktop/src/components/shell.tsx
+  s_ab16b2e70b0baf::t_2b28502bb5bd3e 31,129
+  s_ab16b2e70b0baf::t_1910a389a5aea8 50,189
+apps/web/src/styles.css
+  s_ab16b2e70b0baf::t_1910a389a5aea8 2
+packages/agents/src/client/browser-ports.ts
+  s_ab16b2e70b0baf::t_a75ed19711bbdd 1-11,16-40
+  s_ab16b2e70b0baf::t_db77be35920cff 12-15
+packages/agents/src/client.ts
+  s_ab16b2e70b0baf::t_22da153d8f46ea 2
+  s_ab16b2e70b0baf::t_de924864a3c252 1
+apps/api/tests/helpers/control-server.ts
+  s_ab16b2e70b0baf::t_5509653655306c 137-147,163-165
+  s_ab16b2e70b0baf::t_e7ff70a2295168 12-20,58-70,95,99-102,118-121,124-136,148-149,154,161-162,166-169,179-182,186-189,197-199
+  s_f9cc0d01f49051::t_878197e4cf0b35 21-25,51-57,98
+docs/architecture/spaces.md
+  s_ab16b2e70b0baf::t_444f13d1dae6f4 23-26,29-31
+packages/contracts/src/desktop.ts
+  s_ab16b2e70b0baf::t_32b88871144066 5,113-127
+packages/agents/package.json
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 30
+  s_ab16b2e70b0baf::t_b27af188f64550 7-11,18-19,24,27-28,35-42,44-46
+packages/agents/vitest.config.ts
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 9,11-35
+packages/agents/src/model/port.ts
+  s_ab16b2e70b0baf::t_1bfeeae3336472 3-9,73-77
+  s_ab16b2e70b0baf::t_799de1f1764af4 1-2,10-27,34-35,37-47,51-72,78-82
+  s_ab16b2e70b0baf::t_db367517df4c2d 29-32
+  s_ab16b2e70b0baf::t_fd979cdb215b5e 28,33,36,48-50
+packages/agents/locales/zh/index.ts
+  s_ab16b2e70b0baf::t_dd3b5cc1547256 1-3
+packages/agents/src/client/agent-form.tsx
+  s_ab16b2e70b0baf::t_632398f1fc3786 26-27
+  s_ab16b2e70b0baf::t_99a3f33e172d54 1-25,28-36,49-51,53-63,70-77,87-89,98-101,124-125,131,136-143
+  s_ab16b2e70b0baf::t_a896767e8986a9 52,116,122
+  s_ab16b2e70b0baf::t_db77be35920cff 64-69,78-86,90-97,102-110,123,126-130,132-134
+  s_ab16b2e70b0baf::t_ac4fa57b35ea88 37-48,111-115,117-121,135
+docs/roadmap.md
+  s_ab16b2e70b0baf::t_444f13d1dae6f4 7-9,54-55
+packages/agents/locales/zh/agents.json
+  s_ab16b2e70b0baf::t_dd3b5cc1547256 1-27,29-62
+  s_ab16b2e70b0baf::t_2f8c41aa89d868 28
+apps/cli/src/runtime/daemon/desktop/control.test.ts
+  s_ab16b2e70b0baf::t_e06710ac77cc55 5-6,37-38,43-60,62-64,68,72,74-88,109-111,116-129,131,133-134,146-154,171-173,175-182
+  s_ab16b2e70b0baf::t_2e16de9129f975 130,132,170,174
+  s_ab16b2e70b0baf::t_d3cdf511b469d1 34-36,39-42,65-67,69-71,73,89-108,112-115,135-145,155-169
+  s_ab16b2e70b0baf::t_bdc9cfac25e124 61
+  s_f9cc0d01f49051::t_685b6e1b65d2a1 183
+apps/desktop/src/features/agents/socket.test.ts
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 5-9,13-20,38-39,43-49,60-67,82-92
+  s_ab16b2e70b0baf::t_d998fff7482f4c 1-4,10-12,21-37,40-42,50-59,68-81,93-106
+apps/api/src/runtime/shared.ts
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 1-2,49,152,155,187
+  s_ab16b2e70b0baf::t_5509653655306c 150-151
+apps/web/src/router.tsx
+  s_ab16b2e70b0baf::t_1910a389a5aea8 32
+apps/api/src/routers/rpc/spaces.ts
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 86-90
+packages/agents/src/client/workspace.component.test.tsx
+  s_ab16b2e70b0baf::t_cb58a446b2770f 274,385-387,395-398,402-405,429,439-446,450,456,472-475
+  s_ab16b2e70b0baf::t_306b2796e981e3 92,141,195-196
+  s_ab16b2e70b0baf::t_6e76062f772ff6 1-7,15-21,34,76,81,87-91,93,102,112,117,122,126,142-143,156,176-183,187-194,197-199,203-206,236-241,251,262-263,267-273,275,282-284,288-289,308-309,319-320,342-343,351-355,365-384,527
+  s_ab16b2e70b0baf::t_db77be35920cff 8-9,11-14,22-33,35-75,77-80,82-86,94-101,103-111,113-116,118-121,123-125,127-140,144-155,157-175,184-186,200-202,242-250,252-261,264-266,276-281,285-287,290-307,310-318,321-341,344-350,356-364,388-394,399-401,406-428,430-438,447-449,451-455,457-471
+  s_ab16b2e70b0baf::t_66ef5b3aa81419 10,476-480,484-485,503-505,509-510,523-526
+  s_ab16b2e70b0baf::t_a896767e8986a9 207-215,222,234-235
+  s_ab16b2e70b0baf::t_d44b44ced2bf96 481-483,486-502,506-508,511-522
+  s_ab16b2e70b0baf::t_ac4fa57b35ea88 216-221,223-233
+apps/desktop/AGENTS.md
+  s_ab16b2e70b0baf::t_305ffd7adb6f83 17-23
+apps/desktop/src/components/command-menu.tsx
+  s_ab16b2e70b0baf::t_84d8a4fe29b731 19
+packages/agents/src/client/space-form.tsx
+  s_ab16b2e70b0baf::t_99a3f33e172d54 1-4,12-13,21-30,37-38,45,49-51,61,67,74-79
+  s_ab16b2e70b0baf::t_db77be35920cff 5-11,14-20,31-36,39-44,46-48,52-60,62-66,68-73
+apps/cli/src/runtime/daemon/desktop/events.ts
+  s_ab16b2e70b0baf::t_d3cdf511b469d1 65-75,119-123,142-145,147-150
+  s_ab16b2e70b0baf::t_5719ce98686567 1-60,64,76-118,124-141,146,151-169
+  s_ab16b2e70b0baf::t_c7051410eefacb 61-63
+apps/api/tests/helpers/browser-model.ts
+  s_ab16b2e70b0baf::t_38788d95c21b43 64
+  s_ab16b2e70b0baf::t_e7ff70a2295168 1-40,47-60,67
+  s_ab16b2e70b0baf::t_5509653655306c 41-46,61-63,65-66
+apps/api/tests/helpers/model.ts
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 3-4,15-16
+apps/api/src/routers/rpc/spaces.test.ts
+  s_ab16b2e70b0baf::t_926c4ddb01877d 62-65
+  s_ab16b2e70b0baf::t_6bca01aeb570bf 22,40,43,86,94-95,99-110
+  s_ab16b2e70b0baf::t_5509653655306c 33-34
+  s_f9cc0d01f49051::t_0fb7049f954262 111-112
+docs/development/ui.md
+  s_ab16b2e70b0baf::t_3813b9a40b6048 29-30
+  s_ab16b2e70b0baf::t_fc282e713fbc2f 20-28
+packages/agents/src/model/conversation.test.ts
+  s_ab16b2e70b0baf::t_db367517df4c2d 257-262,316-321,329-331,335-347,352-364,367-375
+  s_ab16b2e70b0baf::t_202f9761a94175 254-256,263-315,322-328,332-334,348-351,365-366,376-378
+  s_ab16b2e70b0baf::t_1bfeeae3336472 4-10,15-29,31-34,37-43,45-52,55-69,74-77,79-91,93-110,113-120,122-139,151-170,175-177,200-204,214-216,236-250,386-388,405-407,422-427,440-443,445-452,459-462,473-488,493-495,501-513,528-532,539-548,552-559,565-575,580-588,590-606
+  s_ab16b2e70b0baf::t_fe027939bd2066 1-3,11-14,30,35-36,44,53-54,70-73,78,92,111-112,121,140-150,171-174,178-199,205-213,217-235,251-253,379-385,389-404,408-421,428-439,444,453-458,463-472,489-492,496-500,514-527,533-538,549-551,560-564,576-579,589,607-615
+packages/agents/src/model/drafts.ts
+  s_ab16b2e70b0baf::t_799de1f1764af4 1-28,31-43,50-56
+  s_ab16b2e70b0baf::t_1bfeeae3336472 29-30,44-49
+apps/web/e2e/agents.spec.ts
+  s_ab16b2e70b0baf::t_66b2c3e5d991dc 33,39
+  s_ab16b2e70b0baf::t_edf744c8e008a7 1-25,27-32,34-38,40-47
+  s_ab16b2e70b0baf::t_0ae02c93c251e9 26
+e2e/AGENTS.md
+  s_ab16b2e70b0baf::t_926c4ddb01877d 82
+  s_ab16b2e70b0baf::t_edf744c8e008a7 83-84
+apps/cli/src/runtime/daemon/desktop/api.ts
+  s_ab16b2e70b0baf::t_c7051410eefacb 14,97
+  s_ab16b2e70b0baf::t_5719ce98686567 89,102,106
+  s_ab16b2e70b0baf::t_d3cdf511b469d1 98-100
+apps/desktop/src/routes/__root.tsx
+  s_ab16b2e70b0baf::t_305ffd7adb6f83 41
+apps/desktop/src/router-pages.component.test.ts
+  s_ab16b2e70b0baf::t_a8caef881c8b53 28
+apps/web/src/routes/(app)/agents.tsx
+  s_ab16b2e70b0baf::t_45633da7cf5026 1-22,26-32,34-38
+  s_ab16b2e70b0baf::t_84d8a4fe29b731 33
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 23-25
+apps/desktop/src/router.tsx
+  s_ab16b2e70b0baf::t_1910a389a5aea8 35
+packages/agents/src/client/i18n.ts
+  s_ab16b2e70b0baf::t_dd3b5cc1547256 1-4
+apps/desktop/src/routes/agents.tsx
+  s_ab16b2e70b0baf::t_a8caef881c8b53 1,22,24
+  s_ab16b2e70b0baf::t_45633da7cf5026 2-21,23,30-42,44-46
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 25-29
+  s_ab16b2e70b0baf::t_84d8a4fe29b731 43
+packages/agents/src/model.ts
+  s_ab16b2e70b0baf::t_1bfeeae3336472 1-45
+apps/desktop/src/styles.css
+  s_ab16b2e70b0baf::t_1910a389a5aea8 2
+packages/agents/src/model/conversation.ts
+  s_ab16b2e70b0baf::t_1bfeeae3336472 2-10,41-47,51-54,65-66,79-88,101-107,113-122,126-128,136-141,151-154,160-167,174-184
+  s_ab16b2e70b0baf::t_db367517df4c2d 71-78
+  s_ab16b2e70b0baf::t_10c02305070e28 1,11-29,31-40,48-50,55-64,67-68,89-100,108-112,123-125,129-135,142-150,155-159,168-173,185-190
+  s_ab16b2e70b0baf::t_6adb09f0f01605 30
+  s_ab16b2e70b0baf::t_fd979cdb215b5e 69-70
+apps/web/locales/en/index.ts
+  s_ab16b2e70b0baf::t_acafec5b77c0c0 5,23
+apps/web/AGENTS.md
+  s_ab16b2e70b0baf::t_305ffd7adb6f83 10-14
+apps/web/src/router-pages.component.test.ts
+  s_ab16b2e70b0baf::t_a8caef881c8b53 47
+apps/api/tests/helpers/app.ts
+  s_ab16b2e70b0baf::t_0da8315d2e45d2 10
+apps/web/locales/zh/index.ts
+  s_ab16b2e70b0baf::t_acafec5b77c0c0 5,23
+apps/web/src/router-agents.component.test.tsx
+  s_ab16b2e70b0baf::t_1d4b3a836629a6 6-8,12-13
+  s_ab16b2e70b0baf::t_5493df3f490a9e 25-26
+  s_ab16b2e70b0baf::t_d7e6163d354a7e 1-5,9-11,14-24,27-35
+docs/architecture/clients.md
+  s_ab16b2e70b0baf::t_444f13d1dae6f4 18-33,54-58
+  s_f9cc0d01f49051::t_687ca01521b558 59
+apps/cli/AGENTS.md
+  s_ab16b2e70b0baf::t_305ffd7adb6f83 25-29
+packages/agents/src/client/conversation.tsx
+  s_ab16b2e70b0baf::t_32c01c15fe6bea 1,34,41-42,51-53,68,73,80-82,108-110
+  s_ab16b2e70b0baf::t_307c8b88f8144d 105,161
+  s_ab16b2e70b0baf::t_632398f1fc3786 54-59,65-67
+  s_ab16b2e70b0baf::t_db77be35920cff 22-25,27-32,43-50,60-64,69-72,74-79,83-89,96-102,112-121,131-135,143-148,151-160,162-169,171-177,180-183,189-193,196-212,227-229,234-240,247-249,254-265,268-277
+  s_ab16b2e70b0baf::t_2f8c41aa89d868 7,195,213
+  s_ab16b2e70b0baf::t_d8be172b064619 2-6,8-21,26,33,35-40,90-95,103-104,106-107,111,122-130,136-142,149-150,170,178-179,184-188,194,214-226,230-233,241-246,250-253,266-267,278-283
+apps/desktop/src/routeTree.gen.ts
+  s_f9cc0d01f49051::t_719bfa2af5e6ae 15,43-47,117,134,153,173,190,208,228,259-265,400
+apps/web/src/routeTree.gen.ts
+  s_f9cc0d01f49051::t_12de35d5d62c58 18,63-67,162,184,211,236,258,284,358-364,513,523
+bun.lock
+  s_f9cc0d01f49051::t_c4632adf5eacb5 116,234,357,360-361,363,368-375,378-380
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3113525faf805b489b50a301cd52a6ffc30516e9",
+  "prompts": {},
+  "sessions": {
+    "s_ab16b2e70b0baf": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d51e-6c40-7df1-ad25-273c65b9d0ca",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
