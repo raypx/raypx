@@ -1,0 +1,239 @@
+docs/architecture/approvals.md
+  s_b02eaa397c8a02::t_1640222d8a844d 74-76,134-136
+packages/spaces/src/server/fanout.ts
+  s_b02eaa397c8a02::t_1d16f7eb6d1861 1,3-41
+  s_b02eaa397c8a02::t_8e50634471048a 2
+packages/contracts/src/conversation.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 65-81,85-90
+  s_b02eaa397c8a02::t_7d455fe6698067 14
+packages/contracts/src/spaces.test.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 51-60,62-66,78-83,88-90,94-96
+  s_b02eaa397c8a02::t_3a3a61c1114517 48-50,61,67-77,84-87,91-93,97-98
+packages/agents/src/approvals.test.ts
+  s_b02eaa397c8a02::t_36e348a22a06cb 260
+  s_b02eaa397c8a02::t_b062cc7edc3a99 113-115
+  s_b02eaa397c8a02::t_62d20f23d15006 237-259,261-268
+packages/contracts/AGENTS.md
+  s_b02eaa397c8a02::t_769829fe3ea5ea 29-35
+packages/agents/src/server/postgres.ts
+  s_b02eaa397c8a02::t_1cff57f5841dc2 111
+docs/roadmap.md
+  s_b02eaa397c8a02::t_1640222d8a844d 175-183
+packages/contracts/src/spaces.ts
+  s_b02eaa397c8a02::t_e48045213aa193 16-25,27,43-46,51-52,56-57,61-68,72
+  s_b02eaa397c8a02::t_3e4f182851e56e 53-55,58-60,69-71,73-88
+apps/api/tests/postgres/node/model-connections.test.ts
+  s_b02eaa397c8a02::t_c13bea4f2b5c96 7,22,396-397,406-408,412-413,416-417,422-423,431-433,441-442
+  s_b02eaa397c8a02::t_3e4f182851e56e 398-405,409-411,414-415,418-421,424-430,434-436,443-451
+  s_b02eaa397c8a02::t_318f6e4c8219f3 437-440
+  s_b02eaa397c8a02::t_25cd2cd12342ac 452-453
+apps/api/src/runtime/agents.ts
+  s_b02eaa397c8a02::t_d904aa486cba7b 11,13,22,126-132,137,139-140
+  s_b02eaa397c8a02::t_3e4f182851e56e 133-136
+packages/database/drizzle-foundation/20261113195221_tiny_lord_tyger/snapshot.json
+  s_b02eaa397c8a02::t_3867c0371e911c 1-1470
+apps/api/AGENTS.md
+  s_b02eaa397c8a02::t_769829fe3ea5ea 36-41
+apps/api/src/runtime/shared.ts
+  s_b02eaa397c8a02::t_d904aa486cba7b 48,158-159,163,169-170,176,211
+packages/agents/src/runner.test.ts
+  s_b02eaa397c8a02::t_b062cc7edc3a99 565-567
+packages/agents/AGENTS.md
+  s_b02eaa397c8a02::t_1d0af74461cbb5 57-61
+apps/api/tests/helpers/space-stream.ts
+  s_b02eaa397c8a02::t_6204dfdf068d6b 1-12,19-25,27-32,37,42-48,55-57
+  s_b02eaa397c8a02::t_994b6e870c9da1 26
+  s_b02eaa397c8a02::t_3e4f182851e56e 13-18,33-36,38-41,49-54
+apps/api/src/conversations/tools.test.ts
+  s_b02eaa397c8a02::t_3b1dd86a5b528f 5,339-346,356-357
+  s_b02eaa397c8a02::t_f4626251aaef35 347-355
+  s_b02eaa397c8a02::t_cfe2e3bf083d1b 358-359
+packages/spaces/src/server/postgres.ts
+  s_b02eaa397c8a02::t_37b14dc8f2e4f6 1,141,143,154,159-162
+  s_b02eaa397c8a02::t_3e4f182851e56e 27-32,46-52,98-102,104-116,124-130,145-150
+  s_b02eaa397c8a02::t_eb513fb45d2b28 16,73,95,103
+apps/api/src/app/options.ts
+  s_b02eaa397c8a02::t_62abc4a5120c84 17,29
+apps/api/src/conversations/stream.ts
+  s_b02eaa397c8a02::t_bb1036fed980ee 8,16-26,45,56,66-69,83-84,87-88,93-100,117,128-129,147-163,168-172,202,216,233-239,244-261,267-272,274-278,360-361
+  s_b02eaa397c8a02::t_3e4f182851e56e 85-86,89-92,142-146,164-167,183-184,262-266
+  s_b02eaa397c8a02::t_577c1bba02e975 273
+apps/api/src/routers/rpc/spaces.test.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 126-127,137-139,159-162
+  s_b02eaa397c8a02::t_a75d45ddac4390 90-92,109-110
+  s_b02eaa397c8a02::t_a11192a20ce9e3 6,10,52,114-125,128-136,140-158,163-164
+  s_b02eaa397c8a02::t_deb81abded6f41 165
+docs/architecture/domain.md
+  s_b02eaa397c8a02::t_1640222d8a844d 99-113
+  s_b02eaa397c8a02::t_c9984a7f7e47a1 123-125
+packages/jobs/AGENTS.md
+  s_b02eaa397c8a02::t_3b1dd86a5b528f 54-57
+apps/api/src/runtime/server.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 73-74
+  s_b02eaa397c8a02::t_d904aa486cba7b 2,81-82,102,131,140
+apps/api/tests/integration/runtime-providers.test.ts
+  s_b02eaa397c8a02::t_769829fe3ea5ea 32-35
+packages/database/src/schema.test.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 40-46,57-64,66-68
+  s_b02eaa397c8a02::t_04dcabe43014fb 30-34,39,47-56,65,69
+  s_b02eaa397c8a02::t_fffef40a4b9cc6 70
+packages/jobs/src/routines/postgres.ts
+  s_b02eaa397c8a02::t_20a3d679f0ddb5 94
+  s_b02eaa397c8a02::t_3e4f182851e56e 97-102
+  s_b02eaa397c8a02::t_12ffbaaa267848 18,87-92
+  s_b02eaa397c8a02::t_54aba97f071a8a 110,112-113,437
+  s_b02eaa397c8a02::t_f4626251aaef35 114
+packages/spaces/src/server/management.ts
+  s_b02eaa397c8a02::t_69d76e59759320 423,430-436
+  s_b02eaa397c8a02::t_5b35d7737e8dc5 641
+  s_b02eaa397c8a02::t_194207843c7b9a 35,141
+  s_b02eaa397c8a02::t_e2015490565792 189-191
+  s_b02eaa397c8a02::t_7a9e0e9e5d9187 445
+  s_b02eaa397c8a02::t_dc20eb9a1cc856 2-3,15-16,29-34,36-37,39-51,57-59,65-73,80-84,91-95,102-103,110-111,120-124,131,135-140,142-143,171,182-184,186-188,193-196,203-204,210,216-220,293-295,309-310,347,367,379,384,391-394,400,408,437-439,446-458,466-475,481-484,538,542-544,557-559,562,573,575,583-589,598-601,604,609,613,626-627,634-635,649-650,687-688,690-692,713-714,725-730,735-738,763-768,784-787
+  s_b02eaa397c8a02::t_20a3d679f0ddb5 251-252
+  s_b02eaa397c8a02::t_3e4f182851e56e 4-14,17-28,52-56,60-64,74-79,85-90,96-101,104-109,112-119,125-130,132-134,144-149,152,161-162,164-166,172,174-176,181,197-202,205-209,211-215,221-225,296-308,314,349-366,368-378,380-383,385-390,395-399,401-407,409-422,424-429,440-444,459-465,476-480,486-519,526-532,535-537,539-541,545-556,563-572,576-582,591-597,605-608,610-612,614-625,628-633,636-640,642-648,651-686,689,693-712,715-724,731-734,739-762,769-783
+  s_b02eaa397c8a02::t_b8901be82aea1a 150-151,153-160,163,167-170
+  s_b02eaa397c8a02::t_5b462a059b52bf 348,590,602-603
+  s_b02eaa397c8a02::t_f4626251aaef35 227-250,253-292,311-313,315-346,520-525
+  s_b02eaa397c8a02::t_f439123cbb7c54 173,177-180,185,192,226,560-561,574
+  s_b02eaa397c8a02::t_e6bea8a3d9973b 1,38,485,533-534
+packages/spaces/AGENTS.md
+  s_b02eaa397c8a02::t_8ae95df1e4fa9b 15-25
+packages/core/src/spaces.ts
+  s_b02eaa397c8a02::t_d5dd088338cbcd 105,134-135
+  s_b02eaa397c8a02::t_3e4f182851e56e 106-133
+  s_b02eaa397c8a02::t_a083a8c0b82650 23-104,136
+packages/database/drizzle-foundation/20261113195710_shared_space_references/snapshot.json
+  s_b02eaa397c8a02::t_32cedb49f49f16 1-191
+packages/spaces/tests/postgres/management.test.ts
+  s_b02eaa397c8a02::t_0c434fcb6b0d9b 1,3-4,20,22-47,55-63,75-84,90-91,95-142,150-155,162-163,174-185,189-195,200-202,207-208,213-219,224-229,234,239-244,252,273,297,302,307,323,334-338,342-344,351-356,363-365,374-377,381-388,399,404-420,430-436,441-442,450-452,457-460,462-463,480-489,509-514,522-529,533,544
+  s_b02eaa397c8a02::t_c9178ff4c37c55 428,491,496,501,508
+  s_b02eaa397c8a02::t_f4626251aaef35 48-54,245-251,253-272,274-282,286-292,503-507
+  s_b02eaa397c8a02::t_42b4ced55cf65f 461
+  s_b02eaa397c8a02::t_36f85178cdd935 2,21
+  s_b02eaa397c8a02::t_3e4f182851e56e 5-19,64-74,85-89,92-94,143-149,156-161,164-173,186-188,196-199,203-206,209-212,220-223,230-233,235-238,283-285,293-296,298-301,303-306,308-322,324-333,339-341,345-350,357-362,366-373,378-380,389-398,400-403,421-427,429,437-440,443-449,453-456,464-479,490,492-495,497-500,502,515-521,530-532,534-543
+apps/api/tests/helpers/app.ts
+  s_b02eaa397c8a02::t_62abc4a5120c84 13
+docs/architecture/spaces.md
+  s_b02eaa397c8a02::t_1640222d8a844d 29-34,59-98,129-136,154-168
+apps/api/src/routers/rpc/approvals.ts
+  s_b02eaa397c8a02::t_85a8cf0201f3c1 3-4,14,18-21,48,59,73,80,85
+packages/agents/src/runner.ts
+  s_b02eaa397c8a02::t_8e50634471048a 251,269
+  s_b02eaa397c8a02::t_3e4f182851e56e 252-268
+  s_b02eaa397c8a02::t_b93c3f2c27f56e 250
+apps/api/src/spaces/deletion-worker.ts
+  s_b02eaa397c8a02::t_fd543b8e7d3051 1-29,37-42,45-46,51-57,67-69,74-85,97-111,121-136,144-149,158-164,172-173,184-188,194-197,201-211,215-218,223-224
+  s_b02eaa397c8a02::t_3e4f182851e56e 30-36,43-44,47-50,58-66,70-73,86-96,112-120,137-143,150-157,165-171,174-183,189-193,198-200,212,214,219-222
+  s_b02eaa397c8a02::t_c9178ff4c37c55 213
+packages/spaces/src/server/fanout.test.ts
+  s_b02eaa397c8a02::t_6204dfdf068d6b 1-15,23-24,28,33-43
+  s_b02eaa397c8a02::t_3e4f182851e56e 16-22,25-27,29-32
+packages/database/drizzle-foundation/20261113195710_shared_space_references/migration.sql
+  s_b02eaa397c8a02::t_32cedb49f49f16 1-4
+apps/api/tests/helpers/agent-tools.ts
+  s_b02eaa397c8a02::t_b062cc7edc3a99 108-110
+packages/core/src/spaces.test.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 2-11,32-39,41-75
+  s_b02eaa397c8a02::t_00f5a051b645bc 30-31,40
+  s_b02eaa397c8a02::t_b6758eeda9663b 76
+packages/core/AGENTS.md
+  s_b02eaa397c8a02::t_f5bc89eacf79d3 19-22
+packages/database/AGENTS.md
+  s_b02eaa397c8a02::t_d86a8424af2392 29-38
+docs/architecture/events.md
+  s_b02eaa397c8a02::t_6bd035a6c605c5 111,231-258
+packages/agents/src/server/conversations.ts
+  s_b02eaa397c8a02::t_1cff57f5841dc2 21,63-65,116,119,492-495,501-503,531-533,1470-1474
+  s_b02eaa397c8a02::t_d02cd1262ce37a 561,1228,1234,1246
+  s_b02eaa397c8a02::t_12ffbaaa267848 263,463,598,878,932
+  s_b02eaa397c8a02::t_ed51c6d0bf0735 601
+  s_b02eaa397c8a02::t_3e4f182851e56e 59-62,475-480,496-500,505-510,515-519,556-560,607-612,1229-1233,1235-1245
+  s_b02eaa397c8a02::t_d8b58f4cff9ed6 504,511-514,520-530
+packages/memory/src/space-server/postgres.ts
+  s_b02eaa397c8a02::t_0f9ca070e04b2b 6,140
+packages/agents/src/server/approvals.ts
+  s_b02eaa397c8a02::t_9ad9709b1ce360 90
+  s_b02eaa397c8a02::t_efaa206f3ad047 425-439,518,526,529-537
+  s_b02eaa397c8a02::t_018102bef6d396 424,456
+  s_b02eaa397c8a02::t_63eb0499faf87a 1,337
+  s_b02eaa397c8a02::t_71f96a6ca67097 12,92-101,327,440
+  s_b02eaa397c8a02::t_19c4fccbe25720 14,27,325-326,328-336,338-339,341-356
+  s_b02eaa397c8a02::t_c4c0ab3f242211 340
+  s_b02eaa397c8a02::t_36e348a22a06cb 441-455,457-463,471-476,478-517,527-528
+  s_f9cc0d01f49051::t_4d9b77bffd883a 357-358
+apps/api/src/routers/rpc/spaces.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 135-270
+  s_b02eaa397c8a02::t_4ef52b47c41477 4,20-36,62-63
+packages/agents/tests/postgres/approvals.test.ts
+  s_b02eaa397c8a02::t_f4626251aaef35 57-59,61-63
+  s_b02eaa397c8a02::t_4a9b6339383d7c 2,56,60,64-66,188,306
+  s_b02eaa397c8a02::t_c9178ff4c37c55 194
+  s_b02eaa397c8a02::t_ecf9a3d3bbfc79 307
+  s_b02eaa397c8a02::t_40def42d51bb90 224
+  s_b02eaa397c8a02::t_9ad9709b1ce360 25,203-214,221-223,225
+  s_b02eaa397c8a02::t_da039b804afcf1 13-14,109-145,149,156-174,178-180,187,189,196-202
+  s_b02eaa397c8a02::t_36e348a22a06cb 93-95,146-148,150-155,175-177,181-186,190-193,195,215-220,308-313
+packages/agents/src/server/fence.ts
+  s_b02eaa397c8a02::t_1cff57f5841dc2 3
+  s_b02eaa397c8a02::t_12ffbaaa267848 25
+apps/api/tests/postgres/node/space-deletion.test.ts
+  s_b02eaa397c8a02::t_c26a94e1e56111 23-24
+  s_b02eaa397c8a02::t_32fdd700eda4c8 15,34,44,49-50
+  s_b02eaa397c8a02::t_c9178ff4c37c55 224
+  s_b02eaa397c8a02::t_3e02cd17399746 51-90,92-115,117-170
+  s_b02eaa397c8a02::t_d02cd1262ce37a 22,204
+  s_b02eaa397c8a02::t_f4626251aaef35 91,116
+  s_b02eaa397c8a02::t_3e4f182851e56e 5-13,17-20,37-39,46-48,178-180,185-188,190-203,208-213,216-222,228-231,236-247,254-263,268-272,276-284
+  s_b02eaa397c8a02::t_ce766c46b5e8dc 1-4,14,16,21,25-33,35-36,40-43,45,171-177,181-184,189,205-207,214-215,223,225-227,232-235,248-253,264-267,273-275,285-286
+packages/agents/src/approvals.ts
+  s_b02eaa397c8a02::t_2c2931bdc6f693 78-82,243-245,275,305,318
+apps/api/src/runtime/worker.ts
+  s_b02eaa397c8a02::t_3e4f182851e56e 41-42
+  s_b02eaa397c8a02::t_d904aa486cba7b 48,57-58,61,70
+apps/api/tests/integration/conversation-stream.test.ts
+  s_b02eaa397c8a02::t_58acdbfa120f69 10,19,21,133-147,151,154,158-159,163-166
+  s_b02eaa397c8a02::t_3e4f182851e56e 148-150,152-153,155-157,160-162
+packages/database/src/schema.ts
+  s_b02eaa397c8a02::t_c21f4438604a79 61,228,263
+  s_b02eaa397c8a02::t_dabbb46cbec70c 48,70-75,79-82,86-94,107-111,115-118,122-125,129-141,146-150,154,163,165-168,177-181,185,191-197,206-207,1783-1787
+  s_b02eaa397c8a02::t_3e4f182851e56e 76-78,83-85,95-106,112-114,119-121,126-128,142-145,151-153,155-162,169-176,182-184,186-190,198-205,256-259
+  s_b02eaa397c8a02::t_e0e63c9e2b7caf 164
+apps/api/src/conversations/connections-postgres.ts
+  s_b02eaa397c8a02::t_23d1ec8174470a 1,8,113
+  s_b02eaa397c8a02::t_3e4f182851e56e 80-87
+packages/database/drizzle-foundation/20261113195221_tiny_lord_tyger/migration.sql
+  s_b02eaa397c8a02::t_3867c0371e911c 1-74
+apps/api/src/conversations/stream.test.ts
+  s_b02eaa397c8a02::t_994b6e870c9da1 4,116-123,128-129,132,135-140,145-159,170-174
+  s_b02eaa397c8a02::t_3e4f182851e56e 124-127,130-131,133-134,141-144,160-169
+docs/architecture/security.md
+  s_b02eaa397c8a02::t_c9984a7f7e47a1 89-92
+packages/spaces/src/server.ts
+  s_b02eaa397c8a02::t_f9f14e8ce65af6 1,12,31-55,60-62,68-79
+  s_b02eaa397c8a02::t_3e4f182851e56e 2-11,56-59,63-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6c6718e1d54a2edbfa216b4319f9815523fecc34",
+  "prompts": {},
+  "sessions": {
+    "s_b02eaa397c8a02": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d670-f4ea-7652-8e79-e702c971ced2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
