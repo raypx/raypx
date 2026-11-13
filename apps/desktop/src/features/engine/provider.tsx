@@ -9,8 +9,6 @@ import {
 import { useDesktopPlatform } from "../../lib/platform-context.js";
 import { createEngineController } from "./model.js";
 import { useQueryClient } from "@tanstack/react-query";
-import { taskChangeSchema } from "@raypx/contracts/tasks";
-import { projectCatalogKey } from "../tasks/project-catalog.js";
 
 type Controller = ReturnType<typeof createEngineController>;
 const EngineContext = createContext<Controller | null>(null);
@@ -24,24 +22,10 @@ export function DesktopRuntimeProvider({ children }: { children: ReactNode }) {
   );
   useEffect(() => {
     if (!platform.isDesktop()) return;
-    const refresh = () => void queries.invalidateQueries({ queryKey: projectCatalogKey });
-    const stop = platform.onLocalEvent((event) => {
-      if (event.event === "engine.status") {
-        refresh();
-        if (event.data.status === "ready")
-          void queries.invalidateQueries({ queryKey: ["instance"] });
-      }
-      if (event.event === "agent.changed") {
-        const change = taskChangeSchema.safeParse(event.data.change);
-        if (!change.success || change.data.type === "devices" || change.data.type === "reset")
-          refresh();
-      }
+    return platform.onLocalEvent((event) => {
+      if (event.event === "engine.status" && event.data.status === "ready")
+        void queries.invalidateQueries({ queryKey: ["instance"] });
     });
-    window.addEventListener("raypx:remote-change", refresh);
-    return () => {
-      stop();
-      window.removeEventListener("raypx:remote-change", refresh);
-    };
   }, [platform, queries]);
   return <EngineContext.Provider value={controller}>{children}</EngineContext.Provider>;
 }

@@ -67,46 +67,7 @@ export async function signedInAccount(page: Page) {
   await page.route("**/rpc/account/get", (route) =>
     authResponse(route, { json: { id: user.id, name: user.name, email: user.email } }),
   );
-  await page.route("**/rpc/approvals/list", (route) => authResponse(route, { json: [] }));
-  await page.route("**/rpc/observed/list", (route) =>
-    authResponse(route, { json: { sessions: [], requests: [] } }),
-  );
+  await page.route("**/rpc/spaces/list", (route) => authResponse(route, { json: [] }));
   await page.route("**/rpc/devices/list", (route) => authResponse(route, { json: [] }));
   return user;
-}
-
-export async function connectedProject(page: Page, deviceId: string, projectId: string) {
-  await page.route("**/rpc/devices/list", (route) =>
-    authResponse(route, {
-      json: [
-        {
-          id: deviceId,
-          name: "Development Mac",
-          platform: "darwin",
-          appVersion: "0.1.0",
-          epoch: 1,
-          revoked: false,
-          online: true,
-          lastSeenAt: null,
-          projects: [{ id: projectId, name: "Raypx", providers: ["codex"], dirty: false }],
-          capabilities: [
-            {
-              provider: "codex",
-              available: true,
-              version: "0.163.0",
-              reason: "ready",
-              definition: {
-                version: 1 as const,
-                runtime: "process" as const,
-                modes: ["plan" as const, "run" as const],
-                approvals: true,
-                modelSelection: false,
-              },
-              inputModes: ["queue", "steer"],
-            },
-          ],
-        },
-      ],
-    }),
-  );
 }

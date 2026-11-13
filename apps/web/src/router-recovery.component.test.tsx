@@ -5,20 +5,20 @@ import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
 describe("authentication routes", () => {
   it("preserves the page through registration and password recovery links", async () => {
-    const router = await page("/login?returnTo=%2Fapprovals");
+    const router = await page("/login?returnTo=%2Fmemory");
     fireEvent.click(screen.getByRole("link", { name: "Create account" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/signup"));
-    expect(router.state.location.search).toMatchObject({ returnTo: "/approvals" });
+    expect(router.state.location.search).toMatchObject({ returnTo: "/memory" });
     fireEvent.click(screen.getByRole("link", { name: "Sign in" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
     fireEvent.click(screen.getByRole("link", { name: "Forgot password?" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/forgot-password"));
-    expect(router.state.location.search).toMatchObject({ returnTo: "/approvals" });
+    expect(router.state.location.search).toMatchObject({ returnTo: "/memory" });
   });
 
   it("preserves the destination in verification and reset emails", async () => {
     mocks.signUp.mockResolvedValue({ data: {}, error: null });
-    const router = await page("/signup?returnTo=%2Ftasks%3Ffrom%3Dguest");
+    const router = await page("/signup?returnTo=%2Fagents%3Ffrom%3Dguest");
     fireEvent.change(screen.getByLabelText("Your name"), { target: { value: "Ada" } });
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "ada@example.test" },
@@ -29,11 +29,11 @@ describe("authentication routes", () => {
       expect(mocks.signUp).toHaveBeenCalledWith(
         expect.objectContaining({
           callbackURL:
-            "https://raypx.example/verify-email?verified=1&returnTo=%2Ftasks%3Ffrom%3Dguest",
+            "https://raypx.example/verify-email?verified=1&returnTo=%2Fagents%3Ffrom%3Dguest",
         }),
       ),
     );
-    await router.navigate({ to: "/forgot-password", search: { returnTo: "/tasks?from=guest" } });
+    await router.navigate({ to: "/forgot-password", search: { returnTo: "/agents?from=guest" } });
     mocks.requestPasswordReset.mockResolvedValue({ data: {}, error: null });
     fireEvent.change(await screen.findByLabelText("Email address"), {
       target: { value: "ada@example.test" },
@@ -42,7 +42,7 @@ describe("authentication routes", () => {
     await waitFor(() =>
       expect(mocks.requestPasswordReset).toHaveBeenCalledWith(
         expect.objectContaining({
-          redirectTo: "https://raypx.example/reset-password?returnTo=%2Ftasks%3Ffrom%3Dguest",
+          redirectTo: "https://raypx.example/reset-password?returnTo=%2Fagents%3Ffrom%3Dguest",
         }),
       ),
     );

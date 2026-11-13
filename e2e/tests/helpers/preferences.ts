@@ -4,7 +4,7 @@ import { web } from "./surfaces.js";
 import { capture } from "./capture.js";
 
 export async function preferencesPersist(page: Page, base: string) {
-  await page.goto(`${base}${base === web ? "/settings" : "/#settings"}`);
+  await page.goto(`${base}${base === web ? "/settings" : "/agents#settings"}`);
   await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
   if (base === web)
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();

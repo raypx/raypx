@@ -1,61 +1,39 @@
 import { useTranslations } from "../i18n.js";
 import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
-import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
 import { authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
-import { taskClient } from "../features/tasks/client.js";
-import { TerminalRequestNotice } from "../features/tasks/request-notice.js";
-import { ProjectNavigation } from "../features/tasks/project-navigation.js";
-import { RemoteProjectNavigation } from "../features/tasks/remote-navigation.js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
-import { createPendingClient, localTaskClient } from "../features/tasks/local-client.js";
-import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopReturnTo } from "../features/auth/return-to.js";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Link,
   Outlet,
-  useLocation,
   useMatches,
   useRouter,
   useRouterState,
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
-import { ScheduleIcon } from "@raypx/icons/schedule";
-import { FolderOpenIcon } from "@raypx/icons/folder-open";
-import { InboxIcon } from "@raypx/icons/inbox";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { BookOpenIcon } from "@raypx/icons/book-open";
 import { AgentIcon } from "@raypx/icons/agent";
+import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { AppShell, type ShellAction, type ShellLinkProps } from "@raypx/blocks/shell";
 import { useCommandShortcut } from "@raypx/blocks/command-palette";
-import { PlusIcon } from "@raypx/icons/plus";
 import { SearchIcon } from "@raypx/icons/search";
 import { DesktopCommandMenu } from "./command-menu.js";
 import { EngineNotice } from "../features/engine/notice.js";
 import { desktopStorageKey } from "../lib/storage.js";
 
-import { isDesktop, onLocalEvent } from "../lib/desktop.js";
+import { isDesktop } from "../lib/desktop.js";
 import { useDesktopEngine } from "../features/engine/provider.js";
 import { WindowDragRegion } from "./window-drag-region.js";
 import { Button } from "@raypx/ui/components/ui/button";
 import { SettingsOverlay } from "../features/settings/overlay.js";
 import { useSettingsNavigation } from "../features/settings/navigation.js";
 
-const pendingClient = createPendingClient(localTaskClient, taskClient);
-
-type DesktopPath =
-  | "/agents"
-  | "/"
-  | "/files"
-  | "/automations"
-  | "/memory"
-  | "/terminal"
-  | "/account"
-  | "/tasks"
-  | "/approvals";
+type DesktopPath = "/agents" | "/memory" | "/account";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<DesktopPath>) {
   return (
@@ -97,58 +75,14 @@ export function DesktopShell() {
   const { engine, restart } = useDesktopEngine();
   const [searchOpen, setSearchOpen] = useState(false);
   const shortcut = useCommandShortcut();
-  // New session starts in the project on screen; otherwise in the most recent project.
-  const target = useLocation({
-    select: (location) => {
-      if (location.pathname !== "/tasks") return null;
-      const search = new URLSearchParams(location.searchStr);
-      const project = search.get("project"),
-        device = search.get("device");
-      if (!project || !device) return null;
-      return `${search.get("scope") === "remote" ? "remote" : "local"}:${device}:${project}`;
-    },
-  });
-  useEffect(() => {
-    const stop = onLocalEvent((event) => {
-      if (event.event === "approval.open")
-        void router.navigate({
-          to: "/approvals",
-          search: { scope: event.data.scope === "remote" ? "remote" : "local" },
-        });
-    });
-    return () => {
-      stop();
-    };
-  }, [router]);
   const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
   const pages = [
-    { to: "/", label: c("projects"), icon: <FolderOpenIcon /> },
-    { to: "/approvals", label: c("approvals"), icon: <InboxIcon /> },
-    { to: "/automations", label: c("jobs"), icon: <ScheduleIcon /> },
-    { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
     { to: "/agents", label: t("agents.title"), icon: <AgentIcon /> },
+    { to: "/memory", label: memory("title"), icon: <BookOpenIcon /> },
+    { to: "/account", label: c("account"), icon: <UserCircleIcon /> },
   ] as const;
-  const [targetScope, targetDevice, targetProject] = target?.split(":") ?? [];
   const actions: ShellAction[] = [
     { label: c("search"), icon: <SearchIcon />, shortcut, onSelect: () => setSearchOpen(true) },
-    {
-      label: c("newSession"),
-      icon: <PlusIcon />,
-      emphasis: "primary",
-      render: (
-        <Link
-          to="/tasks"
-          search={{
-            scope: targetScope === "remote" ? "remote" : "local",
-            ...(targetDevice && targetProject
-              ? { device: targetDevice, project: targetProject }
-              : {}),
-            compose: true,
-          }}
-          activeOptions={{ exact: true }}
-        />
-      ),
-    },
   ];
   return (
     <>
@@ -160,35 +94,10 @@ export function DesktopShell() {
         <AppShell
           storageKey={desktopStorageKey("raypx_sidebar_open")}
           frame="window"
-          brand={{ to: "/", label: "Raypx" }}
+          brand={{ to: "/agents", label: "Raypx" }}
           actions={actions}
-          contextNavigation={
-            <div className="space-y-6">
-              <ProjectNavigation />
-              {accountId && <RemoteProjectNavigation key={accountId} accountId={accountId} />}
-            </div>
-          }
           navigationLabels={[c("workspace")]}
-          navigation={[
-            [
-              { ...pages[0], exact: true },
-              {
-                to: "/approvals",
-                label: c("approvals"),
-                icon: <InboxIcon />,
-                badge: (
-                  <PendingCount
-                    key={accountId ?? "signed-out"}
-                    client={accountId ? pendingClient : localTaskClient}
-                    accountId={accountId ?? LOCAL_WORKSPACE_ID}
-                  />
-                ),
-              },
-              pages[2],
-              pages[3],
-              pages[4],
-            ],
-          ]}
+          navigation={[[pages[0], pages[1], pages[2]]]}
           accountAction={
             <Tooltip>
               <TooltipTrigger
@@ -207,12 +116,11 @@ export function DesktopShell() {
               <TooltipContent side="top">{c("settings")}</TooltipContent>
             </Tooltip>
           }
-          breadcrumbs={page ? [t(page.title)] : []}
+          breadcrumbs={[]}
           layout={page?.layout ?? "document"}
           LinkComponent={ShellLink}
           notice={
             <>
-              <TerminalRequestNotice accountId={accountId} />
               {engine.status === "error" && isDesktop() && (
                 <EngineNotice code={engine.code} restart={restart} />
               )}
@@ -234,7 +142,7 @@ export function DesktopShell() {
                   : void router.navigate({ to: `/${destination}` })
               }
               onSignOut={async () => {
-                const result = await auth.signOut(accountId, "/");
+                const result = await auth.signOut(accountId, "/login");
                 return result.status === "success";
               }}
             />

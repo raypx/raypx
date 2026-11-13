@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@raypx-kit/analytics": "catalog:",
-    "@raypx/client": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*"
   },

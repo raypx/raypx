@@ -24,7 +24,7 @@ describe("authentication routes", () => {
   });
   it("switches language without losing credentials or the return destination", async () => {
     mocks.signIn.mockResolvedValue({ error: { code: "INVALID_EMAIL_OR_PASSWORD" } });
-    const router = await page("/login?returnTo=%2Fapprovals");
+    const router = await page("/login?returnTo=%2Fmemory");
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "ada@example.test" },
     });
@@ -47,7 +47,7 @@ describe("authentication routes", () => {
     expect(screen.getByLabelText("密码")).toHaveValue("password123");
     expect(localStorage.getItem("raypx_locale")).toBe("zh");
     expect(router.state.location.pathname).toBe("/login");
-    expect(router.state.location.search).toMatchObject({ returnTo: "/approvals" });
+    expect(router.state.location.search).toMatchObject({ returnTo: "/memory" });
     expect(mocks.signIn).not.toHaveBeenCalled();
     fireEvent.submit(screen.getByRole("button", { name: "登录" }).closest("form")!);
     await screen.findByRole("alert");
@@ -125,14 +125,14 @@ describe("authentication routes", () => {
 });
 
 it("preserves a validated return destination through Google OAuth", async () => {
-  await page("/login?returnTo=%2Ftasks%3FtaskId%3Done");
+  await page("/login?returnTo=%2Fagents%3FtaskId%3Done");
   fireEvent.click(await screen.findByRole("button", { name: "Continue with Google" }));
   await waitFor(() =>
     expect(mocks.social).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "google",
-        callbackURL: "https://raypx.example/login?oauth=success&returnTo=%2Ftasks%3FtaskId%3Done",
-        errorCallbackURL: "https://raypx.example/login?returnTo=%2Ftasks%3FtaskId%3Done",
+        callbackURL: "https://raypx.example/login?oauth=success&returnTo=%2Fagents%3FtaskId%3Done",
+        errorCallbackURL: "https://raypx.example/login?returnTo=%2Fagents%3FtaskId%3Done",
       }),
     ),
   );
@@ -140,16 +140,13 @@ it("preserves a validated return destination through Google OAuth", async () => 
 
 it("refreshes the account and restores navigation on an OAuth callback", async () => {
   signIn();
-  const router = await page("/login?oauth=success&returnTo=%2Fprojects%23settings%2Faccount");
-  await waitFor(() => expect(router.state.location.href).toBe("/projects#settings/account"));
+  const router = await page("/login?oauth=success&returnTo=%2Fagents%23settings%2Faccount");
+  await waitFor(() => expect(router.state.location.href).toBe("/agents#settings/account"));
 });
 
-it.each(["/login", "/signup"])(
-  "redirects an existing account from %s to projects",
-  async (path) => {
-    signIn();
-    const router = await page(path);
-    expect(router.state.location.pathname).toBe("/projects");
-    expect(screen.queryByLabelText("Password")).toBeNull();
-  },
-);
+it.each(["/login", "/signup"])("redirects an existing account from %s to Agents", async (path) => {
+  signIn();
+  const router = await page(path);
+  expect(router.state.location.pathname).toBe("/agents");
+  expect(screen.queryByLabelText("Password")).toBeNull();
+});

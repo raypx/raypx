@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Raypx",
   "short_name": "Raypx",
-  "start_url": "/projects",
+  "start_url": "/agents",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -2,15 +2,15 @@
   "navigation": "Legal information",
   "privacy": "Privacy",
   "backHome": "Back to home",
-  "intro": "How Raypx handles data on your computer, in your account and during remote access.",
+  "intro": "How Raypx handles conversations, account information and device preferences.",
   "updated": "Last updated: November 13, 2026",
   "contents": "On this page",
   "openSettings": "Manage preferences",
   "openAccount": "Manage account sessions",
   "local": {
-    "title": "Local work",
-    "body": "Desktop projects, device-owned sessions, drafts and local execution records stay on your computer. Local tools work without a Raypx account. Signing in or enabling remote access does not automatically upload that local history.",
-    "detail": "When you send work to an Agent, the Agent may send your instructions and selected project context to its model provider. Local execution does not mean that the Agent runs its model offline."
+    "title": "Device-local data",
+    "body": "Unsent conversation drafts and unconfirmed-send receipts stay on this device, scoped to the server, account, Space and conversation. Theme, language and diagnostics preferences also stay on the device.",
+    "detail": "Restoring a draft never sends it. Clearing device storage does not delete conversation records already stored by the server."
   },
   "account": {
     "title": "Account information",
@@ -18,14 +18,14 @@
     "detail": "Verification and password-reset emails use the deployment's configured mail service. That service receives the recipient address and the message needed to deliver the email."
   },
   "remote": {
-    "title": "Remote access",
-    "body": "Remote access requires sign-in and explicit authorization of a computer and its projects. Remote session instructions, selected references, results, status and approval records pass through the remote services so they can be shown to your account.",
-    "detail": "Choosing a text attachment uploads the file to the deployment's private object store. Sending the session saves its selected text with that session. Sharing terminal approval requests is a separate opt-in and does not synchronize the full terminal output or session stream."
+    "title": "Conversations and model replies",
+    "body": "Agents, conversations, messages and Run records are stored in the deployment’s PostgreSQL database. The backend checks Space membership before access and sends conversation context to the configured model provider when you request a reply.",
+    "detail": "This phase has no Agent tools or computer access. The earlier device execution runtime remains in the repository; it is separate from the Agents conversation workspace."
   },
   "storage": {
     "title": "Cookies and device storage",
     "body": "Authentication uses session cookies. Theme and language preferences use cookies and device storage so they can be restored before the page renders. Diagnostics choices are also stored on the device.",
-    "detail": "Web drafts and temporary sign-in handoffs use browser storage. Signing out preserves local preferences and device-owned work. Clearing browser storage does not delete records already held by a remote deployment."
+    "detail": "Conversation drafts use device storage. Signing out preserves device preferences. Clearing browser storage does not delete records already held by a deployment."
   },
   "diagnostics": {
     "title": "Optional diagnostics",
@@ -39,7 +39,7 @@
   },
   "controls": {
     "title": "Your choices and retention",
-    "body": "Manage theme, language and diagnostics in Settings. Use Account to review and revoke other sign-in sessions. Remote authorization can be disabled or revoked separately from local work.",
+    "body": "Manage theme, language and diagnostics in Settings. Open Account to review and revoke sign-in sessions or manage security methods.",
     "detail": "Signing out or revoking access does not erase stored history. Server retention, backups and deletion are managed by the operator of the deployment you use. Contact that operator about data access, deletion or privacy questions."
   }
 }

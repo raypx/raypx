@@ -24,16 +24,23 @@ function AuthLayout({ children }: { children: ReactNode }) {
   const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
   return (
     <div className="flex h-dvh flex-col bg-sidebar">
-      <header className="flex h-[max(3.5rem,var(--mygo-titlebar-height,0px))] shrink-0 items-center gap-6 px-6 pr-[max(1.5rem,calc(var(--mygo-titlebar-inset-right,0px)+0.75rem))] pl-[max(1.5rem,calc(var(--mygo-titlebar-inset-left,0px)+0.75rem))] [--app-region:drag]">
+      <header className="flex h-[max(3.5rem,var(--mygo-titlebar-height,0px))] shrink-0 items-center gap-2 px-3 sm:gap-6 sm:px-6 pr-[max(1.5rem,calc(var(--mygo-titlebar-inset-right,0px)+0.75rem))] pl-[max(1.5rem,calc(var(--mygo-titlebar-inset-left,0px)+0.75rem))] [--app-region:drag]">
         <Link
-          to="/"
+          to="/agents"
           aria-label="Raypx"
           className="inline-flex rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [--app-region:no-drag]"
         >
           <Logo className="text-sm [&_[data-slot=logo-mark]]:size-6" />
         </Link>
         <div className="ml-auto flex items-center gap-1 [--app-region:no-drag]">
-          <Link to={returnTo} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <Link
+            to={returnTo}
+            className={buttonVariants({
+              variant: "ghost",
+              size: "sm",
+              className: "max-w-36 truncate",
+            })}
+          >
             <ArrowLeftIcon data-icon="inline-start" />
             {t("backToWorkspace")}
           </Link>

@@ -1,17 +1,51 @@
 # Raypx context
 
-- Application: a composition root under apps, never imported by another workspace.
-- Library: a private ESM package with explicit public exports and platform metadata.
-- Tooling: development/test automation excluded from production import graphs.
-- API: Bun-hosted Hono/oRPC application composed by Nitro.
-- Local engine: the bundled CLI runtime with device-local SQLite state. On macOS/Windows an independent daemon owns execution, scheduling and remote connections; Desktop is its private IPC client.
-- Registered instance: a local profile bound once to one account and API origin; its signed identity permits offline work after online logout. Remote Host opt-in is separate.
-- Desktop: a MyGo Go host around the React SPA, system WebView and native policy; it launches the bundled CLI by absolute path.
-- Relay: an independent ingress service that routes device messages through the private Redis broker; API owns remote read projections.
-- Root grant: an opaque identifier for an explicitly authorized local directory.
-- Project: one authorized directory on one computer, the working context for sessions and project tools.
-- Session: an Agent work record within a project, including its request, process and result. Continuation retains the existing parent/child relation; internal AgentTask and tasks APIs keep their names.
-- Automation: a five-field Cron schedule with an IANA timezone and a local action.
-- Terminal: an interactive process/PTY, stopped when its owning runtime stops; GUI Quit leaves the independent daemon running.
+The accepted [architecture](docs/architecture/README.md) and
+[ADR 0066](docs/architecture/0066-server-owned-agent-platform.md) define the target.
+The [roadmap](docs/roadmap.md) separates delivered behavior from later work.
 
-Current [architecture](docs/architecture/README.md) defines the runtime boundaries and accepted decisions.
+- Product: persistent Agents, each with one continuing Conversation. Agents is
+  the signed-in home in Web and the Desktop renderer.
+- Space: the authorization boundary. Resolve membership on every request and
+  scope every repository operation; deployment administration grants no bypass.
+- Authority: PostgreSQL holds Agents, conversations, messages, Runs and events.
+  Clients express intent and render authoritative state. Drafts are device-local,
+  keyed by server origin, account, Space and conversation; restoration never sends.
+- Phase 1: Space selection/creation, Agent management, one direct Conversation,
+  member messages, ordered events, snapshots, acknowledged replay, transient reply
+  text, committed segments, queued backend Runs and stop. Model access uses Pi
+  and deployment configuration in one API-enabled process.
+- Later phases: durable Runs, attempts, leases, steering and recovery; computers,
+  tools, approvals and effects; routines and Agent/Space memory; Pages and
+  connections; invitations, groups and delegation; the device connector and full
+  Mobile. None is implied by the phase 1 conversation UI.
+- Retained screens: account/security, authentication, administration/configuration,
+  public Web landing/legal pages, device preferences and standalone earlier Memory.
+  That Memory is device/account-owned and is not recalled by phase 1 Agents.
+- Removed client surface: project/session pages, New session, Waiting, guest task
+  drafts/handoff and dependent Automations. Desktop also removes project Files,
+  Terminal, onboarding and old execution settings from the renderer.
+- Application: a composition root under `apps/` or `infra/`, never imported by
+  another workspace. Library: a private ESM source package with explicit exports.
+  Tooling: executables and development/test helpers outside runtime import graphs.
+  Discover packages from workspace manifests; do not declare platform metadata.
+- Shared feature layers: Core owns schemas and pure rules, Contracts composes wire
+  definitions, `/model` owns state and injected ports, `/client` adapts to React,
+  `/server` owns use cases and repository ports. API composes adapters and secrets.
+- Desktop: the MyGo Go host around a React SPA and system WebView. It still launches
+  the bundled Bun CLI by absolute path. Native enrollment, session transport and
+  account/origin isolation remain until their replacement phases; no CLI source
+  enters the renderer.
+- Retained device runtime: CLI/daemon execution, scheduling, local SQLite profiles,
+  file grants, terminal handling and remote read projections still exist. They are
+  separate from new Agent history. Existing enrollment permits offline device
+  workflows; it provides no offline mode for server Conversations.
+- Current backend roles: `api|relay|both`, with direct calls in `both` and a private
+  Redis broker for split roles. The target adds `worker` and default `all`, with
+  PostgreSQL coordination. Phase 1 does not implement that topology or recovery.
+- Target computer boundary: tools use one Computer port; the Agent runtime and
+  credentials stay outside computers. Only the supervisor holds the Docker socket.
+  A granted device retains the user's OS permissions and is not a sandbox.
+- Transition rule: replace earlier code in its owning phase. Add no compatibility
+  layer or automatic profile import, and never create a second Agent authority.
+  Keep applicable toolchain, UI, i18n and verification rules in AGENTS.md.

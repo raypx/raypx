@@ -46,11 +46,9 @@ vi.mock("./client.js", () => ({
     getSession: async () => mocks.session(),
   },
 }));
-vi.mock("../tasks/client.js", () => ({
-  taskClient: { account: { get: mocks.account } },
+vi.mock("./account-client.js", () => ({
+  accountClient: { account: { get: mocks.account } },
 }));
-// The complete route tree imports the terminal; auth tests do not mount xterm.
-vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));
 
 const rootOptions = routeTree.options as typeof routeTree.options &
   Pick<RootRouteOptions, "shellComponent">;

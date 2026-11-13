@@ -10,24 +10,27 @@ comparison and reads i18n's static locale policy through workspace discovery.
 
 ## Namespace ownership
 
-| Owner     | Namespaces                                       |
-| --------- | ------------------------------------------------ |
-| I18n      | common                                           |
-| Auth      | auth                                             |
-| Account   | access                                           |
-| Tasks     | tasks, including terminalApproval                |
-| Memory    | memory                                           |
-| Jobs      | automations, local and cloud                     |
-| Analytics | analytics                                        |
-| Blocks    | settings                                         |
-| Instances | instances                                        |
-| API       | api                                              |
-| Web       | dash, users, site, guest, legal                  |
-| Desktop   | files, terminal, engine, command, localWorkspace |
+| Owner     | Namespaces                                            |
+| --------- | ----------------------------------------------------- |
+| I18n      | common                                                |
+| Auth      | auth                                                  |
+| Account   | access                                                |
+| Agents    | agents                                                |
+| Tasks     | tasks, including terminalApproval (retained runtime)  |
+| Memory    | memory                                                |
+| Jobs      | automations, local and cloud (retained runtime)       |
+| Analytics | analytics                                             |
+| Blocks    | settings                                              |
+| Instances | instances                                             |
+| API       | api                                                   |
+| Web       | dash, users, site, guest, legal, desktopAuthorization |
+| Desktop   | engine, desktopLogin, localWorkspace                  |
 
 Shared owners expose pure `/messages/en` and `/messages/zh` entries without React,
-UI or execution code. App catalogs remain private. Web and Desktop compose the nine
-shared entries and their own five namespaces through explicit object assembly.
+UI or execution code. App catalogs remain private. Web and Desktop compose only their consumed
+shared entries and private namespaces through explicit object assembly. Retained Tasks
+and Jobs catalogs are outside renderer composition; native task notifications still
+consume Tasks language entries.
 Mobile uses only common and auth, with a platform-neutral translator. Devtools'
 private `locales` dictionary loads only with Devtools and never enters app messages.
 UI primitives continue to receive caller-provided labels.

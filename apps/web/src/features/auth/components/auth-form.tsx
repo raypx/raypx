@@ -2,7 +2,6 @@ import { VerificationCode } from "./verification-code.js";
 import { useRef, useState } from "react";
 import { PasskeySignIn } from "./passkey-sign-in.js";
 import { useTranslations } from "../../../i18n.js";
-import { claimGuestDraft } from "../../tasks/guest-draft.js";
 import { safeReturnTo } from "../return-to.js";
 
 import { analytics } from "../../analytics/client.js";
@@ -25,7 +24,7 @@ function authLinkLocation(to: AuthFormLinkProps["to"], returnTo: string) {
 
 function signInDestination(search: string, returnTo: string) {
   if (new URLSearchParams(search).has("returnTo")) return returnTo;
-  return "/projects";
+  return "/agents";
 }
 
 function authCallbackURLs(returnTo: string) {
@@ -82,11 +81,6 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       fetchOptions: { signal: AbortSignal.timeout(10_000) },
     });
     if (session.error || !session.data) throw new Error("Session refresh failed");
-    try {
-      claimGuestDraft(apiUrl, session.data.user.id);
-    } catch {
-      /* A failed handoff remains recoverable in the original tab. */
-    }
     router.options.context.queryClient.clear();
     await navigate({
       to: signedInDestination,

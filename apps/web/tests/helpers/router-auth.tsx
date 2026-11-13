@@ -12,7 +12,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
 import { ThemeProvider } from "@raypx/ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { SyncDevice } from "@raypx/contracts/tasks";
 import { accessForRole, type AccountRole } from "@raypx/account/access";
 import { routeTree } from "../../src/routeTree.gen.js";
 
@@ -28,10 +27,7 @@ const mocks = vi.hoisted(() => ({
     user: { id: string; name: string; email: string };
     session: { id: string };
   },
-  tasks: vi.fn(async () => []),
-  devices: vi.fn(async (): Promise<SyncDevice[]> => []),
-  approvals: vi.fn(async () => []),
-  create: vi.fn(),
+  agentsSpaces: vi.fn(async () => []),
   social: vi.fn(async () => ({ error: null })),
   providers: vi.fn(async () => ({ data: { providers: ["google", "github"] }, error: null })),
   signIn: vi.fn(),
@@ -88,12 +84,17 @@ vi.mock("../../src/features/auth/access.js", async (original) => ({
     retry: false,
   }),
 }));
-vi.mock("../../src/features/tasks/client.js", () => ({
-  taskClient: {
-    tasks: { list: mocks.tasks, create: mocks.create },
-    devices: { list: mocks.devices },
-    approvals: { list: mocks.approvals },
-    subscribe: () => () => {},
+vi.mock("../../src/features/agents/client.js", () => ({
+  agentsClient: { spaces: { list: mocks.agentsSpaces } },
+}));
+// Route-composition cases exercise account overlays above administration without network I/O.
+vi.mock("../../src/features/admin/client.js", () => ({
+  administrationClient: {
+    overview: async () => ({ totalUsers: 0, verifiedUsers: 0, newUsers: 0, registrations: [] }),
+    health: async () => ({
+      observedAt: "2026-11-13T00:00:00.000Z",
+      checks: { database: "ok", redis: "not-configured", relay: "not-configured" },
+    }),
   },
 }));
 vi.mock("../../src/features/auth/account.js", () => ({
@@ -124,9 +125,7 @@ beforeEach(() => {
   mocks.sessionError = false;
   mocks.sessionPending = false;
   mocks.session = null;
-  mocks.tasks.mockResolvedValue([]);
-  mocks.devices.mockResolvedValue([]);
-  mocks.approvals.mockResolvedValue([]);
+  mocks.agentsSpaces.mockResolvedValue([]);
   mocks.passkeys.mockResolvedValue({ data: [], error: null });
   mocks.providers.mockResolvedValue({ data: { providers: ["google", "github"] }, error: null });
   sessionStorage.clear();

@@ -1,10 +1,8 @@
 import i18n from "@raypx/i18n/messages/en";
 import auth from "@raypx/auth/messages/en";
 import account from "@raypx/account/messages/en";
-import tasks from "@raypx/tasks/messages/en";
 import agents from "@raypx/agents/messages/en";
 import memory from "@raypx/memory/messages/en";
-import jobs from "@raypx/jobs/messages/en";
 import analytics from "@raypx/analytics/messages/en";
 import blocks from "@raypx/blocks/messages/en";
 import instances from "@raypx/instances/messages/en";
@@ -19,10 +17,8 @@ export default {
   ...i18n,
   ...auth,
   ...account,
-  ...tasks,
   ...agents,
   ...memory,
-  ...jobs,
   ...analytics,
   ...blocks,
   ...instances,

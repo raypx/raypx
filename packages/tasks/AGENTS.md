@@ -1,5 +1,10 @@
 # @raypx/tasks
 
+Web and Desktop no longer expose project/session or automation pages. This package
+remains with the earlier device-owned runtime; it does not implement Space-owned
+Agents or routines. Orphaned public entries use `raypx.entryConsumers` to name their
+later removal. Do not reconnect them to the phase 1 Agents workspace.
+
 `/server` owns the remote task read projection and stored task/event/request
 schemas. Its injected ports provide account reads and device-authorized transactions;
 it never imports Control, a database adapter or an application. Keep connection
@@ -167,6 +172,5 @@ the same UI primitives; conversation virtualization and domain state stay unchan
 ## Catalog ownership
 
 Own `tasks (including terminalApproval)` in `locales/<language>/`, with handwritten language entries
-and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
-JSON nested strings, one format per namespace/language. Bind private translation
+and pure `/messages/en` and `/messages/zh` exports. Use JSON nested strings for every language and namespace. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.

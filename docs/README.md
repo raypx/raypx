@@ -3,9 +3,11 @@
 Raypx is the durable home for persistent Agents: each has one continuing
 conversation, memory, routines and a computer. The
 [target architecture](architecture/README.md) on this branch is server-owned, with
-PostgreSQL as the one authority. The code still implements the earlier
-device-owned product, and the development guides below describe that code until a
-[roadmap](roadmap.md) phase replaces it.
+PostgreSQL as the one authority. Phase 1 makes Agents the signed-in Web/Desktop
+home, with Space selection, Agent management, conversations and process-local
+streamed replies. Tools and durable recovery arrive later. The earlier CLI/daemon,
+native host and device stores remain; the development guides below describe that
+retained code until its [roadmap](roadmap.md) phase replaces it.
 
 Start with the [architecture](architecture/README.md), the [roadmap](roadmap.md)
 and [development setup](development/getting-started.md).

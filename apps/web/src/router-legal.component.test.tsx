@@ -19,8 +19,6 @@ describe("public legal routes", () => {
     );
     expect(mocks.loadAccount).not.toHaveBeenCalled();
     expect(mocks.access).not.toHaveBeenCalled();
-    expect(mocks.devices).not.toHaveBeenCalled();
-    expect(mocks.tasks).not.toHaveBeenCalled();
     expect(mocks.configurationGet).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("link", { name: "Optional diagnostics" }));
     await waitFor(() => expect(router.state.location.hash).toBe("diagnostics"));
@@ -28,7 +26,9 @@ describe("public legal routes", () => {
       "aria-current",
       "page",
     );
-    expect(screen.getByRole("link", { name: "Local work" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Device-local data" })).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 
   it.each(["/", "/login", "/signup"])("links to privacy from %s", async (path) => {

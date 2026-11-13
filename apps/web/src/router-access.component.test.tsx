@@ -6,7 +6,7 @@ import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
 describe("menu permissions", () => {
   it("keeps private menu links and their queries hidden for guests", async () => {
-    await page("/projects");
+    await page("/settings");
     expect(screen.queryByRole("link", { name: "Waiting" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Memory and templates" })).toBeNull();
@@ -29,7 +29,7 @@ describe("menu permissions", () => {
 
   it("removes administrator navigation when the server downgrades the same account", async () => {
     signIn("admin");
-    const router = await page("/approvals");
+    const router = await page("/settings");
     expect(await screen.findByRole("link", { name: "Admin console" })).toBeTruthy();
     mocks.role = "member";
     await router.options.context.queryClient.invalidateQueries({ queryKey: ["account-access"] });
@@ -51,7 +51,7 @@ describe("menu permissions", () => {
 
   it("never carries administrator navigation into another account while grants are pending", async () => {
     signIn("admin");
-    const router = await page("/projects");
+    const router = await page("/settings");
     expect(await screen.findByRole("link", { name: "Admin console" })).toBeTruthy();
     signIn("member", "user-2");
     mocks.access.mockImplementation(() => new Promise(() => {}));
@@ -78,17 +78,9 @@ it("blocks a member's user-management navigation before the page mounts", async 
   expect(await screen.findByRole("alert")).toHaveTextContent("You do not have permission");
   expect(screen.queryByRole("table", { name: "Users" })).toBeNull();
 });
-it("blocks remote project reads when the signed-in permission projection is invalid", async () => {
-  signIn();
-  mocks.access.mockResolvedValue(accessForRole("admin", "another-account"));
-  await page("/projects");
-  expect(await screen.findByRole("alert")).toHaveTextContent("You do not have permission");
-  expect(mocks.devices).not.toHaveBeenCalled();
-});
-
 it("retains the account menu on failed logout and clears private caches on success", async () => {
   signIn();
-  const router = await page("/projects");
+  const router = await page("/settings");
   router.options.context.queryClient.setQueryData(["private-test"], "cached");
   mocks.signOut.mockResolvedValueOnce({
     error: { code: "OFFLINE", message: "private diagnostic" },

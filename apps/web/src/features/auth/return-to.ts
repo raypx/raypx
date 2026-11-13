@@ -3,12 +3,8 @@ import { resumablePath } from "@raypx/core/auth";
 
 const allowedReturnPaths = new Set([
   "/",
-  "/projects",
   "/agents",
   desktopAuthorizationPath,
-  "/tasks",
-  "/approvals",
-  "/automations",
   "/memory",
   "/settings",
   "/admin",

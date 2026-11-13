@@ -26,5 +26,10 @@
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
     "vitest": "catalog:dev"
+  },
+  "raypx": {
+    "entryConsumers": {
+      "./tasks": "Retained for API/CLI device-runtime acceptance after phase 1 renderer removal; remove with the replaced device task projection/relay stack in a later roadmap phase."
+    }
   }
 }

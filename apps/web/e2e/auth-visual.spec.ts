@@ -68,7 +68,7 @@ for (const mail of [
         requests += 1;
         return authResponse(route, { status: true });
       });
-      await page.goto(`${web}/${mail.path}?returnTo=%2Ftasks`);
+      await page.goto(`${web}/${mail.path}?returnTo=%2Fagents`);
       const email = page.getByRole("textbox", { name: "Email address", exact: true });
       await email.fill("browser@example.test");
       await page.getByRole("button", { name: mail.action, exact: true }).click();
@@ -79,7 +79,7 @@ for (const mail of [
       expect(requests).toBe(1);
       await expect(page.getByRole("link", { name: "Sign in", exact: true })).toHaveAttribute(
         "href",
-        "/login?returnTo=%2Ftasks",
+        "/login?returnTo=%2Fagents",
       );
       await capture(page, {
         path: test.info().outputPath(`${mail.path}-sent.png`),
@@ -99,7 +99,7 @@ test(
       resets.push(route.request().postDataJSON() as Record<string, unknown>);
       return authResponse(route, { status: true });
     });
-    await page.goto(`${web}/reset-password?token=browser-fixture&returnTo=%2Ftasks`);
+    await page.goto(`${web}/reset-password?token=browser-fixture&returnTo=%2Fagents`);
     await page.getByLabel("New password", { exact: true }).fill("browser-new-password");
     await page.getByRole("button", { name: "Reset password", exact: true }).click();
     await expect(page.getByRole("status")).toBeVisible();
@@ -111,13 +111,13 @@ test(
       animations: "disabled",
     });
     await page.getByRole("link", { name: "Sign in", exact: true }).click();
-    await expect(page).toHaveURL(`${web}/login?returnTo=%2Ftasks`);
-    await page.goto(`${web}/verify-email?verified=1&returnTo=%2Ftasks`);
+    await expect(page).toHaveURL(`${web}/login?returnTo=%2Fagents`);
+    await page.goto(`${web}/verify-email?verified=1&returnTo=%2Fagents`);
     await expect(page.getByRole("status")).toBeVisible();
     await expect(page.getByRole("textbox")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Sign in", exact: true })).toHaveAttribute(
       "href",
-      "/login?returnTo=%2Ftasks",
+      "/login?returnTo=%2Fagents",
     );
     await capture(page, {
       path: test.info().outputPath("email-verified.png"),
@@ -144,7 +144,7 @@ test(
   { tag: "@web" },
   async ({ page }) => {
     await enabledProviders(page, ["github"]);
-    await page.goto(`${web}/login?returnTo=%2Ftasks`);
+    await page.goto(`${web}/login?returnTo=%2Fagents`);
     const email = page.getByRole("textbox", { name: "Email address", exact: true });
     const password = page.getByLabel("Password", { exact: true });
     await email.fill("browser@example.test");
@@ -165,7 +165,7 @@ test(
     await expect(page.getByLabel("密码", { exact: true })).toHaveAttribute("type", "password");
     await expect(page.getByRole("link", { name: "忘记密码？", exact: true })).toHaveAttribute(
       "href",
-      "/forgot-password?returnTo=%2Ftasks",
+      "/forgot-password?returnTo=%2Fagents",
     );
     await page.goto(`${web}/login?error=access_denied`);
     await expect(page.getByRole("alert")).toBeVisible();
@@ -196,7 +196,7 @@ test(
         token: "browser-fixture-only",
       });
     });
-    await page.goto(`${web}/login?returnTo=%2Fprojects`);
+    await page.goto(`${web}/login?returnTo=%2Fagents`);
     await page
       .getByRole("textbox", { name: "Email address", exact: true })
       .fill("browser@example.test");
@@ -221,7 +221,7 @@ test(
     });
     await signedInAccount(page);
     await page.getByRole("button", { name: "Try again", exact: true }).click();
-    await expect(page).toHaveURL(`${web}/projects`);
+    await expect(page).toHaveURL(`${web}/agents`);
     expect(signIns).toBe(1);
   },
 );

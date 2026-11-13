@@ -40,5 +40,13 @@
   },
   "peerDependencies": {
     "react": "^19.3.0"
+  },
+  "raypx": {
+    "entryConsumers": {
+      "./client": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase.",
+      "./client/styles.css": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase.",
+      "./messages/en": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase.",
+      "./messages/zh": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase."
+    }
   }
 }

@@ -12,7 +12,7 @@ export function registerTests(fixtureUtility: string) {
       if (request.url().includes("/__devtools/") || request.url().includes("/@raypx/devtools"))
         diagnosticRequests.push(request.url());
     });
-    await page.goto(`${base}${surface === "Web" ? "/settings" : "/#settings"}`);
+    await page.goto(`${base}${surface === "Web" ? "/settings" : "/memory#settings"}`);
     await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
     await page.keyboard.press("Shift+Alt+d");
     await expect(page.locator("[data-raypx-devtools-panel]")).toHaveCount(0);

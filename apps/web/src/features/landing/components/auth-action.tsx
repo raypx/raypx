@@ -1,14 +1,10 @@
-import { useTranslations } from "../../../i18n.js";
 import { Link } from "@tanstack/react-router";
-
-import { LoginIcon } from "@raypx/icons/login";
-import { MonitorIcon } from "@raypx/icons/monitor";
-import { SpinnerIcon } from "@raypx/icons/spinner";
+import { AgentIcon } from "@raypx/icons/agent";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { cn } from "@raypx/ui/lib/utils";
 import { authClient } from "../../auth/client.js";
+import { useTranslations } from "../../../i18n.js";
 
-/** Share Better Auth's deduplicated session store with the header account menu. */
 export function LandingAuthAction({
   className,
   size = "default",
@@ -19,28 +15,20 @@ export function LandingAuthAction({
   const c = useTranslations("common");
   const t = useTranslations("guest");
   const session = authClient.useSession();
-  if (session.isPending) {
+  if (session.isPending)
     return (
-      <Button variant="outline" size={size} className={className} disabled aria-busy={true}>
-        <SpinnerIcon
-          aria-hidden="true"
-          data-icon="inline-start"
-          className="animate-spin motion-reduce:animate-none"
-        />
+      <Button size={size} className={className} disabled aria-busy>
         {c("loading")}
       </Button>
     );
-  }
-  const signedIn = Boolean(session.data);
-  const Icon = signedIn ? MonitorIcon : LoginIcon;
   return (
     <Link
-      to={signedIn ? "/settings" : "/login"}
-      search={signedIn ? {} : { returnTo: "/settings" }}
-      className={cn(buttonVariants({ variant: "outline", size }), className)}
+      to={session.data && !session.error ? "/agents" : "/login"}
+      search={session.data && !session.error ? {} : { returnTo: "/agents" }}
+      className={cn(buttonVariants({ size }), className)}
     >
-      <Icon aria-hidden="true" data-icon="inline-start" />
-      {t(signedIn ? "connectComputer" : "connect")}
+      <AgentIcon data-icon="inline-start" />
+      {t("openAgents")}
     </Link>
   );
 }

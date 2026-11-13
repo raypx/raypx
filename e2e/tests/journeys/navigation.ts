@@ -8,8 +8,6 @@ import {
   webShellFixture,
 } from "../helpers/account-fixture.js";
 
-import type { HumanRequest } from "@raypx/core/tasks";
-
 /** Register the shared journey in the owning application's Playwright file. */
 export function registerTests() {
   test(`groups sidebar menus and keeps collapsed navigation accessible`, async ({
@@ -19,24 +17,7 @@ export function registerTests() {
   }) => {
     if (surface === "Web") await webShellFixture(page);
     await signedInAccount(page);
-    await page.route("**/rpc/approvals/list", (route) =>
-      authResponse(route, {
-        json: [
-          {
-            id: crypto.randomUUID(),
-            taskId: crypto.randomUUID(),
-            kind: "permission",
-            title: "Check sidebar badge",
-            body: "",
-            questions: [],
-            status: "pending",
-            decision: null,
-            expiresAt: new Date(Date.now() + 600000).toISOString(),
-          } satisfies HumanRequest,
-        ],
-      }),
-    );
-    await page.goto(`${base}${surface === "Web" ? "/projects" : "/"}`);
+    await page.goto(`${base}/agents`);
     await test.step("shows the skip link only on keyboard focus", async () => {
       const skip = page.getByRole("link", { name: "Skip navigation", exact: true });
       await expect(skip).toBeAttached();
@@ -50,17 +31,13 @@ export function registerTests() {
     const sidebar = page.getByRole("complementary");
     const navigation = sidebar.getByRole("navigation", { name: "Raypx", exact: true });
     const workspace = navigation.getByRole("group", { name: "Workspace", exact: true });
-    await expect(workspace.getByRole("link", { name: "Projects", exact: true })).toBeVisible();
-    const waiting = workspace.getByRole("link", { name: /^Waiting/ });
-    await expect(waiting).toContainText("1");
-    if (surface === "Desktop") {
-      const local = sidebar;
-      await expect(
-        local.getByRole("link", { name: "Memory and templates", exact: true }),
-      ).toBeVisible();
-      await expect(local.getByRole("link", { name: "Automations", exact: true })).toBeVisible();
-    }
-    await expect(workspace.getByRole("link", { name: "Projects", exact: true })).toHaveAttribute(
+    await expect(workspace.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
+    await expect(
+      workspace.getByRole("link", { name: "Memory and templates", exact: true }),
+    ).toBeVisible();
+    for (const name of ["Projects", "Waiting", "Automations", "New session"])
+      await expect(sidebar.getByRole("link", { name, exact: true })).toHaveCount(0);
+    await expect(workspace.getByRole("link", { name: "Agents", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -68,7 +45,7 @@ export function registerTests() {
     await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
     const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
     await expect(expand).toHaveAttribute("aria-expanded", "false");
-    await expect(workspace.getByRole("link", { name: "Projects", exact: true })).toBeVisible();
+    await expect(workspace.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
     await page.reload();
     await expect(expand).toHaveAttribute("aria-expanded", "false");
     const account = sidebar.getByRole("button", { name: "Account menu", exact: true });
@@ -93,6 +70,38 @@ export function registerTests() {
     });
   });
 
+  for (const locale of ["en", "zh"] as const) {
+    test(`Agents shell fits narrow and wide screens in ${locale}`, async ({
+      page,
+      surface,
+      base,
+    }) => {
+      if (surface === "Web") await webShellFixture(page);
+      await signedInAccount(page);
+      await page.addInitScript(
+        (language) => localStorage.setItem("raypx_locale", language),
+        locale,
+      );
+      await page.goto(`${base}/agents`);
+      const title = locale === "zh" ? "智能体" : "Agents";
+      for (const width of [375, 1280]) {
+        await page.setViewportSize({ width, height: 812 });
+        await expect(page.getByRole("heading", { name: title, exact: true })).toHaveCount(1);
+        await expect(
+          page.getByRole("complementary").getByRole("link", { name: title, exact: true }),
+        ).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true,
+        );
+        await capture(page, {
+          path: test.info().outputPath(`agents-shell-${locale}-${width}.png`),
+          fullPage: true,
+          animations: "disabled",
+        });
+      }
+    });
+  }
+
   test(`account menu supports keyboard, localization and sign-out recovery`, async ({
     page,
     surface,
@@ -110,8 +119,7 @@ export function registerTests() {
       updatedAt: new Date().toISOString(),
     };
     await accountAccessFixture(page, user.id);
-    await page.route("**/rpc/approvals/list", (route) => authResponse(route, { json: [] }));
-    await page.route("**/rpc/devices/list", (route) => authResponse(route, { json: [] }));
+    await page.route("**/rpc/spaces/list", (route) => authResponse(route, { json: [] }));
     await page.route("**/api/auth/get-session**", (route) =>
       authResponse(
         route,
@@ -154,7 +162,7 @@ export function registerTests() {
       return authResponse(route, { success: true });
     });
     if (surface === "Web") await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${base}${surface === "Web" ? "/settings" : "/"}`);
+    await page.goto(`${base}${surface === "Web" ? "/settings" : "/agents"}`);
     await test.step("keyboard and localized menu", async () => {
       const trigger = page.getByRole("button", { name: "Account menu", exact: true });
       await expect(trigger).toBeVisible();
@@ -175,7 +183,9 @@ export function registerTests() {
         .getByRole("complementary")
         .getByRole("button", { name: "Settings", exact: true })
         .click();
-      await expect(page).toHaveURL(`${base}${surface === "Web" ? "/settings" : "/#settings"}`);
+      await expect(page).toHaveURL(
+        `${base}${surface === "Web" ? "/settings" : "/agents#settings"}`,
+      );
       const settings = page.getByRole("dialog");
       await expect(settings).toBeVisible();
       await settings.getByText("Dark", { exact: true }).click();
@@ -220,8 +230,13 @@ export function registerTests() {
       await expect(menu.getByRole("alert")).toBeVisible();
       await expect(menu.getByText("private diagnostic")).toHaveCount(0);
       await menu.getByRole("menuitem", { name: "Sign out", exact: true }).click();
-      await expect(page).toHaveURL(base + "/");
-      await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+      await expect(page).toHaveURL(surface === "Web" ? base + "/" : /\/login(?:\?|$)/);
+      await expect(
+        page.getByRole("button", {
+          name: surface === "Web" ? "Sign in" : "Sign in with browser",
+          exact: true,
+        }),
+      ).toBeVisible();
       await expect(trigger).toHaveCount(0);
       expect(attempts).toBe(2);
     });

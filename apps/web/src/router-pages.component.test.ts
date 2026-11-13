@@ -32,7 +32,7 @@ describe("application shell pages", () => {
   it("keeps the public homepage in its own landing group", () => {
     const routes = pages();
     expect(routes.find((route) => route.fullPath === "/")?.id).toBe("/(landing)/");
-    expect(routes.find((route) => route.fullPath === "/projects")?.id).toBe("/(app)/projects");
+    expect(routes.find((route) => route.fullPath === "/agents")?.id).toBe("/(app)/agents");
   });
   it("declare a translated title and page template for every shell route", () => {
     const shellPages = pages().filter(
@@ -43,17 +43,13 @@ describe("application shell pages", () => {
         shellPages.map((route) => [route.fullPath, route.options.staticData?.page]),
       ),
     ).toEqual({
-      "/projects": { title: "common.projects", layout: "workbench" },
       "/agents": { title: "agents.title", layout: "tool" },
       "/admin/": { title: "dash.nav.overview", layout: "workbench" },
       "/admin/audit": { title: "dash.nav.audit", layout: "workbench" },
       "/admin/users": { title: "common.users", layout: "workbench" },
       "/admin/settings": { title: "site.title", layout: "document" },
-      "/approvals": { title: "common.approvals", layout: "workbench" },
-      "/automations": { title: "common.jobs", layout: "workbench" },
       "/memory": { title: "memory.title", layout: "workbench" },
       "/settings": { title: "common.settings", layout: "document" },
-      "/tasks": { title: "common.tasks", layout: "workbench" },
     });
   });
 });

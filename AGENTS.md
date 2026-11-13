@@ -2,48 +2,58 @@
 
 ## Purpose
 
-Desktop uses the MyGo/Go host with the Bun CLI/daemon. The retired Tauri/Rust host is
-archived in `raypx/raypx-tauri`; do not reintroduce it here.
+Raypx is the home for persistent Agents, each with one continuing conversation.
+Spaces are the authorization boundary; PostgreSQL is the one authority. Follow
+[ADR 0066](docs/architecture/0066-server-owned-agent-platform.md), the
+[architecture guides](docs/architecture/README.md) and [roadmap](docs/roadmap.md).
+Read the nearest workspace AGENTS.md, docs/README.md and DESIGN.md before changes.
 
-Raypx is a project-centered personal development workbench with device-local Desktop execution and optional Web remote access.
-Read the nearest workspace AGENTS.md and docs/README.md before changing code.
-The accepted foundation design and current architecture decisions define the implementation.
+Phase 1 makes `/agents` the signed-in home in Web and Desktop: Space selection,
+Agent management, messages, streamed replies, committed segments and stop. Its
+backend Runs are process-local: no tools, attempts, leases, steering or recovery.
+Do not describe later roadmap capabilities as implemented. The earlier CLI/daemon,
+SQLite profiles, native enrollment and remote projections still exist until their
+replacement phases. Do not extend them as a second authority for the new product.
+Desktop still uses MyGo/Go and the bundled Bun CLI. The retired Tauri/Rust host is
+archived in `raypx/raypx-tauri`; do not reintroduce it.
 
 ## Workspaces and boundaries
 
 - Discover workspaces from package.json workspaces; never maintain a package-name allowlist.
 - Infrastructure services and provider tooling live under `infra/*`; keep composition
-  roots out of cross-workspace imports.
-- Applications are composition roots and cannot be imported by another workspace.
+  roots out of cross-workspace imports. Applications cannot be imported by another workspace.
 - Libraries expose explicit package.json exports; do not import private source paths.
-- Every public entry has an established consumer in another workspace. An entry nobody
-  imports is removed rather than kept for a possible future use; a deliberate exception
-  records `raypx.entryConsumers` with its reason and is validated by `policy`.
-- Kind is derived, never declared: a package with a `bin` is tooling, a package without
-  exports is an application, the rest are libraries. Manifests declare no platform
-  target; policy does not check platform boundaries.
-- Keep build helpers out of product runtime. Policy rejects runtime imports of
-  executable tooling and test-only modules. Declare direct dependencies.
-- Keep the complete workspace dependency graph acyclic, including devDependencies.
-- Auth receives its database adapter, configuration and mail interface from API.
-- Remote contracts and local device contracts have separate public entries.
-- Desktop launches the bundled CLI by absolute path. Do not import CLI source.
-- Desktop and CLI execution require one account/origin-bound instance enrollment.
-  A signed local identity permits indefinite offline work; online logout preserves it.
-  Gate remote data and Host authorization separately on login. Never transfer a profile
-  to another account/origin. Only device-owned local work is supported.
+  Every public entry needs an established consumer in another workspace. Remove unused
+  entries; a deliberate transition exception records `raypx.entryConsumers` with a
+  reason naming the later removal, validated by `policy`.
+- Kind is derived: `bin` means tooling, no exports means application, otherwise library.
+  Manifests declare no platform target; policy does not check platform boundaries.
+- Keep build helpers out of runtime. Policy rejects runtime imports of executable
+  tooling and test-only modules. Declare direct dependencies and keep the complete
+  workspace graph acyclic, including devDependencies.
+- Core owns domain schemas, identifiers, public account models and pure rules.
+  Contracts composes wire schemas and exports transport definitions only. Feature
+  `/model` entries own page state and injected ports; `/client` adapts them to React;
+  `/server` owns services/repositories, with persistence behind adapters. API composes
+  authentication, configuration and credentials. Auth receives its database adapter,
+  configuration and mail interface from API. Web imports no backend code.
+- Resolve fresh Space membership at each request. Require Space-scoped repository
+  ports, filter by `space_id` before limiting and use same-Space foreign keys.
+  Resource selectors and deployment administrator roles never grant Space access.
+- Keep new Agent execution in the backend, separate from the retained private CLI
+  harness. Vendor SDKs stay in adapters. Add packages only for established
+  responsibilities and actual consumers; do not create speculative entries.
+- Remote and local device contracts have separate public entries. Desktop launches
+  its bundled CLI by absolute path and never imports CLI source. Preserve existing
+  enrollment/account/origin isolation while that device runtime remains; it does
+  not authorize a Space or turn local history into server conversation history.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
-- Add packages when their responsibility and actual consumers are established.
-- Core owns task, memory and job domain schemas, public account models and pure rules; contracts composes wire schemas and
-  exports only transport definitions. Tasks/model owns page state and injected view ports;
-  Tasks/client adapts those models to React. Keep execution in CLI's private harness
-  until a second execution consumer establishes a shared package boundary.
 
 ## Toolchain
 
 - Bun 1.4.4 owns install, lockfile, scripts, tests and standalone CLI compilation.
-- Formal CLI packaging is embedded stable Bun with minified ESM and depth-0 bytecode
-  (ADR 0047). Native AOT and separate-runtime layouts remain manual experiments.
+- Formal CLI packaging is embedded stable Bun with minified ESM and depth-0 bytecode.
+  Native AOT and separate-runtime layouts remain manual experiments.
 - Bun is the only JavaScript runtime. Root `packageManager` pins it; tooling reads that pin and
   `raypx-dev policy` rejects drift in devEngines, Dockerfiles, CI and documented versions,
   and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
@@ -103,20 +113,31 @@ The accepted foundation design and current architecture decisions define the imp
   pure `messages/en`/`messages/zh` exports; apps compose private catalogs. I18n owns
   common copy and shared runtime state. Keep handwritten language entries and unique
   namespace ownership. The only generated catalog source is the ignored
-  `<namespace>.d.json.ts` literal types written by `bun run i18n:types` (ADR 0064).
+  `<namespace>.d.json.ts` literal types written by `bun run i18n:types`.
 - Use `.js` specifiers for relative TypeScript imports and re-exports, including
   dynamic imports. Keep source files, package export targets and filesystem paths
   at their actual `.ts`/`.tsx` extensions.
 - Prefer named functions, lookup tables and early returns for conditional logic.
   Avoid nested ternary expressions; use simple ternaries only when they improve readability.
 - Do not log credentials, tokens, cookies, passwords or private file content.
-- Device preferences and CLI SQLite profiles stay local and survive logout.
+- PostgreSQL owns new Agent/conversation/Run state. Clients render it and express intent;
+  client caches, drafts and retained CLI SQLite profiles are never a second authority.
+  Drafts and uncertain-send receipts stay device-local, scoped by server origin,
+  account, Space and conversation. Restoration never sends a message.
+- Device preferences and retained CLI SQLite profiles stay local and survive logout.
+  Existing device execution still requires one account/origin-bound enrollment;
+  its signed identity permits indefinite offline use after online logout. Gate remote data and
+  Host authorization separately. Never transfer a profile to another account/origin.
 - Current functionality is the initial baseline. Support current protocols and data formats
   only. Do not add legacy fallback, compatibility aliases or automatic imports of old data.
   Reject unsupported versions.
 - The new PostgreSQL database is isolated from the retired product database.
   Never run new migrations or destructive commands against an old/operator database.
-- File grants constrain built-in file operations. External commands retain OS permissions.
+- Context is not permission. Memory, prompts and inbound text never authorize an action.
+  Future computer tools use the Computer port; the Agent runtime and credentials
+  remain outside the computer. Only the supervisor may hold the Docker socket.
+- Existing file grants constrain built-in file operations. External commands retain
+  OS permissions; a granted device is not sandbox isolation.
 - Local protocol dates are ISO strings; terminal bytes use base64.
 - Preserve original logos and neutral light/dark visual tokens. The logo-palette accent
   is limited to public-page decoration as scoped in DESIGN.md; the workbench stays
@@ -160,17 +181,30 @@ Keep documentation aligned with the implementation and remove obsolete guides.
 
 ## Remote control
 
-Opted-in remote Agent tasks use explicit API projections and device-scoped grants.
-On macOS and Windows the independent CLI daemon owns execution, approval arbitration, the
-durable replay journal, the outbound WebSocket and restricted device credentials.
-Desktop bootstraps over authenticated private IPC (Unix socket or token-guarded
-loopback on Windows); its renderer uses a separate authenticated loopback WebSocket
-(ADR 0052). The daemon owns sessions, API policy and acknowledged events. GUI Quit
-does not stop daemon tasks. Relay routes messages; API stores read
-projections. Native handles initial opt-in without exporting cookies or host secrets
-to the renderer. Explicit logout/account changes revoke the affected binding. The backend in `apps/api` owns HTTP and socket peers through `SERVER_ROLE=api|relay|both`.
-The default both role uses direct calls; split roles require the private Redis broker.
-Shared `@raypx/control` services own authorization and projection rules. Never publish the
-local method router or provider credentials. Desktop connection settings are
-user-level runtime TOML; server origins isolate sessions, remote settings and
-remote authorization.
+New conversations use session-authorized oRPC and the backend event stream, with
+fresh Space membership checks. Apply state and its cursor together before ACK;
+reconnect replays durable events or replaces state from a snapshot. Transient
+reply text is not durable. Phase 1 requires one API-enabled reply process; never
+promise crash recovery, multi-process live replies or exactly-once external effects.
+
+The target backend owns Runs, approvals, events and scheduling. The CLI daemon
+becomes an outbound-only device connector in a later phase, with native-confirmed
+Space directory grants and per-command checks. Do not implement new Agent authority
+in the renderer, Go host or device profile.
+
+Until replaced, the existing macOS/Windows daemon still owns device execution,
+approval arbitration, replay, restricted credentials and Desktop session transport.
+Native bootstraps over authenticated private IPC (Unix socket or token-guarded
+loopback on Windows); the renderer uses a separate authenticated loopback WebSocket.
+GUI Quit does not stop daemon tasks. Existing Relay routes device messages and API
+stores their read projections; `@raypx/control` owns their authorization rules.
+Current roles remain `SERVER_ROLE=api|relay|both`; `both` uses direct calls and split
+roles require the private Redis broker. These are retained implementation details,
+not the target `api|worker|relay|all` topology.
+
+Preserve native opt-in without exposing cookies or host secrets to the renderer.
+Explicit logout/account changes revoke the affected remote binding. Never publish
+the local method router or provider credentials. Desktop connection settings remain
+user-level runtime TOML; server origins isolate sessions, device history, settings
+and remote authorization. Replace these boundaries only with their owning roadmap
+phase, and remove obsolete code rather than add compatibility or data imports.

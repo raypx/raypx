@@ -9,30 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
-import { Route as localRouteRouteImport } from './routes/(local)/route'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AgentsRouteImport } from './routes/agents'
-import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as MemoryRouteImport } from './routes/memory'
-import { Route as TasksRouteImport } from './routes/tasks'
-import { Route as TerminalRouteImport } from './routes/terminal'
-import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
-import { Route as localIndexRouteImport } from './routes/(local)/index'
-import { Route as localAutomationsRouteImport } from './routes/(local)/automations'
-import { Route as localFilesRouteImport } from './routes/(local)/files'
 
-const authRouteRoute = authRouteRouteImport.update({
-  id: '/(auth)',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const localRouteRoute = localRouteRouteImport.update({
-  id: '/(local)',
+const authRouteRoute = authRouteRouteImport.update({
+  id: '/(auth)',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -45,29 +39,9 @@ const AgentsRoute = AgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApprovalsRoute = ApprovalsRouteImport.update({
-  id: '/approvals',
-  path: '/approvals',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MemoryRoute = MemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TerminalRoute = TerminalRouteImport.update({
-  id: '/terminal',
-  path: '/terminal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WelcomeRoute = WelcomeRouteImport.update({
-  id: '/welcome',
-  path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -95,75 +69,41 @@ const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => authRouteRoute,
 } as any)
-const localIndexRoute = localIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => localRouteRoute,
-} as any)
-const localAutomationsRoute = localAutomationsRouteImport.update({
-  id: '/automations',
-  path: '/automations',
-  getParentRoute: () => localRouteRoute,
-} as any)
-const localFilesRoute = localFilesRouteImport.update({
-  id: '/files',
-  path: '/files',
-  getParentRoute: () => localRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof localIndexRoute
+  '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
-  '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
-  '/tasks': typeof TasksRoute
-  '/terminal': typeof TerminalRoute
-  '/welcome': typeof WelcomeRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/automations': typeof localAutomationsRoute
-  '/files': typeof localFilesRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof localIndexRoute
+  '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
-  '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
-  '/tasks': typeof TasksRoute
-  '/terminal': typeof TerminalRoute
-  '/welcome': typeof WelcomeRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/automations': typeof localAutomationsRoute
-  '/files': typeof localFilesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
-  '/(local)': typeof localRouteRouteWithChildren
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
-  '/approvals': typeof ApprovalsRoute
   '/memory': typeof MemoryRoute
-  '/tasks': typeof TasksRoute
-  '/terminal': typeof TerminalRoute
-  '/welcome': typeof WelcomeRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
-  '/(local)/automations': typeof localAutomationsRoute
-  '/(local)/files': typeof localFilesRoute
-  '/(local)/': typeof localIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,82 +111,59 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/agents'
-    | '/approvals'
     | '/memory'
-    | '/tasks'
-    | '/terminal'
-    | '/welcome'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/signup'
     | '/verify-email'
-    | '/automations'
-    | '/files'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
     | '/agents'
-    | '/approvals'
     | '/memory'
-    | '/tasks'
-    | '/terminal'
-    | '/welcome'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/signup'
     | '/verify-email'
-    | '/automations'
-    | '/files'
   id:
     | '__root__'
+    | '/'
     | '/(auth)'
-    | '/(local)'
     | '/account'
     | '/agents'
-    | '/approvals'
     | '/memory'
-    | '/tasks'
-    | '/terminal'
-    | '/welcome'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
     | '/(auth)/signup'
     | '/(auth)/verify-email'
-    | '/(local)/automations'
-    | '/(local)/files'
-    | '/(local)/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
-  localRouteRoute: typeof localRouteRouteWithChildren
   AccountRoute: typeof AccountRoute
   AgentsRoute: typeof AgentsRoute
-  ApprovalsRoute: typeof ApprovalsRoute
   MemoryRoute: typeof MemoryRoute
-  TasksRoute: typeof TasksRoute
-  TerminalRoute: typeof TerminalRoute
-  WelcomeRoute: typeof WelcomeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)': {
       id: '/(auth)'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof authRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(local)': {
-      id: '/(local)'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof localRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -263,39 +180,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/approvals': {
-      id: '/approvals'
-      path: '/approvals'
-      fullPath: '/approvals'
-      preLoaderRoute: typeof ApprovalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/memory': {
       id: '/memory'
       path: '/memory'
       fullPath: '/memory'
       preLoaderRoute: typeof MemoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terminal': {
-      id: '/terminal'
-      path: '/terminal'
-      fullPath: '/terminal'
-      preLoaderRoute: typeof TerminalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/welcome': {
-      id: '/welcome'
-      path: '/welcome'
-      fullPath: '/welcome'
-      preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -333,27 +222,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authVerifyEmailRouteImport
       parentRoute: typeof authRouteRoute
     }
-    '/(local)/': {
-      id: '/(local)/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof localIndexRouteImport
-      parentRoute: typeof localRouteRoute
-    }
-    '/(local)/automations': {
-      id: '/(local)/automations'
-      path: '/automations'
-      fullPath: '/automations'
-      preLoaderRoute: typeof localAutomationsRouteImport
-      parentRoute: typeof localRouteRoute
-    }
-    '/(local)/files': {
-      id: '/(local)/files'
-      path: '/files'
-      fullPath: '/files'
-      preLoaderRoute: typeof localFilesRouteImport
-      parentRoute: typeof localRouteRoute
-    }
   }
 }
 
@@ -377,32 +245,12 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
-interface localRouteRouteChildren {
-  localAutomationsRoute: typeof localAutomationsRoute
-  localFilesRoute: typeof localFilesRoute
-  localIndexRoute: typeof localIndexRoute
-}
-
-const localRouteRouteChildren: localRouteRouteChildren = {
-  localAutomationsRoute: localAutomationsRoute,
-  localFilesRoute: localFilesRoute,
-  localIndexRoute: localIndexRoute,
-}
-
-const localRouteRouteWithChildren = localRouteRoute._addFileChildren(
-  localRouteRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
-  localRouteRoute: localRouteRouteWithChildren,
   AccountRoute: AccountRoute,
   AgentsRoute: AgentsRoute,
-  ApprovalsRoute: ApprovalsRoute,
   MemoryRoute: MemoryRoute,
-  TasksRoute: TasksRoute,
-  TerminalRoute: TerminalRoute,
-  WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

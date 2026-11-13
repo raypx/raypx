@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
-import { messages } from "../../locales/index.js";
+import en from "@raypx/tasks/messages/en";
+import zh from "@raypx/tasks/messages/zh";
 
 export async function generateNativeAssets(desktop: string) {
   const directory = resolve(desktop, "generated");
@@ -8,8 +9,8 @@ export async function generateNativeAssets(desktop: string) {
     await rm(resolve(directory, file), { force: true });
   const artifacts: Record<string, unknown> = {
     "notifications.json": {
-      en: messages.en.tasks.notification,
-      zh: messages.zh.tasks.notification,
+      en: en.tasks.notification,
+      zh: zh.tasks.notification,
     },
   };
   for (const [file, value] of Object.entries(artifacts)) {

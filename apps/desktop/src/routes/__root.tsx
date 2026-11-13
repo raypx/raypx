@@ -5,9 +5,7 @@ import { ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences.js";
 import { SessionGate } from "../features/auth/components/session-gate.js";
 import { DesktopSignOutProvider } from "../features/auth/sign-out.js";
-import { RemoteCoordinator } from "../features/tasks/coordinator.js";
 import { DesktopRuntimeProvider } from "../features/engine/provider.js";
-import { EngineRouteSync } from "../features/engine/routes.js";
 import { getBridge, isDesktop } from "../lib/desktop.js";
 import { AppAnalytics } from "../features/analytics/provider.js";
 import { externalLinkTarget } from "../lib/external-links.js";
@@ -69,9 +67,7 @@ function RootComponent() {
         <AppAnalytics>
           <DesktopRuntimeProvider>
             <DesktopSignOutProvider>
-              <EngineRouteSync />
               <SessionGate>
-                <RemoteCoordinator />
                 <DesktopShell />
               </SessionGate>
             </DesktopSignOutProvider>

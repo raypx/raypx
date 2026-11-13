@@ -14,7 +14,7 @@ import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { authClient, apiUrl, webUrl } from "../features/auth/client.js";
 import { accountAccessQuery } from "../features/auth/access.js";
-import { guestReturnTo } from "../features/tasks/guest-draft.js";
+import { safeReturnTo } from "../features/auth/return-to.js";
 import { analytics } from "../features/analytics/client.js";
 import { AccountSettingsOverlay } from "../features/settings/overlay.js";
 import { useSettingsNavigation } from "../features/settings/navigation.js";
@@ -108,7 +108,10 @@ function AccountButton({
         if (destination === "account" && accountId) {
           void settings.open();
         } else {
-          void router.navigate({ to: "/login", search: { returnTo: guestReturnTo(apiUrl, href) } });
+          void router.navigate({
+            to: "/login",
+            search: { returnTo: href === "/" ? "/agents" : safeReturnTo(href) },
+          });
         }
       }}
       onSignOut={async () => {

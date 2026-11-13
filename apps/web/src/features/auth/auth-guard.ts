@@ -13,13 +13,11 @@ export async function authPageGuard({
   const pathname = location.pathname.toLowerCase().replace(/\/+$/, "");
   if (pathname !== "/login" && pathname !== "/signup") return { completeSignIn: false };
   const search = new URLSearchParams(location.searchStr);
-  // The callback owns refresh failures and draft completion, including explicit retries.
+  // The callback owns refresh failures and callback completion, including explicit retries.
   if (search.has("oauth") || search.has("error") || search.get("reauthenticate") === "true")
     return { completeSignIn: false };
   const account = await context.queryClient.fetchQuery(accountQuery());
   if (account.status !== "signed-in") return { completeSignIn: false };
-  const returnTo = search.has("returnTo") ? safeReturnTo(search.get("returnTo")) : "/projects";
-  if (new URL(returnTo, "https://return.invalid").searchParams.has("guestDraft"))
-    return { completeSignIn: true };
+  const returnTo = search.has("returnTo") ? safeReturnTo(search.get("returnTo")) : "/agents";
   throw redirect({ to: returnTo, replace: true });
 }

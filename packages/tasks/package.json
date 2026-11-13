@@ -50,5 +50,13 @@
   "peerDependencies": {
     "@tanstack/react-query": "^5.105.3",
     "react": "^19.3.0"
+  },
+  "raypx": {
+    "entryConsumers": {
+      "./model": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase.",
+      "./client/pending-count": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase.",
+      "./client/status": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase.",
+      "./client/task-composer": "Retained with the earlier device-owned runtime after phase 1 client removal; remove this entry with the replaced task/schedule stack in a later roadmap phase."
+    }
   }
 }

@@ -4,7 +4,7 @@ import { test, web } from "@raypx/e2e/testing";
 test("Web quick settings opens the available install prompt and reflects installation", async ({
   page,
 }) => {
-  await page.goto(new URL("/projects", web).href);
+  await page.goto(new URL("/settings", web).href);
   const settingsButton = page.getByRole("button", { name: "Settings", exact: true });
   const settings = page.getByRole("dialog", { name: "Settings", exact: true });
   const app = settings.getByRole("region", { name: "Web app", exact: true });
@@ -28,11 +28,11 @@ test("Web quick settings opens the available install prompt and reflects install
   await expect(app.getByRole("button")).toHaveCount(0);
 });
 
-test("Web exposes an installable manifest and retries the same project URL after going offline", async ({
+test("Web exposes an installable manifest and retries the same page URL after going offline", async ({
   page,
   context,
 }) => {
-  const target = new URL("/projects?source=pwa", web).href;
+  const target = new URL("/settings?source=pwa", web).href;
   await page.goto(target);
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
     "href",
@@ -45,7 +45,7 @@ test("Web exposes an installable manifest and retries the same project URL after
     id: "/",
     name: "Raypx",
     scope: "/",
-    start_url: "/projects",
+    start_url: "/agents",
     display: "standalone",
     icons: expect.arrayContaining([
       expect.objectContaining({ sizes: "192x192", purpose: "any" }),

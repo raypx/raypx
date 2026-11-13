@@ -1,13 +1,19 @@
 # Roadmap
 
 This is the delivery order for the [target architecture](architecture/README.md).
-Phase 1's additive slices implement Spaces, membership records, Agent CRUD with
-one direct Conversation per Agent, and member messages with an ordered event log,
-snapshots, an acknowledged event stream, and process-local model replies with
-queued Runs, transient deltas, committed segments and stop. The shared `/agents`
-workspace now exposes Spaces, Agent management and conversations in Web and
-Desktop, with device-local drafts and deterministic browser acceptance. The earlier device-owned product
-remains until a phase replaces it.
+Phase 1 implements Spaces, membership records, Agent CRUD with one direct
+Conversation per Agent, and member messages with an ordered event log, snapshots,
+an acknowledged event stream and process-local model replies with queued Runs,
+transient deltas, committed segments and stop. The shared `/agents` workspace is
+the signed-in home in Web and Desktop, with device-local drafts and deterministic
+browser fixtures. Acceptance results remain separate gates; client closeout is
+not a claim of packaged-platform or live-provider acceptance.
+
+Project/session pages, Waiting, New session and the guest task editor/handoff have
+been removed from Web and the Desktop renderer. Dependent Automations screens are
+also removed. Earlier standalone Memory remains device/account-owned, separate
+from the Agent/Space memory planned in phase 4. The CLI/daemon, native host, device
+stores and remote projections remain until a phase replaces them.
 
 ## Phase overview
 
@@ -51,8 +57,13 @@ Acceptance:
   mid-segment shows the same final text.
 - The same conversation renders in Web and Desktop.
 
-The phase-1 slices are additive: project and session pages, the guest task editor
-and remote read projections remain available. Their replacement is deferred.
+Client replacement: `/agents` now leads signed-in navigation and sign-in defaults.
+Web and Desktop no longer expose project/session or pending-approval pages, the
+guest editor or draft handoff. Desktop also removes project Files, Terminal,
+onboarding and old execution settings from its renderer. Device-owned backend,
+CLI and Go code is retained for later removal; phase 1 does not migrate its data.
+Account/security, administration/configuration, sign-in/sign-up, public Web pages
+and device preferences remain reachable.
 
 ## 2. Durable Runs
 
@@ -182,7 +193,6 @@ provider. Each needs its own decision when a concrete workflow requires it.
 
 ## Open questions
 
-- Whether earlier device-local profiles get an export path into a Space.
 - Which hosted sandbox provider passes the conformance suite and fits the port.
 - Whether the first release ships Auto review or only Ask and Never ask.
 - Whether Claude and Codex continue as tools inside a computer or are dropped.

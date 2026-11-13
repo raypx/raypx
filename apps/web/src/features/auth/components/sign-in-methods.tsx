@@ -7,7 +7,7 @@ import { apiUrl, authClient, webUrl } from "../client.js";
 
 const providers = ["google", "github"] as const;
 const names = { google: "Google", github: "GitHub" } as const;
-const settings = "/projects#settings/password";
+const settings = "/agents#settings/password";
 
 type LinkedAccount = { id: string; providerId: string };
 

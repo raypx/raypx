@@ -21,7 +21,7 @@ beforeEach(() => {
   localStorage.setItem("raypx_locale", "en");
 });
 
-async function openPanel(url = "/projects#settings/account") {
+async function openPanel(url = "/agents#settings/account") {
   const mounted = vi.fn();
   function PrivateSessions() {
     useEffect(() => {
@@ -62,18 +62,18 @@ async function openPanel(url = "/projects#settings/account") {
   });
   const projects = createRoute({
     getParentRoute: () => root,
-    path: "/projects",
+    path: "/agents",
     component: () => (
       <>
-        <p>Project list</p>
+        <p>Agent list</p>
         <input aria-label="Background draft" />
       </>
     ),
   });
   const tasks = createRoute({
     getParentRoute: () => root,
-    path: "/tasks",
-    component: () => <p>Task list</p>,
+    path: "/memory",
+    component: () => <p>Reference list</p>,
   });
   const router = createRouter({
     routeTree: root.addChildren([projects, tasks]),
@@ -91,7 +91,7 @@ async function openPanel(url = "/projects#settings/account") {
   return { router, mounted };
 }
 
-it("opens a direct link, preserves drafts and closes to projects", async () => {
+it("opens a direct link, preserves drafts and closes to Agents", async () => {
   const { router } = await openPanel();
   fireEvent.change(screen.getByRole("textbox", { name: "Draft name" }), {
     target: { value: "Ada edited" },
@@ -104,8 +104,8 @@ it("opens a direct link, preserves drafts and closes to projects", async () => {
   );
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
   expect(screen.queryByRole("alertdialog")).toBeNull();
-  await waitFor(() => expect(router.state.location.pathname).toBe("/projects"));
-  expect(await screen.findByText("Project list")).toBeTruthy();
+  await waitFor(() => expect(router.state.location.pathname).toBe("/agents"));
+  expect(await screen.findByText("Agent list")).toBeTruthy();
 });
 
 it("mounts private panels only on first visit and retains them after switching", async () => {
@@ -127,28 +127,28 @@ it("changes device preferences within the dialog through the compact category se
   await act(async () => fireEvent.click(option));
   fireEvent.click(await screen.findByRole("radio", { name: "Dark" }));
   expect(localStorage.getItem("theme")).toBe("dark");
-  expect(router.state.location.href).toBe("/projects#settings/preferences");
+  expect(router.state.location.href).toBe("/agents#settings/preferences");
 });
 
-it.each(["close", "escape"])("returns to the originating task and query on %s", async (action) => {
-  const { router } = await openPanel("/tasks?taskId=task-123#settings/account");
+it.each(["close", "escape"])("returns to the originating page and query on %s", async (action) => {
+  const { router } = await openPanel("/memory?referenceId=task-123#settings/account");
   if (action === "close") fireEvent.click(screen.getByRole("button", { name: "Close" }));
   else fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
-  await waitFor(() => expect(router.state.location.href).toBe("/tasks?taskId=task-123"));
+  await waitFor(() => expect(router.state.location.href).toBe("/memory?referenceId=task-123"));
 });
 
 it("keeps the background draft mounted and supports back/forward after opening and switching", async () => {
-  const { router } = await openPanel("/projects?view=recent#list");
+  const { router } = await openPanel("/agents?view=recent#list");
   const background = screen.getByRole("textbox", { name: "Background draft" });
   fireEvent.change(background, { target: { value: "Keep this draft" } });
   fireEvent.click(screen.getByRole("button", { name: "Open account" }));
   await screen.findByRole("dialog");
-  expect(router.state.location.href).toBe("/projects?view=recent#settings/account");
+  expect(router.state.location.href).toBe("/agents?view=recent#settings/account");
   await act(async () => fireEvent.click(screen.getByRole("tab", { name: "Signed-in sessions" })));
-  expect(router.state.location.href).toBe("/projects?view=recent#settings/sessions");
+  expect(router.state.location.href).toBe("/agents?view=recent#settings/sessions");
   await act(async () => router.history.back());
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  expect(router.state.location.href).toBe("/projects?view=recent#list");
+  expect(router.state.location.href).toBe("/agents?view=recent#list");
   expect(screen.getByRole("textbox", { name: "Background draft" })).toBe(background);
   expect(background).toHaveValue("Keep this draft");
   await act(async () => router.history.forward());
@@ -158,18 +158,18 @@ it("keeps the background draft mounted and supports back/forward after opening a
     "true",
   );
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
-  await waitFor(() => expect(router.state.location.href).toBe("/projects?view=recent#list"));
+  await waitFor(() => expect(router.state.location.href).toBe("/agents?view=recent#list"));
 });
 
 it("opens a deep-linked category without mounting unvisited private panels", async () => {
-  const { router, mounted } = await openPanel("/tasks?taskId=one#settings/sessions");
+  const { router, mounted } = await openPanel("/memory?referenceId=one#settings/sessions");
   expect(mounted).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole("textbox", { name: "Draft name" })).toBeNull();
   expect(screen.getByRole("tab", { name: "Signed-in sessions" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
-  expect(router.state.location.href).toBe("/tasks?taskId=one#settings/sessions");
+  expect(router.state.location.href).toBe("/memory?referenceId=one#settings/sessions");
 });
 
 it.each([
@@ -242,7 +242,7 @@ it.each(["input", "result"])(
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(router.state.location.hash).toBe("settings/account");
     fireEvent.keyDown(search, { key: "Escape", code: "Escape" });
-    await waitFor(() => expect(router.state.location.pathname).toBe("/projects"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/agents"));
   },
 );
 
@@ -302,5 +302,5 @@ it("lets a nested language menu handle Escape without clearing settings search",
   fireEvent.keyDown(option, { key: "Escape", code: "Escape" });
   await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
   expect(search.value).toBe("system");
-  expect(router.state.location.href).toBe("/projects#settings/preferences");
+  expect(router.state.location.href).toBe("/agents#settings/preferences");
 });

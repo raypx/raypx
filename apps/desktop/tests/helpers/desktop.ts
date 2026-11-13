@@ -71,8 +71,6 @@ export function desktopFixture() {
     return handler(params);
   });
   setLocal("agents.local.device", () => device);
-  setLocal("agents.projects", () => device.projects);
-  setLocal("agents.capabilities", () => device.capabilities);
   setLocal("instance.status", () => ({ state: "registered" }));
   setLocal("instance.refresh", () => ({ state: "registered" }));
   const platform = createDesktopPlatform({
