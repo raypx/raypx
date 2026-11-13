@@ -4,7 +4,7 @@ Claude and Codex terminal connectors deliver approval requests to the independen
 CLI daemon. The MyGo Desktop host connects to that daemon.
 The daemon runs TypeScript in its embedded stable Bun 1.4.4 executable, packaged
 with minified ESM and depth-0 bytecode.
-[ADR 0035](../architecture/0035-local-owner-host.md) defines local execution ownership. [ADR 0040](../architecture/0040-instance-enrollment-and-providers.md)
+ADR 0035 defines local execution ownership. ADR 0040
 requires first-time local instance enrollment; local terminal approvals then work
 offline without an active online session. Web delivery is a separately enabled
 cloud scope. Native mobile remains separate.

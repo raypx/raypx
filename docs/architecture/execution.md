@@ -1,0 +1,96 @@
+# Run execution and recovery
+
+A Run is one unit of Agent work. Pi executes it inside the backend process. This
+guide covers how a Run starts, how one process owns it, and how it recovers.
+
+## Dispatch
+
+Work starts at once in the process that creates it.
+
+1. A request commits the message, the Run and a backup job in one transaction.
+2. The request returns. The client follows the reply on the
+   [event stream](events.md).
+3. The same process starts the Run as an independent task.
+
+Routines, webhooks, inbound email, Agent-to-Agent messages and retries start the
+same way in whichever process creates them. A Run that is due later starts from a
+timer in the process that scheduled it. No queue, scan or shared slot sits between
+a due Run and its start, so a slow Run never delays another.
+
+## Ownership
+
+- Starting a Run claims an execution lease with one atomic update. The claim sets
+  the owner, an expiry and a new fence number.
+- The owner renews the lease with a heartbeat. Every write of an attempt carries
+  its fence. A write with an older fence is rejected.
+- However many `api` and `worker` processes run, one claim succeeds and the Run
+  executes once.
+- A message that arrives during an active Run becomes a steering message for that
+  Run. It does not create a second Run.
+- Stop ends the active attempt, cancels its work on the computer and records
+  `cancelled`.
+
+## Attempts and checkpoints
+
+- An attempt is one execution of a Run. A retry or a resume adds an attempt.
+- After each model turn the owner commits a checkpoint: the canonical model
+  history, the pending tool calls and the open effects.
+- A resume starts a new attempt from the last checkpoint. It never replays an
+  effect whose outcome is unknown. See [approvals](approvals.md#effects).
+- A Run pins its model, connection and computer at its first start. A resume uses
+  the same ones. If one is gone, the Run fails with an explicit state.
+
+## Recovery
+
+Recovery is never on the path a new Run takes.
+
+- Each `worker` scans for runnable Runs at startup and every five seconds. It
+  starts any whose process died, whose lease expired or whose start was lost.
+- A process that is shutting down, or that lacks memory headroom, releases its
+  Runs and notifies the other processes. One of them resumes each Run.
+- The backup job fires only if the process crashed before finishing. Its due time
+  is the attempt's own timeout plus a margin. Success deletes the job. A clean
+  failure moves it to the retry time.
+
+## Computers and concurrency
+
+- An Agent uses its computer for one Run at a time.
+- A Run that needs a computer another Run holds stays `queued`. The Run that
+  releases the computer starts the next one waiting.
+- The conversation stays available while a Run waits. A member can keep chatting
+  and start work that does not need the computer.
+- Execution timing starts after the computer is acquired.
+
+## Delegated work
+
+- An Agent can delegate work. The delegated work is a child Run of the parent, not
+  a second visible conversation.
+- A child runs independently. The parent keeps answering new messages.
+- A child has the tools and permissions that apply to its task. Delegation grants
+  no authority the parent lacks and bypasses no approval.
+- Results return to the parent. The parent accounts for changed instructions and
+  cancellation before it acts on a late result.
+
+## Models
+
+- Pi provides model access. A member's Connection supplies the endpoint and
+  credential. Raypx adds no model-specific configuration.
+- Model roles are `main` and `review`. A third role for screen work is added with
+  graphical computers.
+- A provider error with a retry time schedules the next attempt at that time.
+  Other transient errors use bounded backoff. A change of model never happens
+  silently.
+
+## The queue
+
+The queue is a PostgreSQL table claimed with `SKIP LOCKED`. It holds backup jobs,
+scheduled jobs and maintenance jobs. It provides keyed jobs, a run-at time, retries
+and backoff. It is never the normal path for starting a Run or a model call.
+
+## Timing
+
+Structured logs record `run.execution_started`, `run.first_response` and
+`run.finished` with durations in milliseconds: wait before creation, wait before
+the first start, time to the first visible response, and total time. The first
+response time is committed with its output and survives resumes. Logs carry no
+message content.

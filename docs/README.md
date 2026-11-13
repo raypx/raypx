@@ -1,29 +1,32 @@
 # Raypx documentation
 
-Raypx is a project-centered workbench with MyGo Desktop, a standalone TypeScript
-CLI/daemon, TanStack Start Web, Bun backend with API/Relay roles. Desktop targets
-macOS 13.5+ and Windows; Expo Mobile currently provides the account/login baseline.
-Register local profiles once for offline work; remote data and execution grants
-require separate online authorization.
+Raypx is the durable home for persistent Agents: each has one continuing
+conversation, memory, routines and a computer. The
+[target architecture](architecture/README.md) on this branch is server-owned, with
+PostgreSQL as the one authority. The code still implements the earlier
+device-owned product, and the development guides below describe that code until a
+[roadmap](roadmap.md) phase replaces it.
 
-Start with the [project overview](../README.md), [product scope](../PRODUCT.md),
-[current architecture](architecture/README.md) and
-[development setup](development/getting-started.md).
+Start with the [architecture](architecture/README.md), the [roadmap](roadmap.md)
+and [development setup](development/getting-started.md).
 [Root instructions](../AGENTS.md) define repository rules. Workspace manifests are the inventory:
-`bun run workspace:list` and `bun run test list`. Current guides describe the
-implementation; the roadmap describes future work. Decision records explain the
-boundaries behind the implementation.
+`bun run workspace:list` and `bun run test list`.
 
 ## Architecture and decisions
 
-- [Current stack, process ownership, data boundaries and distribution](architecture/README.md)
-- [Accepted Bun CLI production packaging](architecture/0047-bun-cli-production-packaging.md)
-- [MyGo / Bun and immutable CLI artifacts](architecture/0046-mygo-bun-artifacts.md)
-- [Remote Agent tasks and approvals](architecture/remote-tasks.md)
-- [Planned Spaces and sandbox computers](architecture/0065-spaces-and-sandbox-computers.md)
-- [Decision history and supersession status](architecture/README.md#decision-history)
-- [Pi product roadmap](roadmap.md)
-- [Next platform plan](next/README.md) — proposal on the `next` branch
+- [Overview, topology, workspaces and decision history](architecture/README.md)
+- [Domain model and data](architecture/domain.md)
+- [Run execution and recovery](architecture/execution.md)
+- [Conversations and the event stream](architecture/events.md)
+- [Approvals and effects](architecture/approvals.md)
+- [Computers, the supervisor and device connectors](architecture/computers.md)
+- [Spaces, membership and settings](architecture/spaces.md)
+- [Routines, memory, pages and connections](architecture/capabilities.md)
+- [Clients](architecture/clients.md)
+- [Security boundaries](architecture/security.md)
+- [Deployment and operations](architecture/operations.md)
+- [Server-owned Agent platform decision](architecture/0066-server-owned-agent-platform.md)
+- [Roadmap and acceptance](roadmap.md)
 
 ## Development and verification
 

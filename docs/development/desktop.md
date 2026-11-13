@@ -159,8 +159,8 @@ the affected remote binding without transferring the profile.
 
 ## Desktop daemon channel
 
-[ADR 0052](../architecture/0052-daemon-desktop-channel.md) defines the boundary;
-[ADR 0054](../architecture/0054-desktop-execution-recovery.md) defines execution
+ADR 0052 defines the boundary;
+ADR 0054 defines execution
 ownership and recovery.
 Go launches the absolute version-matched CLI with finite `daemon desktop` bootstrap.
 Administrative IPC stays private (Unix socket on POSIX; token-guarded loopback on

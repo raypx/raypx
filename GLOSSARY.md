@@ -21,10 +21,17 @@ A reference available across projects within its local or account ownership scop
 **General Plan / 通用计划**:
 A local automation without a project association, available in global automation management.
 
-**Space / 空间** (planned, [ADR 0065](docs/architecture/0065-spaces-and-sandbox-computers.md)):
-The authorization boundary that holds projects, sessions, memory, automations and computers. A device Space belongs to one local profile; a shared Space belongs to the server and has members.
+**Space / 空间** (target, [spaces](docs/architecture/spaces.md)):
+The authorization boundary that holds Agents, conversations, memory, routines, pages and computers. A Space can have members.
 _Avoid_: Workspace, organization, team as synonyms for Space
 
-**Computer / 电脑** (planned, [ADR 0065](docs/architecture/0065-spaces-and-sandbox-computers.md)):
-The place where a Run's tools execute: the registered device, a Docker container or a hosted sandbox. The Agent runtime stays outside it.
-_Avoid_: Sandbox as a synonym for the host path, which gives no isolation
+**Agent / 智能体** (target, [domain](docs/architecture/domain.md)):
+A persistent identity with instructions, a model choice, one continuing conversation and a computer.
+_Avoid_: Bot, assistant, preset
+
+**Run / 运行** (target, [execution](docs/architecture/execution.md)):
+One unit of Agent work, started by a message, a routine, a trigger or another Agent. A retry or a resume adds an attempt to the same Run.
+
+**Computer / 电脑** (target, [computers](docs/architecture/computers.md)):
+The durable place where a Run's tools execute: a Docker container, a hosted sandbox or a granted device. The Agent runtime stays outside it.
+_Avoid_: Sandbox as a synonym for a granted device, which gives no isolation

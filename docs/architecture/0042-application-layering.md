@@ -2,7 +2,7 @@
 
 Status: Accepted, 2026-11-03. Extends ADRs 0040 and 0041.
 
-Desktop session/API/event transport superseded by [ADR 0052](0052-daemon-desktop-channel.md).
+Desktop session/API/event transport superseded by ADR 0052.
 
 Current implementation (2026-11-09): MyGo/Go owns the native Desktop host;
 the TypeScript CLI/daemon uses embedded stable Bun under
@@ -40,7 +40,7 @@ Its Go host composes an Engine adapter that owns child-process framing and the
 version-matched daemon proxy.
 
 Application services receive persistence ports. AgentStore borrows ProfileStorage's
-single SQLite writer. [ADR 0044](0044-event-sourced-cli-orchestration.md) defines
+single SQLite writer. ADR 0044 defines
 the atomic decision transaction spanning receipts, events, task/request/input/activity
 projections, relay journal/outbox and effect intents. Forgetting and replay retain
 their atomic operations and serialization.

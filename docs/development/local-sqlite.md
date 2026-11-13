@@ -14,7 +14,7 @@ other processes still use separate connections. The database and auxiliaries use
 
 1. The initial migration creates the state, Memory, Agent, Terminal and Pi tables.
 2. The second migration adds the Agent orchestration tables from
-   `schema/orchestration.ts` ([ADR 0044](../architecture/0044-event-sourced-cli-orchestration.md)):
+   `schema/orchestration.ts` (ADR 0044):
    `task_events` (durable non-activity domain events, indexed by binding, task and
    sequence) and `task_effects` (effect intents and their `open`, `done`,
    `failed` or `abandoned` status, indexed by task, status and settle time).

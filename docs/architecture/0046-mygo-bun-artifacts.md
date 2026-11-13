@@ -2,7 +2,7 @@
 
 Status: accepted, 2026-11-06. Supersedes the historical Tauri / Node / pnpm decision.
 
-Desktop session/API/event transport superseded by [ADR 0052](0052-daemon-desktop-channel.md).
+Desktop session/API/event transport superseded by ADR 0052.
 
 Packaging amendment (2026-11-07): [ADR 0047](0047-bun-cli-production-packaging.md)
 formalizes stable Bun 1.4.4 with an embedded runtime and depth-0 bytecode as the

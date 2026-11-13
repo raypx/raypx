@@ -372,6 +372,6 @@ an explicit approval. Unknown tool outcomes block continuation; inspect them and
 start a new session. Closing the CLI or Desktop preserves daemon-owned tasks.
 Use `tasks cancel` to stop them. The TUI continues to manage Jobs.
 
-[ADR 0041](../architecture/0041-provider-capabilities-and-pi.md) lists the command
+ADR 0041 lists the command
 tree, JSON examples, durability limits and the local-only scope. Web remote Pi
 and mobile controls remain later work.

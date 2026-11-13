@@ -2,7 +2,7 @@
 
 Status: accepted; current Desktop host.
 
-Desktop session/API/event transport superseded by [ADR 0052](0052-daemon-desktop-channel.md).
+Desktop session/API/event transport superseded by ADR 0052.
 
 MyGo v0.8.3 hosts the React SPA and native DesktopBridge, and packages the
 standalone Bun CLI. The independent CLI daemon owns execution. Go 1.27.3 builds
