@@ -112,3 +112,18 @@ it("binds wrapped keys to the owner/secret and allows rewrapping without rewriti
   ).resolves.toBe(credential);
   expect(JSON.stringify(rewrapped)).not.toContain(credential);
 });
+
+it("uses the same envelope store for routine secrets with owner and identity binding", async () => {
+  const { sealStoredSecret, openStoredSecret } = await import("./secrets.js");
+  const keys = applicationSecretKeyProvider(applicationKey);
+  const value = "routine-repository-secret-fixture";
+  const sealed = await sealStoredSecret(keys, "owner", "routine-secret", value);
+  expect(JSON.stringify(sealed)).not.toContain(value);
+  await expect(openStoredSecret(keys, "owner", "routine-secret", sealed)).resolves.toBe(value);
+  await expect(openStoredSecret(keys, "other", "routine-secret", sealed)).rejects.toThrow(
+    "SECRET_UNAVAILABLE",
+  );
+  await expect(openStoredSecret(keys, "owner", "other-secret", sealed)).rejects.toThrow(
+    "SECRET_UNAVAILABLE",
+  );
+});

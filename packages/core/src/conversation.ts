@@ -61,7 +61,7 @@ export const runSchema = z
     spaceId: spaceIdSchema,
     conversationId: conversationIdSchema,
     agentId: agentIdSchema,
-    trigger: z.literal("message"),
+    trigger: z.enum(["message", "routine", "webhook", "email"]),
     messageId: messageIdSchema,
     memberAccountId: z.string().min(1).max(128),
     model: agentModelChoiceSchema,
@@ -71,6 +71,17 @@ export const runSchema = z
     startedAt: z.iso.datetime().nullable(),
     firstResponseAt: z.iso.datetime().nullable(),
     finishedAt: z.iso.datetime().nullable(),
+    routineId: z.string().min(1).max(128).nullable().optional(),
+    routineDueAt: z.iso.datetime().nullable().optional(),
+    routineTimezone: z.string().nullable().optional(),
+    inboundProvenance: z
+      .strictObject({
+        kind: z.enum(["webhook", "email", "repository"]),
+        routineId: z.string().min(1).max(128),
+        deliveryId: z.string().min(1).max(200),
+      })
+      .nullable()
+      .optional(),
   })
   .refine(
     (run) => (run.state === "failed") === (run.failureCode !== null),

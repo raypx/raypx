@@ -99,7 +99,8 @@ instructions captured by that transaction.
 It returns ordered `{ event, message? }` entries (only `message.created` carries a hydrated message; `reply.segment` embeds the completed segment), the last returned cursor and
 `hasMore`, or `status: snapshot-required`. Future cursors are rejected.
 `conversations.snapshot` returns Conversation metadata, all current messages, Runs, completed segments and
-a resume cursor from one repeatable-read snapshot. Event retention is indefinite
+a resume cursor while holding the conversation counter across state/cursor reads.
+Reads persist departed-actor cancellation under that same lock. Event retention is indefinite
 by default. The internal `retainAfter` maintenance operation removes only a prefix
 and persists its floor even when no events remain. Message history and retry keys
 remain available. There is no scheduled retention policy in this slice.
@@ -209,3 +210,21 @@ Snapshots add `toolActivity` (at most the newest 100 lifecycle rows, returned in
 start order) and `toolActivityTruncated`. Each row contains the shared summary
 fields, `startedAt`, nullable `finishedAt`, `outcome`, `durationMs` and `exitStatus`.
 This projection survives event retention and contains no tool results.
+
+## Routine events
+
+`routines.events` returns immutable `routine.fired` and `routine.coalesced`
+records from the routine occurrence transaction. Both contain only `id`,
+`spaceId`, `routineId`, `occurrenceId`, `runId`, `conversationId`, `dueAt` and
+`firedAt`, plus `kind`. They are ordered by firing time and ID. A replayed delivery
+returns its original outcome and adds no event. Coalescing links the later
+occurrence to the existing pending Run. These records and structured logs contain
+identifiers and times only. The existing conversation stream still receives the
+normal `message.created` and `run.state` events with no new event variants.
+
+Card event references include `(space_id, conversation_id, run_id, request_id)` and
+point to the same tuple on `approval_requests`. Requests retain their Run actor
+binding after member/account removal; cancellation/resolution changes their state
+and appends events instead of deleting their identity. No deletion convenience
+removes the Space foreign key. Routine events also bind their selected Run to the
+same occurrence through a composite key.

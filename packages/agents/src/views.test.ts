@@ -10,6 +10,7 @@ it("projects SQL dates and the opaque model choice into the domain records", () 
       name: "Helper",
       instructions: "Keep\n whitespace",
       modelId: "chosen-model",
+      allowSharedMemory: false,
       createdAt: date,
       updatedAt: date,
     }),
@@ -19,6 +20,7 @@ it("projects SQL dates and the opaque model choice into the domain records", () 
     name: "Helper",
     instructions: "Keep\n whitespace",
     model: { modelId: "chosen-model" },
+    allowSharedMemory: false,
     createdAt: date.toISOString(),
     updatedAt: date.toISOString(),
   });

@@ -18,7 +18,9 @@
     "./jobs": "./src/jobs.ts",
     "./conversation": "./src/conversation.ts",
     "./computers": "./src/computers.ts",
-    "./approvals": "./src/approvals.ts"
+    "./approvals": "./src/approvals.ts",
+    "./routines": "./src/routines.ts",
+    "./space-memory": "./src/space-memory.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

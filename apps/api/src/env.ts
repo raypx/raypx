@@ -30,6 +30,17 @@ const server = {
   RUN_HEARTBEAT_MS: z.coerce.number().int().min(10).max(60_000).default(5_000),
   RUN_ATTEMPT_TIMEOUT_MS: z.coerce.number().int().min(100).max(86_400_000).default(300_000),
   RUN_BACKUP_MARGIN_MS: z.coerce.number().int().min(1).max(300_000).default(30_000),
+  ROUTINE_EMAIL_RELAY_TOKEN: z
+    .string()
+    .min(32)
+    .max(512)
+    .regex(/^[^\r\n]+$/)
+    .optional(),
+  ROUTINE_EMAIL_DOMAIN: z
+    .string()
+    .max(253)
+    .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/)
+    .optional(),
   ADMIN_EMAILS: z
     .string()
     .default("")
@@ -114,6 +125,21 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
       throw new Error("SANDBOX_SUPERVISOR_TOKEN must be dedicated");
   }
   validateRunTiming(env);
+  if (Boolean(env.ROUTINE_EMAIL_RELAY_TOKEN) !== Boolean(env.ROUTINE_EMAIL_DOMAIN))
+    throw new Error("Routine email requires ROUTINE_EMAIL_RELAY_TOKEN and ROUTINE_EMAIL_DOMAIN");
+  if (env.ROUTINE_EMAIL_RELAY_TOKEN) {
+    const token = env.ROUTINE_EMAIL_RELAY_TOKEN;
+    for (const [key, value] of Object.entries(runtimeEnv)) {
+      if (
+        key !== "ROUTINE_EMAIL_RELAY_TOKEN" &&
+        value &&
+        (value === token || value.includes(JSON.stringify(token)))
+      )
+        throw new Error("ROUTINE_EMAIL_RELAY_TOKEN must be dedicated");
+    }
+    if ([env.AUTH_SECRET, env.APP_KEY].includes(token))
+      throw new Error("ROUTINE_EMAIL_RELAY_TOKEN must be dedicated");
+  }
   if (env.NODE_ENV === "production") {
     if (
       !runtimeEnv.DATABASE_URL ||
@@ -187,6 +213,7 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
       RUN_HEARTBEAT_MS: server.RUN_HEARTBEAT_MS,
       RUN_ATTEMPT_TIMEOUT_MS: server.RUN_ATTEMPT_TIMEOUT_MS,
       RUN_BACKUP_MARGIN_MS: server.RUN_BACKUP_MARGIN_MS,
+      ROUTINE_EMAIL_DOMAIN: server.ROUTINE_EMAIL_DOMAIN,
     },
   });
   validateRunTiming(environment);

@@ -62,6 +62,8 @@ export interface ExecutionRun extends Run {
   connectionId: string | null;
   computerId: string | null;
   computerGeneration: number | null;
+  allowSharedMemory?: boolean;
+  untrustedInput?: boolean;
 }
 export class StaleRunFenceError extends Error {
   constructor() {
@@ -82,6 +84,13 @@ export interface RunCheckpoint {
   completed: boolean;
   /** Snapshot for inspection; effect rows remain authoritative for replay. */
   openEffects?: string[];
+  untrustedInput?: boolean;
+  memory?: {
+    revisions: Array<{ documentId: string; revision: number }>;
+    context: string;
+    untrustedInput: boolean;
+  };
+  routineTiming?: { dueAt: string; startedAt: string; timezone: string; annotation: string };
 }
 export interface RunExecution {
   /** Fresh admission for the Run's initiating member, independent of who woke it. */

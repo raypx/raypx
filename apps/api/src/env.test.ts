@@ -137,3 +137,26 @@ it.each(["GOOGLE", "GITHUB"] as const)("requires complete %s OAuth credentials",
     ],
   ).toBeUndefined();
 });
+
+it("requires a dedicated paired email relay credential without parsing it in the worker", () => {
+  const token = "routine-relay-fixture-token-dedicated-32-characters";
+  expect(getApiEnvironment({}).ROUTINE_EMAIL_RELAY_TOKEN).toBeUndefined();
+  expect(() => getApiEnvironment({ ROUTINE_EMAIL_RELAY_TOKEN: token })).toThrow(
+    "Routine email requires",
+  );
+  expect(() => getApiEnvironment({ ROUTINE_EMAIL_DOMAIN: "mail.example.test" })).toThrow(
+    "Routine email requires",
+  );
+  const input = { ROUTINE_EMAIL_RELAY_TOKEN: token, ROUTINE_EMAIL_DOMAIN: "mail.example.test" };
+  expect(getApiEnvironment(input).ROUTINE_EMAIL_DOMAIN).toBe("mail.example.test");
+  expect(() => getApiEnvironment({ ...input, APP_KEY: token })).toThrow("must be dedicated");
+  expect(() => getApiEnvironment({ ...input, SANDBOX_SUPERVISOR_TOKEN: token })).toThrow(
+    "must be dedicated",
+  );
+  expect(() =>
+    getApiEnvironment({ ...input, AGENT_MODEL_CREDENTIALS: JSON.stringify({ model: token }) }),
+  ).toThrow("must be dedicated");
+  const worker = getWorkerEnvironment({ ...input, ROUTINE_EMAIL_RELAY_TOKEN: "invalid" });
+  expect(worker).not.toHaveProperty("ROUTINE_EMAIL_RELAY_TOKEN");
+  expect(worker.ROUTINE_EMAIL_DOMAIN).toBe("mail.example.test");
+});

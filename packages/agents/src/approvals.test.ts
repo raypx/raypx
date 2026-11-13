@@ -533,3 +533,46 @@ it("advances the settings revision when an approval remembers a new Allow rule",
     }),
   ).rejects.toMatchObject({ code: "APPROVAL_SETTINGS_CONFLICT", settings: current });
 });
+
+it.each(["webhook", "email", "repository"] as const)(
+  "requires approval for %s input despite an Allow rule",
+  async (kind) => {
+    const { service, requests } = fixture();
+    await service.updateSettings("owner", {
+      expectedRevision: 0,
+      mode: "ask",
+      rules: [{ toolName: write.name, executable: null, decision: "allow" }],
+    });
+    const inbound: ExecutionRun = {
+      ...run,
+      inboundProvenance: { kind, routineId: "routine", deliveryId: "delivery" },
+    };
+    const pending = service.authorize(scope, inbound, write, new AbortController().signal);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(requests.size).toBe(1);
+    await service.answer(scope, [...requests.values()][0]!.id, {
+      decision: "approved",
+      allowTool: true,
+    });
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await pending).toBe("approved");
+    const again = service.authorize(
+      scope,
+      inbound,
+      { ...write, id: "again" },
+      new AbortController().signal,
+    );
+    await vi.advanceTimersByTimeAsync(1);
+    expect(requests.size).toBe(2);
+    await vi.advanceTimersByTimeAsync(21);
+    expect(await again).toBe("expired");
+    await service.updateSettings("owner", {
+      expectedRevision: (await service.getSettings("owner")).revision,
+      mode: "never",
+      rules: [],
+    });
+    expect(await service.authorize(scope, inbound, write, new AbortController().signal)).toBe(
+      "approved",
+    );
+  },
+);

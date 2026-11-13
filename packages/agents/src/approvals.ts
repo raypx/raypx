@@ -148,14 +148,16 @@ function matchingRule(rule: ApprovalRule, call: ApprovalCall) {
   if (rule.toolName !== call.name) return false;
   return rule.executable === (call.executable ?? null);
 }
-function disposition(
-  settings: ApprovalSettings,
+export function approvalDisposition(
+  settings: { mode: ApprovalSettings["mode"] | "auto"; rules: ApprovalRule[] },
   call: ApprovalCall,
+  untrustedInput = false,
 ): "approved" | "blocked" | "ask" {
   const rules = settings.rules.filter((rule) => matchingRule(rule, call));
   if (rules.some((rule) => rule.decision === "block")) return "blocked";
-  if (!call.changes || settings.mode === "never" || rules.some((rule) => rule.decision === "allow"))
-    return "approved";
+  if (!call.changes || settings.mode === "never") return "approved";
+  if (untrustedInput) return "ask";
+  if (rules.some((rule) => rule.decision === "allow")) return "approved";
   return "ask";
 }
 function canonicalJson(value: unknown): string {
@@ -261,7 +263,11 @@ export function createApprovalsService(
     listEffects: (scope, runId) => repository.listEffects(scope, runId, now()),
     async authorize(scope, run, call, signal) {
       if (signal.aborted) return "cancelled";
-      const action = disposition(await settings(run.memberAccountId), call);
+      const action = approvalDisposition(
+        await settings(run.memberAccountId),
+        call,
+        run.untrustedInput || Boolean(run.inboundProvenance),
+      );
       if (action !== "ask") return action;
       const createdAt = now();
       const request = await repository.createRequest(
@@ -287,7 +293,11 @@ export function createApprovalsService(
       // A member may have blocked the action while the request was open.
       if (
         current.state === "approved" &&
-        disposition(await settings(run.memberAccountId), call) === "blocked"
+        approvalDisposition(
+          await settings(run.memberAccountId),
+          call,
+          run.untrustedInput || Boolean(run.inboundProvenance),
+        ) === "blocked"
       )
         return "blocked";
       if (current.state === "pending") throw new Error("INVALID_APPROVAL_STATE");
@@ -295,7 +305,13 @@ export function createApprovalsService(
     },
     async executeEffect(scope, run, call, operation, signal) {
       if (signal.aborted) return computerToolResult("cancelled", "The action was cancelled.");
-      if (disposition(await settings(run.memberAccountId), call) === "blocked")
+      if (
+        approvalDisposition(
+          await settings(run.memberAccountId),
+          call,
+          run.untrustedInput || Boolean(run.inboundProvenance),
+        ) === "blocked"
+      )
         return computerToolResult("refused", "BLOCKED");
       const argumentHash = await digest(canonicalJson(call.arguments));
       const key = await digest(canonicalJson([run.id, call.id, call.name, argumentHash]));

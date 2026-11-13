@@ -15,6 +15,9 @@ import {
   conversationRuns as runs,
   conversationToolCalls as toolCalls,
   computers as computerRows,
+  routineIdentities,
+  spaceMemoryDocuments,
+  spaceMemoryRevisions,
   spaceMembers,
   spaces,
   user,
@@ -774,4 +777,126 @@ it("starts all pending calls in the model checkpoint transaction and cancels une
   expect(page.events.filter(({ event }) => event.kind === "tool.started")).toHaveLength(2);
   expect(page.events.filter(({ event }) => event.kind === "tool.finished")).toHaveLength(2);
   expect(JSON.stringify(activity)).not.toContain("private-not-in-activity");
+});
+
+async function seedMemorySource(run: ExecutionRun, documentId: string, revision: number) {
+  const timestamp = new Date();
+  const body = {
+    id: documentId,
+    spaceId: run.spaceId,
+    scope: "agent" as const,
+    agentId: run.agentId,
+    title: "Pinned fixture",
+    text: "Pinned fixture content",
+    pinned: false,
+    removed: false,
+    revision,
+    attribution: { speaker: null, source: null },
+    provenance: {
+      kind: "member",
+      accountId: run.memberAccountId,
+      runId: null,
+      untrustedInput: false,
+    },
+    createdAt: timestamp.toISOString(),
+    updatedAt: timestamp.toISOString(),
+  };
+  await first.db.insert(spaceMemoryDocuments).values({
+    ...body,
+    authorAccountId: run.memberAccountId,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+  for (let number = 1; number <= revision; number++) {
+    const reason = number === 1 ? "created" : "edited";
+    await first.db.insert(spaceMemoryRevisions).values({
+      spaceId: run.spaceId,
+      documentId,
+      revision: number,
+      reason,
+      body: { ...body, revision: number, reason },
+      createdAt: timestamp,
+    });
+  }
+}
+
+it("pins the routine due time and private untrusted context at the original first start", async () => {
+  await send("Saved routine prompt");
+  const dueAt = new Date("2026-11-14T00:00:00.000Z");
+  const firstStart = new Date("2026-11-14T00:15:00.000Z");
+  await first.db
+    .insert(routineIdentities)
+    .values({ spaceId: scope.spaceId, id: "routine-fixture" });
+  await first.db
+    .update(runs)
+    .set({
+      trigger: "webhook",
+      routineId: "routine-fixture",
+      routineDueAt: dueAt,
+      routineTimezone: "Asia/Shanghai",
+      inboundProvenance: {
+        kind: "webhook",
+        routineId: "routine-fixture",
+        deliveryId: "delivery-fixture",
+      },
+      inboundContent: JSON.stringify({ source: "webhook", content: { text: "external input" } }),
+    })
+    .where(and(eq(runs.spaceId, scope.spaceId), eq(runs.conversationId, id)));
+  const clocked = createConversationsRepository(first.db, undefined, { now: () => firstStart });
+  const execution = (await clocked.claimNext(scope, id, claim))!;
+  expect(execution.run.untrustedInput).toBe(true);
+  expect(execution.history.some((entry) => entry.text.includes("Untrusted inbound context"))).toBe(
+    true,
+  );
+  expect(execution.history.some((entry) => entry.text.includes("external input"))).toBe(true);
+  expect(await clocked.executionStarted(scope, execution.run)).toBe(firstStart.toISOString());
+  await seedMemorySource(execution.run, "pinned", 2);
+  await clocked.saveCheckpoint(scope, execution.run, {
+    ...execution.checkpoint,
+    memory: {
+      revisions: [{ documentId: "pinned", revision: 2 }],
+      context: "Pinned context",
+      untrustedInput: true,
+    },
+  });
+  await clocked.release(scope, execution.run);
+  const resumed = (await competitor.claimNext(scope, id, { ...claim, ownerId: "fixture-b" }))!;
+  expect(resumed.run.routineDueAt).toBe(dueAt.toISOString());
+  expect(await competitor.executionStarted(scope, resumed.run)).toBe(firstStart.toISOString());
+  expect(resumed.checkpoint.memory?.revisions).toEqual([{ documentId: "pinned", revision: 2 }]);
+  expect(resumed.history).toEqual(execution.history);
+  const snapshot = await competitor.snapshot(scope, id);
+  expect(snapshot.messages.map((message) => message.text)).toEqual(["Saved routine prompt"]);
+  expect(JSON.stringify(snapshot)).not.toContain("external input");
+  await competitor.stop(scope, id, resumed.run.id);
+});
+
+it("keeps untrusted recalled-memory provenance on subsequent conversation Runs", async () => {
+  await send("First prompt");
+  const initial = (await writer.claimNext(scope, id, claim))!;
+  await writer.executionStarted(scope, initial.run);
+  await seedMemorySource(initial.run, "removed-memory", 1);
+  await writer.commitTurn(scope, initial.run, {
+    checkpoint: {
+      ...initial.checkpoint,
+      completed: true,
+      memory: {
+        revisions: [{ documentId: "removed-memory", revision: 1 }],
+        context: "untrusted prior memory",
+        untrustedInput: true,
+      },
+    },
+    segmentId: crypto.randomUUID(),
+    text: "Reply derived from recalled context",
+    firstResponseAt: new Date().toISOString(),
+  });
+  await writer.finish(scope, initial.run, null);
+  await send("Second prompt after source memory removal");
+  const next = (await competitor.claimNext(scope, id, { ...claim, ownerId: "fixture-b" }))!;
+  expect(next.run.untrustedInput).toBe(true);
+  expect(next.checkpoint.untrustedInput).toBe(true);
+  expect(next.history.some((entry) => entry.text === "Reply derived from recalled context")).toBe(
+    true,
+  );
+  await competitor.stop(scope, id, next.run.id);
 });

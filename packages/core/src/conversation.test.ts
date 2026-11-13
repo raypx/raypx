@@ -70,7 +70,7 @@ it("models only current Run states and pins opaque model/member identity without
   expect(runSchema.parse({ ...base, state: "waiting" }).state).toBe("waiting");
   for (const change of [
     { state: "recovering" },
-    { trigger: "routine" },
+    { trigger: "unsupported" },
     { apiKey: "secret" },
     { state: "failed", failureCode: "raw provider failure" },
     { state: "failed" },
@@ -80,6 +80,8 @@ it("models only current Run states and pins opaque model/member identity without
   expect(
     runSchema.safeParse({ ...base, state: "failed", failureCode: "MODEL_UNAVAILABLE" }).success,
   ).toBe(true);
+  for (const trigger of ["routine", "webhook", "email"])
+    expect(runSchema.safeParse({ ...base, trigger }).success).toBe(true);
 });
 it("accepts completed reply and run state events while rejecting reasoning and placeholders", () => {
   const base = {

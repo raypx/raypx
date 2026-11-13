@@ -43,12 +43,12 @@ space_id. Restrictive owner foreign keys prevent silent resource orphaning.
 `computer.state` joins the existing conversation event counter/payload convention.
 
 `approval_settings` and exact-tool/executable `approval_rules` are account-owned.
-`approval_requests` references its Run and addressed/answering members through
-same-Space foreign keys; `conversation_effects` records a hashed intent and bounded
+`approval_requests` references its Run and binds addressed/answering account IDs to
+that Run's historical actor through same-Space composite foreign keys; `conversation_effects` records a hashed intent and bounded
 outcome with the same Run boundary. Card event references include Space and
-Conversation. Requests cascade with addressed/answering memberships and their Run;
-effects cascade with their Run. Run actor identity references the account, so
-membership removal does not erase Run/effect history. The active Run index includes
+Conversation. Requests and effects cascade with their Run, not with current memberships.
+Member/account removal cancels active Runs/requests and retains their history;
+current membership still gates request admission and execution fences. The active Run index includes
 `waiting` as well as `running`.
 
 Durable Runs add lease owner/expiry, monotonically increasing fences and immutable
@@ -144,3 +144,21 @@ coupling, result classification, access control and long-term retention. Time an
 identity indexes support cursor queries. `user.created_at` indexes registration trends.
 
 - Better Auth owns the passkey and two-factor records. Apply foundation migrations before enabling clients that use them.
+
+`routines`, occurrences, deliveries and routine event metadata are Space-owned;
+owner membership, Agent and Space removal cascade active definitions and their
+credentials. `routine_identities` retains only Space/ID/time tombstones until Space
+deletion. Active definitions and Run source IDs (including the generated inbound
+JSON source ID) reference those tombstones with actual `space_id` composite FKs.
+Routine events bind both their Run and their occurrence/Run tuple. Card events
+retain a composite request FK including Space, Conversation and Run; requests
+remain cancelled/resolved rows after their member/account disappears.
+
+`space_memory_documents` and immutable revisions use same-Space Agent/document
+keys; revision JSON identity must match its row. Shared knowledge survives author
+membership removal, and author account deletion sets the nullable global-user FK
+to null. Message/Run actor account IDs are historical deployment identities, not
+membership grants. `conversation_run_memory_pins` binds the checkpoint and exact
+memory revision with two Space-scoped FKs. Logical memory removal retains pins;
+physical source deletion cascades only pin relations, preserving accepted context.
+Checkpoint JSON cannot contain copied pin arrays. All tables are exposed by `/schema`.

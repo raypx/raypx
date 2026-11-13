@@ -27,6 +27,8 @@ import { agentApprovalsContract } from "./approvals.js";
 import { jobsContract } from "./jobs.js";
 export * from "./jobs.js";
 import { memoryContract } from "./memory.js";
+import { routinesContract } from "./routines.js";
+import { spaceMemoryContract } from "./space-memory.js";
 import { conversationsContract } from "./conversation.js";
 export * from "./conversation.js";
 import { spacesContract, agentsContract, computersContract } from "./spaces.js";
@@ -59,6 +61,8 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  routines: routinesContract,
+  spaceMemory: spaceMemoryContract,
   modelConnections: modelConnectionsContract,
   computers: computersContract,
   spaces: spacesContract,

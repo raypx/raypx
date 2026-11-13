@@ -4,6 +4,12 @@ import type { EventPolicyOptions } from "@raypx/logger/safe";
 const API_LOG_FIELDS = [
   "operation",
   "runId",
+  "spaceId",
+  "routineId",
+  "occurrenceId",
+  "conversationId",
+  "dueAt",
+  "firedAt",
   "requestId",
   "method",
   "route",

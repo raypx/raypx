@@ -29,6 +29,8 @@ interface RunTimingFields {
   totalMs?: number;
 }
 interface ApiEventFields {
+  "routine.fired": RoutineEventFields;
+  "routine.coalesced": RoutineEventFields;
   "run.execution_started": RunTimingFields;
   "run.first_response": RunTimingFields;
   "run.finished": RunTimingFields;
@@ -62,6 +64,17 @@ interface ApiEventFields {
     };
   };
 }
+interface RoutineEventFields {
+  status: number;
+  code: string;
+  spaceId: string;
+  routineId: string;
+  occurrenceId: string;
+  runId: string;
+  conversationId: string;
+  dueAt: string;
+  firedAt: string;
+}
 type ApiOperation = keyof ApiEventFields;
 type ApiEventStart =
   | ({ operation: "http.request" | "rpc.request" } & Pick<
@@ -76,7 +89,9 @@ type ApiEventStart =
         | "run.execution"
         | "run.execution_started"
         | "run.first_response"
-        | "run.finished";
+        | "run.finished"
+        | "routine.fired"
+        | "routine.coalesced";
     };
 
 export interface ApiEventLogger<Operation extends ApiOperation> {

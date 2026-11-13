@@ -9,6 +9,7 @@ import {
   conversationEvents as events,
   conversationRuns as runs,
   conversations,
+  spaceMembers,
 } from "@raypx/database/schema";
 import {
   approvalRequestSchema,
@@ -373,6 +374,19 @@ export function createApprovalsRepository(
     },
     async answer(scope, id, answer, now) {
       const result = await db.transaction(async (tx) => {
+        // Historical requests survive revocation; the answering member must still
+        // exist now. Hold the membership through the decision transaction.
+        const [member] = await tx
+          .select({ accountId: spaceMembers.accountId })
+          .from(spaceMembers)
+          .where(
+            and(
+              eq(spaceMembers.spaceId, scope.spaceId),
+              eq(spaceMembers.accountId, scope.member.accountId),
+            ),
+          )
+          .for("key share");
+        if (!member) throw new SpaceNotFound();
         const before = await findRequest(tx, scope, id);
         if (before.memberAccountId !== scope.member.accountId)
           throw new ApprovalOperationError("NOT_ADDRESSED");

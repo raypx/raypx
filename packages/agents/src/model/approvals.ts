@@ -43,6 +43,8 @@ export function approvalExtraSummary(
     computer_read_file: ["Read file", "Read a file", "读取文件"],
     computer_write_file: ["Write file", "Write a file", "写入文件"],
     computer_run_command: ["Run command", "Run a command", "运行命令"],
+    agent_memory_save: ["Save memory", "保存记忆"],
+    agent_memory_update: ["Update memory", "更新记忆"],
   };
   const summary = card.argumentSummary.trim();
   const redundant = labels[card.toolName].some(

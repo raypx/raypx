@@ -686,7 +686,7 @@ it("deletes a Space containing pending/resolved requests and effect history", as
     );
 });
 
-it("removes a member's requests while retaining the Space and Run/effect history", async () => {
+it("retains and cancels a departed member's requests with Space and Run/effect history", async () => {
   const { conversation } = await createAgentsRepository(first.db).create(other, {
     name: "Member helper",
     instructions: "",
@@ -716,6 +716,7 @@ it("removes a member's requests while retaining the Space and Run/effect history
     await first.db
       .delete(spaceMembers)
       .where(and(eq(spaceMembers.spaceId, other.spaceId), eq(spaceMembers.accountId, member)));
+    await conversations.getRun(scope, conversation.id, execution.run.id);
     expect(
       await first.db
         .select()
@@ -723,7 +724,7 @@ it("removes a member's requests while retaining the Space and Run/effect history
         .where(
           and(eq(approvalRequests.spaceId, other.spaceId), eq(approvalRequests.id, request.id)),
         ),
-    ).toEqual([]);
+    ).toEqual([expect.objectContaining({ id: request.id, state: "cancelled" })]);
     expect((await access.resolve(owner, scope.spaceId)).spaceId).toBe(scope.spaceId);
     await expect(access.resolve(member, other.spaceId)).rejects.toThrow("not found");
     expect(
@@ -855,4 +856,42 @@ it("cascades revisioned approval settings and rules when their account is delete
   } finally {
     await first.db.delete(user).where(eq(user.id, accountId));
   }
+});
+
+it("binds request actors and card references to the same Run within a Space", async () => {
+  await expect(
+    first.db.insert(approvalRequests).values({
+      spaceId: scope.spaceId,
+      conversationId: run.conversationId,
+      id: crypto.randomUUID(),
+      runId: run.id,
+      memberAccountId: member,
+      toolCallId: "wrong-actor",
+      toolName: call.name,
+      arguments: call.arguments,
+      argumentSummary: call.argumentSummary,
+      target: call.target,
+      createdAt,
+      expiresAt,
+    }),
+  ).rejects.toMatchObject({ cause: { code: "23503" } });
+  const request = await approvals.createRequest(scope, run, call, expiresAt, createdAt);
+  await conversations.stop(scope, run.conversationId, run.id);
+  await conversations.send(scope, run.conversationId, {
+    text: "Another Run",
+    idempotencyKey: crypto.randomUUID(),
+  });
+  const anotherRun = (await conversations.claimNext(scope, run.conversationId, claimOptions))!.run;
+  const snapshot = await conversations.snapshot(scope, run.conversationId);
+  await expect(
+    first.db.insert(conversationEvents).values({
+      spaceId: scope.spaceId,
+      conversationId: run.conversationId,
+      sequence: snapshot.cursor + 1,
+      kind: "card.created",
+      runId: anotherRun.id,
+      requestId: request.id,
+      data: { toolName: call.name, argumentSummary: call.argumentSummary },
+    }),
+  ).rejects.toMatchObject({ cause: { code: "23503" } });
 });

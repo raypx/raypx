@@ -16,7 +16,14 @@ import type { AgentConversation, AgentsRepository } from "../server.js";
 import { agentView, conversationView } from "../views.js";
 function values(input: AgentInput) {
   const parsed = agentInputSchema.parse(input);
-  return { name: parsed.name, instructions: parsed.instructions, modelId: parsed.model.modelId };
+  return {
+    name: parsed.name,
+    instructions: parsed.instructions,
+    modelId: parsed.model.modelId,
+    ...(parsed.allowSharedMemory === undefined
+      ? {}
+      : { allowSharedMemory: parsed.allowSharedMemory }),
+  };
 }
 type AgentDatabase = Pick<Database, "select" | "insert" | "update" | "delete" | "transaction">;
 export function createAgentsRepository(db: AgentDatabase): AgentsRepository {

@@ -53,7 +53,8 @@ const schemas = {
     cwd: safePath,
   }),
 };
-const descriptions: Record<ComputerToolName, string> = {
+type NativeComputerToolName = keyof typeof schemas;
+const descriptions: Record<NativeComputerToolName, string> = {
   computer_list_files: "List files in a directory relative to the computer workspace. Read only.",
   computer_read_file: "Read a UTF-8 file relative to the computer workspace. Read only.",
   computer_write_file:
@@ -62,7 +63,7 @@ const descriptions: Record<ComputerToolName, string> = {
     "Run an executable with argv and a workspace-relative cwd. No implicit shell. This is a change.",
 };
 /** Parameters and runtime validation share these schemas. Pi receives plain JSON Schema only. */
-const definitions: Tool[] = (Object.keys(schemas) as ComputerToolName[]).map((name) => ({
+const definitions: Tool[] = (Object.keys(schemas) as NativeComputerToolName[]).map((name) => ({
   name,
   description: descriptions[name],
   parameters: z.toJSONSchema(schemas[name]),
@@ -242,7 +243,7 @@ export function createComputerTools(
       throw new ComputerToolsError("INVALID_ARGUMENTS");
     if (containsSecret([call.id, call.name, call.arguments], secrets()))
       throw new ComputerToolsError("SECRET_INPUT");
-    const name = call.name as ComputerToolName;
+    const name = call.name as NativeComputerToolName;
     const parsed = schemas[name].safeParse(call.arguments);
     if (!parsed.success) throw new ComputerToolsError("INVALID_ARGUMENTS");
     const args = parsed.data;

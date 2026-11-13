@@ -8,6 +8,8 @@ export const computerToolNameSchema = z.enum([
   "computer_read_file",
   "computer_write_file",
   "computer_run_command",
+  "agent_memory_save",
+  "agent_memory_update",
 ]);
 export type ComputerToolName = z.infer<typeof computerToolNameSchema>;
 export const approvalModeSchema = z.enum(["ask", "never"]);

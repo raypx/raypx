@@ -151,14 +151,24 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       conversationModels,
       agentApprovals,
       modelConnections,
+      routines,
+      spaceMemory,
+      routineWorker,
     } = await composeAgents(db, environment, logger, resources.createModels);
     lifecycle.own(() => runner.close());
+    lifecycle.own(() => routineWorker.close());
     const conversations = runner.conversations;
     return {
+      routines,
+      spaceMemory,
+      routineWorker,
       modelConnections,
       agentApprovals,
       runner,
-      stopClaiming: () => runner.stopClaiming(),
+      stopClaiming: () => {
+        routineWorker.stop();
+        runner.stopClaiming();
+      },
       computers,
       spaces,
       liveReplies: runner.live,
@@ -182,6 +192,11 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        routines,
+        spaceMemory,
+        ...(environment.ROUTINE_EMAIL_RELAY_TOKEN
+          ? { routineEmailRelayToken: environment.ROUTINE_EMAIL_RELAY_TOKEN }
+          : {}),
         modelConnections,
         agentApprovals,
         computers,

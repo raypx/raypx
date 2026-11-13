@@ -375,3 +375,11 @@ Audit records survive account deletion and are never removed by cleanup jobs.
 
 Existing explicit SERVER_ROLE=both remains a combined API/worker/Relay process;
 all is the default for new configurations. No role requires Redis for Durable Runs.
+
+Phase 4 composes `@raypx/jobs/routines` and `@raypx/memory/space-server` beside
+retained account/device services. Routine ingress mounts `/routines` with bearer,
+relay or HMAC admission independent of account sessions. Only explicit worker
+start scans schedules; shutdown stops scans and drains before runner/storage.
+Email requires paired `ROUTINE_EMAIL_RELAY_TOKEN` and `ROUTINE_EMAIL_DOMAIN`;
+the token is dedicated and never reaches a worker. Memory tools share the existing
+approval/effect pipeline and secret guards, with stale execution fences propagated.

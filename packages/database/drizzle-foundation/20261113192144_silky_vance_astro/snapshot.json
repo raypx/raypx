@@ -1,0 +1,4298 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "62bb752b-9a49-4960-bd1d-16ba8ae545dc",
+  "prevIds": [
+    "3fb7541f-daa3-45f7-92ba-b1b91b829221"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_run_memory_pins"
+      ],
+      "writes": [
+        "s|tbl|public.conversation_run_memory_pins",
+        "n|tbl|public.conversation_run_memory_pins",
+        "e|tbl|public.conversation_run_memory_pins",
+        "n|rel|public.conversation_run_memory_pins",
+        "n|type|public.conversation_run_memory_pins",
+        "n|rel|public.conversation_run_memory_pins_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_deliveries"
+      ],
+      "writes": [
+        "s|tbl|public.routine_deliveries",
+        "n|tbl|public.routine_deliveries",
+        "e|tbl|public.routine_deliveries",
+        "n|rel|public.routine_deliveries",
+        "n|type|public.routine_deliveries",
+        "n|rel|public.routine_deliveries_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_events"
+      ],
+      "writes": [
+        "s|tbl|public.routine_events",
+        "n|tbl|public.routine_events",
+        "e|tbl|public.routine_events",
+        "n|rel|public.routine_events",
+        "n|type|public.routine_events",
+        "n|rel|public.routine_events_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_identities"
+      ],
+      "writes": [
+        "s|tbl|public.routine_identities",
+        "n|tbl|public.routine_identities",
+        "e|tbl|public.routine_identities",
+        "n|rel|public.routine_identities",
+        "n|type|public.routine_identities",
+        "n|rel|public.routine_identities_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_occurrences"
+      ],
+      "writes": [
+        "s|tbl|public.routine_occurrences",
+        "n|tbl|public.routine_occurrences",
+        "e|tbl|public.routine_occurrences",
+        "n|rel|public.routine_occurrences",
+        "n|type|public.routine_occurrences",
+        "n|rel|public.routine_occurrences_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_secrets"
+      ],
+      "writes": [
+        "s|tbl|public.routine_secrets",
+        "n|tbl|public.routine_secrets",
+        "e|tbl|public.routine_secrets",
+        "n|rel|public.routine_secrets",
+        "n|type|public.routine_secrets",
+        "n|rel|public.routine_secrets_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "routines"
+      ],
+      "writes": [
+        "s|tbl|public.routines",
+        "n|tbl|public.routines",
+        "e|tbl|public.routines",
+        "n|rel|public.routines",
+        "n|type|public.routines",
+        "n|rel|public.routines_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_memory_documents"
+      ],
+      "writes": [
+        "s|tbl|public.space_memory_documents",
+        "n|tbl|public.space_memory_documents",
+        "e|tbl|public.space_memory_documents",
+        "n|rel|public.space_memory_documents",
+        "n|type|public.space_memory_documents",
+        "n|rel|public.space_memory_documents_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_memory_revisions"
+      ],
+      "writes": [
+        "s|tbl|public.space_memory_revisions",
+        "n|tbl|public.space_memory_revisions",
+        "e|tbl|public.space_memory_revisions",
+        "n|rel|public.space_memory_revisions",
+        "n|type|public.space_memory_revisions",
+        "n|rel|public.space_memory_revisions_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|fk|public.approval_requests.approval_requests_du9yIpRRl4yk_fkey",
+        "n|fk|public.approval_requests.approval_requests_du9yIpRRl4yk_fkey",
+        "e|fk|public.approval_requests.approval_requests_du9yIpRRl4yk_fkey",
+        "n|con|public.approval_requests.approval_requests_du9yIpRRl4yk_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "e|col|public.approval_requests.space_id",
+        "e|col|public.approval_requests.member_account_id"
+      ]
+    },
+    {
+      "statementType": "drop_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|fk|public.approval_requests.approval_requests_M53VVasRkDeT_fkey",
+        "n|fk|public.approval_requests.approval_requests_M53VVasRkDeT_fkey",
+        "e|fk|public.approval_requests.approval_requests_M53VVasRkDeT_fkey",
+        "n|con|public.approval_requests.approval_requests_M53VVasRkDeT_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "e|col|public.approval_requests.space_id",
+        "e|col|public.approval_requests.answered_by_account_id"
+      ]
+    },
+    {
+      "statementType": "drop_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|fk|public.conversation_events.conversation_events_rlsvR6Oi5yJY_fkey",
+        "n|fk|public.conversation_events.conversation_events_rlsvR6Oi5yJY_fkey",
+        "e|fk|public.conversation_events.conversation_events_rlsvR6Oi5yJY_fkey",
+        "n|con|public.conversation_events.conversation_events_rlsvR6Oi5yJY_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "e|col|public.conversation_events.space_id",
+        "e|col|public.conversation_events.conversation_id",
+        "e|col|public.conversation_events.request_id"
+      ]
+    },
+    {
+      "statementType": "drop_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_runs"
+      ],
+      "writes": [
+        "s|fk|public.conversation_runs.conversation_runs_member_account_id_user_id_fkey",
+        "n|fk|public.conversation_runs.conversation_runs_member_account_id_user_id_fkey",
+        "e|fk|public.conversation_runs.conversation_runs_member_account_id_user_id_fkey",
+        "n|con|public.conversation_runs.conversation_runs_member_account_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "e|col|public.conversation_runs.member_account_id"
+      ]
+    },
+    {
+      "statementType": "drop_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_messages"
+      ],
+      "writes": [
+        "s|fk|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey",
+        "n|fk|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey",
+        "e|fk|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey",
+        "n|con|public.conversation_messages.conversation_messages_author_account_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "e|col|public.conversation_messages.author_account_id"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "agents",
+        "allow_shared_memory"
+      ],
+      "writes": [
+        "s|col|public.agents.allow_shared_memory",
+        "n|col|public.agents.allow_shared_memory",
+        "e|col|public.agents.allow_shared_memory"
+      ],
+      "reads": [
+        "n|tbl|public.agents",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_runs",
+        "routine_id"
+      ],
+      "writes": [
+        "s|col|public.conversation_runs.routine_id",
+        "n|col|public.conversation_runs.routine_id",
+        "e|col|public.conversation_runs.routine_id"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_runs",
+        "routine_due_at"
+      ],
+      "writes": [
+        "s|col|public.conversation_runs.routine_due_at",
+        "n|col|public.conversation_runs.routine_due_at",
+        "e|col|public.conversation_runs.routine_due_at"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_runs",
+        "routine_timezone"
+      ],
+      "writes": [
+        "s|col|public.conversation_runs.routine_timezone",
+        "n|col|public.conversation_runs.routine_timezone",
+        "e|col|public.conversation_runs.routine_timezone"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_runs",
+        "inbound_content"
+      ],
+      "writes": [
+        "s|col|public.conversation_runs.inbound_content",
+        "n|col|public.conversation_runs.inbound_content",
+        "e|col|public.conversation_runs.inbound_content"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_runs",
+        "inbound_provenance"
+      ],
+      "writes": [
+        "s|col|public.conversation_runs.inbound_provenance",
+        "n|col|public.conversation_runs.inbound_provenance",
+        "e|col|public.conversation_runs.inbound_provenance"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_runs",
+        "inbound_routine_id"
+      ],
+      "writes": [
+        "s|col|public.conversation_runs.inbound_routine_id",
+        "n|col|public.conversation_runs.inbound_routine_id",
+        "e|col|public.conversation_runs.inbound_routine_id"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "approval_requests",
+        "approval_requests_event_ref_idx"
+      ],
+      "writes": [
+        "s|idx|public.approval_requests_event_ref_idx",
+        "n|idx|public.approval_requests_event_ref_idx",
+        "e|idx|public.approval_requests_event_ref_idx",
+        "n|rel|public.approval_requests_event_ref_idx"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.approval_requests.space_id",
+        "n|col|public.approval_requests.conversation_id",
+        "n|col|public.approval_requests.run_id",
+        "n|col|public.approval_requests.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_run_memory_pins",
+        "conversation_run_memory_pins_position_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_run_memory_pins_position_idx",
+        "n|idx|public.conversation_run_memory_pins_position_idx",
+        "e|idx|public.conversation_run_memory_pins_position_idx",
+        "n|rel|public.conversation_run_memory_pins_position_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_run_memory_pins",
+        "n|sch|public",
+        "n|col|public.conversation_run_memory_pins.space_id",
+        "n|col|public.conversation_run_memory_pins.conversation_id",
+        "n|col|public.conversation_run_memory_pins.run_id",
+        "n|col|public.conversation_run_memory_pins.position"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_run_memory_pins",
+        "conversation_run_memory_pins_source_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_run_memory_pins_source_idx",
+        "n|idx|public.conversation_run_memory_pins_source_idx",
+        "e|idx|public.conversation_run_memory_pins_source_idx",
+        "n|rel|public.conversation_run_memory_pins_source_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_run_memory_pins",
+        "n|sch|public",
+        "n|col|public.conversation_run_memory_pins.space_id",
+        "n|col|public.conversation_run_memory_pins.document_id",
+        "n|col|public.conversation_run_memory_pins.revision"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_runs",
+        "conversation_runs_actor_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_runs_actor_idx",
+        "n|idx|public.conversation_runs_actor_idx",
+        "e|idx|public.conversation_runs_actor_idx",
+        "n|rel|public.conversation_runs_actor_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "n|col|public.conversation_runs.member_account_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_runs",
+        "conversation_runs_routine_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_runs_routine_idx",
+        "n|idx|public.conversation_runs_routine_idx",
+        "e|idx|public.conversation_runs_routine_idx",
+        "n|rel|public.conversation_runs_routine_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.routine_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_runs",
+        "conversation_runs_inbound_routine_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_runs_inbound_routine_idx",
+        "n|idx|public.conversation_runs_inbound_routine_idx",
+        "e|idx|public.conversation_runs_inbound_routine_idx",
+        "n|rel|public.conversation_runs_inbound_routine_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.inbound_routine_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "routine_events",
+        "routine_events_run_idx"
+      ],
+      "writes": [
+        "s|idx|public.routine_events_run_idx",
+        "n|idx|public.routine_events_run_idx",
+        "e|idx|public.routine_events_run_idx",
+        "n|rel|public.routine_events_run_idx"
+      ],
+      "reads": [
+        "n|tbl|public.routine_events",
+        "n|sch|public",
+        "n|col|public.routine_events.space_id",
+        "n|col|public.routine_events.conversation_id",
+        "n|col|public.routine_events.run_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "routine_occurrences",
+        "routine_occurrences_event_ref_idx"
+      ],
+      "writes": [
+        "s|idx|public.routine_occurrences_event_ref_idx",
+        "n|idx|public.routine_occurrences_event_ref_idx",
+        "e|idx|public.routine_occurrences_event_ref_idx",
+        "n|rel|public.routine_occurrences_event_ref_idx"
+      ],
+      "reads": [
+        "n|tbl|public.routine_occurrences",
+        "n|sch|public",
+        "n|col|public.routine_occurrences.space_id",
+        "n|col|public.routine_occurrences.routine_id",
+        "n|col|public.routine_occurrences.id",
+        "n|col|public.routine_occurrences.conversation_id",
+        "n|col|public.routine_occurrences.run_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "routine_occurrences",
+        "routine_occurrences_history_idx"
+      ],
+      "writes": [
+        "s|idx|public.routine_occurrences_history_idx",
+        "n|idx|public.routine_occurrences_history_idx",
+        "e|idx|public.routine_occurrences_history_idx",
+        "n|rel|public.routine_occurrences_history_idx"
+      ],
+      "reads": [
+        "n|tbl|public.routine_occurrences",
+        "n|sch|public",
+        "n|col|public.routine_occurrences.space_id",
+        "n|col|public.routine_occurrences.routine_id",
+        "n|col|public.routine_occurrences.created_at",
+        "n|col|public.routine_occurrences.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "routines",
+        "routines_ingress_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.routines_ingress_id_idx",
+        "n|idx|public.routines_ingress_id_idx",
+        "e|idx|public.routines_ingress_id_idx",
+        "n|rel|public.routines_ingress_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|col|public.routines.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "routines",
+        "routines_email_idx"
+      ],
+      "writes": [
+        "s|idx|public.routines_email_idx",
+        "n|idx|public.routines_email_idx",
+        "e|idx|public.routines_email_idx",
+        "n|rel|public.routines_email_idx"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|col|public.routines.email_address"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "routines",
+        "routines_due_idx"
+      ],
+      "writes": [
+        "s|idx|public.routines_due_idx",
+        "n|idx|public.routines_due_idx",
+        "e|idx|public.routines_due_idx",
+        "n|rel|public.routines_due_idx"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|col|public.routines.enabled",
+        "n|col|public.routines.next_due_at",
+        "n|col|public.routines.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "routines",
+        "routines_agent_idx"
+      ],
+      "writes": [
+        "s|idx|public.routines_agent_idx",
+        "n|idx|public.routines_agent_idx",
+        "e|idx|public.routines_agent_idx",
+        "n|rel|public.routines_agent_idx"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|col|public.routines.space_id",
+        "n|col|public.routines.agent_id",
+        "n|col|public.routines.created_at",
+        "n|col|public.routines.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "space_memory_documents",
+        "space_memory_recall_idx"
+      ],
+      "writes": [
+        "s|idx|public.space_memory_recall_idx",
+        "n|idx|public.space_memory_recall_idx",
+        "e|idx|public.space_memory_recall_idx",
+        "n|rel|public.space_memory_recall_idx"
+      ],
+      "reads": [
+        "n|tbl|public.space_memory_documents",
+        "n|sch|public",
+        "n|col|public.space_memory_documents.space_id",
+        "n|col|public.space_memory_documents.agent_id",
+        "n|col|public.space_memory_documents.pinned",
+        "n|col|public.space_memory_documents.updated_at",
+        "n|col|public.space_memory_documents.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "space_memory_revisions",
+        "space_memory_mutation_idx"
+      ],
+      "writes": [
+        "s|idx|public.space_memory_mutation_idx",
+        "n|idx|public.space_memory_mutation_idx",
+        "e|idx|public.space_memory_mutation_idx",
+        "n|rel|public.space_memory_mutation_idx"
+      ],
+      "reads": [
+        "n|tbl|public.space_memory_revisions",
+        "n|sch|public",
+        "n|col|public.space_memory_revisions.space_id",
+        "n|col|public.space_memory_revisions.mutation_key"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|fk|public.approval_requests.approval_requests_NyTlPyvU1bAr_fkey",
+        "n|fk|public.approval_requests.approval_requests_NyTlPyvU1bAr_fkey",
+        "e|fk|public.approval_requests.approval_requests_NyTlPyvU1bAr_fkey",
+        "n|con|public.approval_requests.approval_requests_NyTlPyvU1bAr_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.approval_requests.space_id",
+        "n|col|public.approval_requests.conversation_id",
+        "n|col|public.approval_requests.run_id",
+        "n|col|public.approval_requests.member_account_id",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "n|col|public.conversation_runs.member_account_id",
+        "e|uniqueness|public.conversation_runs.conversation_id.id.member_account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|fk|public.approval_requests.approval_requests_MO9IML6PoB8W_fkey",
+        "n|fk|public.approval_requests.approval_requests_MO9IML6PoB8W_fkey",
+        "e|fk|public.approval_requests.approval_requests_MO9IML6PoB8W_fkey",
+        "n|con|public.approval_requests.approval_requests_MO9IML6PoB8W_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.approval_requests.space_id",
+        "n|col|public.approval_requests.conversation_id",
+        "n|col|public.approval_requests.run_id",
+        "n|col|public.approval_requests.answered_by_account_id",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "n|col|public.conversation_runs.member_account_id",
+        "e|uniqueness|public.conversation_runs.conversation_id.id.member_account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|fk|public.conversation_events.conversation_events_fYBbkMzqoYc2_fkey",
+        "n|fk|public.conversation_events.conversation_events_fYBbkMzqoYc2_fkey",
+        "e|fk|public.conversation_events.conversation_events_fYBbkMzqoYc2_fkey",
+        "n|con|public.conversation_events.conversation_events_fYBbkMzqoYc2_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.conversation_events.space_id",
+        "n|col|public.conversation_events.conversation_id",
+        "n|col|public.conversation_events.run_id",
+        "n|col|public.conversation_events.request_id",
+        "n|col|public.approval_requests.space_id",
+        "n|col|public.approval_requests.conversation_id",
+        "n|col|public.approval_requests.run_id",
+        "n|col|public.approval_requests.id",
+        "e|uniqueness|public.approval_requests.conversation_id.id.run_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_run_memory_pins"
+      ],
+      "writes": [
+        "s|fk|public.conversation_run_memory_pins.conversation_run_memory_pins_RNdJnDBf7vR2_fkey",
+        "n|fk|public.conversation_run_memory_pins.conversation_run_memory_pins_RNdJnDBf7vR2_fkey",
+        "e|fk|public.conversation_run_memory_pins.conversation_run_memory_pins_RNdJnDBf7vR2_fkey",
+        "n|con|public.conversation_run_memory_pins.conversation_run_memory_pins_RNdJnDBf7vR2_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_run_memory_pins",
+        "n|sch|public",
+        "n|tbl|public.conversation_run_checkpoints",
+        "n|sch|public",
+        "n|col|public.conversation_run_memory_pins.space_id",
+        "n|col|public.conversation_run_memory_pins.conversation_id",
+        "n|col|public.conversation_run_memory_pins.run_id",
+        "n|col|public.conversation_run_checkpoints.space_id",
+        "n|col|public.conversation_run_checkpoints.conversation_id",
+        "n|col|public.conversation_run_checkpoints.run_id",
+        "e|uniqueness|public.conversation_run_checkpoints.conversation_id.run_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_run_memory_pins"
+      ],
+      "writes": [
+        "s|fk|public.conversation_run_memory_pins.conversation_run_memory_pins_tzicmTIle9Ck_fkey",
+        "n|fk|public.conversation_run_memory_pins.conversation_run_memory_pins_tzicmTIle9Ck_fkey",
+        "e|fk|public.conversation_run_memory_pins.conversation_run_memory_pins_tzicmTIle9Ck_fkey",
+        "n|con|public.conversation_run_memory_pins.conversation_run_memory_pins_tzicmTIle9Ck_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_run_memory_pins",
+        "n|sch|public",
+        "n|tbl|public.space_memory_revisions",
+        "n|sch|public",
+        "n|col|public.conversation_run_memory_pins.space_id",
+        "n|col|public.conversation_run_memory_pins.document_id",
+        "n|col|public.conversation_run_memory_pins.revision",
+        "n|col|public.space_memory_revisions.space_id",
+        "n|col|public.space_memory_revisions.document_id",
+        "n|col|public.space_memory_revisions.revision",
+        "e|uniqueness|public.space_memory_revisions.document_id.revision.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_runs"
+      ],
+      "writes": [
+        "s|fk|public.conversation_runs.conversation_runs_jdFotloXl8JH_fkey",
+        "n|fk|public.conversation_runs.conversation_runs_jdFotloXl8JH_fkey",
+        "e|fk|public.conversation_runs.conversation_runs_jdFotloXl8JH_fkey",
+        "n|con|public.conversation_runs.conversation_runs_jdFotloXl8JH_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|tbl|public.routine_identities",
+        "n|sch|public",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.routine_id",
+        "n|col|public.routine_identities.space_id",
+        "n|col|public.routine_identities.id",
+        "e|uniqueness|public.routine_identities.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_runs"
+      ],
+      "writes": [
+        "s|fk|public.conversation_runs.conversation_runs_3dHr38gNXeJx_fkey",
+        "n|fk|public.conversation_runs.conversation_runs_3dHr38gNXeJx_fkey",
+        "e|fk|public.conversation_runs.conversation_runs_3dHr38gNXeJx_fkey",
+        "n|con|public.conversation_runs.conversation_runs_3dHr38gNXeJx_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|tbl|public.routine_identities",
+        "n|sch|public",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.inbound_routine_id",
+        "n|col|public.routine_identities.space_id",
+        "n|col|public.routine_identities.id",
+        "e|uniqueness|public.routine_identities.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_deliveries"
+      ],
+      "writes": [
+        "s|fk|public.routine_deliveries.routine_deliveries_EeSVBPayrLDN_fkey",
+        "n|fk|public.routine_deliveries.routine_deliveries_EeSVBPayrLDN_fkey",
+        "e|fk|public.routine_deliveries.routine_deliveries_EeSVBPayrLDN_fkey",
+        "n|con|public.routine_deliveries.routine_deliveries_EeSVBPayrLDN_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_deliveries",
+        "n|sch|public",
+        "n|tbl|public.routine_occurrences",
+        "n|sch|public",
+        "n|col|public.routine_deliveries.space_id",
+        "n|col|public.routine_deliveries.routine_id",
+        "n|col|public.routine_deliveries.occurrence_id",
+        "n|col|public.routine_occurrences.space_id",
+        "n|col|public.routine_occurrences.routine_id",
+        "n|col|public.routine_occurrences.id",
+        "e|uniqueness|public.routine_occurrences.id.routine_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_events"
+      ],
+      "writes": [
+        "s|fk|public.routine_events.routine_events_qLqIQAOmCo5u_fkey",
+        "n|fk|public.routine_events.routine_events_qLqIQAOmCo5u_fkey",
+        "e|fk|public.routine_events.routine_events_qLqIQAOmCo5u_fkey",
+        "n|con|public.routine_events.routine_events_qLqIQAOmCo5u_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_events",
+        "n|sch|public",
+        "n|tbl|public.routine_occurrences",
+        "n|sch|public",
+        "n|col|public.routine_events.space_id",
+        "n|col|public.routine_events.routine_id",
+        "n|col|public.routine_events.occurrence_id",
+        "n|col|public.routine_events.conversation_id",
+        "n|col|public.routine_events.run_id",
+        "n|col|public.routine_occurrences.space_id",
+        "n|col|public.routine_occurrences.routine_id",
+        "n|col|public.routine_occurrences.id",
+        "n|col|public.routine_occurrences.conversation_id",
+        "n|col|public.routine_occurrences.run_id",
+        "e|uniqueness|public.routine_occurrences.conversation_id.id.routine_id.run_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_events"
+      ],
+      "writes": [
+        "s|fk|public.routine_events.routine_events_84fGpONFbGNB_fkey",
+        "n|fk|public.routine_events.routine_events_84fGpONFbGNB_fkey",
+        "e|fk|public.routine_events.routine_events_84fGpONFbGNB_fkey",
+        "n|con|public.routine_events.routine_events_84fGpONFbGNB_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_events",
+        "n|sch|public",
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.routine_events.space_id",
+        "n|col|public.routine_events.conversation_id",
+        "n|col|public.routine_events.run_id",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "e|uniqueness|public.conversation_runs.conversation_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_identities"
+      ],
+      "writes": [
+        "s|fk|public.routine_identities.routine_identities_space_id_spaces_id_fkey",
+        "n|fk|public.routine_identities.routine_identities_space_id_spaces_id_fkey",
+        "e|fk|public.routine_identities.routine_identities_space_id_spaces_id_fkey",
+        "n|con|public.routine_identities.routine_identities_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_identities",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.routine_identities.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_occurrences"
+      ],
+      "writes": [
+        "s|fk|public.routine_occurrences.routine_occurrences_cVZpPLiRcOgC_fkey",
+        "n|fk|public.routine_occurrences.routine_occurrences_cVZpPLiRcOgC_fkey",
+        "e|fk|public.routine_occurrences.routine_occurrences_cVZpPLiRcOgC_fkey",
+        "n|con|public.routine_occurrences.routine_occurrences_cVZpPLiRcOgC_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_occurrences",
+        "n|sch|public",
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|col|public.routine_occurrences.space_id",
+        "n|col|public.routine_occurrences.routine_id",
+        "n|col|public.routines.space_id",
+        "n|col|public.routines.id",
+        "e|uniqueness|public.routines.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_occurrences"
+      ],
+      "writes": [
+        "s|fk|public.routine_occurrences.routine_occurrences_gOMhmsotf64S_fkey",
+        "n|fk|public.routine_occurrences.routine_occurrences_gOMhmsotf64S_fkey",
+        "e|fk|public.routine_occurrences.routine_occurrences_gOMhmsotf64S_fkey",
+        "n|con|public.routine_occurrences.routine_occurrences_gOMhmsotf64S_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_occurrences",
+        "n|sch|public",
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.routine_occurrences.space_id",
+        "n|col|public.routine_occurrences.conversation_id",
+        "n|col|public.routine_occurrences.run_id",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "e|uniqueness|public.conversation_runs.conversation_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_secrets"
+      ],
+      "writes": [
+        "s|fk|public.routine_secrets.routine_secrets_space_id_routine_id_routines_space_id_id_fkey",
+        "n|fk|public.routine_secrets.routine_secrets_space_id_routine_id_routines_space_id_id_fkey",
+        "e|fk|public.routine_secrets.routine_secrets_space_id_routine_id_routines_space_id_id_fkey",
+        "n|con|public.routine_secrets.routine_secrets_space_id_routine_id_routines_space_id_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_secrets",
+        "n|sch|public",
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|col|public.routine_secrets.space_id",
+        "n|col|public.routine_secrets.routine_id",
+        "n|col|public.routines.space_id",
+        "n|col|public.routines.id",
+        "e|uniqueness|public.routines.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routine_secrets"
+      ],
+      "writes": [
+        "s|fk|public.routine_secrets.routine_secrets_5lOnvtjchMLR_fkey",
+        "n|fk|public.routine_secrets.routine_secrets_5lOnvtjchMLR_fkey",
+        "e|fk|public.routine_secrets.routine_secrets_5lOnvtjchMLR_fkey",
+        "n|con|public.routine_secrets.routine_secrets_5lOnvtjchMLR_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routine_secrets",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.routine_secrets.space_id",
+        "n|col|public.routine_secrets.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routines"
+      ],
+      "writes": [
+        "s|fk|public.routines.routines_space_id_spaces_id_fkey",
+        "n|fk|public.routines.routines_space_id_spaces_id_fkey",
+        "e|fk|public.routines.routines_space_id_spaces_id_fkey",
+        "n|con|public.routines.routines_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.routines.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routines"
+      ],
+      "writes": [
+        "s|fk|public.routines.routines_space_id_id_routine_identities_space_id_id_fkey",
+        "n|fk|public.routines.routines_space_id_id_routine_identities_space_id_id_fkey",
+        "e|fk|public.routines.routines_space_id_id_routine_identities_space_id_id_fkey",
+        "n|con|public.routines.routines_space_id_id_routine_identities_space_id_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|tbl|public.routine_identities",
+        "n|sch|public",
+        "n|col|public.routines.space_id",
+        "n|col|public.routines.id",
+        "n|col|public.routine_identities.space_id",
+        "n|col|public.routine_identities.id",
+        "e|uniqueness|public.routine_identities.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routines"
+      ],
+      "writes": [
+        "s|fk|public.routines.routines_space_id_agent_id_agents_space_id_id_fkey",
+        "n|fk|public.routines.routines_space_id_agent_id_agents_space_id_id_fkey",
+        "e|fk|public.routines.routines_space_id_agent_id_agents_space_id_id_fkey",
+        "n|con|public.routines.routines_space_id_agent_id_agents_space_id_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|col|public.routines.space_id",
+        "n|col|public.routines.agent_id",
+        "n|col|public.agents.space_id",
+        "n|col|public.agents.id",
+        "e|uniqueness|public.agents.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "routines"
+      ],
+      "writes": [
+        "s|fk|public.routines.routines_QoSzyQZs5D4Y_fkey",
+        "n|fk|public.routines.routines_QoSzyQZs5D4Y_fkey",
+        "e|fk|public.routines.routines_QoSzyQZs5D4Y_fkey",
+        "n|con|public.routines.routines_QoSzyQZs5D4Y_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.routines",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.routines.space_id",
+        "n|col|public.routines.owner_account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_memory_documents"
+      ],
+      "writes": [
+        "s|fk|public.space_memory_documents.space_memory_documents_space_id_spaces_id_fkey",
+        "n|fk|public.space_memory_documents.space_memory_documents_space_id_spaces_id_fkey",
+        "e|fk|public.space_memory_documents.space_memory_documents_space_id_spaces_id_fkey",
+        "n|con|public.space_memory_documents.space_memory_documents_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_memory_documents",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.space_memory_documents.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_memory_documents"
+      ],
+      "writes": [
+        "s|fk|public.space_memory_documents.space_memory_documents_author_account_id_user_id_fkey",
+        "n|fk|public.space_memory_documents.space_memory_documents_author_account_id_user_id_fkey",
+        "e|fk|public.space_memory_documents.space_memory_documents_author_account_id_user_id_fkey",
+        "n|con|public.space_memory_documents.space_memory_documents_author_account_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_memory_documents",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.space_memory_documents.author_account_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_memory_documents"
+      ],
+      "writes": [
+        "s|fk|public.space_memory_documents.space_memory_documents_8g0Pvw6psJ4k_fkey",
+        "n|fk|public.space_memory_documents.space_memory_documents_8g0Pvw6psJ4k_fkey",
+        "e|fk|public.space_memory_documents.space_memory_documents_8g0Pvw6psJ4k_fkey",
+        "n|con|public.space_memory_documents.space_memory_documents_8g0Pvw6psJ4k_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_memory_documents",
+        "n|sch|public",
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|col|public.space_memory_documents.space_id",
+        "n|col|public.space_memory_documents.agent_id",
+        "n|col|public.agents.space_id",
+        "n|col|public.agents.id",
+        "e|uniqueness|public.agents.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "space_memory_revisions"
+      ],
+      "writes": [
+        "s|fk|public.space_memory_revisions.space_memory_revisions_9dTkS43ipnir_fkey",
+        "n|fk|public.space_memory_revisions.space_memory_revisions_9dTkS43ipnir_fkey",
+        "e|fk|public.space_memory_revisions.space_memory_revisions_9dTkS43ipnir_fkey",
+        "n|con|public.space_memory_revisions.space_memory_revisions_9dTkS43ipnir_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.space_memory_revisions",
+        "n|sch|public",
+        "n|tbl|public.space_memory_documents",
+        "n|sch|public",
+        "n|col|public.space_memory_revisions.space_id",
+        "n|col|public.space_memory_revisions.document_id",
+        "n|col|public.space_memory_documents.space_id",
+        "n|col|public.space_memory_documents.id",
+        "e|uniqueness|public.space_memory_documents.id.space_id"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_run_checkpoints"
+      ],
+      "writes": [
+        "s|ck|public.conversation_run_checkpoints.conversation_run_checkpoints_memory_refs_check",
+        "n|ck|public.conversation_run_checkpoints.conversation_run_checkpoints_memory_refs_check",
+        "e|ck|public.conversation_run_checkpoints.conversation_run_checkpoints_memory_refs_check",
+        "n|con|public.conversation_run_checkpoints.conversation_run_checkpoints_memory_refs_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_run_checkpoints",
+        "n|sch|public",
+        "n|col|public.conversation_run_checkpoints.data"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_runs"
+      ],
+      "writes": [
+        "s|ck|public.conversation_runs.conversation_runs_inbound_routine_check",
+        "n|ck|public.conversation_runs.conversation_runs_inbound_routine_check",
+        "e|ck|public.conversation_runs.conversation_runs_inbound_routine_check",
+        "n|con|public.conversation_runs.conversation_runs_inbound_routine_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.conversation_runs.inbound_provenance",
+        "n|col|public.conversation_runs.inbound_routine_id",
+        "n|col|public.conversation_runs.routine_id"
+      ]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_runs"
+      ],
+      "writes": [
+        "s|ck|public.conversation_runs.conversation_runs_trigger_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.conversation_runs.trigger",
+        "e|col|public.conversation_runs.trigger"
+      ],
+      "sqlHash": "7d6e71f0e73534ff"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|ck|public.approval_requests.approval_requests_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.approval_requests.tool_name",
+        "e|col|public.approval_requests.tool_name"
+      ],
+      "sqlHash": "ee1d984dfaf48446"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_rules"
+      ],
+      "writes": [
+        "s|ck|public.approval_rules.approval_rules_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_rules",
+        "n|sch|public",
+        "n|col|public.approval_rules.tool_name",
+        "e|col|public.approval_rules.tool_name"
+      ],
+      "sqlHash": "f02735b0b84649aa"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_effects"
+      ],
+      "writes": [
+        "s|ck|public.conversation_effects.conversation_effects_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_effects",
+        "n|sch|public",
+        "n|col|public.conversation_effects.tool_name",
+        "e|col|public.conversation_effects.tool_name"
+      ],
+      "sqlHash": "9e2925fc0701937c"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "conversation_run_memory_pins",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "routine_deliveries",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "routine_events",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "routine_identities",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "routine_occurrences",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "routine_secrets",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "routines",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "space_memory_documents",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "space_memory_revisions",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "allow_shared_memory",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "conversation_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "run_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "document_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "revision",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "position",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "routine_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "routine_due_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "routine_timezone",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "inbound_content",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "inbound_provenance",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "inbound_routine_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": {
+          "as": "inbound_provenance ->> 'routineId'",
+          "type": "stored"
+        },
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "routine_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "kind",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "body_digest",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "occurrence_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "routine_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "kind",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "occurrence_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "run_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "conversation_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "due_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "fired_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_identities",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_identities",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_identities",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "kind",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "due_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "run_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "conversation_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "routine_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "key_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "wrapped_data_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "ciphertext",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "agent_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "owner_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "prompt",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "enabled",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "true",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "triggers",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "webhook_digest",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "email_address",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "next_due_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "rate_window_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "rate_count",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "scope",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "agent_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "title",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "text",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "pinned",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "removed",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "revision",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "attribution",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "provenance",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "author_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "document_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "revision",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "reason",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "body",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "mutation_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "approval_requests",
+        "name": "approval_requests_event_ref_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "run_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "conversation_run_memory_pins_position_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "run_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "position",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "conversation_run_memory_pins_source_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "document_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "revision",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "conversation_runs_actor_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "member_account_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "conversation_runs_routine_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "routine_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "conversation_runs_inbound_routine_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "inbound_routine_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "routine_events_run_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "run_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_event_ref_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "routine_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "conversation_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "run_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_history_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "routine_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_ingress_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_email_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "email_address",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_due_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "enabled",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "next_due_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_agent_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "agent_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_recall_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "agent_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "pinned",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "updated_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "space_memory_mutation_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "mutation_key",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"mutation_key\" is not null",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "approval_requests",
+        "name": "approval_requests_NyTlPyvU1bAr_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "run_id",
+          "member_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversation_runs",
+        "columnsTo": [
+          "space_id",
+          "conversation_id",
+          "id",
+          "member_account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "approval_requests",
+        "name": "approval_requests_MO9IML6PoB8W_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "run_id",
+          "answered_by_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversation_runs",
+        "columnsTo": [
+          "space_id",
+          "conversation_id",
+          "id",
+          "member_account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_events",
+        "name": "conversation_events_fYBbkMzqoYc2_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "run_id",
+          "request_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "approval_requests",
+        "columnsTo": [
+          "space_id",
+          "conversation_id",
+          "run_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "conversation_run_memory_pins_RNdJnDBf7vR2_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "run_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversation_run_checkpoints",
+        "columnsTo": [
+          "space_id",
+          "conversation_id",
+          "run_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "conversation_run_memory_pins_tzicmTIle9Ck_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "document_id",
+          "revision"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_memory_revisions",
+        "columnsTo": [
+          "space_id",
+          "document_id",
+          "revision"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "conversation_runs_jdFotloXl8JH_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "routine_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "routine_identities",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "conversation_runs_3dHr38gNXeJx_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "inbound_routine_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "routine_identities",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "routine_deliveries_EeSVBPayrLDN_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "routine_id",
+          "occurrence_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "routine_occurrences",
+        "columnsTo": [
+          "space_id",
+          "routine_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "routine_events_qLqIQAOmCo5u_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "routine_id",
+          "occurrence_id",
+          "conversation_id",
+          "run_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "routine_occurrences",
+        "columnsTo": [
+          "space_id",
+          "routine_id",
+          "id",
+          "conversation_id",
+          "run_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "routine_events_84fGpONFbGNB_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "run_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversation_runs",
+        "columnsTo": [
+          "space_id",
+          "conversation_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_identities",
+        "name": "routine_identities_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_cVZpPLiRcOgC_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "routine_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "routines",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_gOMhmsotf64S_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "run_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversation_runs",
+        "columnsTo": [
+          "space_id",
+          "conversation_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "routine_secrets_space_id_routine_id_routines_space_id_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "routine_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "routines",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "routine_secrets_5lOnvtjchMLR_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_members",
+        "columnsTo": [
+          "space_id",
+          "account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_space_id_id_routine_identities_space_id_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "routine_identities",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_space_id_agent_id_agents_space_id_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "agent_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "agents",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_QoSzyQZs5D4Y_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "owner_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_members",
+        "columnsTo": [
+          "space_id",
+          "account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_documents_space_id_spaces_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "spaces",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_documents_author_account_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "author_account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_documents_8g0Pvw6psJ4k_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "agent_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "agents",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "space_memory_revisions_9dTkS43ipnir_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "document_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_memory_documents",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "conversation_run_memory_pins_pkey",
+        "columns": [
+          "space_id",
+          "conversation_id",
+          "run_id",
+          "document_id",
+          "revision"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "routine_deliveries_pkey",
+        "columns": [
+          "space_id",
+          "routine_id",
+          "kind",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "routine_events_pkey",
+        "columns": [
+          "space_id",
+          "routine_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_identities",
+        "name": "routine_identities_pkey",
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_pkey",
+        "columns": [
+          "space_id",
+          "routine_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_secrets",
+        "name": "routine_secrets_pkey",
+        "columns": [
+          "space_id",
+          "routine_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_pkey",
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_documents_pkey",
+        "columns": [
+          "space_id",
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "space_memory_revisions_pkey",
+        "columns": [
+          "space_id",
+          "document_id",
+          "revision"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_checkpoints",
+        "name": "conversation_run_checkpoints_memory_refs_check",
+        "value": "not coalesce((\"data\"->'memory') ? 'revisions', false)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_run_memory_pins",
+        "name": "conversation_run_memory_pins_position_check",
+        "value": "\"position\" >= 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_runs",
+        "name": "conversation_runs_inbound_routine_check",
+        "value": "\"inbound_provenance\" is null or (\"inbound_routine_id\" is not null and \"routine_id\" is not null and \"inbound_routine_id\" = \"routine_id\")",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_deliveries",
+        "name": "routine_deliveries_kind_check",
+        "value": "\"kind\" in ('manual', 'webhook', 'email', 'repository')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_events",
+        "name": "routine_events_kind_check",
+        "value": "\"kind\" in ('routine.fired', 'routine.coalesced')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_kind_check",
+        "value": "\"kind\" in ('schedule', 'manual', 'webhook', 'email', 'repository')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_status_check",
+        "value": "\"status\" in ('fired', 'coalesced', 'ignored')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routine_occurrences",
+        "name": "routine_occurrences_run_check",
+        "value": "(\"run_id\" is null) = (\"conversation_id\" is null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "routines",
+        "name": "routines_rate_count_check",
+        "value": "\"rate_count\" >= 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_scope_check",
+        "value": "(\"scope\" = 'agent' and \"agent_id\" is not null) or (\"scope\" = 'space' and \"agent_id\" is null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_removed_check",
+        "value": "(\"removed\" and \"text\" is null) or (not \"removed\" and \"text\" is not null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_documents",
+        "name": "space_memory_revision_check",
+        "value": "\"revision\" > 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "space_memory_revisions",
+        "name": "space_memory_revision_body_identity_check",
+        "value": "coalesce(\n      (\"body\"->>'spaceId') = \"space_id\" and\n      (\"body\"->>'id') = \"document_id\" and\n      (\"body\"->>'revision') = \"revision\"::text, false)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "fks\u0000[\"public\",\"conversation_messages\",\"conversation_messages_author_account_id_user_id_fkey\"]"
+    },
+    {
+      "op": "drop",
+      "key": "fks\u0000[\"public\",\"approval_requests\",\"approval_requests_du9yIpRRl4yk_fkey\"]"
+    },
+    {
+      "op": "drop",
+      "key": "fks\u0000[\"public\",\"approval_requests\",\"approval_requests_M53VVasRkDeT_fkey\"]"
+    },
+    {
+      "op": "drop",
+      "key": "fks\u0000[\"public\",\"conversation_events\",\"conversation_events_rlsvR6Oi5yJY_fkey\"]"
+    },
+    {
+      "op": "drop",
+      "key": "fks\u0000[\"public\",\"conversation_runs\",\"conversation_runs_member_account_id_user_id_fkey\"]"
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_runs\",\"conversation_runs_trigger_check\"]",
+      "set": {
+        "value": "\"trigger\" in ('message', 'routine', 'webhook', 'email')"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_requests\",\"approval_requests_tool_check\"]",
+      "set": {
+        "value": "\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update')"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_rules\",\"approval_rules_tool_check\"]",
+      "set": {
+        "value": "\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update')"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_effects\",\"conversation_effects_tool_check\"]",
+      "set": {
+        "value": "\"tool_name\" in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update')"
+      }
+    }
+  ]
+}

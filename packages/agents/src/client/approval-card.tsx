@@ -17,6 +17,8 @@ export const toolLabelKeys = {
   computer_read_file: "tools.readFile",
   computer_write_file: "tools.writeFile",
   computer_run_command: "tools.runCommand",
+  agent_memory_save: "tools.saveMemory",
+  agent_memory_update: "tools.updateMemory",
 } as const;
 
 /** A timer updates presentation only; the server decides when a request resolves. */

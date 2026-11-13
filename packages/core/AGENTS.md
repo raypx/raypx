@@ -66,3 +66,9 @@ ModelSelection and ModelCatalog are pure domain metadata; connection fingerprint
 
 Task create/follow-up/cancel/decision inputs and TaskContinuation are domain schemas.
 Contracts composes them without domain re-export aliases. Wire field names remain transport-owned.
+
+`/routines` owns Space routine definitions, occurrence/history/event projections
+and five-field Cron validation. `/space-memory` owns Agent/shared memory revisions,
+attribution, provenance and deterministic whole-document recall budgeting. These
+entries are independent of retained account/device `/jobs` and `/memory`.
+Computer approval names also cover the memory save/update change tools.

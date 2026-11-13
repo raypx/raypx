@@ -119,7 +119,10 @@ export async function createApiRuntime(
     allowedOrigins: environment.allowedOrigins,
     clientIp: createClientIpReader(environment.ipAddressHeaders, environment.trustedProxies),
     start: async () => {
-      if (combined) await runtime.runner.startWorker(fanout);
+      if (combined) {
+        await runtime.runner.startWorker(fanout);
+        await runtime.routineWorker.start();
+      }
     },
     close: () =>
       (closing ??= (async () => {

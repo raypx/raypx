@@ -8,6 +8,7 @@ export function agentView(row: typeof agents.$inferSelect): Agent {
     name: row.name,
     instructions: row.instructions,
     model: { modelId: row.modelId },
+    allowSharedMemory: row.allowSharedMemory,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   });

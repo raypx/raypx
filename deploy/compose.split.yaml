@@ -50,6 +50,7 @@ services:
     environment:
       NODE_ENV: production
       SERVER_ROLE: worker
+      APP_KEY: ${APP_KEY:?Set the application key}
       DATABASE_MIGRATE_ON_START: "false"
       DATABASE_URL: postgres://${POSTGRES_RUNTIME_USER:-raypx_runtime}:${POSTGRES_RUNTIME_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       COMPUTER_PROVIDER: ${COMPUTER_PROVIDER:-none}

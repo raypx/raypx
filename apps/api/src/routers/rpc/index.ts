@@ -22,12 +22,16 @@ import { createAccountHandlers } from "./account.js";
 import { createAttachmentHandlers } from "./attachments.js";
 import { createSpaceHandlers } from "./spaces.js";
 import { createModelConnectionsHandlers } from "./model-connections.js";
+import { createRoutineHandlers } from "./routines.js";
+import { createSpaceMemoryHandlers } from "./space-memory.js";
 
 export const rpcPrefix = "/rpc";
 
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
   const setup = createRpcSetup(options);
   return setup.implementer.router({
+    routines: createRoutineHandlers(setup),
+    spaceMemory: createSpaceMemoryHandlers(setup),
     ...createSpaceHandlers(setup),
     modelConnections: createModelConnectionsHandlers(setup),
     admin: createAdministrationHandlers(setup, readReadiness),

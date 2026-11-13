@@ -131,6 +131,13 @@ Replaces: root-grant file tools and host command execution as the default path.
 Schedules, webhook, email and repository triggers, run history, and Agent and
 Space memory. See [capabilities](architecture/capabilities.md).
 
+Backend slice: Space routines and versioned Agent/shared memory use PostgreSQL,
+normal direct Run dispatch, worker-only scans, durable deduplication/coalescing,
+independent ingress credentials, untrusted-input approval and checkpoint-pinned
+recall. Existing account/device Memory and jobs remain for retained consumers;
+no data is imported. Client delivery and PostgreSQL/loopback acceptance are
+separate gates; an unrun database or listener is not claimed as passed.
+
 Acceptance:
 
 - One occurrence starts one Run. A repeated delivery with the same key starts none.

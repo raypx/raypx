@@ -2,6 +2,17 @@ import { expect, it } from "vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import {
   computers,
+  agents,
+  spaceMembers,
+  routines,
+  routineIdentities,
+  routineSecrets,
+  routineOccurrences,
+  routineDeliveries,
+  routineEvents,
+  spaceMemoryDocuments,
+  spaceMemoryRevisions,
+  conversationRunMemoryPins,
   conversationEvents,
   conversationRuns,
   approvalSettings,
@@ -155,21 +166,23 @@ it("includes the Space in every approval/effect and card reference", () => {
       ),
     ).toBe(true);
   }
-  const card = getTableConfig(conversationEvents)
-    .foreignKeys.find((key) =>
-      key.reference().columns.some((column) => column.name === "request_id"),
-    )
-    ?.reference();
-  expect(card?.columns.map((column) => column.name)).toEqual([
+  const card = getTableConfig(conversationEvents).foreignKeys.find((key) =>
+    key.reference().columns.some((column) => column.name === "request_id"),
+  );
+  expect(card?.reference().foreignTable).toBe(approvalRequests);
+  expect(card?.reference().columns.map((column) => column.name)).toEqual([
     "space_id",
     "conversation_id",
+    "run_id",
     "request_id",
   ]);
-  expect(card?.foreignColumns.map((column) => column.name)).toEqual([
+  expect(card?.reference().foreignColumns.map((column) => column.name)).toEqual([
     "space_id",
     "conversation_id",
+    "run_id",
     "id",
   ]);
+  expect(card?.onDelete).toBe("cascade");
   const active = getTableConfig(conversationRuns).indexes.find(
     (index) => index.config.name === "conversation_runs_active_agent_idx",
   );
@@ -182,7 +195,69 @@ it("cascades approval ownership and retains Run actor identity after membership 
   const actor = getTableConfig(conversationRuns).foreignKeys.find((key) =>
     key.reference().columns.some((column) => column.name === "member_account_id"),
   );
-  expect(actor?.reference().columns.map((column) => column.name)).toEqual(["member_account_id"]);
-  expect(actor?.reference().foreignTable).toBe(user);
-  expect(actor?.onDelete).toBe("no action");
+  expect(actor).toBeUndefined();
+});
+
+it("requires actual Space columns on every relational reference to a Space-owned table", () => {
+  for (const table of Object.values(schema)) {
+    for (const key of getTableConfig(table).foreignKeys) {
+      const reference = key.reference();
+      const target = getTableConfig(reference.foreignTable);
+      if (!target.columns.some((column) => column.name === "space_id")) continue;
+      expect(reference.columns[0]?.name).toBe("space_id");
+      expect(reference.foreignColumns[0]?.name).toBe("space_id");
+      expect(reference.columns.length).toBeGreaterThan(1);
+    }
+  }
+});
+
+it("retains the required phase-four reference targets and their deletion actions", () => {
+  const cases = [
+    [routines, routineIdentities, ["space_id", "id"]],
+    [routines, agents, ["space_id", "agent_id"]],
+    [routines, spaceMembers, ["space_id", "owner_account_id"]],
+    [routineSecrets, spaceMembers, ["space_id", "account_id"]],
+    [routineSecrets, routines, ["space_id", "routine_id"]],
+    [routineOccurrences, routines, ["space_id", "routine_id"]],
+    [routineOccurrences, conversationRuns, ["space_id", "conversation_id", "run_id"]],
+    [routineDeliveries, routineOccurrences, ["space_id", "routine_id", "occurrence_id"]],
+    [
+      routineEvents,
+      routineOccurrences,
+      ["space_id", "routine_id", "occurrence_id", "conversation_id", "run_id"],
+    ],
+    [routineEvents, conversationRuns, ["space_id", "conversation_id", "run_id"]],
+    [spaceMemoryDocuments, agents, ["space_id", "agent_id"]],
+    [spaceMemoryRevisions, spaceMemoryDocuments, ["space_id", "document_id"]],
+    [conversationRuns, routineIdentities, ["space_id", "routine_id"]],
+    [conversationRuns, routineIdentities, ["space_id", "inbound_routine_id"]],
+    [
+      conversationRunMemoryPins,
+      conversationRunCheckpoints,
+      ["space_id", "conversation_id", "run_id"],
+    ],
+    [conversationRunMemoryPins, spaceMemoryRevisions, ["space_id", "document_id", "revision"]],
+    [
+      approvalRequests,
+      conversationRuns,
+      ["space_id", "conversation_id", "run_id", "member_account_id"],
+    ],
+    [
+      approvalRequests,
+      conversationRuns,
+      ["space_id", "conversation_id", "run_id", "answered_by_account_id"],
+    ],
+  ] as const;
+  for (const [table, target, columns] of cases) {
+    const key = getTableConfig(table).foreignKeys.find(
+      (candidate) =>
+        candidate
+          .reference()
+          .columns.map((column) => column.name)
+          .join() === columns.join(),
+    );
+    expect(key?.reference().foreignTable).toBe(target);
+    expect(key?.onDelete).toBe("cascade");
+  }
+  expect(conversationRuns.inboundRoutineId.generated).toBeDefined();
 });

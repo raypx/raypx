@@ -93,7 +93,9 @@
     "listFiles": "List files",
     "readFile": "Read a file",
     "writeFile": "Write a file",
-    "runCommand": "Run a command"
+    "runCommand": "Run a command",
+    "saveMemory": "Save memory",
+    "updateMemory": "Update memory"
   },
   "approval": {
     "answeredBy": "Answered by {member}",

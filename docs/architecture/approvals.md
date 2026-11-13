@@ -130,3 +130,11 @@ tool arguments before records or Computer calls, and from output before effects
 or model history. Tool results carry an untrusted-data label; this label does not
 grant authority. Approval decisions remain durable request records and immutable
 conversation resolution events; a general Space audit feed is a later slice.
+
+Phase 4 persists inbound provenance on webhook, email and repository Runs.
+The approval policy checks Block first, then read-only/Never ask, then untrusted
+write policy, then Allow. Consequently an Allow rule cannot bypass Ask for a
+change in an inbound Run; the same policy requires Ask for Auto if that mode is
+configured in a later slice. Auto itself remains unavailable without a review
+model. Saving/updating memory uses the same policy, addressed request, effect and
+fence checks as other changes. Memory tool summaries contain no memory text.

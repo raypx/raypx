@@ -38,7 +38,7 @@ export async function createWorkerRuntime(
   try {
     const connection = resources?.connect() ?? connectRuntimeDatabase(environment.DATABASE_URL);
     lifecycle.own(() => connection.close());
-    const { runner } = await composeAgents(
+    const { runner, routines, spaceMemory, routineWorker } = await composeAgents(
       connection.db,
       environment,
       logger,
@@ -48,17 +48,26 @@ export async function createWorkerRuntime(
       resources?.createConversationFanout?.() ?? createConversationFanout(environment.DATABASE_URL);
     lifecycle.own(() => fanout.close());
     lifecycle.own(() => runner.close());
+    lifecycle.own(() => routineWorker.close());
     const readiness = createReadinessCheck({
       database: () => connection.db.execute(sql`select 1`),
     });
     let closing: Promise<void> | undefined;
     return {
       runner,
-      stopClaiming: () => runner.stopClaiming(),
+      routines,
+      spaceMemory,
+      stopClaiming: () => {
+        routineWorker.stop();
+        runner.stopClaiming();
+      },
       app: createRelayHttpApp(readiness, "worker"),
       allowedOrigins: [] as string[],
       clientIp: createClientIpReader([], []),
-      start: () => runner.startWorker(fanout),
+      start: async () => {
+        await runner.startWorker(fanout);
+        await routineWorker.start();
+      },
       close: () => (closing ??= lifecycle.close()),
     };
   } catch (error) {

@@ -148,3 +148,8 @@ Private agents.models.* exposes only non-secret catalog/default metadata. Pi con
 explicitly marks these `web`, excluding them from native allowlists. Audit values
 are a strict projection of supported roles and non-secret configuration; filters
 have bounded strings and page sizes, with server-validated date windows and cursors.
+
+`/api` also composes Space-scoped `routines.*` and `spaceMemory.*`, with session
+admission and explicit renderer exposure. They do not replace retained `jobs.*`
+or `memory.*`. Only routine create/update/rotation can return a freshly issued
+key; list/get/history/events never return a credential or secret reference.

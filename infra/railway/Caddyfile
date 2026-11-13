@@ -20,7 +20,7 @@
       header_up -Authorization
     }
   }
-  @api path /api/* /rpc/* /.well-known/openid-configuration /.well-known/oauth-authorization-server /events /health /ready
+  @api path /api/* /rpc/* /routines/* /.well-known/openid-configuration /.well-known/oauth-authorization-server /events /health /ready
 	handle @api {
 		reverse_proxy {$API_UPSTREAM} {
 			header_up X-Forwarded-Proto https

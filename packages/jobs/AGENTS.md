@@ -40,3 +40,17 @@ relay round trips and Bun/Nitro scheduled events have separate integration gates
 Own `automations (local and cloud)` in `locales/<language>/`, with handwritten language entries
 and pure `/messages/en` and `/messages/zh` exports. Use JSON nested strings for every language and namespace. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.
+
+## Space routines
+
+`/routines` owns injected Space-scoped routine use cases, ingress verification and
+an explicit worker scan. `/routines/postgres` atomically records occurrences,
+deliveries, trigger messages, queued Runs, backup jobs and identifier-only routine
+events before direct dispatch. This is independent of the retained device/cloud
+job APIs. Construction performs no I/O; API/worker composition supplies the clock,
+secret envelope store and dispatcher. Repository signatures bind delivery ID and
+event kind as well as the body. Repository secrets are encrypted; webhook keys
+are digest-only. Every automatic occurrence resolves current owner membership.
+The worker locks due routines with SKIP LOCKED and the conversation counter before
+coalescing, so a pending catch-up cannot race its first start. `test:postgres`
+selects isolated PostgreSQL acceptance; ordinary test runs exclude that directory.

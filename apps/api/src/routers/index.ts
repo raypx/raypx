@@ -8,6 +8,7 @@ import { registerApiMiddleware } from "../middleware/http.js";
 import { createOpenApiRoutes } from "./openapi.js";
 import type { ApiRouterEnv } from "./request.js";
 import { createRpcRouter, createRpcRoutes, rpcPrefix } from "./rpc/index.js";
+import { createRoutineIngressRoutes } from "../routines/http.js";
 
 export function createApiApp(options: ApiAppOptions) {
   const app = new Hono<ApiRouterEnv>();
@@ -19,6 +20,15 @@ export function createApiApp(options: ApiAppOptions) {
   const router = createRpcRouter(options, readReadiness);
   const timeout = options.rpcTimeoutMs ?? 15_000;
   app
+    .route(
+      "/routines",
+      createRoutineIngressRoutes({
+        routines: options.routines,
+        ...(options.routineEmailRelayToken
+          ? { emailRelayToken: options.routineEmailRelayToken }
+          : {}),
+      }),
+    )
     .route("/", health)
     .on(
       ["GET", "HEAD"],

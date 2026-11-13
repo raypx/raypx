@@ -10,6 +10,13 @@ import {
   createApprovalsRepository,
 } from "@raypx/agents/server/postgres";
 import type { Database } from "@raypx/database/connection";
+import { createSpaceMemoryService } from "@raypx/memory/space-server";
+import { createSpaceMemoryRepository } from "@raypx/memory/space-server/postgres";
+import { createRoutinesService } from "@raypx/jobs/routines";
+import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
+import type { ConversationId } from "@raypx/core/agents";
+import { withMemoryTools } from "../conversations/memory-tools.js";
+import { createRoutineWorker } from "../routines/worker.js";
 import { createDeploymentModels, type ConversationModels } from "../conversations/models.js";
 import type { ApiLogging } from "../logging.js";
 import { createModelConnections } from "../conversations/connections.js";
@@ -18,6 +25,8 @@ import { createConnectionTransport } from "../conversations/connection-transport
 import {
   applicationSecretKeyProvider,
   createPostgresSecretStore,
+  sealStoredSecret,
+  openStoredSecret,
 } from "../conversations/secrets.js";
 import {
   configuredComputerProvider,
@@ -59,11 +68,16 @@ export async function composeAgents(
     backupMarginMs: environment.RUN_BACKUP_MARGIN_MS,
   });
   const deploymentSecrets = knownComputerSecrets(environment);
-  const tools = createComputerTools(
-    computers,
-    computerProvider,
+  const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(db));
+  const tools = withMemoryTools(
+    createComputerTools(
+      computers,
+      computerProvider,
+      () => [...deploymentSecrets, ...modelConnections.protectedValues()],
+      repository.pinResources,
+    ),
+    spaceMemory,
     () => [...deploymentSecrets, ...modelConnections.protectedValues()],
-    repository.pinResources,
   );
   const runner = new ConversationRunner(
     repository,
@@ -80,9 +94,36 @@ export async function composeAgents(
       scanIntervalMs: environment.RUN_RECOVERY_INTERVAL_MS,
       attemptTimeoutMs: environment.RUN_ATTEMPT_TIMEOUT_MS,
       backupMarginMs: environment.RUN_BACKUP_MARGIN_MS,
+      recallMemory: (scope, run) => spaceMemory.recall(scope, run.agentId),
     },
   );
+  const keys = applicationSecretKeyProvider(environment.APP_KEY);
+  const routines = createRoutinesService(
+    createRoutinesRepository(db, {
+      backupDelayMs: environment.RUN_ATTEMPT_TIMEOUT_MS + environment.RUN_BACKUP_MARGIN_MS,
+      onEvent: ({ kind, id: _id, ...fields }) =>
+        logger.createLogger({ operation: kind }).emit({ status: 200, code: "OK", ...fields }),
+    }),
+    {
+      dispatch: (scope, id) => runner.dispatch(scope, id as ConversationId),
+      secrets: {
+        seal: (accountId, secretId, value) => sealStoredSecret(keys, accountId, secretId, value),
+        open: (accountId, secretId, sealed) => openStoredSecret(keys, accountId, secretId, sealed),
+      },
+      ...(environment.ROUTINE_EMAIL_DOMAIN
+        ? { emailDomain: environment.ROUTINE_EMAIL_DOMAIN }
+        : {}),
+    },
+  );
+  const routineWorker = createRoutineWorker(routines, environment.RUN_RECOVERY_INTERVAL_MS, () =>
+    logger
+      .createLogger({ operation: "run.execution" })
+      .emit({ status: 503, code: "EXECUTION_FAILED" }),
+  );
   return {
+    routines,
+    spaceMemory,
+    routineWorker,
     runner,
     computers,
     computerProvider,

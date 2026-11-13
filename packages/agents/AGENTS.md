@@ -37,7 +37,8 @@ Conversation.
 port; `/server/postgres` provides both adapters. Member sends lock the conversation
 counter, reuse a member/conversation idempotency receipt, then atomically insert a
 message and immutable event, advance the counter and publish a content-free hint.
-Snapshot and cursor reads use repeatable-read transactions. Prefix retention keeps
+Snapshot and cursor reads hold the conversation counter while persisting departed
+actor cancellations and reading state with its cursor. Prefix retention keeps
 messages and advances the replay floor atomically. API owns socket lifecycle,
 ACKs and fresh membership checks. Sends also record a queued Run and keyed delayed backup job in the message
 transaction, then dispatch directly through ConversationRunner. Messages received
@@ -70,3 +71,23 @@ Every effect read/decision lazily expires old intents using the service clock.
 Member reads hold counter/Run locks and use the current stored fence without a
 live lease; tracked-tool unknown events commit once with expiry. Executor writes
 still require the current unexpired attempt fence.
+
+Phase 4 adds routine/webhook/email trigger projections and private inbound Run
+provenance. The shared change policy asks on untrusted writes before Allow;
+Never ask and Block retain their existing precedence. Runner recall is an injected
+port: selected memory revision/context and first-start late routine annotations
+commit to the checkpoint before model access and are reused on recovery.
+`dispatch` wakes already committed non-message Runs through the normal runner.
+`allowSharedMemory` is an optional Agent configuration (default false).
+
+Historical message/Run actor IDs survive account and membership deletion.
+Approval requests remain attached to their Run actor; card events retain their
+Space/Conversation/Run/request composite FK after cancellation. Worker scans, claims and conversation reads cancel departed
+actors under counter/Run locks, revoke their fences and close attempts, queued
+backups, cards and open tools. Attempt writes and heartbeats require current
+membership. Maintenance uses Space selectors, never fabricated membership scopes.
+
+Memory revision references are stored in `conversation_run_memory_pins`, with
+same-Space checkpoint/revision FKs. Checkpoint JSON stores accepted context and
+provenance only; claims hydrate ordered pins. Later checkpoints cannot replace
+accepted memory or recreate references removed by physical source deletion.

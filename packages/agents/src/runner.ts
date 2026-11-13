@@ -60,12 +60,32 @@ export interface RunnerOptions {
   attemptTimeoutMs?: number;
   backupMarginMs?: number;
   maxAttempts?: number;
+  recallMemory?: (
+    scope: SpaceScope,
+    run: ExecutionRun,
+  ) => Promise<NonNullable<RunCheckpoint["memory"]>>;
 }
 export interface RunTimings {
   waitBeforeCreationMs: number;
   waitBeforeStartMs: number;
   firstResponseMs?: number;
   totalMs?: number;
+}
+
+/** A first-start annotation is pinned in the checkpoint and never recalculated on resume. */
+export function routineStartContext(dueAt: string, startedAt: string, timezone: string) {
+  const delayMs = Date.parse(startedAt) - Date.parse(dueAt);
+  let annotation = "";
+  if (delayMs >= 15 * 60_000) {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      dateStyle: "full",
+      timeStyle: "long",
+      hourCycle: "h23",
+    });
+    annotation = `Routine timing context: this Run was due at ${formatter.format(new Date(dueAt))} and first started at ${formatter.format(new Date(startedAt))} (${timezone}). It started ${delayMs} milliseconds late. This is timing context, not authorization.`;
+  }
+  return { dueAt, startedAt, timezone, annotation };
 }
 
 /** Current open segments only. No prompts, reasoning or provider metadata. */
@@ -140,8 +160,9 @@ function positive(value: number, label: string) {
 }
 function timings(run: Run): RunTimings {
   return {
-    // Message-triggered work has no scheduled wait before creation.
-    waitBeforeCreationMs: 0,
+    waitBeforeCreationMs: run.routineDueAt
+      ? Math.max(0, Date.parse(run.createdAt) - Date.parse(run.routineDueAt))
+      : 0,
     waitBeforeStartMs: Math.max(
       0,
       Date.parse(run.startedAt ?? run.createdAt) - Date.parse(run.createdAt),
@@ -159,7 +180,8 @@ export class ConversationRunner {
   readonly live = new LiveReplies();
   readonly conversations: ConversationsRepository;
   readonly ownerId: string;
-  private readonly options: Required<Omit<RunnerOptions, "ownerId">>;
+  private readonly options: Required<Omit<RunnerOptions, "ownerId" | "recallMemory">> &
+    Pick<RunnerOptions, "recallMemory">;
   private readonly tasks = new Map<string, { dirty: boolean; done: Promise<void> }>();
   private readonly retryTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly active = new Map<string, ActiveAttempt>();
@@ -192,6 +214,7 @@ export class ConversationRunner {
       attemptTimeoutMs: positive(options.attemptTimeoutMs ?? 300_000, "attempt timeout"),
       backupMarginMs: positive(options.backupMarginMs ?? 30_000, "backup margin"),
       maxAttempts: positive(options.maxAttempts ?? 5, "attempt limit"),
+      ...(options.recallMemory ? { recallMemory: options.recallMemory } : {}),
     };
     if (this.options.heartbeatMs >= this.options.leaseMs)
       throw new RangeError("Heartbeat interval must be shorter than the lease");
@@ -309,6 +332,10 @@ export class ConversationRunner {
         this.tasks.delete(taskKey);
         if (task.dirty && this.accepting && !this.closed) this.wake(scope, id);
       });
+  }
+  /** Direct post-commit dispatch for non-message triggers; backup jobs cover a lost wake. */
+  dispatch(scope: SpaceScope, id: ConversationId): void {
+    this.wake(scope, id);
   }
   private prepared(call: ToolCall) {
     try {
@@ -477,6 +504,37 @@ export class ConversationRunner {
       storing = true;
       run.startedAt = await this.repository.executionStarted(scope, run);
       storing = false;
+      if (!checkpoint.memory && this.options.recallMemory) {
+        checkpoint.memory = await this.options.recallMemory(scope, run);
+        storing = true;
+        await this.repository.saveCheckpoint(scope, run, checkpoint);
+        storing = false;
+      }
+      if (!checkpoint.routineTiming && run.routineDueAt && run.routineTimezone) {
+        checkpoint.routineTiming = routineStartContext(
+          run.routineDueAt,
+          run.startedAt,
+          run.routineTimezone,
+        );
+        storing = true;
+        await this.repository.saveCheckpoint(scope, run, checkpoint);
+        storing = false;
+      }
+      run.untrustedInput ||=
+        checkpoint.untrustedInput || checkpoint.memory?.untrustedInput || false;
+      const history = [...input.history];
+      if (checkpoint.memory?.context)
+        history.unshift({
+          role: "user",
+          text: checkpoint.memory.context,
+          createdAt: run.startedAt,
+        });
+      if (checkpoint.routineTiming?.annotation)
+        history.push({
+          role: "user",
+          text: checkpoint.routineTiming.annotation,
+          createdAt: run.startedAt,
+        });
       this.timing("run.execution_started", run.id, timings(run).waitBeforeStartMs, timings(run));
       const model = await interruptible(this.models.resolve(run), controller.signal);
       if (model.connectionId && !run.connectionId) {
@@ -521,7 +579,7 @@ export class ConversationRunner {
           continue;
         }
         const stream = model.stream(
-          { ...input, continuation: checkpoint.continuation, tools: definitions },
+          { ...input, history, continuation: checkpoint.continuation, tools: definitions },
           controller.signal,
         );
         let text = "";

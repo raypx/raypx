@@ -13,6 +13,7 @@ export const agentInputSchema = z.strictObject({
   name: z.string().trim().min(1).max(120),
   instructions: z.string().max(32_000),
   model: agentModelChoiceSchema,
+  allowSharedMemory: z.boolean().optional(),
 });
 export type AgentInput = z.infer<typeof agentInputSchema>;
 export const agentSchema = agentInputSchema.extend({

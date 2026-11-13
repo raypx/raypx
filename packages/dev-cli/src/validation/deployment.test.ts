@@ -34,6 +34,17 @@ function replace(root: string, file: string, from: string, to: string) {
 it("keeps Compose environment inputs, runtime ports and both proxy route maps aligned", () => {
   expect(checkDeployment(fixture())).toEqual([]);
 });
+it("rejects a proxy that sends authenticated routine ingress to the Web application", () => {
+  const root = fixture();
+  replace(root, "deploy/compose.yaml", " || PathPrefix(`/routines/`)", "");
+  replace(root, "infra/railway/Caddyfile", " /routines/*", "");
+  expect(checkDeployment(root)).toEqual(
+    expect.arrayContaining([
+      "deploy/compose.yaml: API ingress routes differ from the deployment contract",
+      "infra/railway/Caddyfile: API ingress routes differ from the deployment contract",
+    ]),
+  );
+});
 it("detects newly declared API settings missing from deployment adapters", () => {
   const root = fixture();
   replace(

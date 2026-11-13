@@ -212,3 +212,42 @@ first-response or total duration. Execution-start logging follows Computer
 acquisition. The first-response timestamp commits with its event and checkpoint
 and is not replaced on resume. Logs carry identifiers and durations only, never
 message, prompt, tool result, arguments, file contents or credentials.
+
+## Routine and memory context
+
+Routine Runs enter the same queued Run, direct-dispatch, lease, checkpoint and
+backup-job path as member messages. Their actor is the routine's owner at
+acceptance. `routine`, `webhook` and `email` are additional trigger values;
+repository events use `routine` plus private inbound provenance. The Run keeps its
+original due instant and IANA time zone; routine IDs reference same-Space identity
+tombstones that outlive an active definition and its owner membership.
+At its first execution start, a delay of at least 900,000 ms produces a timing
+annotation with the due time and actual first start in that zone. Both annotation
+and original instants are pinned in the checkpoint before model access and reused
+on resume. History derives delay from that original start, including coalesced
+occurrences without changing the Run's due instant.
+
+Initial recall pins whole memory revisions and their labelled reference context
+before the first model call. Later attempts use those pins/context without reading
+current memory. External trigger content, earlier inbound conversation context and
+recalled untrusted provenance keep write approval mandatory in Ask mode, including
+when an exact Allow rule exists. Checkpoints preserve that decision input across
+attempts. Context never changes Space admission or credential ownership.
+
+Member/account removal does not prune historical messages or card events from a
+surviving shared conversation. Approval rows remain bound to the Run's historical
+actor, and card events keep their composite request FK. Current membership still
+gates every execution fence and heartbeat. Worker scans
+and conversation reads cancel departed actors' active Runs under the conversation
+counter and Run locks, revoke leases, remove backups, and append cancellation
+state/card/tool events before exposing the updated cursor. A later queued Run can
+then acquire the Agent. Runtime construction never performs this maintenance.
+
+Memory revision pins are normalized in `conversation_run_memory_pins`: one scoped
+FK references the checkpoint and one references the exact source revision. The
+checkpoint JSON stores immutable accepted context and its provenance, not a copied
+revision-ID array. Logical remove/restore does not remove old pins. Physical source
+deletion removes the corresponding pin relations through CASCADE; it never deletes
+the checkpoint or changes accepted context, and later writes do not recreate those
+references. A resume hydrates remaining pins in original selection order and uses
+the same context bytes without looking up newer memory.

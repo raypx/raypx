@@ -3,7 +3,7 @@ import type { Database } from "@raypx/database/connection";
 import { modelConnectionSecrets } from "@raypx/database/schema";
 import { configurationCipher } from "../config/credentials.js";
 
-import type { SecretKeyProvider, SecretStore } from "./secret-types.js";
+import type { SealedSecret, SecretKeyProvider, SecretStore } from "./secret-types.js";
 export type {
   WrappedDataKey,
   SecretKeyProvider,
@@ -25,6 +25,46 @@ export function applicationSecretKeyProvider(applicationKey: string): SecretKeyP
   };
 }
 
+/** The same envelope store protects connection and routine secrets. Callers persist only sealed values. */
+export async function sealStoredSecret(
+  keys: SecretKeyProvider,
+  accountId: string,
+  secretId: string,
+  value: string,
+): Promise<SealedSecret> {
+  try {
+    const binding = JSON.stringify([accountId, secretId]);
+    const dataKey = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64");
+    return {
+      ...(await keys.wrap(dataKey, binding)),
+      ciphertext: await configurationCipher(dataKey, "model-connection-value-v1", secretId).seal(
+        value,
+        binding,
+      ),
+    };
+  } catch {
+    throw new Error("SECRET_UNAVAILABLE");
+  }
+}
+
+export async function openStoredSecret(
+  keys: SecretKeyProvider,
+  accountId: string,
+  secretId: string,
+  sealed: SealedSecret,
+): Promise<string> {
+  try {
+    const binding = JSON.stringify([accountId, secretId]);
+    const dataKey = await keys.unwrap(sealed, binding);
+    return await configurationCipher(dataKey, "model-connection-value-v1", secretId).open(
+      sealed.ciphertext,
+      binding,
+    );
+  } catch {
+    throw new Error("SECRET_UNAVAILABLE");
+  }
+}
+
 /** Construction is pure; writes are performed atomically by the connection repository. */
 export function createPostgresSecretStore(db: Database, keys: SecretKeyProvider): SecretStore {
   function selection(accountId: string, connectionId: string, secretId: string) {
@@ -35,17 +75,7 @@ export function createPostgresSecretStore(db: Database, keys: SecretKeyProvider)
     );
   }
   return {
-    async seal(accountId, secretId, value) {
-      const binding = JSON.stringify([accountId, secretId]);
-      const dataKey = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64");
-      return {
-        ...(await keys.wrap(dataKey, binding)),
-        ciphertext: await configurationCipher(dataKey, "model-connection-value-v1", secretId).seal(
-          value,
-          binding,
-        ),
-      };
-    },
+    seal: (accountId, secretId, value) => sealStoredSecret(keys, accountId, secretId, value),
     async read(accountId, connectionId, secretId) {
       const [row] = await db
         .select()
@@ -53,17 +83,7 @@ export function createPostgresSecretStore(db: Database, keys: SecretKeyProvider)
         .where(selection(accountId, connectionId, secretId))
         .limit(1);
       if (!row) throw new Error("SECRET_UNAVAILABLE");
-      try {
-        const binding = JSON.stringify([accountId, secretId]);
-        const dataKey = await keys.unwrap(row, binding);
-        return await configurationCipher(dataKey, "model-connection-value-v1", secretId).open(
-          row.ciphertext,
-          binding,
-        );
-      } catch {
-        // Key-service and crypto failures must never attach their input or cause.
-        throw new Error("SECRET_UNAVAILABLE");
-      }
+      return openStoredSecret(keys, accountId, secretId, row);
     },
     async rewrap(accountId, connectionId, secretId, next) {
       try {

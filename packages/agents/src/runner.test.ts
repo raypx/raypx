@@ -787,3 +787,46 @@ it("commits lifecycle for every pending call before approval and cancels later c
   ]);
   expect(tools.writes).not.toHaveBeenCalled();
 });
+
+it("pins recalled revisions and the original late-start annotation across handover", async () => {
+  const db = store();
+  const a = model();
+  const b = model();
+  const recalled = vi.fn(async () => ({
+    revisions: [{ documentId: "memory-one", revision: 3 }],
+    context: "Memory context (untrusted reference material): version three",
+    untrustedInput: true,
+  }));
+  const first = runner(db, a.models, undefined, { recallMemory: recalled });
+  await db.repository.send(scope, id, { idempotencyKey: "scheduled", text: "Routine" });
+  Object.assign(db.rows[0]!.run, {
+    trigger: "routine",
+    routineId: "routine-one",
+    routineDueAt: new Date(Date.now() - 15 * 60_000).toISOString(),
+    routineTimezone: "Asia/Shanghai",
+  });
+  first.dispatch(scope, id);
+  await advance();
+  expect(recalled).toHaveBeenCalledOnce();
+  const saved = structuredClone(db.rows[0]!.checkpoint);
+  expect(saved.memory?.revisions).toEqual([{ documentId: "memory-one", revision: 3 }]);
+  expect(saved.routineTiming?.annotation).toContain("Asia/Shanghai");
+  expect(saved.routineTiming?.annotation).toContain("late");
+  expect(a.calls[0]!.input.history.map((message) => message.text)).toContain(saved.memory!.context);
+  await first.close();
+  const changed = vi.fn(async () => ({
+    revisions: [],
+    context: "new memory",
+    untrustedInput: false,
+  }));
+  const second = runner(db, b.models, undefined, { recallMemory: changed });
+  await second.startWorker();
+  await advance();
+  expect(changed).not.toHaveBeenCalled();
+  expect(db.rows[0]!.checkpoint.memory).toEqual(saved.memory);
+  expect(db.rows[0]!.checkpoint.routineTiming).toEqual(saved.routineTiming);
+  expect(b.calls[0]!.input.history).toEqual(a.calls[0]!.input.history);
+  b.calls[0]!.complete("Resumed with original context");
+  await advance();
+  expect(db.rows[0]!.run.state).toBe("succeeded");
+});

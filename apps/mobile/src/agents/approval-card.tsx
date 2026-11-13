@@ -16,6 +16,8 @@ const toolKeys = {
   computer_read_file: "agents.tools.readFile",
   computer_write_file: "agents.tools.writeFile",
   computer_run_command: "agents.tools.runCommand",
+  agent_memory_save: "agents.tools.saveMemory",
+  agent_memory_update: "agents.tools.updateMemory",
 } as const;
 
 export interface ApprovalCardProps {

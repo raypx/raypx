@@ -78,3 +78,15 @@ them; these guards are released when the execution attempt settles.
   is safe.
 - Meaning and factual claims are judged by an opt-in model with a versioned rubric.
   A judge error is an unqualified result, never a pass.
+
+Routine ingress has no session admission. Webhook bearer keys use digests;
+repository HMAC keys use the encrypted secret-store envelope. Email requires a
+dedicated `ROUTINE_EMAIL_RELAY_TOKEN`, distinct from other deployment credentials,
+and a paired `ROUTINE_EMAIL_DOMAIN`; no SMTP listener is added. All three paths
+count stream bytes and commit per-routine rate limits and delivery deduplication
+in PostgreSQL. Signature bytes bind repository delivery ID, event kind and body.
+Secret references, ciphertext, payloads, prompts and memory text are absent from
+routine event/log projections. Deleting a routine, owner membership or Space
+cascades its occurrences, deliveries and encrypted secret. Run/message actor IDs are historical selectors, so account deletion cannot punch
+gaps in a surviving conversation stream. Memory's author FK becomes null while its
+immutable provenance remains historical context in a surviving shared Space.

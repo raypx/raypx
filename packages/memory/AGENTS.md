@@ -6,6 +6,22 @@ Versioned user-selected memory and task templates: injected server use cases and
 
 ## Interface
 
+`/space-server` owns the separate Space/Agent memory service, deterministic bounded
+recall and memory change-tool port; `/space-server/postgres` owns its persistence.
+API resolves fresh membership. Agent memory references one Agent; shared documents
+have no Agent selector. Every mutation creates an immutable revision, including
+removal and restoration. Removed current text cannot be recalled. Run checkpoints
+pin both revision identities and the exact labelled context; resumes do not recall
+again. Tool writes require the current Run lease/fence and use Run/tool-call
+identities for idempotency. Shared tool writes require Agent configuration.
+Provenance and attribution are data, never instructions or permission. Restoring
+untrusted material preserves its provenance. Optional semantic ranking receives
+only eligible candidates; no vector service or embedding adapter is installed.
+
+The retained account/device library below is independent. Retire its procedures,
+context tables and device selection UI when their remaining consumers are removed;
+never migrate their content into Space memory implicitly.
+
 `@raypx/core/memory` owns document/version schemas and errors shared by transports,
 server use cases, device execution and browser views.
 `/server` owns injected account/device use cases and repository ports for Node hosts;

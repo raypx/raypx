@@ -80,6 +80,8 @@ services:
       RUN_HEARTBEAT_MS: ${RUN_HEARTBEAT_MS:-5000}
       RUN_ATTEMPT_TIMEOUT_MS: ${RUN_ATTEMPT_TIMEOUT_MS:-300000}
       RUN_BACKUP_MARGIN_MS: ${RUN_BACKUP_MARGIN_MS:-30000}
+      ROUTINE_EMAIL_RELAY_TOKEN: ${ROUTINE_EMAIL_RELAY_TOKEN:-}
+      ROUTINE_EMAIL_DOMAIN: ${ROUTINE_EMAIL_DOMAIN:-}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       AUTH_IP_HEADERS: ${AUTH_IP_HEADERS:-x-forwarded-for}
       AUTH_TRUSTED_PROXIES: ${AUTH_TRUSTED_PROXIES:?Set the trusted proxy CIDRs}
@@ -112,7 +114,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/.well-known/openid-configuration`) || Path(`/.well-known/oauth-authorization-server`) || Path(`/events`) || Path(`/health`) || Path(`/ready`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || PathPrefix(`/routines/`) || Path(`/.well-known/openid-configuration`) || Path(`/.well-known/oauth-authorization-server`) || Path(`/events`) || Path(`/health`) || Path(`/ready`))"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.priority=100"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"

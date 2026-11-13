@@ -36,7 +36,7 @@ export function toolActivityView(row: typeof calls.$inferSelect): ToolActivity {
     exitStatus: row.exitStatus,
   });
 }
-function selection(scope: SpaceScope, run: Identity, toolCallId: string) {
+function selection(scope: Pick<SpaceScope, "spaceId">, run: Identity, toolCallId: string) {
   return and(
     eq(calls.spaceId, scope.spaceId),
     eq(calls.runId, run.id),
@@ -46,7 +46,7 @@ function selection(scope: SpaceScope, run: Identity, toolCallId: string) {
 /** Caller holds counter/Run locks and validates an attempt or observes the current fence. */
 async function append(
   tx: Transaction,
-  scope: SpaceScope,
+  scope: Pick<SpaceScope, "spaceId">,
   run: Identity,
   row: typeof calls.$inferSelect,
   kind: "tool.started" | "tool.finished",
@@ -83,7 +83,7 @@ async function append(
 }
 export async function beginToolEvent(
   tx: Transaction,
-  scope: SpaceScope,
+  scope: Pick<SpaceScope, "spaceId">,
   run: Identity,
   tool: ToolSummary,
   publish: Publish,
@@ -107,7 +107,7 @@ export async function beginToolEvent(
 }
 export async function finishToolEvent(
   tx: Transaction,
-  scope: SpaceScope,
+  scope: Pick<SpaceScope, "spaceId">,
   run: Identity,
   result: ToolCompletion,
   publish: Publish,
@@ -132,7 +132,7 @@ export async function finishToolEvent(
 
 export async function finishOpenToolEvents(
   tx: Transaction,
-  scope: SpaceScope,
+  scope: Pick<SpaceScope, "spaceId">,
   run: Identity,
   outcome: ToolOutcome,
   publish: Publish,

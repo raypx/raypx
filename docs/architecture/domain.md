@@ -95,3 +95,20 @@ recovery fields ship with their writers in later phases.
 - A computer's home is retained for a stated period after its owner is deleted,
   then destroyed. The retention period is a deployment setting.
 - Audit events outlive the records they describe.
+
+Phase 4 keeps message/Run actor account IDs as historical deployment identities.
+Approval requests bind their addressed and answering identities to the Run's
+historical actor, with a composite Space/Conversation/Run/account key; they remain
+cancelled or resolved when a member/account disappears. Card events retain a
+composite foreign key to those requests, including Space, Conversation and Run.
+Current membership still gates admission and execution; retaining history grants
+no current access. Space/Conversation/Run deletion cascades its owned history.
+
+Routine source IDs reference minimal `routine_identities` tombstones in the same
+Space. Deleting an active definition/member/account removes its secrets and
+active records while preserving the tombstone and accepted Run attribution;
+Space deletion removes both. JSON inbound routine IDs have a generated scoped FK
+and must equal the Run's source ID. External delivery IDs remain external values.
+Memory revision identities in checkpoints live in a relation with composite FKs
+to the checkpoint and source revision. Immutable copied context/attribution is
+never used as a live resource selector.
