@@ -1,14 +1,14 @@
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 export function createApprovalsHandlers({
   os,
-  controlCall,
+  callControl,
   withRpcPermission,
-}: Pick<RpcBoundary, "os" | "controlCall" | "withRpcPermission">) {
+}: Pick<RpcSetup, "os" | "callControl" | "withRpcPermission">) {
   return {
     list: os.approvals.list
       .use(withRpcPermission())
       .handler(({ context }) =>
-        controlCall(context, (control, auth) => control.tasks.listApprovals(auth.user.id)),
+        callControl(context, (control, auth) => control.tasks.listApprovals(auth.user.id)),
       ),
   };
 }

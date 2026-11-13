@@ -3,7 +3,7 @@ import type { ConfigService } from "../../config/types.js";
 import type { RpcContext } from "../../middleware/rpc.js";
 import { ORPCError } from "@orpc/server";
 import { hasPermission } from "@raypx/account/access";
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 export function createConfigHandlers({
   os,
   withRpcPermission,
@@ -12,7 +12,7 @@ export function createConfigHandlers({
   options,
   access,
 }: Pick<
-  RpcBoundary,
+  RpcSetup,
   "os" | "withRpcPermission" | "withPublicRpcAccess" | "requireTrustedOrigin" | "options" | "access"
 >) {
   async function configurationCall<T>(

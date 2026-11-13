@@ -1,13 +1,13 @@
 import { createAccountService } from "@raypx/account/server";
 import { ORPCError } from "@orpc/server";
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 export function createAccountHandlers({
   os,
   options,
   access,
   withRpcPermission,
   withPublicRpcAccess,
-}: Pick<RpcBoundary, "os" | "options" | "access" | "withRpcPermission" | "withPublicRpcAccess">) {
+}: Pick<RpcSetup, "os" | "options" | "access" | "withRpcPermission" | "withPublicRpcAccess">) {
   return {
     access: os.account.access
       .use(withPublicRpcAccess)

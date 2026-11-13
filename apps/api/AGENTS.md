@@ -277,7 +277,7 @@ cleanup drains old revoked-device projections in batches of 1000 per table. Serv
 uses a projection marker and never increments host-owned request revisions.
 
 `src/routers/rpc/` contains feature handlers and their service error mapping.
-`boundary.ts` wires shared oRPC middleware and adapts Control calls for multiple routers.
+`setup.ts` wires shared oRPC middleware and adapts Control calls for multiple routers.
 Every procedure declares its access in `@raypx/contracts/api` (`public`, `session`
 or a permission) and its handler uses `withPublicRpcAccess` or `withRpcPermission`;
 a test rejects a served procedure without one. Handlers never resolve sessions or

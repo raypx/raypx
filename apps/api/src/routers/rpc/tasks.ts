@@ -1,20 +1,20 @@
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 export function createTasksHandlers({
   os,
-  controlCall,
+  callControl,
   withRpcPermission,
-}: Pick<RpcBoundary, "os" | "controlCall" | "withRpcPermission">) {
+}: Pick<RpcSetup, "os" | "callControl" | "withRpcPermission">) {
   const canRead = withRpcPermission();
   return {
     list: os.tasks.list
       .use(canRead)
       .handler(({ input, context }) =>
-        controlCall(context, (control, auth) => control.tasks.listTasks(auth.user.id, input)),
+        callControl(context, (control, auth) => control.tasks.listTasks(auth.user.id, input)),
       ),
     get: os.tasks.get
       .use(canRead)
       .handler(({ input, context }) =>
-        controlCall(context, (control, auth) =>
+        callControl(context, (control, auth) =>
           control.tasks.getTask(auth.user.id, input.id, input.after, input.beforeActivity),
         ),
       ),

@@ -1,21 +1,21 @@
 import type { RpcContext } from "../../middleware/rpc.js";
-import type { RpcBoundary } from "./boundary.js";
+import type { RpcSetup } from "./setup.js";
 export function createHostsHandlers({
   os,
-  controlCall,
+  callControl,
   options,
   enforceLimit,
-  controlFailure,
+  throwControlRpcError,
   withRpcPermission,
   withPublicRpcAccess,
   requireTrustedOrigin,
 }: Pick<
-  RpcBoundary,
+  RpcSetup,
   | "os"
-  | "controlCall"
+  | "callControl"
   | "options"
   | "enforceLimit"
-  | "controlFailure"
+  | "throwControlRpcError"
   | "withRpcPermission"
   | "withPublicRpcAccess"
   | "requireTrustedOrigin"
@@ -42,7 +42,7 @@ export function createHostsHandlers({
       .use(requireTrustedOrigin)
       .use(withRpcPermission({ window: 60, max: 5 }))
       .handler(({ input, context }) =>
-        controlCall(context, (control, auth) => control.credentials.authorizeHost(auth, input)),
+        callControl(context, (control, auth) => control.credentials.authorizeHost(auth, input)),
       ),
     grant: os.hosts.grant.use(withPublicRpcAccess).handler(async ({ input, context }) => {
       await limitPeer(context, "hosts.grant");
@@ -53,7 +53,7 @@ export function createHostsHandlers({
       try {
         return await options.control.credentials.hostGrant(input.credential);
       } catch (error) {
-        return controlFailure(error, context);
+        return throwControlRpcError(error, context);
       }
     }),
     revoke: os.hosts.revoke.use(withPublicRpcAccess).handler(async ({ input, context }) => {
@@ -61,7 +61,7 @@ export function createHostsHandlers({
       try {
         return await options.control.credentials.revokeHost(input.credential);
       } catch (error) {
-        return controlFailure(error, context);
+        return throwControlRpcError(error, context);
       }
     }),
   };
