@@ -146,3 +146,108 @@ it("rejects user creation while registration is closed and names the site in mai
   expect((await signUp()).status).toBe(200);
   expect(sent).toMatchObject([{ email: "new@example.com", siteName: "Team" }]);
 });
+
+it("requires a valid Turnstile result for email-code requests when configured", async () => {
+  const origin = "http://localhost:3000";
+  const sendSignInCode = vi.fn(async () => {});
+  const auth = createAuth({
+    database: memoryAdapter({ user: [], verification: [] }),
+    mailer: {
+      sendVerification: async () => {},
+      sendPasswordReset: async () => {},
+      sendSignInCode,
+    },
+    config: {
+      baseURL: origin,
+      secret: "turnstile-test-secret-at-least-32-characters",
+      trustedOrigins: [],
+      production: false,
+      turnstile: { siteKey: "public-fixture-key", secretKey: "server-fixture-key" },
+    },
+  });
+  const { internalAdapter } = await auth.$context;
+  await internalAdapter.createUser(
+    {
+      name: "Turnstile Test",
+      email: "otp@example.test",
+      emailVerified: true,
+    },
+    { method: "email-password" },
+  );
+  const capabilities = await auth.handler(new Request(`${origin}/api/auth/social-providers`));
+  expect(await capabilities.json()).toEqual({
+    providers: [],
+    turnstileSiteKey: "public-fixture-key",
+  });
+  const send = (token?: string) =>
+    auth.handler(
+      new Request(`${origin}/api/auth/email-otp/send-verification-otp`, {
+        method: "POST",
+        headers: {
+          origin,
+          "content-type": "application/json",
+          ...(token ? { "x-captcha-response": token } : {}),
+        },
+        body: JSON.stringify({ email: "otp@example.test", type: "sign-in" }),
+      }),
+    );
+  expect((await send()).status).toBe(400);
+  const siteverify = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(Response.json({ success: true, hostname: "localhost", action: "other" }))
+    .mockResolvedValueOnce(
+      Response.json({ success: true, hostname: "localhost", action: "email-code" }),
+    );
+  try {
+    expect((await send("wrong-action")).status).toBe(403);
+    expect(sendSignInCode).not.toHaveBeenCalled();
+    expect((await send("correct-action")).status).toBe(200);
+    expect(siteverify).toHaveBeenCalledTimes(2);
+    expect(sendSignInCode).toHaveBeenCalledOnce();
+  } finally {
+    siteverify.mockRestore();
+  }
+});
+
+it("checks password hash prefixes only when setting a password and rejects known matches", async () => {
+  const origin = "http://localhost:3000";
+  const auth = createAuth({
+    database: memoryAdapter({ user: [], account: [], session: [], verification: [] }),
+    mailer: { sendVerification: async () => {}, sendPasswordReset: async () => {} },
+    config: {
+      baseURL: origin,
+      secret: "password-check-test-secret-at-least-32-characters",
+      trustedOrigins: [],
+      production: false,
+      checkCompromisedPasswords: true,
+    },
+  });
+  const password = "compromised-fixture";
+  const digest = new Uint8Array(
+    await crypto.subtle.digest("SHA-1", new TextEncoder().encode(password)),
+  );
+  const hash = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+  const rangeLookup = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(new Response(`${hash.slice(5)}:10\r\n`));
+  try {
+    const signUp = await auth.handler(
+      new Request(`${origin}/api/auth/sign-up/email`, {
+        method: "POST",
+        headers: { origin, "content-type": "application/json" },
+        body: JSON.stringify({ name: "Test", email: "check@example.test", password }),
+      }),
+    );
+    expect(signUp.status).toBe(400);
+    expect(await signUp.json()).toMatchObject({ code: "PASSWORD_COMPROMISED" });
+    expect(rangeLookup).toHaveBeenCalledOnce();
+    const lookup = new Request(rangeLookup.mock.calls[0]![0], rangeLookup.mock.calls[0]![1]);
+    expect(lookup.url).toBe(`https://api.pwnedpasswords.com/range/${hash.slice(0, 5)}`);
+    expect(lookup.body).toBeNull();
+    expect(lookup.headers.get("add-padding")).toBe("true");
+  } finally {
+    rangeLookup.mockRestore();
+  }
+});

@@ -6,6 +6,7 @@ import type {
   MailMessage,
   MailTransport,
   SendLinkEmailInput,
+  SendSignInCodeInput,
 } from "./types.js";
 
 export type {
@@ -14,6 +15,7 @@ export type {
   MailMessage,
   MailTransport,
   SendLinkEmailInput,
+  SendSignInCodeInput,
 } from "./types.js";
 export interface CreateMailerOptions {
   apiKey?: string;
@@ -34,12 +36,12 @@ export function createMailer(
 ): Mailer & { readonly available: boolean } {
   const resend = options.apiKey?.trim() ? new Resend(options.apiKey) : undefined;
   const available = Boolean(options.transport || (resend && options.from?.trim()));
-  async function send(kind: "verification" | "reset", input: SendLinkEmailInput) {
+  async function deliver(email: string, content: Pick<MailMessage, "subject" | "html" | "text">) {
     if (!available) throw new MailUnavailableError();
     const message: MailMessage = {
-      to: input.email,
+      to: email,
       from: options.from ?? "Raypx <noreply@raypx.local>",
-      ...(await renderLinkEmail(kind, input, options.defaultLocale)),
+      ...content,
     };
     if (options.transport) {
       await options.transport.send(message);
@@ -54,8 +56,23 @@ export function createMailer(
       );
     if (!delivered) throw new Error("Authentication email delivery failed");
   }
+  async function send(kind: "verification" | "reset", input: SendLinkEmailInput) {
+    await deliver(input.email, await renderLinkEmail(kind, input, options.defaultLocale));
+  }
+  async function sendSignInCode(input: SendSignInCodeInput) {
+    if (!/^\d{6}$/.test(input.code)) throw new Error("Invalid sign-in code");
+    const zh = (input.locale ?? options.defaultLocale) === "zh";
+    const subject = zh ? "Raypx 登录验证码" : "Your Raypx sign-in code";
+    const intro = zh ? "此验证码将在 5 分钟后过期。" : "This code expires in five minutes.";
+    await deliver(input.email, {
+      subject,
+      text: `${input.code}\n\n${intro}`,
+      html: `<p><strong>${input.code}</strong></p><p>${intro}</p>`,
+    });
+  }
   return {
     available,
+    sendSignInCode,
     sendVerification: (input) => send("verification", input),
     sendPasswordReset: (input) => send("reset", input),
   };

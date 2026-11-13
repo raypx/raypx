@@ -54,6 +54,16 @@ export function createAuthConfig(environment: ApiEnvironment) {
           }
         : {}),
     },
+    checkCompromisedPasswords: environment.AUTH_CHECK_COMPROMISED_PASSWORDS,
+    ...(environment.AUTH_PASSKEY_RP_ID ? { passkeyRpId: environment.AUTH_PASSKEY_RP_ID } : {}),
+    ...(environment.AUTH_TURNSTILE_SITE_KEY && environment.AUTH_TURNSTILE_SECRET_KEY
+      ? {
+          turnstile: {
+            siteKey: environment.AUTH_TURNSTILE_SITE_KEY,
+            secretKey: environment.AUTH_TURNSTILE_SECRET_KEY,
+          },
+        }
+      : {}),
     ...(environment.AUTH_DOMAIN ? { cookieDomain: environment.AUTH_DOMAIN } : {}),
     ...(environment.ipAddressHeaders.length
       ? { ipAddressHeaders: environment.ipAddressHeaders }

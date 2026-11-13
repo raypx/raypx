@@ -89,6 +89,10 @@ execution. Only explicit stop/GUI Quit ends it; never resend commands or input.
 
 Own native directory authorization and local UX. Runtime implementations live exclusively in CLI and shared schemas in `@raypx/contracts/local`; never import CLI source. Account loading and views use `@raypx/account` and `/client`. Client instances live in `src/features/auth/client.ts`. Logout actions use `@raypx/auth/hooks`; the renderer owns navigation and session display.
 
+The `/login` route and Host reauthorization open the configured API OAuth
+authorization endpoint in the system browser. Host renewal requires fresh
+authentication for the account already bound to the profile. The daemon owns the temporary callback and token exchange. Refresh
+the renderer session and resume the validated Desktop route after completion.
 `src/features/auth/components/form.tsx` adapts the shared `@raypx/auth/client` form
 for Desktop account URLs, auth client and router search. Shared forms own fields,
 translated feedback and submission state; the renderer owns navigation. Renderer tests use

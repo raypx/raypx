@@ -34,6 +34,15 @@ const server = {
   ALLOWED_ORIGINS: z
     .string()
     .default("http://localhost:3000,http://localhost:5173,views://main,raypx://"),
+  AUTH_PASSKEY_RP_ID: z
+    .union([z.literal(""), z.string().regex(/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/)])
+    .optional(),
+  AUTH_CHECK_COMPROMISED_PASSWORDS: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  AUTH_TURNSTILE_SITE_KEY: z.string().optional(),
+  AUTH_TURNSTILE_SECRET_KEY: z.string().optional(),
   AUTH_DOMAIN: z.string().min(1).optional(),
   AUTH_IP_HEADERS: z.string().optional(),
   AUTH_TRUSTED_PROXIES: z.string().optional(),
@@ -79,6 +88,10 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
         `${provider} login requires both ${provider}_CLIENT_ID and ${provider}_CLIENT_SECRET`,
       );
   }
+  if (Boolean(env.AUTH_TURNSTILE_SITE_KEY) !== Boolean(env.AUTH_TURNSTILE_SECRET_KEY))
+    throw new Error(
+      "Turnstile requires both AUTH_TURNSTILE_SITE_KEY and AUTH_TURNSTILE_SECRET_KEY",
+    );
   return {
     ...env,
     allowedOrigins: normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(",")),

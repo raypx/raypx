@@ -1,3 +1,4 @@
+import { desktopLoginAuthorizationSchema, desktopLoginStartSchema } from "./desktop-login.js";
 import { z } from "zod";
 import { localEventSchema } from "./local.js";
 import { localResults } from "./client.js";
@@ -93,3 +94,18 @@ export const desktopServerFrameSchema = z.discriminatedUnion("type", [
     event: localEventSchema,
   }),
 ]);
+
+const desktopLoginAttempt = z.strictObject({ id: z.uuid() });
+export const desktopLoginRequests = {
+  browser_login_start: desktopLoginAttempt.extend({
+    webOrigin: desktopLoginStartSchema.shape.webOrigin,
+    reauthorizeHost: desktopLoginStartSchema.shape.reauthorizeHost,
+  }),
+  browser_login_wait: desktopLoginAttempt,
+  browser_login_cancel: desktopLoginAttempt,
+};
+export const desktopLoginResults = {
+  browser_login_start: desktopLoginAuthorizationSchema,
+  browser_login_wait: z.literal(true),
+  browser_login_cancel: z.literal(true),
+};

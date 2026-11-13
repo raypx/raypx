@@ -19,3 +19,9 @@ it("preserves a valid application path, query and fragment", () => {
   expect(safeReturnTo("/projects")).toBe("/projects");
   expect(safeReturnTo("/automations?scope=cloud")).toBe("/automations?scope=cloud");
 });
+
+it("only resumes Desktop authorization with a valid request", () => {
+  const path = "/desktop-authorize?oauth=nonce%3Dabc%26sig%3Dxyz";
+  expect(safeReturnTo(`${path}&guestDraft=unrelated#fragment`)).toBe(path);
+  expect(safeReturnTo("/desktop-authorize?oauth=")).toBe("/");
+});

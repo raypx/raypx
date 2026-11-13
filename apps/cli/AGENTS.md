@@ -109,6 +109,10 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
 - Formal production packaging (ADR 0047) uses stable Bun 1.4.4: VP builds `src/main.ts` directly with Bun compile, ESM/minify and depth-0 bytecode. Keep the embedded Bun runtime and shims; disabling all bytecode trades little further size for slower startup. One identity is embedded and recorded in `dist/runtime.json`; Desktop, archives, smoke and Strobe share the complete signed payload. `RAYPX_CLI_PAYLOAD` consumers verify and never rebuild.
 
+Desktop OAuth/OIDC uses a per-attempt loopback listener. The daemon checks
+state and issuer, redeems the code with PKCE, and validates profile ownership. Keep exchange credentials
+and cookies private. Renderer release and logout cancel pending authorization.
+
 ## Verification
 
 Unit tests live beside runtime, command and TUI source; integration suites stay in

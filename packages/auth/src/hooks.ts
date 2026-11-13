@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { SocialProvider } from "@raypx/core/auth";
 
 export type AuthErrorKey =
+  | "passwordCompromised"
   | "registrationDisabled"
   | "mailUnavailable"
   | "invalidCredentials"
@@ -32,6 +33,7 @@ export type AuthActionSuccess = () => void | Promise<unknown>;
 export interface AuthActionResponse {
   error?: { code?: string | undefined; status?: number | undefined } | null | undefined;
   retryAfterSeconds?: number;
+  data?: unknown;
 }
 
 type RequestOptions = {
@@ -89,6 +91,7 @@ function authErrorKey({ code, status }: NonNullable<AuthActionResponse["error"]>
   if (code === "EMAIL_NOT_VERIFIED") return "emailNotVerified";
   if (code === "USER_ALREADY_EXISTS" || code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL")
     return "emailTaken";
+  if (code === "PASSWORD_COMPROMISED") return "passwordCompromised";
   if (code === "PASSWORD_TOO_SHORT") return "passwordShort";
   if (code === "PASSWORD_TOO_LONG") return "passwordLong";
   if (code === "INVALID_NAME") return "invalidName";
@@ -189,11 +192,13 @@ export function useAuthActions({
   webUrl,
   locale,
   callbackURLs,
+  onTwoFactorRequired,
 }: {
   client: AuthActionClient;
   webUrl: string;
   locale?: string;
   callbackURLs?: { verify: string; reset: string };
+  onTwoFactorRequired?: () => void;
 }) {
   const { run, ...state } = useAuthRequest();
   const fetchOptions: RequestOptions["fetchOptions"] = {
@@ -204,15 +209,24 @@ export function useAuthActions({
   return {
     ...state,
     signIn(input: Credentials, onSuccess?: AuthActionSuccess) {
-      return run(
-        () =>
-          client.signIn.email({
-            email: input.email.trim(),
-            password: input.password,
-            fetchOptions,
-          }),
-        onSuccess,
-      );
+      return run(async () => {
+        const result = await client.signIn.email({
+          email: input.email.trim(),
+          password: input.password,
+          fetchOptions,
+        });
+        const data = result.data;
+        if (
+          data &&
+          typeof data === "object" &&
+          "twoFactorRedirect" in data &&
+          data.twoFactorRedirect
+        ) {
+          onTwoFactorRequired?.();
+          return { error: { code: "TWO_FACTOR_REQUIRED" } };
+        }
+        return result;
+      }, onSuccess);
     },
     signUp(input: Credentials & { name: string }, onSuccess?: AuthActionSuccess) {
       return run(

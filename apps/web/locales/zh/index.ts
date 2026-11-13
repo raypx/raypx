@@ -7,6 +7,7 @@ import jobs from "@raypx/jobs/messages/zh";
 import analytics from "@raypx/analytics/messages/zh";
 import blocks from "@raypx/blocks/messages/zh";
 import instances from "@raypx/instances/messages/zh";
+import desktopAuthorization from "./desktopAuthorization.js";
 import dash from "./dash.js";
 import users from "./users.js";
 import site from "./site.js";
@@ -23,6 +24,7 @@ export default {
   ...analytics,
   ...blocks,
   ...instances,
+  desktopAuthorization,
   dash,
   users,
   site,

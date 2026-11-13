@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
   signUp: vi.fn(),
   resend: vi.fn(),
   listAccounts: vi.fn(),
+  passkeys: vi.fn(),
   requestPasswordReset: vi.fn(),
   resetPassword: vi.fn(),
   signOut: vi.fn(),
@@ -63,6 +64,7 @@ vi.mock("../../src/features/auth/client.js", () => ({
     signUp: { email: mocks.signUp },
     sendVerificationEmail: mocks.resend,
     listAccounts: mocks.listAccounts,
+    passkey: { listUserPasskeys: mocks.passkeys },
     requestPasswordReset: mocks.requestPasswordReset,
     resetPassword: mocks.resetPassword,
     signOut: mocks.signOut,
@@ -125,6 +127,8 @@ beforeEach(() => {
   mocks.tasks.mockResolvedValue([]);
   mocks.devices.mockResolvedValue([]);
   mocks.approvals.mockResolvedValue([]);
+  mocks.passkeys.mockResolvedValue({ data: [], error: null });
+  mocks.providers.mockResolvedValue({ data: { providers: ["google", "github"] }, error: null });
   sessionStorage.clear();
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();

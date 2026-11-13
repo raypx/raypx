@@ -1,4 +1,12 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { oauthProvider } from "@better-auth/oauth-provider";
+import { captcha } from "better-auth/plugins/captcha";
+import { passkey } from "@better-auth/passkey";
+import { haveIBeenPwned } from "better-auth/plugins/haveibeenpwned";
+import { emailOTP } from "better-auth/plugins/email-otp";
+import { twoFactor } from "better-auth/plugins/two-factor";
+import { jwt } from "better-auth/plugins/jwt";
+import { desktopLoginPaths, desktopOAuthClientId } from "@raypx/contracts/api";
 import { admin } from "better-auth/plugins/admin";
 import { accountAccessControl, accountRoles, assignedRoles } from "./access.js";
 import {
@@ -15,6 +23,7 @@ import {
   type AuthUser,
   type SocialProvider,
 } from "@raypx/core/auth";
+import { desktopLogin, desktopOAuthHash } from "./desktop-login.js";
 import { authPolicy } from "./policy.js";
 
 export interface AuthMailInput {
@@ -27,12 +36,16 @@ export interface AuthMailInput {
 export interface AuthMailer {
   sendVerification(input: AuthMailInput): Promise<void>;
   sendPasswordReset(input: AuthMailInput): Promise<void>;
+  sendSignInCode?(input: Omit<AuthMailInput, "url"> & { code: string }): Promise<void>;
 }
 export interface AuthConfiguration {
   baseURL: string;
   secret: string;
   trustedOrigins: string[];
   production: boolean;
+  passkeyRpId?: string;
+  checkCompromisedPasswords?: boolean;
+  turnstile?: { siteKey: string; secretKey: string };
   socialProviders?: Partial<Record<SocialProvider, { clientId: string; clientSecret: string }>>;
   /** Parent domain shared by separately hosted Web and API, e.g. "example.com". */
   cookieDomain?: string;
@@ -81,12 +94,42 @@ export function createAuth({
   if (config.secret.length < 32) throw new Error("AUTH_SECRET must contain at least 32 characters");
   if (config.production && new URL(config.baseURL).protocol !== "https:")
     throw new Error("Production AUTH_URL must use HTTPS");
-  return betterAuth({
+  const issuer = new URL(config.baseURL).origin;
+  const rpId = config.passkeyRpId ?? new URL(issuer).hostname;
+  const passkeyOrigins = origins.filter((origin) => {
+    const url = new URL(origin);
+    return (
+      (url.protocol === "https:" || (url.protocol === "http:" && url.hostname === "localhost")) &&
+      (url.hostname === rpId || url.hostname.endsWith(`.${rpId}`))
+    );
+  });
+  const socialProviders = config.socialProviders ?? {};
+  const turnstile =
+    config.turnstile &&
+    captcha({
+      provider: "cloudflare-turnstile",
+      secretKey: config.turnstile.secretKey,
+      endpoints: ["/email-otp/send-verification-otp"],
+      allowedHostnames: origins
+        .filter((origin) => /^https?:/.test(origin))
+        .map((origin) => new URL(origin).hostname),
+      expectedAction: "email-code",
+    });
+  const consent: Parameters<typeof desktopLogin>[2] = (headers, body) =>
+    auth.api.oauth2Consent({ headers, body });
+  const auth = betterAuth({
     appName: "Raypx",
     database,
     baseURL: config.baseURL,
     basePath: "/api/auth",
     secret: config.secret,
+    disabledPaths: [
+      "/token",
+      "/email-otp/verify-email",
+      "/email-otp/request-password-reset",
+      "/email-otp/reset-password",
+      "/forget-password/email-otp",
+    ],
     trustedOrigins: origins,
     socialProviders: {
       ...(config.socialProviders?.google
@@ -100,12 +143,57 @@ export function createAuth({
     // provider name as a substitute for verification.
     account: { accountLinking: { enabled: true, trustedProviders: [] } },
     plugins: [
+      twoFactor({ issuer: "Raypx" }),
+      emailOTP({
+        disableSignUp: true,
+        storeOTP: "hashed",
+        allowedAttempts: 3,
+        async sendVerificationOTP({ email, otp, type }, ctx) {
+          if (type !== "sign-in" || !mailer.sendSignInCode)
+            throw new APIError("BAD_REQUEST", { message: "Unsupported verification" });
+          const account = await ctx?.context.internalAdapter.findUserByEmail(email);
+          if (account && "twoFactorEnabled" in account.user && account.user.twoFactorEnabled)
+            return;
+          await mailer.sendSignInCode({
+            email,
+            code: otp,
+            ...recipientLocale(ctx?.request),
+            ...(await mailSite()),
+          });
+        },
+      }),
+      passkey({
+        rpID: rpId,
+        rpName: "Raypx",
+        origin: passkeyOrigins,
+        authenticatorSelection: { userVerification: "required" },
+      }),
+      haveIBeenPwned({ enabled: config.checkCompromisedPasswords === true }),
+      jwt({ jwt: { issuer, audience: desktopOAuthClientId }, disableSettingJwtHeader: true }),
+      oauthProvider({
+        loginPage: `${issuer}/api/auth${desktopLoginPaths.browser}`,
+        consentPage: `${issuer}/api/auth${desktopLoginPaths.browser}`,
+        scopes: ["openid"],
+        grantTypes: ["authorization_code"],
+        clientPrivileges: () => false,
+        resourcePrivileges: () => false,
+        allowDynamicClientRegistration: false,
+        codeExpiresIn: 300,
+        accessTokenExpiresIn: 60,
+        idTokenExpiresIn: 60,
+        storeTokens: { hash: desktopOAuthHash },
+      }),
+      desktopLogin(issuer, origins, consent),
       admin({ defaultRole: "member", ac: accountAccessControl, roles: accountRoles }),
       {
         id: "raypx-social-providers",
+        ...(turnstile?.onRequest ? { onRequest: turnstile.onRequest } : {}),
         endpoints: {
           socialProviders: createAuthEndpoint("/social-providers", { method: "GET" }, async (ctx) =>
-            ctx.json({ providers: Object.keys(config.socialProviders ?? {}) }),
+            ctx.json({
+              providers: Object.keys(socialProviders),
+              turnstileSiteKey: config.turnstile?.siteKey,
+            }),
           ),
         },
       },
@@ -117,6 +205,16 @@ export function createAuth({
             ctx.path.startsWith("/admin/") &&
             !["/admin/list-users", "/admin/get-user"].includes(ctx.path)) ||
           [
+            "/two-factor/enable",
+            "/two-factor/disable",
+            "/two-factor/generate-backup-codes",
+            "/two-factor/get-totp-uri",
+            "/two-factor/verify-totp",
+            "/two-factor/verify-backup-code",
+            "/link-social",
+            "/unlink-account",
+            "/passkey/verify-registration",
+            "/passkey/delete-passkey",
             "/update-user",
             "/change-password",
             "/revoke-session",
@@ -130,6 +228,48 @@ export function createAuth({
               code: "INVALID_ORIGIN",
               message: "Untrusted origin",
             });
+        }
+        if (ctx.path === "/two-factor/enable" && ctx.body?.method === "otp")
+          throw new APIError("BAD_REQUEST", { message: "Use an authenticator app" });
+        if (ctx.path === "/sign-in/email-otp") {
+          const email = typeof ctx.body?.email === "string" ? ctx.body.email.toLowerCase() : "";
+          const account = email && (await ctx.context.internalAdapter.findUserByEmail(email));
+          if (!account || ("twoFactorEnabled" in account.user && account.user.twoFactorEnabled))
+            throw new APIError("BAD_REQUEST", { code: "INVALID_OTP", message: "Invalid code" });
+        }
+        if (
+          [
+            "/link-social",
+            "/unlink-account",
+            "/passkey/verify-registration",
+            "/passkey/delete-passkey",
+          ].includes(ctx.path)
+        ) {
+          const session = await getAuthoritativeSessionFromCtx(ctx);
+          const user =
+            session &&
+            projectAuthUser(await ctx.context.internalAdapter.findUserById(session.user.id));
+          if (!user?.emailVerified || user.banned || session?.session.impersonatedBy)
+            throw new APIError("UNAUTHORIZED", { message: "Authentication required" });
+          if (ctx.path === "/unlink-account" || ctx.path === "/passkey/delete-passkey") {
+            const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
+            const removed = accounts.find(
+              (account) => ctx.path === "/unlink-account" && account.id === ctx.body?.accountId,
+            );
+            if (removed?.providerId === "credential")
+              throw new APIError("BAD_REQUEST", {
+                message: "Password credentials cannot be unlinked",
+              });
+            const fallback = accounts.some((account) => {
+              if (account === removed) return false;
+              if (account.providerId === "credential") return !!account.password;
+              if (account.providerId === "google" || account.providerId === "github")
+                return !!socialProviders[account.providerId];
+              return false;
+            });
+            if (!fallback)
+              throw new APIError("BAD_REQUEST", { message: "Add another sign-in method first" });
+          }
         }
         if (ctx.path.startsWith("/admin/") && (ctx.request || ctx.headers)) {
           const session = await getAuthoritativeSessionFromCtx(ctx);
@@ -304,6 +444,7 @@ export function createAuth({
         : {}),
     },
   });
+  return auth;
 }
 export type Auth = ReturnType<typeof createAuth>;
 export function projectAuthUser(value: unknown): AuthUser | null {
@@ -334,7 +475,7 @@ export async function readAuthSession(
   headers: Headers,
 ): Promise<AuthSession | null> {
   const result = await auth.api.getSession({ headers, query: { disableCookieCache: true } });
-  if (!result || result.session.impersonatedBy) return null;
+  if (!result || ("impersonatedBy" in result.session && result.session.impersonatedBy)) return null;
   const user = projectAuthUser(
     await (await auth.$context).internalAdapter.findUserById(result.user.id),
   );

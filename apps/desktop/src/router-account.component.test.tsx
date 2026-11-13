@@ -20,6 +20,8 @@ import type { AccountProfile } from "@raypx/contracts/api";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "./routeTree.gen.js";
+import { desktopFixture } from "../tests/helpers/desktop.js";
+import { DesktopPlatformProvider } from "./lib/platform-context.js";
 import { DesktopSignOutProvider } from "./features/auth/sign-out.js";
 
 expect.extend(matchers);
@@ -32,7 +34,6 @@ type SessionSnapshot = {
 const mocks = vi.hoisted(() => ({
   account: vi.fn(),
   getSession: vi.fn(),
-  signIn: vi.fn(),
   signOut: vi.fn(),
   hostSignOut: vi.fn(),
   session: { data: null, isPending: false, error: null } as SessionSnapshot,
@@ -43,7 +44,6 @@ vi.mock("./features/auth/client.js", () => ({
   webUrl: "https://raypx.example",
   authClient: {
     getSession: mocks.getSession,
-    signIn: { email: mocks.signIn },
     signUp: { email: vi.fn() },
     sendVerificationEmail: vi.fn(),
     requestPasswordReset: vi.fn(),
@@ -119,7 +119,6 @@ beforeEach(() => {
   mocks.listeners.clear();
   setSession(ada);
   mocks.account.mockResolvedValue(ada);
-  mocks.signIn.mockResolvedValue({ data: {}, error: null });
   mocks.signOut.mockResolvedValue({ data: {}, error: null });
   mocks.hostSignOut.mockResolvedValue(undefined);
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -147,24 +146,26 @@ function testRouter(
   });
 }
 
-function mount(router: ReturnType<typeof testRouter>) {
+function mount(router: ReturnType<typeof testRouter>, desktop = desktopFixture()) {
   return render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
       <ThemeProvider>
         <BrowserLanguageProvider>
-          <RouterProvider router={router} />
+          <DesktopPlatformProvider platform={desktop.platform}>
+            <RouterProvider router={router} />
+          </DesktopPlatformProvider>
         </BrowserLanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>,
   );
 }
 
-async function page(url = "/account", browser = false) {
+async function page(url = "/account", browser = false, desktop = desktopFixture()) {
   const router = testRouter(url, { browser });
   await router.load();
-  mount(router);
+  mount(router, desktop);
   return router;
 }
 
@@ -252,7 +253,7 @@ describe("Desktop account route", () => {
       await loading;
     });
     expect(requestSignal?.aborted).toBe(true);
-    expect(await screen.findByLabelText("Email address")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Sign in with browser" })).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -381,15 +382,18 @@ describe("Desktop account route", () => {
   );
 
   it("waits for authentication invalidation before navigating to the account route", async () => {
-    const router = await page("/login?returnTo=%2Faccount");
+    const desktop = desktopFixture();
+    desktop.setNative("browserLoginStart", async () => ({
+      authorizationUrl: "https://api.example.test/api/auth/oauth2/authorize?state=fixture",
+    }));
+    desktop.setNative("openExternal", async () => true);
+    desktop.setNative("browserLoginWait", async () => true);
+    desktop.setNative("browserLoginCancel", async () => true);
+    const router = await page("/login?returnTo=%2Faccount", false, desktop);
     const refresh = deferred<void>();
     const invalidate = vi.spyOn(router, "invalidate").mockReturnValue(refresh.promise);
     const navigate = vi.spyOn(router, "navigate");
-    fireEvent.change(screen.getByLabelText("Email address"), {
-      target: { value: ada.email },
-    });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
-    fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with browser" }));
     await waitFor(() => expect(invalidate).toHaveBeenCalledTimes(1));
     expect(navigate).not.toHaveBeenCalled();
     expect(router.state.location.pathname).toBe("/login");

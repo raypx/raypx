@@ -20,6 +20,11 @@ export function createApiApp(options: ApiAppOptions) {
   const timeout = options.rpcTimeoutMs ?? 15_000;
   app
     .route("/", health)
+    .on(
+      ["GET", "HEAD"],
+      ["/.well-known/openid-configuration", "/.well-known/oauth-authorization-server"],
+      (c) => options.authHandler(c.req.raw),
+    )
     .route("/api/auth", createAuthRoutes(options))
     .route("/", createOpenApiRoutes(router, health, timeout))
     .route(rpcPrefix, createRpcRoutes(router, timeout, options.logger));

@@ -1,3 +1,5 @@
+import { desktopLoginRequests } from "@raypx/contracts/desktop";
+import { BrowserLogin } from "./browser-login.js";
 import { accountProfileSchema } from "@raypx/contracts/api";
 import { localResults, type LocalClientMethod } from "@raypx/contracts/local-client";
 import { localParams, type LocalMethod } from "@raypx/contracts/local";
@@ -49,11 +51,18 @@ export class DesktopControl {
   private selected: string | null = null;
   private authorizationError = false;
   private httpScope = new AbortController();
+  private readonly browserLogin: BrowserLogin;
   constructor(
     private readonly api: DesktopApi,
     private readonly host: DesktopHost,
     private readonly directories: ConnectorDirectories,
-  ) {}
+  ) {
+    this.browserLogin = new BrowserLogin(api, host, () => {
+      this.httpScope.abort();
+      this.httpScope = new AbortController();
+      this.deselect();
+    });
+  }
   private get origin() {
     return this.api.cookies.origin.origin;
   }
@@ -105,6 +114,18 @@ export class DesktopControl {
     signal: AbortSignal,
   ): Promise<unknown> {
     signal.throwIfAborted();
+    if (method === "browser_login_start") {
+      const input = desktopLoginRequests[method].parse(raw);
+      if (input.reauthorizeHost) {
+        if (!this.selected) throw unauthorized();
+        await this.verify(this.selected, signal);
+      }
+      return this.browserLogin.start(input, client, signal);
+    }
+    if (method === "browser_login_wait")
+      return this.browserLogin.wait(desktopLoginRequests[method].parse(raw).id, client, signal);
+    if (method === "browser_login_cancel")
+      return this.browserLogin.cancel(desktopLoginRequests[method].parse(raw).id, client);
     if (method === "local_request") return this.localRequest(raw, client, signal);
     if (method === "api_cancel") {
       const { id } = z.strictObject({ id: z.uuid() }).parse(raw);
@@ -114,6 +135,7 @@ export class DesktopControl {
       const input = z.object({ path: z.string() }).parse(raw);
       const path = new URL(input.path, this.origin).pathname;
       if (sessionMutations.has(path)) {
+        this.browserLogin.cancel();
         this.httpScope.abort();
         this.httpScope = new AbortController();
         // Only an explicit sign-out revokes host access. Signing in must not: the daemon's
@@ -240,6 +262,7 @@ export class DesktopControl {
     return localResults[method].parse(await host.request(method, parsed, client, signal));
   }
   close() {
+    this.browserLogin.cancel();
     this.selection.abort();
     this.httpScope.abort();
   }

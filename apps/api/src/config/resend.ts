@@ -131,6 +131,7 @@ export function databaseMailer(
   return {
     available: async () => readCached().then(Boolean, () => false),
     sendVerification: async (input) => (await requireMailer()).sendVerification(input),
+    sendSignInCode: async (input) => (await requireMailer()).sendSignInCode(input),
     sendPasswordReset: async (input) => (await requireMailer()).sendPasswordReset(input),
   } satisfies Mailer & { available(): Promise<boolean> };
 }

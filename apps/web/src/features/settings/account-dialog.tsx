@@ -1,3 +1,5 @@
+import { TwoFactorSettings } from "../auth/components/two-factor-settings.js";
+import { SignInMethods } from "../auth/components/sign-in-methods.js";
 import { useTranslations } from "../../i18n.js";
 import type { ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -73,7 +75,9 @@ export default function AccountSettingsDialog({
         <PrivateSettings>
           {(id) =>
             user?.id === id && (
-              <PasswordSettings key={id} accountId={id} email={user.email} reload={reload} />
+              <div className="grid gap-5" key={id}>
+                <PasswordSettings accountId={id} email={user.email} reload={reload} />
+              </div>
             )
           }
         </PrivateSettings>
@@ -121,7 +125,7 @@ function PasswordSettings({
       });
       if (error || !Array.isArray(data) || data.some((account) => account.userId !== accountId))
         throw new Error("Linked accounts unavailable");
-      return data.some((account) => account.providerId === "credential");
+      return data;
     },
   });
   const recoveryLink = (
@@ -142,21 +146,42 @@ function PasswordSettings({
         </Button>
       </div>
     );
-  if (!query.data) return <PasswordSetupEmail client={authClient} email={email} webUrl={webUrl} />;
+  const hasPassword = query.data.some((account) => account.providerId === "credential");
   return (
-    <PasswordChangeDialog
-      client={authClient}
-      recoveryLink={recoveryLink}
-      onChanged={async () => {
-        const result = await authClient.getSession({
-          fetchOptions: { signal: AbortSignal.timeout(10_000) },
-        });
-        if (result.error || result.data?.user.id !== accountId)
-          throw new Error("Session refresh failed");
-        await reload();
-      }}
-    />
+    <>
+      {hasPassword ? (
+        <>
+          <PasswordChangeDialog
+            client={authClient}
+            recoveryLink={recoveryLink}
+            onChanged={async () => {
+              const result = await authClient.getSession({
+                fetchOptions: { signal: AbortSignal.timeout(10_000) },
+              });
+              if (result.error || result.data?.user.id !== accountId)
+                throw new Error("Session refresh failed");
+              await reload();
+            }}
+          />
+          <TwoFactorPanel />
+        </>
+      ) : (
+        <PasswordSetupEmail client={authClient} email={email} webUrl={webUrl} />
+      )}
+      <SignInMethods
+        accounts={query.data}
+        accountId={accountId}
+        reloadAccounts={async () => {
+          await query.refetch({ throwOnError: true });
+        }}
+      />
+    </>
   );
+}
+
+function TwoFactorPanel() {
+  const user = authClient.useSession().data?.user;
+  return <TwoFactorSettings enabled={user?.twoFactorEnabled === true} />;
 }
 
 function AccountProfile({

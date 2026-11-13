@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { twoFactorClient } from "better-auth/client/plugins";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 import { serverOrigin, sessionStoragePrefix } from "./config.js";
@@ -12,6 +13,7 @@ export const authClient = createAuthClient({
   fetchOptions: { headers: { Origin: apiOrigin } },
   sessionOptions: { refetchInterval: 60 },
   plugins: [
+    twoFactorClient(),
     expoClient({
       scheme: "raypx-mobile",
       storagePrefix: sessionStoragePrefix(apiOrigin),

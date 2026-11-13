@@ -1,5 +1,11 @@
 import type { Database } from "@raypx/database/connection";
-import { rateLimit, session, sessionAttachment, verification } from "@raypx/database/schema";
+import {
+  oauthAccessToken,
+  rateLimit,
+  session,
+  sessionAttachment,
+  verification,
+} from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
 import type { ConfigReader } from "../config/types.js";
@@ -28,6 +34,7 @@ export interface CleanupResult {
   rateLimits: number;
   contextCommands: number;
   attachments: number;
+  oauthTokens: number;
 }
 
 /** Repeated runs are safe; every transaction removes at most 1,000 rows per table. */
@@ -45,12 +52,19 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
       rateLimits: 0,
       contextCommands: 0,
       attachments: 0,
+      oauthTokens: 0,
     };
     if (!lock?.acquired) return result;
 
     // Database time is authoritative. Keep a full day after token/session expiry;
     // stale rate limits retain an hour, well beyond the shared 60-second window.
     const policies = [
+      {
+        key: "oauthTokens",
+        table: oauthAccessToken,
+        order: oauthAccessToken.expiresAt,
+        expired: sql`${oauthAccessToken.expiresAt} < transaction_timestamp() - interval '1 day'`,
+      },
       {
         key: "sessions",
         table: session,
@@ -117,6 +131,7 @@ export async function runCleanupJob(
           rateLimits: 0,
           contextCommands: 0,
           attachments: 0,
+          oauthTokens: 0,
         };
     event.emit({
       status: 200,
@@ -125,6 +140,7 @@ export async function runCleanupJob(
         status: result.status,
         sessions: String(result.sessions),
         verifications: String(result.verifications),
+        oauthTokens: String(result.oauthTokens),
         rateLimits: String(result.rateLimits),
         contextReceipts: String(result.contextCommands),
       },

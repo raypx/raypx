@@ -116,10 +116,10 @@ describe("Desktop local file routes", () => {
       ).toHaveLength(2);
     });
     await act(async () => router.navigate({ to: "/login" }));
-    expect(await screen.findByLabelText("Email address")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Sign in with browser" })).toBeTruthy();
     await act(async () => lateJobs.resolve([job("Late automation")]));
     expect(router.state.location.pathname).toBe("/login");
-    expect(screen.getByLabelText("Email address")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sign in with browser" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Late automation" })).toBeNull();
   });
 });

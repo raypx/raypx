@@ -7,6 +7,7 @@ import jobs from "@raypx/jobs/messages/en";
 import analytics from "@raypx/analytics/messages/en";
 import blocks from "@raypx/blocks/messages/en";
 import instances from "@raypx/instances/messages/en";
+import desktopLogin from "./desktopLogin.js";
 import files from "./files.js";
 import terminal from "./terminal.js";
 import engine from "./engine.js";
@@ -23,6 +24,7 @@ export default {
   ...analytics,
   ...blocks,
   ...instances,
+  desktopLogin,
   files,
   terminal,
   engine,

@@ -105,9 +105,7 @@ test(
     ).toBeVisible();
     await page.getByRole("link", { name: "Sign in", exact: true }).click();
     await expect(page).toHaveURL(/\/login\?returnTo=%2Ftasks%3Fscope%3Dremote/);
-    await page.getByRole("link", { name: "Create account", exact: true }).click();
-    await expect(page).toHaveURL(/\/signup\?returnTo=/);
-    await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in with browser" })).toBeVisible();
     await page.goto(desktop + "/welcome");
     await expect(
       page.getByRole("heading", { name: "Start on this computer", exact: true }),
@@ -122,21 +120,11 @@ test(
 );
 
 test(
-  "Desktop returns to the requested remote page after login and keeps local tools after logout",
+  "Desktop keeps local tools after signing out of the remote workspace",
   { tag: ["@desktop", "@smoke"] },
   async ({ page }) => {
-    await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
+    await signedInAccount(page);
     await page.goto(desktop + "/tasks?scope=remote");
-    await page.getByRole("link", { name: "Sign in", exact: true }).click();
-    await page.route("**/api/auth/sign-in/email", async (route) => {
-      const user = await signedInAccount(page);
-      return authResponse(route, { user, token: "browser-fixture-only" });
-    });
-    await page
-      .getByRole("textbox", { name: "Email address", exact: true })
-      .fill("desktop@example.test");
-    await page.getByLabel("Password", { exact: true }).fill("browser-fixture-password");
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page).toHaveURL(desktop + "/tasks?scope=remote");
     await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
     await page.route("**/api/auth/sign-out", async (route) => {

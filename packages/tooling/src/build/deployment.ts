@@ -8,7 +8,12 @@ export const deploymentServices = {
 
 export const apiIngress = {
   prefixes: ["/api/", "/rpc/"],
-  paths: [deploymentServices.api.health, deploymentServices.api.ready],
+  paths: [
+    "/.well-known/openid-configuration",
+    "/.well-known/oauth-authorization-server",
+    deploymentServices.api.health,
+    deploymentServices.api.ready,
+  ],
 } as const;
 
 export const relayIngress = { paths: ["/relay"] } as const;

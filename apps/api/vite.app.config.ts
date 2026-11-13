@@ -55,6 +55,8 @@ export default defineConfig({
           method: "GET",
         },
         "/api/auth/**": { handler, format: "web" },
+        "/.well-known/openid-configuration": { handler, format: "web" },
+        "/.well-known/oauth-authorization-server": { handler, format: "web" },
         "/rpc/**": { handler, format: "web" },
         [deploymentServices.api.health]: { handler, format: "web" },
         [deploymentServices.api.ready]: { handler, format: "web" },

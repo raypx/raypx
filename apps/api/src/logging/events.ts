@@ -29,6 +29,7 @@ interface ApiEventFields {
       status: "completed" | "skipped" | "disabled";
       sessions: string;
       verifications: string;
+      oauthTokens: string;
       rateLimits: string;
       contextReceipts: string;
     };

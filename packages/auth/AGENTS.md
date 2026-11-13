@@ -41,6 +41,11 @@ Account authentication, platform-specific session adapters and shared DOM forms.
   permission projections consume this same ACL. Admin grants user list, get and
   set-role only; other account administration operations remain denied.
 
+The server uses Better Auth OAuth Provider for the Desktop public client's code
+and PKCE flow. Raypx binds the signed authorization request to its profile and
+confirmed account, then exchanges the OAuth result for an independent native
+session that retains the source authentication time.
+
 ## Ownership
 
 Own authentication actions, safe request state and the shared DOM form's fields,
@@ -100,3 +105,5 @@ Own `auth` in `locales/<language>/`, with handwritten language entries
 and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
 JSON nested strings, one format per namespace/language. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.
+
+- Web sign-in supports passkeys, Resend email codes and TOTP with backup codes. Keep profile-bound Host reauthorization on the Desktop OAuth flow and require a fresh browser session.

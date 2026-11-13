@@ -12,6 +12,7 @@ const result = {
   rateLimits: 3,
   contextCommands: 0,
   attachments: 0,
+  oauthTokens: 0,
 };
 it("uses the server runtime without closing the shared HTTP pool", async () => {
   const runtime = { jobs: { cleanup: vi.fn(async () => result) }, close: vi.fn() };

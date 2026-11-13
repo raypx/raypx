@@ -32,6 +32,7 @@ roll back together. Keep the official Drizzle migrator inside that transaction.
 The migrator moves the previous ledger into `public` before Drizzle reads it.
 The API's `db:migrate` command can inject a provider import into the same
 transaction after the schema applies. Database has no dependency on provider policy.
+OAuth Provider and JWT signing tables live in `src/oauth-schema.ts`.
 Session and verification expiry indexes support API maintenance batches; retention
 and scheduling policy belongs to the API, not this persistence package.
 Better Auth Admin uses `user.role/banned/ban_reason/ban_expires` and
@@ -94,3 +95,5 @@ bounded non-secret change snapshots. Actor/target IDs deliberately have no casca
 foreign keys: historical evidence survives account deletion. API owns transaction
 coupling, result classification, access control and long-term retention. Time and
 identity indexes support cursor queries. `user.created_at` indexes registration trends.
+
+- Better Auth owns the passkey and two-factor records. Apply foundation migrations before enabling clients that use them.

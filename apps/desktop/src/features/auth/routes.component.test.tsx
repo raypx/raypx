@@ -18,12 +18,13 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DesktopSignOutProvider } from "./sign-out.js";
+import { desktopFixture, deferred } from "../../../tests/helpers/desktop.js";
+import { DesktopPlatformProvider } from "../../lib/platform-context.js";
 import { routeTree } from "../../routeTree.gen.js";
 
 expect.extend(matchers);
 
 const mocks = vi.hoisted(() => ({
-  signIn: vi.fn(),
   signUp: vi.fn(),
   resend: vi.fn(),
   requestPasswordReset: vi.fn(),
@@ -36,7 +37,6 @@ vi.mock("./client.js", () => ({
   apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {
-    signIn: { email: mocks.signIn },
     signUp: { email: mocks.signUp },
     sendVerificationEmail: mocks.resend,
     requestPasswordReset: mocks.requestPasswordReset,
@@ -92,7 +92,7 @@ beforeEach(() => {
   window.history.replaceState({}, "", "/");
 });
 
-async function page(url: string, browser = false) {
+async function page(url: string, browser = false, desktop = desktopFixture()) {
   if (browser) window.history.replaceState({}, "", url);
   const history = browser ? createBrowserHistory() : createMemoryHistory({ initialEntries: [url] });
   histories.push(history);
@@ -101,7 +101,9 @@ async function page(url: string, browser = false) {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <BrowserLanguageProvider>
-        <RouterProvider router={router} />
+        <DesktopPlatformProvider platform={desktop.platform}>
+          <RouterProvider router={router} />
+        </DesktopPlatformProvider>
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
@@ -130,8 +132,14 @@ describe("Desktop authentication routes", () => {
     expect(await screen.findByRole("status")).toBeTruthy();
   });
 
-  it("navigates to the Desktop account route after sign-in", async () => {
-    mocks.signIn.mockResolvedValue({ data: {}, error: null });
+  it("opens the configured OAuth authorization endpoint and returns to the Desktop account route after authorization", async () => {
+    const desktop = desktopFixture();
+    const completion = deferred<true>();
+    desktop.setNative("browserLoginStart", async () => ({
+      authorizationUrl: "https://api.example.test/api/auth/oauth2/authorize?state=fixture",
+    }));
+    desktop.setNative("openExternal", async () => true);
+    desktop.setNative("browserLoginWait", async () => completion.promise);
     mocks.account.mockResolvedValue({ id: "u1", name: "Ada", email: "ada@example.test" });
     mocks.session.mockReturnValue({
       data: { user: { id: "u1", name: "Ada", email: "ada@example.test" } },
@@ -139,14 +147,17 @@ describe("Desktop authentication routes", () => {
       isPending: false,
       refetch: async () => {},
     });
-    const router = await page("/login?returnTo=%2Faccount");
-    fireEvent.change(screen.getByLabelText("Email address"), {
-      target: { value: "ada@example.test" },
+    const router = await page("/login?returnTo=%2Faccount", false, desktop);
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with browser" }));
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Finish signing in in your browser",
+    );
+    expect(desktop.calls).toContainEqual({
+      method: "openExternal",
+      input: { url: "https://api.example.test/api/auth/oauth2/authorize?state=fixture" },
     });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
-    fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
+    completion.resolve(true);
     await waitFor(() => expect(router.state.location.pathname).toBe("/account"));
-    await waitFor(() => expect(screen.queryByLabelText("Password")).toBeNull());
   });
 
   it("submits a reset-link token without requiring an email", async () => {
@@ -198,23 +209,24 @@ describe("Desktop authentication routes", () => {
     expect(screen.getByLabelText("Email address")).toBeTruthy();
   });
 
-  it("clears errors and fields when switching authentication routes", async () => {
-    mocks.signIn.mockResolvedValue({ error: { code: "INVALID_EMAIL_OR_PASSWORD" } });
-    const router = await page("/login");
-    fireEvent.change(screen.getByLabelText("Email address"), {
-      target: { value: "ada@example.test" },
-    });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "incorrect" } });
-    fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The email or password is incorrect.",
-    );
-    fireEvent.click(screen.getByRole("link", { name: "Create account" }));
-    await waitFor(() => expect(router.state.location.pathname).toBe("/signup"));
-    expect(await screen.findByLabelText("Your name")).toBeTruthy();
-    expect(screen.getByLabelText("Email address")).toHaveValue("");
-    expect(screen.getByLabelText("Password")).toHaveValue("");
-    expect(screen.queryByRole("alert")).toBeNull();
+  it("cancels browser sign-in and ignores an obsolete completion", async () => {
+    const desktop = desktopFixture();
+    const completion = deferred<true>();
+    desktop.setNative("browserLoginStart", async () => ({
+      authorizationUrl: "https://api.example.test/api/auth/oauth2/authorize?state=fixture",
+    }));
+    desktop.setNative("openExternal", async () => true);
+    desktop.setNative("browserLoginWait", async () => completion.promise);
+    const cancel = vi.fn(async () => true as const);
+    desktop.setNative("browserLoginCancel", cancel);
+    const router = await page("/login", false, desktop);
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with browser" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    expect(cancel).toHaveBeenCalledTimes(1);
+    completion.resolve(true);
+    expect(router.state.location.pathname).toBe("/login");
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByRole("button", { name: "Sign in with browser" })).toBeEnabled();
   });
 
   it("reads reset tokens from the browser URL query", async () => {

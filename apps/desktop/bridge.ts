@@ -23,6 +23,9 @@ export interface DesktopRuntime {
 /** Product methods; the adapter routes business calls directly to the daemon. */
 export const DESKTOP_METHODS = {
   openExternal: "open_external",
+  browserLoginStart: "browser_login_start",
+  browserLoginWait: "browser_login_wait",
+  browserLoginCancel: "browser_login_cancel",
   apiFetch: "api_fetch",
   apiCancel: "api_cancel",
   controlInfo: "control_info",
@@ -52,6 +55,12 @@ type DesktopRequests = {
   executionResult: { params: { id: string }; response: ToolResult };
   terminalRestore: { params: { id: string }; response: { accepted: true } };
   recoverSession: { params: Record<string, never>; response: boolean };
+  browserLoginStart: {
+    params: { id: string; webOrigin: string; reauthorizeHost?: true };
+    response: { authorizationUrl: string };
+  };
+  browserLoginWait: { params: { id: string }; response: true };
+  browserLoginCancel: { params: { id: string }; response: true };
   openExternal: { params: { url: string }; response: boolean };
   apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
   apiCancel: { params: { id: string }; response: boolean };

@@ -4,6 +4,8 @@ import {
   type DesktopClientFrame,
   desktopExecutionRequests,
   desktopExecutionResults,
+  desktopLoginRequests,
+  desktopLoginResults,
 } from "@raypx/contracts/desktop";
 import {
   DESKTOP_METHODS,
@@ -285,6 +287,16 @@ export async function createMyGoBridge(dispatch: (event: unknown) => void): Prom
             await requestDaemon(
               query,
               desktopExecutionRequests[query].parse(input),
+              options?.maxRequestTime,
+            ),
+          );
+        }
+        if (Object.hasOwn(desktopLoginRequests, method)) {
+          const action = method as keyof typeof desktopLoginRequests;
+          return desktopLoginResults[action].parse(
+            await requestDaemon(
+              action,
+              desktopLoginRequests[action].parse(input),
               options?.maxRequestTime,
             ),
           );

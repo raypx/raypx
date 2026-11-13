@@ -60,3 +60,5 @@ Run `bun run --cwd apps/mobile check`, `test`, and `build`; device acceptance is
 
 Statically compose common and auth in private language entries; never import DOM
 i18n adapters or other product catalogs.
+
+- Expo password login handles Better Auth TOTP and backup-code challenges.

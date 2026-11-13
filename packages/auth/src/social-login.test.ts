@@ -15,7 +15,7 @@ async function fixture(provider: SocialProvider, registrationAllowed = true, ema
     verification: [],
   };
   const mailer = {
-    sendVerification: vi.fn(async () => {}),
+    sendVerification: vi.fn<AuthMailer["sendVerification"]>(async () => {}),
     sendPasswordReset: vi.fn<AuthMailer["sendPasswordReset"]>(async () => {}),
   };
   const auth = createAuth({
@@ -217,4 +217,45 @@ it("consumes OAuth state once so callback replay cannot create another session",
   const result = await finish(replay);
   expect(new URL(result.headers.get("location")!).searchParams.has("error")).toBe(true);
   expect(records.session).toHaveLength(1);
+});
+
+it("links and removes a provider from a verified account with a password fallback", async () => {
+  const { auth, records, mailer, finish } = await fixture("github");
+  const origin = "http://localhost:3000";
+  const post = (path: string, body: object, cookie?: string, requestOrigin = origin) =>
+    auth.handler(
+      new Request(`http://localhost:3002/api/auth/${path}`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: requestOrigin,
+          ...(cookie ? { cookie } : {}),
+        },
+        body: JSON.stringify(body),
+      }),
+    );
+  const credentials = { email: "social@example.test", password: "link-fixture-password" };
+  expect((await post("sign-up/email", { ...credentials, name: "Local Account" })).status).toBe(200);
+  await auth.handler(new Request(mailer.sendVerification.mock.calls[0]![0].url));
+  const signedIn = await post("sign-in/email", credentials);
+  expect(signedIn.status).toBe(200);
+  const cookie = signedIn.headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ");
+  const callbackURL = `${origin}/projects#settings/password`;
+  const link = { provider: "github", callbackURL, errorCallbackURL: callbackURL };
+  expect((await post("link-social", link, cookie, "https://untrusted.example.test")).status).toBe(
+    403,
+  );
+  const initiated = await post("link-social", link, cookie);
+  expect(initiated.status).toBe(200);
+  const completed = await finish(initiated);
+  expect(completed.headers.get("location")).toBe(callbackURL);
+  const provider = records.account.find((account) => account.providerId === "github");
+  const password = records.account.find((account) => account.providerId === "credential");
+  expect(provider?.userId).toBe(password?.userId);
+  expect((await post("unlink-account", { accountId: password?.id }, cookie)).status).toBe(400);
+  expect((await post("unlink-account", { accountId: provider?.id }, cookie)).status).toBe(200);
+  expect(records.account.map((account) => account.providerId)).toEqual(["credential"]);
 });

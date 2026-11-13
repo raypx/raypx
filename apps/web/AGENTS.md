@@ -193,6 +193,11 @@ behavior by client/contracts.
 See [foundation architecture](../../docs/architecture/0034-extensible-foundation.md)
 and [verification](../../docs/development/testing.md).
 
+The public `/desktop-authorize` route displays the account and computer before
+explicit approval. It preserves the signed OAuth request through the existing
+Web sign-in return path. The API owns
+request expiry, origin/account checks and exchange.
+
 ## Verification
 
 ```sh
@@ -294,3 +299,5 @@ Infer app translation types from the English entry; shared views read the same
 messages context through their private typed hooks.
 The app-owned static/lazy entries are selected by the i18n Vite plugin for this
 client only: English static, Chinese lazy, SSR static. Preload before hydration.
+
+- Account settings manage linked providers, passkeys and authenticator setup. Browser sign-in preserves the Desktop authorization destination through every supported Web method.

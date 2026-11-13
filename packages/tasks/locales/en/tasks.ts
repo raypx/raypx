@@ -70,10 +70,10 @@ export default {
   managedRequests: "Session requests",
   managedNothingWaiting: "No managed sessions need your answer.",
   daemonAuthorizationRequired:
-    "Authorizing this computer requires a recent sign-in. Confirm your password to continue.",
+    "Authorizing this computer requires a recent sign-in. Verify your identity in the browser.",
   daemonReauthorize: "Authorize this computer again",
   daemonReauthorizeHint:
-    "Confirm the password for this account. Raypx will refresh your sign-in and retry host authorization. Running sessions will continue.",
+    "Verify the current account in your browser to authorize this computer again.",
   daemonHint:
     "On macOS, sessions continue after quitting Desktop. Signing out or disconnecting stops this account's work.",
   pendingCount: "{count, plural, one {# pending approval} other {# pending approvals}}",

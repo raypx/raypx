@@ -21,11 +21,15 @@
     "test:coverage": "bun --bun vitest run --coverage"
   },
   "dependencies": {
+    "@better-auth/oauth-provider": "catalog:",
+    "@better-auth/passkey": "catalog:",
+    "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "better-auth": "catalog:"
+    "better-auth": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

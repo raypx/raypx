@@ -62,7 +62,13 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
       origin: (origin) => (allowedOrigins.includes(origin) ? origin : undefined),
       credentials: true,
       allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
-      allowHeaders: ["Content-Type", "Authorization", "Accept-Language", "X-Request-Id"],
+      allowHeaders: [
+        "Content-Type",
+        "Authorization",
+        "Accept-Language",
+        "X-Request-Id",
+        "X-Captcha-Response",
+      ],
       exposeHeaders: ["X-Request-Id", "Retry-After", "X-Retry-After"],
       // Every JSON RPC call is preflighted; let browsers reuse the answer for ten minutes.
       maxAge: 600,

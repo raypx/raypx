@@ -1,12 +1,15 @@
 /** @vitest-environment happy-dom */
 import { BrowserLanguageProvider } from "../i18n.js";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   recent: false,
   authorized: false,
-  signIn: vi.fn(),
+  start: vi.fn(async () => ({ authorizationUrl: "https://api.example.test/authorize" })),
+  wait: vi.fn(),
+  cancel: vi.fn(async () => {}),
+  open: vi.fn(async () => true),
   refetch: vi.fn(async () => {}),
   detach: vi.fn(),
   session: vi.fn(async () => true),
@@ -19,7 +22,7 @@ vi.mock("./auth/client.js", () => ({
   apiUrl: "https://api.example.test",
   webUrl: "https://web.example.test",
   authClient: {
-    signIn: { email: mocks.signIn },
+    getSession: async () => ({ data: { user: { id: "account" } }, error: null }),
     useSession: () => ({
       data: { user: { id: "account", email: "user@example.test" } },
       isPending: false,
@@ -43,6 +46,10 @@ vi.mock("../lib/desktop.js", () => ({
   localRequest: mocks.local,
   getBridge: async () => ({
     request: {
+      browserLoginStart: mocks.start,
+      browserLoginWait: mocks.wait,
+      browserLoginCancel: mocks.cancel,
+      openExternal: mocks.open,
       controlSession: mocks.session,
       controlInfo: async () => ({
         daemon: true,
@@ -70,9 +77,8 @@ import { RemoteCoordinator } from "./tasks/coordinator.js";
 beforeEach(() => {
   mocks.recent = false;
   mocks.authorized = false;
-  mocks.signIn.mockImplementation(async () => {
+  mocks.wait.mockImplementation(async () => {
     mocks.recent = true;
-    return { error: null };
   });
   mocks.attach.mockImplementation(async () => {
     if (!mocks.recent)
@@ -107,41 +113,35 @@ it("offers in-place authentication for a stale session and retries bootstrap wit
   await waitFor(() => expect(mocks.attach).toHaveBeenCalledTimes(1));
   expect(mocks.detach).not.toHaveBeenCalled();
   fireEvent.click(await screen.findByRole("button", { name: "Authorize this computer again" }));
-  const email = await screen.findByLabelText<HTMLInputElement>("Email address");
-  expect(email.readOnly).toBe(true);
-  expect(email.value).toBe("user@example.test");
-  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "synthetic-password" } });
-  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Sign in with browser" }));
   await waitFor(() => expect(mocks.authorized).toBe(true));
-  expect(mocks.signIn).toHaveBeenCalledExactlyOnceWith({
-    email: "user@example.test",
-    password: "synthetic-password",
-    fetchOptions: { headers: { "Accept-Language": "en" } },
-  });
+  expect(mocks.start).toHaveBeenCalledExactlyOnceWith(
+    { id: expect.any(String), webOrigin: "https://web.example.test", reauthorizeHost: true },
+    { maxRequestTime: 35_000 },
+  );
+  expect(mocks.open).toHaveBeenCalledExactlyOnceWith({ url: "https://api.example.test/authorize" });
   expect(mocks.refetch).toHaveBeenCalledTimes(1);
   expect(mocks.attach).toHaveBeenCalledTimes(2);
   expect(mocks.detach).not.toHaveBeenCalled();
   expect(mocks.local.mock.calls.every(([method]) => method !== "agents.local.detach")).toBe(true);
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 });
-it("keeps failed authentication actionable and clears passwords on submission and cancellation", async () => {
-  mocks.signIn.mockResolvedValue({ error: { code: "INVALID_EMAIL_OR_PASSWORD" } });
+
+it("retries an expired browser attempt and cancels the replacement when closed", async () => {
+  mocks.wait.mockRejectedValueOnce(
+    Object.assign(new Error("Expired"), { code: "DESKTOP_LOGIN_EXPIRED" }),
+  );
+  mocks.wait.mockImplementationOnce(() => new Promise(() => {}));
   mount();
   await waitFor(() => expect(mocks.attach).toHaveBeenCalledTimes(1));
   fireEvent.click(await screen.findByRole("button", { name: "Authorize this computer again" }));
-  const password = await screen.findByLabelText<HTMLInputElement>("Password");
-  fireEvent.change(password, { target: { value: "wrong-password" } });
-  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-  await screen.findByText("The email or password is incorrect.");
-  expect(password.value).toBe("");
+  fireEvent.click(await screen.findByRole("button", { name: "Sign in with browser" }));
+  await screen.findByText("This sign-in request expired. Start again to open a new request.");
+  fireEvent.click(screen.getByRole("button", { name: "Sign in with browser" }));
+  await screen.findByRole("status");
+  fireEvent.click(screen.getByRole("button", { name: /^Close$/ }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(mocks.cancel).toHaveBeenCalledTimes(2);
   expect(mocks.refetch).not.toHaveBeenCalled();
   expect(mocks.attach).toHaveBeenCalledTimes(1);
-  fireEvent.change(password, { target: { value: "cleared-on-cancel" } });
-  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  await act(async () => {
-    fireEvent.click(screen.getByRole("button", { name: "Authorize this computer again" }));
-  });
-  expect((await screen.findByLabelText<HTMLInputElement>("Password")).value).toBe("");
-  expect(screen.queryByText("The email or password is incorrect.")).toBeNull();
 });

@@ -67,6 +67,10 @@ services:
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       AUTH_IP_HEADERS: ${AUTH_IP_HEADERS:-x-forwarded-for}
       AUTH_TRUSTED_PROXIES: ${AUTH_TRUSTED_PROXIES:?Set the trusted proxy CIDRs}
+      AUTH_PASSKEY_RP_ID: ${AUTH_PASSKEY_RP_ID:-}
+      AUTH_CHECK_COMPROMISED_PASSWORDS: ${AUTH_CHECK_COMPROMISED_PASSWORDS:-false}
+      AUTH_TURNSTILE_SITE_KEY: ${AUTH_TURNSTILE_SITE_KEY:-}
+      AUTH_TURNSTILE_SECRET_KEY: ${AUTH_TURNSTILE_SECRET_KEY:-}
       AUTH_DOMAIN: ${AUTH_DOMAIN:-}
       REDIS_URL: ${REDIS_URL:-}
       POSTHOG_PROJECT_TOKEN: ${POSTHOG_PROJECT_TOKEN:-}
@@ -91,7 +95,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/health`) || Path(`/ready`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/.well-known/openid-configuration`) || Path(`/.well-known/oauth-authorization-server`) || Path(`/health`) || Path(`/ready`))"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.priority=100"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"

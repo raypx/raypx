@@ -10,7 +10,12 @@ import type { ApiAppOptions } from "../app/options.js";
 import type { ApiRouterEnv } from "../routers/request.js";
 
 const emailSignupPath = "/sign-up/email";
-const mailPaths = [emailSignupPath, "/send-verification-email", "/request-password-reset"];
+const mailPaths = [
+  emailSignupPath,
+  "/send-verification-email",
+  "/request-password-reset",
+  "/email-otp/send-verification-otp",
+];
 
 export type AuthRouteEnv = {
   Variables: ApiRouterEnv["Variables"] & LanguageVariables;

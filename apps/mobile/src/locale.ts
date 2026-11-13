@@ -20,6 +20,7 @@ export function actionErrorKey(error: AuthActionError) {
     case "emailNotVerified":
     case "emailTaken":
     case "passwordShort":
+    case "passwordCompromised":
     case "rateLimited":
     case "invalidLink":
       return `auth.${error.key}` as const;

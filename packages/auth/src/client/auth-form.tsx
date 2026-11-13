@@ -48,6 +48,8 @@ export interface AuthFormProps {
   mode: AuthMode;
   compact?: boolean;
   headingLeading?: ReactNode;
+  onTwoFactorRequired?: () => void;
+  renderSignInAlternatives?: (busy: boolean) => ReactNode;
   completeOnMount?: boolean;
   socialLogin?:
     | { providers: readonly SocialProvider[]; callbackURL: string; errorCallbackURL: string }
@@ -65,6 +67,8 @@ export function AuthForm({
   mode,
   compact = false,
   headingLeading,
+  onTwoFactorRequired,
+  renderSignInAlternatives,
   completeOnMount = false,
   socialLogin,
   backLabel,
@@ -79,6 +83,7 @@ export function AuthForm({
   const c = useTranslations("common");
   const locale = useLocale();
   const auth = useAuthActions({
+    ...(onTwoFactorRequired ? { onTwoFactorRequired } : {}),
     client,
     locale,
     webUrl,
@@ -191,6 +196,7 @@ export function AuthForm({
             <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
           </LinkComponent>
         )}
+        {showForm && mode === "login" && renderSignInAlternatives?.(busy)}
         {showForm &&
           (mode === "login" || mode === "signup") &&
           socialLogin &&

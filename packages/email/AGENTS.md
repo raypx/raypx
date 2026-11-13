@@ -14,7 +14,7 @@ Authentication email templates and Resend delivery.
 
 ## Constraints
 
-Verification and password-reset mail only, in en/zh. Templates are React Email components in `src/emails/` (shared parts under `_components/`); localized copy lives in `src/copy.ts` and feeds the subject, HTML and text together. Accept injected transports in tests. Never log addresses, credentials, tokens, URLs or bodies. Unconfigured delivery fails in every environment when a send is attempted. Creation remains available for startup/liveness. The factory exposes availability so API mail actions can fail before Better Auth dispatch.
+Authentication mail covers verification, password reset and sign-in codes in en/zh. Link templates are React Email components in `src/emails/` (shared parts under `_components/`); localized link copy lives in `src/copy.ts` and feeds the subject, HTML and text together. Accept injected transports in tests. Never log addresses, credentials, tokens, URLs or bodies. Unconfigured delivery fails in every environment when a send is attempted. Creation remains available for startup/liveness. The factory exposes availability so API mail actions can fail before Better Auth dispatch.
 
 ## Preview
 

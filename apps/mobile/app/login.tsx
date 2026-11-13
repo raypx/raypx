@@ -11,7 +11,20 @@ import { Action, Screen } from "../src/ui.js";
 export default function LoginScreen() {
   const { locale, t } = useCopy();
   const { refetch } = authClient.useSession();
-  const actions = useAuthActions({ client: authClient, webUrl: apiOrigin, locale });
+  const [challenge, setChallenge] = useState<"totp" | "backup">();
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [codeError, setCodeError] = useState(false);
+  const verification = useRef(false);
+  const actions = useAuthActions({
+    client: authClient,
+    webUrl: apiOrigin,
+    locale,
+    onTwoFactorRequired: () => {
+      setPassword("");
+      setChallenge("totp");
+    },
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [linkFailed, setLinkFailed] = useState(false);
@@ -34,6 +47,84 @@ export default function LoginScreen() {
       await refetch();
     });
   };
+  async function verifyCode() {
+    if (verification.current || !code.trim()) return;
+    verification.current = true;
+    setVerifying(true);
+    setCodeError(false);
+    try {
+      const input = { code: code.trim() };
+      const result =
+        challenge === "backup"
+          ? await authClient.twoFactor.verifyBackupCode(input)
+          : await authClient.twoFactor.verifyTotp(input);
+      if (result.error) throw new Error("Invalid code");
+      await refetch();
+    } catch {
+      setCodeError(true);
+    } finally {
+      verification.current = false;
+      setCode("");
+      setVerifying(false);
+    }
+  }
+  if (challenge) {
+    const label = t(challenge === "backup" ? "auth.methods.backupCode" : "auth.methods.code");
+    return (
+      <Screen>
+        <Text accessibilityRole="header" className="text-[28px] font-semibold text-foreground">
+          {t("auth.methods.twoFactor")}
+        </Text>
+        <TextField isDisabled={verifying} className="gap-2">
+          <Label>{label}</Label>
+          <Input
+            accessibilityLabel={label}
+            autoComplete="one-time-code"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType={challenge === "backup" ? "default" : "number-pad"}
+            value={code}
+            onChangeText={(value) => {
+              setCodeError(false);
+              setCode(value);
+            }}
+            onSubmitEditing={() => void verifyCode()}
+            className="p-3 text-base"
+          />
+        </TextField>
+        {codeError && <Text accessibilityRole="alert">{t("auth.methods.failed")}</Text>}
+        <Action
+          label={t("auth.methods.verifyCode")}
+          busy={verifying}
+          disabled={!code.trim() || verifying}
+          onPress={() => void verifyCode()}
+        />
+        <Action
+          label={t(
+            challenge === "backup" ? "auth.methods.useAuthenticator" : "auth.methods.useBackup",
+          )}
+          secondary
+          disabled={verifying}
+          onPress={() => {
+            setCode("");
+            setCodeError(false);
+            setChallenge(challenge === "backup" ? "totp" : "backup");
+          }}
+        />
+        <Action
+          label={t("common.cancel")}
+          secondary
+          disabled={verifying}
+          onPress={() => {
+            actions.clearError();
+            setCode("");
+            setCodeError(false);
+            setChallenge(undefined);
+          }}
+        />
+      </Screen>
+    );
+  }
   return (
     <Screen>
       <Image

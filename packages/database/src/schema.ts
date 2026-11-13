@@ -11,6 +11,7 @@ import {
   primaryKey,
 } from "drizzle-orm/pg-core";
 import { defineRelations, sql } from "drizzle-orm";
+import { oauthTables } from "./oauth-schema.js";
 
 const date = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 const timestamps = () => ({
@@ -29,9 +30,47 @@ export const user = pgTable(
     banned: boolean("banned").notNull().default(false),
     banReason: text("ban_reason"),
     banExpires: date("ban_expires"),
+    twoFactorEnabled: boolean("two_factor_enabled").default(false),
     ...timestamps(),
   },
   (table) => [index("user_created_at_idx").on(table.createdAt)],
+);
+export const twoFactor = pgTable(
+  "two_factor",
+  {
+    id: text().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    secret: text().notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    verified: boolean().default(true),
+    failedVerificationCount: integer("failed_verification_count").default(0),
+    lockedUntil: date("locked_until"),
+  },
+  (table) => [
+    index("two_factor_user_idx").on(table.userId),
+    index("two_factor_secret_idx").on(table.secret),
+  ],
+);
+export const passkey = pgTable(
+  "passkey",
+  {
+    id: text().primaryKey(),
+    name: text(),
+    publicKey: text("public_key").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    credentialID: text("credential_id").notNull().unique(),
+    counter: bigint({ mode: "number" }).notNull(),
+    deviceType: text("device_type").notNull(),
+    backedUp: boolean("backed_up").notNull(),
+    transports: text(),
+    createdAt: date("created_at"),
+    aaguid: text(),
+  },
+  (table) => [index("passkey_user_idx").on(table.userId)],
 );
 export const session = pgTable(
   "session",
@@ -393,7 +432,28 @@ export const adminAudit = pgTable(
   ],
 );
 
+export const {
+  jwks,
+  oauthClient,
+  oauthResource,
+  oauthClientResource,
+  oauthAccessToken,
+  oauthRefreshToken,
+  oauthConsent,
+  oauthClientAssertion,
+} = oauthTables(user, session);
+
 export const schema = {
+  passkey,
+  twoFactor,
+  jwks,
+  oauthClient,
+  oauthResource,
+  oauthClientResource,
+  oauthAccessToken,
+  oauthRefreshToken,
+  oauthConsent,
+  oauthClientAssertion,
   adminAudit,
   runtimeInstance,
   instanceEnrollment,

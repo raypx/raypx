@@ -22,6 +22,7 @@ export const apiEventPolicy = {
       "status",
       "sessions",
       "verifications",
+      "oauthTokens",
       "rateLimits",
       "contextReceipts",
       "claimed",

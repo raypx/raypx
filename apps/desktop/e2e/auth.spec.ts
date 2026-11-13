@@ -76,18 +76,14 @@ for (const { width, height, locale, colorScheme } of [
 }
 
 test(
-  "Desktop authentication retains entered values across language changes and returns to the workspace",
+  "Desktop browser sign-in follows language changes and returns to the workspace",
   { tag: "@desktop" },
   async ({ page }) => {
     await page.goto(desktop + "/login?returnTo=%2Ftasks%3Fscope%3Dremote");
-    await page.getByLabel("Email address", { exact: true }).fill("desktop@example.test");
-    await page.getByLabel("Password", { exact: true }).fill("unsubmitted-fixture-password");
+    await expect(page.getByRole("button", { name: "Sign in with browser" })).toBeVisible();
     await page.getByRole("button", { name: "Language", exact: true }).click();
     await page.getByRole("menuitemradio", { name: "简体中文", exact: true }).click();
-    await expect(page.getByLabel("邮箱地址", { exact: true })).toHaveValue("desktop@example.test");
-    await expect(page.getByLabel("密码", { exact: true })).toHaveValue(
-      "unsubmitted-fixture-password",
-    );
+    await expect(page.getByRole("button", { name: "在浏览器中登录" })).toBeVisible();
     await page.getByRole("link", { name: "返回工作台", exact: true }).click();
     await expect(page).toHaveURL(desktop + "/tasks?scope=remote");
   },

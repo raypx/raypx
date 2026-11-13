@@ -7,8 +7,12 @@ import { AuthFormSection } from "../../features/auth/components/auth-form-sectio
 
 export const Route = createFileRoute("/(auth)")({
   beforeLoad: authPageGuard,
-  validateSearch: (search: Record<string, unknown>): { returnTo?: string } =>
-    typeof search.returnTo === "string" ? { returnTo: safeReturnTo(search.returnTo) } : {},
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { returnTo?: string; reauthenticate?: true } => ({
+    ...(typeof search.returnTo === "string" ? { returnTo: safeReturnTo(search.returnTo) } : {}),
+    ...(search.reauthenticate === true ? { reauthenticate: true as const } : {}),
+  }),
   component: AuthLayout,
 });
 

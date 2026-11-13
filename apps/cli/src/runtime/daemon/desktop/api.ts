@@ -1,4 +1,11 @@
-import { apiExposure } from "@raypx/contracts/api";
+import {
+  apiExposure,
+  desktopLoginPaths,
+  desktopLoginSessionSchema,
+  desktopOAuthClientId,
+  desktopOAuthTokensSchema,
+  oauthTokenPath,
+} from "@raypx/contracts/api";
 import { desktopApiRequestSchema, type DesktopApiResponse } from "@raypx/contracts/desktop";
 import { z } from "zod";
 import { LocalError } from "../../errors.js";
@@ -187,6 +194,90 @@ export class DesktopApi {
       if (key) this.requests.delete(key);
       this.active--;
     }
+  }
+  private async browserLoginRequest(
+    path: string,
+    body: string | URLSearchParams,
+    parent: AbortSignal,
+  ) {
+    this.cookies.assertAvailable();
+    const signal = AbortSignal.any([parent, this.lifetime.signal, AbortSignal.timeout(15_000)]);
+    const request = new Request(new URL(path, this.cookies.origin).href, {
+      method: "POST",
+      headers: {
+        "content-type":
+          typeof body === "string" ? "application/json" : "application/x-www-form-urlencoded",
+      },
+      body,
+      redirect: "manual",
+      credentials: "omit",
+      signal,
+    });
+    try {
+      const response = await abortable(signal, () => this.fetch(request));
+      const text = await readBody(response, signal);
+      return { response, body: JSON.parse(text) as unknown };
+    } catch {
+      parent.throwIfAborted();
+      throw new LocalError("DESKTOP_LOGIN_UNAVAILABLE", "Desktop login unavailable");
+    }
+  }
+  browserLoginStart(input: unknown, signal: AbortSignal) {
+    return this.browserLoginRequest(
+      `/api/auth${desktopLoginPaths.start}`,
+      JSON.stringify(input),
+      signal,
+    );
+  }
+  async browserLoginExchange(
+    input: { code: string; verifier: string; redirectUri: string; nonce: string },
+    signal: AbortSignal,
+    verify: (account: string) => Promise<void>,
+    commit: () => void,
+  ) {
+    const token = await this.browserLoginRequest(
+      oauthTokenPath,
+      new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: desktopOAuthClientId,
+        code: input.code,
+        code_verifier: input.verifier,
+        redirect_uri: input.redirectUri,
+      }),
+      signal,
+    );
+    const tokens = desktopOAuthTokensSchema.safeParse(token.body);
+    if (token.response.status !== 200 || !tokens.success)
+      throw new LocalError("DESKTOP_LOGIN_UNAVAILABLE", "Desktop login unavailable");
+    const { response, body } = await this.browserLoginRequest(
+      `/api/auth${desktopLoginPaths.exchange}`,
+      JSON.stringify({
+        accessToken: tokens.data.access_token,
+        idToken: tokens.data.id_token,
+        nonce: input.nonce,
+      }),
+      signal,
+    );
+    if (response.status !== 200)
+      throw new LocalError("DESKTOP_LOGIN_UNAVAILABLE", "Desktop login unavailable");
+    const { accountId } = desktopLoginSessionSchema.parse(body);
+    const headers = response.headers.getSetCookie();
+    if (!headers.length || headers.length > 32) throw invalidResponse();
+    const changes = headers.flatMap((raw) => {
+      const change = parseSessionCookie(this.cookies.origin, raw);
+      return change ? [change] : [];
+    });
+    if (
+      !changes.some(
+        ({ cookie, remove }) =>
+          !remove && /^(?:__Secure-)?better-auth\.session_token$/.test(cookie.name),
+      )
+    )
+      throw invalidResponse();
+    await verify(accountId);
+    signal.throwIfAborted();
+    this.cookies.replace(changes);
+    commit();
   }
   async rpc(procedure: string, input: unknown, signal: AbortSignal): Promise<unknown> {
     const response = await this.request(

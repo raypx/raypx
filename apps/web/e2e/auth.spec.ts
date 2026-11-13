@@ -74,3 +74,58 @@ test(
     await expect(page.getByRole("button", { name: "Send reset link", exact: true })).toBeVisible();
   },
 );
+
+test(
+  "Web confirms the account before completing Desktop browser sign-in",
+  { tag: "@web" },
+  async ({ page }) => {
+    const oauthQuery = "client_id=raypx-desktop&nonce=fixture&sig=signed-fixture";
+    const callback = `http://127.0.0.1:41337/desktop-login/callback?state=${"s".repeat(43)}&code=${"c".repeat(43)}`;
+    let signedIn = false;
+    const account = {
+      id: "desktop-account",
+      email: "desktop@example.test",
+      name: "Desktop Account",
+    };
+    await page.route("**/api/auth/get-session", (route) =>
+      authResponse(route, signedIn ? { user: account, session: { id: "web-session" } } : null),
+    );
+    await page.route("**/api/auth/sign-in/email", async (route) => {
+      signedIn = true;
+      await authResponse(route, { user: account });
+    });
+    await page.route("**/api/auth/desktop-login/inspect", (route) =>
+      authResponse(
+        route,
+        signedIn
+          ? {
+              accountId: account.id,
+              email: account.email,
+              device: "Test computer",
+              matchesProfile: true,
+            }
+          : { code: "UNAUTHORIZED" },
+        signedIn ? 200 : 401,
+      ),
+    );
+    await page.route("**/api/auth/desktop-login/decide", async (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        oauthQuery,
+        accountId: account.id,
+        approve: true,
+      });
+      await authResponse(route, { redirectUri: callback });
+    });
+    await page.route(callback, (route) => route.fulfill({ body: "Return to Raypx Desktop" }));
+    await page.goto(`${web}/desktop-authorize?${new URLSearchParams({ oauth: oauthQuery })}`);
+    await page.getByRole("link", { name: "Sign in", exact: true }).click();
+    await page.getByLabel("Email address", { exact: true }).fill(account.email);
+    await page.getByLabel("Password", { exact: true }).fill("desktop-test-password");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByText("Test computer")).toBeVisible();
+    await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Authorize Desktop" }).click();
+    await expect(page).toHaveURL(callback);
+    await expect(page.getByText("Return to Raypx Desktop")).toBeVisible();
+  },
+);

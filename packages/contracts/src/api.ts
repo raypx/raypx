@@ -1,3 +1,4 @@
+export * from "./desktop-login.js";
 import { collectApiExposure, exposeApiTo } from "./exposure.js";
 import { rpcAccess } from "./policy.js";
 export { getRpcAccess, getRpcAudit } from "./policy.js";

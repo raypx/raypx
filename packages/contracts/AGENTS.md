@@ -16,6 +16,9 @@ This entry never describes the
 administrative daemon router. The daemon derives renderer local admission from
 `/local-client` and API admission from `apiExposure`; no second business allowlist.
 
+`/api` also defines the browser sign-in HTTP messages. `/desktop` defines the
+renderer start/wait/cancel messages, which expose no callback or exchange secret.
+
 `/api`: public HTTP account contract and native transport exposure policy (`apiExposure`).
 Declare each procedure's consumer with `.meta(exposeApiTo(...))`. The daemon
 derives Desktop RPC admission from the generated map. A missing declaration

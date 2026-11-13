@@ -291,10 +291,63 @@ error and preserves that destination. Completion failures can retry the session
 refresh without repeating provider authorization. No task or approval executes
 as a result of login.
 
-The native Desktop and Expo login screens currently keep their existing
-email/password flow. Their native session stores need a separate browser-to-native
-session handoff before OAuth buttons can be enabled there; a browser session must
-not be copied through URL parameters.
+Desktop's sign-in button opens the configured `web_url` in the system browser.
+The user reviews the computer and the active Web account, then authorizes the
+Desktop session. They can switch accounts in the browser when needed. An
+existing profile accepts only the account and API origin in its enrollment.
+The daemon redeems the loopback code with PKCE at Better Auth's standard OAuth
+token endpoint on `api_url`, then exchanges the verified OIDC result for a
+separate Desktop session. The API serves OIDC discovery and signing keys.
+For authentication testing, start with a fresh Raypx foundation database and
+apply the repository migrations. The `account-authentication` migration creates
+the current OAuth, passkey and two-factor schema without a data backfill. If a
+disposable test database already ran the draft authentication migrations, use a
+new test database for this version.
+An expired or cancelled request can be restarted from Desktop. First-time device
+registration follows sign-in.
+
+Host reauthorization opens the same system-browser flow. Sign in again with the
+account bound to the profile, then approve. API requires a session created after
+the request starts, and Desktop uses that authentication time to renew the Host
+grant. Existing local work remains attached during the renewal.
+See [ADR 0063](../architecture/0063-desktop-oauth.md).
+
+### Sign-in methods and account protection
+
+In Web, open **Settings → Account → Password** to add or remove passkeys, link or
+unlink configured Google and GitHub accounts, and configure an authenticator app.
+A supported browser can sign in with a passkey using its authenticator. Set
+`AUTH_PASSKEY_RP_ID` to a shared parent domain if Web and API use sibling hosts.
+Keep the exact Web origin in `ALLOWED_ORIGINS`. Use HTTPS outside localhost. Keep
+the RP ID stable after deployment because it scopes existing credentials.
+
+Email sign-in codes use the existing Resend configuration. Codes are valid for
+five minutes, allow up to three verification attempts and are single-use. They
+sign in existing accounts. For accounts with TOTP enabled, password login in
+Web and Expo requires an authenticator code or a single-use backup code.
+Keep backup codes somewhere separate from the authenticator. Replacing the codes
+invalidates the previous set. Passkeys and social identity providers authenticate
+through their own credentials. Email-only login is unavailable while TOTP is enabled.
+
+Set `AUTH_CHECK_COMPROMISED_PASSWORDS=true` to check new passwords during
+registration, change and recovery. The service sends a short hash prefix to
+Have I Been Pwned and checks the full match locally. Password changes require
+the service to be reachable while the check is enabled.
+
+Set both `AUTH_TURNSTILE_SITE_KEY` and `AUTH_TURNSTILE_SECRET_KEY` to protect
+requests that send sign-in codes. Register the Web hostname in the Turnstile
+widget configuration. API returns the public site key to the Web form and
+validates each challenge token before sending mail. Compose forwards both
+values. On Railway, set both on the API service.
+
+### CLI and organizational accounts
+
+`raypx login` uses instance enrollment. Its browser approval issues a signed
+receipt for offline work. OAuth Device Authorization can be added when a CLI
+command has an online API scope to request. Project access is currently bound
+to personal accounts. Organization membership and enterprise SSO require a
+project permission model and a policy for who can provision members and identity
+providers.
 
 ### Verification
 

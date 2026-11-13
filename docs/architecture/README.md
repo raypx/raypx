@@ -53,6 +53,12 @@ The renderer can list executions, query retained tool results and restore Herdr
 screens/history without replaying commands or input. Later bootstrap can attach
 an unlocked session key; Settings provides retry or native-confirmed reset of
 all origins' saved sign-ins in the current profile.
+Desktop account sign-in and Host reauthorization use the system browser and a
+one-time OAuth code exchange. The daemon owns the resulting Desktop session and
+validates the profile binding. Host renewal requires a fresh browser session
+([ADR 0063](0063-desktop-oauth.md)).
+Web uses Better Auth for passkeys, email sign-in codes, linked social accounts,
+and authenticator-app verification. See [Accounts](../development/accounts.md).
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
 Desktop mounts its device-local workspace independently of account resolution.
@@ -73,8 +79,8 @@ target; unavailable targets are explicit and never redirect execution elsewhere.
 ### Mobile
 
 Phone browsers use Web. The Expo iOS/Android application in `apps/mobile` requires
-login by default and currently provides email/password login, secure session
-restoration and an account screen. Native task views and push notifications remain
+login by default and provides email/password login with TOTP or backup-code
+challenges, secure session restoration and an account screen. Native task views and push notifications remain
 later work. Its Expo-supported React version lives in the Mobile catalog;
 Web/Desktop use the DOM catalog. See [mobile development](../development/mobile.md).
 
@@ -375,6 +381,8 @@ current implementation.
 - [0059: Manifest workspace boundaries](0059-manifest-workspace-boundaries.md)
 - [0060: Turbo task graph](0060-turbo-task-graph.md) — supersedes the VP task graph in 0057
 - [0061: Standalone Vitest](0061-standalone-vitest.md) — updates the leaf test runner in 0060
+- [0062: Desktop sign-in in the system browser](0062-desktop-browser-sign-in.md)
+- [0063: OAuth/OIDC for Desktop sign-in](0063-desktop-oauth.md)
 
 ## Distribution and performance
 

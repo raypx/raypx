@@ -1,3 +1,6 @@
+import { VerificationCode } from "./verification-code.js";
+import { useRef, useState } from "react";
+import { PasskeySignIn } from "./passkey-sign-in.js";
 import { useTranslations } from "../../../i18n.js";
 import { claimGuestDraft } from "../../tasks/guest-draft.js";
 import { safeReturnTo } from "../return-to.js";
@@ -10,7 +13,6 @@ import {
   type AuthMode,
 } from "@raypx/auth/client";
 import { apiUrl, authClient, webUrl } from "../client.js";
-import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { SocialProvider } from "@raypx/core/auth";
 
@@ -51,22 +53,47 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
   const navigate = useNavigate();
   const signInReported = useRef(false);
+  const [challenge, setChallenge] = useState(false);
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = safeReturnTo(new URLSearchParams(search).get("returnTo"));
   const providers = useQuery({
     queryKey: ["auth", "social-providers", apiUrl],
     queryFn: async ({ signal }) => {
-      const result = await authClient.$fetch<{ providers: SocialProvider[] }>("/social-providers", {
+      const result = await authClient.$fetch<{
+        providers: SocialProvider[];
+        turnstileSiteKey?: string;
+      }>("/social-providers", {
         signal,
       });
       if (result.error || !result.data) throw new Error("Login providers unavailable");
-      return result.data.providers;
+      return result.data;
     },
     staleTime: 60_000,
     enabled: mode === "login" || mode === "signup",
   });
   const signedInDestination = signInDestination(search, returnTo);
   const oauthDestination = encodeURIComponent(signedInDestination);
+  async function onSignedIn() {
+    if (!signInReported.current) {
+      analytics.capture("sign_in_succeeded");
+      signInReported.current = true;
+    }
+    const session = await authClient.getSession({
+      fetchOptions: { signal: AbortSignal.timeout(10_000) },
+    });
+    if (session.error || !session.data) throw new Error("Session refresh failed");
+    try {
+      claimGuestDraft(apiUrl, session.data.user.id);
+    } catch {
+      /* A failed handoff remains recoverable in the original tab. */
+    }
+    router.options.context.queryClient.clear();
+    await navigate({
+      to: signedInDestination,
+    });
+  }
+  if (mode === "login" && challenge)
+    return <VerificationCode onSignedIn={onSignedIn} onCancel={() => setChallenge(false)} />;
   return (
     <SharedAuthForm
       key={mode}
@@ -74,33 +101,31 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       completeOnMount={completeSignIn}
       backLabel={g("back")}
       client={authClient}
+      onTwoFactorRequired={() => setChallenge(true)}
       webUrl={webUrl}
       search={search}
       callbackURLs={authCallbackURLs(returnTo)}
       socialLogin={{
-        providers: providers.data ?? [],
+        providers: providers.data?.providers ?? [],
         callbackURL: `${webUrl}/login?oauth=success&returnTo=${oauthDestination}`,
         errorCallbackURL: `${webUrl}/login?returnTo=${oauthDestination}`,
       }}
-      onSignedIn={async () => {
-        if (!signInReported.current) {
-          analytics.capture("sign_in_succeeded");
-          signInReported.current = true;
-        }
-        const session = await authClient.getSession({
-          fetchOptions: { signal: AbortSignal.timeout(10_000) },
-        });
-        if (session.error || !session.data) throw new Error("Session refresh failed");
-        try {
-          claimGuestDraft(apiUrl, session.data.user.id);
-        } catch {
-          /* A failed handoff remains recoverable in the original tab. */
-        }
-        router.options.context.queryClient.clear();
-        await navigate({
-          to: signedInDestination,
-        });
-      }}
+      onSignedIn={onSignedIn}
+      renderSignInAlternatives={(busy) => (
+        <>
+          <PasskeySignIn onSignedIn={onSignedIn} disabled={busy} />
+          {providers.data && (
+            <VerificationCode
+              email
+              onSignedIn={onSignedIn}
+              disabled={busy}
+              {...(providers.data.turnstileSiteKey
+                ? { turnstileSiteKey: providers.data.turnstileSiteKey }
+                : {})}
+            />
+          )}
+        </>
+      )}
       LinkComponent={AuthLink}
     />
   );

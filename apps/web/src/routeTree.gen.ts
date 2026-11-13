@@ -21,6 +21,7 @@ import { Route as appMemoryRouteImport } from './routes/(app)/memory'
 import { Route as appProjectsRouteImport } from './routes/(app)/projects'
 import { Route as appSettingsRouteImport } from './routes/(app)/settings'
 import { Route as appTasksRouteImport } from './routes/(app)/tasks'
+import { Route as authDesktopAuthorizeRouteImport } from './routes/(auth)/desktop-authorize'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
@@ -88,6 +89,11 @@ const appTasksRoute = appTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => appRouteRoute,
 } as any)
+const authDesktopAuthorizeRoute = authDesktopAuthorizeRouteImport.update({
+  id: '/desktop-authorize',
+  path: '/desktop-authorize',
+  getParentRoute: () => authRouteRoute,
+} as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof appProjectsRoute
   '/settings': typeof appSettingsRoute
   '/tasks': typeof appTasksRoute
+  '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/projects': typeof appProjectsRoute
   '/settings': typeof appSettingsRoute
   '/tasks': typeof appTasksRoute
+  '/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/(app)/projects': typeof appProjectsRoute
   '/(app)/settings': typeof appSettingsRoute
   '/(app)/tasks': typeof appTasksRoute
+  '/(auth)/desktop-authorize': typeof authDesktopAuthorizeRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/settings'
     | '/tasks'
+    | '/desktop-authorize'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/settings'
     | '/tasks'
+    | '/desktop-authorize'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/(app)/projects'
     | '/(app)/settings'
     | '/(app)/tasks'
+    | '/(auth)/desktop-authorize'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -372,6 +384,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tasks'
       preLoaderRoute: typeof appTasksRouteImport
       parentRoute: typeof appRouteRoute
+    }
+    '/(auth)/desktop-authorize': {
+      id: '/(auth)/desktop-authorize'
+      path: '/desktop-authorize'
+      fullPath: '/desktop-authorize'
+      preLoaderRoute: typeof authDesktopAuthorizeRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(auth)/forgot-password': {
       id: '/(auth)/forgot-password'
@@ -494,6 +513,7 @@ const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
 )
 
 interface authRouteRouteChildren {
+  authDesktopAuthorizeRoute: typeof authDesktopAuthorizeRoute
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authLoginRoute: typeof authLoginRoute
   authResetPasswordRoute: typeof authResetPasswordRoute
@@ -502,6 +522,7 @@ interface authRouteRouteChildren {
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
+  authDesktopAuthorizeRoute: authDesktopAuthorizeRoute,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authLoginRoute: authLoginRoute,
   authResetPasswordRoute: authResetPasswordRoute,

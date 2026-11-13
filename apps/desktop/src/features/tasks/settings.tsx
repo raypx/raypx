@@ -245,9 +245,8 @@ export function AgentSettings() {
                   </p>
                 )}
                 {info?.daemon &&
-                  (info.error === "AUTH_REQUIRED" || info.error === "UNAUTHORIZED") &&
-                  session.data?.user.email && (
-                    <ReauthorizeHost key={accountId} email={session.data.user.email} />
+                  (info.error === "AUTH_REQUIRED" || info.error === "UNAUTHORIZED") && (
+                    <ReauthorizeHost key={accountId} />
                   )}
                 {info?.daemon && (
                   <CloudTerminalSettings

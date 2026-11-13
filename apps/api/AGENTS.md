@@ -20,7 +20,8 @@ mail stays in-process; never reuse this fixture against an operator database or
 bypass real-user verification.
 
 `/api/auth/*` delegates to Better Auth, including Google/GitHub OAuth and public
-provider discovery. API injects optional paired `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
+provider discovery. Desktop OAuth/OIDC uses the same handler, with issuer
+metadata at the root `/.well-known/` endpoints. API injects optional paired `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
 and `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`; neither secret reaches Web. `/rpc/*` serves the explicit oRPC account
 contract. `/health` reports process liveness without querying PostgreSQL;
 `/ready` checks configured dependencies. `/api/openapi.json` combines the Hono
@@ -311,3 +312,5 @@ account permission, quota and trusted Origin in that order.
 Dependency checks reuse `/ready` probes;
 statistics and audit expose no task content, addresses, secrets or raw HTTP bodies.
 Audit records survive account deletion and are never removed by cleanup jobs.
+
+- Authentication deployment accepts the passkey RP ID, a compromised-password check and paired Turnstile keys for email-code sends.

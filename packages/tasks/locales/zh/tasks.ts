@@ -68,10 +68,9 @@ export default {
   guestSendHint: "登录后选择电脑，登录不会发送会话。",
   managedRequests: "会话请求",
   managedNothingWaiting: "暂无受管会话需要你回答。",
-  daemonAuthorizationRequired: "授权这台电脑需要近期登录。请确认密码后继续。",
+  daemonAuthorizationRequired: "授权这台电脑需要近期登录，请在浏览器中验证身份。",
   daemonReauthorize: "重新授权这台电脑",
-  daemonReauthorizeHint:
-    "确认当前账号的密码后，Raypx 会刷新登录并重试宿主授权。正在运行的会话会继续。",
+  daemonReauthorizeHint: "请在浏览器中验证当前账号，再次授权这台电脑。",
   daemonHint: "macOS 上退出 Desktop 后会话继续运行。登出或断开连接会停止此账户的会话。",
   pendingCount: "{count} 项待处理审批",
   pendingCountPartial: "待办计数不完整，已确认至少 {count, number} 项。",

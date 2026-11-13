@@ -1,5 +1,4 @@
-import { analytics } from "../../analytics/client.js";
-import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   AuthForm as SharedAuthForm,
   type AuthFormLinkProps,
@@ -25,12 +24,8 @@ function AuthLink({ to, children, className }: AuthFormLinkProps) {
   );
 }
 
-export function AuthForm({ mode }: { mode: AuthMode }) {
-  const router = useRouter();
-  const session = authClient.useSession();
-  const navigate = useNavigate();
+export function AuthForm({ mode }: { mode: Exclude<AuthMode, "login"> }) {
   const search = useLocation({ select: (location) => location.searchStr });
-  const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
   return (
     <SharedAuthForm
       key={mode}
@@ -40,12 +35,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       client={authClient}
       webUrl={webUrl}
       search={search}
-      onSignedIn={async () => {
-        analytics.capture("sign_in_succeeded");
-        await session.refetch();
-        await router.invalidate();
-        await navigate({ to: returnTo });
-      }}
+      onSignedIn={() => {}}
       LinkComponent={AuthLink}
     />
   );

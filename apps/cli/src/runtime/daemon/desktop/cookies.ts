@@ -176,10 +176,16 @@ export class SessionCookies {
       .map((cookie) => `${cookie.name}=${cookie.value}`)
       .join("; ");
   }
+  replace(changes: CookieChange[]) {
+    this.update(changes, []);
+  }
   apply(changes: CookieChange[]) {
+    this.update(changes, this.values);
+  }
+  private update(changes: CookieChange[], current: Cookie[]) {
     this.assertAvailable();
     if (!changes.length) return;
-    let next = this.values.filter(
+    let next = current.filter(
       (cookie) => cookie.expires === undefined || cookie.expires > this.now() / 1000,
     );
     for (const { cookie, remove } of changes) {
