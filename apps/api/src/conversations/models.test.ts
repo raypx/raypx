@@ -29,8 +29,8 @@ it("projects configured identifiers and display names without provider or creden
   );
   try {
     await expect(models.list(scope)).resolves.toEqual([
-      { modelId: "chat", name: "Friendly chat", source: "deployment" },
-      { modelId: "plain", name: "plain", source: "deployment" },
+      { modelId: "chat", name: "Friendly chat", source: "deployment", supportsImages: false },
+      { modelId: "plain", name: "plain", source: "deployment", supportsImages: false },
     ]);
   } finally {
     models.close();

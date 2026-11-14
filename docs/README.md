@@ -17,6 +17,9 @@ approvals. See [capabilities](architecture/capabilities.md) and
 Web/Desktop also provide optional computer Screen viewing and takeover; native
 Mobile uses the phone Web client for Screen. See [clients](architecture/clients.md).
 
+Member attachments, device-aware Files and the cross-Space notification list are
+described in [member input and notifications](architecture/member-input-and-notifications.md).
+
 ## Architecture and decisions
 
 - [Overview and decision history](architecture/README.md)

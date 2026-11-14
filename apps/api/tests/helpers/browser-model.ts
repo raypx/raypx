@@ -1,4 +1,9 @@
-import { createAssistantMessageEventStream, type AssistantMessage, type ToolCall } from "@raypx/ai";
+import {
+  AiError,
+  createAssistantMessageEventStream,
+  type AssistantMessage,
+  type ToolCall,
+} from "@raypx/ai";
 import type { ModelTurn } from "@raypx/agents/server";
 import type { Run } from "@raypx/core/conversation";
 import type { ConversationModels } from "../../src/conversations/models.js";
@@ -9,6 +14,7 @@ export function browserModelFixture() {
   const transcripts = new Map<string, string[]>();
   const completions = new Map<() => void, { conversationId: string | undefined; group: boolean }>();
   const resolve = async (completeImmediately = false, run?: Run) => ({
+    supportsImages: true,
     stream(input: ModelTurn, signal: AbortSignal) {
       if (run) {
         const previous = transcripts.get(run.conversationId) ?? [];
@@ -36,6 +42,17 @@ export function browserModelFixture() {
         };
       }
       const lastMessage = [...input.history].reverse().find((entry) => entry.role === "user");
+      const requestsAttachments = lastMessage?.text.startsWith("Fixture attachments") ?? false;
+      if (requestsAttachments) {
+        const supplied = (input.continuation ?? [])
+          .filter((entry) => entry.role === "user")
+          .flatMap((entry) => (typeof entry.content === "string" ? [] : entry.content));
+        const images = supplied.filter((part) => part.type === "image").length;
+        const files = supplied.filter(
+          (part) => part.type === "text" && part.text.includes('"state":"available"'),
+        ).length;
+        text = `Attachment input: images=${images}; files=${files}`;
+      }
       const requestsMcp = lastMessage?.text.startsWith("Fixture MCP call ") ?? false;
       const requestsOpenApi = lastMessage?.text.startsWith("Fixture API call ") ?? false;
       const pagePrefix = "Fixture Page create ";
@@ -293,6 +310,7 @@ export function browserModelFixture() {
       // streaming gate, so parallel browser journeys cannot release each other.
       if (
         completeImmediately ||
+        requestsAttachments ||
         groupCoordinator ||
         child ||
         requestsMcp ||
@@ -327,9 +345,17 @@ export function browserModelFixture() {
       },
     },
     list: async () => [
-      { modelId: "browser-fixture", name: "Deterministic fixture", source: "deployment" },
+      {
+        modelId: "browser-fixture",
+        name: "Deterministic fixture",
+        source: "deployment",
+        supportsImages: true,
+      },
     ],
-    resolve: (run) => resolve(run.trigger !== "message", run),
+    resolve: (run) => {
+      if (run.model.modelId === "browser-failure-fixture") throw new AiError("AI_MODEL_NOT_FOUND");
+      return resolve(run.trigger !== "message", run);
+    },
     close() {
       completions.clear();
     },

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "react-native";
+import { runIdSchema } from "@raypx/core/conversation";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { AgentConversation } from "../../../src/agents/conversation.js";
 import { useWorkspace, useWorkspaceView } from "../../../src/agents/provider.js";
@@ -11,7 +12,9 @@ import { Action, Screen } from "../../../src/ui.js";
 export default function GroupConversationRoute() {
   const workspace = useWorkspace();
   const view = useWorkspaceView();
-  const selected = parseAgentSelection(useLocalSearchParams());
+  const params = useLocalSearchParams();
+  const selected = parseAgentSelection(params);
+  const target = runIdSchema.safeParse(params.runId);
   const router = useRouter();
   const { t } = useCopy();
   const [controllers, setControllers] = useState<ReturnType<
@@ -44,6 +47,12 @@ export default function GroupConversationRoute() {
       <AgentConversation
         key={group.conversation.id}
         group={group}
+        initialRunId={target.success ? target.data : undefined}
+        supportsImages={group.agents.some(
+          (agent) =>
+            view.page.models.find((model) => model.modelId === agent.model.modelId)
+              ?.supportsImages === true,
+        )}
         controller={controllers.conversation}
         computer={controllers.computer}
         devices={controllers.devices}

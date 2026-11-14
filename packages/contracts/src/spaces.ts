@@ -5,6 +5,7 @@ import {
   computerFileSchema,
   computerFilePathSchema,
   spaceComputerSchema,
+  deviceComputerSelectionSchema,
 } from "@raypx/core/computers";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
@@ -95,6 +96,7 @@ export const agentsContract = {
         modelId: z.string().min(1).max(200),
         name: z.string().min(1).max(200),
         source: z.enum(["deployment", "connection"]).default("deployment"),
+        supportsImages: z.boolean().optional(),
       }),
     ),
   ),
@@ -119,6 +121,7 @@ export const computersContract = {
   listDirectory: session
     .input(
       spaceSelection.extend({
+        device: deviceComputerSelectionSchema.optional(),
         path: computerFilePathSchema.default("."),
         limit: z.number().int().min(1).max(MAX_COMPUTER_DIRECTORY_ENTRIES).default(100),
       }),
@@ -127,6 +130,7 @@ export const computersContract = {
   readFile: session
     .input(
       spaceSelection.extend({
+        device: deviceComputerSelectionSchema.optional(),
         path: computerFilePathSchema,
         maxBytes: z
           .number()

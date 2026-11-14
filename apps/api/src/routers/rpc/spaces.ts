@@ -1,3 +1,4 @@
+import { MessageAttachmentError } from "@raypx/agents/server";
 import { ComputerFilesError, ComputerOperationError } from "@raypx/computers/server";
 import { GroupConversationError } from "@raypx/core/agents";
 import { ConversationSteeringError, InvalidConversationCursor } from "@raypx/core/conversation";
@@ -14,6 +15,10 @@ export function createSpaceHandlers(setup: RpcSetup) {
     try {
       return await run();
     } catch (error) {
+      if (error instanceof MessageAttachmentError)
+        throw new ORPCError("BAD_REQUEST", {
+          data: { error: { code: error.code }, requestId: context.requestId },
+        });
       if (error instanceof ConversationSteeringError)
         throw new ORPCError("CONFLICT", {
           data: { error: { code: error.code }, requestId: context.requestId },
@@ -78,14 +83,18 @@ export function createSpaceHandlers(setup: RpcSetup) {
         .use(read)
         .handler(({ context, input }) =>
           scoped(context, input.spaceId, (scope) =>
-            options.computers.listDirectory(scope, input.path, input.limit),
+            input.device
+              ? options.deviceFiles.listDirectory(scope, input.device, input.path, input.limit)
+              : options.computers.listDirectory(scope, input.path, input.limit),
           ),
         ),
       readFile: os.computers.readFile
         .use(read)
         .handler(({ context, input }) =>
           scoped(context, input.spaceId, (scope) =>
-            options.computers.readFile(scope, input.path, input.maxBytes),
+            input.device
+              ? options.deviceFiles.readFile(scope, input.device, input.path, input.maxBytes)
+              : options.computers.readFile(scope, input.path, input.maxBytes),
           ),
         ),
       start: os.computers.start

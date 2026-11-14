@@ -128,6 +128,15 @@ export interface PreparedComputerCall {
   readOnlyHttp?: boolean;
 }
 export interface ComputerTools {
+  attachmentFailureReason?(run: ExecutionRun): "COMPUTER_UNAVAILABLE" | "DEVICE_GRANT_REQUIRED";
+  /** Explicit member upload, confined to a generated inbox path; caller records its receipt before dispatch. */
+  stageAttachment?(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    id: string,
+    bytes: string,
+    signal: AbortSignal,
+  ): Promise<string | null>;
   /** Private single-operation delivery. The value must never join prepared arguments. */
   executeProtected?(
     scope: SpaceScope,
@@ -393,6 +402,28 @@ export function createComputerTools(
     };
   }
   const tools: ComputerTools = {
+    async stageAttachment(scope, run, id, bytes, signal) {
+      if (!provider || withoutComputer.has(attemptKey(run))) return null;
+      if (!/^[a-f0-9-]{36}$/.test(id) || !/^[a-f0-9-]{36}$/.test(run.id))
+        throw new ComputerToolsError("INVALID_ARGUMENTS");
+      if (containsSecret(Buffer.from(bytes, "base64").toString("utf8"), secrets()))
+        throw new ComputerToolsError("SECRET_INPUT");
+      const path = `inbox/${run.id}/${id}`;
+      const prepared: PreparedComputerCall = {
+        id: `attachment:${id}`,
+        name: "computer_write_file",
+        arguments: {},
+        argumentSummary: "Member attachment inbox",
+        target: path,
+        changes: true,
+      };
+      return withDriverSlot(scope, run, prepared, signal, async () => {
+        if (signal.aborted) throw new ComputerToolsError("COMPUTER_UNAVAILABLE");
+        const ref = await computer(scope, run, signal);
+        await provider.write(ref, path, bytes);
+        return path;
+      });
+    },
     guardInput(call) {
       if (containsSecret([call.id, call.name, call.arguments], secrets()))
         throw new ComputerToolsError("SECRET_INPUT");

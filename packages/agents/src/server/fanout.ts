@@ -1,6 +1,6 @@
 import { connectDatabaseNotifications } from "@raypx/database/connection";
 import type { ConversationFanout, ConversationNotice } from "../conversations.js";
-import { conversationChannel } from "./conversations.js";
+import { conversationChannel } from "./notice.js";
 
 /** Dedicated LISTEN connection, owned and closed by the backend runtime. */
 export function createConversationFanout(url: string): ConversationFanout {

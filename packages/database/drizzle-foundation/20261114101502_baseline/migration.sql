@@ -170,6 +170,43 @@ CREATE TABLE "computers" (
 	CONSTRAINT "computers_failure_check" CHECK (("state" = 'failed' and "failure_code" is not null and "failure_code" in ('PROVIDER_UNAVAILABLE', 'RESTORE_FAILED')) or ("state" <> 'failed' and "failure_code" is null))
 );
 --> statement-breakpoint
+CREATE TABLE "conversation_attachment_deliveries" (
+	"space_id" text,
+	"conversation_id" text,
+	"run_id" text,
+	"attachment_id" text,
+	"message_id" text NOT NULL,
+	"state" text NOT NULL,
+	"path" text,
+	"reason" text,
+	"fence" bigint NOT NULL,
+	CONSTRAINT "conversation_attachment_deliveries_pkey" PRIMARY KEY("space_id","conversation_id","run_id","attachment_id"),
+	CONSTRAINT "conversation_attachment_deliveries_state_check" CHECK ("state" in ('staging', 'image', 'available', 'withheld')),
+	CONSTRAINT "conversation_attachment_deliveries_outcome_check" CHECK (("state" = 'available' and "path" is not null and "reason" is null) or ("state" = 'image' and "path" is null and "reason" is null) or ("state" = 'staging' and "path" is null and "reason" is null) or ("state" = 'withheld' and "path" is null and "reason" in ('MODEL_IMAGES_UNAVAILABLE', 'COMPUTER_UNAVAILABLE', 'DEVICE_GRANT_REQUIRED', 'DELIVERY_UNCONFIRMED')))
+);
+--> statement-breakpoint
+CREATE TABLE "conversation_attachments" (
+	"space_id" text,
+	"conversation_id" text,
+	"id" text,
+	"uploader_account_id" text NOT NULL,
+	"message_id" text,
+	"name" text NOT NULL,
+	"media_type" text NOT NULL,
+	"size" integer NOT NULL,
+	"ready" boolean DEFAULT true NOT NULL,
+	"expected_size" integer,
+	"sha256" text NOT NULL,
+	"bytes" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "conversation_attachments_pkey" PRIMARY KEY("space_id","conversation_id","id"),
+	CONSTRAINT "conversation_attachments_message_key" UNIQUE("space_id","conversation_id","id","message_id"),
+	CONSTRAINT "conversation_attachments_size_check" CHECK ("size" between 1 and 1048576 and octet_length(decode("bytes", 'base64')) = "size"),
+	CONSTRAINT "conversation_attachments_upload_check" CHECK (("expected_size" is null or ("expected_size" between 1 and 1048576 and "size" <= "expected_size" and (not "ready" or "size" = "expected_size"))) and ("message_id" is null or "ready")),
+	CONSTRAINT "conversation_attachments_hash_check" CHECK ("sha256" ~ '^[a-f0-9]{64}$')
+);
+--> statement-breakpoint
 CREATE TABLE "conversation_counters" (
 	"space_id" text,
 	"conversation_id" text,
@@ -227,11 +264,14 @@ CREATE TABLE "conversation_events" (
 	"fence" bigint DEFAULT 0 NOT NULL,
 	"segment_id" text,
 	"computer_id" text,
+	"attachment_id" text GENERATED ALWAYS AS (case when "conversation_events"."kind" = 'attachment.state' then "conversation_events"."data"->>'attachmentId' else null end) STORED,
+	"attachment_message_id" text GENERATED ALWAYS AS (case when "conversation_events"."kind" = 'attachment.state' then "conversation_events"."data"->>'messageId' else null end) STORED,
 	"request_id" text,
 	"page_id" text GENERATED ALWAYS AS (case when "conversation_events"."kind" = 'tool.finished' then "conversation_events"."data"->'page'->>'id' else null end) STORED,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "conversation_events_pkey" PRIMARY KEY("space_id","conversation_id","sequence"),
 	CONSTRAINT "conversation_events_payload_check" CHECK ((
+      ("kind" = 'attachment.state' and "attachment_id" is not null and "attachment_message_id" is not null and "message_id" is null and "run_id" is not null and "segment_id" is null and "data" is not null and "computer_id" is null and "request_id" is null) or
       ("kind" = 'message.created' and "message_id" is not null and "run_id" is null and "segment_id" is null and "data" is null and "computer_id" is null and "request_id" is null) or
       ("kind" = 'run.state' and "message_id" is null and "run_id" is not null and "segment_id" is null and "data" is not null and "computer_id" is null and "request_id" is null) or
       ("kind" = 'reply.segment' and "message_id" is null and "run_id" is not null and "segment_id" is not null and "data" is null and "computer_id" is null and "request_id" is null) or
@@ -239,7 +279,7 @@ CREATE TABLE "conversation_events" (
       ("kind" in ('tool.started', 'tool.finished') and "message_id" is null and "run_id" is not null and "segment_id" is null and "computer_id" is null and "request_id" is null and "data" is not null) or
       ("kind" in ('card.created', 'card.resolved') and "message_id" is null and "run_id" is not null and "segment_id" is null and "computer_id" is null and "request_id" is not null and "data" is not null)
     )),
-	CONSTRAINT "conversation_events_kind_check" CHECK ("kind" in ('message.created', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved', 'tool.started', 'tool.finished'))
+	CONSTRAINT "conversation_events_kind_check" CHECK ("kind" in ('message.created', 'attachment.state', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved', 'tool.started', 'tool.finished'))
 );
 --> statement-breakpoint
 CREATE TABLE "conversation_member_names" (
@@ -533,6 +573,20 @@ CREATE TABLE "device_directory_grants" (
 	CONSTRAINT "device_directory_grants_revision_check" CHECK ("revision" > 0)
 );
 --> statement-breakpoint
+CREATE TABLE "device_member_file_reads" (
+	"space_id" text,
+	"id" text CONSTRAINT "device_member_file_reads_id_key" UNIQUE,
+	"device_id" text NOT NULL,
+	"grant_id" text NOT NULL,
+	"account_id" text NOT NULL,
+	"grant_revision" bigint NOT NULL,
+	"connection_fence" bigint NOT NULL,
+	"operation" jsonb NOT NULL,
+	"result" jsonb,
+	"expires_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "device_member_file_reads_pkey" PRIMARY KEY("space_id","id")
+);
+--> statement-breakpoint
 CREATE TABLE "device_space_devices" (
 	"space_id" text,
 	"device_id" text,
@@ -594,6 +648,24 @@ CREATE TABLE "mcp_servers" (
 	CONSTRAINT "mcp_servers_owner_idx" UNIQUE("id","account_id"),
 	CONSTRAINT "mcp_servers_secret_owner_idx" UNIQUE("id","account_id","secret_id"),
 	CONSTRAINT "mcp_servers_availability_check" CHECK ("availability" in ('all', 'selected'))
+);
+--> statement-breakpoint
+CREATE TABLE "member_conversation_views" (
+	"space_id" text,
+	"account_id" text,
+	"conversation_id" text,
+	"viewed_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "member_conversation_views_pkey" PRIMARY KEY("space_id","account_id","conversation_id")
+);
+--> statement-breakpoint
+CREATE TABLE "member_notification_reads" (
+	"space_id" text,
+	"account_id" text,
+	"kind" text,
+	"source_id" text,
+	"read_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "member_notification_reads_pkey" PRIMARY KEY("space_id","account_id","kind","source_id"),
+	CONSTRAINT "member_notification_reads_kind_check" CHECK ("kind" in ('approval', 'protected-input', 'run-succeeded', 'run-failed', 'invitation'))
 );
 --> statement-breakpoint
 CREATE TABLE "member_skill_spaces" (
@@ -1222,6 +1294,8 @@ CREATE INDEX "computer_screen_viewers_member_idx" ON "computer_screen_viewers" (
 CREATE UNIQUE INDEX "computers_team_idx" ON "computers" ("space_id") WHERE "scope" = 'team';--> statement-breakpoint
 CREATE UNIQUE INDEX "computers_private_agent_idx" ON "computers" ("space_id","agent_id") WHERE "scope" = 'private';--> statement-breakpoint
 CREATE INDEX "computers_creator_idx" ON "computers" ("created_by_account_id");--> statement-breakpoint
+CREATE INDEX "conversation_attachments_expiry_idx" ON "conversation_attachments" ("expires_at") WHERE "message_id" is null;--> statement-breakpoint
+CREATE INDEX "conversation_attachments_member_idx" ON "conversation_attachments" ("space_id","uploader_account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "conversation_delegations_child_idx" ON "conversation_delegations" ("space_id","conversation_id","child_run_id");--> statement-breakpoint
 CREATE INDEX "conversation_effects_run_idx" ON "conversation_effects" ("space_id","conversation_id","run_id");--> statement-breakpoint
 CREATE INDEX "conversation_events_activity_idx" ON "conversation_events" ("space_id","conversation_id","sequence" DESC NULLS LAST,"created_at");--> statement-breakpoint
@@ -1249,9 +1323,11 @@ CREATE INDEX "conversation_tool_calls_snapshot_idx" ON "conversation_tool_calls"
 CREATE UNIQUE INDEX "conversations_direct_agent_idx" ON "conversations" ("space_id","agent_id") WHERE "kind" = 'direct';--> statement-breakpoint
 CREATE UNIQUE INDEX "device_computer_pairings_code_idx" ON "device_computer_pairings" ("code_hash");--> statement-breakpoint
 CREATE INDEX "device_computers_owner_idx" ON "device_computers" ("account_id");--> statement-breakpoint
+CREATE INDEX "device_member_file_reads_expiry_idx" ON "device_member_file_reads" ("expires_at");--> statement-breakpoint
 CREATE INDEX "mcp_server_secrets_owner_idx" ON "mcp_server_secrets" ("account_id","server_id");--> statement-breakpoint
 CREATE INDEX "mcp_server_spaces_member_idx" ON "mcp_server_spaces" ("space_id","account_id","server_id");--> statement-breakpoint
 CREATE INDEX "mcp_servers_account_idx" ON "mcp_servers" ("account_id","created_at","id");--> statement-breakpoint
+CREATE INDEX "member_notification_reads_account_idx" ON "member_notification_reads" ("account_id","space_id");--> statement-breakpoint
 CREATE INDEX "member_skill_spaces_member_idx" ON "member_skill_spaces" ("space_id","account_id","skill_id");--> statement-breakpoint
 CREATE INDEX "member_skills_account_idx" ON "member_skills" ("account_id","created_at","id");--> statement-breakpoint
 CREATE INDEX "model_connection_secrets_owner_idx" ON "model_connection_secrets" ("account_id","connection_id");--> statement-breakpoint
@@ -1330,6 +1406,10 @@ ALTER TABLE "computer_screen_viewers" ADD CONSTRAINT "computer_screen_viewers_YT
 ALTER TABLE "computers" ADD CONSTRAINT "computers_space_id_spaces_id_fkey" FOREIGN KEY ("space_id") REFERENCES "spaces"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computers" ADD CONSTRAINT "computers_space_id_agent_id_agents_space_id_id_fkey" FOREIGN KEY ("space_id","agent_id") REFERENCES "agents"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computers" ADD CONSTRAINT "computers_ml9XhGwYtCtS_fkey" FOREIGN KEY ("space_id","created_by_account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "conversation_attachment_deliveries" ADD CONSTRAINT "conversation_attachment_deliveries_C12Azf0T4rmj_fkey" FOREIGN KEY ("space_id","conversation_id","run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "conversation_attachment_deliveries" ADD CONSTRAINT "conversation_attachment_deliveries_oV19iJ9kRPMD_fkey" FOREIGN KEY ("space_id","conversation_id","attachment_id","message_id") REFERENCES "conversation_attachments"("space_id","conversation_id","id","message_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "conversation_attachments" ADD CONSTRAINT "conversation_attachments_R5f8l0fMYmwZ_fkey" FOREIGN KEY ("space_id","conversation_id") REFERENCES "conversations"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "conversation_attachments" ADD CONSTRAINT "conversation_attachments_vgHVwbuVTlDp_fkey" FOREIGN KEY ("space_id","conversation_id","message_id") REFERENCES "conversation_messages"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_counters" ADD CONSTRAINT "conversation_counters_VRyqPxfEewzC_fkey" FOREIGN KEY ("space_id","conversation_id") REFERENCES "conversations"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_delegations" ADD CONSTRAINT "conversation_delegations_6AKQohdM5emf_fkey" FOREIGN KEY ("space_id","conversation_id","parent_run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_delegations" ADD CONSTRAINT "conversation_delegations_xfb5rSMKKnZj_fkey" FOREIGN KEY ("space_id","conversation_id","child_run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
@@ -1342,6 +1422,7 @@ ALTER TABLE "conversation_events" ADD CONSTRAINT "conversation_events_QDw4cP3SFQ
 ALTER TABLE "conversation_events" ADD CONSTRAINT "conversation_events_jYPcAyFq6yhV_fkey" FOREIGN KEY ("space_id","conversation_id","segment_id") REFERENCES "conversation_reply_segments"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_events" ADD CONSTRAINT "conversation_events_yYRNLMt1Sepk_fkey" FOREIGN KEY ("space_id","computer_id") REFERENCES "computers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_events" ADD CONSTRAINT "conversation_events_fYBbkMzqoYc2_fkey" FOREIGN KEY ("space_id","conversation_id","run_id","request_id") REFERENCES "approval_requests"("space_id","conversation_id","run_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "conversation_events" ADD CONSTRAINT "conversation_events_CWUbY17rN8Zi_fkey" FOREIGN KEY ("space_id","conversation_id","attachment_id","attachment_message_id") REFERENCES "conversation_attachments"("space_id","conversation_id","id","message_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_member_names" ADD CONSTRAINT "conversation_member_names_vSrQvYeZQmNq_fkey" FOREIGN KEY ("space_id","conversation_id") REFERENCES "conversations"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_message_mentions" ADD CONSTRAINT "conversation_message_mentions_TIJFbbjtIJ28_fkey" FOREIGN KEY ("space_id","conversation_id","message_id") REFERENCES "conversation_messages"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_message_mentions" ADD CONSTRAINT "conversation_message_mentions_VUv39vDI5gAu_fkey" FOREIGN KEY ("space_id","agent_id") REFERENCES "agents"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
@@ -1377,12 +1458,16 @@ ALTER TABLE "device_connector_operations" ADD CONSTRAINT "device_connector_opera
 ALTER TABLE "device_connector_operations" ADD CONSTRAINT "device_connector_operations_UrigbpBp1Ldg_fkey" FOREIGN KEY ("space_id","conversation_id","run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "device_directory_grants" ADD CONSTRAINT "device_directory_grants_space_id_id_computers_space_id_id_fkey" FOREIGN KEY ("space_id","id") REFERENCES "computers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "device_directory_grants" ADD CONSTRAINT "device_directory_grants_2tgovcFau3aw_fkey" FOREIGN KEY ("space_id","device_id","account_id") REFERENCES "device_space_devices"("space_id","device_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "device_member_file_reads" ADD CONSTRAINT "device_member_file_reads_WmbMec0qXTv4_fkey" FOREIGN KEY ("space_id","grant_id","device_id","account_id") REFERENCES "device_directory_grants"("space_id","id","device_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "device_space_devices" ADD CONSTRAINT "device_space_devices_0oE1dGjEisZg_fkey" FOREIGN KEY ("device_id","account_id") REFERENCES "device_computers"("id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "device_space_devices" ADD CONSTRAINT "device_space_devices_FOU0a8uzpSBo_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "mcp_server_secrets" ADD CONSTRAINT "mcp_server_secrets_DosQQutjQv11_fkey" FOREIGN KEY ("server_id","account_id","id") REFERENCES "mcp_servers"("id","account_id","secret_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "mcp_server_spaces" ADD CONSTRAINT "mcp_server_spaces_GaEj2xTQgleA_fkey" FOREIGN KEY ("server_id","account_id") REFERENCES "mcp_servers"("id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "mcp_server_spaces" ADD CONSTRAINT "mcp_server_spaces_CjkEgGFxh9uN_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "mcp_servers" ADD CONSTRAINT "mcp_servers_account_id_user_id_fkey" FOREIGN KEY ("account_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "member_conversation_views" ADD CONSTRAINT "member_conversation_views_MpkErHKVVfvu_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "member_conversation_views" ADD CONSTRAINT "member_conversation_views_NmAXpAS5vux0_fkey" FOREIGN KEY ("space_id","conversation_id") REFERENCES "conversations"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "member_notification_reads" ADD CONSTRAINT "member_notification_reads_VI9gPWOxjjHf_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "member_skill_spaces" ADD CONSTRAINT "member_skill_spaces_m7Z9ySXspTWA_fkey" FOREIGN KEY ("skill_id","account_id") REFERENCES "member_skills"("id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "member_skill_spaces" ADD CONSTRAINT "member_skill_spaces_KRHoTRKuWQQV_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "member_skills" ADD CONSTRAINT "member_skills_account_id_user_id_fkey" FOREIGN KEY ("account_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint

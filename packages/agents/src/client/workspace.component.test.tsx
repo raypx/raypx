@@ -344,7 +344,7 @@ it.each(["en", "zh"] as const)(
   },
 );
 
-it("labels the bounded Files tab as Team sandbox when a device is selected", async () => {
+it("selects the granted device Files without depending on the team sandbox", async () => {
   const context = fixture();
   enableDeviceComputer(context.client);
   const listDirectory = vi.fn(async () => ({
@@ -361,9 +361,17 @@ it("labels the bounded Files tab as Team sandbox when a device is selected", asy
   context.mount(true);
   await screen.findByRole("button", { name: "Computer: My machine · Connected" });
   await userEvent.click(screen.getByRole("tab", { name: "Files" }));
-  expect(await screen.findByRole("heading", { name: "Team sandbox" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "My machine" })).toBeInTheDocument();
   await waitFor(() =>
-    expect(listDirectory).toHaveBeenCalledWith({ spaceId: agent.spaceId, path: ".", limit: 100 }),
+    expect(listDirectory).toHaveBeenCalledWith({
+      spaceId: agent.spaceId,
+      device: {
+        deviceId: "018e2c42-08e0-4000-8000-000000000001",
+        grantId: "018e2c42-08e0-4000-8000-000000000002",
+      },
+      path: ".",
+      limit: 100,
+    }),
   );
 });
 

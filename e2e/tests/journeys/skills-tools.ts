@@ -128,7 +128,8 @@ export function registerTests() {
       await agentForm.getByRole("checkbox", { name: skillName, exact: true }).check({ timeout });
       await inspectForm(page, agentForm);
       await agentForm.getByRole("button", { name: "Create Agent", exact: true }).click({ timeout });
-      await expect(agentForm).toBeHidden();
+      // The new identity is retained as Edit Agent while capability writes finish.
+      await expect(page.getByRole("dialog", { name: /^(?:New|Edit) Agent$/ })).toBeHidden();
       await expect(page.locator("[data-conversation-header] h1")).toHaveText(agentName);
       const agent = (await api.agents.list({ spaceId, limit: 100 })).find(
         ({ agent: entry }) => entry.name === agentName,

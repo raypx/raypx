@@ -1,3 +1,4 @@
+import { AttachmentPicker, useAttachmentDrafts } from "./attachments.js";
 import logoMark from "@raypx/ui/logo-mark.webp";
 import { useEffect, useRef, useState, useSyncExternalStore, type ComponentRef } from "react";
 import { Button } from "heroui-native/button";
@@ -44,6 +45,7 @@ export function AgentHome({
   onContext(this: void): void;
 }) {
   const { t } = useCopy();
+  const attachmentDrafts = useAttachmentDrafts(controller.attachments);
   const state = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,
@@ -80,8 +82,7 @@ export function AgentHome({
       void computer.start();
   }
   async function send() {
-    await controller.send();
-    onOpen();
+    if (await controller.send()) onOpen();
   }
   return (
     <KeyboardAvoidingView
@@ -103,6 +104,14 @@ export function AgentHome({
             </Text>
           </View>
           <View className="gap-3 rounded-3xl border border-border bg-background p-3 shadow-sm">
+            <AttachmentPicker
+              controller={controller.attachments}
+              supportsImages={
+                models.find((entry) => entry.modelId === item.agent.model.modelId)
+                  ?.supportsImages === true
+              }
+              disabled={state.sending || state.pending !== null}
+            />
             <TextArea
               ref={editor}
               accessibilityLabel={t("agents.message")}
@@ -145,7 +154,12 @@ export function AgentHome({
               <Button
                 accessibilityLabel={t("agents.send")}
                 isDisabled={
-                  state.loading || !state.draft.trim() || !!state.pending || state.sending
+                  state.loading ||
+                  (!state.draft.trim() &&
+                    !attachmentDrafts.some((draft) => draft.state === "ready")) ||
+                  attachmentDrafts.some((draft) => draft.state !== "ready") ||
+                  !!state.pending ||
+                  state.sending
                 }
                 onPress={() => void send()}
                 className="min-h-11 min-w-11 rounded-full"

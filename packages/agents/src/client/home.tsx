@@ -1,3 +1,5 @@
+import { AttachmentDrafts, useAttachmentFiles } from "./attachments.js";
+import type { MessageAttachmentsPort } from "../model/attachments.js";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type Ref } from "react";
 import type { ApprovalMode } from "@raypx/core/approvals";
 import { Logo } from "@raypx/ui/logo";
@@ -63,6 +65,7 @@ export function WorkspaceHome({
   port,
   computerPort,
   deviceComputers,
+  messageAttachments,
   approvalPort,
   drafts,
   socket,
@@ -83,6 +86,7 @@ export function WorkspaceHome({
   port: ConversationPort;
   computerPort: ComputerPort;
   deviceComputers?: DeviceComputersPort | undefined;
+  messageAttachments?: MessageAttachmentsPort | undefined;
   approvalPort?: ApprovalPort | undefined;
   drafts: ConversationDraftStore;
   socket: ConversationSocketPort;
@@ -128,6 +132,11 @@ export function WorkspaceHome({
             port={port}
             computerPort={computerPort}
             deviceComputers={deviceComputers}
+            messageAttachments={messageAttachments}
+            supportsImages={
+              models.find((model) => model.modelId === item.agent.model.modelId)?.supportsImages ===
+              true
+            }
             approvalPort={approvalPort}
             drafts={drafts}
             socket={socket}
@@ -181,10 +190,12 @@ interface HomeComposerProps {
   onOpen: (item: AgentConversationView) => void;
   onEdit: () => void;
   modelName: string;
+  supportsImages: boolean;
   mode?: ApprovalMode | undefined;
   port: ConversationPort;
   computerPort: ComputerPort;
   deviceComputers?: DeviceComputersPort | undefined;
+  messageAttachments?: MessageAttachmentsPort | undefined;
   approvalPort?: ApprovalPort | undefined;
   drafts: ConversationDraftStore;
   socket: ConversationSocketPort;
@@ -197,6 +208,7 @@ function HomeComposer(props: HomeComposerProps) {
     item,
     computerPort,
     deviceComputers,
+    messageAttachments,
     approvalPort,
     origin,
     accountId,
@@ -219,6 +231,7 @@ function HomeComposer(props: HomeComposerProps) {
       computer = new ComputerController(item.agent.spaceId, computerPort, { accountId, socket });
       conversation = new ConversationController({
         computer,
+        ...(messageAttachments ? { attachments: messageAttachments } : {}),
         ...(approvalPort ? { approvals: approvalPort } : {}),
         selection: { spaceId: item.agent.spaceId, conversationId: item.conversation.id },
         owner: { origin, accountId },
@@ -249,6 +262,7 @@ function HomeComposer(props: HomeComposerProps) {
     item.conversation.id,
     computerPort,
     deviceComputers,
+    messageAttachments,
     approvalPort,
     origin,
     accountId,
@@ -269,6 +283,7 @@ function HomeComposerView({
   modelName,
   mode,
   controllers,
+  supportsImages,
 }: HomeComposerProps & {
   controllers: {
     computer: ComputerController;
@@ -296,6 +311,7 @@ function HomeComposerView({
     computer.getSnapshot,
     computer.getSnapshot,
   );
+  const attachmentFiles = useAttachmentFiles(conversation.attachments, supportsImages);
   const [computerOpen, setComputerOpen] = useState(false);
   const computerTrigger = useRef<HTMLButtonElement>(null);
   const editor = useRef<HTMLTextAreaElement>(null);
@@ -328,12 +344,22 @@ function HomeComposerView({
   return (
     <form
       className="flex w-full max-w-150 min-w-0 flex-col gap-3"
+      onPasteCapture={attachmentFiles.onPaste}
+      onDragOverCapture={attachmentFiles.onDragOver}
+      onDropCapture={attachmentFiles.onDrop}
       onSubmit={(event) => {
         event.preventDefault();
         void send();
       }}
     >
       <ComposerCard
+        attachments={
+          <AttachmentDrafts
+            controller={conversation.attachments}
+            files={attachmentFiles}
+            disabled={state.sending || state.pending !== null}
+          />
+        }
         toolbar={
           <>
             <DropdownMenu>
@@ -346,6 +372,12 @@ function HomeComposerView({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    disabled={!conversation.attachments || state.pending !== null}
+                    onClick={() => attachmentFiles.choose()}
+                  >
+                    {t("attachments.add")}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={onEdit}>
                     <AgentIcon aria-hidden="true" />
                     {t("editAgent")}
@@ -440,6 +472,12 @@ function HomeComposerView({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    disabled={!conversation.attachments || state.pending !== null}
+                    onClick={() => attachmentFiles.choose()}
+                  >
+                    {t("attachments.add")}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={onEdit}>{t("editAgent")}</DropdownMenuItem>
                   {appliedMode && (
                     <DropdownMenuItem disabled>
@@ -455,7 +493,12 @@ function HomeComposerView({
               size="icon"
               variant="default"
               className="rounded-full"
-              disabled={!state.draft.trim() || state.sending}
+              disabled={
+                (!state.draft.trim() &&
+                  !attachmentFiles.items.some((draft) => draft.state === "ready")) ||
+                state.sending ||
+                attachmentFiles.items.some((draft) => draft.state !== "ready")
+              }
             >
               <SendIcon aria-hidden="true" />
             </IconButton>

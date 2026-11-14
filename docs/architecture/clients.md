@@ -57,7 +57,8 @@ running, stopping, failed with its reason, or not configured on this server.
 Start is available when stopped, failures offer retry, and Stop requires
 confirmation. Pending commands and lifecycle transitions guard repeated
 activation. not-configured is a quiet explicit state without controls. Files
-remain bounded read-only computer access rather than local device files.
+provide bounded read-only access to the selected team sandbox or the member
+owner’s granted device directory, with waiting/unavailable reasons.
 
 Computer reads and commands use `computers.get/start/stop`. The model applies
 `computer.state` events, reads failure details through `get`, and refreshes on
@@ -157,6 +158,12 @@ steering work without loading old messages. Show Run loads the trigger's page an
 removes that Run's duplicate strip entry. Web/Desktop share the DOM implementation;
 Mobile uses native controls over the same model.
 
+Member files/images use the composer menu, drop and paste on Web/Desktop and
+native document/photo pickers on Mobile. Removable chips show upload/error and
+delivery status, and published chips download through session-authorized ports.
+The sidebar bell and Mobile list show addressed PostgreSQL sources across Spaces.
+See [limits, draft lifecycle and notifications](member-input-and-notifications.md).
+
 ## Interface rules
 
 - Chat shows the reply, useful progress, results and requests for help. Tool
@@ -180,8 +187,9 @@ to the next Run. Device approval cards show the device, directory and bounded
 complete command. English and Chinese share the same controls and warnings.
 The redesigned home and conversation composer chips reflect this per-conversation
 selection and open the Computer card or sheet. Selecting a device never starts a
-team sandbox. The Files tab identifies Team sandbox explicitly because its
-Space-scoped read port has no device-directory selector.
+team sandbox. The Files tab follows the selected computer through an additive device/grant
+selector on its read port. Offline devices wait; other members and revoked grants
+show an explicit unavailable state. The sandbox read path is unchanged.
 
 Desktop pairs through a native Cancel-default dialog and finite absolute bundled
 CLI calls. The connector queues remote directory requests; the native host checks

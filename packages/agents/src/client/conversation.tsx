@@ -1,3 +1,4 @@
+import { AttachmentDrafts, MessageAttachments, useAttachmentFiles } from "./attachments.js";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- The bounded transcript needs a keyboard scroll target. */
 import {
   useCallback,
@@ -93,6 +94,7 @@ const errorKeys = {
 } as const;
 
 interface AgentConversationProps {
+  supportsImages?: boolean | undefined;
   onBack?: (() => void) | undefined;
   onEditAgent?: (() => void) | undefined;
   onDeleteAgent?: (() => void) | undefined;
@@ -104,7 +106,15 @@ interface AgentConversationProps {
   agentDirectory?: readonly Agent[] | undefined;
   onManageParticipants?: (() => void) | undefined;
   capabilities?:
-    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers" | "protectedInputs">
+    | Pick<
+        AgentsWorkspacePort,
+        | "routines"
+        | "spaceMemory"
+        | "deviceComputers"
+        | "protectedInputs"
+        | "messageAttachments"
+        | "notifications"
+      >
     | undefined;
   item: AgentConversationView;
   port: ConversationPort;
@@ -127,6 +137,7 @@ interface AgentConversationProps {
 }
 
 export function AgentConversation({
+  supportsImages,
   onBack,
   onEditAgent,
   onDeleteAgent,
@@ -170,6 +181,9 @@ export function AgentConversation({
       computer = new ComputerController(item.agent.spaceId, computerPort, { accountId, socket });
       next = new ConversationController({
         computer,
+        ...(capabilities?.messageAttachments
+          ? { attachments: capabilities.messageAttachments }
+          : {}),
         ...(approvalPort ? { approvals: approvalPort } : {}),
         selection: { spaceId: item.agent.spaceId, conversationId: item.conversation.id },
         owner: { origin, accountId },
@@ -195,6 +209,7 @@ export function AgentConversation({
     };
   }, [
     referenceText,
+    capabilities?.messageAttachments,
     item.agent.spaceId,
     item.conversation.id,
     origin,
@@ -224,6 +239,7 @@ export function AgentConversation({
       agentDirectory={agentDirectory}
       onManageParticipants={onManageParticipants}
       capabilities={capabilities}
+      supportsImages={supportsImages}
       origin={origin}
       controller={controllers.conversation}
       computer={controllers.computer}
@@ -242,6 +258,7 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  supportsImages,
   runReference,
   onBack,
   onEditAgent,
@@ -278,9 +295,18 @@ function ConversationContents({
   agentDirectory: readonly Agent[] | undefined;
   onManageParticipants: (() => void) | undefined;
   capabilities:
-    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers" | "protectedInputs">
+    | Pick<
+        AgentsWorkspacePort,
+        | "routines"
+        | "spaceMemory"
+        | "deviceComputers"
+        | "protectedInputs"
+        | "messageAttachments"
+        | "notifications"
+      >
     | undefined;
   origin: string;
+  supportsImages: boolean | undefined;
   controller: ConversationController;
   computer: ComputerController;
   accountId: string;
@@ -296,7 +322,25 @@ function ConversationContents({
 }) {
   const t = useTranslations("agents");
   const id = useId();
+  useEffect(() => {
+    const port = capabilities?.notifications;
+    if (!port) return;
+    const viewed = () => {
+      if (!document.hidden)
+        void port
+          .viewed({ spaceId: item.agent.spaceId, conversationId: item.conversation.id })
+          .catch(() => {});
+    };
+    viewed();
+    const timer = setInterval(viewed, 15_000);
+    document.addEventListener("visibilitychange", viewed);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", viewed);
+    };
+  }, [capabilities?.notifications, item.agent.spaceId, item.conversation.id]);
   const panelId = useId();
+  const attachmentFiles = useAttachmentFiles(controller.attachments, supportsImages === true);
   const computerTrigger = useRef<HTMLButtonElement>(null);
   const capabilityMenuTrigger = useRef<HTMLButtonElement>(null);
   const computerMenuOpener = useRef<HTMLButtonElement | null>(null);
@@ -550,7 +594,8 @@ function ConversationContents({
     state.loading ||
     state.error === "load" ||
     state.sending ||
-    !state.draft.trim() ||
+    (!state.draft.trim() && !attachmentFiles.items.some((draft) => draft.state === "ready")) ||
+    attachmentFiles.items.some((draft) => draft.state !== "ready") ||
     (state.pending !== null && state.pending.text !== state.draft);
 
   const resizeEditor = useCallback(() => {
@@ -722,6 +767,8 @@ function ConversationContents({
 
   return (
     <Tabs
+      onDropCapture={attachmentFiles.onDrop}
+      onDragOverCapture={attachmentFiles.onDragOver}
       value={tab}
       onValueChange={(value) => {
         if (value === "conversation" || value === "activity" || value === "files") setTab(value);
@@ -1000,6 +1047,14 @@ function ConversationContents({
                       <p className="text-[15px] leading-7 whitespace-pre-wrap wrap-anywhere">
                         {row.text}
                       </p>
+                      <MessageAttachments
+                        attachments={row.attachments}
+                        port={capabilities?.messageAttachments}
+                        selection={{
+                          spaceId: item.agent.spaceId,
+                          conversationId: item.conversation.id,
+                        }}
+                      />
                     </article>
                   );
                 if (row.kind === "member")
@@ -1021,6 +1076,14 @@ function ConversationContents({
                       <p className="max-w-[90%] rounded-2xl bg-muted px-4 py-2.5 text-[15px] leading-6 whitespace-pre-wrap wrap-anywhere">
                         {row.text}
                       </p>
+                      <MessageAttachments
+                        attachments={row.attachments}
+                        port={capabilities?.messageAttachments}
+                        selection={{
+                          spaceId: item.agent.spaceId,
+                          conversationId: item.conversation.id,
+                        }}
+                      />
                     </article>
                   );
                 const run = row.run;
@@ -1325,10 +1388,15 @@ function ConversationContents({
         </TabsContent>
         <TabsContent value="files" className="min-h-0 min-w-0 overflow-y-auto overscroll-contain">
           <div className="mx-auto w-full min-w-0 max-w-[44rem] px-1 py-5 sm:px-3">
-            <h2 className="mb-3 text-sm font-medium">{t("devices.teamSandbox")}</h2>
+            <h2 className="mb-3 text-sm font-medium">
+              {deviceState?.selection
+                ? (selectedDevice?.name ?? t("files.deviceTitle"))
+                : t("devices.teamSandbox")}
+            </h2>
             {computer.files ? (
               <ComputerFiles
                 controller={computer.files}
+                device={deviceState?.selection}
                 status={computerState.status}
                 refreshKey={state.toolActivity
                   .filter((call) => call.finishedAt)
@@ -1514,7 +1582,13 @@ function ConversationContents({
               conversationId={item.conversation.id}
             />
           )}
-          <form onSubmit={submit} className="min-w-0 shrink-0">
+          <form
+            onSubmit={submit}
+            onPasteCapture={attachmentFiles.onPaste}
+            onDragOverCapture={attachmentFiles.onDragOver}
+            onDropCapture={attachmentFiles.onDrop}
+            className="min-w-0 shrink-0"
+          >
             <Field>
               <FieldLabel htmlFor={id} className="sr-only">
                 {t("message")}
@@ -1537,7 +1611,15 @@ function ConversationContents({
                   }}
                 />
               )}
+
               <ComposerCard
+                attachments={
+                  <AttachmentDrafts
+                    controller={controller.attachments}
+                    files={attachmentFiles}
+                    disabled={state.sending || state.pending !== null}
+                  />
+                }
                 toolbar={
                   <>
                     <DropdownMenu>
@@ -1548,6 +1630,28 @@ function ConversationContents({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
                         <DropdownMenuGroup>
+                          <DropdownMenuItem
+                            disabled={
+                              !controller.attachments || state.sending || state.pending !== null
+                            }
+                            onClick={() => attachmentFiles.choose()}
+                          >
+                            {t("attachments.add")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={
+                              !controller.attachments ||
+                              supportsImages !== true ||
+                              state.sending ||
+                              state.pending !== null
+                            }
+                            onClick={() => attachmentFiles.choose(true)}
+                          >
+                            {t("attachments.images")}
+                            {supportsImages !== true
+                              ? ` — ${t("attachments.imagesUnavailable")}`
+                              : ""}
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setTab("files")}>
                             {t("files.title")}
                           </DropdownMenuItem>

@@ -60,6 +60,7 @@ function pause(signal: AbortSignal, milliseconds = 25) {
 export function createDeviceConnectorRegistry(
   repository: DeviceComputersRepository,
   cluster?: DeviceConnectorBroker,
+  memberFiles?: import("./member-files.js").DeviceMemberFilesRepository,
 ) {
   const owner = cluster?.nodeId ?? crypto.randomUUID();
   const peers = new Map<string, Peer>();
@@ -70,10 +71,10 @@ export function createDeviceConnectorRegistry(
     );
     if (!client) throw new DeviceComputerError("DEVICE_OFFLINE");
     if (
-      frame.type === "request" &&
+      (frame.type === "request" || frame.type === "member-read") &&
       (client.device!.connectionFence !== frame.request.connectionFence ||
         client.device!.accountId !== frame.request.accountId ||
-        frame.request.requesterAccountId !== frame.request.accountId)
+        (frame.type === "request" && frame.request.requesterAccountId !== frame.request.accountId))
     )
       throw new DeviceComputerError("STALE_FENCE");
     client.peer.send(frame);
@@ -168,6 +169,11 @@ export function createDeviceConnectorRegistry(
     if (frame.type === "grant") return;
     if (frame.connectionFence !== device.connectionFence)
       throw new DeviceComputerError("STALE_FENCE");
+    if (frame.type === "member-read-result") {
+      if (!memberFiles) throw new DeviceComputerError("ACCESS_DENIED");
+      await memberFiles.complete(device, frame.id, frame.result);
+      return;
+    }
     await repository.event(device, frame.sequence, frame.operationId, frame.event);
     client.peer.send({
       type: "ack",
@@ -179,6 +185,30 @@ export function createDeviceConnectorRegistry(
     repository,
     owner,
     ready: () => !closing && (!cluster || cluster.ready()),
+    async memberRead(
+      scope: SpaceScope,
+      selection: import("@raypx/core/computers").DeviceComputerSelection,
+      operation: import("@raypx/contracts/device-connector").DeviceMemberReadRequest["operation"],
+    ) {
+      if (!memberFiles) throw new DeviceComputerError("DEVICE_OFFLINE");
+      const prepared = await memberFiles.prepare(scope, selection, operation);
+      try {
+        await send(
+          prepared.identity,
+          { type: "member-read", request: prepared.request },
+          prepared.route,
+        );
+        const signal = AbortSignal.timeout(10_000);
+        while (!signal.aborted) {
+          const result = await memberFiles.take(scope, prepared.request.id);
+          if (result) return result;
+          await pause(signal, 50);
+        }
+        throw new DeviceComputerError("DEVICE_OFFLINE");
+      } finally {
+        await memberFiles.remove(scope, prepared.request.id);
+      }
+    },
     async start() {
       if (!cluster) return;
       await cluster.start(

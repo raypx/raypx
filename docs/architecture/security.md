@@ -168,3 +168,9 @@ untrusted provenance/context prevents receiving a device; delegated authority
 keeps the root requester. Audit stores pairing/grant/revocation and command intent
 and terminal outcome without credentials, private paths or command bodies.
 [Device setup](../development/device-connector.md) records conservative limits.
+
+Member upload bytes never grant authority. Published downloads require a fresh
+session/Space check and use attachment disposition, no-store, nosniff and sandbox
+CSP. Unsent files remain uploader-only and expire. Device member reads revalidate
+owner/grant/fence on dispatch and consumption. See
+[member input boundaries](member-input-and-notifications.md).

@@ -58,11 +58,17 @@ export const computerDirectoryEntrySchema = z.strictObject({
   kind: z.enum(["file", "directory", "symlink"]),
 });
 const unavailableFilesSchema = z.discriminatedUnion("status", [
+  z.strictObject({ status: z.literal("waiting"), code: z.literal("DEVICE_OFFLINE") }),
   z.strictObject({ status: z.literal("not-configured") }),
   z.strictObject({ status: z.literal("not-running"), state: computerStateSchema.nullable() }),
   z.strictObject({
     status: z.literal("unavailable"),
-    code: z.enum(["FILES_UNAVAILABLE", "COMPUTER_UNAVAILABLE"]),
+    code: z.enum([
+      "FILES_UNAVAILABLE",
+      "COMPUTER_UNAVAILABLE",
+      "DEVICE_NOT_OWNED",
+      "DEVICE_GRANT_UNAVAILABLE",
+    ]),
   }),
 ]);
 export const computerDirectorySchema = z.union([

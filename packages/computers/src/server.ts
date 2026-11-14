@@ -184,3 +184,5 @@ export {
   type DeviceConnectorPeer,
   type DeviceConnectorBroker,
 } from "./device-registry.js";
+
+export type { DeviceMemberFilesRepository, DeviceMemberFilesService } from "./member-files.js";

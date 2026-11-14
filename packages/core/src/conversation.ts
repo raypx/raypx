@@ -15,17 +15,66 @@ export { runIdSchema } from "./run-identity.js";
 
 export const eventSequenceSchema = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
 export const messageIdSchema = z.string().min(1).max(128).brand<"MessageId">();
+export const MAX_MESSAGE_ATTACHMENTS = 4;
+export const MESSAGE_ATTACHMENT_CHUNK_BYTES = 96 * 1024;
+export const MAX_MESSAGE_ATTACHMENT_BYTES = 1024 * 1024;
+export const attachmentIdSchema = z.uuid();
+export const attachmentNameSchema = z
+  .string()
+  .min(1)
+  .max(120)
+  .regex(/^[^\p{Cc}\p{Cf}\p{Cs}/\\]+$/u);
+export const attachmentMediaTypeSchema = z.enum([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+  "text/plain",
+  "text/markdown",
+  "text/csv",
+  "application/json",
+]);
+export const attachmentDeliverySchema = z.strictObject({
+  runId: runIdSchema,
+  state: z.enum(["image", "available", "withheld"]),
+  path: z.string().max(4096).nullable(),
+  reason: z
+    .enum([
+      "MODEL_IMAGES_UNAVAILABLE",
+      "COMPUTER_UNAVAILABLE",
+      "DEVICE_GRANT_REQUIRED",
+      "DELIVERY_UNCONFIRMED",
+    ])
+    .nullable(),
+});
+export const messageAttachmentSchema = z.strictObject({
+  id: attachmentIdSchema,
+  name: attachmentNameSchema,
+  mediaType: attachmentMediaTypeSchema,
+  size: z.number().int().min(1).max(MAX_MESSAGE_ATTACHMENT_BYTES),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  createdAt: z.iso.datetime(),
+  deliveries: z.array(attachmentDeliverySchema).max(32).optional(),
+});
+export type MessageAttachment = z.infer<typeof messageAttachmentSchema>;
+export type AttachmentDelivery = z.infer<typeof attachmentDeliverySchema>;
 export const memberMessageInputSchema = z
   .strictObject({
     idempotencyKey: z.string().min(1).max(128),
     mentions: z.array(agentIdSchema).max(32).optional(),
     steerRunId: runIdSchema.optional(),
-    text: z
-      .string()
-      .min(1)
-      .max(32_000)
-      .refine((text) => text.trim().length > 0),
+    attachmentIds: z
+      .array(attachmentIdSchema)
+      .max(MAX_MESSAGE_ATTACHMENTS)
+      .refine((ids) => new Set(ids).size === ids.length)
+      .optional(),
+    text: z.string().max(32_000),
   })
+  .refine(
+    (input) => input.text.trim().length > 0 || Boolean(input.attachmentIds?.length),
+    "A message needs text or attachments",
+  )
   .refine((input) => !input.steerRunId || !input.mentions?.length, "Steering addresses one Run");
 export type MemberMessageInput = z.infer<typeof memberMessageInputSchema>;
 export const messageSchema = z.strictObject({
@@ -39,6 +88,7 @@ export const messageSchema = z.strictObject({
     agentId: agentIdSchema.optional(),
   }),
   mentions: z.array(agentIdSchema).optional(),
+  attachments: z.array(messageAttachmentSchema).max(MAX_MESSAGE_ATTACHMENTS).optional(),
   text: memberMessageInputSchema.shape.text,
   createdAt: z.iso.datetime(),
 });
@@ -205,6 +255,13 @@ export type ToolActivity = z.infer<typeof toolActivitySchema>;
 export type ToolOutcome = z.infer<typeof toolOutcomeSchema>;
 export const conversationEventSchema = z
   .discriminatedUnion("kind", [
+    z.strictObject({
+      ...eventFields,
+      kind: z.literal("attachment.state"),
+      messageId: messageIdSchema,
+      attachmentId: attachmentIdSchema,
+      delivery: attachmentDeliverySchema,
+    }),
     z.strictObject({
       ...eventFields,
       ...toolLifecycleFields,

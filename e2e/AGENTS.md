@@ -133,3 +133,7 @@ under `.artifacts/ui/` before any value is generated or entered. Trace, video an
 automatic screenshots stay disabled around generated sensitive values.
 
 Protected-input journeys cover every destination, including both device channels and both masked basic fields. Test-only transcript inspection is session/Space scoped. All protected journeys disable traces, video and automatic screenshots around values.
+
+attachments-notifications journeys exercise real owned-backend uploads, image
+parts, download/reload, device Files/withholding and notification sources on both
+renderers. RAYPX_E2E_SCREENSHOTS writes light/dark evidence to .artifacts/attach/.

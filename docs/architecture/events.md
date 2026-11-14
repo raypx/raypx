@@ -21,16 +21,17 @@ clients follow it.
 
 Each conversation has one ordered event log in PostgreSQL.
 
-| Event kind        | Carries                                          |
-| ----------------- | ------------------------------------------------ |
-| `message.created` | A member, Agent or trigger message               |
-| `reply.segment`   | A completed segment of reply text                |
-| `card.created`    | An approval, a question or a result card         |
-| `card.resolved`   | The answer and who gave it                       |
-| `run.state`       | A Run's state change                             |
-| `tool.started`    | Bounded target and argument summary for a call   |
-| `tool.finished`   | Stable outcome, duration and command exit status |
-| `computer.state`  | A computer's start, stop or unavailable state    |
+| Event kind         | Carries                                          |
+| ------------------ | ------------------------------------------------ |
+| `message.created`  | A member, Agent or trigger message               |
+| `reply.segment`    | A completed segment of reply text                |
+| `card.created`     | An approval, a question or a result card         |
+| `card.resolved`    | The answer and who gave it                       |
+| `run.state`        | A Run's state change                             |
+| `tool.started`     | Bounded target and argument summary for a call   |
+| `tool.finished`    | Stable outcome, duration and command exit status |
+| `computer.state`   | A computer's start, stop or unavailable state    |
+| `attachment.state` | Per-Run attachment delivery or withheld reason   |
 
 - A per-conversation counter assigns each event a sequence number in the
   transaction that writes it. Sequences have no gaps.
@@ -69,23 +70,25 @@ Each conversation has one ordered event log in PostgreSQL.
 
 ## Notifications
 
-A Run that finishes, or that needs an answer while no client is connected, sends a
-push notification through an optional notification port. The notification carries
-a title and a conversation identifier. It carries no message content unless the
-member enables previews.
+The member notification list queries current PostgreSQL sources and stores only
+read/view receipts. Pending requests, away completions and issued invitations have
+source links; push delivery remains unimplemented. See
+[notification semantics](member-input-and-notifications.md#notification-list).
 
 ## Implemented conversation slice
 
 `@raypx/core/conversation` defines member messages and the immutable
 `message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created`
-`card.resolved`, `tool.started` and `tool.finished` event variants. Events reference the stored message or segment; cursor
+`card.resolved`, `tool.started`, `tool.finished` and `attachment.state` event variants. Events reference the stored message or segment; cursor
 reads hydrate that message for transport. Run state events contain the Run ID, state and a stable failure code. The first queued event also carries optional trigger, routine ID, provenance kind and untrusted-input metadata, without inbound content. Snapshots include messages, Runs and completed reply segments.
 `@raypx/agents/server` owns scoped conversation persistence and the small fanout
 subscriber port. The PostgreSQL repository accepts a transactional publisher;
 its default calls `pg_notify` inside the write transaction, so rollbacks publish
 nothing. Notifications contain exactly `conversationId` and `sequence`.
 
-`conversations.send` accepts a resource selection and `{ text, idempotencyKey }`.
+`conversations.send` accepts a resource selection and `{ text, idempotencyKey, attachmentIds? }`.
+Final uploads are claimed atomically; message/event/history hydration includes
+attachment chips and per-Run delivery outcomes. See [attachments](member-input-and-notifications.md).
 The key is scoped to Space, Conversation and session member. Retrying a key returns
 the original message, even if retry text differs or its event was compacted.
 One counter-row lock serializes writers and prefix retention; failed transactions

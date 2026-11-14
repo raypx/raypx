@@ -20,7 +20,8 @@
     "./skills": "./src/skills.ts",
     "./mcp-servers": "./src/mcp-servers.ts",
     "./openapi-servers": "./src/openapi-servers.ts",
-    "./protected-input": "./src/protected-input.ts"
+    "./protected-input": "./src/protected-input.ts",
+    "./notifications": "./src/notifications.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

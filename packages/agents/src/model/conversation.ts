@@ -61,6 +61,7 @@ export type ConversationRow =
       text: string;
       agentId?: Run["agentId"] | undefined;
       targetAgentIds?: Message["mentions"] | undefined;
+      attachments?: Message["attachments"] | undefined;
     }
   | {
       id: string;
@@ -86,6 +87,7 @@ export function conversationRows(view: ConversationView): ConversationRow[] {
       : {}),
     sequence: message.sequence,
     text: message.text,
+    attachments: message.attachments,
   }));
   const runIds = new Set([
     ...view.runs.map((run) => run.id),
@@ -548,6 +550,31 @@ export class ConversationState {
       this.latestMessageId = message.id;
       this.latestMessageSequence = message.sequence;
       if (includeNewMessages) this.receiveMessage(message);
+    }
+    if (event.kind === "attachment.state") {
+      this.view = {
+        ...this.view,
+        messages: this.view.messages.map((message) =>
+          message.id !== event.messageId
+            ? message
+            : {
+                ...message,
+                attachments: message.attachments?.map((attachment) =>
+                  attachment.id !== event.attachmentId
+                    ? attachment
+                    : {
+                        ...attachment,
+                        deliveries: [
+                          ...(attachment.deliveries ?? []).filter(
+                            (delivery) => delivery.runId !== event.delivery.runId,
+                          ),
+                          event.delivery,
+                        ].slice(-32),
+                      },
+                ),
+              },
+        ),
+      };
     }
     if (event.kind === "run.state") {
       if ((event.state === "failed") !== (event.failureCode !== null)) return "snapshot-required";

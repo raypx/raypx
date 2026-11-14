@@ -11,7 +11,7 @@ import {
 import { conversationIdSchema } from "@raypx/core/agents";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import type { SpaceScope } from "@raypx/spaces/server";
-import { publishConversationNotice } from "../../src/server/conversations.js";
+import { publishConversationNotice } from "../../src/server/notice.js";
 import {
   createAgentsRepository,
   createConversationsRepository,

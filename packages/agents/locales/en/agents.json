@@ -276,7 +276,11 @@
     "symlink": "Symbolic links cannot be previewed.",
     "size": "{size, number} bytes",
     "computerUnavailable": "The computer is unavailable.",
-    "notRunning": "{state}. Files are available while the computer is running."
+    "notRunning": "{state}. Files are available while the computer is running.",
+    "deviceWaiting": "Waiting for device. Reconnect it, then refresh.",
+    "deviceNotOwned": "Only the member who owns this directory grant can browse it.",
+    "deviceUnavailable": "This device directory grant is unavailable.",
+    "deviceTitle": "Device files"
   },
   "routines": "Routines",
   "spaceMemory": "Memory",
@@ -734,5 +738,41 @@
   "pagesContext": "Pages",
   "computerShort": "Computer",
   "composerComputer": "Computer context: {state}",
-  "modelAndApproval": "Model and approval mode"
+  "modelAndApproval": "Model and approval mode",
+  "attachments": {
+    "title": "Attachments",
+    "add": "Attach files",
+    "images": "Attach images",
+    "imagesUnavailable": "This model does not support images",
+    "uploading": "Uploading…",
+    "remove": "Remove {name}",
+    "download": "Download {name}",
+    "downloadError": "Download failed. Try again.",
+    "invalid": "Unsupported file type",
+    "limit": "Up to 4 files, 1 MiB each",
+    "upload": "Upload failed. Remove and try again.",
+    "ATTACHMENT_EXPIRED": "An upload expired. Attach it again.",
+    "MODEL_IMAGES_UNAVAILABLE": "Image withheld: this model does not support images.",
+    "COMPUTER_UNAVAILABLE": "File withheld: no computer is available.",
+    "DEVICE_GRANT_REQUIRED": "File withheld: a directory grant from its owner is required.",
+    "DELIVERY_UNCONFIRMED": "File withheld: delivery could not be confirmed.",
+    "ATTACHMENT_INVALID": "Unsupported file type",
+    "ATTACHMENT_LIMIT": "Up to 4 files, 1 MiB each"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "{count} unread",
+    "new": "Unread",
+    "empty": "You’re all caught up.",
+    "error": "Notifications could not be loaded. Refresh to try again.",
+    "truncated": "Showing the latest 100 items.",
+    "approval": "Approval needed",
+    "protected-input": "Protected input needed",
+    "run-succeeded": "Run finished",
+    "run-failed": "Run failed",
+    "invitation": "Open invitation"
+  },
+  "ATTACHMENT_EXPIRED": "An upload expired. Attach it again.",
+  "ATTACHMENT_INVALID": "Unsupported file type",
+  "ATTACHMENT_LIMIT": "Up to 4 files, 1 MiB each"
 }

@@ -92,6 +92,16 @@ function containsCredential(value: unknown, secret: string): boolean {
 export function createConnectionTransport(): ConnectionTransport {
   const active = new Set<AiClient>();
   return {
+    supportsImages(connection, model) {
+      const client = configuredClient(connection);
+      try {
+        return client.resolveModel(selected(connection, model)).input.includes("image");
+      } catch {
+        return false;
+      } finally {
+        client.close();
+      }
+    },
     validate(input: ModelConnectionConfiguration) {
       const client = configuredClient(input);
       try {
@@ -101,7 +111,17 @@ export function createConnectionTransport(): ConnectionTransport {
       }
     },
     async resolve(connection, model, secret) {
+      const capabilityClient = configuredClient(connection);
+      let supportsImages: boolean;
+      try {
+        supportsImages = capabilityClient
+          .resolveModel(selected(connection, model))
+          .input.includes("image");
+      } finally {
+        capabilityClient.close();
+      }
       return {
+        supportsImages,
         stream(input, signal): AiStream {
           const client = configuredClient(connection);
           active.add(client);

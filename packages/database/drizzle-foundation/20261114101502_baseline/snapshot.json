@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "b1f25c05-e89d-42ce-bf37-e47af41e96c7",
+  "id": "d5034c46-ed8e-447d-8ca1-bbe7f9449c6a",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -230,6 +230,45 @@
         "n|rel|public.computers",
         "n|type|public.computers",
         "n|rel|public.computers_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachment_deliveries"
+      ],
+      "writes": [
+        "s|tbl|public.conversation_attachment_deliveries",
+        "n|tbl|public.conversation_attachment_deliveries",
+        "e|tbl|public.conversation_attachment_deliveries",
+        "n|rel|public.conversation_attachment_deliveries",
+        "n|type|public.conversation_attachment_deliveries",
+        "n|rel|public.conversation_attachment_deliveries_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachments"
+      ],
+      "writes": [
+        "s|tbl|public.conversation_attachments",
+        "n|tbl|public.conversation_attachments",
+        "e|tbl|public.conversation_attachments",
+        "n|rel|public.conversation_attachments",
+        "n|type|public.conversation_attachments",
+        "n|rel|public.conversation_attachments_pkey",
+        "n|rel|public.conversation_attachments_message_key"
       ],
       "reads": [
         "n|sch|public"
@@ -680,6 +719,26 @@
       "statementTarget": [
         "table",
         "public",
+        "device_member_file_reads"
+      ],
+      "writes": [
+        "s|tbl|public.device_member_file_reads",
+        "n|tbl|public.device_member_file_reads",
+        "e|tbl|public.device_member_file_reads",
+        "n|rel|public.device_member_file_reads",
+        "n|type|public.device_member_file_reads",
+        "n|rel|public.device_member_file_reads_pkey",
+        "n|rel|public.device_member_file_reads_id_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
         "device_space_devices"
       ],
       "writes": [
@@ -787,6 +846,44 @@
         "n|rel|public.mcp_servers_pkey",
         "n|rel|public.mcp_servers_owner_idx",
         "n|rel|public.mcp_servers_secret_owner_idx"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "member_conversation_views"
+      ],
+      "writes": [
+        "s|tbl|public.member_conversation_views",
+        "n|tbl|public.member_conversation_views",
+        "e|tbl|public.member_conversation_views",
+        "n|rel|public.member_conversation_views",
+        "n|type|public.member_conversation_views",
+        "n|rel|public.member_conversation_views_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "member_notification_reads"
+      ],
+      "writes": [
+        "s|tbl|public.member_notification_reads",
+        "n|tbl|public.member_notification_reads",
+        "e|tbl|public.member_notification_reads",
+        "n|rel|public.member_notification_reads",
+        "n|type|public.member_notification_reads",
+        "n|rel|public.member_notification_reads_pkey"
       ],
       "reads": [
         "n|sch|public"
@@ -2115,6 +2212,47 @@
       "statementTarget": [
         "index",
         "public",
+        "conversation_attachments",
+        "conversation_attachments_expiry_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_attachments_expiry_idx",
+        "n|idx|public.conversation_attachments_expiry_idx",
+        "e|idx|public.conversation_attachments_expiry_idx",
+        "n|rel|public.conversation_attachments_expiry_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.expires_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_attachments",
+        "conversation_attachments_member_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_attachments_member_idx",
+        "n|idx|public.conversation_attachments_member_idx",
+        "e|idx|public.conversation_attachments_member_idx",
+        "n|rel|public.conversation_attachments_member_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.space_id",
+        "n|col|public.conversation_attachments.uploader_account_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
         "conversation_delegations",
         "conversation_delegations_child_idx"
       ],
@@ -2712,6 +2850,26 @@
       "statementTarget": [
         "index",
         "public",
+        "device_member_file_reads",
+        "device_member_file_reads_expiry_idx"
+      ],
+      "writes": [
+        "s|idx|public.device_member_file_reads_expiry_idx",
+        "n|idx|public.device_member_file_reads_expiry_idx",
+        "e|idx|public.device_member_file_reads_expiry_idx",
+        "n|rel|public.device_member_file_reads_expiry_idx"
+      ],
+      "reads": [
+        "n|tbl|public.device_member_file_reads",
+        "n|sch|public",
+        "n|col|public.device_member_file_reads.expires_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
         "mcp_server_secrets",
         "mcp_server_secrets_owner_idx"
       ],
@@ -2770,6 +2928,27 @@
         "n|col|public.mcp_servers.account_id",
         "n|col|public.mcp_servers.created_at",
         "n|col|public.mcp_servers.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "member_notification_reads",
+        "member_notification_reads_account_idx"
+      ],
+      "writes": [
+        "s|idx|public.member_notification_reads_account_idx",
+        "n|idx|public.member_notification_reads_account_idx",
+        "e|idx|public.member_notification_reads_account_idx",
+        "n|rel|public.member_notification_reads_account_idx"
+      ],
+      "reads": [
+        "n|tbl|public.member_notification_reads",
+        "n|sch|public",
+        "n|col|public.member_notification_reads.account_id",
+        "n|col|public.member_notification_reads.space_id"
       ]
     },
     {
@@ -4507,6 +4686,114 @@
       "statementTarget": [
         "table",
         "public",
+        "conversation_attachment_deliveries"
+      ],
+      "writes": [
+        "s|fk|public.conversation_attachment_deliveries.conversation_attachment_deliveries_C12Azf0T4rmj_fkey",
+        "n|fk|public.conversation_attachment_deliveries.conversation_attachment_deliveries_C12Azf0T4rmj_fkey",
+        "e|fk|public.conversation_attachment_deliveries.conversation_attachment_deliveries_C12Azf0T4rmj_fkey",
+        "n|con|public.conversation_attachment_deliveries.conversation_attachment_deliveries_C12Azf0T4rmj_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachment_deliveries",
+        "n|sch|public",
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.conversation_attachment_deliveries.space_id",
+        "n|col|public.conversation_attachment_deliveries.conversation_id",
+        "n|col|public.conversation_attachment_deliveries.run_id",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "e|uniqueness|public.conversation_runs.conversation_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachment_deliveries"
+      ],
+      "writes": [
+        "s|fk|public.conversation_attachment_deliveries.conversation_attachment_deliveries_oV19iJ9kRPMD_fkey",
+        "n|fk|public.conversation_attachment_deliveries.conversation_attachment_deliveries_oV19iJ9kRPMD_fkey",
+        "e|fk|public.conversation_attachment_deliveries.conversation_attachment_deliveries_oV19iJ9kRPMD_fkey",
+        "n|con|public.conversation_attachment_deliveries.conversation_attachment_deliveries_oV19iJ9kRPMD_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachment_deliveries",
+        "n|sch|public",
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|col|public.conversation_attachment_deliveries.space_id",
+        "n|col|public.conversation_attachment_deliveries.conversation_id",
+        "n|col|public.conversation_attachment_deliveries.attachment_id",
+        "n|col|public.conversation_attachment_deliveries.message_id",
+        "n|col|public.conversation_attachments.space_id",
+        "n|col|public.conversation_attachments.conversation_id",
+        "n|col|public.conversation_attachments.id",
+        "n|col|public.conversation_attachments.message_id",
+        "e|uniqueness|public.conversation_attachments.conversation_id.id.message_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachments"
+      ],
+      "writes": [
+        "s|fk|public.conversation_attachments.conversation_attachments_R5f8l0fMYmwZ_fkey",
+        "n|fk|public.conversation_attachments.conversation_attachments_R5f8l0fMYmwZ_fkey",
+        "e|fk|public.conversation_attachments.conversation_attachments_R5f8l0fMYmwZ_fkey",
+        "n|con|public.conversation_attachments.conversation_attachments_R5f8l0fMYmwZ_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|tbl|public.conversations",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.space_id",
+        "n|col|public.conversation_attachments.conversation_id",
+        "n|col|public.conversations.space_id",
+        "n|col|public.conversations.id",
+        "e|uniqueness|public.conversations.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachments"
+      ],
+      "writes": [
+        "s|fk|public.conversation_attachments.conversation_attachments_vgHVwbuVTlDp_fkey",
+        "n|fk|public.conversation_attachments.conversation_attachments_vgHVwbuVTlDp_fkey",
+        "e|fk|public.conversation_attachments.conversation_attachments_vgHVwbuVTlDp_fkey",
+        "n|con|public.conversation_attachments.conversation_attachments_vgHVwbuVTlDp_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|tbl|public.conversation_messages",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.space_id",
+        "n|col|public.conversation_attachments.conversation_id",
+        "n|col|public.conversation_attachments.message_id",
+        "n|col|public.conversation_messages.space_id",
+        "n|col|public.conversation_messages.conversation_id",
+        "n|col|public.conversation_messages.id",
+        "e|uniqueness|public.conversation_messages.conversation_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
         "conversation_counters"
       ],
       "writes": [
@@ -4824,6 +5111,35 @@
         "n|col|public.approval_requests.run_id",
         "n|col|public.approval_requests.id",
         "e|uniqueness|public.approval_requests.conversation_id.id.run_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_events"
+      ],
+      "writes": [
+        "s|fk|public.conversation_events.conversation_events_CWUbY17rN8Zi_fkey",
+        "n|fk|public.conversation_events.conversation_events_CWUbY17rN8Zi_fkey",
+        "e|fk|public.conversation_events.conversation_events_CWUbY17rN8Zi_fkey",
+        "n|con|public.conversation_events.conversation_events_CWUbY17rN8Zi_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_events",
+        "n|sch|public",
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|col|public.conversation_events.space_id",
+        "n|col|public.conversation_events.conversation_id",
+        "n|col|public.conversation_events.attachment_id",
+        "n|col|public.conversation_events.attachment_message_id",
+        "n|col|public.conversation_attachments.space_id",
+        "n|col|public.conversation_attachments.conversation_id",
+        "n|col|public.conversation_attachments.id",
+        "n|col|public.conversation_attachments.message_id",
+        "e|uniqueness|public.conversation_attachments.conversation_id.id.message_id.space_id"
       ]
     },
     {
@@ -5746,6 +6062,35 @@
       "statementTarget": [
         "table",
         "public",
+        "device_member_file_reads"
+      ],
+      "writes": [
+        "s|fk|public.device_member_file_reads.device_member_file_reads_WmbMec0qXTv4_fkey",
+        "n|fk|public.device_member_file_reads.device_member_file_reads_WmbMec0qXTv4_fkey",
+        "e|fk|public.device_member_file_reads.device_member_file_reads_WmbMec0qXTv4_fkey",
+        "n|con|public.device_member_file_reads.device_member_file_reads_WmbMec0qXTv4_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_member_file_reads",
+        "n|sch|public",
+        "n|tbl|public.device_directory_grants",
+        "n|sch|public",
+        "n|col|public.device_member_file_reads.space_id",
+        "n|col|public.device_member_file_reads.grant_id",
+        "n|col|public.device_member_file_reads.device_id",
+        "n|col|public.device_member_file_reads.account_id",
+        "n|col|public.device_directory_grants.space_id",
+        "n|col|public.device_directory_grants.id",
+        "n|col|public.device_directory_grants.device_id",
+        "n|col|public.device_directory_grants.account_id",
+        "e|uniqueness|public.device_directory_grants.account_id.device_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
         "device_space_devices"
       ],
       "writes": [
@@ -5889,6 +6234,81 @@
         "n|col|public.mcp_servers.account_id",
         "n|col|public.user.id",
         "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "member_conversation_views"
+      ],
+      "writes": [
+        "s|fk|public.member_conversation_views.member_conversation_views_MpkErHKVVfvu_fkey",
+        "n|fk|public.member_conversation_views.member_conversation_views_MpkErHKVVfvu_fkey",
+        "e|fk|public.member_conversation_views.member_conversation_views_MpkErHKVVfvu_fkey",
+        "n|con|public.member_conversation_views.member_conversation_views_MpkErHKVVfvu_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.member_conversation_views",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.member_conversation_views.space_id",
+        "n|col|public.member_conversation_views.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "member_conversation_views"
+      ],
+      "writes": [
+        "s|fk|public.member_conversation_views.member_conversation_views_NmAXpAS5vux0_fkey",
+        "n|fk|public.member_conversation_views.member_conversation_views_NmAXpAS5vux0_fkey",
+        "e|fk|public.member_conversation_views.member_conversation_views_NmAXpAS5vux0_fkey",
+        "n|con|public.member_conversation_views.member_conversation_views_NmAXpAS5vux0_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.member_conversation_views",
+        "n|sch|public",
+        "n|tbl|public.conversations",
+        "n|sch|public",
+        "n|col|public.member_conversation_views.space_id",
+        "n|col|public.member_conversation_views.conversation_id",
+        "n|col|public.conversations.space_id",
+        "n|col|public.conversations.id",
+        "e|uniqueness|public.conversations.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "member_notification_reads"
+      ],
+      "writes": [
+        "s|fk|public.member_notification_reads.member_notification_reads_VI9gPWOxjjHf_fkey",
+        "n|fk|public.member_notification_reads.member_notification_reads_VI9gPWOxjjHf_fkey",
+        "e|fk|public.member_notification_reads.member_notification_reads_VI9gPWOxjjHf_fkey",
+        "n|con|public.member_notification_reads.member_notification_reads_VI9gPWOxjjHf_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.member_notification_reads",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.member_notification_reads.space_id",
+        "n|col|public.member_notification_reads.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
       ]
     },
     {
@@ -7573,6 +7993,18 @@
     },
     {
       "schema": "public",
+      "name": "conversation_attachment_deliveries",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "conversation_attachments",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "conversation_counters",
       "isRlsEnabled": false,
       "entityType": "tables"
@@ -7711,6 +8143,12 @@
     },
     {
       "schema": "public",
+      "name": "device_member_file_reads",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "device_space_devices",
       "isRlsEnabled": false,
       "entityType": "tables"
@@ -7742,6 +8180,18 @@
     {
       "schema": "public",
       "name": "mcp_servers",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "member_conversation_views",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "member_notification_reads",
       "isRlsEnabled": false,
       "entityType": "tables"
     },
@@ -9421,6 +9871,305 @@
     },
     {
       "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "conversation_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "run_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "attachment_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "message_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "state",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "path",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "reason",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "fence",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "uploader_account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "message_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "media_type",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "size",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "ready",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "true",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "expected_size",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "sha256",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "bytes",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
       "table": "conversation_counters",
       "name": "space_id",
       "type": "text",
@@ -9910,6 +10659,38 @@
       "dimensions": 0,
       "default": null,
       "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_events",
+      "name": "attachment_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "case when \"conversation_events\".\"kind\" = 'attachment.state' then \"conversation_events\".\"data\"->>'attachmentId' else null end",
+        "type": "stored"
+      },
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_events",
+      "name": "attachment_message_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "case when \"conversation_events\".\"kind\" = 'attachment.state' then \"conversation_events\".\"data\"->>'messageId' else null end",
+        "type": "stored"
+      },
       "identity": null,
       "entityType": "columns"
     },
@@ -12456,6 +13237,136 @@
     },
     {
       "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "device_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "grant_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "grant_revision",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "connection_fence",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "operation",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "result",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
       "table": "device_space_devices",
       "name": "space_id",
       "type": "text",
@@ -12952,6 +13863,123 @@
       "schema": "public",
       "table": "mcp_servers",
       "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_conversation_views",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_conversation_views",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_conversation_views",
+      "name": "conversation_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_conversation_views",
+      "name": "viewed_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "kind",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "source_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "read_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -18852,6 +19880,55 @@
     },
     {
       "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_expiry_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "expires_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"message_id\" is null",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_member_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "uploader_account_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
       "table": "conversation_delegations",
       "name": "conversation_delegations_child_idx",
       "nameExplicit": true,
@@ -19818,6 +20895,27 @@
     },
     {
       "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "device_member_file_reads_expiry_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "expires_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
       "table": "mcp_server_secrets",
       "name": "mcp_server_secrets_owner_idx",
       "nameExplicit": true,
@@ -19901,6 +20999,34 @@
         },
         {
           "value": "id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "member_notification_reads_account_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "space_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -21893,6 +23019,90 @@
     },
     {
       "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "conversation_attachment_deliveries_C12Azf0T4rmj_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "run_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversation_runs",
+      "columnsTo": [
+        "space_id",
+        "conversation_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "conversation_attachment_deliveries_oV19iJ9kRPMD_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "attachment_id",
+        "message_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversation_attachments",
+      "columnsTo": [
+        "space_id",
+        "conversation_id",
+        "id",
+        "message_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_R5f8l0fMYmwZ_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversations",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_vgHVwbuVTlDp_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "message_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversation_messages",
+      "columnsTo": [
+        "space_id",
+        "conversation_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
       "table": "conversation_counters",
       "name": "conversation_counters_VRyqPxfEewzC_fkey",
       "nameExplicit": false,
@@ -22138,6 +23348,29 @@
         "conversation_id",
         "run_id",
         "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_events",
+      "name": "conversation_events_CWUbY17rN8Zi_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "attachment_id",
+        "attachment_message_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversation_attachments",
+      "columnsTo": [
+        "space_id",
+        "conversation_id",
+        "id",
+        "message_id"
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
@@ -22850,6 +24083,29 @@
     },
     {
       "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "device_member_file_reads_WmbMec0qXTv4_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "grant_id",
+        "device_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "device_directory_grants",
+      "columnsTo": [
+        "space_id",
+        "id",
+        "device_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
       "table": "device_space_devices",
       "name": "device_space_devices_0oE1dGjEisZg_fkey",
       "nameExplicit": false,
@@ -22957,6 +24213,63 @@
       "tableTo": "user",
       "columnsTo": [
         "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "member_conversation_views",
+      "name": "member_conversation_views_MpkErHKVVfvu_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "space_members",
+      "columnsTo": [
+        "space_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "member_conversation_views",
+      "name": "member_conversation_views_NmAXpAS5vux0_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversations",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "member_notification_reads_VI9gPWOxjjHf_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "space_members",
+      "columnsTo": [
+        "space_id",
+        "account_id"
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
@@ -24270,6 +25583,31 @@
     },
     {
       "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "conversation_attachment_deliveries_pkey",
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "run_id",
+        "attachment_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_pkey",
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "conversation_counters",
       "name": "conversation_counters_pkey",
       "columns": [
@@ -24532,6 +25870,17 @@
     },
     {
       "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "device_member_file_reads_pkey",
+      "columns": [
+        "space_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "device_space_devices",
       "name": "device_space_devices_pkey",
       "columns": [
@@ -24548,6 +25897,31 @@
       "columns": [
         "server_id",
         "space_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "member_conversation_views",
+      "name": "member_conversation_views_pkey",
+      "columns": [
+        "space_id",
+        "account_id",
+        "conversation_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "member_notification_reads_pkey",
+      "columns": [
+        "space_id",
+        "account_id",
+        "kind",
+        "source_id"
       ],
       "nameExplicit": false,
       "entityType": "pks"
@@ -25129,6 +26503,20 @@
     },
     {
       "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_message_key",
+      "nameExplicit": true,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "id",
+        "message_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
       "table": "device_computers",
       "name": "device_computers_owner_key",
       "nameExplicit": true,
@@ -25161,6 +26549,17 @@
         "id",
         "device_id",
         "account_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "device_member_file_reads",
+      "name": "device_member_file_reads_id_key",
+      "nameExplicit": true,
+      "columns": [
+        "id"
       ],
       "nullsNotDistinct": false,
       "entityType": "uniques"
@@ -25487,6 +26886,41 @@
     },
     {
       "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "conversation_attachment_deliveries_state_check",
+      "value": "\"state\" in ('staging', 'image', 'available', 'withheld')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachment_deliveries",
+      "name": "conversation_attachment_deliveries_outcome_check",
+      "value": "(\"state\" = 'available' and \"path\" is not null and \"reason\" is null) or (\"state\" = 'image' and \"path\" is null and \"reason\" is null) or (\"state\" = 'staging' and \"path\" is null and \"reason\" is null) or (\"state\" = 'withheld' and \"path\" is null and \"reason\" in ('MODEL_IMAGES_UNAVAILABLE', 'COMPUTER_UNAVAILABLE', 'DEVICE_GRANT_REQUIRED', 'DELIVERY_UNCONFIRMED'))",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_size_check",
+      "value": "\"size\" between 1 and 1048576 and octet_length(decode(\"bytes\", 'base64')) = \"size\"",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_upload_check",
+      "value": "(\"expected_size\" is null or (\"expected_size\" between 1 and 1048576 and \"size\" <= \"expected_size\" and (not \"ready\" or \"size\" = \"expected_size\"))) and (\"message_id\" is null or \"ready\")",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_attachments",
+      "name": "conversation_attachments_hash_check",
+      "value": "\"sha256\" ~ '^[a-f0-9]{64}$'",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
       "table": "conversation_counters",
       "name": "conversation_counters_bounds",
       "value": "\"retained_after\" >= 0 and \"retained_after\" <= \"sequence\" and \"sequence\" <= 9007199254740991",
@@ -25531,14 +26965,14 @@
       "schema": "public",
       "table": "conversation_events",
       "name": "conversation_events_payload_check",
-      "value": "(\n      (\"kind\" = 'message.created' and \"message_id\" is not null and \"run_id\" is null and \"segment_id\" is null and \"data\" is null and \"computer_id\" is null and \"request_id\" is null) or\n      (\"kind\" = 'run.state' and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"data\" is not null and \"computer_id\" is null and \"request_id\" is null) or\n      (\"kind\" = 'reply.segment' and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is not null and \"data\" is null and \"computer_id\" is null and \"request_id\" is null) or\n      (\"kind\" = 'computer.state' and \"message_id\" is null and \"run_id\" is null and \"segment_id\" is null and \"computer_id\" is not null and \"data\" is not null and \"request_id\" is null) or\n      (\"kind\" in ('tool.started', 'tool.finished') and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"computer_id\" is null and \"request_id\" is null and \"data\" is not null) or\n      (\"kind\" in ('card.created', 'card.resolved') and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"computer_id\" is null and \"request_id\" is not null and \"data\" is not null)\n    )",
+      "value": "(\n      (\"kind\" = 'attachment.state' and \"attachment_id\" is not null and \"attachment_message_id\" is not null and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"data\" is not null and \"computer_id\" is null and \"request_id\" is null) or\n      (\"kind\" = 'message.created' and \"message_id\" is not null and \"run_id\" is null and \"segment_id\" is null and \"data\" is null and \"computer_id\" is null and \"request_id\" is null) or\n      (\"kind\" = 'run.state' and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"data\" is not null and \"computer_id\" is null and \"request_id\" is null) or\n      (\"kind\" = 'reply.segment' and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is not null and \"data\" is null and \"computer_id\" is null and \"request_id\" is null) or\n      (\"kind\" = 'computer.state' and \"message_id\" is null and \"run_id\" is null and \"segment_id\" is null and \"computer_id\" is not null and \"data\" is not null and \"request_id\" is null) or\n      (\"kind\" in ('tool.started', 'tool.finished') and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"computer_id\" is null and \"request_id\" is null and \"data\" is not null) or\n      (\"kind\" in ('card.created', 'card.resolved') and \"message_id\" is null and \"run_id\" is not null and \"segment_id\" is null and \"computer_id\" is null and \"request_id\" is not null and \"data\" is not null)\n    )",
       "entityType": "checks"
     },
     {
       "schema": "public",
       "table": "conversation_events",
       "name": "conversation_events_kind_check",
-      "value": "\"kind\" in ('message.created', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved', 'tool.started', 'tool.finished')",
+      "value": "\"kind\" in ('message.created', 'attachment.state', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved', 'tool.started', 'tool.finished')",
       "entityType": "checks"
     },
     {
@@ -25693,6 +27127,13 @@
       "table": "mcp_servers",
       "name": "mcp_servers_availability_check",
       "value": "\"availability\" in ('all', 'selected')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "member_notification_reads",
+      "name": "member_notification_reads_kind_check",
+      "value": "\"kind\" in ('approval', 'protected-input', 'run-succeeded', 'run-failed', 'invitation')",
       "entityType": "checks"
     },
     {

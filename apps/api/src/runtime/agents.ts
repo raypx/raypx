@@ -9,6 +9,8 @@ import { withDeviceComputerTools } from "../conversations/device-tools.js";
 import {
   createComputersRepository,
   createDeviceComputersRepository,
+  createDeviceMemberFilesRepository,
+  createDeviceMemberFilesService,
   createComputerScreenRepository,
   revokeComputerScreenControl,
 } from "@raypx/computers/server/postgres";
@@ -19,6 +21,8 @@ import {
 } from "@raypx/agents/server";
 import {
   createConversationsRepository,
+  createMessageAttachmentsService,
+  createMemberNotificationsService,
   createApprovalsRepository,
   createProtectedInputsService,
   createComputerUseQueue,
@@ -76,10 +80,16 @@ export async function composeAgents(
     db,
     environment.DEVICE_CONNECTOR_ORIGIN ?? environment.publicApiOrigin ?? "",
   );
+  const memberFiles = createDeviceMemberFilesRepository(
+    db,
+    environment.DEVICE_CONNECTOR_ORIGIN ?? environment.publicApiOrigin ?? "",
+  );
   const deviceConnector = createDeviceConnectorRegistry(
     deviceComputersRepository,
     environment.REDIS_URL ? createDeviceBroker(environment.REDIS_URL) : undefined,
+    memberFiles,
   );
+  const deviceFiles = createDeviceMemberFilesService(deviceConnector);
   const deviceComputers = createDeviceComputersService(deviceComputersRepository, deviceConnector);
   const computerProvider = await configuredComputerProvider(environment);
   const computersRepository = createComputersRepository(db, {
@@ -118,6 +128,7 @@ export async function composeAgents(
   const deploymentSecrets = knownComputerSecrets(environment);
   const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(db));
   const keys = applicationSecretKeyProvider(environment.APP_KEY);
+  const messageAttachments = createMessageAttachmentsService(db);
   const protectedInputs = createProtectedInputsService(db, {
     seal: (binding, value) => sealStoredSecret(keys, "protected-input", binding, value),
     open: (binding, sealed) => openStoredSecret(keys, "protected-input", binding, sealed),
@@ -175,7 +186,16 @@ export async function composeAgents(
       logger
         .createLogger({ operation })
         .emit({ status: 200, code: "OK", runId, durationMs, ...timings }),
-    { tools, approvals: agentApprovals, protectedInputs },
+    {
+      tools,
+      approvals: agentApprovals,
+      protectedInputs,
+      attachments: messageAttachments,
+      cleanup: async () => {
+        await messageAttachments.cleanup();
+        await memberFiles.cleanup();
+      },
+    },
     {
       leaseMs: environment.RUN_LEASE_MS,
       heartbeatMs: environment.RUN_HEARTBEAT_MS,
@@ -226,6 +246,9 @@ export async function composeAgents(
         .emit({ status: 503, code: "EXECUTION_FAILED" }),
   });
   return {
+    messageAttachments,
+    notifications: createMemberNotificationsService(db),
+    deviceFiles,
     deviceConnector,
     deviceComputers,
     deviceComputersRepository,

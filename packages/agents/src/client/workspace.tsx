@@ -1,3 +1,4 @@
+import { NotificationsBell } from "./notifications.js";
 import { ProtectedInputs } from "./protected-input.js";
 import {
   saveAgentCapabilities,
@@ -17,6 +18,7 @@ import {
 import {
   ShellToolbar,
   ShellPrimaryAction,
+  ShellSidebarActions,
   ShellSidebarNavigation,
   ShellSidebarDirectory,
   ShellSidebarFooter,
@@ -698,6 +700,43 @@ function AgentsWorkspaceContents({
     setPage(nextPage);
     onNavigate?.({ spaceId: value });
   }
+  async function openNotification(
+    notification: import("@raypx/core/notifications").MemberNotification,
+  ) {
+    chooseSpace(notification.spaceId);
+    if (!notification.conversationId) {
+      setSpaceSettingsOpen(true);
+      return;
+    }
+    const revision = navigationRevision.current;
+    const [agents, notificationGroups] = await Promise.all([
+      client.agents.list({ spaceId: notification.spaceId, limit: 100 }),
+      groups?.listGroups({ spaceId: notification.spaceId, limit: 100 }) ?? [],
+    ]);
+    if (revision !== navigationRevision.current) return;
+    const group = notificationGroups.find((item) => item.id === notification.conversationId);
+    const direct = agents.find((item) => item.conversation.id === notification.conversationId);
+    const loaded = applyGroups(
+      applyAgents(current.current, notification.spaceId, agents),
+      notification.spaceId,
+      notificationGroups.map((conversation) => ({
+        conversation,
+        agents: agents
+          .filter((item) => conversation.agentIds?.includes(item.agent.id))
+          .map((item) => item.agent),
+      })),
+    );
+    current.current = loaded;
+    setPage(loaded);
+    if (group) chooseGroup({ conversation: group, agents: agents.map((item) => item.agent) });
+    else if (direct) chooseAgent(direct);
+    if (notification.runId)
+      setRunReference({
+        conversationId: notification.conversationId,
+        id: crypto.randomUUID(),
+        runId: notification.runId,
+      });
+  }
   function chooseAgent(item: AgentConversationView) {
     rememberTarget(item.agent.id);
     ++navigationRevision.current;
@@ -1363,6 +1402,16 @@ function AgentsWorkspaceContents({
           )}
         </ShellSidebarFooter>
       )}
+      {client.notifications && (
+        <ShellSidebarActions>
+          <NotificationsBell
+            port={client.notifications}
+            onOpen={(item) =>
+              void openNotification(item).catch(() => setSpaceNotice("unavailable"))
+            }
+          />
+        </ShellSidebarActions>
+      )}
       {spaceNotice && (
         <p role="status" className="px-5 py-2 text-sm text-muted-foreground">
           {t(spaceExitKeys[spaceNotice])}
@@ -1439,6 +1488,16 @@ function AgentsWorkspaceContents({
             agentDirectory={page.agents.map((entry) => entry.agent)}
             onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
             capabilities={client}
+            supportsImages={
+              selectedGroup
+                ? selectedGroup.agents.some(
+                    (agent) =>
+                      page.models.find((model) => model.modelId === agent.model.modelId)
+                        ?.supportsImages === true,
+                  )
+                : page.models.find((model) => model.modelId === selected.agent.model.modelId)
+                    ?.supportsImages === true
+            }
             port={conversationPort}
             computerPort={computerPort}
             approvalPort={approvalPort}
@@ -1456,6 +1515,7 @@ function AgentsWorkspaceContents({
           />
         ) : (
           <WorkspaceHome
+            messageAttachments={client.messageAttachments}
             agents={agentsByActivity}
             deviceComputers={client.deviceComputers}
             targetId={homeTargetId}

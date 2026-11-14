@@ -351,3 +351,8 @@ member-owned device computers. Connector protocol 2 keeps values outside operati
 hashes and journals, and scrubs output before the device outbox. File and screen
 input remain unavailable. See [protected input](protected-input.md) for the exact
 boundary, encoding limits and independent acceptance layers.
+
+The Files read port also accepts a device/grant selector for its owning member.
+Expiring connector member-read frames provide bounded read-only browsing without
+Runs or commands. Attachment writes use generated inbox paths and the existing
+Computer execution gate. See [device Files](member-input-and-notifications.md#device-files).

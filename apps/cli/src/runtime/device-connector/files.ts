@@ -15,6 +15,7 @@ import type { LocalDeviceGrant } from "./storage.js";
 import { LocalError } from "../errors.js";
 
 type NativeFiles = {
+  mkdirat(directory: number, name: Uint8Array, mode: number): number;
   openat(directory: number, name: Uint8Array, flags: number, mode: number): number;
   fdopendir(directory: number): number | null;
   readdir(directory: number): number | null;
@@ -40,6 +41,7 @@ async function nativeFiles() {
           : ["int", "ptr", "int", "int"],
         returns: "int",
       },
+      mkdirat: { args: ["int", "ptr", "int"], returns: "int" },
       fdopendir: { args: ["int"], returns: "ptr" },
       readdir: { args: ["ptr"], returns: "ptr" },
       closedir: { args: ["ptr"], returns: "int" },
@@ -146,7 +148,13 @@ export class DeviceFiles {
         if (last && write)
           flags =
             constants.O_WRONLY | constants.O_CREAT | constants.O_NOFOLLOW | constants.O_NONBLOCK;
-        const next = library.openat(fd, Buffer.from(parts[index]! + "\0"), flags, 0o600);
+        const name = Buffer.from(parts[index]! + "\0");
+        // Only explicit member uploads create inbox directories, under no-follow descriptors.
+        if (write && !last && /^inbox\/[a-f0-9-]{36}\/[a-f0-9-]{36}$/.test(path)) {
+          check?.();
+          library.mkdirat(fd, name, 0o700);
+        }
+        const next = library.openat(fd, name, flags, 0o600);
         if (next < 0)
           throw new LocalError("ACCESS_DENIED", "Path is unavailable or contains a symbolic link");
         closeSync(fd);

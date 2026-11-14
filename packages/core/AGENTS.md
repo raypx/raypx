@@ -21,3 +21,6 @@ agent-runs, local/cloud jobs or account-memory public entries remain. Run check/
 and contract consumer tests.
 
 /protected-input owns bounded destination schemas and pure UTF-8 encoding redaction shared by the executor, transports and connector. No platform globals are required.
+
+`/conversation` owns attachment limits/metadata/delivery events. `/notifications`
+owns source keys and bounded member-feed projections; neither grants authority.

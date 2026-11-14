@@ -233,3 +233,8 @@ Desktop runtime TOML selects exact server origins. Origin/account changes close
 old event streams; explicit sign-out clears session selection. No renderer holds
 connector credentials, cookies, native capabilities or administrative tokens.
 The connector and Desktop session database never import earlier device data.
+
+Member attachments use Space-scoped PostgreSQL bytes and fenced Computer inbox
+delivery; no renderer or supplied file authorizes execution. Device Files use
+separate expiring connector member-read frames. Notifications derive from existing
+sources with per-member read/view receipts. See docs/architecture/member-input-and-notifications.md.

@@ -67,3 +67,7 @@ export {
   type ProtectedInputsService,
   type ProtectedInputCipher,
 } from "./protected-input.js";
+
+export { MessageAttachmentError, type MessageAttachmentsService } from "./attachments.js";
+
+export type { MemberNotificationsService } from "./notifications.js";

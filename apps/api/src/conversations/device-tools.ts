@@ -30,8 +30,13 @@ export function withDeviceComputerTools(
   secrets: () => readonly string[],
 ): ComputerTools {
   const selected = new Map<string, { tools: ComputerTools; grant: DeviceRunGrant }>();
+  const attachmentFailures = new Map<string, "COMPUTER_UNAVAILABLE" | "DEVICE_GRANT_REQUIRED">();
   const forRun = (run: ExecutionRun) => selected.get(attempt(run))?.tools ?? base;
   return {
+    attachmentFailureReason: (run) =>
+      attachmentFailures.get(attempt(run)) ?? "COMPUTER_UNAVAILABLE",
+    stageAttachment: (scope, run, id, bytes, signal) =>
+      forRun(run).stageAttachment?.(scope, run, id, bytes, signal) ?? Promise.resolve(null),
     executeProtected(scope, run, call, signal, value) {
       const tools = forRun(run);
       if (!tools.executeProtected) throw new ComputerToolsError("INVALID_ARGUMENTS");
@@ -55,7 +60,14 @@ export function withDeviceComputerTools(
           untrustedInput: run.untrustedInput === true,
           inboundProvenance: run.inboundProvenance,
         });
-      } catch {
+      } catch (error) {
+        attachmentFailures.set(
+          attempt(run),
+          error instanceof DeviceComputerError &&
+            ["ACCESS_DENIED", "DEVICE_REVOKED", "NOT_FOUND"].includes(error.code)
+            ? "DEVICE_GRANT_REQUIRED"
+            : "COMPUTER_UNAVAILABLE",
+        );
         throw new RunResourceUnavailableError("COMPUTER_UNAVAILABLE");
       }
       if (!grant) {
@@ -130,6 +142,10 @@ export function withDeviceComputerTools(
           callId = call.id;
           return native.executeProtected!(callScope, execution, call, callSignal, value);
         },
+        stageAttachment(attachmentScope, execution, id, bytes, attachmentSignal) {
+          callId = `attachment:${id}`;
+          return native.stageAttachment!(attachmentScope, execution, id, bytes, attachmentSignal);
+        },
         execute(callScope, execution, call, callSignal) {
           callId = call.id;
           return native.execute(callScope, execution, call, callSignal);
@@ -174,6 +190,7 @@ export function withDeviceComputerTools(
       await Promise.all(attempts.map(([, entry]) => entry.tools.cancel(scope, run)));
     },
     release(run) {
+      attachmentFailures.delete(attempt(run));
       const entry = selected.get(attempt(run));
       if (entry) {
         entry.tools.release(run);

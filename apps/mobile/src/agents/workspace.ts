@@ -40,10 +40,27 @@ export class MobileWorkspace {
   private disposed = false;
   private active = false;
   private focused = false;
+  private viewedTimer: ReturnType<typeof setInterval> | undefined;
+  private updateViewed() {
+    clearInterval(this.viewedTimer);
+    const selected = this.selected;
+    const notifications = this.port.notifications;
+    if (!this.active || !this.focused || !selected || !notifications) return;
+    const selection = selected.selection;
+    const viewed = () => {
+      void notifications.viewed(selection).catch(() => {});
+    };
+    viewed();
+    this.viewedTimer = setInterval(viewed, 15_000);
+  }
   private live: { spaceId: string; controller: SpaceLiveController } | undefined;
   private selected:
     | {
         id: string;
+        selection: {
+          spaceId: import("@raypx/core/spaces").SpaceId;
+          conversationId: import("@raypx/core/agents").ConversationId;
+        };
         conversation: ConversationController;
         computer: ComputerController;
         devices: DeviceComputersController | undefined;
@@ -231,6 +248,7 @@ export class MobileWorkspace {
       selection: { spaceId: item.spaceId, conversationId: item.id },
       owner: this.owner,
       port: this.port.conversations,
+      ...(this.port.messageAttachments ? { attachments: this.port.messageAttachments } : {}),
       socket: this.socket,
       drafts: this.drafts,
       key: messageKey,
@@ -240,7 +258,13 @@ export class MobileWorkspace {
     const devices = this.port.deviceComputers
       ? new DeviceComputersController(item.spaceId, this.port.deviceComputers, item.id)
       : undefined;
-    this.selected = { id, conversation, computer, devices };
+    this.selected = {
+      id,
+      selection: { spaceId: item.spaceId, conversationId: item.id },
+      conversation,
+      computer,
+      devices,
+    };
     if (!this.active || !this.focused) conversation.suspend();
     void conversation.start();
     if (this.active && this.focused) {
@@ -252,6 +276,7 @@ export class MobileWorkspace {
   setActive(active: boolean) {
     if (this.disposed || this.active === active) return;
     this.active = active;
+    this.updateViewed();
     this.syncLive();
     if (!active) this.selected?.conversation.suspend();
     else {
@@ -265,11 +290,13 @@ export class MobileWorkspace {
   /** Leaving the conversation closes its stream but retains the acknowledged projection. */
   leaveConversation() {
     this.focused = false;
+    this.updateViewed();
     this.applyActivity();
     this.selected?.conversation.suspend();
   }
   enterConversation() {
     this.focused = true;
+    this.updateViewed();
     if (this.active) {
       this.selected?.conversation.resume();
       void this.selected?.devices?.refresh();
@@ -277,6 +304,7 @@ export class MobileWorkspace {
   }
   dispose() {
     this.disposed = true;
+    clearInterval(this.viewedTimer);
     ++this.revision;
     this.live?.controller.dispose();
     this.clearConversation();

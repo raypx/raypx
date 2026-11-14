@@ -1,7 +1,7 @@
 import { commandInputDestinationSchema } from "@raypx/core/protected-input";
 import { z } from "zod";
 
-/** This channel is separate from retained device Relay and private Desktop IPC. */
+/** The outbound connector channel is separate from private Desktop IPC. */
 export const DEVICE_CONNECTOR_VERSION = 2;
 export const DEVICE_CONNECTOR_MAX_FRAME_BYTES = 1_500_000;
 export const DEVICE_CONNECTOR_MAX_OUTPUT_BYTES = 1024 * 1024;
@@ -161,7 +161,45 @@ const eventDataSchema = z.discriminatedUnion("kind", [
     ]),
   }),
 ]);
+export const deviceMemberReadRequestSchema = z.strictObject({
+  id: z.uuid(),
+  deviceId: id,
+  accountId: id,
+  spaceId: id,
+  grantId: id,
+  grantRevision: revision,
+  connectionFence: revision,
+  expiresAt: z.iso.datetime(),
+  operation: z.discriminatedUnion("kind", [
+    z.strictObject({ kind: z.literal("list"), path, limit: z.number().int().min(1).max(200) }),
+    z.strictObject({ kind: z.literal("read"), path, maxBytes: z.number().int().min(1).max(65536) }),
+  ]),
+});
+export const deviceMemberReadResultSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("list"),
+    entries: z
+      .array(z.strictObject({ path, kind: z.enum(["file", "directory", "symlink"]) }))
+      .max(200),
+    truncated: z.boolean(),
+  }),
+  z.strictObject({
+    kind: z.literal("read"),
+    bytes: z.base64().max(87384),
+    size: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+    truncated: z.boolean(),
+  }),
+  z.strictObject({ kind: z.literal("error"), code: z.enum(["ACCESS_DENIED", "UNAVAILABLE"]) }),
+]);
+export type DeviceMemberReadRequest = z.infer<typeof deviceMemberReadRequestSchema>;
+export type DeviceMemberReadResult = z.infer<typeof deviceMemberReadResultSchema>;
 export const deviceConnectorClientFrameSchema = z.discriminatedUnion("type", [
+  z.strictObject({
+    type: z.literal("member-read-result"),
+    id: z.uuid(),
+    connectionFence: revision,
+    result: deviceMemberReadResultSchema,
+  }),
   z.strictObject({
     type: z.literal("hello"),
     protocolVersion: z.literal(DEVICE_CONNECTOR_VERSION),
@@ -188,6 +226,7 @@ export const deviceConnectorClientFrameSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("pong") }),
 ]);
 export const deviceConnectorServerFrameSchema = z.discriminatedUnion("type", [
+  z.strictObject({ type: z.literal("member-read"), request: deviceMemberReadRequestSchema }),
   z.strictObject({
     type: z.literal("welcome"),
     protocolVersion: z.literal(DEVICE_CONNECTOR_VERSION),

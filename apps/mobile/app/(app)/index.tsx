@@ -156,6 +156,7 @@ export default function AgentsScreen() {
         </Text>
       ) : null}
       <AgentDirectory
+        onNotifications={() => router.push("/notifications")}
         state={view.page}
         loading={view.loading}
         error={view.error}

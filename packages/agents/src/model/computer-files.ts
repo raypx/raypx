@@ -1,15 +1,20 @@
-import type { Computer, ComputerDirectory, ComputerFile } from "@raypx/core/computers";
+import type {
+  Computer,
+  ComputerDirectory,
+  ComputerFile,
+  DeviceComputerSelection,
+} from "@raypx/core/computers";
 import type { SpaceId } from "@raypx/core/spaces";
 
 /** Read-only member procedures; these never provision or start a computer. */
 export interface ComputerFilesPort {
   listDirectory(
     this: void,
-    input: { spaceId: SpaceId; path: string; limit?: number },
+    input: { spaceId: SpaceId; device?: DeviceComputerSelection; path: string; limit?: number },
   ): Promise<ComputerDirectory>;
   readFile(
     this: void,
-    input: { spaceId: SpaceId; path: string; maxBytes?: number },
+    input: { spaceId: SpaceId; device?: DeviceComputerSelection; path: string; maxBytes?: number },
   ): Promise<ComputerFile>;
 }
 
@@ -97,6 +102,15 @@ export function computerPreviewText(bytes: string): string {
 /** Bounded lazy projection, discarded with the selected Space/account. */
 export class ComputerFilesController {
   private view = initialView();
+  private device: DeviceComputerSelection | undefined;
+  get deviceSelected() {
+    return this.device !== undefined;
+  }
+  selectComputer(device: DeviceComputerSelection | null) {
+    if (JSON.stringify(device ?? null) === JSON.stringify(this.device ?? null)) return;
+    this.device = device ?? undefined;
+    this.clear();
+  }
   private readonly listeners = new Set<() => void>();
   private epoch = 0;
   private disposed = false;
@@ -145,7 +159,12 @@ export class ComputerFilesController {
     }
     let result: DirectoryView;
     try {
-      result = await this.port.listDirectory({ spaceId: this.spaceId, path, limit: 100 });
+      result = await this.port.listDirectory({
+        spaceId: this.spaceId,
+        ...(this.device ? { device: this.device } : {}),
+        path,
+        limit: 100,
+      });
     } catch {
       result = { status: "error" };
     }
@@ -168,7 +187,12 @@ export class ComputerFilesController {
     this.update({ selectedPath: path, preview: { status: "loading" } });
     let preview: FilePreviewView;
     try {
-      preview = await this.port.readFile({ spaceId: this.spaceId, path, maxBytes: 65_536 });
+      preview = await this.port.readFile({
+        spaceId: this.spaceId,
+        ...(this.device ? { device: this.device } : {}),
+        path,
+        maxBytes: 65_536,
+      });
     } catch {
       preview = { status: "error" };
     }

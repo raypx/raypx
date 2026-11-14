@@ -1,10 +1,11 @@
 import { validMentionTokens, type MentionToken } from "./mentions.js";
-import { runIdSchema, type RunId } from "@raypx/core/conversation";
+import { attachmentIdSchema, runIdSchema, type RunId } from "@raypx/core/conversation";
 import type { AgentId } from "@raypx/core/agents";
 import type { ConversationOwner, ConversationSelection } from "./port.js";
 
 export const MAX_CONVERSATION_DRAFT = 32_000;
 export interface PendingMessage {
+  attachmentIds?: string[];
   idempotencyKey: string;
   mentions?: AgentId[] | undefined;
   steerRunId?: RunId | undefined;
@@ -46,7 +47,12 @@ export function readConversationDraft(raw: string | null): ConversationDraft {
       typeof pending !== "object" ||
       !("text" in pending) ||
       !isText(pending.text) ||
-      !pending.text.trim() ||
+      (!pending.text.trim() &&
+        !(
+          "attachmentIds" in pending &&
+          Array.isArray(pending.attachmentIds) &&
+          pending.attachmentIds.length > 0
+        )) ||
       !("idempotencyKey" in pending) ||
       typeof pending.idempotencyKey !== "string" ||
       pending.idempotencyKey.length < 1 ||
@@ -62,6 +68,14 @@ export function readConversationDraft(raw: string | null): ConversationDraft {
         ))
     )
       return empty;
+    const attachmentIds = "attachmentIds" in pending ? pending.attachmentIds : undefined;
+    if (
+      attachmentIds !== undefined &&
+      (!Array.isArray(attachmentIds) ||
+        attachmentIds.length > 4 ||
+        !attachmentIds.every((id) => attachmentIdSchema.safeParse(id).success))
+    )
+      return empty;
     const steerRunId = "steerRunId" in pending ? runIdSchema.safeParse(pending.steerRunId) : null;
     if (steerRunId && !steerRunId.success) return empty;
     return {
@@ -69,6 +83,7 @@ export function readConversationDraft(raw: string | null): ConversationDraft {
       ...tokens,
       pending: {
         text: pending.text,
+        ...(Array.isArray(attachmentIds) ? { attachmentIds: attachmentIds as string[] } : {}),
         idempotencyKey: pending.idempotencyKey,
         ...(steerRunId?.success ? { steerRunId: steerRunId.data } : {}),
         ...("mentions" in pending &&

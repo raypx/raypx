@@ -45,6 +45,12 @@ export async function webShellFixture(page: Page) {
 }
 
 export async function signedInAccount(page: Page) {
+  await page.route("**/rpc/notifications/list", (route) =>
+    authResponse(route, { json: { items: [], truncated: false } }),
+  );
+  await page.route("**/rpc/notifications/viewed", (route) =>
+    authResponse(route, { json: { ok: true } }),
+  );
   const user = {
     id: "desktop-fixture",
     name: "Desktop User",

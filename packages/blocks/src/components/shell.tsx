@@ -140,6 +140,7 @@ interface ToolbarSlots {
 }
 const ToolbarContext = createContext<ToolbarSlots | null>(null);
 const SidebarSlotsContext = createContext<{
+  actions: HTMLElement | null;
   header: HTMLElement | null;
   primaryAction: HTMLElement | null;
   navigation: HTMLElement | null;
@@ -180,6 +181,13 @@ export function ShellSidebarHeader({ children }: { children: ReactNode }) {
   const slots = useContext(SidebarSlotsContext);
   if (!slots) return <>{children}</>;
   return slots.header ? createPortal(children, slots.header) : null;
+}
+
+/** Feature actions beside the brand/search controls, shared by both frames. */
+export function ShellSidebarActions({ children }: { children: ReactNode }) {
+  const slots = useContext(SidebarSlotsContext);
+  if (!slots) return <>{children}</>;
+  return slots.actions ? createPortal(children, slots.actions) : null;
 }
 
 /** The current feature's primary action, below its scope control in either frame. */
@@ -309,6 +317,7 @@ function ShellContents<To extends string>({
   const windowed = frame === "window";
   const [toolbarStart, setToolbarStart] = useState<HTMLElement | null>(null);
   const [toolbarEnd, setToolbarEnd] = useState<HTMLElement | null>(null);
+  const [sidebarActions, setSidebarActions] = useState<HTMLElement | null>(null);
   const [sidebarHeader, setSidebarHeader] = useState<HTMLElement | null>(null);
   const [primaryAction, setPrimaryAction] = useState<HTMLElement | null>(null);
   const [sidebarNavigation, setSidebarNavigation] = useState<HTMLElement | null>(null);
@@ -316,6 +325,7 @@ function ShellContents<To extends string>({
   const [sidebarFooter, setSidebarFooter] = useState<HTMLElement | null>(null);
   const sidebarSlots = useMemo(
     () => ({
+      actions: sidebarActions,
       header: sidebarHeader,
       primaryAction,
       navigation: sidebarNavigation,
@@ -323,7 +333,15 @@ function ShellContents<To extends string>({
       footer: sidebarFooter,
       collapsed,
     }),
-    [sidebarHeader, primaryAction, sidebarNavigation, sidebarDirectory, sidebarFooter, collapsed],
+    [
+      sidebarActions,
+      sidebarHeader,
+      primaryAction,
+      sidebarNavigation,
+      sidebarDirectory,
+      sidebarFooter,
+      collapsed,
+    ],
   );
   const [claims, setClaims] = useState(0);
   const toolbar = useMemo<ToolbarSlots>(
@@ -420,6 +438,7 @@ function ShellContents<To extends string>({
       {windowed ? (
         <div className="flex shrink-0 items-center gap-1 [--app-region:no-drag]">
           {brandLink}
+          <div ref={setSidebarActions} className="empty:hidden" />
           {commands}
           {sidebarToggle}
         </div>
@@ -484,6 +503,7 @@ function ShellContents<To extends string>({
                 <div className="flex min-w-0 items-center justify-between gap-1 sidebar-icon:flex-col">
                   {brandLink}
                   <div className="flex shrink-0 items-center gap-0.5 sidebar-icon:flex-col">
+                    <div ref={setSidebarActions} className="empty:hidden" />
                     {commands}
                     {sidebarToggle}
                   </div>

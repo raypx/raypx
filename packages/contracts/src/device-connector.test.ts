@@ -30,7 +30,7 @@ const request = {
   },
 };
 describe("device computer channel contract", () => {
-  it("requires its own exact version without accepting retained Relay frames", () => {
+  it("requires its own exact version and rejects unsupported frames", () => {
     expect(
       devicePairingClaimSchema.safeParse({
         protocolVersion: 2,

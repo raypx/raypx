@@ -4,6 +4,9 @@ import { spawnProcess } from "@raypx/runtime-node/process";
 import {
   deviceConnectorPayloadIdentity,
   deviceConnectorRequestSchema,
+  deviceMemberReadRequestSchema,
+  type DeviceMemberReadRequest,
+  type DeviceMemberReadResult,
   type DeviceConnectorClientFrame,
   type DeviceConnectorEventData,
   type DeviceConnectorRequest,
@@ -31,6 +34,61 @@ export class DeviceConnectorEngine {
     private readonly send: (frame: DeviceConnectorClientFrame) => void,
   ) {
     this.files = new DeviceFiles(storage.profile);
+  }
+  async memberRead(raw: DeviceMemberReadRequest) {
+    const request = deviceMemberReadRequestSchema.parse(raw);
+    const epoch = this.cancellationEpoch;
+    const check = () => {
+      const state = this.storage.read();
+      if (
+        epoch !== this.cancellationEpoch ||
+        !state.credential ||
+        !state.binding ||
+        state.binding.deviceId !== request.deviceId ||
+        state.binding.accountId !== request.accountId ||
+        state.connectionFence !== request.connectionFence ||
+        Date.parse(request.expiresAt) <= Date.now() ||
+        Date.parse(request.expiresAt) > Date.now() + 15_000
+      )
+        throw new LocalError("ACCESS_DENIED", "Member read is unavailable");
+      const local = state.grants.find(
+        (entry) =>
+          entry.grant.id === request.grantId &&
+          entry.grant.spaceId === request.spaceId &&
+          entry.grant.deviceId === request.deviceId &&
+          entry.grant.revision === request.grantRevision,
+      );
+      if (!local) throw new LocalError("ACCESS_DENIED", "Member read is unavailable");
+      return local;
+    };
+    let result: DeviceMemberReadResult;
+    try {
+      const local = check();
+      const operation = request.operation;
+      if (operation.kind === "list") {
+        const listed = await this.files.list(local, operation.path, operation.limit, check);
+        result = {
+          kind: "list",
+          truncated: listed.truncated,
+          entries: listed.entries.flatMap((entry) =>
+            entry.kind === "other" ? [] : [{ path: entry.path, kind: entry.kind }],
+          ),
+        };
+      } else
+        result = {
+          kind: "read",
+          ...(await this.files.read(local, operation.path, operation.maxBytes, check)),
+        };
+      check();
+    } catch {
+      result = { kind: "error", code: "ACCESS_DENIED" };
+    }
+    this.send({
+      type: "member-read-result",
+      id: request.id,
+      connectionFence: request.connectionFence,
+      result,
+    });
   }
   private emit(operationId: string, event: DeviceConnectorEventData, settle = true) {
     const sent = this.storage.mutate((state): DeviceConnectorClientFrame => {

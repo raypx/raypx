@@ -140,6 +140,12 @@ export async function runDeviceConnector(
             return;
           }
           if (!ready) throw new Error();
+          if (frame.type === "member-read") {
+            void engine
+              .memberRead(frame.request)
+              .catch(() => current.close(4000, "Member read unavailable"));
+            return;
+          }
           if (frame.type === "request-grant") {
             storage.mutate((stored) => {
               stored.grantRequests = stored.grantRequests.filter(

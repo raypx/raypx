@@ -59,6 +59,7 @@ function fakeClient(message = assistant(), events?: AssistantMessageEvent[]) {
       api: "openai-completions",
       provider: "member-connection",
       id: "model-a",
+      input: ["text"],
     })),
   };
   vi.spyOn(ai, "createAiClient").mockReturnValue(client as unknown as AiClient);
@@ -193,6 +194,6 @@ it("refuses credentials in model history before sending or persisting provider o
     ),
   ).toThrow("The AI request failed.");
   expect(client.stream).not.toHaveBeenCalled();
-  expect(client.close).toHaveBeenCalledOnce();
+  expect(client.close).toHaveBeenCalledTimes(2);
   transport.close();
 });

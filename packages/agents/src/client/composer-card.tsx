@@ -6,10 +6,12 @@ import { cn } from "@raypx/ui/lib/utils";
 export function ComposerCard({
   children,
   toolbar,
+  attachments,
   className,
 }: {
   children: ReactNode;
   toolbar: ReactNode;
+  attachments?: ReactNode;
   className?: string;
 }) {
   return (
@@ -20,6 +22,7 @@ export function ComposerCard({
         className,
       )}
     >
+      {attachments}
       {children}
       <InputGroupAddon align="block-end" className="flex-wrap gap-1 px-3 pt-1 pb-3">
         {toolbar}

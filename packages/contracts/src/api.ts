@@ -1,4 +1,6 @@
+import { notificationsContract } from "./notifications.js";
 import { deviceComputersContract } from "./device-computers.js";
+import { messageAttachmentsContract } from "./message-attachments.js";
 import { pagesContract } from "./pages.js";
 import { skillsContract } from "./skills.js";
 import { openApiServersContract } from "./openapi-servers.js";
@@ -45,7 +47,9 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  notifications: notificationsContract,
   deviceComputers: deviceComputersContract,
+  messageAttachments: messageAttachmentsContract,
   pages: pagesContract,
   skills: skillsContract,
   mcpServers: mcpServersContract,

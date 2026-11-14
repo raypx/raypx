@@ -10,8 +10,10 @@ session-authorized oRPC, member messages, ordered conversation logs, snapshots a
 an acknowledged WebSocket event stream. Backend Runs provide Pi model calls,
 transient reply text, committed segments, fenced leases, checkpoints, steering,
 recovery and cancellation. The bounded Computer tool loop supports approvals,
-effect records and durable tool lifecycle activity. Members can browse bounded
-team-computer files and manage their own encrypted model connections.
+effect records and durable tool lifecycle activity. Members can attach bounded files/images, browse team-computer or owned granted
+device files, and manage their own encrypted model connections. A member notification
+list derives pending requests and away completions from PostgreSQL. See
+[member input and notifications](member-input-and-notifications.md).
 Bounded conversation windows retain a separate active-Run projection, rendered in
 Web/Desktop and Mobile above the composer. Space-owned OpenAPI tools use the same
 approval/effect pipeline and the remote-tool DNS-pinned HTTP adapter. Web/Desktop

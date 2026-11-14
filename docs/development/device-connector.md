@@ -147,7 +147,9 @@ Use only an isolated disposable test database. The real subprocess test is part
 of API's serial PostgreSQL mode and creates a private temporary home, connector
 owner and API fixture. It pairs using the test native-confirmation hooks, grants a
 temporary directory and has the deterministic model read/write files and execute
-an approved command. It verifies files, durable effects, revocation and cleanup.
+an approved command. It also browses device Files through the member read port before a Run, stages a
+member attachment into the granted inbox, and reads completed output through that
+port. It verifies files, durable effects, revocation and cleanup.
 
 ```sh
 TEST_DATABASE_URL=postgres://raypx@127.0.0.1:55439/raypx_next_test NODE_ENV=test \

@@ -28,3 +28,5 @@ Hugeicons Free glyphs, decorative defaults and consistent sizing/stroke behavior
 
 Run `bun run --cwd packages/icons check` and `test`, then `bun run verify`.
 Browser checks cover inherited stroke widths with the compiled Tailwind utilities.
+
+`/bell` supplies the neutral notification affordance to the shared workspace.

@@ -276,7 +276,11 @@
     "symlink": "无法预览符号链接。",
     "size": "{size, number} 字节",
     "computerUnavailable": "电脑暂不可用。",
-    "notRunning": "{state}，电脑运行时可查看文件。"
+    "notRunning": "{state}，电脑运行时可查看文件。",
+    "deviceWaiting": "等待设备上线。连接后请刷新。",
+    "deviceNotOwned": "只有此目录授权的所有者可以浏览文件。",
+    "deviceUnavailable": "此设备目录授权不可用。",
+    "deviceTitle": "设备文件"
   },
   "routines": "例行任务",
   "spaceMemory": "记忆",
@@ -734,5 +738,41 @@
   "pagesContext": "页面",
   "computerShort": "计算机",
   "composerComputer": "计算机上下文：{state}",
-  "modelAndApproval": "模型与审批模式"
+  "modelAndApproval": "模型与审批模式",
+  "attachments": {
+    "title": "附件",
+    "add": "添加文件",
+    "images": "添加图片",
+    "imagesUnavailable": "此模型不支持图片",
+    "uploading": "上传中…",
+    "remove": "移除 {name}",
+    "download": "下载 {name}",
+    "downloadError": "下载失败，请重试。",
+    "invalid": "不支持此文件类型",
+    "limit": "最多 4 个文件，每个 1 MiB",
+    "upload": "上传失败，请移除后重试。",
+    "ATTACHMENT_EXPIRED": "附件已过期，请重新添加。",
+    "MODEL_IMAGES_UNAVAILABLE": "图片未提供：此模型不支持图片。",
+    "COMPUTER_UNAVAILABLE": "文件未提供：没有可用的电脑。",
+    "DEVICE_GRANT_REQUIRED": "文件未提供：需要目录所有者的授权。",
+    "DELIVERY_UNCONFIRMED": "文件未提供：无法确认传输结果。",
+    "ATTACHMENT_INVALID": "不支持此文件类型",
+    "ATTACHMENT_LIMIT": "最多 4 个文件，每个 1 MiB"
+  },
+  "notifications": {
+    "title": "通知",
+    "unread": "{count} 条未读",
+    "new": "未读",
+    "empty": "暂时没有待处理的事项。",
+    "error": "无法加载通知，请刷新重试。",
+    "truncated": "仅显示最近 100 项。",
+    "approval": "需要审批",
+    "protected-input": "需要提供私密输入",
+    "run-succeeded": "运行已完成",
+    "run-failed": "运行失败",
+    "invitation": "待使用的邀请"
+  },
+  "ATTACHMENT_EXPIRED": "附件已过期，请重新添加。",
+  "ATTACHMENT_INVALID": "不支持此文件类型",
+  "ATTACHMENT_LIMIT": "最多 4 个文件，每个 1 MiB"
 }

@@ -94,3 +94,6 @@ Own `settings` in `locales/<language>/`, with handwritten language entries
 and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
 JSON nested strings, one format per namespace/language. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.
+
+ShellSidebarActions places product actions beside the sidebar brand/search in
+both Web and Desktop headers; feature packages own their content.

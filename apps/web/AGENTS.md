@@ -119,3 +119,6 @@ member's available resources. Remote credentials remain write-only.
 Tools settings also compose Space-owner HTTP API management beside remote servers: one-time OpenAPI imports, explicit operation selection, write-only credentials and all/selected Agent availability. API activity and approvals use the shared conversation views.
 
 Protected input renders the shared independent addressed request form, including outside-window Runs. Values never join the home composer, conversation drafts or query caches.
+
+The shared Agents client owns attachments, device-aware Files and the sidebar
+notification bell; Web contributes renderer acceptance journeys without backend imports.

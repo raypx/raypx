@@ -15,6 +15,20 @@ import { Action } from "../ui.js";
 function FileState({ value }: { value: DirectoryView | FilePreviewView }) {
   const { t } = useCopy();
   if (value.status === "available") return null;
+  if (value.status === "waiting")
+    return (
+      <Text accessibilityRole="text" className="text-sm text-muted-foreground">
+        {t("agents.files.deviceWaiting")}
+      </Text>
+    );
+  if (value.status === "unavailable" && value.code === "DEVICE_NOT_OWNED")
+    return (
+      <Text className="text-sm text-muted-foreground">{t("agents.files.deviceNotOwned")}</Text>
+    );
+  if (value.status === "unavailable" && value.code === "DEVICE_GRANT_UNAVAILABLE")
+    return (
+      <Text className="text-sm text-muted-foreground">{t("agents.files.deviceUnavailable")}</Text>
+    );
   if (value.status === "not-running") {
     const keys = {
       stopped: "agents.computerStopped",
@@ -50,9 +64,11 @@ function FileState({ value }: { value: DirectoryView | FilePreviewView }) {
 export function ComputerFiles({
   controller,
   status,
+  device,
 }: {
   controller: ComputerFilesController;
   status: ComputerView["status"];
+  device?: import("@raypx/core/computers").DeviceComputerSelection | null | undefined;
 }) {
   const { t } = useCopy();
   const state = useSyncExternalStore(
@@ -61,10 +77,11 @@ export function ComputerFiles({
     controller.getSnapshot,
   );
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "running") void controller.refresh();
-    else controller.setUnavailable(status);
-  }, [controller, status]);
+    controller.selectComputer(device ?? null);
+    if (!device && status === "loading") return;
+    if (device || status === "running") void controller.refresh();
+    else if (status !== "loading") controller.setUnavailable(status);
+  }, [controller, status, device]);
   useEffect(() => () => controller.clear(), [controller]);
   const root = state.directories["."];
   return (
@@ -75,12 +92,13 @@ export function ComputerFiles({
     >
       <View className="flex-row items-center justify-between gap-2">
         <Text accessibilityRole="header" className="text-sm font-medium text-foreground">
-          {t("agents.devices.teamSandbox")} · {t("agents.files.workspace")}
+          {device ? t("agents.files.deviceTitle") : t("agents.devices.teamSandbox")} ·{" "}
+          {t("agents.files.workspace")}
         </Text>
         <Action
           label={t("agents.files.refresh")}
           secondary
-          disabled={status !== "running" || state.refreshing}
+          disabled={(!device && status !== "running") || state.refreshing}
           onPress={() => void controller.refresh()}
         />
       </View>

@@ -17,7 +17,8 @@ startup owns scans/subscriptions and shutdown releases owned resources. APIs sta
 work directly; workers recover claims and routines. Relay owns only native-only
 /device routes and health, without Auth/mail/migrations/RPC. /events is the
 session/Origin-authorized conversation/screen stream. No /relay, device task
-projection, attachment upload, enrollment or account scheduler exists.
+projection, enrollment or account scheduler exists. Message uploads use the
+Space-scoped messageAttachments procedures.
 
 The connector registry revalidates current account/Space grants and fences per
 operation. Split-process device routing requires the lazy private Redis broker;
@@ -38,3 +39,8 @@ private homes and an explicit loopback test database. Run check/test, then the
 selected backend/browser gates. Packaged native/provider acceptance is separate.
 
 Nitro KV storage is an explicit runtime dependency for bundled migration/assets; cold builds must never auto-install dependencies.
+
+Runtime composes bounded message upload/delivery, notification queries and
+device member files. RPC mutations retain session, trusted-Origin and quota
+checks. /message-attachments downloads require fresh Space admission and always
+force safe attachment disposition; never inline supplied documents.

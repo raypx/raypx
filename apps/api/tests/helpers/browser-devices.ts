@@ -92,6 +92,32 @@ export function browserDeviceFixture(
         await registry.receive(device.peerId, JSON.stringify({ type: "pong" }));
         return;
       }
+      if (value.type === "member-read") {
+        const operation = value.request.operation;
+        const result =
+          operation.kind === "list"
+            ? {
+                kind: "list",
+                entries: [{ path: "device-notes.txt", kind: "file" }],
+                truncated: false,
+              }
+            : {
+                kind: "read",
+                bytes: Buffer.from("Device fixture notes").toString("base64"),
+                size: 20,
+                truncated: false,
+              };
+        await registry.receive(
+          device.peerId,
+          JSON.stringify({
+            type: "member-read-result",
+            id: value.request.id,
+            connectionFence: device.fence,
+            result,
+          }),
+        );
+        return;
+      }
       if (value.type === "request-grant") {
         // This explicit fixture hook replaces the native dialog only in browser tests.
         const identity = await repository.authenticate(device.credential.credential);
@@ -102,6 +128,10 @@ export function browserDeviceFixture(
       if (value.type === "request") {
         const { operation, operationId } = value.request;
         await event(device, operationId, { kind: "accepted" });
+        if (operation.kind === "write" && operation.path.startsWith("inbox/")) {
+          await event(device, operationId, { kind: "result", value: {} });
+          return;
+        }
         if (
           operation.kind !== "execute" ||
           operation.executable !== "echo" ||
@@ -183,6 +213,10 @@ export function browserDeviceFixture(
         const device = devices.get(deviceId);
         if (!device || device.ownerAccountId !== accountId)
           return new Response(null, { status: 404 });
+        if (new URL(request.url).pathname === "/fixture/device/offline") {
+          device.connected = false;
+          await registry.close(device.peerId);
+        }
         return Response.json({
           connected: device.connected,
           executionCount: device.executionCount,

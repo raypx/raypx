@@ -5,6 +5,22 @@ import { findByLabel, press, renderNative, textContent } from "../../tests/nativ
 import { ComputerFiles } from "./computer-files.js";
 
 const spaceId = spaceIdSchema.parse("files-space");
+it("reads a selected device while the sandbox is stopped and shows offline waiting", async () => {
+  const device = { deviceId: crypto.randomUUID(), grantId: crypto.randomUUID() };
+  const listDirectory = vi.fn(async () => ({
+    status: "waiting" as const,
+    code: "DEVICE_OFFLINE" as const,
+  }));
+  const controller = new ComputerFilesController(spaceId, { listDirectory, readFile: vi.fn() });
+  const view = await renderNative(
+    <ComputerFiles controller={controller} status="stopped" device={device} />,
+  );
+  expect(listDirectory).toHaveBeenCalledWith({ spaceId, device, path: ".", limit: 100 });
+  expect(textContent(view.root)).toContain("Waiting for device");
+  expect(findByLabel(view.root, "Refresh files").props.isDisabled).toBe(false);
+  await view.unmount();
+  controller.dispose();
+});
 function harness() {
   const port: ComputerFilesPort = {
     listDirectory: vi.fn<ComputerFilesPort["listDirectory"]>(async ({ path }) => ({

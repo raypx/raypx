@@ -37,6 +37,10 @@ export default function ConversationScreen() {
       <AgentConversation
         key={item.conversation.id}
         item={item}
+        supportsImages={
+          view.page.models.find((model) => model.modelId === item.agent.model.modelId)
+            ?.supportsImages === true
+        }
         controller={controllers.conversation}
         computer={controllers.computer}
         devices={controllers.devices}

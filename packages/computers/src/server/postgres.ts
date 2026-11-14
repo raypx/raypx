@@ -174,3 +174,8 @@ export function createComputersRepository(
 }
 
 export { createDeviceComputersRepository } from "./devices-postgres.js";
+
+export {
+  createDeviceMemberFilesRepository,
+  createDeviceMemberFilesService,
+} from "./member-files.js";

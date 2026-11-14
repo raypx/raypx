@@ -48,7 +48,7 @@ import {
   createApprovalsRepository,
   createConversationsRepository,
 } from "../../src/server/postgres.js";
-import { publishConversationNotice } from "../../src/server/conversations.js";
+import { publishConversationNotice } from "../../src/server/notice.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))

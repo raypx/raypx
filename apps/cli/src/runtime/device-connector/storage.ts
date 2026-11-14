@@ -123,6 +123,7 @@ export class ConnectorStorage {
     }
   }
   mutate<T>(change: (state: ConnectorState) => T): T {
+    // Native consent and daemon receipts can briefly contend across processes.
     const release = acquireLock(this.directory, "connector-state", 1000);
     if (!release)
       throw new LocalError("CONNECTOR_BUSY", "Another device connector operation is running");

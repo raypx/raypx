@@ -28,6 +28,16 @@ import { useTranslations } from "./i18n.js";
 function FileState({ value }: { value: DirectoryView | FilePreviewView }) {
   const t = useTranslations("agents");
   if (value.status === "available") return null;
+  if (value.status === "waiting")
+    return (
+      <p role="status" className="text-xs text-muted-foreground">
+        {t("files.deviceWaiting")}
+      </p>
+    );
+  if (value.status === "unavailable" && value.code === "DEVICE_NOT_OWNED")
+    return <p className="text-xs text-muted-foreground">{t("files.deviceNotOwned")}</p>;
+  if (value.status === "unavailable" && value.code === "DEVICE_GRANT_UNAVAILABLE")
+    return <p className="text-xs text-muted-foreground">{t("files.deviceUnavailable")}</p>;
   if (value.status === "not-running") {
     const states = {
       stopped: "computerStopped",
@@ -65,10 +75,12 @@ export function ComputerFiles({
   controller,
   status,
   refreshKey,
+  device,
 }: {
   controller: ComputerFilesController;
   status: ComputerView["status"];
   refreshKey: string;
+  device?: import("@raypx/core/computers").DeviceComputerSelection | null | undefined;
 }) {
   const t = useTranslations("agents");
   const view = useSyncExternalStore(
@@ -80,10 +92,11 @@ export function ComputerFiles({
   const nodes = useRef(new Map<string, HTMLElement>());
   const focusWithin = useRef(false);
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "running") void controller.refresh();
-    else controller.setUnavailable(status);
-  }, [controller, status, refreshKey]);
+    controller.selectComputer(device ?? null);
+    if (!device && status === "loading") return;
+    if (device || status === "running") void controller.refresh();
+    else if (status !== "loading") controller.setUnavailable(status);
+  }, [controller, status, refreshKey, device]);
   useEffect(() => () => controller.clear(), [controller]);
   const root = view.directories["."];
   const rows = computerFileRows(view);
@@ -136,7 +149,7 @@ export function ComputerFiles({
         <IconButton
           label={t("files.refresh")}
           size="icon-sm"
-          disabled={status !== "running" || view.refreshing}
+          disabled={(!device && status !== "running") || view.refreshing}
           onClick={() => void controller.refresh()}
         >
           <RefreshIcon aria-hidden="true" />

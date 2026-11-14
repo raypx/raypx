@@ -1,7 +1,7 @@
 /** Explicit real-backend browser fixture. Never imported by production routes. */
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { serve } from "bun";
-import { user, schema } from "@raypx/database/schema";
+import { user, schema, spaces as spaceRows, spaceDeletionJobs } from "@raypx/database/schema";
 import { eq, inArray } from "drizzle-orm";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
@@ -13,6 +13,8 @@ import {
 } from "@raypx/agents/server";
 import {
   createAgentsRepository,
+  createMessageAttachmentsService,
+  createMemberNotificationsService,
   createConversationsRepository,
   createConversationFanout,
   createApprovalsRepository,
@@ -71,6 +73,8 @@ import {
   createComputerScreenRepository,
   revokeComputerScreenControl,
   createDeviceComputersRepository,
+  createDeviceMemberFilesRepository,
+  createDeviceMemberFilesService,
 } from "@raypx/computers/server/postgres";
 import { withDeviceComputerTools } from "../../src/conversations/device-tools.js";
 import { browserDeviceFixture } from "./browser-devices.js";
@@ -126,7 +130,15 @@ const deviceComputersRepository = createDeviceComputersRepository(
   connection.db,
   `http://127.0.0.1:${port}`,
 );
-const deviceConnector = createDeviceConnectorRegistry(deviceComputersRepository);
+const memberFiles = createDeviceMemberFilesRepository(connection.db, `http://127.0.0.1:${port}`);
+const deviceConnector = createDeviceConnectorRegistry(
+  deviceComputersRepository,
+  undefined,
+  memberFiles,
+);
+const deviceFiles = createDeviceMemberFilesService(deviceConnector);
+const messageAttachments = createMessageAttachmentsService(connection.db);
+const notifications = createMemberNotificationsService(connection.db);
 const deviceComputers = createDeviceComputersService(deviceComputersRepository, deviceConnector);
 const browserDevices = browserDeviceFixture(deviceComputersRepository, deviceConnector);
 // Sign-up reads the registration switch, so the fixture needs the real configuration service.
@@ -223,6 +235,7 @@ const runner = new ConversationRunner(
       protectedValues,
     ),
     approvals: agentApprovals,
+    attachments: messageAttachments,
     protectedInputs,
   },
   {
@@ -263,6 +276,9 @@ const stream = new ConversationStream({
 });
 await stream.start();
 const app = createApiApp({
+  messageAttachments,
+  deviceFiles,
+  notifications,
   authHandler: (request) => auth.handler(request),
   readSession,
   allowedOrigins: ["http://127.0.0.1:4173", "http://127.0.0.1:4174"],
@@ -322,7 +338,11 @@ const server = serve<SocketData>({
     if (path === "/fixture/mcp") return fixtureMcpResponse(request);
     if (path === "/fixture/httpapi" || path.startsWith("/fixture/httpapi/"))
       return openApiResponse(request);
-    if (path === "/fixture/device/pair" || path === "/fixture/device/status") {
+    if (
+      path === "/fixture/device/pair" ||
+      path === "/fixture/device/status" ||
+      path === "/fixture/device/offline"
+    ) {
       const origin = request.headers.get("origin");
       if (!origin || !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
         return new Response(null, { status: 403 });
@@ -509,6 +529,25 @@ const stop = async () => {
   await fanout.close();
   await spaceFanout.close();
   await server.stop(true);
+  // The fixture has no deletion worker. Drain only deletion claims requested by
+  // its seeded accounts so repeated acceptance cannot starve unrelated test jobs.
+  await connection.db.delete(spaceRows).where(
+    inArray(
+      spaceRows.id,
+      connection.db
+        .select({ id: spaceDeletionJobs.spaceId })
+        .from(spaceDeletionJobs)
+        .where(
+          inArray(
+            spaceDeletionJobs.requestedByAccountId,
+            connection.db
+              .select({ id: user.id })
+              .from(user)
+              .where(inArray(user.email, accountEmails)),
+          ),
+        ),
+    ),
+  );
   await connection.db.delete(user).where(inArray(user.email, accountEmails));
   await connection.close();
   process.exit(0);

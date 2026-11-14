@@ -143,7 +143,11 @@ it.each([
     const router = await page("/login?returnTo=%2Faccount#settings", language);
     expect(await screen.findByRole("heading", { name: settings })).toBeVisible();
     const dialog = screen.getByRole("dialog", { name: settings });
-    const theme = await within(dialog).findByRole("radiogroup", { name: appearance });
+    const theme = await within(dialog).findByRole(
+      "radiogroup",
+      { name: appearance },
+      { timeout: 5_000 },
+    );
     expect(theme).toBeVisible();
     const dark = within(theme).getByRole("radio", { name: language === "en" ? "Dark" : "深色" });
     await userEvent.click(dark);

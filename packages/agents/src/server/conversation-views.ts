@@ -2,10 +2,13 @@ import { and, asc, eq } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   conversationMessageMentions as messageMentions,
+  conversationAttachments,
+  conversationAttachmentDeliveries,
   type conversationMessages as messages,
   type conversationRuns as runs,
   type conversationReplySegments as segments,
 } from "@raypx/database/schema";
+import { attachmentView } from "./attachments.js";
 import { messageSchema, runSchema, replySegmentSchema } from "@raypx/core/conversation";
 
 export async function message(tx: Pick<Database, "select">, row: typeof messages.$inferSelect) {
@@ -20,7 +23,45 @@ export async function message(tx: Pick<Database, "select">, row: typeof messages
       ),
     )
     .orderBy(asc(messageMentions.position), asc(messageMentions.agentId));
+  const uploaded = await tx
+    .select({
+      id: conversationAttachments.id,
+      name: conversationAttachments.name,
+      mediaType: conversationAttachments.mediaType,
+      size: conversationAttachments.size,
+      sha256: conversationAttachments.sha256,
+      createdAt: conversationAttachments.createdAt,
+    })
+    .from(conversationAttachments)
+    .where(
+      and(
+        eq(conversationAttachments.spaceId, row.spaceId),
+        eq(conversationAttachments.conversationId, row.conversationId),
+        eq(conversationAttachments.messageId, row.id),
+      ),
+    )
+    .orderBy(asc(conversationAttachments.createdAt), asc(conversationAttachments.id));
+  const outcomes = uploaded.length
+    ? await tx
+        .select()
+        .from(conversationAttachmentDeliveries)
+        .where(
+          and(
+            eq(conversationAttachmentDeliveries.spaceId, row.spaceId),
+            eq(conversationAttachmentDeliveries.conversationId, row.conversationId),
+            eq(conversationAttachmentDeliveries.messageId, row.id),
+          ),
+        )
+        .orderBy(asc(conversationAttachmentDeliveries.runId))
+    : [];
   return messageSchema.parse({
+    attachments: uploaded.map((attachment) => ({
+      ...attachmentView(attachment),
+      deliveries: outcomes
+        .filter((outcome) => outcome.attachmentId === attachment.id && outcome.state !== "staging")
+        .slice(-32)
+        .map(({ runId, state, path, reason }) => ({ runId, state, path, reason })),
+    })),
     id: row.id,
     spaceId: row.spaceId,
     conversationId: row.conversationId,

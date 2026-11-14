@@ -5,15 +5,15 @@ covers the services, their roles and what the operator maintains.
 
 ## Services
 
-| Service            | Required                 | Notes                                                                     |
-| ------------------ | ------------------------ | ------------------------------------------------------------------------- |
-| PostgreSQL         | Yes                      | The one authority.                                                        |
-| Backend            | Yes                      | One artifact; `SERVER_ROLE` selects its roles.                            |
-| Web                | Yes                      | Bun server rendering.                                                     |
-| Sandbox supervisor | For `docker` computers   | Holds the Docker socket on the private network.                           |
-| Object storage     | Optional                 | Attachments, page assets and home snapshots.                              |
-| Redis              | For split device routing | Private connector frames; optional shared caches in combined deployments. |
-| Mail               | Optional                 | Verification, sign-in codes and inbound routine email.                    |
+| Service            | Required                 | Notes                                                                                |
+| ------------------ | ------------------------ | ------------------------------------------------------------------------------------ |
+| PostgreSQL         | Yes                      | The one authority.                                                                   |
+| Backend            | Yes                      | One artifact; `SERVER_ROLE` selects its roles.                                       |
+| Web                | Yes                      | Bun server rendering.                                                                |
+| Sandbox supervisor | For `docker` computers   | Holds the Docker socket on the private network.                                      |
+| Object storage     | Optional                 | Future larger assets and home snapshots; current message attachments use PostgreSQL. |
+| Redis              | For split device routing | Private connector frames; optional shared caches in combined deployments.            |
+| Mail               | Optional                 | Verification, sign-in codes and inbound routine email.                               |
 
 A deployment with no model connection, no sandbox provider and no mail still
 starts. Each missing capability is an explicit state in the product.
@@ -45,7 +45,7 @@ starts. Each missing capability is an explicit state in the product.
 ## Deploys
 
 - The unreleased `next` database is disposable. Its migration payload now contains
-  one generated baseline, `20261114090050_baseline`, rather than the earlier chain.
+  one generated baseline, `20261114101502_baseline`, rather than the earlier chain.
   Use a fresh, isolated database for this baseline; an existing disposable `next`
   database must be recreated explicitly by its operator. This is not an upgrade
   procedure and imports no earlier schema, ledger or data. Never reset or migrate
@@ -163,3 +163,9 @@ without the matching device origin fails closed instead of accepting another
 origin's registration. Compose supplies that common origin in its split overlay.
 The optional value accepts HTTPS or loopback HTTP, with no credentials, path,
 query or fragment. See [device limits and acceptance](../development/device-connector.md).
+
+Worker maintenance deletes expired unsent uploads and transient device file reads
+in batches of 100. Upload rows expire after 24 hours; member reads expire after ten
+seconds. Published attachments live with their conversation. Notification sources
+are queried from PostgreSQL, with no push service to deploy. See
+[limits and lifecycle](member-input-and-notifications.md).

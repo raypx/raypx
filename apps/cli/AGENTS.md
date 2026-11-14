@@ -29,4 +29,9 @@ unsupported inventories. Consumers verify RAYPX_CLI_PAYLOAD and never rebuild or
 rewrite sealed files. Run check/test and prepared-payload smoke; real connector
 PostgreSQL, Go host and packaged native gates remain separate.
 
-Protocol 2 protected command environment/stdin values remain process-local. Scrub raw/escaped/common encoded echoes before emit touches the outbox. Receipt hashes include destination metadata only; unknown operations never replay. Connector-state writers wait at most one second for local contention.
+Protocol 2 protected command environment/stdin values remain process-local. Scrub raw/escaped/common encoded echoes before emit touches the outbox. Receipt hashes include destination metadata only; unknown operations never replay. Connector-state writers wait at most one second for local contention; owner locks remain immediate.
+
+Only the separate device connector handles expiring member-read frames. It
+validates local owner/grant/fence and uses no-follow descriptors for read-only
+browsing. Generated inbox parents are restricted to Run/attachment UUID paths
+inside the granted root. Connector receipts grant no Agent execution authority.

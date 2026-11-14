@@ -12,7 +12,14 @@ export interface ConversationModels extends ModelAccess {
   list(
     this: void,
     scope: SpaceScope,
-  ): Promise<Array<{ modelId: string; name: string; source?: "deployment" | "connection" }>>;
+  ): Promise<
+    Array<{
+      modelId: string;
+      name: string;
+      supportsImages?: boolean;
+      source?: "deployment" | "connection";
+    }>
+  >;
 }
 
 const catalogSchema = z.array(
@@ -41,6 +48,15 @@ export function createDeploymentModels(
     throw new Error("Invalid deployment model configuration");
   }
   const client = createAiClient();
+  function supportsImages(entry: (typeof catalog)[number]) {
+    try {
+      return client
+        .resolveModel({ provider: entry.provider, model: entry.model })
+        .input.includes("image");
+    } catch {
+      return false;
+    }
+  }
   function reviewSelection() {
     if (!reviewModelId) return undefined;
     const entry = catalog.find((candidate) => candidate.modelId === reviewModelId);
@@ -104,6 +120,7 @@ export function createDeploymentModels(
           modelId: entry.modelId,
           name: entry.name ?? entry.modelId,
           source: "deployment" as const,
+          supportsImages: supportsImages(entry),
         }));
     },
     async resolve(run) {
@@ -133,6 +150,7 @@ export function createDeploymentModels(
       const model = client.resolveModel(selection);
       return {
         connectionId,
+        supportsImages: model.input.includes("image"),
         stream(input, signal) {
           const messages: Message[] = input.history.map((item) => {
             if (item.role === "user")

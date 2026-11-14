@@ -70,7 +70,8 @@
     "./warning": "./src/icons/warning.ts",
     "./copy": "./src/icons/copy.ts",
     "./more-horizontal": "./src/icons/more-horizontal.ts",
-    "./filter": "./src/icons/filter.ts"
+    "./filter": "./src/icons/filter.ts",
+    "./bell": "./src/icons/bell.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

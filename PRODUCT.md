@@ -58,6 +58,8 @@ describes implemented native UI; native platform acceptance remains a separate g
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | Agents              | Create, edit, delete; offered models and instructions                                                                                      | Model connection catalog                                                                                                     | Model connection and approval-rule management                           |
 | Conversations       | Direct/groups, bounded virtualized history, streaming, structural mentions, attribution, departed-member names, device-local scoped drafts | Run origins and untrusted-input markers                                                                                      | —                                                                       |
+| Attachments         | Document/photo picker, removable upload chips, published downloads                                                                         | Delivery/withheld reasons                                                                                                    | —                                                                       |
+| Notifications       | Cross-Space list, unread state and jump to source                                                                                          | Pending requests, away completions and own open invitations                                                                  | —                                                                       |
 | Device computers    | Pairing code, owned-device/grant list and revocation, per-conversation selection                                                           | Connection state; device/directory/command approval details                                                                  | Native confirmation happens on the selected computer; headless uses CLI |
 | Runs and activity   | Stop, targeted steer, active-Run strip, addressed approvals                                                                                | Expandable tool details, effects and delegated child work                                                                    | Page results open the Web Page workspace                                |
 | Groups              | List, create, rename, add/remove Agents, delete                                                                                            | —                                                                                                                            | —                                                                       |
@@ -68,7 +70,7 @@ describes implemented native UI; native platform acceptance remains a separate g
 | Skills              | Per-Agent enablement; account-skill all/selected Space availability                                                                        | Account/Space catalogs and Space-skill availability                                                                          | Definition editing, imports and deletion                                |
 | Remote tool servers | Per-Agent enablement; all/selected Space availability                                                                                      | Server names and endpoints                                                                                                   | Definitions, credentials, discovery/testing and deletion                |
 | HTTP APIs           | Approvals for configured operations                                                                                                        | Owners: definitions, selected operations, read/change labels and Agent availability; all members: conversation calls/effects | Import, credentials, operation selection, availability and deletion     |
-| Computers           | Existing team lifecycle and stop confirmation                                                                                              | Lifecycle/failure state and bounded computer directories/file previews                                                       | Use phone Web for Screen viewing and takeover                           |
+| Computers           | Existing team lifecycle and stop confirmation                                                                                              | Lifecycle/failure state and bounded sandbox or owned granted-device directories/file previews                                | Use phone Web for Screen viewing and takeover                           |
 
 Native authenticated Page frames are disabled; Mobile opens the configured Web
 origin without forwarding credentials. Account skill/server availability can be
@@ -158,6 +160,15 @@ uncertain-send receipts stay device-local and scoped by origin, account, Space
 and conversation. Restoration never sends; delivery retry preserves its key,
 and failed-Run retry restores editing for an explicit new Send. Preferences remain local; connector credentials and consent retain their exact
 account/origin binding. Old profiles are never opened.
+
+Messages accept four files of at most 1 MiB each, with supported image, PDF and
+UTF-8 document types. Uploads expire after 24 hours if unsent; restored drafts
+never upload or send. Images require model support; other files use the Computer
+inbox and can be visibly withheld for unavailable or ungranted devices. The bell
+and native list derive notifications from existing PostgreSQL sources with member
+read state. Open invitations are the member’s issued links, since bearer links
+have no recipient identity. Push remains unconfigured. See
+[limits and contracts](docs/architecture/member-input-and-notifications.md).
 
 ## Brand Commitments
 

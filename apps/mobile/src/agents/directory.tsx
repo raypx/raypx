@@ -54,6 +54,7 @@ interface AgentDirectoryProps {
   onOpenGroup?: ((item: GroupConversationView) => void) | undefined;
   onPages?: (() => void) | undefined;
   onSpaceSettings?: (() => void) | undefined;
+  onNotifications?: (() => void) | undefined;
   onResources?: (() => void) | undefined;
   onRoutines?: (() => void) | undefined;
   onMemory?: (() => void) | undefined;
@@ -80,6 +81,7 @@ export function AgentDirectory({
   onPages,
   onSpaceSettings,
   onResources,
+  onNotifications,
   onRoutines,
   onMemory,
   onNew,
@@ -158,6 +160,13 @@ export function AgentDirectory({
               onChangeText={setQuery}
               className="min-h-11 rounded-xl bg-background px-3 py-2 text-base"
             />
+            {onNotifications && (
+              <Action
+                label={t("agents.notifications.title")}
+                secondary
+                onPress={() => go(onNotifications)}
+              />
+            )}
             {space && <Action label={t("mobile.new")} secondary onPress={() => go(onNew)} />}
             {space && (
               <View className="gap-1">

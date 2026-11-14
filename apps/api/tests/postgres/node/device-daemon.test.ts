@@ -150,7 +150,7 @@ afterAll(async () => {
   }
 }, 30_000);
 it.skipIf(process.platform === "win32")(
-  "pairs the actual outbound CLI daemon, locally confirms a directory, and executes model file/command tools only after approvals",
+  "pairs the actual outbound CLI daemon, reads device Files, stages member attachments, supplies protected command input and executes tools only after approvals",
   async () => {
     const created = await client.spaces.create({ name: `Real device ${crypto.randomUUID()}` });
     const spaceId = created.space.id;
@@ -212,10 +212,46 @@ it.skipIf(process.platform === "win32")(
       conversationId,
       selection: { deviceId: paired.deviceId, grantId: granted.grantId },
     });
+    const deviceSelection = { deviceId: paired.deviceId, grantId: granted.grantId };
+    const directoryRead = await client.computers.listDirectory({
+      spaceId,
+      device: deviceSelection,
+      path: ".",
+    });
+    expect(directoryRead).toMatchObject({
+      status: "available",
+      entries: expect.arrayContaining([{ path: "input.txt", kind: "file" }]),
+    });
+    const memberRead = await client.computers.readFile({
+      spaceId,
+      device: deviceSelection,
+      path: "input.txt",
+    });
+    expect(memberRead).toMatchObject({
+      status: "available",
+      bytes: Buffer.from("Read through device").toString("base64"),
+      contentType: "text",
+      truncated: false,
+    });
+    expect(await client.computers.get({ spaceId })).toMatchObject({
+      status: "available",
+      computer: null,
+    });
+    const attachment = await client.messageAttachments.upload({
+      spaceId,
+      conversationId,
+      name: "member.txt",
+      mediaType: "text/plain",
+      bytes: Buffer.from("Explicit member upload").toString("base64"),
+    });
     await client.conversations.send({
       spaceId,
       conversationId,
-      message: { idempotencyKey: "roundtrip", text: "Fixture real device roundtrip" },
+      message: {
+        idempotencyKey: "roundtrip",
+        text: "Fixture real device roundtrip",
+        attachmentIds: [attachment.id],
+      },
     });
     for (const toolName of ["computer_write_file", "computer_run_command"]) {
       await expect
@@ -251,6 +287,17 @@ it.skipIf(process.platform === "win32")(
     expect(snapshot.segments.map((segment) => segment.text).join(" ")).toContain(
       "Device roundtrip complete",
     );
+    const inboxPath = `inbox/${snapshot.runs[0]!.id}/${attachment.id}`;
+    expect(snapshot.messages[0]?.attachments?.[0]?.deliveries).toEqual([
+      expect.objectContaining({ state: "available", path: inboxPath, reason: null }),
+    ]);
+    expect(await readFile(join(workspace, inboxPath), "utf8")).toBe("Explicit member upload");
+    expect(
+      await client.computers.readFile({ spaceId, device: deviceSelection, path: "output.txt" }),
+    ).toMatchObject({
+      status: "available",
+      bytes: Buffer.from("Read through device").toString("base64"),
+    });
     const effects = await client.approvals.effects({ spaceId, runId: snapshot.runs[0]!.id });
     expect(
       effects.filter((effect) => effect.state === "succeeded").map((effect) => effect.toolName),
@@ -363,6 +410,9 @@ it.skipIf(process.platform === "win32")(
       }
     }
     await client.deviceComputers.revoke({ spaceId, deviceId: paired.deviceId });
+    expect(
+      await client.computers.listDirectory({ spaceId, device: deviceSelection, path: "." }),
+    ).toEqual({ status: "unavailable", code: "DEVICE_GRANT_UNAVAILABLE" });
     await expect
       .poll(async () => z.object({ running: z.boolean() }).parse(await device("status")).running, {
         timeout: 10_000,

@@ -7,6 +7,7 @@ import {
   deviceConnectorPayloadIdentity,
   type DeviceConnectorClientFrame,
   type DeviceConnectorRequest,
+  type DeviceMemberReadRequest,
 } from "@raypx/contracts/device-connector";
 import { captureDeviceDirectory } from "./files.js";
 import { DeviceConnectorEngine } from "./engine.js";
@@ -263,3 +264,44 @@ it("serializes short competing connector-state writes without losing updates", a
   expect(await Promise.all(workers.map((worker) => worker.exited))).toEqual([0, 0]);
   expect(storage.read().runFences.counter).toBe(40);
 });
+
+it.skipIf(process.platform === "win32")(
+  "serves owner member reads without journal authority and refuses stale grants, owners and fences",
+  async () => {
+    const { root, storage, engine, frames } = await fixture();
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(join(root, "member.txt"), "Member fixture");
+    const request: DeviceMemberReadRequest = {
+      id: crypto.randomUUID(),
+      deviceId: "device",
+      accountId: "owner",
+      spaceId: "space",
+      grantId: "grant",
+      grantRevision: 1,
+      connectionFence: 1,
+      expiresAt: new Date(Date.now() + 10_000).toISOString(),
+      operation: { kind: "read", path: "member.txt", maxBytes: 6 },
+    };
+    await engine.memberRead(request);
+    expect(frames.at(-1)).toMatchObject({
+      type: "member-read-result",
+      id: request.id,
+      result: { kind: "read", bytes: Buffer.from("Member").toString("base64"), truncated: true },
+    });
+    for (const change of [
+      { accountId: "other" },
+      { spaceId: "other" },
+      { grantRevision: 2 },
+      { connectionFence: 2 },
+      { expiresAt: new Date(Date.now() - 1).toISOString() },
+    ]) {
+      await engine.memberRead({ ...request, ...change });
+      expect(frames.at(-1)).toMatchObject({
+        type: "member-read-result",
+        result: { kind: "error", code: "ACCESS_DENIED" },
+      });
+    }
+    expect(storage.read().outbox).toEqual([]);
+    expect(storage.read().receipts).toEqual({});
+  },
+);

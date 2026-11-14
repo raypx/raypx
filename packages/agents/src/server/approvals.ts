@@ -33,7 +33,7 @@ import {
   EffectInProgressError,
   type ApprovalsRepository,
 } from "../approvals.js";
-import { publishConversationNotice } from "./conversations.js";
+import { publishConversationNotice } from "./notice.js";
 import { EFFECT_INTENT_TIMEOUT_MS } from "../tool-limits.js";
 import { StaleRunFenceError, type ExecutionRun } from "../conversations.js";
 import { assertRunFence } from "./fence.js";

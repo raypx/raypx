@@ -1,3 +1,4 @@
+import { AttachmentsController, type MessageAttachmentsPort } from "./attachments.js";
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import type { AgentId } from "@raypx/core/agents";
 import { editMentionTokens, insertMention, mentionIds, type MentionToken } from "./mentions.js";
@@ -59,6 +60,7 @@ export interface ConversationControllerView extends ConversationView {
   pending: PendingMessage | null;
 }
 export interface ConversationControllerOptions {
+  attachments?: MessageAttachmentsPort;
   approvals?: ApprovalPort;
   computer?: ComputerController;
   selection: ConversationSelection;
@@ -66,11 +68,12 @@ export interface ConversationControllerOptions {
   port: ConversationPort;
   socket: ConversationSocketPort;
   drafts: ConversationDraftStore;
-  key(): string;
+  key(this: void): string;
 }
 
 /** Owns one selected conversation. Adapters provide transport and device persistence. */
 export class ConversationController {
+  readonly attachments: AttachmentsController | undefined;
   readonly state: ConversationState;
   private readonly approvals: ApprovalProjection;
   private readonly listeners = new Set<() => void>();
@@ -93,6 +96,9 @@ export class ConversationController {
   private resolvedSummaries: ConversationView["resolvedApprovals"];
   private resolvedActivity: ConversationView["toolActivity"] | undefined;
   constructor(private readonly options: ConversationControllerOptions) {
+    this.attachments = options.attachments
+      ? new AttachmentsController(options.selection, options.attachments, options.key)
+      : undefined;
     this.state = new ConversationState(options.selection);
     this.approvals = new ApprovalProjection(options.selection);
     this.draftKey = conversationDraftKey(options.owner, options.selection);
@@ -740,12 +746,19 @@ export class ConversationController {
     if (!this.view.pending) this.update({ steeringRunId: undefined });
   }
   async send(): Promise<boolean> {
-    if (this.disposed || this.view.sending || !this.view.draft.trim()) return false;
+    if (
+      this.disposed ||
+      this.view.sending ||
+      (!this.view.draft.trim() && !this.attachments?.ids().length)
+    )
+      return false;
+    if (this.attachments && !this.attachments.ready()) return false;
     if (this.view.pending && this.view.pending.text !== this.view.draft) return false;
     const mentions = this.view.steeringRunId ? [] : mentionIds(this.view.mentionTokens ?? []);
     const pending = this.view.pending ?? {
       text: this.view.draft,
       idempotencyKey: this.options.key(),
+      ...(this.attachments?.ids().length ? { attachmentIds: this.attachments.ids() } : {}),
       ...(this.view.steeringRunId ? { steerRunId: this.view.steeringRunId } : {}),
       ...(mentions.length ? { mentions } : {}),
     };
@@ -837,6 +850,7 @@ export class ConversationController {
         sendCode: null,
       });
       this.persist(draft, null);
+      this.attachments?.sent(pending.attachmentIds ?? []);
       return true;
     } catch (error) {
       const code = sendFailureCode(error);
@@ -870,6 +884,7 @@ export class ConversationController {
     }
   }
   dispose() {
+    this.attachments?.dispose();
     if (this.disposed) return;
     this.disposed = true;
     ++this.approvalsGeneration;
@@ -882,6 +897,9 @@ export class ConversationController {
 }
 
 const sendFailureCodes = [
+  "ATTACHMENT_EXPIRED",
+  "ATTACHMENT_INVALID",
+  "ATTACHMENT_LIMIT",
   "GROUP_MIN_AGENTS",
   "GROUP_AGENT_NOT_PARTICIPANT",
   "GROUP_AGENT_LIMIT",

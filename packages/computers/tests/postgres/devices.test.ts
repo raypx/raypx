@@ -18,6 +18,7 @@ import {
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import type { DeviceConnectorRequest } from "@raypx/contracts/device-connector";
 import { createDeviceComputersRepository } from "../../src/server/devices-postgres.js";
+import { createDeviceMemberFilesRepository } from "../../src/server/member-files.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
@@ -136,6 +137,48 @@ async function fixture() {
   }
   return { scope, connected, grant, conversationId, run, credential };
 }
+it("admits only owner member reads, rechecks grants after the response and rejects offline devices", async () => {
+  const f = await fixture();
+  const files = createDeviceMemberFilesRepository(connection.db, origin);
+  const selection = { deviceId: f.connected.deviceId, grantId: f.grant.id };
+  const read = await files.prepare(f.scope, selection, {
+    kind: "read",
+    path: "notes.txt",
+    maxBytes: 64,
+  });
+  expect(read.request).toMatchObject({
+    accountId: owner,
+    grantRevision: f.grant.revision,
+    operation: { kind: "read", maxBytes: 64 },
+  });
+  expect(read.request).not.toHaveProperty("runId");
+  await files.complete(f.connected, read.request.id, {
+    kind: "read",
+    bytes: "YQ==",
+    size: 1,
+    truncated: false,
+  });
+  expect(await files.take(f.scope, read.request.id)).toMatchObject({ kind: "read", bytes: "YQ==" });
+  const otherScope = await access.resolve(other, f.scope.spaceId);
+  await expect(
+    files.prepare(otherScope, selection, { kind: "list", path: ".", limit: 100 }),
+  ).rejects.toThrow("ACCESS_DENIED");
+  await expect(
+    files.prepare(f.scope, selection, { kind: "read", path: "../secret", maxBytes: 64 }),
+  ).rejects.toThrow("INVALID_INPUT");
+  await repository.revokeGrant(f.connected, f.scope.spaceId, f.grant.id);
+  await expect(files.take(f.scope, read.request.id)).rejects.toThrow("DEVICE_REVOKED");
+  await files.remove(f.scope, read.request.id);
+  const offline = await fixture();
+  await repository.disconnect(offline.connected, "fixture-node");
+  await expect(
+    files.prepare(
+      offline.scope,
+      { deviceId: offline.connected.deviceId, grantId: offline.grant.id },
+      { kind: "list", path: ".", limit: 100 },
+    ),
+  ).rejects.toThrow("DEVICE_OFFLINE");
+});
 it("expires one-time pairing codes and rejects claim and confirmation replay", async () => {
   const scope = await createSpace();
   const pair = await repository.createPairing(scope);

@@ -139,10 +139,6 @@ bun run --cwd packages/database test
 DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/database generate
 ```
 
-Remote control records share the public schema and cascade with the account.
-`control_owner` provides a transactional cross-instance account write lock; read-only projections do not acquire it; payloads are
-explicit domain projections. Changes require generated foundation migrations.
-
 `system_configuration` stores the singleton non-secret site settings with revision
 and last-editor metadata. API owns validation, permissions and compare-and-swap.
 
@@ -205,6 +201,12 @@ resolves current Space membership before exposing metadata or dispatching tools.
 
 Device Computer state uses current connector records: `device_computers` stores account/origin-bound restricted-credential digests and expiring connection fences; `device_computer_pairings` stores one-use five-minute hashes. `device_space_devices`, `device_directory_grants` and `device_computer_selections` use composite same-Space/member ownership keys. Each directory grant references a device Computer. `device_connector_operations/events` retain bounded sequenced outcomes before ACK and cascade with the original Run. Command audit intents and terminal outcomes are append-only Space evidence; credentials and private output are never logs. Approval requests add nullable bounded device presentation metadata. The generated disposable baseline is recorded below.
 
-protected_input_requests binds Space/Conversation/Run/actor and one canonical call hash. Only answered rows may hold the encrypted envelope; consumption, expiry and cancellation clear all envelope columns. Same-Space actor foreign keys cascade with Runs. The regenerated disposable baseline is 20261114090050_baseline.
+protected_input_requests binds Space/Conversation/Run/actor and one canonical call hash. Only answered rows may hold the encrypted envelope; consumption, expiry and cancellation clear all envelope columns. Same-Space actor foreign keys cascade with Runs. The regenerated disposable baseline is 20261114101502_baseline.
 
 MCP server metadata adds nullable per_call_secret_header; values remain outside that table. Connector protected values and value digests never enter operation/event rows.
+
+`conversation_attachments` stores bounded upload bytes, finalization and expiry;
+`conversation_attachment_deliveries` binds fenced receipts to exact Run/message
+identities. `device_member_file_reads` is expiring routing state.
+`member_notification_reads` and `member_conversation_views` store member read/view
+state only; sources remain authoritative. All relationships include Space scope.

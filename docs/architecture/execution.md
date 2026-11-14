@@ -359,3 +359,8 @@ existing attempt limit. An in-flight disconnect or lost response follows the
 existing unknown-effect guard; no fallback sandbox or automatic redispatch occurs.
 Memory context is recalled and pinned before initial Computer admission so it cannot
 introduce untrusted authority after device selection. See [device decisions](../development/device-connector.md).
+
+Member attachments are untrusted input. Images enter ephemeral model image parts
+when supported; other files stage through the Computer port under generated inbox
+paths. Fenced delivery receipts withhold unknown writes after recovery. See
+[Run delivery](member-input-and-notifications.md#run-delivery).

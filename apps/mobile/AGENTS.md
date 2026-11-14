@@ -141,8 +141,8 @@ codes for confirmation on the target machine, requests native directory selectio
 and lists/revokes grants or a machine with native destructive confirmation.
 The existing Computer sheet selects the team sandbox or a connected member device
 for the caller's next Run. An offline/revoked selection remains explicit and never
-falls back automatically. Files remains a read-only Team sandbox view, labelled independently of the next-Run
-device selection. Composer controls wait for the current selection before starting
+falls back automatically. Files follows the selected sandbox or owned granted device directory through
+bounded read-only ports, with explicit offline and ownership reasons. Composer controls wait for the current selection before starting
 the sandbox. Shared `DeviceComputersController` projections refresh
 on foreground and explicit Refresh; native Mobile holds no connector credential
 and cannot confirm a directory on another machine. Device commands retain the
@@ -155,3 +155,8 @@ the bounded composer scroll region owns scrolling for both card types.
 Values live only in a private ref, clear on submit/background/unmount and never
 enter SecureStore or drafts. Normal approval remains separate; no native device
 acceptance is implied.
+
+Native attachments use document/photo pickers and cache-only download sharing.
+The shared upload controller chunks bytes within the existing transport budget;
+restoration never uploads. Device Files and the notification route share injected
+backend ports. Picker/sharing component mocks do not establish device acceptance.

@@ -302,3 +302,16 @@ provider. Each needs its own decision when a concrete workflow requires it.
 
 - Which hosted sandbox provider passes the conformance suite and fits the port.
 - Whether Claude and Codex continue as tools inside a computer or are dropped.
+
+## Workspace gap closure
+
+Implemented message attachments on Web/Desktop and native Mobile, device-aware
+read-only Files, and a member notification list. PostgreSQL owns bounded upload
+bytes, fenced delivery receipts and read/view state; additive contracts retain
+current transport versions. See [current behavior and limits](architecture/member-input-and-notifications.md).
+Source, PostgreSQL and both browser renderer journeys are independently validated;
+macOS arm64 real connector daemon acceptance also covers device Files and generated
+attachment inbox delivery. Packaged Desktop, physical Mobile pickers/sharing, live
+model image perception and unverified native platforms retain separate gates.
+Recipient-targeted invitations, push delivery and larger attachment storage remain
+future work. No data import or compatibility layer is introduced.

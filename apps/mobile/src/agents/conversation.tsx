@@ -1,3 +1,4 @@
+import { AttachmentPicker, AttachmentDownloads, useAttachmentDrafts } from "./attachments.js";
 import {
   type ComponentRef,
   useCallback,
@@ -73,6 +74,7 @@ export function AgentConversation({
   onMemory,
   onResources,
   initialRunId,
+  supportsImages = false,
   controller,
   computer,
   devices,
@@ -89,6 +91,7 @@ export function AgentConversation({
   onMemory?: (() => void) | undefined;
   onResources?: (() => void) | undefined;
   initialRunId?: RunId | undefined;
+  supportsImages?: boolean | undefined;
   controller: ConversationController;
   computer: ComputerController;
   devices?: DeviceComputersController | undefined;
@@ -98,6 +101,7 @@ export function AgentConversation({
   onEdit(this: void): void;
 }) {
   const { t } = useCopy();
+  const attachmentDrafts = useAttachmentDrafts(controller.attachments);
   const state = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,
@@ -330,6 +334,12 @@ export function AgentConversation({
               {row.text}
             </Text>
           </View>
+          <AttachmentDownloads
+            attachments={row.attachments}
+            port={controller.attachments?.port}
+            spaceId={spaceId}
+            conversationId={conversationId}
+          />
         </View>
       );
     const run = row.run;
@@ -537,7 +547,11 @@ export function AgentConversation({
             </Text>
           ) : null}
           {tab === "files" && computer.files && (
-            <ComputerFiles controller={computer.files} status={computerState.status} />
+            <ComputerFiles
+              controller={computer.files}
+              status={computerState.status}
+              device={deviceState.selection}
+            />
           )}
           {tab === "files" && !computer.files && (
             <View className="flex-1 gap-3 p-4">
@@ -791,6 +805,11 @@ export function AgentConversation({
                 conversationId={conversationId}
               />
             )}
+            <AttachmentPicker
+              controller={controller.attachments}
+              supportsImages={supportsImages}
+              disabled={state.sending || state.pending !== null}
+            />
             {state.effectiveMode && (
               <Text className="text-xs text-muted-foreground">
                 {t("agents.spaceSettings.effectiveMode")}:{" "}
@@ -917,7 +936,13 @@ export function AgentConversation({
                 <Action
                   label={t(state.sending ? "agents.sending" : "agents.send")}
                   busy={state.sending}
-                  disabled={state.loading || !state.draft.trim() || !!state.pending}
+                  disabled={
+                    state.loading ||
+                    (!state.draft.trim() &&
+                      !attachmentDrafts.some((draft) => draft.state === "ready")) ||
+                    attachmentDrafts.some((draft) => draft.state !== "ready") ||
+                    !!state.pending
+                  }
                   onPress={() => {
                     atBottom.current = true;
                     setMentionRange(null);

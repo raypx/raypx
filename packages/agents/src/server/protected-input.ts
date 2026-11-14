@@ -25,7 +25,7 @@ import {
   type ProtectedInputsService,
 } from "../protected-input.js";
 import { assertRunFence } from "./fence.js";
-import { publishConversationNotice } from "./conversations.js";
+import { publishConversationNotice } from "./notice.js";
 
 type Transaction = Pick<Database, "select" | "insert" | "update" | "execute">;
 type Row = typeof requests.$inferSelect;

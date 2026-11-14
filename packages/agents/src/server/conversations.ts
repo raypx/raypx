@@ -1,3 +1,4 @@
+import { publishConversationNotice } from "./notice.js";
 import { and, asc, desc, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
@@ -46,7 +47,6 @@ import { resolveSpaceScope, type SpaceScope } from "@raypx/spaces/server";
 import type {
   ConversationsRepository,
   ConversationRunRepository,
-  ConversationNotice,
   ExecutionRun,
   RunCheckpoint,
   RunExecution,
@@ -55,6 +55,7 @@ import type {
 import { RunResourceUnavailableError } from "../conversations.js";
 import { conversationView } from "../views.js";
 import { message, runView, segmentView } from "./conversation-views.js";
+import { claimMessageAttachments } from "./attachments.js";
 import { lastConversationActivity } from "./activity.js";
 import { readHistory, readActiveRuns, snapshotAttribution, rememberMember } from "./history.js";
 import { createGroupsRepository } from "./groups.js";
@@ -84,14 +85,6 @@ type StoredCheckpoint = Omit<RunCheckpoint, "memory"> & {
   memory?: Omit<NonNullable<RunCheckpoint["memory"]>, "revisions">;
 };
 
-export const conversationChannel = "raypx_conversation_events";
-/** Called inside the committing transaction: PostgreSQL delivers only after commit. */
-export async function publishConversationNotice(
-  tx: Pick<Database, "execute">,
-  notice: ConversationNotice,
-) {
-  await tx.execute(sql`select pg_notify(${conversationChannel}, ${JSON.stringify(notice)})`);
-}
 function steeringContent(row: typeof messages.$inferSelect, kind: string, actorAccountId: string) {
   if (row.authorAgentId || row.authorAccountId !== actorAccountId)
     return JSON.stringify({
@@ -1655,6 +1648,7 @@ export function createConversationsRepository(
           messageId: row!.id,
           createdAt: row!.createdAt,
         });
+        await claimMessageAttachments(tx, scope, id, row!.id, values.attachmentIds ?? []);
         const conversation = await requireConversation(tx, scope, id);
         const participantRows =
           conversation.kind === "group"
@@ -1814,6 +1808,8 @@ export function createConversationsRepository(
               let payload: object = {};
               if (row.event.kind === "message.created")
                 payload = { messageId: row.event.messageId };
+              if (row.event.kind === "attachment.state")
+                payload = { ...(row.event.data as object) };
               if (row.event.kind === "computer.state")
                 payload = { ...(row.event.data as object), computerId: row.event.computerId };
               if (row.event.kind === "tool.started" || row.event.kind === "tool.finished")

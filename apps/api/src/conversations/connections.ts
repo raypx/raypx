@@ -43,6 +43,7 @@ export interface ModelConnectionsRepository {
 type ResolvedModel = Awaited<ReturnType<ModelAccess["resolve"]>>;
 export interface ConnectionTransport {
   validate(this: void, input: ModelConnectionConfiguration): void;
+  supportsImages?(connection: ModelConnection, model: string): boolean;
   resolve(
     this: void,
     connection: ModelConnection,
@@ -135,11 +136,17 @@ export function createModelConnections(
               modelId: connectionModelId(connection.id, model),
               name: taskText(`${connection.name} / ${model}`, 200),
               source: "connection" as const,
+              supportsImages: transport.supportsImages?.(connection, model) ?? false,
             })),
           );
           const offered = new Map<
             string,
-            { modelId: string; name: string; source?: "connection" | "deployment" }
+            {
+              modelId: string;
+              name: string;
+              supportsImages?: boolean;
+              source?: "connection" | "deployment";
+            }
           >();
           for (const model of [...memberModels, ...(await deployment.list(scope))]) {
             if (!offered.has(model.modelId)) offered.set(model.modelId, model);

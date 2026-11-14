@@ -147,12 +147,15 @@ export interface GroupsPort {
   deleteGroup(this: void, input: ConversationSelection): Promise<{ deleted: true }>;
 }
 export interface OfferedModel {
+  supportsImages?: boolean | undefined;
   source: "connection" | "deployment";
   modelId: string;
   name: string;
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  notifications?: import("./notifications.js").MemberNotificationsPort;
+  messageAttachments?: import("./attachments.js").MessageAttachmentsPort;
   protectedInputs?: import("./protected-input.js").ProtectedInputsPort;
   deviceComputers?: DeviceComputersPort;
   skills?: AgentSkillsPort;

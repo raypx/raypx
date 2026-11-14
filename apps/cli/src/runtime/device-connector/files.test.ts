@@ -149,3 +149,17 @@ it.skipIf(process.platform === "win32")(
     await expect(readFile(join(root, "cancelled.txt"))).rejects.toMatchObject({ code: "ENOENT" });
   },
 );
+
+it.skipIf(process.platform === "win32")(
+  "creates generated inbox parents inside the grant and refuses a linked inbox",
+  async () => {
+    const { root, outside, grant, files } = await fixture();
+    const path = `inbox/${crypto.randomUUID()}/${crypto.randomUUID()}`;
+    await files.write(grant, path, Buffer.from("member upload").toString("base64"));
+    expect(await readFile(join(root, path), "utf8")).toBe("member upload");
+    await rm(join(root, "inbox"), { recursive: true });
+    await symlink(outside, join(root, "inbox"));
+    await expect(files.write(grant, path, "YQ==")).rejects.toMatchObject({ code: "ACCESS_DENIED" });
+    expect(await readFile(join(outside, "secret.txt"), "utf8")).toBe("outside");
+  },
+);

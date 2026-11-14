@@ -1324,6 +1324,7 @@ export const conversationEvents = pgTable(
     kind: text("kind", {
       enum: [
         "message.created",
+        "attachment.state",
         "run.state",
         "reply.segment",
         "computer.state",
@@ -1339,6 +1340,14 @@ export const conversationEvents = pgTable(
     fence: bigint("fence", { mode: "number" }).notNull().default(0),
     segmentId: text("segment_id"),
     computerId: text("computer_id"),
+    attachmentId: text("attachment_id").generatedAlwaysAs(
+      (): SQL =>
+        sql`case when ${conversationEvents.kind} = 'attachment.state' then ${conversationEvents.data}->>'attachmentId' else null end`,
+    ),
+    attachmentMessageId: text("attachment_message_id").generatedAlwaysAs(
+      (): SQL =>
+        sql`case when ${conversationEvents.kind} = 'attachment.state' then ${conversationEvents.data}->>'messageId' else null end`,
+    ),
     // Requests remain with their Run after membership removal.
     requestId: text("request_id"),
     pageId: text("page_id").generatedAlwaysAs(
@@ -1401,9 +1410,19 @@ export const conversationEvents = pgTable(
         approvalRequests.id,
       ],
     }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.attachmentId, table.attachmentMessageId],
+      foreignColumns: [
+        conversationAttachments.spaceId,
+        conversationAttachments.conversationId,
+        conversationAttachments.id,
+        conversationAttachments.messageId,
+      ],
+    }).onDelete("cascade"),
     check(
       "conversation_events_payload_check",
       sql`(
+      (${table.kind} = 'attachment.state' and ${table.attachmentId} is not null and ${table.attachmentMessageId} is not null and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null and ${table.computerId} is null and ${table.requestId} is null) or
       (${table.kind} = 'message.created' and ${table.messageId} is not null and ${table.runId} is null and ${table.segmentId} is null and ${table.data} is null and ${table.computerId} is null and ${table.requestId} is null) or
       (${table.kind} = 'run.state' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is null and ${table.data} is not null and ${table.computerId} is null and ${table.requestId} is null) or
       (${table.kind} = 'reply.segment' and ${table.messageId} is null and ${table.runId} is not null and ${table.segmentId} is not null and ${table.data} is null and ${table.computerId} is null and ${table.requestId} is null) or
@@ -1414,7 +1433,7 @@ export const conversationEvents = pgTable(
     ),
     check(
       "conversation_events_kind_check",
-      sql`${table.kind} in ('message.created', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved', 'tool.started', 'tool.finished')`,
+      sql`${table.kind} in ('message.created', 'attachment.state', 'run.state', 'reply.segment', 'computer.state', 'card.created', 'card.resolved', 'tool.started', 'tool.finished')`,
     ),
   ],
 );
@@ -2513,7 +2532,183 @@ export const deviceConnectorEvents = pgTable(
   ],
 );
 
+/** Small member uploads live with their transactional message ownership. */
+export const conversationAttachments = pgTable(
+  "conversation_attachments",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    id: text("id").notNull(),
+    uploaderAccountId: text("uploader_account_id").notNull(),
+    messageId: text("message_id"),
+    name: text("name").notNull(),
+    mediaType: text("media_type").notNull(),
+    size: integer("size").notNull(),
+    ready: boolean("ready").notNull().default(true),
+    expectedSize: integer("expected_size"),
+    sha256: text("sha256").notNull(),
+    bytes: text("bytes").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+    expiresAt: date("expires_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.conversationId, t.id] }),
+    unique("conversation_attachments_message_key").on(
+      t.spaceId,
+      t.conversationId,
+      t.id,
+      t.messageId,
+    ),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId, t.messageId],
+      foreignColumns: [
+        conversationMessages.spaceId,
+        conversationMessages.conversationId,
+        conversationMessages.id,
+      ],
+    }).onDelete("cascade"),
+    index("conversation_attachments_expiry_idx")
+      .on(t.expiresAt)
+      .where(sql`${t.messageId} is null`),
+    index("conversation_attachments_member_idx").on(t.spaceId, t.uploaderAccountId),
+    check(
+      "conversation_attachments_size_check",
+      sql`${t.size} between 1 and 1048576 and octet_length(decode(${t.bytes}, 'base64')) = ${t.size}`,
+    ),
+    check(
+      "conversation_attachments_upload_check",
+      sql`(${t.expectedSize} is null or (${t.expectedSize} between 1 and 1048576 and ${t.size} <= ${t.expectedSize} and (not ${t.ready} or ${t.size} = ${t.expectedSize}))) and (${t.messageId} is null or ${t.ready})`,
+    ),
+    check("conversation_attachments_hash_check", sql`${t.sha256} ~ '^[a-f0-9]{64}$'`),
+  ],
+);
+export const conversationAttachmentDeliveries = pgTable(
+  "conversation_attachment_deliveries",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    attachmentId: text("attachment_id").notNull(),
+    messageId: text("message_id").notNull(),
+    state: text("state", { enum: ["staging", "image", "available", "withheld"] }).notNull(),
+    path: text("path"),
+    reason: text("reason"),
+    fence: bigint("fence", { mode: "number" }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.conversationId, t.runId, t.attachmentId] }),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId, t.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId, t.attachmentId, t.messageId],
+      foreignColumns: [
+        conversationAttachments.spaceId,
+        conversationAttachments.conversationId,
+        conversationAttachments.id,
+        conversationAttachments.messageId,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "conversation_attachment_deliveries_state_check",
+      sql`${t.state} in ('staging', 'image', 'available', 'withheld')`,
+    ),
+    check(
+      "conversation_attachment_deliveries_outcome_check",
+      sql`(${t.state} = 'available' and ${t.path} is not null and ${t.reason} is null) or (${t.state} = 'image' and ${t.path} is null and ${t.reason} is null) or (${t.state} = 'staging' and ${t.path} is null and ${t.reason} is null) or (${t.state} = 'withheld' and ${t.path} is null and ${t.reason} in ('MODEL_IMAGES_UNAVAILABLE', 'COMPUTER_UNAVAILABLE', 'DEVICE_GRANT_REQUIRED', 'DELIVERY_UNCONFIRMED'))`,
+    ),
+  ],
+);
+
+/** Short-lived read responses coordinate API and connector processes without Run authority. */
+export const deviceMemberFileReads = pgTable(
+  "device_member_file_reads",
+  {
+    spaceId: text("space_id").notNull(),
+    id: text("id").notNull(),
+    deviceId: text("device_id").notNull(),
+    grantId: text("grant_id").notNull(),
+    accountId: text("account_id").notNull(),
+    grantRevision: bigint("grant_revision", { mode: "number" }).notNull(),
+    connectionFence: bigint("connection_fence", { mode: "number" }).notNull(),
+    operation: jsonb("operation").notNull(),
+    result: jsonb("result"),
+    expiresAt: date("expires_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.id] }),
+    unique("device_member_file_reads_id_key").on(t.id),
+    foreignKey({
+      columns: [t.spaceId, t.grantId, t.deviceId, t.accountId],
+      foreignColumns: [
+        deviceDirectoryGrants.spaceId,
+        deviceDirectoryGrants.id,
+        deviceDirectoryGrants.deviceId,
+        deviceDirectoryGrants.accountId,
+      ],
+    }).onDelete("cascade"),
+    index("device_member_file_reads_expiry_idx").on(t.expiresAt),
+  ],
+);
+
+export const memberNotificationReads = pgTable(
+  "member_notification_reads",
+  {
+    spaceId: text("space_id").notNull(),
+    accountId: text("account_id").notNull(),
+    kind: text("kind").notNull(),
+    sourceId: text("source_id").notNull(),
+    readAt: date("read_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.accountId, t.kind, t.sourceId] }),
+    foreignKey({
+      columns: [t.spaceId, t.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    index("member_notification_reads_account_idx").on(t.accountId, t.spaceId),
+    check(
+      "member_notification_reads_kind_check",
+      sql`${t.kind} in ('approval', 'protected-input', 'run-succeeded', 'run-failed', 'invitation')`,
+    ),
+  ],
+);
+export const memberConversationViews = pgTable(
+  "member_conversation_views",
+  {
+    spaceId: text("space_id").notNull(),
+    accountId: text("account_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    viewedAt: date("viewed_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.accountId, t.conversationId] }),
+    foreignKey({
+      columns: [t.spaceId, t.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+  ],
+);
+
 export const schema = {
+  conversationAttachments,
+  conversationAttachmentDeliveries,
+  deviceMemberFileReads,
+  memberNotificationReads,
+  memberConversationViews,
   deviceComputers,
   deviceComputerPairings,
   deviceSpaceDevices,

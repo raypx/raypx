@@ -210,7 +210,12 @@ it("offers an owner's connections across their Spaces, respects narrowing, and i
   const created = await f.service.create("owner", configuration, credential);
   const models = f.service.models(f.deployment);
   const modelId = connectionModelId(created.id, "model-a");
-  const expected = { modelId, name: "Personal model / model-a", source: "connection" };
+  const expected = {
+    modelId,
+    name: "Personal model / model-a",
+    source: "connection",
+    supportsImages: false,
+  };
   expect(await models.list(scope())).toContainEqual(expected);
   expect(await models.list(scope("owner", "space-b"))).toContainEqual(expected);
   f.members.get("owner")!.add("later-space");

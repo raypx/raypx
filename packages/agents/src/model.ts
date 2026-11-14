@@ -174,3 +174,11 @@ export {
 } from "./model/approval-settings.js";
 
 export { ProtectedInputsController, type ProtectedInputsPort } from "./model/protected-input.js";
+
+export {
+  AttachmentsController,
+  type MessageAttachmentsPort,
+  type AttachmentDraft,
+} from "./model/attachments.js";
+
+export { NotificationsController, type MemberNotificationsPort } from "./model/notifications.js";

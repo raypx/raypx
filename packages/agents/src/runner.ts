@@ -39,6 +39,8 @@ export interface ModelTurn extends Pick<RunExecution, "instructions" | "history"
   tools?: Tool[];
 }
 export interface RunTools {
+  cleanup?(): Promise<void>;
+  attachments?: import("./attachments.js").MessageAttachmentsService;
   protectedInputs?: ProtectedInputsService;
   tools: ComputerTools;
   approvals: ApprovalsService;
@@ -54,6 +56,7 @@ export interface ModelAccess {
     run: Run,
   ): Promise<{
     connectionId?: string;
+    supportsImages?: boolean;
     stream(input: ModelTurn, signal: AbortSignal): AiStream;
   }>;
   close(this: void): void;
@@ -395,6 +398,7 @@ export class ConversationRunner {
       while (this.scanAgain && this.accepting && !this.closed) {
         this.scanAgain = false;
         await this.toolRuntime?.protectedInputs?.cleanup();
+        await this.toolRuntime?.cleanup?.();
         const [runnable, backup] = await Promise.all([
           this.repository.scanRunnable(),
           this.repository.claimBackupJobs(this.ownerId, this.options.leaseMs),
@@ -799,7 +803,24 @@ export class ConversationRunner {
         checkpoint.untrustedInput || checkpoint.memory?.untrustedInput || false;
       if (checkpoint.toolCatalog !== undefined)
         this.toolRuntime?.tools.restore?.(run, checkpoint.toolCatalog);
-      await this.toolRuntime?.tools.initialize?.(scope, run, controller.signal);
+      try {
+        await this.toolRuntime?.tools.initialize?.(scope, run, controller.signal);
+      } catch (error) {
+        if (
+          error instanceof RunResourceUnavailableError &&
+          error.code === "COMPUTER_UNAVAILABLE" &&
+          !controller.signal.aborted
+        )
+          await this.toolRuntime?.attachments?.prepare(
+            scope,
+            run,
+            false,
+            controller.signal,
+            undefined,
+            this.toolRuntime.tools.attachmentFailureReason?.(run) ?? "COMPUTER_UNAVAILABLE",
+          );
+        throw error;
+      }
       if (checkpoint.toolCatalog === undefined && this.toolRuntime?.tools.snapshot) {
         checkpoint.toolCatalog = this.toolRuntime.tools.snapshot(run);
         storing = true;
@@ -945,8 +966,30 @@ export class ConversationRunner {
           if (terminal) break;
           continue;
         }
+        const attachmentContext =
+          (await this.toolRuntime?.attachments?.prepare(
+            scope,
+            run,
+            model.supportsImages === true,
+            controller.signal,
+            (id, bytes) =>
+              this.toolRuntime?.tools.stageAttachment?.(scope, run, id, bytes, controller.signal) ??
+              Promise.resolve(null),
+          )) ?? [];
+        if (attachmentContext.length && !checkpoint.untrustedInput) {
+          run.untrustedInput = true;
+          checkpoint.untrustedInput = true;
+          storing = true;
+          await this.repository.saveCheckpoint(scope, run, checkpoint);
+          storing = false;
+        }
         const stream = model.stream(
-          { ...input, history, continuation: checkpoint.continuation, tools: definitions },
+          {
+            ...input,
+            history,
+            continuation: [...attachmentContext, ...checkpoint.continuation],
+            tools: definitions,
+          },
           controller.signal,
         );
         let text = "";
