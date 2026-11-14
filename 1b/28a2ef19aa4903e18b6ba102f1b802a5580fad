@@ -1,0 +1,301 @@
+packages/providers/AGENTS.md
+  s_8b1bf31e102961::t_490a15b5a81cfa 42
+  s_8b1bf31e102961::t_7c38ec8475d187 3-4,49-50
+  s_8b1bf31e102961::t_a6773369c78589 46-48
+packages/database/AGENTS.md
+  s_8b1bf31e102961::t_490a15b5a81cfa 13,37,215-216
+  s_8b1bf31e102961::t_e0279c15158707 217-221
+docs/development/ui.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 33-40,59-68,120-124
+docs/README.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 12-16
+  s_8b1bf31e102961::t_6cfebcc9b0139c 17
+docs/development/workspaces.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 125-126,138-143
+  s_8b1bf31e102961::t_3dc3212623b530 144
+docs/development/testing.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 67-68,107-114,158-159,164-168,178-181,229-230
+  s_8b1bf31e102961::t_7c38ec8475d187 169-177
+apps/mobile/AGENTS.md
+  s_8b1bf31e102961::t_490a15b5a81cfa 29-36
+PRODUCT.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 44-45,56,81-94,106-107
+  s_8b1bf31e102961::t_7c38ec8475d187 54-55
+  s_8b1bf31e102961::t_94e5f3bab166ef 62-73
+apps/web/AGENTS.md
+  s_8b1bf31e102961::t_490a15b5a81cfa 19-20
+  s_8b1bf31e102961::t_5d71befa490204 116-117
+docs/development/desktop.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 14-17
+README.md
+  s_8b1bf31e102961::t_7c38ec8475d187 10-12,14-15
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 13
+AGENTS.md
+  s_8b1bf31e102961::t_7c38ec8475d187 13-14
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 16-19
+docs/development/ai.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 42-47
+  s_8b1bf31e102961::t_7c38ec8475d187 37-38
+  s_8b1bf31e102961::t_61f350e9e12140 48
+docs/development/openapi.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 3-8
+packages/agents/AGENTS.md
+  s_8b1bf31e102961::t_490a15b5a81cfa 165-172
+  s_8b1bf31e102961::t_021c66fe4c2953 155-164,173-176
+apps/desktop/AGENTS.md
+  s_8b1bf31e102961::t_490a15b5a81cfa 28-31
+packages/contracts/AGENTS.md
+  s_8b1bf31e102961::t_490a15b5a81cfa 187-188
+  s_8b1bf31e102961::t_7face7c9c7f238 184-186,189-194
+docs/development/getting-started.md
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 86-91
+docs/development/mobile.md
+  s_8b1bf31e102961::t_7c38ec8475d187 139-140,248-249
+  s_8b1bf31e102961::t_cde5e4c35bc8f8 163-173,247,274-278
+  s_8b1bf31e102961::t_e971b80faa6f0d 138,162
+apps/api/AGENTS.md
+  s_8b1bf31e102961::t_7c38ec8475d187 13-14,71
+  s_8b1bf31e102961::t_490a15b5a81cfa 72-84
+DESIGN.md
+  s_f9cc0d01f49051::t_b4d1aada704d39 43-44,151-155
+apps/api/src/app/options.ts
+  s_f9cc0d01f49051::t_89699908e28354 24
+apps/api/src/conversations/openapi-postgres.ts
+  s_f9cc0d01f49051::t_adde8f2b5cd2a0 1-240
+apps/api/src/conversations/openapi-servers.test.ts
+  s_f9cc0d01f49051::t_73284d52ba68f0 1-218
+apps/api/src/conversations/openapi-servers.ts
+  s_f9cc0d01f49051::t_fd14c869899a18 1-346
+apps/api/src/conversations/openapi-tools.test.ts
+  s_f9cc0d01f49051::t_6512e11c9c8beb 1-170
+apps/api/src/conversations/openapi-tools.ts
+  s_f9cc0d01f49051::t_d7731fef23c498 1-242
+apps/api/src/routers/rpc/index.ts
+  s_f9cc0d01f49051::t_1f7908f1fe9bf7 3,40
+apps/api/src/routers/rpc/openapi-servers.ts
+  s_f9cc0d01f49051::t_947a46013f0da2 1-73
+apps/api/src/routers/rpc/spaces.ts
+  s_f9cc0d01f49051::t_5322a77687f698 3,21-24
+apps/api/src/runtime/agents.ts
+  s_f9cc0d01f49051::t_ba3c6996ef0aaa 28-31,94-98,103,116-122,183
+apps/api/src/runtime/shared.ts
+  s_f9cc0d01f49051::t_e49bff2cf31d0c 160,173,213
+apps/api/tests/helpers/app.ts
+  s_f9cc0d01f49051::t_ed7278a4687bd0 10
+apps/api/tests/helpers/browser-history.ts
+  s_f9cc0d01f49051::t_9ac5ac71d2fbc3 20,32-33,39,65-66,68
+apps/api/tests/helpers/browser-model.ts
+  s_f9cc0d01f49051::t_d41a1d162e160a 35,71-78,149-156
+apps/api/tests/helpers/browser-openapi.ts
+  s_f9cc0d01f49051::t_3caafced5ecb9f 1-56
+apps/api/tests/helpers/control-server.ts
+  s_f9cc0d01f49051::t_2889ef7f314d72 34,40-42,44,119,138-142,146,154-163,166,169,172,245,287-288,330
+apps/api/tests/integration/conversation-history-rpc.test.ts
+  s_f9cc0d01f49051::t_5c9d45d013be67 7,156-158,165,243,336-360
+apps/api/tests/integration/openapi-rpc.test.ts
+  s_f9cc0d01f49051::t_3fa92db0845929 1-159
+apps/api/tests/postgres/node/openapi.test.ts
+  s_f9cc0d01f49051::t_6a92da170f770f 1-302
+apps/desktop/e2e/active-runs.spec.ts
+  s_f9cc0d01f49051::t_c34ad61ce869f6 1-2
+apps/desktop/e2e/openapi-tools.spec.ts
+  s_f9cc0d01f49051::t_1dc2e15f25179e 1-2
+apps/desktop/src/features/settings/content.tsx
+  s_f9cc0d01f49051::t_b1243bc975074c 4-9,36-37,56-63
+apps/desktop/src/router-settings.component.test.tsx
+  s_f9cc0d01f49051::t_d440b841a92ba3 60
+apps/mobile/src/agents/approval-card.component.test.tsx
+  s_f9cc0d01f49051::t_9f8f22d6397c71 4-8,142-165
+apps/mobile/src/agents/approval-card.tsx
+  s_f9cc0d01f49051::t_0a436434240412 5-6,61,77,79-83
+apps/mobile/src/agents/conversation.component.test.tsx
+  s_f9cc0d01f49051::t_8cd8dae9205be0 683-756
+apps/mobile/src/agents/conversation.tsx
+  s_f9cc0d01f49051::t_c5c373b04e7bf8 1-8,81-82,85-97,137-138,142,400-484,520-523,538-555,559
+apps/mobile/src/agents/tool-activity.component.test.tsx
+  s_f9cc0d01f49051::t_b6f1afe1301a1a 3,194-223
+apps/mobile/src/agents/tool-activity.tsx
+  s_f9cc0d01f49051::t_2c0007adcee196 5-6,43-44,63-67
+apps/web/e2e/active-runs.spec.ts
+  s_f9cc0d01f49051::t_9197badece4290 1-2
+apps/web/e2e/openapi-tools.spec.ts
+  s_f9cc0d01f49051::t_6fd436691bbca2 1-2
+apps/web/src/features/settings/account-dialog.tsx
+  s_f9cc0d01f49051::t_b7189082c17e72 8-13,94-102,273-278
+apps/web/src/features/settings/account-settings.component.test.tsx
+  s_f9cc0d01f49051::t_0628c4902ee9dd 48,310-319
+apps/web/src/features/settings/account-settings.tsx
+  s_f9cc0d01f49051::t_0818a05610a395 184,296-305
+bun.lock
+  s_f9cc0d01f49051::t_df8ec761b4d53e 871
+docs/architecture/README.md
+  s_f9cc0d01f49051::t_043e508cdb0c10 16-20
+docs/architecture/approvals.md
+  s_f9cc0d01f49051::t_d7762e581a3953 168-177
+docs/architecture/capabilities.md
+  s_f9cc0d01f49051::t_ab2a9799199fa6 263-311
+docs/architecture/clients.md
+  s_f9cc0d01f49051::t_b4d9c91c99f818 4,25-28,31,50-52,106-109,112-118
+docs/architecture/domain.md
+  s_f9cc0d01f49051::t_140e0a3ec63f70 156-164
+docs/architecture/events.md
+  s_f9cc0d01f49051::t_f1ff833d3c5d37 380-409
+docs/architecture/execution.md
+  s_f9cc0d01f49051::t_fad35c22a08fd9 332-340
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_62a2a816c2d86c 45-47,59,122-132
+docs/roadmap.md
+  s_f9cc0d01f49051::t_33bf65b244dd4a 95-96,181-185,205-207
+e2e/AGENTS.md
+  s_f9cc0d01f49051::t_20e4fdbf8ac2b5 97-103
+e2e/tests/helpers/owned-api.ts
+  s_f9cc0d01f49051::t_745ae73f9ba301 1-22
+e2e/tests/journeys/active-runs.ts
+  s_f9cc0d01f49051::t_208b840de8bf29 1-109
+e2e/tests/journeys/openapi-tools.ts
+  s_f9cc0d01f49051::t_f4159addcaee3c 1-166
+packages/agents/locales/en/agents.json
+  s_f9cc0d01f49051::t_919d36bc9af45f 530-593
+packages/agents/locales/zh/agents.json
+  s_f9cc0d01f49051::t_500358d2030fb3 530-593
+packages/agents/src/approvals.test.ts
+  s_f9cc0d01f49051::t_b491d7c8b0ad5c 730-745
+packages/agents/src/approvals.ts
+  s_f9cc0d01f49051::t_427f92606aa825 67,172
+packages/agents/src/client.ts
+  s_f9cc0d01f49051::t_10c5655936c288 9-10
+packages/agents/src/client/approval-card.component.test.tsx
+  s_f9cc0d01f49051::t_4007280a87da77 4-8,311-329
+packages/agents/src/client/approval-card.tsx
+  s_f9cc0d01f49051::t_c89d9dcf6c6d23 7-8,98,126,128-132
+packages/agents/src/client/approval-settings.component.test.tsx
+  s_f9cc0d01f49051::t_32314f91a83cdb 237-317
+packages/agents/src/client/approval-settings.tsx
+  s_f9cc0d01f49051::t_7887d3f358159e 6,98-99,103-104,123-128,137-138,142-143,157,182-214,240,248
+packages/agents/src/client/conversation.tsx
+  s_f9cc0d01f49051::t_b8956c1d37f5f9 29,336,345,363-365,1045-1148,1239-1244
+packages/agents/src/client/effects.component.test.tsx
+  s_f9cc0d01f49051::t_4914e00cc8d448 110-172
+packages/agents/src/client/effects.tsx
+  s_f9cc0d01f49051::t_9d9d2e79d06ffc 3,13,20,25-27,49-57,101
+packages/agents/src/client/openapi-servers.component.test.tsx
+  s_f9cc0d01f49051::t_eb61a5aee3b59a 1-225
+packages/agents/src/client/openapi-servers.tsx
+  s_f9cc0d01f49051::t_5fb1aa683d9d9c 1-625
+packages/agents/src/client/tool-activity.component.test.tsx
+  s_f9cc0d01f49051::t_440352fe51e9d0 5,226-251
+packages/agents/src/client/tool-activity.tsx
+  s_f9cc0d01f49051::t_564ff36d3f4ef8 10,51-52,79-83,112-121,153-155,183-189
+packages/agents/src/client/workspace.component.test.tsx
+  s_f9cc0d01f49051::t_76aeb3965f7b5b 327-332,2294-2452
+packages/agents/src/computer-tools.ts
+  s_f9cc0d01f49051::t_fdf35864a7b89e 96-97
+packages/agents/src/conversations.ts
+  s_f9cc0d01f49051::t_0c79654c584f12 12,37-38
+packages/agents/src/model.ts
+  s_f9cc0d01f49051::t_52ff43ac3b04d0 93-99,144-152
+packages/agents/src/model/approval-settings.ts
+  s_f9cc0d01f49051::t_f11e40c8489db9 8,145
+packages/agents/src/model/approvals.ts
+  s_f9cc0d01f49051::t_559f300c76badc 9,71-75,147-161,238,247-249
+packages/agents/src/model/controller.ts
+  s_f9cc0d01f49051::t_f33d5017b8a9bf 25,58,127,154-157,286-290,307,320-381,649-655,726-740,744,748-749,835,888
+packages/agents/src/model/conversation.test.ts
+  s_f9cc0d01f49051::t_dc1a2b87c5be40 675-676
+packages/agents/src/model/conversation.ts
+  s_f9cc0d01f49051::t_78b977cb72343e 3,15,34-35,52,272,282-308,317-323,346-353,366-370,382,384,386,419-420,447,449,470,496,546,553,566-573,585,591-603,606,623,643,650,658-660,667
+packages/agents/src/model/drafts.ts
+  s_f9cc0d01f49051::t_8e39bb8053bd6c 2,10,65-66,73
+packages/agents/src/model/history.test.ts
+  s_f9cc0d01f49051::t_36f400d5ec5e9f 654-1032
+packages/agents/src/model/openapi-servers.test.ts
+  s_f9cc0d01f49051::t_2713f0af1eae8f 1-137
+packages/agents/src/model/openapi-servers.ts
+  s_f9cc0d01f49051::t_dad7184a3617b0 1-219
+packages/agents/src/model/port.ts
+  s_f9cc0d01f49051::t_06f4bc101dc133 15,69-70
+packages/agents/src/model/tool-label.test.ts
+  s_f9cc0d01f49051::t_fab1ea28411f0c 5-10,61-83
+packages/agents/src/model/tool-label.ts
+  s_f9cc0d01f49051::t_7156b0b2ad12d1 33,35,44-74
+packages/agents/src/server/conversations.ts
+  s_f9cc0d01f49051::t_8759b07ef28ae1 34,58,172-175,1544-1553,1602,1623-1627,1640-1642,1644-1648,1740-1751,1826
+packages/agents/src/server/history.ts
+  s_f9cc0d01f49051::t_9bf37a46108f9f 17-19,125-207,327
+packages/agents/tests/postgres/conversation-history.test.ts
+  s_f9cc0d01f49051::t_ff63fd3998ac98 21,321-538
+packages/contracts/src/api.test.ts
+  s_f9cc0d01f49051::t_d0c4ee0a8c5ff6 18
+packages/contracts/src/api.ts
+  s_f9cc0d01f49051::t_7530d4c8dcf31e 3,71
+packages/contracts/src/conversation.test.ts
+  s_f9cc0d01f49051::t_e474bc73f86214 73-137
+packages/contracts/src/conversation.ts
+  s_f9cc0d01f49051::t_74901ad5ce6367 13-14,49-50
+packages/contracts/src/openapi-servers.test.ts
+  s_f9cc0d01f49051::t_b758c62fabb567 1-17
+packages/contracts/src/openapi-servers.ts
+  s_f9cc0d01f49051::t_6c68306850d839 1-45
+packages/core/AGENTS.md
+  s_f9cc0d01f49051::t_18cf11727ce485 96-104
+packages/core/package.json
+  s_f9cc0d01f49051::t_c26b03ac021ec5 26-27
+packages/core/src/approvals.ts
+  s_f9cc0d01f49051::t_d38d9198697be5 27-36
+packages/core/src/conversation.test.ts
+  s_f9cc0d01f49051::t_b04f095eee5b3e 3,193-254
+packages/core/src/conversation.ts
+  s_f9cc0d01f49051::t_3cf347e833832f 18-29,127-155,249-251,287-294
+packages/core/src/openapi-servers.test.ts
+  s_f9cc0d01f49051::t_ca2d504ff5d42c 1-62
+packages/core/src/openapi-servers.ts
+  s_f9cc0d01f49051::t_55053ce37e2c48 1-81
+packages/database/drizzle-foundation/20261114015908_baseline/migration.sql
+  s_f9cc0d01f49051::t_e9edde74d104ae 88,102,325,801-835,1268,1278,1310-1311,1442-1445
+packages/database/drizzle-foundation/20261114015908_baseline/snapshot.json
+  s_f9cc0d01f49051::t_b36aa75360557a 5,1179-1236,2894-2916,3118-3140,3791-3834,6944-7043,8486-8503,15458,15471-15472,15484-15485,15497-15498,15510-15511,15523-15525,15527,15536-15537,15549-15551,15555,15562-15564,15566,15575-15577,15579,15588-15589,15601-15602,15614-15616,15627-15628,15640-15641,15653-15655,15666-15667,15679-15680,15692-15694,15696,15698,15705,15718-15720,15724-15997,20352-20422,20431-20432,20450,20457,20459,20807-20848,21710-21779,24568-24643,25887-25920,26561-26573,26688,26723,26807,27013-27019
+packages/database/src/schema.ts
+  s_f9cc0d01f49051::t_3a019c19bb1156 545-547,815-820,1004,1083,1130,2325-2387,2389-2391
+packages/providers/package.json
+  s_f9cc0d01f49051::t_115a94e292cfa8 15-16,32
+packages/providers/src/core/http-egress.ts
+  s_f9cc0d01f49051::t_4b8ff25ed70e00 1-97
+packages/providers/src/mcp/url.ts
+  s_f9cc0d01f49051::t_eb1ff997729a55 1-8,23,26-29,32-38
+packages/providers/src/openapi/document.test.ts
+  s_f9cc0d01f49051::t_d0b89756d5001a 1-106
+packages/providers/src/openapi/document.ts
+  s_f9cc0d01f49051::t_4ed0f7ac18e7d1 1-348
+packages/providers/src/openapi/index.ts
+  s_f9cc0d01f49051::t_31a444c22167e5 1-9
+packages/providers/src/openapi/transport.test.ts
+  s_f9cc0d01f49051::t_db9ddf93446cf4 1-140
+packages/providers/src/openapi/transport.ts
+  s_f9cc0d01f49051::t_6405bd7cb6d32e 1-249
+packages/providers/tsconfig.json
+  s_f9cc0d01f49051::t_0d17d518babd8a 3-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1b28a2ef19aa4903e18b6ba102f1b802a5580fad",
+  "prompts": {},
+  "sessions": {
+    "s_8b1bf31e102961": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d7b9-3bc7-7a40-a04f-599c3ca7f661",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
