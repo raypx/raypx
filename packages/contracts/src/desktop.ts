@@ -113,6 +113,13 @@ export const desktopLoginResults = {
 
 /** Selected-origin conversation stream; session headers stay in the daemon. */
 const desktopEventsIdentity = z.strictObject({ id: z.uuid() });
+/** Terminal read result, separate from backend conversation/Space frames. */
+export const desktopEventsCloseSchema = z.strictObject({
+  type: z.literal("closed"),
+  code: z.number().int().min(1000).max(4999),
+  reason: z.string().max(123),
+});
+export type DesktopEventsClose = z.infer<typeof desktopEventsCloseSchema>;
 export const desktopEventsRequests = {
   events_open: desktopEventsIdentity.extend({ accountId: z.string().min(1).max(128) }),
   events_read: desktopEventsIdentity,
@@ -121,7 +128,8 @@ export const desktopEventsRequests = {
 };
 export const desktopEventsResults = {
   events_open: z.literal(true),
-  events_read: conversationServerFrameSchema.nullable(),
+  events_read: z.union([conversationServerFrameSchema, desktopEventsCloseSchema]).nullable(),
   events_send: z.literal(true),
   events_close: z.literal(true),
 };
+export type DesktopEventsRead = z.infer<typeof desktopEventsResults.events_read>;

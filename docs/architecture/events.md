@@ -274,6 +274,21 @@ An unknown selector still uses the existing generic refusal, so the close reason
 does not reveal a Space to a caller who never belonged to it. No frame or event
 variant is added.
 
+Web and Desktop browser previews receive the code and reason from the browser
+WebSocket. Packaged Desktop's daemon owns that remote socket and carries a
+terminal `{ type: "closed", code, reason }` through its private `events_read`
+result to the renderer's conversation socket port. Existing frames and null idle
+polls are unchanged. The daemon validates the reason's UTF-8 and 123-byte limit,
+then forwards only `4003` paired with `SPACE_MEMBER_REMOVED`, `SPACE_MEMBER_LEFT`
+or `SPACE_DELETING`, and `4001` paired with `SESSION_ENDED`. Other reasons are
+empty and unknown codes keep the generic state; malformed codes become abnormal
+close `1006`. No raw errors, cookies or host credentials enter this result.
+Unread content is discarded at termination. One terminal result survives between
+polls within the existing stream bound, until read, peer/session cleanup or a
+20-second expiry. The renderer reports closure once and stops polling; local
+teardown ignores late reads. This adds no backend event or conversation frame
+variant and does not move transport into Go.
+
 ## Group conversations
 
 The backend supports named groups of 2–32 Agents from one Space. Every current

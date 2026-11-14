@@ -15,7 +15,13 @@ conversation workspace. Scope drafts and uncertain-send receipts by server origi
 account, Space and Conversation; restoration never sends. The native
 `eventsOpen/Read/Send/Close` bridge reaches only the configured origin's `/events`.
 The daemon owns cookies; the renderer applies and ACKs events. Browser previews
-use the authenticated browser WebSocket.
+use the authenticated browser WebSocket. `eventsRead` retains its frame/null
+results and adds `{ type: "closed", code, reason }` for remote termination. The
+daemon validates UTF-8 reasons within 123 bytes and forwards only the public
+Space/session endings with their expected codes; unknown endings stay generic.
+Unread terminal results share the eight-stream bound and expire after 20 seconds.
+The renderer forwards termination once to the shared socket port, stops polling
+and suppresses late results after local close. Go only bootstraps the channel.
 The shared Space menu and New Agent action occupy sidebar slots. The conversation
 header opens the shared team-computer lifecycle panel; its API reads and commands
 use the existing daemon-authenticated client without exposing credentials.

@@ -84,6 +84,20 @@ the renderer receives validated conversation frames and sends its own ACK after
 application. Peer loss, account selection and session replacement close the
 remote socket. Browser previews use the ordinary cookie-authenticated WebSocket.
 
+Packaged Desktop carries remote WebSocket termination through the same daemon
+channel: `events_read` returns existing conversation/Space frames, null for an
+idle poll, or the additive `{ type: "closed", code, reason }` terminal result.
+The daemon accepts only well-formed UTF-8 reasons within the 123-byte WebSocket
+budget and forwards the public Space/session reason only with its expected code.
+Other reasons are empty; unknown codes retain generic client behavior. Closed
+streams discard unread content and retain one terminal result until read, peer/
+session cleanup or a 20-second expiry, within the eight-stream limit. The renderer
+passes its code/reason to the shared conversation socket's `onClose` once and
+stops reading. Local teardown suppresses late callbacks. Go remains the finite
+bootstrap and native-capability host; cookies and host credentials stay private.
+Browser simulation and daemon transport tests cover this boundary separately
+from packaged WKWebView/WebView2 acceptance.
+
 ## Mobile
 
 - The Expo app shares Core, contracts and message catalogs. It keeps its own

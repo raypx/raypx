@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { ConversationClientFrame } from "@raypx/contracts/api";
+import { spaceIdSchema } from "@raypx/core/spaces";
 const mocks = vi.hoisted(() => ({
   native: true,
   open: vi.fn(),
@@ -103,4 +104,88 @@ it("uses the browser's authenticated socket only in a browser preview", () => {
   mocks.browser.mockReturnValue(port);
   expect(desktopConversationSocket("owner")).toBe(port);
   expect(mocks.browser).toHaveBeenCalledWith("https://api.example.test");
+});
+
+it.each([
+  [4003, "SPACE_MEMBER_REMOVED"],
+  [4003, "SPACE_MEMBER_LEFT"],
+  [4003, "SPACE_DELETING"],
+  [4001, "SESSION_ENDED"],
+  [1006, ""],
+  [4999, ""],
+])("forwards terminal close metadata %i/%s once and stops reading", async (code, reason) => {
+  mocks.read.mockResolvedValueOnce({ type: "closed", code, reason });
+  const onFrame = vi.fn(),
+    onClose = vi.fn();
+  const socket = desktopConversationSocket("owner").connect({ onFrame, onClose, onError: vi.fn() });
+  await vi.waitFor(() => expect(onClose).toHaveBeenCalledExactlyOnceWith(code, reason));
+  expect(onFrame).not.toHaveBeenCalled();
+  expect(mocks.read).toHaveBeenCalledOnce();
+  expect(mocks.close).toHaveBeenCalledOnce();
+  socket.send({
+    type: "space.ack",
+    version: 1,
+    spaceId: spaceIdSchema.parse("space"),
+    sequence: 1,
+  });
+  socket.close();
+  await Promise.resolve();
+  expect(mocks.send).not.toHaveBeenCalled();
+  expect(mocks.close).toHaveBeenCalledOnce();
+});
+
+it("continues polling after an idle read and suppresses a terminal read after local close", async () => {
+  let finish!: (value: unknown) => void;
+  mocks.read.mockResolvedValueOnce(null).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const onFrame = vi.fn(),
+    onClose = vi.fn();
+  const socket = desktopConversationSocket("owner").connect({ onFrame, onClose, onError: vi.fn() });
+  await vi.waitFor(() => expect(mocks.read).toHaveBeenCalledTimes(2));
+  socket.close();
+  finish({ type: "closed", code: 4003, reason: "SPACE_MEMBER_LEFT" });
+  await Promise.resolve();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(onFrame).not.toHaveBeenCalled();
+});
+
+it("preserves the remote ending when an in-flight send subsequently fails", async () => {
+  let failSend!: (error: Error) => void;
+  let finishRead!: (value: unknown) => void;
+  mocks.send.mockImplementationOnce(
+    () =>
+      new Promise((_resolve, reject) => {
+        failSend = reject;
+      }),
+  );
+  mocks.read.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishRead = resolve;
+      }),
+  );
+  const onClose = vi.fn();
+  const socket = desktopConversationSocket("owner").connect({
+    onFrame: vi.fn(),
+    onClose,
+    onError: vi.fn(),
+  });
+  await vi.waitFor(() => expect(mocks.read).toHaveBeenCalledOnce());
+  socket.send({
+    type: "space.ack",
+    version: 1,
+    spaceId: spaceIdSchema.parse("space"),
+    sequence: 1,
+  });
+  await vi.waitFor(() => expect(mocks.send).toHaveBeenCalledOnce());
+  finishRead({ type: "closed", code: 4003, reason: "SPACE_DELETING" });
+  await vi.waitFor(() => expect(onClose).toHaveBeenCalledExactlyOnceWith(4003, "SPACE_DELETING"));
+  failSend(new Error("private diagnostic"));
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(onClose).toHaveBeenCalledOnce();
 });

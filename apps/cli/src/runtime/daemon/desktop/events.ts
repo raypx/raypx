@@ -4,6 +4,7 @@ import {
   type ConversationClientFrame,
   type ConversationServerFrame,
 } from "@raypx/contracts/api";
+import type { DesktopEventsClose, DesktopEventsRead } from "@raypx/contracts/desktop";
 import { LocalError } from "../../errors.js";
 import type { SessionCookies } from "./cookies.js";
 
@@ -15,16 +16,35 @@ export type EventsSocketFactory = (
   url: URL,
   headers: Record<string, string>,
   receive: (data: unknown) => void,
-  closed: () => void,
+  closed: (code?: number, reason?: string) => void,
 ) => EventsSocket;
 
 const unavailable = () => new LocalError("EVENTS_UNAVAILABLE", "Conversation stream unavailable");
 const queueLimit = 1024 * 1024;
+// Remote diagnostics are not renderer copy. Forward only the stable public endings,
+// paired with their expected code, after validating the WebSocket UTF-8 byte budget.
+function closeResult(code = 1006, reason = ""): DesktopEventsClose {
+  const validCode = Number.isInteger(code) && code >= 1000 && code <= 4999;
+  const validReason =
+    typeof reason === "string" &&
+    reason.length <= 123 &&
+    Buffer.byteLength(reason, "utf8") <= 123 &&
+    Buffer.from(reason, "utf8").toString("utf8") === reason;
+  const knownReason =
+    (code === 4001 && reason === "SESSION_ENDED") ||
+    (code === 4003 &&
+      ["SPACE_MEMBER_REMOVED", "SPACE_MEMBER_LEFT", "SPACE_DELETING"].includes(reason));
+  return {
+    type: "closed",
+    code: validCode ? code : 1006,
+    reason: validReason && knownReason ? reason : "",
+  };
+}
 const socketFactory: EventsSocketFactory = (url, headers, receive, closed) => {
   const socket = new WebSocket(url, { headers });
   socket.addEventListener("message", ({ data }) => receive(data));
-  socket.addEventListener("close", closed);
-  socket.addEventListener("error", closed);
+  socket.addEventListener("close", ({ code, reason }) => closed(code, reason));
+  socket.addEventListener("error", () => closed());
   return socket;
 };
 interface Stream {
@@ -32,7 +52,9 @@ interface Stream {
   socket?: EventsSocket;
   queue: { frame: ConversationServerFrame; bytes: number }[];
   bytes: number;
-  waiter?: { resolve(frame: ConversationServerFrame): void; reject(): void };
+  closed?: DesktopEventsClose;
+  expiry?: ReturnType<typeof setTimeout>;
+  waiter?: { resolve(frame: Exclude<DesktopEventsRead, null>): void; reject(): void };
 }
 
 /** A bounded private bridge to /events. Only the renderer applies and ACKs events. */
@@ -66,6 +88,7 @@ export class DesktopEvents {
       "abort",
       () => {
         parent.removeEventListener("abort", close);
+        clearTimeout(stream.expiry);
         stream.queue.length = 0;
         stream.bytes = 0;
         stream.socket?.close();
@@ -74,7 +97,7 @@ export class DesktopEvents {
       { once: true },
     );
     const receive = (data: unknown) => {
-      if (stream.scope.signal.aborted) return;
+      if (stream.scope.signal.aborted || stream.closed) return;
       try {
         if (typeof data !== "string") throw unavailable();
         const bytes = Buffer.byteLength(data);
@@ -91,10 +114,30 @@ export class DesktopEvents {
         close();
       }
     };
+    const ended = (code?: number, reason?: string) => {
+      if (this.streams.get(key) !== stream || stream.closed) return;
+      stream.closed = closeResult(code, reason);
+      // Admission may have ended: discard unread content before delivering closure.
+      stream.queue.length = 0;
+      stream.bytes = 0;
+      const socket = stream.socket;
+      delete stream.socket;
+      socket?.close();
+      if (stream.waiter) {
+        stream.waiter.resolve(stream.closed);
+        close();
+        return;
+      }
+      // Retain one terminal result between long polls, within the eight-stream bound.
+      stream.expiry = setTimeout(close, 20_000);
+    };
     resource.protocol = resource.protocol === "https:" ? "wss:" : "ws:";
     try {
-      stream.socket = this.connect(resource, { cookie, origin: "views://main" }, receive, close);
-      if (stream.scope.signal.aborted) stream.socket.close();
+      stream.socket = this.connect(resource, { cookie, origin: "views://main" }, receive, ended);
+      if (stream.scope.signal.aborted || stream.closed) {
+        stream.socket.close();
+        delete stream.socket;
+      }
     } catch {
       close();
       throw unavailable();
@@ -108,6 +151,7 @@ export class DesktopEvents {
   }
   send(client: string, id: string, frame: ConversationClientFrame): true {
     const stream = this.get(client, id);
+    if (stream.closed) throw unavailable();
     try {
       stream.socket!.send(JSON.stringify(frame));
     } catch {
@@ -116,14 +160,15 @@ export class DesktopEvents {
     }
     return true;
   }
-  async read(
-    client: string,
-    id: string,
-    signal: AbortSignal,
-  ): Promise<ConversationServerFrame | null> {
+  async read(client: string, id: string, signal: AbortSignal): Promise<DesktopEventsRead> {
     signal.throwIfAborted();
     const stream = this.get(client, id);
     if (stream.waiter) throw unavailable();
+    if (stream.closed) {
+      const result = stream.closed;
+      this.close(client, id);
+      return result;
+    }
     const next = stream.queue.shift();
     if (next) {
       stream.bytes -= next.bytes;

@@ -4,8 +4,8 @@ import type { DeviceGrant } from "@raypx/contracts/tasks";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DevicePreferences } from "./preferences.js";
 import type { DesktopApiRequest, DesktopApiResponse } from "./api.js";
-import type { DesktopExecution } from "@raypx/contracts/desktop";
-import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
+import type { DesktopEventsRead, DesktopExecution } from "@raypx/contracts/desktop";
+import type { ConversationClientFrame } from "@raypx/contracts/api";
 
 interface EngineStatus {
   status: "starting" | "ready" | "error";
@@ -70,7 +70,7 @@ type DesktopRequests = {
   apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
   apiCancel: { params: { id: string }; response: boolean };
   eventsOpen: { params: { id: string; accountId: string }; response: true };
-  eventsRead: { params: { id: string }; response: ConversationServerFrame | null };
+  eventsRead: { params: { id: string }; response: DesktopEventsRead };
   eventsSend: { params: { id: string; frame: ConversationClientFrame }; response: true };
   eventsClose: { params: { id: string }; response: true };
   controlInfo: { params: { accountId: string }; response: ControlInfo };

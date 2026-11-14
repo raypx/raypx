@@ -283,3 +283,38 @@ it("keeps a healthy renderer channel usable when rebootstrap fails", async () =>
   previous.deliver({ type: "response", id: previous.frames.at(-1)!.id, result: [] });
   await expect(waiting).resolves.toEqual([]);
 });
+
+it.each([
+  { type: "ready", version: 1 },
+  null,
+  { type: "closed", code: 4003, reason: "SPACE_MEMBER_LEFT" },
+])("validates additive event read results over the daemon channel (case %#)", async (value) => {
+  const native = runtime();
+  const bridge = await createMyGoBridge(() => {});
+  const id = crypto.randomUUID();
+  const pending = bridge.request.eventsRead({ id });
+  await vi.waitFor(() =>
+    expect(nextSocket().frames.at(-1)).toMatchObject({
+      type: "request",
+      method: "events_read",
+      params: { id },
+    }),
+  );
+  nextSocket().deliver({ type: "response", id: nextSocket().frames.at(-1)!.id, result: value });
+  await expect(pending).resolves.toEqual(value);
+  expect(native.mock.calls.some(([, method]) => method === "events_read")).toBe(false);
+});
+
+it("rejects oversized terminal metadata from the private channel", async () => {
+  runtime();
+  const bridge = await createMyGoBridge(() => {});
+  const pending = bridge.request.eventsRead({ id: crypto.randomUUID() });
+  const rejected = pending.catch((error: unknown) => error);
+  await vi.waitFor(() => expect(nextSocket().frames.at(-1)?.method).toBe("events_read"));
+  nextSocket().deliver({
+    type: "response",
+    id: nextSocket().frames.at(-1)!.id,
+    result: { type: "closed", code: 4003, reason: "x".repeat(124) },
+  });
+  expect(await rejected).toMatchObject({ name: "ZodError" });
+});

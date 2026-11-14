@@ -12,12 +12,14 @@ export function desktopConversationSocket(accountId: string): ConversationSocket
       const scope = new AbortController();
       const bridge = getBridge();
       let outgoing = Promise.resolve();
-      function fail() {
+      function ended(code?: number, reason?: string) {
         if (scope.signal.aborted) return;
         scope.abort();
         void bridge.then((value) => value.request.eventsClose({ id })).catch(() => {});
-        callbacks.onClose();
+        if (code === undefined) callbacks.onClose();
+        else callbacks.onClose(code, reason);
       }
+      const fail = () => ended();
       void (async () => {
         const native = await bridge;
         if (scope.signal.aborted) return;
@@ -29,6 +31,10 @@ export function desktopConversationSocket(accountId: string): ConversationSocket
         while (!scope.signal.aborted) {
           const frame = await native.request.eventsRead({ id });
           if (scope.signal.aborted) return;
+          if (frame?.type === "closed") {
+            ended(frame.code, frame.reason);
+            return;
+          }
           if (frame) callbacks.onFrame(frame);
         }
       })().catch(fail);
