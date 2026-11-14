@@ -585,6 +585,7 @@ CREATE TABLE "mcp_servers" (
 	"account_id" text NOT NULL,
 	"name" text NOT NULL,
 	"url" text NOT NULL,
+	"per_call_secret_header" text,
 	"availability" text NOT NULL,
 	"secret_id" text NOT NULL,
 	"has_credentials" boolean DEFAULT false NOT NULL,

@@ -28,7 +28,7 @@ const connected: ConnectedDevice = {
   cursor: 0,
   grants: [grant],
   credential: {
-    protocolVersion: 1,
+    protocolVersion: 2,
     deviceId,
     deviceName: "Device",
     accountId: "member",
@@ -96,7 +96,7 @@ function fixture(cluster?: DeviceConnectorBroker) {
     await registry.open("peer", "credential", peer);
     await registry.receive(
       "peer",
-      JSON.stringify({ type: "hello", protocolVersion: 1, deviceId, cursor: 0 }),
+      JSON.stringify({ type: "hello", protocolVersion: 2, deviceId, cursor: 0 }),
     );
     await registry.receive(
       "peer",

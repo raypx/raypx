@@ -32,3 +32,5 @@ and base path, reject every redirect, bound responses and reject credential echo
 
 No local model/session process adapter or public core transport entry remains.
 Run check/test and explicit provider conformance when selected.
+
+Private commands support UTF-8 stdin. Device adapters separate protected values from ordinary command fields; remote adapters scrub call-local overrides before truncation. No protected value joins a catalog or stored credential.

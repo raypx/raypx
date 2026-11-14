@@ -1,3 +1,4 @@
+import { scrubProtectedValue } from "@raypx/core/protected-input";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import {
@@ -53,6 +54,7 @@ export interface OpenApiTransport {
     operation: OpenApiToolOperation,
     args: Record<string, unknown>,
     signal: AbortSignal,
+    protectedInput?: { query?: { name: string; value: string }; protectedValues: string[] },
   ): Promise<{ status: number; content: string; truncated: boolean; isError: boolean }>;
 }
 function request(
@@ -114,6 +116,7 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
     body: string | undefined,
     parent: AbortSignal,
     allowError = false,
+    redactValues: readonly string[] = [],
   ) {
     const controller = new AbortController();
     let timedOut = false;
@@ -173,6 +176,7 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
         if (!value || typeof value !== "object") return false;
         return Object.entries(value).some(([key, child]) => contains(key) || contains(child));
       }
+      for (const value of redactValues) result.body = scrubProtectedValue(result.body, value);
       let parsed: unknown = result.body;
       try {
         parsed = JSON.parse(result.body);
@@ -208,7 +212,7 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
     async test(url, headers, signal) {
       await perform(validateRemoteEndpoint(url), "HEAD", headers, undefined, signal);
     },
-    async call(url, headers, operation, args, signal) {
+    async call(url, headers, operation, args, signal, protectedInput) {
       if (JSON.stringify(args).length > 40000 || !matchesOpenApiSchema(args, operation.inputSchema))
         throw new OpenApiTransportError("INVALID_ARGUMENTS");
       const base = validateRemoteEndpoint(url);
@@ -230,6 +234,8 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
       for (const parameter of operation.parameters.filter((param) => param.in === "query"))
         if (queryValues[parameter.name] !== undefined)
           target.searchParams.set(parameter.name, String(queryValues[parameter.name]));
+      if (protectedInput?.query)
+        target.searchParams.set(protectedInput.query.name, protectedInput.query.value);
       const result = await perform(
         target,
         operation.method,
@@ -237,6 +243,7 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
         args.body === undefined ? undefined : JSON.stringify(args.body),
         signal,
         true,
+        protectedInput?.protectedValues,
       );
       return {
         status: result.status,

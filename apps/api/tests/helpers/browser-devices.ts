@@ -1,3 +1,4 @@
+import { scrubProtectedValue } from "@raypx/core/protected-input";
 import { z } from "zod";
 import type { DeviceConnectorRegistry, DeviceComputersRepository } from "@raypx/computers/server";
 import {
@@ -112,7 +113,14 @@ export function browserDeviceFixture(
         device.executionCount += 1;
         await event(device, operationId, {
           kind: "stdout",
-          bytes: Buffer.from("Fixture device command\n").toString("base64"),
+          bytes: Buffer.from(
+            operation.protectedInput
+              ? scrubProtectedValue(
+                  `Delivered once: ${Buffer.from(operation.protectedInput.value).toString("base64")}`,
+                  operation.protectedInput.value,
+                )
+              : "Fixture device command\n",
+          ).toString("base64"),
         });
         await event(device, operationId, {
           kind: "exit",
@@ -147,7 +155,7 @@ export function browserDeviceFixture(
       device.peerId,
       JSON.stringify({
         type: "hello",
-        protocolVersion: 1,
+        protocolVersion: 2,
         deviceId: credential.deviceId,
         cursor: 0,
       }),

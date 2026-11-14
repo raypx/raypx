@@ -117,3 +117,27 @@ it("preserves observed file size and truncation in bounded member previews", asy
   });
   await expect(f.provider.readFile!(ref, "safe.txt", 1)).rejects.toThrow("LIMIT_EXCEEDED");
 });
+
+it.each(["environment", "stdin"] as const)(
+  "keeps protected %s out of ordinary journal identity fields",
+  async (kind) => {
+    const f = fixture([{ kind: "exit", status: 0, cancelled: false, truncated: false }]);
+    const value = crypto.randomUUID();
+    const destination = kind === "stdin" ? { kind } : { kind, variable: "TOKEN" };
+    await f.provider.execute(ref, {
+      executable: "echo",
+      argv: [],
+      cwd: ".",
+      outputBudget: 100,
+      environment: kind === "environment" ? { TOKEN: value } : {},
+      ...(kind === "stdin" ? { stdin: value } : {}),
+      protectedInput: { destination, value },
+    });
+    const operation = f.request.mock.calls[0]?.[0];
+    expect(operation?.kind).toBe("execute");
+    if (operation?.kind !== "execute") throw new Error("Expected command dispatch");
+    const { protectedInput, ...ordinary } = operation;
+    expect(protectedInput?.value === value).toBe(true);
+    expect(JSON.stringify(ordinary).includes(value)).toBe(false);
+  },
+);

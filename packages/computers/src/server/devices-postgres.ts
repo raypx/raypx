@@ -398,7 +398,7 @@ export function createDeviceComputersRepository(
           .where(and(eq(pairings.spaceId, pair.spaceId), eq(pairings.id, pair.id)));
         await audit(tx, pair.spaceId, pair.accountId, "device.paired", id);
         return {
-          protocolVersion: 1,
+          protocolVersion: 2,
           deviceId: id,
           deviceName: pair.deviceName!,
           accountId: pair.accountId,
@@ -490,7 +490,7 @@ export function createDeviceComputersRepository(
           connectionFence: fence,
           cursor: row.cursor,
           credential: {
-            protocolVersion: 1,
+            protocolVersion: 2,
             deviceId: row.id,
             deviceName: row.name,
             accountId: row.accountId,

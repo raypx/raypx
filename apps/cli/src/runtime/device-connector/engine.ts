@@ -1,3 +1,4 @@
+import { protectedInputVariants } from "@raypx/core/protected-input";
 import { createHash } from "node:crypto";
 import { spawnProcess } from "@raypx/runtime-node/process";
 import {
@@ -262,8 +263,16 @@ export class DeviceConnectorEngine {
         HOME: grant.grant.directory,
         LANG: "C.UTF-8",
         ...command.environment,
+        ...(command.protectedInput?.destination.kind === "environment"
+          ? { [command.protectedInput.destination.variable]: command.protectedInput.value }
+          : {}),
       },
-      stdin: "ignore",
+      stdin:
+        command.protectedInput?.destination.kind === "stdin"
+          ? Buffer.from(command.protectedInput.value)
+          : command.stdin === undefined
+            ? "ignore"
+            : Buffer.from(command.stdin),
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -295,7 +304,10 @@ export class DeviceConnectorEngine {
     const secrets = [this.storage.read().credential?.credential].filter((value): value is string =>
       Boolean(value),
     );
-    const secretBuffers = secrets.map((value) => Buffer.from(value));
+    if (command.protectedInput) secrets.push(command.protectedInput.value);
+    const secretBuffers = [...new Set(secrets.flatMap(protectedInputVariants))].map((value) =>
+      Buffer.from(value),
+    );
     const tailSize = Math.max(0, ...secretBuffers.map((value) => value.length - 1));
     const pump = async (kind: "stdout" | "stderr", stream: ReadableStream<Uint8Array>) => {
       let tail = Buffer.alloc(0);

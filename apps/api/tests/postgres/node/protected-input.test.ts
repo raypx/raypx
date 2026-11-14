@@ -1,3 +1,11 @@
+import { protectedInputParts, type ProtectedInputSpec } from "@raypx/core/protected-input";
+import { createOpenApiServers } from "../../../src/conversations/openapi-servers.js";
+import { createOpenApiServersRepository } from "../../../src/conversations/openapi-postgres.js";
+import { withOpenApiTools, openApiToolName } from "../../../src/conversations/openapi-tools.js";
+import { createOpenApiTransport } from "@raypx/providers/openapi";
+import { createMcpServers } from "../../../src/conversations/mcp-servers.js";
+import { createMcpServersRepository } from "../../../src/conversations/mcp-postgres.js";
+import { withMcpTools, mcpToolName } from "../../../src/conversations/mcp-tools.js";
 import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
@@ -72,13 +80,24 @@ const provider: ComputerProvider = {
   describe: async () => ({ ...(await memory.describe()), screen: false }),
   async execute(_ref, request) {
     dispatched++;
-    const bytes = Buffer.from(request.environment.PROTECTED_TOKEN ?? "missing").toString("base64");
+    const bytes = Buffer.from(
+      request.stdin ?? request.environment.PROTECTED_TOKEN ?? "missing",
+    ).toString("base64");
     return {
       id: "protected-fixture",
       cancel: async () => {},
       events: (async function* () {
         // Split the exact value across provider chunks to catch per-chunk redaction.
-        const raw = Buffer.from(bytes, "base64");
+        const value = Buffer.from(bytes, "base64").toString();
+        const raw = Buffer.from(
+          [
+            value,
+            Buffer.from(value).toString("base64"),
+            Buffer.from(value).toString("base64url"),
+            Buffer.from(value).toString("hex"),
+            encodeURIComponent(value),
+          ].join(" "),
+        );
         yield { kind: "stdout" as const, bytes: raw.subarray(0, 4).toString("base64") };
         yield { kind: "stdout" as const, bytes: raw.subarray(4).toString("base64") };
         yield { kind: "exit" as const, status: 0, truncated: false, cancelled: false };
@@ -88,6 +107,7 @@ const provider: ComputerProvider = {
 };
 const computers = createComputersService(createComputersRepository(connection.db), provider);
 const tools = createComputerTools(computers, provider, [], repository.pinResources);
+let operationTools = tools;
 const model = modelFixture();
 const logs: string[] = [];
 const apiLogger = createApiLogging({
@@ -98,7 +118,7 @@ const apiLogger = createApiLogging({
 });
 function executor() {
   return new ConversationRunner(repository, model.models, (code) => logs.push(code), undefined, {
-    tools,
+    tools: operationTools,
     approvals,
     protectedInputs: inputs,
   });
@@ -110,9 +130,9 @@ let scope: SpaceScope, other: SpaceScope, foreign: SpaceScope, run: ExecutionRun
 let conversationId: ExecutionRun["conversationId"];
 const owned: string[] = [];
 
-it.skipIf(process.env.RAYPX_TEST_PROTECTED_DOCKER !== "1")(
-  "delivers and scrubs a protected command through the real sandbox supervisor",
-  async () => {
+it.skipIf(process.env.RAYPX_TEST_PROTECTED_DOCKER !== "1").each(["environment", "stdin"] as const)(
+  "delivers and scrubs protected %s through the real sandbox supervisor",
+  async (destination) => {
     const engineProvider = createDockerComputerProvider({
       url: process.env.SANDBOX_SUPERVISOR_URL!,
       token: process.env.SANDBOX_SUPERVISOR_TOKEN!,
@@ -147,9 +167,20 @@ it.skipIf(process.env.RAYPX_TEST_PROTECTED_DOCKER !== "1")(
       name: "computer_run_command",
       arguments: {
         executable: "/bin/sh",
-        argv: ["-c", 'printf "%s" "$PROTECTED_TOKEN"; printf "%s" "$PROTECTED_TOKEN" >&2'],
+        argv: [
+          "-c",
+          destination === "stdin"
+            ? 'value=$(cat); printf "%s" "$value"; printf "%s" "$value" >&2'
+            : 'printf "%s" "$PROTECTED_TOKEN"; printf "%s" "$PROTECTED_TOKEN" >&2',
+        ],
         cwd: ".",
-        protectedInput: call.protectedInput!,
+        protectedInput: {
+          ...call.protectedInput!,
+          destination:
+            destination === "stdin"
+              ? { kind: "stdin" }
+              : { kind: "environment", variable: "PROTECTED_TOKEN" },
+        },
       },
     });
     const signal = new AbortController().signal;
@@ -264,6 +295,7 @@ beforeAll(async () => {
   foreign = await access.resolve(owner, second.space.id);
 });
 beforeEach(async () => {
+  operationTools = tools;
   clock = new Date();
   const created = await createAgentsRepository(connection.db).create(scope, {
     name: "Protected Agent",
@@ -474,70 +506,210 @@ it("checks fresh membership even for a previously resolved scope", async () => {
   await waiting;
 });
 
-it("pauses the real tool loop, recovers its checkpoint after executor shutdown and leaks no value to effects or the model", async () => {
-  const secret = `protected-run-${crypto.randomUUID()}`;
-  await repository.release(scope, run);
-  const index = model.calls.length;
-  runner.dispatch(scope, conversationId);
-  await expect.poll(() => model.calls.length).toBe(index + 1);
-  model.calls[index]!.toolCalls([
-    {
-      type: "toolCall",
-      id: call.id,
-      name: call.name,
-      arguments: call.arguments as import("@raypx/ai").ToolCall["arguments"],
-    },
-  ]);
-  await expect
-    .poll(async () => (await approvals.listPending(scope)).find((r) => r.runId === run.id)?.state)
-    .toBe("pending");
-  // A protected request cannot skip normal tool approval.
-  expect((await inputs.pending(scope)).some((r) => r.runId === run.id)).toBe(false);
-  const approval = (await approvals.listPending(scope)).find((r) => r.runId === run.id)!;
-  await approvals.answer(scope, approval.id, { decision: "approved" });
-  await expect
-    .poll(async () => (await inputs.pending(scope)).find((r) => r.runId === run.id)?.state)
-    .toBe("pending");
-  const request = (await inputs.pending(scope)).find((r) => r.runId === run.id)!;
-  await runner.close();
-  inputs = service();
-  // Answer while the executor is gone, then recover from the durable pending call.
-  await inputs.answer(scope, request.id, { decision: "answer", value: secret });
-  const before = dispatched;
-  runner = executor();
-  runner.dispatch(scope, conversationId);
-  await expect.poll(() => model.calls.length).toBe(index + 2);
-  expect(dispatched - before).toBe(1);
-  const transcript = JSON.stringify(model.calls[index + 1]!.input);
-  expect(transcript.includes(secret)).toBe(false);
-  expect(transcript).toContain("[protected]");
-  model.calls[index + 1]!.complete("Operation complete");
-  await expect
-    .poll(async () => (await repository.getRun(scope, conversationId, run.id)).state)
-    .toBe("succeeded");
-  const surfaces = {
-    events: await connection.db
-      .select()
-      .from(conversationEvents)
-      .where(eq(conversationEvents.runId, run.id)),
-    checkpoints: await connection.db
-      .select()
-      .from(conversationRunCheckpoints)
-      .where(eq(conversationRunCheckpoints.runId, run.id)),
-    activity: await connection.db
-      .select()
-      .from(conversationToolCalls)
-      .where(eq(conversationToolCalls.runId, run.id)),
-    effects: await connection.db
-      .select()
-      .from(conversationEffects)
-      .where(eq(conversationEffects.runId, run.id)),
-    logs,
-    transcript: model.calls.map((c) => c.input),
-  };
-  expect(surfaces.effects).toHaveLength(1);
-  expect(surfaces.checkpoints).toHaveLength(1);
-  expect(surfaces.activity).toHaveLength(1);
-  for (const surface of Object.values(surfaces))
-    expect(JSON.stringify(surface).includes(secret)).toBe(false);
-});
+it.each(["environment", "stdin", "bearer", "header", "query", "basic", "mcp"] as const)(
+  "recovers protected %s once with API authorization and sweeps every durable/model/log surface",
+  async (kind) => {
+    const secret =
+      kind === "basic"
+        ? `member-${crypto.randomUUID()}:password-${crypto.randomUUID()}`
+        : `protected-run-${crypto.randomUUID()} /+中文`;
+    const signal = new AbortController().signal;
+    const destinations: Record<typeof kind, ProtectedInputSpec["destination"]> = {
+      environment: { kind: "environment", variable: "PROTECTED_TOKEN" },
+      stdin: { kind: "stdin" },
+      bearer: { kind: "http-bearer" },
+      header: { kind: "http-api-key", in: "header", name: "x-call-key" },
+      query: { kind: "http-api-key", in: "query", name: "api_key" },
+      basic: { kind: "http-basic" },
+      mcp: { kind: "mcp-header", name: "x-call-key" },
+    };
+    const input = {
+      name: "Credential",
+      purpose: "Authenticate once",
+      destination: destinations[kind],
+    };
+    let name: string = "computer_run_command";
+    let args: Record<string, unknown> = {
+      executable: "echo",
+      argv: [],
+      cwd: ".",
+      protectedInput: input,
+    };
+    let received: string | undefined;
+    const echo = (value: string) =>
+      [
+        value,
+        Buffer.from(value).toString("base64"),
+        Buffer.from(value).toString("base64url"),
+        Buffer.from(value).toString("hex"),
+        encodeURIComponent(value),
+      ].join(" ");
+    if (["bearer", "header", "query", "basic"].includes(kind)) {
+      const http = createOpenApiServers(
+        createOpenApiServersRepository(connection.db),
+        keys,
+        createOpenApiTransport({
+          request: async (endpoint, _method, headers) => {
+            dispatched++;
+            const authorization = headers.authorization;
+            const supplied =
+              headers["x-call-key"] ??
+              endpoint.url.searchParams.get("api_key") ??
+              (authorization?.startsWith("Basic ")
+                ? Buffer.from(authorization.slice(6), "base64").toString()
+                : authorization?.replace(/^Bearer /, ""));
+            received = supplied ?? undefined;
+            return { status: 200, headers: new Headers(), body: echo(supplied!) };
+          },
+        }),
+      );
+      const server = await http.create(
+        scope,
+        {
+          name: "Single call",
+          url: "http://127.0.0.1:12345",
+          selectedOperationIds: ["authenticate"],
+          availability: { mode: "all" },
+        },
+        {
+          document: JSON.stringify({
+            openapi: "3.1.0",
+            paths: { "/authenticate": { post: { operationId: "authenticate" } } },
+          }),
+        },
+      );
+      operationTools = withOpenApiTools(tools, http);
+      name = openApiToolName(server.id, "authenticate");
+      args = { protectedInput: input };
+    } else if (kind === "mcp") {
+      const mcp = createMcpServers(createMcpServersRepository(connection.db), keys, {
+        validate() {},
+        async listTools() {
+          return [
+            {
+              name: "authenticate",
+              description: "Authenticate",
+              readOnly: false,
+              inputSchema: { type: "object" },
+            },
+          ];
+        },
+        async callTool(mcpConnection) {
+          dispatched++;
+          const supplied = mcpConnection.headers["x-call-key"]!;
+          received = supplied ?? undefined;
+          return { content: echo(supplied), isError: false, truncated: false };
+        },
+      });
+      const server = await mcp.create(owner, {
+        name: "Single call",
+        transport: "http",
+        url: "http://127.0.0.1:12345/mcp",
+        perCallSecretHeader: "x-call-key",
+        availability: { mode: "all" },
+      });
+      await mcp.setEnabled(scope, run.agentId, [server.id]);
+      operationTools = withMcpTools(tools, mcp);
+      name = mcpToolName(server.id, "authenticate");
+      args = { protectedInput: input };
+    }
+    await operationTools.initialize?.(scope, run, signal);
+    const selectedCall = operationTools.prepare(
+      {
+        type: "toolCall",
+        id: "destination-call",
+        name,
+        arguments: args as import("@raypx/ai").ToolCall["arguments"],
+      },
+      run,
+    );
+    await runner.close();
+    runner = executor();
+    await repository.release(scope, run);
+    const index = model.calls.length;
+    runner.dispatch(scope, conversationId);
+    await expect.poll(() => model.calls.length).toBe(index + 1);
+    model.calls[index]!.toolCalls([
+      {
+        type: "toolCall",
+        id: selectedCall.id,
+        name: selectedCall.name,
+        arguments: selectedCall.arguments as import("@raypx/ai").ToolCall["arguments"],
+      },
+    ]);
+    await expect
+      .poll(async () => (await approvals.listPending(scope)).find((r) => r.runId === run.id)?.state)
+      .toBe("pending");
+    // A protected request cannot skip normal tool approval.
+    expect((await inputs.pending(scope)).some((r) => r.runId === run.id)).toBe(false);
+    const approval = (await approvals.listPending(scope)).find((r) => r.runId === run.id)!;
+    await approvals.answer(scope, approval.id, { decision: "approved" });
+    await expect
+      .poll(async () => (await inputs.pending(scope)).find((r) => r.runId === run.id)?.state)
+      .toBe("pending");
+    const request = (await inputs.pending(scope)).find((r) => r.runId === run.id)!;
+    await runner.close();
+    inputs = service();
+    // Answer while the executor is gone, then recover from the durable pending call.
+    await expect(
+      client(member).protectedInputs.answer({
+        spaceId: scope.spaceId,
+        requestId: request.id,
+        answer: { decision: "answer", value: secret },
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await client(owner).protectedInputs.answer({
+      spaceId: scope.spaceId,
+      requestId: request.id,
+      answer: { decision: "answer", value: secret },
+    });
+    const before = dispatched;
+    runner = executor();
+    runner.dispatch(scope, conversationId);
+    await expect.poll(() => model.calls.length).toBe(index + 2);
+    expect(dispatched - before).toBe(1);
+    expect(["environment", "stdin"].includes(kind) || received === secret).toBe(true);
+    const transcript = JSON.stringify(model.calls[index + 1]!.input);
+    expect(transcript.includes(secret)).toBe(false);
+    expect(transcript).toContain("[protected]");
+    model.calls[index + 1]!.complete("Operation complete");
+    await expect
+      .poll(async () => (await repository.getRun(scope, conversationId, run.id)).state)
+      .toBe("succeeded");
+    const surfaces = {
+      events: await connection.db
+        .select()
+        .from(conversationEvents)
+        .where(eq(conversationEvents.runId, run.id)),
+      checkpoints: await connection.db
+        .select()
+        .from(conversationRunCheckpoints)
+        .where(eq(conversationRunCheckpoints.runId, run.id)),
+      activity: await connection.db
+        .select()
+        .from(conversationToolCalls)
+        .where(eq(conversationToolCalls.runId, run.id)),
+      effects: await connection.db
+        .select()
+        .from(conversationEffects)
+        .where(eq(conversationEffects.runId, run.id)),
+      logs,
+      transcript: model.calls.map((c) => c.input),
+    };
+    expect(surfaces.effects).toHaveLength(1);
+    expect(surfaces.checkpoints).toHaveLength(1);
+    expect(surfaces.activity).toHaveLength(1);
+    for (const value of protectedInputParts(secret, input)) {
+      const variants = [
+        value,
+        Buffer.from(value).toString("base64"),
+        Buffer.from(value).toString("base64url"),
+        Buffer.from(value).toString("hex"),
+        encodeURIComponent(value),
+      ];
+      for (const surface of Object.values(surfaces))
+        for (const variant of variants)
+          expect(JSON.stringify(surface).includes(variant)).toBe(false);
+    }
+  },
+);

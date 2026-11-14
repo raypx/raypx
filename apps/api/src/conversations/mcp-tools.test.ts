@@ -46,6 +46,7 @@ function fixture(readOnly = true) {
     {
       serverId,
       fingerprint: "a".repeat(64),
+      perCallSecretHeader: null as string | null,
       tools: [{ name: "report", description: "Report", inputSchema: { type: "object" }, readOnly }],
     },
   ];
@@ -133,4 +134,56 @@ it("rejects credential echoes in schemas and results before they enter model his
   await expect(
     tools.execute(scope, current, call, new AbortController().signal),
   ).rejects.toMatchObject({ code: "SECRET_OUTPUT" });
+});
+
+it("requires a declared exact header and delivers it outside arguments and frozen catalogs", async () => {
+  const f = fixture();
+  const current = run();
+  const signal = new AbortController().signal;
+  f.catalog[0]!.perCallSecretHeader = "x-call-key";
+  await f.tools.initialize?.(scope, current, signal);
+  const args = {
+    protectedInput: {
+      name: "Remote credential",
+      purpose: "Authenticate once",
+      destination: { kind: "mcp-header", name: "x-call-key" },
+    },
+  };
+  const name = mcpToolName(serverId, "report");
+  const prepared = f.tools.prepare(
+    { type: "toolCall", id: "single", name, arguments: args },
+    current,
+  );
+  expect(() =>
+    f.tools.prepare(
+      {
+        type: "toolCall",
+        id: "bad",
+        name,
+        arguments: {
+          protectedInput: {
+            ...args.protectedInput,
+            destination: { kind: "mcp-header", name: "other" },
+          },
+        },
+      },
+      current,
+    ),
+  ).toThrow("INVALID_ARGUMENTS");
+  await expect(f.tools.execute(scope, current, prepared, signal)).rejects.toMatchObject({
+    code: "INVALID_ARGUMENTS",
+  });
+  const value = crypto.randomUUID();
+  await f.tools.executeProtected!(scope, current, prepared, signal, value);
+  expect(f.service.call).toHaveBeenCalledWith(
+    scope,
+    current.agentId,
+    current.id,
+    expect.anything(),
+    "report",
+    {},
+    signal,
+    { name: "x-call-key", value },
+  );
+  expect(JSON.stringify([prepared, f.tools.snapshot?.(current)]).includes(value)).toBe(false);
 });

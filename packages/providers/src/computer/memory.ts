@@ -185,7 +185,9 @@ export function createMemoryComputerProvider(): ComputerProvider {
                 };
                 if (cancelled) wake();
               });
-          } else if (name === "printf")
+          } else if (name === "cat" && command.argv.length === 0 && command.stdin !== undefined)
+            outputs.push({ kind: "stdout", bytes: Buffer.from(command.stdin) });
+          else if (name === "printf")
             outputs.push({ kind: "stdout", bytes: printfBytes(command.argv[0] ?? "") });
           else if (name === "pwd")
             outputs.push({ kind: "stdout", bytes: Buffer.from(`/home/computer/${cwd}\n`) });

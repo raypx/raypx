@@ -201,3 +201,47 @@ it("keeps one-call credentials outside prepared arguments and checkpoint catalog
   );
   expect(JSON.stringify([prepared, f.tools.snapshot?.(current)]).includes(value)).toBe(false);
 });
+
+it.each([
+  [
+    { kind: "http-api-key", in: "header", name: "x-access-key" },
+    { type: "apiKey", header: "x-access-key" },
+  ],
+  [
+    { kind: "http-api-key", in: "query", name: "api_key" },
+    { type: "query", name: "api_key" },
+  ],
+  [{ kind: "http-basic" }, { type: "basic" }],
+])(
+  "delivers one-call credentials only through the private override (%j)",
+  async (destination, expected) => {
+    const f = fixture();
+    const current = run();
+    const signal = new AbortController().signal;
+    await f.tools.initialize?.(scope, current, signal);
+    const prepared = f.tools.prepare(
+      {
+        type: "toolCall",
+        id: "single",
+        name: openApiToolName(serverId, "report"),
+        arguments: {
+          protectedInput: { name: "Credential", purpose: "Authenticate once", destination },
+        },
+      },
+      current,
+    );
+    const value = `user:${crypto.randomUUID()}`;
+    await f.tools.executeProtected!(scope, current, prepared, signal, value);
+    expect(f.service.call).toHaveBeenLastCalledWith(
+      scope,
+      current.agentId,
+      current.id,
+      expect.anything(),
+      "report",
+      {},
+      signal,
+      { ...expected, value },
+    );
+    expect(JSON.stringify([prepared, f.tools.snapshot?.(current)]).includes(value)).toBe(false);
+  },
+);

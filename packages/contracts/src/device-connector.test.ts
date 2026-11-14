@@ -33,7 +33,7 @@ describe("device computer channel contract", () => {
   it("requires its own exact version without accepting retained Relay frames", () => {
     expect(
       devicePairingClaimSchema.safeParse({
-        protocolVersion: 1,
+        protocolVersion: 2,
         code: "12345678",
         deviceName: "machine",
       }).success,
@@ -102,4 +102,31 @@ describe("device computer channel contract", () => {
       }).success,
     ).toBe(false);
   });
+});
+
+it("refuses protocol v1 rather than degrading protected delivery", () => {
+  expect(
+    deviceConnectorClientFrameSchema.safeParse({
+      type: "hello",
+      protocolVersion: 1,
+      deviceId: "device",
+      cursor: 0,
+    }).success,
+  ).toBe(false);
+});
+
+it("binds the protected destination while excluding value changes from durable receipt identity", () => {
+  const destination = { kind: "environment" as const, variable: "TOKEN" };
+  function identity(value: string, variable = "TOKEN") {
+    return deviceConnectorPayloadIdentity({
+      ...request,
+      operation: {
+        ...request.operation,
+        protectedInput: { destination: { ...destination, variable }, value },
+      },
+    });
+  }
+  expect(identity("first-value")).toBe(identity("different-value"));
+  expect(identity("first-value", "OTHER")).not.toBe(identity("first-value"));
+  expect(identity("first-value").includes("first-value")).toBe(false);
 });

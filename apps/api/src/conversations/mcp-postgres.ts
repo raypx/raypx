@@ -39,6 +39,7 @@ export function createMcpServersRepository(db: Database): McpServersRepository {
       name: row.name,
       transport: "http" as const,
       url: row.url,
+      perCallSecretHeader: row.perCallSecretHeader,
       hasCredentials: row.hasCredentials,
       secretId: row.secretId,
       availability:
@@ -87,6 +88,7 @@ export function createMcpServersRepository(db: Database): McpServersRepository {
     return {
       name: input.name,
       url: input.url,
+      perCallSecretHeader: input.perCallSecretHeader ?? null,
       availability: input.availability.mode,
     };
   }

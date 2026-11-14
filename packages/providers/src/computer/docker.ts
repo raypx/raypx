@@ -135,7 +135,7 @@ export function createDockerComputerProvider(options: {
     stop: (ref) => view(ref, "stop"),
     destroy: (ref) => view(ref, "destroy"),
     async execute(ref, input) {
-      const command = commandSchema.parse(input);
+      const { protectedInput: _protectedInput, ...command } = commandSchema.parse(input);
       const executionId = crypto.randomUUID();
       const response = await call(ref, "exec", { executionId, command });
       const reader = response.body?.getReader();

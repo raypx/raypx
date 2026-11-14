@@ -72,6 +72,7 @@ function fixture() {
         name: input.name,
         transport: "http",
         url: input.url,
+        perCallSecretHeader: input.perCallSecretHeader ?? null,
         availability: input.availability,
         hasCredentials,
         createdAt: at,
@@ -220,6 +221,74 @@ it("rechecks availability and endpoint fingerprints before a pinned call", async
   });
   await expect(
     f.service.call(scope(), agent, "run", pin!, "read_report", {}, new AbortController().signal),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(f.transport.callTool).not.toHaveBeenCalled();
+});
+
+it("never persists or retains a one-call declared header and revalidates its fingerprint", async () => {
+  const f = fixture();
+  const selected = scope();
+  const agent = agentIdSchema.parse("agent");
+  const signal = new AbortController().signal;
+  const server = await f.service.create("owner", {
+    ...configuration,
+    perCallSecretHeader: "x-call-key",
+  });
+  await f.service.setEnabled(selected, agent, [server.id]);
+  const [pin] = await f.service.catalog(selected, agent, "run", signal);
+  const value = crypto.randomUUID();
+  vi.mocked(f.transport.callTool).mockResolvedValue({
+    content: Buffer.from(value).toString("base64"),
+    isError: false,
+    truncated: false,
+  });
+  const result = await f.service.call(selected, agent, "run", pin!, "read_report", {}, signal, {
+    name: "x-call-key",
+    value,
+  });
+  expect(result.content).toBe("[protected]");
+  expect(
+    JSON.stringify([f.rows, [...f.sealed.values()], f.service.protectedValues()]).includes(value),
+  ).toBe(false);
+  await f.service.call(selected, agent, "run", pin!, "read_report", {}, signal);
+  expect(vi.mocked(f.transport.callTool).mock.calls.at(-1)?.[0].headers).not.toHaveProperty(
+    "x-call-key",
+  );
+  await f.service.update("owner", server.id, {
+    ...configuration,
+    perCallSecretHeader: "x-other-key",
+  });
+  await expect(
+    f.service.call(selected, agent, "run", pin!, "read_report", {}, signal, {
+      name: "x-call-key",
+      value,
+    }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+});
+
+it("refuses a destination changed between pin validation and single-call dispatch", async () => {
+  const f = fixture();
+  const selected = scope();
+  const agent = agentIdSchema.parse("agent");
+  const signal = new AbortController().signal;
+  const server = await f.service.create("owner", {
+    ...configuration,
+    perCallSecretHeader: "x-call-key",
+  });
+  await f.service.setEnabled(selected, agent, [server.id]);
+  const [pin] = await f.service.catalog(selected, agent, "run", signal);
+  const list = f.repository.list;
+  let reads = 0;
+  vi.spyOn(f.repository, "list").mockImplementation(async (...args) => {
+    reads++;
+    if (reads === 2) f.rows.get(server.id)!.url = "https://changed.example.test/mcp";
+    return list(...args);
+  });
+  await expect(
+    f.service.call(selected, agent, "run", pin!, "read_report", {}, signal, {
+      name: "x-call-key",
+      value: "single-call-test-value",
+    }),
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
   expect(f.transport.callTool).not.toHaveBeenCalled();
 });

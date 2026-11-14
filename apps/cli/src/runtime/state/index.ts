@@ -18,12 +18,17 @@ export function profilePath(options: { dataDir?: string; profile?: string } = {}
         : join(process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"), "raypx"));
   return resolve(base, "profiles", profile);
 }
-export function acquireLock(directory: string, name: string): (() => void) | null {
-  if (!/^[a-zA-Z0-9_-]+$/.test(name))
+export function acquireLock(directory: string, name: string, waitMs = 0): (() => void) | null {
+  if (
+    !/^[a-zA-Z0-9_-]+$/.test(name) ||
+    !Number.isSafeInteger(waitMs) ||
+    waitMs < 0 ||
+    waitMs > 1000
+  )
     throw new LocalError("INVALID_LOCK", "Invalid lock identifier");
   const db = new Database(join(directory, `${name}.lock.sqlite`), { create: true });
   try {
-    db.exec("PRAGMA busy_timeout=0; BEGIN IMMEDIATE;");
+    db.exec(`PRAGMA busy_timeout=${waitMs}; BEGIN IMMEDIATE;`);
   } catch {
     db.close();
     return null;

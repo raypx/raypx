@@ -1,3 +1,4 @@
+import { scrubProtectedValue } from "@raypx/core/protected-input";
 import type { ProtectedInputAnswer, ProtectedInputRequest } from "@raypx/core/protected-input";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { ExecutionRun } from "./conversations.js";
@@ -43,16 +44,5 @@ export interface ProtectedInputsService {
   ): Promise<string>;
 }
 
-/** Handles exact raw and JSON-escaped echoes, including nested JSON tool content. */
-export function scrubProtectedOutput(output: string, value: string): string {
-  const variants = new Set([value]);
-  let encoded = value;
-  for (let depth = 0; depth < 5; depth++) {
-    encoded = JSON.stringify(encoded).slice(1, -1);
-    variants.add(encoded);
-  }
-  let result = output;
-  for (const secret of [...variants].sort((a, b) => b.length - a.length))
-    result = result.replaceAll(secret, "[protected]");
-  return result;
-}
+/** Scrub before any durable or returned output boundary. */
+export const scrubProtectedOutput = scrubProtectedValue;

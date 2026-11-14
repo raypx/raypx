@@ -1128,7 +1128,7 @@ it.each(["en", "zh"] as const)(
     const row = await screen.findByRole("button", { name });
     expect(row).toHaveAttribute("title", name);
     expect(within(row).getByText(name)).toHaveClass("truncate");
-    const target = screen.getByRole("combobox", {
+    const target = await screen.findByRole("combobox", {
       name: catalogs[language].agents.workspaceHome.target,
     });
     expect(target).toHaveAttribute("title", name);

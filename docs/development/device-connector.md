@@ -159,3 +159,11 @@ bun run test backends --database-url postgres://raypx@127.0.0.1:55439/raypx_next
 The browser journey uses the real backend/approval path and a nonexecuting fake
 connector. It cannot establish a native prompt or real filesystem effect. Keep
 its evidence separate from the actual daemon test and packaged native acceptance.
+
+Protected command input requires connector protocol 2. Version 1 frames and stored
+credentials are rejected; use a fresh profile and pair again. A protected frame
+carries environment/stdin values only in memory. The destination joins receipt
+identity; the value and its digest do not. Output is scrubbed before local outbox
+or server event storage, including common encodings on a best-effort basis.
+See [protected input](../architecture/protected-input.md). Existing native grants,
+member ownership, approvals and unknown-outcome rules still apply.

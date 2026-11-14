@@ -147,9 +147,19 @@ export function createDeviceComputerProvider(
       check(actual);
       await transport.validate();
       const command = commandSchema.parse(input);
+      const { protectedInput, ...ordinary } = command;
+      if (protectedInput?.destination.kind === "environment")
+        delete ordinary.environment[protectedInput.destination.variable];
+      if (protectedInput?.destination.kind === "stdin") delete ordinary.stdin;
       const controller = new AbortController();
       const events = await transport.request(
-        { ...command, cwd: workspacePath(command.cwd) || ".", kind: "execute", approved: true },
+        {
+          ...ordinary,
+          ...(protectedInput ? { protectedInput } : {}),
+          cwd: workspacePath(command.cwd) || ".",
+          kind: "execute",
+          approved: true,
+        },
         controller.signal,
       );
       return {

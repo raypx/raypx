@@ -60,3 +60,43 @@ it("uses a native masked input, clears backgrounded values and never renders a s
   });
   await view.unmount();
 });
+
+it("clears both native basic fields on background and sends them only as protected input", async () => {
+  const basic = {
+    ...request,
+    input: { ...request.input, destination: { kind: "http-basic" as const } },
+  };
+  const answer = vi.fn(async () => ({ ...basic, state: "answered" as const }));
+  const view = await renderNative(
+    <ProtectedInputs
+      port={{ pending: async () => [basic], answer }}
+      spaceId={request.spaceId}
+      conversationId={request.conversationId}
+    />,
+  );
+  const username = findByLabel(view.root, "Username");
+  const password = findByLabel(view.root, "Protected input: Access token");
+  expect(username.props.secureTextEntry).toBe(true);
+  expect(password.props.secureTextEntry).toBe(true);
+  await changeText(username, "member-one");
+  await changeText(password, "password-one");
+  await act(async () => emitAppState("background"));
+  await press(findByLabel(view.root, "Supply once"));
+  expect(answer).not.toHaveBeenCalled();
+  await act(async () => emitAppState("active"));
+  await changeText(username, "invalid:username");
+  await changeText(password, "password-two");
+  await press(findByLabel(view.root, "Supply once"));
+  expect(answer).not.toHaveBeenCalled();
+  expect(textContent(view.root)).toContain("Use a username without a colon");
+  await changeText(username, "member-two");
+  await changeText(password, "password-two");
+  await press(findByLabel(view.root, "Supply once"));
+  expect(answer).toHaveBeenCalledWith({
+    spaceId: request.spaceId,
+    requestId: request.id,
+    answer: { decision: "answer", value: "member-two:password-two" },
+  });
+  expect(textContent(view.root).includes("password-two")).toBe(false);
+  await view.unmount();
+});

@@ -36,7 +36,7 @@ it("routes a fenced device command and revocation through the real private Redis
     connectionOwner: ownerBroker.nodeId,
   };
   const credential = {
-    protocolVersion: 1 as const,
+    protocolVersion: 2 as const,
     deviceId,
     deviceName: "Fixture machine",
     accountId: "member",
@@ -99,7 +99,7 @@ it("routes a fenced device command and revocation through the real private Redis
   await owner.open("peer", credential.credential, peer);
   await owner.receive(
     "peer",
-    JSON.stringify({ type: "hello", protocolVersion: 1, deviceId, cursor: 0 }),
+    JSON.stringify({ type: "hello", protocolVersion: 2, deviceId, cursor: 0 }),
   );
   await owner.receive(
     "peer",

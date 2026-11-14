@@ -1,12 +1,30 @@
 # Protected input
 
-An Agent can request a named value on one sandbox command or one registered HTTP
-operation. The request contains a name, purpose and destination, never a value.
-For commands the destination is an explicit environment variable. For HTTP it is
-a bearer credential sent only to the registered origin. The member reviews the
-tool's ordinary approval first; supplying input grants no permission and creates
-no Allow rule. Auto review cannot answer an input request or review a protected
-operation. Existing exact Allow, Block and account modes still govern the tool.
+An Agent requests a named value for one operation using metadata only. The
+initiating current member supplies the value in a separate masked form after the
+ordinary tool approval. Input grants no permission or Allow rule. Auto never
+supplies input or reviews a protected operation; exact Allow, Block and account
+modes still independently govern the tool.
+
+| Destination    | Delivery                                                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `environment`  | One named environment variable on one sandbox or own-device command                                                        |
+| `stdin`        | UTF-8 standard input followed by EOF on one sandbox or own-device command                                                  |
+| `http-bearer`  | Authorization bearer credential for one registered OpenAPI call                                                            |
+| `http-api-key` | One named header or query parameter for one registered OpenAPI call                                                        |
+| `http-basic`   | Masked username and password for one registered OpenAPI call                                                               |
+| `mcp-header`   | One header value for one remote tool invocation, only when the server definition declares that exact `perCallSecretHeader` |
+
+HTTP overrides replace the stored credential for that call and never update it.
+The API key query is injected after schema validation and origin/path admission;
+it never enters model arguments or endpoint metadata. Routing, framing, cookie
+and protocol-control headers are refused. Basic fields travel in the encrypted
+answer as `username:password`; the username cannot contain a colon. The combined
+input is at most 4096 characters. Header credentials reject CR/LF/NUL. MCP's
+header declaration is public configuration, frozen in its catalog and fingerprint;
+changing it invalidates the pin. The value is call-local, including that call's
+HTTP initialization/session requests to the same server, and absent from discovery,
+subsequent invocations and the active stored-credential catalog.
 
 `protectedInputs.pending/answer` are session-authorized, Space-scoped procedures.
 Only the initiating member can read or answer the request, after fresh membership
@@ -50,9 +68,10 @@ The value never joins prepared arguments, approval arguments, tool catalogs,
 conversation messages/events, checkpoints, activity, effects, diagnostics or model
 history. Command stdout and stderr are accumulated within the existing combined
 byte budget and scrubbed before serialization, including exact echoes split
-across output chunks. A final guard handles exact raw and JSON-escaped echoes.
-Provider errors become safe codes. HTTP adapters refuse credential echoes and
-never retain the one-call override in their active credential catalog.
+across output chunks. A final guard handles exact raw and nested JSON-escaped echoes. Before output
+truncation, HTTP/MCP adapters scrub the supplied value; ordinary stored-credential
+echo refusal remains in place. Provider errors become safe codes. Basic scrubbing
+covers the combined credential and each individual field.
 
 Web and Desktop share a dedicated uncontrolled password form. Native Mobile uses
 a secure text field and a private ref. The shared controller holds metadata only.
@@ -61,27 +80,55 @@ submissions require refreshing authoritative state. They never enter drafts,
 storage, query caches or clipboard controls. English and Chinese labels include
 the destination, expiry, privacy disclosure and untrusted provenance.
 
-This is exact-value output scrubbing, not general information-flow isolation.
-An authorized command can use the value with its OS permissions; transformations,
-encoded derivatives and deliberate external disclosure cannot be inferred by the
-scrubber. Normal tool approval and the Computer boundary remain necessary.
+Scrubbing also covers common UTF-8 base64/base64url (padded and unpadded),
+lower/uppercase hex, percent encoding and form URL encoding, plus up to five JSON
+escaping layers. This is best effort, not information-flow isolation. Arbitrary
+transformations, partial values, line-wrapped encodings, other character sets and
+deliberate external disclosure cannot be inferred. An authorized command retains
+its OS permissions; an HTTP/MCP server necessarily receives the credential and can
+persist or disclose it. Normal approval and destination review remain necessary.
 
-Conservative unsupported destinations: device commands journal their payloads;
-file writes deliberately persist contents; generic MCP arguments have arbitrary
-server persistence and echo behavior. These paths do not accept protected input.
-Standard input, reusable values, browser sign-in injection and protected graphical
-typing are not implemented. A sandbox command receives only its explicit
-per-command environment; this adds no backend-host execution.
+## Device delivery and protocol
+
+Device connector protocol **2** rejects version 1 on pairing/connection and in
+stored credentials; there is no fallback or data import. A fresh private connector
+profile and pairing are required for the new protocol. The Run's current member
+must own the device and native-confirmed Space directory. Existing grant, member,
+Run, root requester and connection fences are checked independently of input.
+Device commands still require a member answer or exact executable Allow even in
+Never ask; Auto never approves them. Device initialization still refuses untrusted
+initial Run context; protected input adds no exception.
+
+The private execute frame carries a separate ephemeral `protectedInput` value.
+Its destination metadata, but never its value or a value digest, joins the
+canonical receipt identity. Ordinary environment/stdin fields exclude that value.
+Neither connector state nor the server operation journal stores the payload.
+The connector injects it immediately into the owned child process and scrubs raw,
+escaped and common encoded stdout/stderr **before** any outbox/receipt event or
+server journal write, retaining a bounded tail across output chunks. Receipts and
+ACK/reconnect semantics remain durable; an accepted unknown command never replays.
+A retry cannot resupply the consumed value. Private broker routing is transient.
+Connector-state writers wait at most one second for a competing local writer;
+contention beyond that bound still fails closed.
+
+File-content input remains unavailable because writing it deliberately persists
+it. Graphical/keyboard injection remains unavailable because the screen and target
+application can retain or disclose it. Generic MCP arguments, reusable values and
+browser sign-in injection are unsupported. Only the explicitly declared per-call
+MCP header is supported. A sandbox command gains no backend-host execution.
 
 ## Acceptance
 
-Source tests cover masking, lifecycle controls, clearing and exact/escaped echo
-scrubbing. PostgreSQL/API acceptance exercises encryption, binding, authorization,
+Source tests cover masking, lifecycle controls, both basic fields clearing, raw,
+escaped and common encoded echoes, declared-header binding and protocol refusal. PostgreSQL/API acceptance exercises encryption, binding, authorization,
 expiry, decline, Stop, fenced single consumption and executor restart. Its full
 tool-loop fixture sweeps events, checkpoints, activity, effects, safe diagnostics
-and the next model transcript for the generated exact value. Shared browser
-journeys exercise both renderers with traces, video and automatic screenshots
-disabled around input. An opt-in PostgreSQL case runs the command through a real
-private supervisor with `RAYPX_TEST_PROTECTED_DOCKER=1`. Results and unrun platform
+and the next model transcript for raw and common encoded values across the command,
+HTTP and MCP destinations. Actual CLI-to-API acceptance additionally sweeps device
+state/outbox, server connector journals and the model transcript fixture for both
+environment and stdin delivery. Shared browser journeys exercise every supported destination on both renderers with traces, video and automatic screenshots
+disabled around input. Opt-in PostgreSQL cases run environment and stdin delivery through a real
+private supervisor with `RAYPX_TEST_PROTECTED_DOCKER=1`. Provider conformance also
+checks cancellation while a child leaves stdin unread. Results and unrun platform
 limits are recorded separately; these tests establish no packaged WebView or
 native-device acceptance.

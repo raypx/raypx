@@ -312,7 +312,8 @@ without borrowing another member's connection. Member model selection and shared
 Space ownership do not grant reviewer configuration. No optional Space reviewer
 model choice is exposed. See [automatic review](approvals.md#automatic-review).
 
-Protected input supplies one sandbox command environment or one HTTP bearer
-credential without entering model context. Normal approval remains independent;
-remote MCP, device and file destinations are unsupported. See
+Protected input supplies one sandbox/own-device command environment or stdin,
+one-call HTTP bearer/API-key/basic credentials or a declared per-call remote tool
+header without entering model context. Normal approval remains independent;
+file-content and graphical destinations remain unavailable. See
 [request lifecycle and disclosure boundary](protected-input.md).

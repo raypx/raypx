@@ -10,6 +10,13 @@ export function browserOpenApiFixture() {
         info: { title: "Fixture inventory", version: "1.0.0" },
         servers: [{ url: `${url.origin}${basePath}` }],
         paths: {
+          "/protected": {
+            post: {
+              operationId: "protectedCall",
+              summary: "Authenticate once",
+              responses: { "200": { description: "Authenticated" } },
+            },
+          },
           "/items/{id}": {
             get: {
               operationId: "getItem",
@@ -43,6 +50,17 @@ export function browserOpenApiFixture() {
     }
     if (request.method === "HEAD" && url.pathname === basePath)
       return new Response(null, { status: 204 });
+    if (url.pathname === `${basePath}/protected` && request.method === "POST") {
+      const authorization = request.headers.get("authorization");
+      const value =
+        request.headers.get("x-call-key") ??
+        url.searchParams.get("api_key") ??
+        (authorization?.startsWith("Basic ")
+          ? Buffer.from(authorization.slice(6), "base64").toString()
+          : authorization?.replace(/^Bearer /, ""));
+      if (!value) return new Response(null, { status: 401 });
+      return Response.json({ delivered: true, encodedEcho: Buffer.from(value).toString("base64") });
+    }
     if (request.headers.get("authorization") !== "Bearer fixture-api-credential")
       return new Response(null, { status: 401 });
     if (request.method === "GET" && url.pathname === `${basePath}/items/fixture`)

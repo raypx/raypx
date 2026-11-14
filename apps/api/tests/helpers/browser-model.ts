@@ -6,9 +6,14 @@ import { createConnectionTransport } from "../../src/conversations/connection-tr
 
 /** An explicit completion gate lets browsers inspect streamed text before commit. */
 export function browserModelFixture() {
+  const transcripts = new Map<string, string[]>();
   const completions = new Map<() => void, { conversationId: string | undefined; group: boolean }>();
   const resolve = async (completeImmediately = false, run?: Run) => ({
     stream(input: ModelTurn, signal: AbortSignal) {
+      if (run) {
+        const previous = transcripts.get(run.conversationId) ?? [];
+        transcripts.set(run.conversationId, [...previous.slice(-15), JSON.stringify(input)]);
+      }
       const stream = createAssistantMessageEventStream();
       let text = "Fixture reply";
       function message(stopReason: "stop" | "aborted" = "stop"): AssistantMessage {
@@ -83,10 +88,72 @@ export function browserModelFixture() {
         stream.end(request);
         return stream;
       }
+      const protectedKind = lastMessage?.text.startsWith("Fixture protected destination ")
+        ? lastMessage.text.slice("Fixture protected destination ".length)
+        : null;
+      if (protectedKind && results.length === 0) {
+        const destinations = {
+          environment: { kind: "environment", variable: "PROTECTED_TOKEN" },
+          stdin: { kind: "stdin" },
+          bearer: { kind: "http-bearer" },
+          header: { kind: "http-api-key", in: "header", name: "x-call-key" },
+          query: { kind: "http-api-key", in: "query", name: "api_key" },
+          basic: { kind: "http-basic" },
+          mcp: { kind: "mcp-header", name: "x-call-key" },
+          "device-environment": { kind: "environment", variable: "PROTECTED_TOKEN" },
+          "device-stdin": { kind: "stdin" },
+        } as const;
+        const destination = destinations[protectedKind as keyof typeof destinations];
+        const remote =
+          protectedKind === "mcp"
+            ? input.tools?.find((tool) => tool.name.endsWith("__fixture_echo"))
+            : input.tools?.find((tool) => tool.name.endsWith("__protectedCall"));
+        const command = ["environment", "stdin", "device-environment", "device-stdin"].includes(
+          protectedKind,
+        );
+        let operationArguments: ToolCall["arguments"] = {};
+        if (command)
+          operationArguments = { executable: "echo", argv: ["Fixture device command"], cwd: "." };
+        if (protectedKind === "environment")
+          operationArguments = { executable: "printenv", argv: ["PROTECTED_TOKEN"], cwd: "." };
+        if (protectedKind === "stdin")
+          operationArguments = { executable: "cat", argv: [], cwd: "." };
+        if (protectedKind === "mcp") operationArguments = { text: "Authenticate once" };
+        if (destination && (command || remote))
+          return toolCall(
+            command ? "computer_run_command" : remote!.name,
+            "protected-destination",
+            {
+              ...operationArguments,
+              protectedInput: {
+                name: "Single-call credential",
+                purpose: "Authenticate this operation",
+                destination,
+              },
+            },
+          );
+      }
+      const realProtected = lastMessage?.text.startsWith("Fixture real device protected ")
+        ? lastMessage.text.slice("Fixture real device protected ".length)
+        : null;
+      if (realProtected && results.length === 0)
+        return toolCall("computer_run_command", "real-protected-device", {
+          executable: realProtected === "stdin" ? "/bin/cat" : "/bin/sh",
+          argv: realProtected === "stdin" ? [] : ["-c", 'printf "%s" "$PROTECTED_TOKEN"'],
+          cwd: ".",
+          protectedInput: {
+            name: "Device credential",
+            purpose: "Authenticate this command once",
+            destination:
+              realProtected === "stdin"
+                ? { kind: "stdin" }
+                : { kind: "environment", variable: "PROTECTED_TOKEN" },
+          },
+        });
       if (requestsProtected && !results.some((entry) => entry.toolName === "computer_run_command"))
         return toolCall("computer_run_command", "browser-protected-command", {
-          executable: "echo",
-          argv: ["Protected operation complete"],
+          executable: "printenv",
+          argv: ["PROTECTED_TOKEN"],
           cwd: ".",
           protectedInput: {
             name: "Access token",
@@ -235,7 +302,9 @@ export function browserModelFixture() {
         requestsAutoUntrusted ||
         requestsDeviceCommand ||
         requestsRealDevice ||
-        requestsProtected
+        requestsProtected ||
+        protectedKind !== null ||
+        realProtected !== null
       )
         queueMicrotask(complete);
       return stream;
@@ -267,6 +336,7 @@ export function browserModelFixture() {
   };
   return {
     models,
+    transcript: (conversationId: string) => transcripts.get(conversationId) ?? [],
     connectionTransport: {
       ...createConnectionTransport(),
       resolve: () => resolve(),

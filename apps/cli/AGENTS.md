@@ -28,3 +28,5 @@ runtime: format-2 payload is executable, runtime.json and legal files. Reject
 unsupported inventories. Consumers verify RAYPX_CLI_PAYLOAD and never rebuild or
 rewrite sealed files. Run check/test and prepared-payload smoke; real connector
 PostgreSQL, Go host and packaged native gates remain separate.
+
+Protocol 2 protected command environment/stdin values remain process-local. Scrub raw/escaped/common encoded echoes before emit touches the outbox. Receipt hashes include destination metadata only; unknown operations never replay. Connector-state writers wait at most one second for local contention.

@@ -231,7 +231,9 @@ it("resumes a claimed Space deletion across worker restarts and an interrupted o
       .where(eq(spaces.id, scope.spaceId));
     await tx
       .insert(spaceDeletionJobs)
-      .values({ spaceId: scope.spaceId, requestedByAccountId: accountId });
+      // Keep this job inside the worker's bounded batch even after browser
+      // acceptance has left many independently owned deletion jobs in this DB.
+      .values({ spaceId: scope.spaceId, requestedByAccountId: accountId, claimedAt: new Date(0) });
   });
   await expect(access.resolve(accountId, scope.spaceId)).rejects.toThrow("Space record not found");
   const onError = vi.fn();

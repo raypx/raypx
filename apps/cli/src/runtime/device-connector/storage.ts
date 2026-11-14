@@ -123,7 +123,7 @@ export class ConnectorStorage {
     }
   }
   mutate<T>(change: (state: ConnectorState) => T): T {
-    const release = acquireLock(this.directory, "connector-state");
+    const release = acquireLock(this.directory, "connector-state", 1000);
     if (!release)
       throw new LocalError("CONNECTOR_BUSY", "Another device connector operation is running");
     try {

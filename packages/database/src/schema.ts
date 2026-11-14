@@ -2179,6 +2179,7 @@ export const mcpServers = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     url: text("url").notNull(),
+    perCallSecretHeader: text("per_call_secret_header"),
     availability: text("availability", { enum: ["all", "selected"] }).notNull(),
     secretId: text("secret_id").notNull(),
     hasCredentials: boolean("has_credentials").notNull().default(false),

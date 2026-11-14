@@ -1,3 +1,4 @@
+import { protectedHeaderSchema, scrubProtectedValue } from "@raypx/core/protected-input";
 import type { AgentId } from "@raypx/core/agents";
 import {
   openApiCredentialSchema,
@@ -327,7 +328,10 @@ export function createOpenApiServers(
       operationId: string,
       args: Record<string, unknown>,
       signal: AbortSignal,
-      protectedCredential?: OpenApiCredential,
+      protectedCredential?:
+        | OpenApiCredential
+        | { type: "query"; name: string; value: string }
+        | { type: "basic"; value: string },
     ) {
       await this.checkPinned(scope, agentId, [pin], runId);
       const row = await repository.get(scope, pin.serverId);
@@ -336,11 +340,42 @@ export function createOpenApiServers(
           item.operationId === operationId && row.selectedOperationIds.includes(operationId),
       );
       if (!operation) throw new OpenApiServerError("NOT_FOUND");
-      const suppliedHeaders = protectedCredential
-        ? credentialHeaders(protectedCredential)
-        : await headers(scope, row, runId);
+      let suppliedHeaders: Record<string, string>;
+      let query: { name: string; value: string } | undefined;
+      const values: string[] = [];
+      if (protectedCredential?.type === "query") {
+        if (
+          !protectedHeaderSchema.safeParse(protectedCredential.name).success ||
+          /[\r\n\0]/.test(protectedCredential.value)
+        )
+          throw new OpenApiServerError("CREDENTIALS_REJECTED");
+        suppliedHeaders = {};
+        query = { name: protectedCredential.name, value: protectedCredential.value };
+        values.push(protectedCredential.value);
+      } else if (protectedCredential?.type === "basic") {
+        const separator = protectedCredential.value.indexOf(":");
+        if (separator < 1 || /[\r\n\0]/.test(protectedCredential.value))
+          throw new OpenApiServerError("CREDENTIALS_REJECTED");
+        suppliedHeaders = {
+          authorization: `Basic ${Buffer.from(protectedCredential.value).toString("base64")}`,
+        };
+        values.push(
+          protectedCredential.value,
+          protectedCredential.value.slice(0, separator),
+          protectedCredential.value.slice(separator + 1),
+        );
+      } else
+        suppliedHeaders = protectedCredential
+          ? credentialHeaders(protectedCredential)
+          : await headers(scope, row, runId);
+      if (protectedCredential && "value" in protectedCredential)
+        values.push(protectedCredential.value);
       guard(args, secrets(suppliedHeaders));
-      const result = await transport.call(row.url, suppliedHeaders, operation, args, signal);
+      const result = await transport.call(row.url, suppliedHeaders, operation, args, signal, {
+        ...(query ? { query } : {}),
+        protectedValues: values,
+      });
+      for (const value of values) result.content = scrubProtectedValue(result.content, value);
       guard(result, secrets(suppliedHeaders));
       return result;
     },

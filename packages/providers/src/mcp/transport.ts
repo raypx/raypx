@@ -1,3 +1,4 @@
+import { scrubProtectedValue } from "@raypx/core/protected-input";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { z } from "zod";
@@ -278,8 +279,18 @@ export function createMcpTransport(options: McpTransportOptions = {}): McpTransp
           { method: "tools/call", params: { name, arguments: args } },
           { signal: requestSignal },
         );
-        rejectsCredentialEcho(result, connection.headers);
-        const content = JSON.stringify(result.content ?? []);
+        const safeResult =
+          connection.protectedValue === undefined
+            ? result
+            : (JSON.parse(
+                scrubProtectedValue(JSON.stringify(result), connection.protectedValue),
+              ) as typeof result);
+        rejectsCredentialEcho(safeResult, connection.headers);
+        const raw = JSON.stringify(safeResult.content ?? []);
+        const content =
+          connection.protectedValue === undefined
+            ? raw
+            : scrubProtectedValue(raw, connection.protectedValue);
         const truncated = content.length > RESULT_CHARACTERS;
         return {
           content: content.slice(0, RESULT_CHARACTERS),

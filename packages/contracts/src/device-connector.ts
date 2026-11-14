@@ -1,7 +1,8 @@
+import { commandInputDestinationSchema } from "@raypx/core/protected-input";
 import { z } from "zod";
 
 /** This channel is separate from retained device Relay and private Desktop IPC. */
-export const DEVICE_CONNECTOR_VERSION = 1;
+export const DEVICE_CONNECTOR_VERSION = 2;
 export const DEVICE_CONNECTOR_MAX_FRAME_BYTES = 1_500_000;
 export const DEVICE_CONNECTOR_MAX_OUTPUT_BYTES = 1024 * 1024;
 export const DEVICE_CONNECTOR_PATHS = {
@@ -99,6 +100,22 @@ export const deviceConnectorOperationSchema = z.discriminatedUnion("kind", [
         .max(32_000)
         .refine((value) => !value.includes("\0")),
     ),
+    stdin: z
+      .string()
+      .max(4096)
+      .refine((value) => !value.includes("\0"))
+      .optional(),
+    /** Ephemeral delivery. Excluded from receipts/identity; scrub before journaled output. */
+    protectedInput: z
+      .strictObject({
+        destination: commandInputDestinationSchema,
+        value: z
+          .string()
+          .min(1)
+          .max(4096)
+          .refine((value) => !value.includes("\0")),
+      })
+      .optional(),
     outputBudget: z.number().int().min(0).max(DEVICE_CONNECTOR_MAX_OUTPUT_BYTES),
     /** Server authorizes the exact operation after its durable approval/effect admission. */
     approved: z.literal(true),
@@ -247,7 +264,12 @@ export function deviceConnectorPayloadIdentity(
       request.grantId,
       request.grantRevision,
       request.runId,
-      request.operation,
+      request.operation.kind === "execute" && request.operation.protectedInput
+        ? {
+            ...request.operation,
+            protectedInput: { destination: request.operation.protectedInput.destination },
+          }
+        : request.operation,
     ]),
   );
 }

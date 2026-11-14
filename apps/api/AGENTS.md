@@ -36,3 +36,5 @@ test:redis require explicit disposable services and run serially. The owned
 workspace-server browser fixture is test-only; real device-daemon acceptance uses
 private homes and an explicit loopback test database. Run check/test, then the
 selected backend/browser gates. Packaged native/provider acceptance is separate.
+
+Nitro KV storage is an explicit runtime dependency for bundled migration/assets; cold builds must never auto-install dependencies.

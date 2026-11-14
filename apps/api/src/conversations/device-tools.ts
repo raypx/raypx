@@ -33,9 +33,9 @@ export function withDeviceComputerTools(
   const forRun = (run: ExecutionRun) => selected.get(attempt(run))?.tools ?? base;
   return {
     executeProtected(scope, run, call, signal, value) {
-      if (selected.has(attempt(run)) || !base.executeProtected)
-        throw new ComputerToolsError("INVALID_ARGUMENTS");
-      return base.executeProtected(scope, run, call, signal, value);
+      const tools = forRun(run);
+      if (!tools.executeProtected) throw new ComputerToolsError("INVALID_ARGUMENTS");
+      return tools.executeProtected(scope, run, call, signal, value);
     },
     definitions: (run) => (run ? forRun(run).definitions(run) : base.definitions()),
     guardInput: (call) => base.guardInput?.(call),
@@ -126,6 +126,10 @@ export function withDeviceComputerTools(
       const native = createComputerTools(lifecycle, provider, secrets, pin, queue);
       const tools: ComputerTools = {
         ...native,
+        executeProtected(callScope, execution, call, callSignal, value) {
+          callId = call.id;
+          return native.executeProtected!(callScope, execution, call, callSignal, value);
+        },
         execute(callScope, execution, call, callSignal) {
           callId = call.id;
           return native.execute(callScope, execution, call, callSignal);
@@ -138,7 +142,6 @@ export function withDeviceComputerTools(
       const prepared = (run ? forRun(run) : base).prepare(call, run);
       const grant = run ? selected.get(attempt(run))?.grant : undefined;
       if (!grant) return prepared;
-      if (prepared.protectedInput) throw new ComputerToolsError("INVALID_ARGUMENTS");
       let command: string | undefined;
       if (prepared.name === "computer_run_command") {
         command = JSON.stringify({

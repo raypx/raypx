@@ -1,3 +1,4 @@
+import { protectedHeaderSchema } from "./protected-input.js";
 import { z } from "zod";
 import { agentIdSchema } from "./agents.js";
 import { modelConnectionAvailabilitySchema } from "./model-connections.js";
@@ -8,6 +9,7 @@ const httpConfiguration = z.strictObject({
   name: z.string().trim().min(1).max(120),
   transport: z.enum(["http", "stdio"]).default("http"),
   url: z.string().min(1).max(2048),
+  perCallSecretHeader: protectedHeaderSchema.nullable().optional(),
   availability: modelConnectionAvailabilitySchema.default({ mode: "all" }),
 });
 // Recognize and refuse command configurations by transport before considering any
@@ -20,6 +22,7 @@ export const mcpServerConfigurationSchema = z.union([
       name: "Unsupported transport",
       transport: "stdio" as const,
       url: "stdio:unsupported",
+      perCallSecretHeader: null,
       availability: { mode: "all" as const },
     })),
   httpConfiguration,
@@ -34,6 +37,7 @@ export const mcpServerSchema = z.strictObject({
   name: z.string().min(1).max(120),
   transport: z.literal("http"),
   url: z.string().url().max(2048),
+  perCallSecretHeader: protectedHeaderSchema.nullable().optional(),
   availability: modelConnectionAvailabilitySchema,
   hasCredentials: z.boolean(),
   createdAt: z.iso.datetime(),

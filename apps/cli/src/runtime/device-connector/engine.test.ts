@@ -39,7 +39,7 @@ async function fixture() {
       deviceName: "Test device",
     };
     state.credential = {
-      protocolVersion: 1,
+      protocolVersion: 2,
       accountId: "owner",
       deviceId: "device",
       deviceName: "Test device",
@@ -187,4 +187,79 @@ describe("device operation admission and durable receipts", () => {
       "Native confirmation expired",
     );
   });
+});
+
+it.each(["environment", "stdin"] as const)(
+  "scrubs protected %s before the device journal and excludes the value from receipt hashes",
+  async (kind) => {
+    const { engine, storage, request, frames } = await fixture();
+    const value = `one-use-${crypto.randomUUID()}-中文 /+?`;
+    const executable = process.execPath;
+    const script = `const v = process.env.TOKEN ?? await new Response(Bun.stdin.stream()).text(); const b = Buffer.from(v); for (const x of [v,b.toString("base64"),b.toString("base64url"),b.toString("hex"),encodeURIComponent(v)]) { process.stdout.write(x.slice(0,3)); await Bun.sleep(1); process.stdout.write(x.slice(3)+"\\n"); }`;
+    const operation = request({
+      operation: {
+        kind: "execute",
+        executable,
+        argv: ["-e", script],
+        cwd: ".",
+        environment: {},
+        outputBudget: 32768,
+        approved: true,
+        protectedInput: {
+          destination: kind === "stdin" ? { kind } : { kind, variable: "TOKEN" },
+          value,
+        },
+      },
+    });
+    expect(deviceConnectorPayloadIdentity(operation).includes(value)).toBe(false);
+    await engine.request(operation);
+    expect(frames.at(-1)).toMatchObject({ type: "event", event: { kind: "exit", status: 0 } });
+    const decoded = frames
+      .flatMap((frame) =>
+        frame.type === "event" && (frame.event.kind === "stdout" || frame.event.kind === "stderr")
+          ? [Buffer.from(frame.event.bytes, "base64").toString()]
+          : [],
+      )
+      .join("");
+    const journal = await readFile(join(storage.directory, "connector.json"), "utf8");
+    for (const secret of [
+      value,
+      Buffer.from(value).toString("base64"),
+      Buffer.from(value).toString("base64url"),
+      Buffer.from(value).toString("hex"),
+      encodeURIComponent(value),
+    ]) {
+      expect(
+        [decoded, journal, JSON.stringify(storage.read())].every(
+          (surface) => !surface.includes(secret),
+        ),
+      ).toBe(true);
+    }
+    const count = frames.length;
+    await engine.request(operation);
+    expect(frames.length).toBe(count + 1);
+  },
+);
+
+it("serializes short competing connector-state writes without losing updates", async () => {
+  const { directory, storage } = await fixture();
+  const modulePath = new URL("./storage.ts", import.meta.url).href;
+  const script = `const { ConnectorStorage } = await import(${JSON.stringify(modulePath)}); const storage = new ConnectorStorage({dataDir: ${JSON.stringify("REPLACE_DATA")}}); for(let i=0;i<20;i++) storage.mutate(state => { state.runFences.counter = (state.runFences.counter ?? 0) + 1; });`;
+  const workers = Array.from({ length: 2 }, () =>
+    Bun.spawn(
+      [
+        process.execPath,
+        "--no-env-file",
+        "-e",
+        script.replace("REPLACE_DATA", join(directory, "data")),
+      ],
+      {
+        stdout: "ignore",
+        stderr: "ignore",
+        env: { ...process.env, RAYPX_HOME: join(directory, "home") },
+      },
+    ),
+  );
+  expect(await Promise.all(workers.map((worker) => worker.exited))).toEqual([0, 0]);
+  expect(storage.read().runFences.counter).toBe(40);
 });

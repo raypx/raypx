@@ -576,11 +576,7 @@ export class ConversationRunner {
       } else {
         try {
           if (prepared.protectedInput) {
-            if (
-              !this.toolRuntime.protectedInputs ||
-              !this.toolRuntime.tools.executeProtected ||
-              prepared.device
-            )
+            if (!this.toolRuntime.protectedInputs || !this.toolRuntime.tools.executeProtected)
               throw new ComputerToolsError("INVALID_ARGUMENTS");
             const state = await this.toolRuntime.protectedInputs.wait(
               scope,

@@ -1,3 +1,14 @@
+import { connectDatabase } from "@raypx/database/connection";
+import {
+  conversationEvents,
+  conversationRunCheckpoints,
+  conversationEffects,
+  conversationToolCalls,
+  deviceConnectorOperations,
+  deviceConnectorEvents,
+  protectedInputRequests,
+} from "@raypx/database/schema";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -28,6 +39,7 @@ let serverOrigin: string;
 let processServer: Subprocess<"ignore", "pipe", "pipe"> | undefined;
 let logs = "";
 let drain: Promise<void> | undefined;
+let clientHeaders: Record<string, string>;
 let client: ReturnType<typeof createApiClient>;
 async function boundedText(stream: ReadableStream<Uint8Array>, maxBytes: number) {
   const chunks: Uint8Array[] = [];
@@ -117,7 +129,8 @@ beforeAll(async () => {
     .getSetCookie()
     .map((value) => value.split(";", 1)[0])
     .join("; ");
-  client = createApiClient({ baseUrl: serverOrigin, headers: { origin, cookie } });
+  clientHeaders = { origin, cookie };
+  client = createApiClient({ baseUrl: serverOrigin, headers: clientHeaders });
 }, 60_000);
 afterAll(async () => {
   try {
@@ -246,6 +259,109 @@ it.skipIf(process.platform === "win32")(
       .object({ running: z.literal(true), paired: z.literal(true) })
       .parse(await device("status"));
     expect(status.running).toBe(true);
+    // Both private delivery channels traverse the actual connector and its restricted journal.
+    for (const destination of ["environment", "stdin"]) {
+      const protectedAgent = await client.agents.create({
+        spaceId,
+        agent: {
+          name: "Protected device",
+          instructions: "Execute only the requested command",
+          model: { modelId: "browser-fixture" },
+        },
+      });
+      const protectedConversationId = protectedAgent.conversation.id;
+      await client.deviceComputers.select({
+        spaceId,
+        conversationId: protectedConversationId,
+        selection: { deviceId: paired.deviceId, grantId: granted.grantId },
+      });
+      const value = `device-protected-${crypto.randomUUID()}`;
+      await client.conversations.send({
+        spaceId,
+        conversationId: protectedConversationId,
+        message: {
+          idempotencyKey: crypto.randomUUID(),
+          text: `Fixture real device protected ${destination}`,
+        },
+      });
+      await expect
+        .poll(async () => (await client.approvals.pending({ spaceId })).length, { timeout: 20_000 })
+        .toBe(1);
+      expect(await client.protectedInputs.pending({ spaceId })).toHaveLength(0);
+      const [approval] = await client.approvals.pending({ spaceId });
+      await client.approvals.answer({ spaceId, requestId: approval!.id, decision: "approved" });
+      await expect
+        .poll(async () => (await client.protectedInputs.pending({ spaceId })).length, {
+          timeout: 20_000,
+        })
+        .toBe(1);
+      const [input] = await client.protectedInputs.pending({ spaceId });
+      await client.protectedInputs.answer({
+        spaceId,
+        requestId: input!.id,
+        answer: { decision: "answer", value },
+      });
+      await expect
+        .poll(
+          async () =>
+            (
+              await client.conversations.snapshot({
+                spaceId,
+                conversationId: protectedConversationId,
+              })
+            ).runs.find((run) => run.id === input!.runId)?.state,
+          { timeout: 20_000 },
+        )
+        .toBe("succeeded");
+      const db = connectDatabase(databaseUrl);
+      try {
+        const surfaces: unknown[] = [
+          logs,
+          await readFile(
+            join(dataDirectory, "profiles", "default", "device-connector", "connector.json"),
+            "utf8",
+          ),
+        ];
+        for (const table of [
+          conversationEvents,
+          conversationRunCheckpoints,
+          conversationEffects,
+          conversationToolCalls,
+          deviceConnectorOperations,
+          deviceConnectorEvents,
+          protectedInputRequests,
+        ])
+          surfaces.push(await db.db.select().from(table).where(eq(table.spaceId, spaceId)));
+        const transcript = await fetch(`${serverOrigin}/fixture/conversation/transcript`, {
+          method: "POST",
+          headers: { ...clientHeaders, "content-type": "application/json" },
+          body: JSON.stringify({ spaceId, conversationId: protectedConversationId }),
+        });
+        expect(transcript.status).toBe(200);
+        surfaces.push(await transcript.json());
+        const values = [
+          value,
+          Buffer.from(value).toString("base64"),
+          Buffer.from(value).toString("base64url"),
+          Buffer.from(value).toString("hex"),
+          encodeURIComponent(value),
+        ];
+        for (const surface of surfaces)
+          expect(values.some((variant) => JSON.stringify(surface).includes(variant))).toBe(false);
+        const rows = await db.db
+          .select()
+          .from(protectedInputRequests)
+          .where(eq(protectedInputRequests.id, input!.id));
+        expect(rows[0]).toMatchObject({
+          state: "consumed",
+          ciphertext: null,
+          wrappedDataKey: null,
+          keyId: null,
+        });
+      } finally {
+        await db.close();
+      }
+    }
     await client.deviceComputers.revoke({ spaceId, deviceId: paired.deviceId });
     await expect
       .poll(async () => z.object({ running: z.boolean() }).parse(await device("status")).running, {

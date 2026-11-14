@@ -13,6 +13,8 @@ export interface McpCallResult {
 export interface McpConnection {
   url: string;
   headers: McpHeaders;
+  /** Call-local only; never cataloged or persisted. */
+  protectedValue?: string;
 }
 export interface McpTransport {
   validate(this: void, url: string): void;

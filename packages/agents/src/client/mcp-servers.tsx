@@ -314,6 +314,21 @@ export function McpServerForm({
               />
             </Field>
             <Field>
+              <FieldLabel htmlFor={`${id}-per-call-header`}>
+                {t("protectedInput.secretHeader")}
+              </FieldLabel>
+              <Input
+                id={`${id}-per-call-header`}
+                autoComplete="off"
+                value={draft.perCallSecretHeader ?? ""}
+                maxLength={128}
+                disabled={pending}
+                onChange={(event) =>
+                  setDraft({ ...draft, perCallSecretHeader: event.target.value || null })
+                }
+              />
+            </Field>
+            <Field>
               <FieldLabel htmlFor={`${id}-headers`}>{t("mcp.headers")}</FieldLabel>
               <Textarea
                 ref={bindHeaderInput}

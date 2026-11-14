@@ -221,3 +221,5 @@ Recorded outcomes still replay. Initial untrusted recall is pinned before device
 admission, and an inherited team-computer pin never enters the device-only guard.
 
 Protected input is separate from approval. The runner waits durably before effect intent, then consumes and erases an encrypted envelope before dispatch. Canonical call hashes bind recovery. The shared metadata controller and masked form retain no values; Stop/terminal completion erase unused envelopes. Commands scrub exact echoes before serialization. Auto never reviews protected operations.
+
+Protected destinations include command environment/stdin, HTTP bearer/API-key/basic and declared remote tool headers. Two basic fields are masked and cleared together. Remote header declarations are credential-free configuration; protected values never enter observable drafts.

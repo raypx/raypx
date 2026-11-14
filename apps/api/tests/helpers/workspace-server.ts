@@ -354,13 +354,22 @@ const server = serve<SocketData>({
     if (
       path === "/events" ||
       path === "/fixture/conversation/complete" ||
-      path === "/fixture/conversation/history"
+      path === "/fixture/conversation/history" ||
+      path === "/fixture/conversation/transcript"
     ) {
       const origin = request.headers.get("origin");
       if (origin && !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
         return new Response(null, { status: 403 });
       const session = await readSession(request.headers);
       if (!session) return new Response(null, { status: 401 });
+      if (path === "/fixture/conversation/transcript") {
+        if (request.method !== "POST" || !accountEmails.includes(session.user.email))
+          return new Response(null, { status: 403 });
+        const input = (await request.json()) as { spaceId: string; conversationId: string };
+        const scope = await spaces.resolve(session.user.id, spaceIdSchema.parse(input.spaceId));
+        await conversationRepository.snapshot(scope, input.conversationId as ConversationId);
+        return Response.json(model.transcript(input.conversationId));
+      }
       if (path === "/fixture/conversation/history") {
         if (request.method !== "POST") return new Response(null, { status: 405 });
         if (!accountEmails.includes(session.user.email)) return new Response(null, { status: 403 });

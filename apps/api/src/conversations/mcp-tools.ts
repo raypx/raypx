@@ -1,3 +1,4 @@
+import { protectedInputSpecSchema, protectedHeaderSchema } from "@raypx/core/protected-input";
 import type { Tool, ToolCall } from "@raypx/ai";
 import {
   ComputerToolsError,
@@ -24,6 +25,7 @@ const catalogSchema = z
       serverId: z.string().uuid(),
       fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
       tools: z.array(savedTool).max(128),
+      perCallSecretHeader: protectedHeaderSchema.nullable().optional(),
     }),
   )
   .max(32)
@@ -37,6 +39,7 @@ interface Binding {
   serverId: string;
   fingerprint: string;
   remoteName: string;
+  perCallSecretHeader?: string | null;
   readOnly: boolean;
   definition: Tool;
 }
@@ -70,8 +73,28 @@ export function withMcpTools(
           serverId: server.serverId,
           fingerprint: server.fingerprint,
           remoteName: tool.name,
+          perCallSecretHeader: server.perCallSecretHeader ?? null,
           readOnly: tool.readOnly,
-          definition: { name, description: tool.description, parameters: tool.inputSchema },
+          definition: {
+            name,
+            description: `${tool.description}${server.perCallSecretHeader ? " Request protectedInput for the declared single-call secret header; never include its value in chat or arguments." : ""}`,
+            parameters: server.perCallSecretHeader
+              ? {
+                  ...tool.inputSchema,
+                  properties: {
+                    ...(tool.inputSchema.properties as object),
+                    protectedInput: z.toJSONSchema(
+                      protectedInputSpecSchema.extend({
+                        destination: z.strictObject({
+                          kind: z.literal("mcp-header"),
+                          name: z.literal(server.perCallSecretHeader),
+                        }),
+                      }),
+                    ),
+                  },
+                }
+              : tool.inputSchema,
+          },
         });
       }
     bindings.set(runId, map);
@@ -142,6 +165,18 @@ export function withMcpTools(
       )
         throw new ComputerToolsError("INVALID_ARGUMENTS");
       guard(call, "SECRET_INPUT");
+      const input =
+        call.arguments.protectedInput === undefined
+          ? undefined
+          : protectedInputSpecSchema.safeParse(call.arguments.protectedInput);
+      if (
+        input &&
+        (!input.success ||
+          input.data.destination.kind !== "mcp-header" ||
+          !binding.perCallSecretHeader ||
+          input.data.destination.name.toLowerCase() !== binding.perCallSecretHeader.toLowerCase())
+      )
+        throw new ComputerToolsError("INVALID_ARGUMENTS");
       return {
         id: call.id,
         name: call.name as PreparedComputerCall["name"],
@@ -150,10 +185,12 @@ export function withMcpTools(
         argumentSummary: `Remote tool ${binding.remoteName}`,
         changes: true,
         readOnlyAnnotated: binding.readOnly,
+        ...(input?.success ? { protectedInput: input.data } : {}),
       };
     },
     async execute(scope, run, call, signal) {
       if (!call.name.startsWith("mcp_")) return base.execute(scope, run, call, signal);
+      if (call.protectedInput) throw new ComputerToolsError("INVALID_ARGUMENTS");
       const binding = bindings.get(run.id)?.get(call.name);
       if (!binding) throw new ComputerToolsError("INVALID_TOOL");
       guard(call, "SECRET_INPUT");
@@ -197,6 +234,45 @@ export function withMcpTools(
             : "MCP_OPERATION_FAILED";
         return JSON.stringify({ source: "remote", untrusted: true, state: "failed", code });
       }
+    },
+    async executeProtected(scope, run, call, signal, value) {
+      if (!call.name.startsWith("mcp_")) {
+        if (!base.executeProtected) throw new ComputerToolsError("INVALID_TOOL");
+        return base.executeProtected(scope, run, call, signal, value);
+      }
+      const prepared = this.prepare(
+        {
+          type: "toolCall",
+          id: call.id,
+          name: call.name,
+          arguments: call.arguments as ToolCall["arguments"],
+        },
+        run,
+      );
+      const binding = bindings.get(run.id)?.get(call.name);
+      if (!binding || prepared.protectedInput?.destination.kind !== "mcp-header")
+        throw new ComputerToolsError("INVALID_ARGUMENTS");
+      const { protectedInput: _input, ...args } = call.arguments;
+      const result = await service.call(
+        scope,
+        run.agentId,
+        run.id,
+        binding,
+        binding.remoteName,
+        args,
+        signal,
+        { name: prepared.protectedInput.destination.name, value },
+      );
+      guard(result, "SECRET_OUTPUT");
+      const output = JSON.stringify({
+        source: "remote",
+        untrusted: true,
+        state: result.isError ? "failed" : "succeeded",
+        content: result.content,
+        truncated: result.truncated,
+      });
+      if (output.length > MAX_TOOL_RESULT) throw new ComputerToolsError("SECRET_OUTPUT");
+      return output;
     },
     release(run) {
       catalogs.delete(run.id);

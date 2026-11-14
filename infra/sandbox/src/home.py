@@ -139,7 +139,7 @@ def run(operation, value):
             return 137
         environment = {"HOME": HOME, "PATH": "/usr/local/bin:/usr/bin:/bin", **value["environment"]}
         try:
-            child = subprocess.Popen([value["executable"], *value["argv"]], env=environment, start_new_session=True)
+            child = subprocess.Popen([value["executable"], *value["argv"]], env=environment, start_new_session=True, stdin=subprocess.PIPE if "stdin" in value else subprocess.DEVNULL)
         except FileNotFoundError:
             return 127
         with open(pidfile, "x") as stream:
@@ -147,6 +147,13 @@ def run(operation, value):
         try:
             if os.path.exists(marker):
                 os.killpg(child.pid, signal.SIGKILL)
+            # Publish the PID before a pipe write can block, so cancellation can kill the child.
+            if child.stdin is not None:
+                try:
+                    child.stdin.write(value["stdin"].encode("utf-8"))
+                    child.stdin.close()
+                except BrokenPipeError:
+                    pass
             code = child.wait()
             return code if code >= 0 else 128 - code
         finally:

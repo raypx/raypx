@@ -19,3 +19,5 @@ domain records. Keep same-Space identifiers, bounded schemas and inferred types.
 Wire envelopes/cursors/protocol versions belong to Contracts. No tasks, activity,
 agent-runs, local/cloud jobs or account-memory public entries remain. Run check/test
 and contract consumer tests.
+
+/protected-input owns bounded destination schemas and pure UTF-8 encoding redaction shared by the executor, transports and connector. No platform globals are required.

@@ -13,3 +13,22 @@ it.each(["opaque-value", '中文\n"\\value', "a\tb\rc"])(
     }
   },
 );
+
+it.each(["value /+中文?=&", "x", "\ud800", 'quote"\\value'])(
+  "scrubs UTF-8 encodings before output is stored",
+  (value) => {
+    const bytes = Buffer.from(value);
+    const variants = [
+      bytes.toString("base64"),
+      bytes.toString("base64url"),
+      bytes.toString("hex"),
+      bytes.toString("hex").toUpperCase(),
+      encodeURIComponent(bytes.toString("utf8")),
+      new URLSearchParams({ v: bytes.toString("utf8") }).toString().slice(2),
+    ];
+    for (const encoded of variants)
+      expect(scrubProtectedOutput(JSON.stringify({ echo: encoded }), value).includes(encoded)).toBe(
+        false,
+      );
+  },
+);

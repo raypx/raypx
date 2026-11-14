@@ -10,6 +10,7 @@ import {
 } from "@raypx/database/schema";
 import {
   protectedInputAnswerSchema,
+  protectedInputParts,
   protectedInputRequestSchema,
   type ProtectedInputRequest,
 } from "@raypx/core/protected-input";
@@ -66,7 +67,9 @@ async function callHash(call: PreparedComputerCall) {
   return Buffer.from(
     await crypto.subtle.digest(
       "SHA-256",
-      new TextEncoder().encode(JSON.stringify(ordered([call.name, call.arguments]))),
+      new TextEncoder().encode(
+        JSON.stringify(ordered([call.name, call.arguments, call.device ?? null])),
+      ),
     ),
   ).toString("hex");
 }
@@ -275,7 +278,17 @@ export function createProtectedInputsService(
           };
           if (answer.data.decision === "answer") {
             try {
-              sealed = await cipher.seal(binding(row), answer.data.value);
+              const value = answer.data.value;
+              const destination = view(row).input.destination;
+              if (destination.kind.startsWith("http-") || destination.kind === "mcp-header") {
+                if (/[\r\n]/.test(value)) throw new ProtectedInputError("INVALID_INPUT");
+                if (
+                  destination.kind === "http-basic" &&
+                  (value.indexOf(":") < 1 || value.endsWith(":"))
+                )
+                  throw new ProtectedInputError("INVALID_INPUT");
+              }
+              sealed = await cipher.seal(binding(row), value);
             } catch {
               throw new ProtectedInputError("UNAVAILABLE");
             }
@@ -299,7 +312,7 @@ export function createProtectedInputsService(
         });
     },
     async wait(scope, run, call, signal) {
-      if (!call.protectedInput || call.device) throw new ProtectedInputError("INVALID_INPUT");
+      if (!call.protectedInput) throw new ProtectedInputError("INVALID_INPUT");
       let row = await db.transaction(async (tx) => {
         await admit(tx, scope);
         await lock(tx, { spaceId: run.spaceId, conversationId: run.conversationId, runId: run.id });
@@ -326,7 +339,9 @@ export function createProtectedInputsService(
             toolCallId: call.id,
             toolName: call.name,
             callHash: await callHash(call),
-            target: call.target,
+            target: call.device
+              ? `${call.device.name} · ${call.device.directory} · ${call.target}`.slice(0, 1024)
+              : call.target,
             input: call.protectedInput!,
             untrustedInput:
               active.untrustedInput ||
@@ -392,7 +407,10 @@ export function createProtectedInputsService(
         throw new ProtectedInputError("UNAVAILABLE");
       }
       try {
-        return scrubProtectedOutput(await operation(value), value);
+        let output = await operation(value);
+        for (const part of protectedInputParts(value, call.protectedInput))
+          output = scrubProtectedOutput(output, part);
+        return output;
       } catch {
         throw new ProtectedInputError("UNAVAILABLE");
       } finally {

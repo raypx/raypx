@@ -1,3 +1,4 @@
+import { scrubProtectedValue } from "@raypx/core/protected-input";
 import type { AgentId } from "@raypx/core/agents";
 import type {
   McpCredentialHeaders,
@@ -98,7 +99,9 @@ function validateHeaders(headers: McpCredentialHeaders): McpCredentialHeaders {
 async function mcpServerFingerprint(server: McpServer): Promise<string> {
   const bytes = await crypto.subtle.digest(
     "SHA-256",
-    new TextEncoder().encode(JSON.stringify([server.id, server.url])),
+    new TextEncoder().encode(
+      JSON.stringify([server.id, server.url, server.perCallSecretHeader ?? null]),
+    ),
   );
   return Buffer.from(bytes).toString("hex");
 }
@@ -221,6 +224,7 @@ export function createMcpServers(
           url: current.url,
           transport: "http",
           availability,
+          perCallSecretHeader: current.perCallSecretHeader ?? null,
         }),
       );
     },
@@ -246,12 +250,22 @@ export function createMcpServers(
       repository.setEnabled(scope, agentId, ids),
     async catalog(scope: SpaceScope, agentId: AgentId, runId: string, signal: AbortSignal) {
       const ids = await repository.enabled(scope, agentId);
-      const result: { serverId: string; fingerprint: string; tools: McpRemoteTool[] }[] = [];
+      const result: {
+        serverId: string;
+        fingerprint: string;
+        tools: McpRemoteTool[];
+        perCallSecretHeader?: string | null;
+      }[] = [];
       for (const id of ids) {
         await withConnection(scope, id, runId, async (server, headers) => {
           const tools = await transport.listTools({ url: server.url, headers }, signal);
           guard(tools, mcpProtectedValues(headers));
-          result.push({ serverId: id, fingerprint: await mcpServerFingerprint(server), tools });
+          result.push({
+            serverId: id,
+            fingerprint: await mcpServerFingerprint(server),
+            tools,
+            perCallSecretHeader: server.perCallSecretHeader ?? null,
+          });
           if (
             result.reduce((count, item) => count + item.tools.length, 0) > 128 ||
             Buffer.byteLength(JSON.stringify(result), "utf8") > 262144
@@ -283,17 +297,39 @@ export function createMcpServers(
       remoteName: string,
       args: Record<string, unknown>,
       signal: AbortSignal,
+      protectedInput?: { name: string; value: string },
     ) {
       await this.checkPinned(scope, agentId, [pin]);
       return withConnection(scope, pin.serverId, runId, async (server, headers) => {
+        // Bind the exact row used for dispatch, including a configuration edit
+        // between checkPinned and opening this operation's credentials.
+        if ((await mcpServerFingerprint(server)) !== pin.fingerprint)
+          throw new McpServerError("NOT_FOUND");
         guard(args, mcpProtectedValues(headers));
+        if (
+          protectedInput &&
+          (!server.perCallSecretHeader ||
+            protectedInput.name.toLowerCase() !== server.perCallSecretHeader.toLowerCase())
+        )
+          throw new McpServerError("MCP_CREDENTIALS_REJECTED");
+        const callHeaders = protectedInput
+          ? { ...headers, ...validateHeaders({ [protectedInput.name]: protectedInput.value }) }
+          : headers;
         const result = await transport.callTool(
-          { url: server.url, headers },
+          {
+            url: server.url,
+            headers: callHeaders,
+            ...(protectedInput ? { protectedValue: protectedInput.value } : {}),
+          },
           remoteName,
           args,
           signal,
         );
         guard(result, mcpProtectedValues(headers));
+        if (protectedInput)
+          return JSON.parse(
+            scrubProtectedValue(JSON.stringify(result), protectedInput.value),
+          ) as typeof result;
         return result;
       });
     },

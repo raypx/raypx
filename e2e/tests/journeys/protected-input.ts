@@ -136,4 +136,171 @@ export function registerTests() {
       await api.spaces.delete({ spaceId });
     }
   });
+  for (const destination of [
+    "environment",
+    "stdin",
+    "bearer",
+    "header",
+    "query",
+    "basic",
+    "mcp",
+    "device-environment",
+    "device-stdin",
+  ] as const) {
+    test(`delivers protected ${destination} once without renderer or durable output leaks`, async ({
+      page,
+      baseURL,
+    }, info) => {
+      test.skip(!apiUrl, "Requires the owned backend fixture");
+      if (!apiUrl || !baseURL) return;
+      test.setTimeout(60_000);
+      const origin = new URL(baseURL).origin;
+      const signedIn = await page.request.post(`${apiUrl}/api/auth/sign-in/email`, {
+        headers: { origin },
+        data: { email: "control-e2e@example.com", password: "Raypx-control-test-123" },
+        timeout,
+      });
+      expect(signedIn.status()).toBe(200);
+      const api = ownedApi(page, origin, apiUrl);
+      const { space } = await api.spaces.create({
+        name: `Protected ${destination} ${info.project.name} ${crypto.randomUUID()}`,
+      });
+      const spaceId = space.id;
+      let remoteId: string | undefined;
+      let deviceId: string | undefined;
+      try {
+        // Auto's always-approve fixture cannot review these operations or supply inputs.
+        await api.spaces.setApprovalOverride({ spaceId, mode: "auto" });
+        const { agent, conversation } = await api.agents.create({
+          spaceId,
+          agent: {
+            name: "Protected input",
+            instructions: "Request a value only through protected input.",
+            model: { modelId: "browser-fixture" },
+          },
+        });
+        if (["bearer", "header", "query", "basic"].includes(destination)) {
+          await api.openApiServers.create({
+            spaceId,
+            server: {
+              name: "Single-call API",
+              url: `${apiUrl}/fixture/httpapi`,
+              selectedOperationIds: ["protectedCall"],
+              availability: { mode: "all" },
+            },
+            source: { url: `${apiUrl}/fixture/httpapi/schema` },
+          });
+        } else if (destination === "mcp") {
+          const server = await api.mcpServers.create({
+            server: {
+              name: "Single-call remote tool",
+              transport: "http",
+              url: `${apiUrl}/fixture/mcp`,
+              perCallSecretHeader: "x-call-key",
+              availability: { mode: "all" },
+            },
+          });
+          remoteId = server.id;
+          await api.mcpServers.setEnabled({ spaceId, agentId: agent.id, serverIds: [server.id] });
+        } else if (destination.startsWith("device-")) {
+          const pairing = await api.deviceComputers.createPairing({ spaceId });
+          const paired = await page.request.post(`${apiUrl}/fixture/device/pair`, {
+            headers: { origin },
+            data: { code: pairing.code },
+            timeout,
+          });
+          expect(paired.status()).toBe(200);
+          deviceId = ((await paired.json()) as { deviceId: string }).deviceId;
+          await api.deviceComputers.requestGrant({ spaceId, deviceId });
+          await expect
+            .poll(
+              async () =>
+                (await api.deviceComputers.list({ spaceId })).devices.find(
+                  (candidate) => candidate.id === deviceId,
+                )?.grants.length,
+              { timeout },
+            )
+            .toBe(1);
+          const device = (await api.deviceComputers.list({ spaceId })).devices.find(
+            (candidate) => candidate.id === deviceId,
+          )!;
+          await api.deviceComputers.select({
+            spaceId,
+            conversationId: conversation.id,
+            selection: { deviceId, grantId: device.grants[0]!.id },
+          });
+        }
+        await page.setViewportSize({ width: destination === "basic" ? 375 : 1280, height: 900 });
+        await page.goto(`${baseURL}/agents?spaceId=${spaceId}&agentId=${agent.id}`, { timeout });
+        await page
+          .getByRole("textbox", { name: "Message", exact: true })
+          .fill(`Fixture protected destination ${destination}`, { timeout });
+        await page.getByRole("button", { name: "Send", exact: true }).click({ timeout });
+        const approval = page.locator("[data-approval-card]");
+        await expect(approval).toBeVisible();
+        expect(await api.protectedInputs.pending({ spaceId })).toHaveLength(0);
+        await approval.getByRole("button", { name: "Approve", exact: true }).click({ timeout });
+        const form = page.locator("[data-protected-input]");
+        await expect(form).toBeVisible();
+        const [request] = await api.protectedInputs.pending({ spaceId });
+        await page.reload({ timeout });
+        await expect(form).toBeVisible();
+        expect((await api.protectedInputs.pending({ spaceId }))[0]?.id).toBe(request?.id);
+        const value = `single-${crypto.randomUUID()} /+`;
+        const username = `user-${crypto.randomUUID()}`;
+        if (destination === "basic")
+          await form.getByLabel("Username", { exact: true }).fill(username, { timeout });
+        const field = form.locator('input[type="password"]').last();
+        await field.fill(value, { timeout });
+        await form.getByRole("button", { name: "Supply once", exact: true }).click({ timeout });
+        await expect(form).toBeHidden();
+        await expect
+          .poll(
+            async () =>
+              (await api.conversations.snapshot({ spaceId, conversationId: conversation.id }))
+                .runs[0]?.state,
+            { timeout: 10_000 },
+          )
+          .toBe("succeeded");
+        const snapshot = await api.conversations.snapshot({
+          spaceId,
+          conversationId: conversation.id,
+        });
+        const effects = await api.approvals.effects({ spaceId, runId: snapshot.runs[0]!.id });
+        expect(effects).toHaveLength(1);
+        expect(effects[0]?.state).toBe("succeeded");
+        const events = await api.conversations.events({
+          spaceId,
+          conversationId: conversation.id,
+          after: 0,
+        });
+        const storage = await page.evaluate(() =>
+          JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]),
+        );
+        const surfaces = JSON.stringify([snapshot, effects, events, storage, await page.content()]);
+        for (const supplied of destination === "basic"
+          ? [value, username, `${username}:${value}`]
+          : [value]) {
+          const encodings = await page.evaluate((raw) => {
+            const bytes = new TextEncoder().encode(raw);
+            const base64 = btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
+            return [
+              raw,
+              base64,
+              base64.replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, ""),
+              Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(""),
+              encodeURIComponent(raw),
+            ];
+          }, supplied);
+          expect(encodings.some((encoded) => surfaces.includes(encoded))).toBe(false);
+        }
+        await page.reload({ timeout });
+        await expect(form).toHaveCount(0);
+      } finally {
+        if (deviceId) await api.deviceComputers.revoke({ spaceId, deviceId });
+        if (remoteId) await api.mcpServers.delete({ id: remoteId });
+        await api.spaces.delete({ spaceId });
+      }
+    });
+  }
 }

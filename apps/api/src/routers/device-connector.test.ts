@@ -41,7 +41,7 @@ function fixture(options: Parameters<typeof createDeviceConnectorRoutes>[1] = {}
 it("denies browser Origins and unsupported pairing versions before credential possession", async () => {
   const f = fixture();
   const body = {
-    protocolVersion: 1,
+    protocolVersion: 2,
     code: "paircode1234",
     deviceName: "My machine",
     platform: "darwin",
@@ -50,7 +50,7 @@ it("denies browser Origins and unsupported pairing versions before credential po
   expect(browser.status).toBe(403);
   expect(browser.headers.get("cache-control")).toBe("no-store");
   expect(f.claim).not.toHaveBeenCalled();
-  const unsupported = await f.post("/device/pairing/claim", { ...body, protocolVersion: 0 });
+  const unsupported = await f.post("/device/pairing/claim", { ...body, protocolVersion: 1 });
   expect(unsupported.status).toBe(400);
   expect(f.claim).not.toHaveBeenCalled();
   const accepted = await f.post("/device/pairing/claim", body);
@@ -60,7 +60,7 @@ it("denies browser Origins and unsupported pairing versions before credential po
 it("requires credential possession and rejects a caller-selected different device", async () => {
   const f = fixture();
   const body = {
-    protocolVersion: 1,
+    protocolVersion: 2,
     deviceId: "another-device",
     spaceId: "space",
     directory: "/granted",
@@ -96,7 +96,7 @@ it("bounds malformed and streamed oversized bodies and returns safe errors", asy
   expect(f.claim).not.toHaveBeenCalled();
   f.claim.mockRejectedValueOnce(new Error("private-credential"));
   const failed = await f.post("/device/pairing/claim", {
-    protocolVersion: 1,
+    protocolVersion: 2,
     code: "paircode1234",
     deviceName: "My machine",
   });
@@ -111,7 +111,7 @@ it("keeps the pairing IP quota when an attacker rotates unrelated bearer headers
     return count <= rule.max;
   });
   const f = fixture({ rateLimit, clientIpHeader: "x-owned-client-ip" });
-  const body = { protocolVersion: 1, code: "paircode1234", deviceName: "Fixture machine" };
+  const body = { protocolVersion: 2, code: "paircode1234", deviceName: "Fixture machine" };
   for (let index = 0; index < 20; index++)
     expect(
       (
@@ -137,7 +137,7 @@ it("keeps the pairing IP quota when an attacker rotates unrelated bearer headers
 it("counts authenticated possession requests against both IP and credential quotas", async () => {
   const rateLimit = vi.fn(async (_key: string, _rule: { window: number; max: number }) => true);
   const f = fixture({ rateLimit });
-  const body = { protocolVersion: 1, deviceId: "device", spaceId: "space", directory: "/granted" };
+  const body = { protocolVersion: 2, deviceId: "device", spaceId: "space", directory: "/granted" };
   expect(
     (await f.post("/device/grants/confirm", body, { authorization: "Bearer " + "a".repeat(64) }))
       .status,

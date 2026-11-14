@@ -95,3 +95,35 @@ it("clears on page handoff and declines without sending a value", async () => {
   });
   view.unmount();
 });
+
+it("keeps both basic credential fields masked and clears both on handoff and submit", async () => {
+  const basic = {
+    ...request,
+    input: { ...request.input, destination: { kind: "http-basic" as const } },
+  };
+  const answer = vi.fn(async () => ({ ...basic, state: "answered" as const }));
+  const view = render(
+    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <ProtectedInputs port={{ pending: async () => [basic], answer }} spaceId={request.spaceId} />
+    </BrowserLanguageProvider>,
+  );
+  const username = await screen.findByLabelText("Username");
+  const password = screen.getByLabelText("Protected input: Access token");
+  for (const field of [username, password]) expect(field).toHaveAttribute("type", "password");
+  fireEvent.change(username, { target: { value: "member-one" } });
+  fireEvent.change(password, { target: { value: "password-one" } });
+  fireEvent(window, new Event("pagehide"));
+  expect(username).toHaveValue("");
+  expect(password).toHaveValue("");
+  fireEvent.change(username, { target: { value: "member-two" } });
+  fireEvent.change(password, { target: { value: "password-two" } });
+  fireEvent.submit(password.closest("form")!);
+  expect(username).toHaveValue("");
+  expect(password).toHaveValue("");
+  expect(answer).toHaveBeenCalledWith({
+    spaceId: request.spaceId,
+    requestId: request.id,
+    answer: { decision: "answer", value: "member-two:password-two" },
+  });
+  expect(view.container.innerHTML.includes("password-two")).toBe(false);
+});

@@ -689,7 +689,15 @@
     "decline": "拒绝",
     "answered": "已提供，等待操作执行。",
     "error": "无法确认请求状态，请刷新后再试。",
-    "requests": "受保护输入请求"
+    "requests": "受保护输入请求",
+    "stdin": "命令标准输入",
+    "apiKey": "API 密钥 · {location}：{name}",
+    "basic": "基本认证 · 仅本次调用",
+    "mcpHeader": "远程工具请求头 · {name}",
+    "username": "用户名",
+    "password": "密码",
+    "secretHeader": "单次调用保密请求头",
+    "invalidBasic": "用户名不能含冒号，密码不能为空。"
   },
   "workspaceSidebar": {
     "new": "新建",

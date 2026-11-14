@@ -345,3 +345,9 @@ including in Never ask. Auto never approves them. The connector journal and serv
 effect records preserve uncertainty after disconnect; unknown effects never replay.
 Device homes and Screen are unsupported, and command OS permissions are not
 sandbox isolation. See [setup, protocol bounds, decisions and platform limits](../development/device-connector.md).
+
+Protected command input supports environment and UTF-8 stdin on sandbox and
+member-owned device computers. Connector protocol 2 keeps values outside operation
+hashes and journals, and scrubs output before the device outbox. File and screen
+input remain unavailable. See [protected input](protected-input.md) for the exact
+boundary, encoding limits and independent acceptance layers.

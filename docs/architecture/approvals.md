@@ -63,8 +63,8 @@ outside text could have asked for it.
 ## Protected input
 
 When a tool needs a secret or a sign-in, the Agent asks for protected input. The
-member supplies it through a dedicated card. The value goes to the secret store or
-directly to the computer for that command. It never enters the conversation, the
+initiating member supplies it through a dedicated card. An encrypted single-use
+answer delivers only to that command or registered HTTP/remote tool call. It never enters the conversation, the
 model history or a log.
 
 ## Implemented backend computer slice

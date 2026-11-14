@@ -157,19 +157,21 @@ export function computerConformance(
         { kind: "exit", status: 0, cancelled: false, truncated: true },
       ]);
     });
-    it("cancels an individual process and drains an exit", async () => {
+    it("cancels a process with unread stdin and drains an exit", async () => {
       const { provider, ref } = await setup();
       const process = await provider.execute(ref, {
         executable: "sleep",
         argv: ["60"],
         cwd: ".",
         environment: {},
+        stdin: "输入".repeat(2048),
         outputBudget: 16,
       });
       const events: ProcessEvent[] = [];
       const drain = (async () => {
         for await (const event of process.events) events.push(event);
       })();
+      await new Promise((resolve) => setTimeout(resolve, 100));
       await process.cancel();
       await drain;
       expect(events.at(-1)).toMatchObject({ kind: "exit", cancelled: true });

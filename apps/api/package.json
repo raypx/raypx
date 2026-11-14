@@ -54,6 +54,7 @@
     "ioredis": "catalog:",
     "lodash-es": "catalog:",
     "nitro": "catalog:",
+    "unstorage": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -11,3 +11,5 @@ Relay protocol entries exist. No credential or supervisor address enters rendere
 contracts. Device possession routes reject browser Origin; pairing and grants
 require native consent. Selectors never confer Space access. Keep exact optional
 properties, explicit exports and direct consumers. Run check/test and policy.
+
+Device connector protocol 2 requires ephemeral protected environment/stdin delivery. Its value never joins payload identity or durable events; version 1 is rejected. Desktop IPC stays independently versioned.

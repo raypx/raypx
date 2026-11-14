@@ -32,17 +32,8 @@ try {
     },
   );
   assert.equal(await child.exited, 0, "Final CLI archive smoke failed");
-  if (process.platform === "win32") {
-    const lifecycle = Bun.spawn(
-      [process.execPath, resolve(import.meta.dirname, "../tests/smoke/windows-payload.ts")],
-      {
-        env: { ...process.env, RAYPX_CLI_PAYLOAD: directory },
-        stdout: "inherit",
-        stderr: "inherit",
-      },
-    );
-    assert.equal(await lifecycle.exited, 0, "Windows archive directory lifecycle failed");
-  }
+  // artifact.ts exercises the current daemon bootstrap, stop and directory cleanup
+  // on every platform, including Windows, from the extracted Unicode path.
 } finally {
   await removeTemporaryDirectory(directory);
 }

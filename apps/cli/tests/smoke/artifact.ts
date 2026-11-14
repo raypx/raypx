@@ -8,7 +8,7 @@ const prepared = resolve(
   process.env.RAYPX_CLI_PAYLOAD ?? resolve(import.meta.dirname, "../../dist"),
 );
 const inventory = await verifyCliPayload(prepared);
-const directory = await mkdtemp(join(tmpdir(), "raypx-cli-安装-smoke-"));
+const directory = await mkdtemp(join(tmpdir(), "raypx CLI 安装 # smoke-"));
 const distribution = join(directory, "distribution");
 const privateHome = join(directory, "home");
 const data = join(directory, "data");

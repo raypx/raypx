@@ -42,7 +42,18 @@ export async function fixtureMcpResponse(request: Request): Promise<Response> {
           id: rpc.id,
           error: { code: -32602, message: "Unknown tool" },
         });
-      result = { content: [{ type: "text", text: "Fixture MCP result" }], isError: false };
+      const protectedValue = request.headers.get("x-call-key");
+      result = {
+        content: [
+          {
+            type: "text",
+            text: protectedValue
+              ? `Delivered once: ${Buffer.from(protectedValue).toString("base64")}`
+              : "Fixture MCP result",
+          },
+        ],
+        isError: false,
+      };
       break;
     default:
       return Response.json({

@@ -26,7 +26,7 @@ async function fixture() {
       deviceName: "Test device",
     };
     state.credential = {
-      protocolVersion: 1,
+      protocolVersion: 2,
       accountId: "owner",
       deviceId: "device",
       deviceName: "Test device",

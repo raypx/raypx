@@ -7,7 +7,7 @@ import {
 } from "@raypx/agents/server";
 import { MAX_TOOL_RESULT } from "@raypx/core/approvals";
 import { z } from "zod";
-import { protectedInputSpecSchema } from "@raypx/core/protected-input";
+import { protectedInputSpecSchema, httpInputDestinationSchema } from "@raypx/core/protected-input";
 import { matchesOpenApiSchema, OpenApiTransportError } from "@raypx/providers/openapi";
 import { OpenApiServerError, type OpenApiServersService } from "./openapi-servers.js";
 
@@ -90,14 +90,14 @@ export function withOpenApiTools(
           readOnly: tool.readOnly,
           definition: {
             name,
-            description: `${tool.method} ${tool.label}. Request protectedInput for a one-call bearer credential; never put its value in chat or arguments.`,
+            description: `${tool.method} ${tool.label}. Request protectedInput for a one-call bearer, API-key header/query or basic credential; never put its value in chat or arguments.`,
             parameters: {
               ...tool.inputSchema,
               properties: {
                 ...(tool.inputSchema.properties as object),
                 protectedInput: z.toJSONSchema(
                   protectedInputSpecSchema.extend({
-                    destination: protectedInputSpecSchema.shape.destination.options[1],
+                    destination: httpInputDestinationSchema,
                   }),
                 ),
               },
@@ -176,7 +176,10 @@ export function withOpenApiTools(
       const { protectedInput: rawInput, ...operationArguments } = call.arguments;
       const input =
         rawInput === undefined ? undefined : protectedInputSpecSchema.safeParse(rawInput);
-      if (input && (!input.success || input.data.destination.kind !== "http-bearer"))
+      if (
+        input &&
+        (!input.success || !httpInputDestinationSchema.safeParse(input.data.destination).success)
+      )
         throw new ComputerToolsError("INVALID_ARGUMENTS");
       if (!matchesOpenApiSchema(operationArguments, binding.operation.inputSchema))
         throw new ComputerToolsError("INVALID_ARGUMENTS");
@@ -265,8 +268,14 @@ export function withOpenApiTools(
         run,
       );
       const binding = bindings.get(run.id)?.get(call.name);
-      if (!binding || prepared.protectedInput?.destination.kind !== "http-bearer")
-        throw new ComputerToolsError("INVALID_ARGUMENTS");
+      if (!binding || !prepared.protectedInput) throw new ComputerToolsError("INVALID_ARGUMENTS");
+      const destination = httpInputDestinationSchema.parse(prepared.protectedInput.destination);
+      let credential: Parameters<typeof service.call>[7];
+      if (destination.kind === "http-bearer") credential = { type: "bearer", value };
+      else if (destination.kind === "http-basic") credential = { type: "basic", value };
+      else if (destination.in === "query")
+        credential = { type: "query", name: destination.name, value };
+      else credential = { type: "apiKey", header: destination.name, value };
       const { protectedInput: _input, ...args } = call.arguments;
       const result = await service.call(
         scope,
@@ -276,7 +285,7 @@ export function withOpenApiTools(
         binding.remoteName,
         args,
         signal,
-        { type: "bearer", value },
+        credential,
       );
       guard(result, "SECRET_OUTPUT");
       const output = JSON.stringify({

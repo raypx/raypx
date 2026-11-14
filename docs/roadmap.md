@@ -116,8 +116,8 @@ client approval controls and bounded Auto review with a deployment-selected,
 tool-less model. Automatic decisions are durable and visible with their reasons;
 untrusted input, mutating HTTP operations and unlisted commands still ask. Protected
 input adds addressed masked forms, encrypted single-use storage, durable waiting
-and restart recovery for sandbox command environments and one-call HTTP bearer
-credentials. See [scope and conservative limits](architecture/protected-input.md).
+and restart recovery for sandbox/own-device command environments and stdin,
+one-call HTTP bearer/API-key/basic credentials and declared remote tool headers. See [scope and conservative limits](architecture/protected-input.md).
 PostgreSQL, browser and live Docker acceptance are separate gates.
 
 Backend egress follow-up: the supervisor selects one DNS upstream and host rules
@@ -244,7 +244,8 @@ Acceptance:
 
 Protected input is implemented for the shared Web/Desktop workspace and native
 Mobile. Only the initiating member supplies a value; normal approval remains
-independent. Device, file, generic MCP and graphical destinations remain unsupported.
+independent. Own-device commands use connector protocol 2 and redact before
+journaling. File, generic MCP arguments and graphical destinations remain unsupported.
 See [protected input](architecture/protected-input.md) for lifecycle and acceptance.
 
 Implemented graphical slice: optional graphical computer image, private bounded

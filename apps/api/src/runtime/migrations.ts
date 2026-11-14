@@ -13,7 +13,7 @@ export async function migrateApiDatabase(
   try {
     const { useKV: getStorage } = await import("nitro/kv");
     const assets = getStorage("assets:database-migrations");
-    const keys = (await assets.getKeys()).filter((key) => key.endsWith(":migration.sql"));
+    const keys = (await assets.getKeys()).filter((key: string) => key.endsWith(":migration.sql"));
     if (!keys.length) throw new Error("Missing database migrations");
     directory = await mkdtemp(join(tmpdir(), "raypx-api-migrations-"));
     for (const key of keys) {

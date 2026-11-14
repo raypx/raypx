@@ -689,7 +689,15 @@
     "decline": "Decline",
     "answered": "Supplied. Waiting for the operation.",
     "error": "Could not confirm the request. Refresh before trying again.",
-    "requests": "Protected input requests"
+    "requests": "Protected input requests",
+    "stdin": "Command standard input",
+    "apiKey": "API key · {location}: {name}",
+    "basic": "Basic credentials · single call",
+    "mcpHeader": "Remote tool header · {name}",
+    "username": "Username",
+    "password": "Password",
+    "secretHeader": "Per-call secret header",
+    "invalidBasic": "Use a username without a colon and a non-empty password."
   },
   "workspaceSidebar": {
     "new": "New",

@@ -47,6 +47,7 @@ export function discoveredMcpTools(
   });
 }
 export interface McpServerDraft {
+  perCallSecretHeader: string | null;
   name: string;
   url: string;
   availability: McpServer["availability"];
@@ -55,6 +56,7 @@ export function createMcpServerDraft(server: McpServer | null): McpServerDraft {
   return {
     name: server?.name ?? "",
     url: server?.url ?? "",
+    perCallSecretHeader: server?.perCallSecretHeader ?? null,
     availability: server?.availability ?? { mode: "all" },
   };
 }

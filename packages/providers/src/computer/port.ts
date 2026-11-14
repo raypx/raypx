@@ -1,3 +1,4 @@
+import { commandInputDestinationSchema } from "@raypx/core/protected-input";
 import { z } from "zod";
 import {
   computerIdSchema,
@@ -62,6 +63,21 @@ export const commandSchema = z.strictObject({
         .refine((v) => !v.includes("\0")),
     )
     .default({}),
+  stdin: z
+    .string()
+    .max(4096)
+    .refine((value) => !value.includes("\0"))
+    .optional(),
+  protectedInput: z
+    .strictObject({
+      destination: commandInputDestinationSchema,
+      value: z
+        .string()
+        .min(1)
+        .max(4096)
+        .refine((value) => !value.includes("\0")),
+    })
+    .optional(),
   outputBudget: z.number().int().min(0).max(MAX_OUTPUT_BYTES),
 });
 export type ComputerCommand = z.infer<typeof commandSchema>;

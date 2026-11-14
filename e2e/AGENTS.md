@@ -131,3 +131,5 @@ and event/effect/storage leak checks. The pending form stays once above the comp
 in all three tabs. Opt-in light/dark screenshots at 1440×860 and 375×812 are saved
 under `.artifacts/ui/` before any value is generated or entered. Trace, video and
 automatic screenshots stay disabled around generated sensitive values.
+
+Protected-input journeys cover every destination, including both device channels and both masked basic fields. Test-only transcript inspection is session/Space scoped. All protected journeys disable traces, video and automatic screenshots around values.

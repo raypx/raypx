@@ -132,6 +132,7 @@ it("stores encrypted write-only credentials and makes selected operations availa
     expect.objectContaining({ operationId: "read" }),
     {},
     expect.any(AbortSignal),
+    { protectedValues: [] },
   );
   f.service.release("run");
   expect(f.service.protectedValues()).toEqual([]);
@@ -234,6 +235,7 @@ it("uses a protected bearer override for one operation and never retains it in t
     expect.anything(),
     {},
     signal,
+    { protectedValues: [value] },
   );
   expect(
     JSON.stringify([
@@ -250,5 +252,6 @@ it("uses a protected bearer override for one operation and never retains it in t
     expect.anything(),
     {},
     signal,
+    { protectedValues: [] },
   );
 });

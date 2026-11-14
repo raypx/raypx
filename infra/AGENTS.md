@@ -10,5 +10,3 @@ another application, and product runtime never imports provider tooling.
 Reuse the service contract in `@raypx/tooling/build/deployment` and application
 Dockerfiles. Keep secrets and infrastructure state out of source control.
 Provider-specific instructions live in each workspace's AGENTS.md.
-The optional Cloudflare Worker is a managed edge adapter; its Relay container and
-all local tooling keep the pinned Bun runtime.

@@ -19,11 +19,32 @@ function ProtectedInputForm({
 }) {
   const t = useTranslations("agents");
   const id = useId();
+  const destination = request.input.destination;
+  function destinationText() {
+    switch (destination.kind) {
+      case "environment":
+        return t("protectedInput.environment", { variable: destination.variable });
+      case "stdin":
+        return t("protectedInput.stdin");
+      case "http-bearer":
+        return t("protectedInput.http");
+      case "http-api-key":
+        return t("protectedInput.apiKey", { location: destination.in, name: destination.name });
+      case "http-basic":
+        return t("protectedInput.basic");
+      case "mcp-header":
+        return t("protectedInput.mcpHeader", { name: destination.name });
+    }
+  }
+  const destinationLabel = destinationText();
   const input = useRef<HTMLInputElement>(null);
+  const username = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const field = input.current;
+    const userField = username.current;
     const clear = () => {
       if (field) field.value = "";
+      if (userField) userField.value = "";
     };
     const hidden = () => {
       if (document.hidden) clear();
@@ -42,7 +63,15 @@ function ProtectedInputForm({
       className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3 text-sm"
       onSubmit={(event) => {
         event.preventDefault();
-        const value = input.current?.value ?? "";
+        const password = input.current?.value ?? "";
+        const user = username.current?.value ?? "";
+        const value =
+          destination.kind === "http-basic"
+            ? user && password
+              ? `${user}:${password}`
+              : ""
+            : password;
+        if (username.current) username.current.value = "";
         if (input.current) input.current.value = "";
         if (value && !busy) void controller.answer(request.id, { decision: "answer", value });
       }}
@@ -58,17 +87,28 @@ function ProtectedInputForm({
           <p className="break-all text-xs text-muted-foreground">
             {request.toolName} · {request.target}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {request.input.destination.kind === "environment"
-              ? t("protectedInput.environment", { variable: request.input.destination.variable })
-              : t("protectedInput.http")}
-          </p>
+          <p className="text-xs text-muted-foreground">{destinationLabel}</p>
           {request.untrustedInput && (
             <p role="note" className="text-sm">
               {t("protectedInput.untrusted", {
                 source: request.provenanceKind ?? t("protectedInput.external"),
               })}
             </p>
+          )}
+          {request.state === "pending" && destination.kind === "http-basic" && (
+            <Field>
+              <FieldLabel htmlFor={`${id}-username`}>{t("protectedInput.username")}</FieldLabel>
+              <Input
+                ref={username}
+                id={`${id}-username`}
+                type="password"
+                autoComplete="off"
+                required
+                maxLength={1024}
+                disabled={busy}
+                pattern="[^:]+"
+              />
+            </Field>
           )}
           {request.state === "pending" ? (
             <Input
@@ -77,7 +117,7 @@ function ProtectedInputForm({
               type="password"
               autoComplete="off"
               required
-              maxLength={4096}
+              maxLength={destination.kind === "http-basic" ? 3071 : 4096}
               disabled={busy}
               aria-describedby={`${id}-purpose ${id}-privacy`}
             />
@@ -106,6 +146,7 @@ function ProtectedInputForm({
             disabled={busy}
             onClick={() => {
               if (input.current) input.current.value = "";
+              if (username.current) username.current.value = "";
               void controller.answer(request.id, { decision: "decline" });
             }}
           >
