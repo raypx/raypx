@@ -783,6 +783,8 @@
     "SPACE_STORAGE_LIMIT": "This Space has reached its computer storage limit.",
     "DEPLOYMENT_STORAGE_LIMIT": "The computer service has reached its storage limit.",
     "HOME_STORAGE_LIMIT": "This computer has reached its file storage limit.",
-    "CAPACITY_UNAVAILABLE": "Computer capacity is temporarily unavailable. Try again later."
+    "CAPACITY_UNAVAILABLE": "Computer capacity is temporarily unavailable. Try again later.",
+    "COMPUTER_TRANSFER_LIMIT": "This computer reached its transfer limit and was stopped.",
+    "SPACE_DAILY_TRANSFER_LIMIT": "This Space reached its daily transfer limit. Try again after midnight UTC."
   }
 }

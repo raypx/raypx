@@ -59,6 +59,7 @@ esac
 if [ "$1" -eq 100 ] && [ "$2" -ge 64 ] && [ "$2" -le 127 ]; then usage; fi
 if [ "$1" -eq 172 ] && [ "$2" -ge 16 ] && [ "$2" -le 31 ]; then usage; fi
 dns_tag=raypx-sandbox-dns:$bridge:$resolver
+ports_tag=raypx-sandbox-ports:$bridge
 created_chain=false
 added_hooks=
 # Include non-public special-use destinations, CGNAT, benchmarks and multicast.
@@ -79,6 +80,13 @@ policy() {
     "$policy_visitor" append iptables "$chain" -p "$protocol" ! -d "$resolver" --dport 53 -m comment --comment "$dns_tag" -j DROP
     "$policy_visitor" append iptables "$chain" -p "$protocol" -m conntrack ! --ctorigdst "$resolver" --ctorigdstport 53 -m comment --comment "$dns_tag" -j DROP
   done
+  # Default public egress is HTTP(S) and the selected DNS server only. This
+  # denies SMTP, remote administration, databases and UDP amplification ports.
+  "$policy_visitor" append iptables "$chain" -p tcp -m multiport ! --dports 53,80,443 -m comment --comment "$ports_tag" -j DROP
+  "$policy_visitor" append iptables "$chain" -p udp ! --dport 53 -m comment --comment "$ports_tag" -j DROP
+  "$policy_visitor" append iptables "$chain" -p tcp -j RETURN
+  "$policy_visitor" append iptables "$chain" -p udp -j RETURN
+  "$policy_visitor" append iptables "$chain" -m comment --comment "$ports_tag" -j DROP
   # INPUT blocks the Docker host regardless of the address used to reach it.
   "$policy_visitor" hook iptables INPUT -i "$bridge" -m comment --comment "$tag" -j DROP
   # Public internet egress is IPv4 only; deny IPv6 rather than leak it.

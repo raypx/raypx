@@ -182,17 +182,27 @@ function fakeRuntime(failure?: string) {
   let bytes = "";
   let screen = false;
   let counterReads = 0;
+  const networkSpaces = new Map<string, string>();
+  const spaceExhaustions = new Map<string, number>();
+  const stoppedNetwork = new Map<string, string>();
   const runtime: SandboxRuntime = {
     platform: "linux",
     rootUser: true,
     hasDocker: () => true,
     async capture(argv) {
       calls.push(argv);
+      if (argv.some((arg) => arg.includes("for port in (25,80)")))
+        return JSON.stringify({ bytes: 262300, seconds: 0.01 });
       if (argv.includes("iptables")) {
-        const packets = counterReads++ * 2;
+        const packets = counterReads++ * 8;
+        if (argv.includes("raw")) {
+          if (argv.includes("-S")) return `-N RPX_R_${plan.bridge.slice(3)}_fixture`;
+          return `${packets} 60 DROP udp -- * * 0.0.0.0/0 0.0.0.0/0 /* raypx-network:${plan.bridge}:datagrams */`;
+        }
         if (argv.includes("INPUT"))
           return `${packets} 60 DROP all -- ${plan.bridge} * 0.0.0.0/0 0.0.0.0/0 /* raypx-sandbox-egress:${plan.bridge} */`;
         return [
+          `${packets} 60 DROP tcp -- * * 0.0.0.0/0 0.0.0.0/0 /* raypx-sandbox-ports:${plan.bridge} */`,
           ...sandboxEgressRanges.map(
             (range) => `${packets} 60 DROP all -- * * 0.0.0.0/0 ${range} /* owned */`,
           ),
@@ -296,16 +306,41 @@ function fakeRuntime(failure?: string) {
       calls.push(["request", operation]);
       if (operation === "description") return { screen };
       if (operation.endsWith("/create")) {
+        const targetId = operation.split("/")[1]!;
+        const space = (body as { spaceId?: string }).spaceId;
+        if (space) {
+          if ((spaceExhaustions.get(space) ?? 0) >= 2)
+            throw new Error("SPACE_DAILY_TRANSFER_LIMIT");
+          networkSpaces.set(targetId, space);
+        }
         if (computer === "probe" || computer === operation.split("/")[1]) {
           computer = operation.split("/")[1]!;
           generation = (body as { generation: number }).generation;
         }
       }
+      if (operation.endsWith("/get") && stoppedNetwork.has(operation.split("/")[1]!))
+        return {
+          state: "stopped",
+          unavailableReason: stoppedNetwork.get(operation.split("/")[1]!),
+        };
       if (operation.endsWith("/exec")) {
         const input = body as { generation: number; command: { argv: string[] } };
         const argv = input.command.argv;
         calls.push(["probe", `generation=${input.generation}`, ...argv]);
         let value: unknown = {};
+        if (argv.some((arg) => arg.includes("GET /262144"))) value = { bytes: 262300, seconds: 3 };
+        if (argv.some((arg) => arg.includes("GET /2097152"))) {
+          const targetId = operation.split("/")[1]!;
+          const space = networkSpaces.get(targetId)!;
+          const used = spaceExhaustions.get(space) ?? 0;
+          stoppedNetwork.set(
+            targetId,
+            used ? "SPACE_DAILY_TRANSFER_LIMIT" : "COMPUTER_TRANSFER_LIMIT",
+          );
+          spaceExhaustions.set(space, used + 1);
+        }
+        if (argv.some((arg) => arg.includes("3389"))) value = { blocked: true };
+        if (argv.some((arg) => arg.includes("opened=[]"))) value = { opened: 8, blocked: 4 };
         if (argv.includes(sandboxIsolationProbe))
           value = {
             uid: 1000,
@@ -423,7 +458,7 @@ describe("owned sandbox execution", () => {
     expect(result.egress).toContain("public HTTPS passed");
     expect(result.egress).toContain("configured DNS passed");
     const probe = calls.find((call) => call.includes(sandboxEgressProbe))!;
-    expect(probe).toContain("generation=2");
+    expect(probe).toContain("generation=3");
     expect(probe.slice(-3)).toEqual(["172.25.0.1", plan.dnsResolver, "40123"]);
     expect(calls.find((call) => call.includes(sandboxEgressControl))).toContain("host");
     expect(calls.find((call) => call[0] === "egress-apply")).toContain("--resolver");

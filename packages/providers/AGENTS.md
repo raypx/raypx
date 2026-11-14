@@ -39,3 +39,5 @@ Computer provision accepts optional trusted Space context. The supervisor requir
 it for untrusted tenants and persists immutable ownership for quota admission.
 Quota error codes are additive and preserved by the private HTTP adapter; no
 Engine detail or credential enters lifecycle responses.
+Provider lifecycle snapshots may also expose an optional value-free availability
+reason after an automatic transfer-budget stop. This metadata grants no authority.

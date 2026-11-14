@@ -17,7 +17,20 @@ const storedSchema = providerComputerSchema.extend({
   writeBytes: z.number().int().nonnegative(),
   homeBytes: z.number().int().nonnegative(),
   homeEntries: z.number().int().nonnegative(),
-  stopReason: z.enum(["idle", "lifetime", "storage", "measurement", "engine"]).nullable(),
+  stopReason: z
+    .enum([
+      "idle",
+      "lifetime",
+      "storage",
+      "measurement",
+      "engine",
+      "transfer",
+      "space-transfer",
+      "network",
+    ])
+    .nullable(),
+  networkKey: z.string().uuid().nullable().optional(),
+  networkBytes: z.number().int().nonnegative().optional(),
 });
 export type StoredComputer = z.infer<typeof storedSchema>;
 export interface ComputerStore {
@@ -97,10 +110,20 @@ export function diskStore(directory: string): ComputerStore {
   };
 }
 export function publicComputer(computer: StoredComputer): ProviderComputer {
+  const reasons = {
+    transfer: "COMPUTER_TRANSFER_LIMIT",
+    "space-transfer": "SPACE_DAILY_TRANSFER_LIMIT",
+    network: "CAPACITY_UNAVAILABLE",
+  } as const;
+  const unavailableReason =
+    computer.stopReason && computer.stopReason in reasons
+      ? reasons[computer.stopReason as keyof typeof reasons]
+      : undefined;
   return providerComputerSchema.parse({
     id: computer.id,
     generation: computer.generation,
     state: computer.state,
     homeRevision: computer.homeRevision,
+    ...(unavailableReason ? { unavailableReason } : {}),
   });
 }

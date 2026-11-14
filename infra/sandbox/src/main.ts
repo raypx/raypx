@@ -25,6 +25,21 @@ const timer = setInterval(() => {
     });
 }, config.reapMs);
 timer.unref();
+let networking = false;
+const networkTimer = setInterval(() => {
+  if (networking) return;
+  networking = true;
+  void provider
+    .maintainNetwork()
+    .catch(() => {
+      console.error('{"event":"sandbox.network_maintenance_failed"}');
+      void shutdown(1);
+    })
+    .finally(() => {
+      networking = false;
+    });
+}, config.networkPollMs);
+networkTimer.unref();
 const server = Bun.serve({
   hostname: config.address,
   port: config.port,
@@ -34,6 +49,7 @@ const server = Bun.serve({
 });
 async function shutdown(code = 0) {
   clearInterval(timer);
+  clearInterval(networkTimer);
   await server.stop(true);
   process.exit(code);
 }

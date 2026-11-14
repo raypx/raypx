@@ -7,6 +7,7 @@ import { sandboxConfig } from "./config.js";
 import { Engine } from "./engine.js";
 import { supervisorHandler } from "./http.js";
 import { fakeEngine, memoryStore } from "../tests/fake-engine.js";
+import type { NetworkPolicy } from "./network.js";
 const token = "sandbox-dedicated-fixture-token-32-characters";
 function fixture(overrides: Record<string, string> = {}) {
   const config = sandboxConfig({
@@ -27,6 +28,51 @@ function fixture(overrides: Record<string, string> = {}) {
   return { provider, client, config, fake, handler, store, engine };
 }
 computerConformance("HTTP provider / supervisor / fake Engine", () => fixture().client, runner);
+it.each(["COMPUTER_TRANSFER_LIMIT", "SPACE_DAILY_TRANSFER_LIMIT"] as const)(
+  "stops on %s and exposes its safe lifecycle reason",
+  async (reason) => {
+    const f = fixture({ SANDBOX_NETWORK_LIMITS: "true" });
+    let exhausted = false;
+    const network: NetworkPolicy = {
+      async register() {},
+      async remove() {},
+      async reconcile() {},
+      async sample() {
+        return {
+          bytes: 100,
+          reservedBytes: 100,
+          spaceReservedBytes: 200,
+          reason: exhausted ? reason : null,
+        };
+      },
+    };
+    const provider = createSupervisor(f.config, f.engine, f.store, { network, report() {} });
+    const ref = { id: crypto.randomUUID(), generation: 1 };
+    await provider.provision(ref, { spaceId: "network-space" });
+    exhausted = true;
+    await provider.maintainNetwork();
+    expect(await provider.get(ref)).toMatchObject({ state: "stopped", unavailableReason: reason });
+  },
+);
+it("contains compute when host network accounting is unavailable", async () => {
+  const f = fixture({ SANDBOX_NETWORK_LIMITS: "true" });
+  const network: NetworkPolicy = {
+    async register() {},
+    async remove() {},
+    async reconcile() {},
+    async sample() {
+      throw new Error("private-host-error");
+    },
+  };
+  const provider = createSupervisor(f.config, f.engine, f.store, { network, report() {} });
+  const ref = { id: crypto.randomUUID(), generation: 1 };
+  await provider.provision(ref);
+  await expect(provider.maintainNetwork()).rejects.toMatchObject({ code: "CAPACITY_UNAVAILABLE" });
+  expect(await provider.get(ref)).toMatchObject({
+    state: "stopped",
+    unavailableReason: "CAPACITY_UNAVAILABLE",
+  });
+});
 computerConformance(
   "graphical HTTP provider / supervisor / fake Engine",
   () => fixture({ SANDBOX_GRAPHICAL: "true" }).client,

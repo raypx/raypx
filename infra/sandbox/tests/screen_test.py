@@ -21,6 +21,8 @@ class ScreenReadiness(unittest.TestCase):
         self.clock = 0
         self.spawned = []
         self.browser_checks = 0
+        self.desktop_checks = 0
+        self.desktop_blocked = False
         self.activations = 0
         self.browser_blocked = False
         self.activation_blocked = False
@@ -53,6 +55,8 @@ class ScreenReadiness(unittest.TestCase):
         self.spawned.append(argv[0])
         if argv[0] == "xterm":
             self.assertGreaterEqual(self.browser_checks, 3)
+        if argv[0].endswith("netsurf-gtk"):
+            self.assertGreaterEqual(self.desktop_checks, 3)
         self.assertTrue(kwargs["start_new_session"])
         return SimpleNamespace(pid=len(self.spawned))
 
@@ -60,6 +64,10 @@ class ScreenReadiness(unittest.TestCase):
         self.assertGreater(kwargs["timeout"], 0)
         self.assertLessEqual(kwargs["timeout"], 1)
         action = argv[1]
+        if action == "get_desktop":
+            self.desktop_checks += 1
+            ready = self.desktop_checks >= 3 and not self.desktop_blocked
+            return SimpleNamespace(returncode=0 if ready else 1, stdout=b"0\n")
         if action == "search":
             if argv[-1] == "^Computer":
                 self.browser_checks += 1
@@ -104,6 +112,13 @@ class ScreenReadiness(unittest.TestCase):
     def test_live_display_without_completed_readiness_is_not_a_running_session(self):
         Path(helper.ROOT).mkdir()
         Path(helper.ROOT + "/processes.json").write_text(json.dumps([[1, "1"]]))
+        self.assertFalse(helper.running())
+
+    def test_does_not_spawn_browser_before_window_manager_readiness(self):
+        self.desktop_blocked = True
+        with self.assertRaisesRegex(Refusal, "PROVIDER_UNAVAILABLE"):
+            helper.start()
+        self.assertEqual(self.spawned, ["Xvfb", "openbox"])
         self.assertFalse(helper.running())
 
 

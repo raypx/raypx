@@ -30,6 +30,19 @@ export interface SandboxConfig {
   deploymentRunning: number;
   spaceStorageBytes: number;
   deploymentStorageBytes: number;
+  namespace: string;
+  networkLimits: boolean;
+  networkSocket: string;
+  networkHostCommand?: string[];
+  networkHelper?: string;
+  networkStateDirectory: string;
+  networkRate: number;
+  networkBurst: number;
+  networkTransfer: number;
+  networkSpaceDaily: number;
+  networkChunk: number;
+  networkConnections: number;
+  networkPollMs: number;
 }
 function privateAddress(address: string) {
   if (!isIP(address)) return false;
@@ -44,8 +57,8 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
       throw new Error(`Invalid ${name}`);
     return Number(value);
   }
-  function flag(name: string) {
-    const value = env[name] ?? "false";
+  function flag(name: string, fallback = "false") {
+    const value = env[name] ?? fallback;
     if (value !== "true" && value !== "false") throw new Error(`Invalid ${name}`);
     return value === "true";
   }
@@ -76,6 +89,31 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(runtime))
     throw new Error("Invalid SANDBOX_RUNTIME");
   const untrustedTenants = flag("SANDBOX_UNTRUSTED_TENANTS");
+  const networkLimits = flag("SANDBOX_NETWORK_LIMITS", untrustedTenants ? "true" : "false");
+  if (untrustedTenants && !networkLimits)
+    throw new Error("Untrusted tenants require host network limits");
+  let networkHostCommand: string[] | undefined;
+  if (env.SANDBOX_NETWORK_HOST_COMMAND) {
+    const value: unknown = JSON.parse(env.SANDBOX_NETWORK_HOST_COMMAND);
+    if (
+      !Array.isArray(value) ||
+      !value.length ||
+      value.length > 16 ||
+      value.some((v) => typeof v !== "string" || !v || v.includes("\0"))
+    )
+      throw new Error("Invalid SANDBOX_NETWORK_HOST_COMMAND");
+    networkHostCommand = value as string[];
+  }
+  const networkHelper = env.SANDBOX_NETWORK_HELPER;
+  const networkSocket = env.SANDBOX_NETWORK_SOCKET ?? "/run/raypx-sandbox-network/control.sock";
+  const networkStateDirectory =
+    env.SANDBOX_NETWORK_STATE_DIRECTORY ?? "/var/lib/raypx-sandbox-network";
+  if (
+    !networkSocket.startsWith("/") ||
+    !networkStateDirectory.startsWith("/") ||
+    (networkHostCommand && !networkHelper?.startsWith("/"))
+  )
+    throw new Error("Host network policy paths must be absolute");
   if (
     untrustedTenants &&
     !(flag("SANDBOX_RESTRICTED_EGRESS") && flag("SANDBOX_HOST_RULES_APPLIED"))
@@ -98,6 +136,12 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
     throw new Error("Invalid SANDBOX_DNS_RESOLVER: public IPv4 required");
   const pids = positive("SANDBOX_PIDS_LIMIT", "128", 1_000_000);
   const overhead = positive("SANDBOX_RUNTIME_PIDS_OVERHEAD", "256", 1_000_000);
+  const networkRate = positive("SANDBOX_NETWORK_BYTES_PER_SECOND", "1048576", 1_000_000_000);
+  const networkBurst = positive("SANDBOX_NETWORK_BURST_BYTES", "1048576", 1_000_000_000);
+  if (networkRate < 1024 || networkBurst < networkRate)
+    throw new Error(
+      "Network burst must cover at least one second at the configured byte rate (minimum 1024)",
+    );
   return {
     address,
     port: positive("SANDBOX_PORT", "4020", 65535),
@@ -136,5 +180,26 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
       "8589934592",
       Number.MAX_SAFE_INTEGER,
     ),
+    namespace,
+    networkLimits,
+    networkSocket,
+    ...(networkHostCommand ? { networkHostCommand } : {}),
+    ...(networkHelper ? { networkHelper } : {}),
+    networkStateDirectory,
+    networkRate,
+    networkBurst,
+    networkTransfer: positive(
+      "SANDBOX_NETWORK_TRANSFER_BYTES",
+      "1073741824",
+      Number.MAX_SAFE_INTEGER,
+    ),
+    networkSpaceDaily: positive(
+      "SANDBOX_NETWORK_SPACE_DAILY_BYTES",
+      "10737418240",
+      Number.MAX_SAFE_INTEGER,
+    ),
+    networkChunk: positive("SANDBOX_NETWORK_CHUNK_BYTES", "67108864", 1_073_741_824),
+    networkConnections: positive("SANDBOX_NETWORK_CONNECTIONS", "64", 10000),
+    networkPollMs: positive("SANDBOX_NETWORK_POLL_MS", "5000", 60000),
   };
 }

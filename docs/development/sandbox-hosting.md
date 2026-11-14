@@ -141,14 +141,14 @@ execute. Runtime installation is a separate operator action; provisioning never
 pulls images, installs runtimes or falls back to runc.
 
 Build the supervisor with `bun run --cwd infra/sandbox build`. Install its
-`dist/server.mjs`, `infra/sandbox/egress.sh`, and the host template's
+`dist/server.mjs`, `infra/sandbox/egress.sh`, `infra/sandbox/host-network.py`, and the host template's
 `prepare-host.sh` and `stop-owned.sh` into an immutable `/opt/raypx-sandbox/releases/<release>/`, owned
 by root. Point `/opt/raypx-sandbox/current` at that release. Prepare the digest-pinned
 Computer image from the same release using [the image procedure](sandbox.md#engine-and-image). Preload it
 onto this Engine and record its immutable image ID or repository digest.
 
 Create a `raypx-sandbox` system user/group with Docker socket access. This access
-is effectively root on the dedicated compute host. Install the systemd unit and
+is effectively root on the dedicated compute host. Install both systemd units and
 copy `supervisor.env.example` to `/etc/raypx-sandbox/supervisor.env` (`0600`, root).
 Fill in the independent token and image digest. The unit grants only its private
 state directory for writes and bounds supervisor memory/tasks. Never populate it
@@ -189,6 +189,74 @@ until rules and counters are verified. An independent firewall reset while runni
 can remove enforcement; flags do not detect this. Monitor rule presence from the
 host and stop tenant containers immediately if the rules disappear. Never switch
 to gVisor host networking to fix a failed network probe.
+
+## Host network budgets
+
+Install immutable `infra/sandbox/host-network.py` beside `server.mjs` and both
+systemd units from the host templates. Linux needs Python 3 and iptables with
+time/quota/hashlimit/connlimit support. The nft compatibility frontend is supported;
+Docker's native nftables backend is not. Start `raypx-sandbox-network.service`
+before the supervisor. Its Unix socket admits the exact supervisor UID using peer
+credentials and filesystem permissions. The service has network-administration
+and raw-socket capabilities, no Docker socket, backend credentials or public
+listener. Supervisor `NoNewPrivileges` stays enabled. Release files stay root-owned
+and immutable to the supervisor. Never mount this socket in a computer or API.
+
+Untrusted mode requires `SANDBOX_NETWORK_LIMITS=true`. Production uses the Unix
+socket. `SANDBOX_NETWORK_HOST_COMMAND` and an absolute `SANDBOX_NETWORK_HELPER`
+are an explicit validation adapter for a remote Engine VM. The local Compose
+supervisor remains trusted development; network limits need a reviewed host-socket
+bind override there. Do not use arbitrary command prefixes in production.
+
+| Setting                             |     Default | Meaning                                             |
+| ----------------------------------- | ----------: | --------------------------------------------------- |
+| `SANDBOX_NETWORK_BYTES_PER_SECOND`  |     1048576 | 1 MiB/s aggregate upload + download per computer    |
+| `SANDBOX_NETWORK_BURST_BYTES`       |     1048576 | one-second initial burst; at least the rate         |
+| `SANDBOX_NETWORK_TRANSFER_BYTES`    |  1073741824 | 1 GiB per start                                     |
+| `SANDBOX_NETWORK_SPACE_DAILY_BYTES` | 10737418240 | 10 GiB reserved transfer per Space per UTC day      |
+| `SANDBOX_NETWORK_CHUNK_BYTES`       |    67108864 | 64 MiB durable allowance quantum                    |
+| `SANDBOX_NETWORK_CONNECTIONS`       |          64 | tracked TCP flows and tracked UDP flows, separately |
+| `SANDBOX_NETWORK_POLL_MS`           |        5000 | network accounting interval                         |
+
+The host kernel polices both directions through one byte bucket and quota chain
+per computer. This is packet policing, not smooth shaping; TCP retransmission can
+lower effective throughput. Public traffic defaults to TCP 80/443 and TCP/UDP 53
+to the selected resolver. SMTP, SSH, remote desktop, database ports, arbitrary UDP
+and other IP protocols are denied. Extra ports require an operator-reviewed host
+policy release and new acceptance. Connection limits count host conntrack
+lifetimes, which can outlast an application socket. Before conntrack allocation,
+raw-table rules police outgoing bytes, TCP SYNs (16/s, burst 32), and UDP datagrams
+(64/s, burst 64), and drop other protocols and IPv6. Rejected connection floods
+therefore have a bounded arrival rate into host connection tracking as well.
+
+Before granting a quantum, the service reserves it against start and Space/day
+budgets and fsyncs its private journal. Refill freezes that computer's chain while
+reading admitted-byte counters and replacing its quota. The nft frontend displays
+a configured quota, not remaining credit. UTC kernel cutoffs deny old-day grants
+at midnight even if a poll is late. Backwards UTC dates refuse admission. An
+over-budget packet drops immediately; the supervisor then stops compute and
+publishes `COMPUTER_TRANSFER_LIMIT` or `SPACE_DAILY_TRANSFER_LIMIT`. Missing host
+accounting contains compute and reports capacity unavailable. Clients translate
+these reasons in English and Chinese, including subsequent stopped-state reads.
+
+Unknown/unused reservations are not refunded after crash/stop. A running computer
+can hold roughly 1.5 quanta ahead of observed usage, so daily admission is
+conservative even for starts with no traffic. Logs report observed/reserved bytes
+and Space reservations without content. Admission/refill serialize in the host
+journal. Preserve `/var/lib/raypx-sandbox-network` with supervisor state during
+upgrades/backups; deleting it resets cost authority and requires drained operator
+recovery. Startup removes exact owned orphan rules without refunding reservations.
+Quotas belong to this supervisor/namespace; keep each Space's placement stable.
+This does not provide fleet-wide billing or scheduling.
+
+Limits count forwarded IP bytes, including headers, and exclude private Engine/
+control streams with their existing output/frame bounds. Locally discarded
+packets do not consume transfer credit. Inbound bytes/retransmissions may already
+have reached a provider interface before host policing drops them. This cannot
+guarantee provider billing or prevent unsolicited host floods. Monitor conntrack,
+network saturation and provider usage independently. Root firewall changes can
+remove enforcement; the monitor refuses missing owned hooks, but host incident
+containment remains necessary.
 
 ## Limits and accounting
 
@@ -346,6 +414,10 @@ and does not become a claim of graphical success. Evidence is under
 `.artifacts/sandbox-hosting/<runtime>/`. A runtime registered in `docker info` is
 not a passing test. An unavailable graphical stack must remain disabled with its
 recorded runtime failure; do not advertise Screen based on an unrun image.
+With egress enabled it also verifies host socket peer credentials, byte rate,
+start/Space-day budgets, connection limits, abuse ports and datagram policing
+before conntrack. Both runc and runsc passed the live graphical cases on the
+recorded arm64 Engine VM; other host/runtime combinations still need their own gate.
 
 A requested graphical image receives a bounded session-start/PNG startup probe.
 Failure disables Screen and reports `GRAPHICAL_RUNTIME_UNAVAILABLE` through
@@ -357,7 +429,16 @@ passes. Headless remains the production template's default. Other CPU/platform
 combinations, rootless Engines, encrypted-channel deployment, physical host
 hardening and restore drills require their own acceptance. gVisor narrows the host
 kernel interface; it is not a VM or a promise against every kernel/runtime exploit.
-Public HTTPS can carry tunnels or abuse; this policy does not inspect content,
-limit aggregate bandwidth or prevent attacks on public destinations. Measured
+Public HTTPS can carry tunnels or abuse; this policy does not inspect content
+or prevent all attacks on public destinations. Host network limits bound forwarded
+traffic and tracked flows, not all provider ingress or control-plane costs. Measured
 storage allows transient overshoot and snapshots cap regular file bytes at 32 MiB.
 Maintain host disk alarms, network abuse controls and a patch/incident process.
+
+Runsc graphics require an ordered desktop: Xvfb socket, Openbox EWMH readiness,
+mapped browser, then mapped/focused terminal. The old helper spawned the browser
+before the window manager was ready; controlled runs stranded it with only the
+window manager mapped. Waiting for EWMH readiness fixed the race within the same
+eight-second shared budget and ten-second outer limit. No memory/PID increase,
+GPU/DRI device, capability, host namespace, writable root or larger shared memory/
+tmpfs was needed. The 512 MiB/128 guest PID defaults and sizing formulas still apply.

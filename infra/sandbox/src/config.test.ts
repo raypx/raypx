@@ -4,6 +4,21 @@ const base = {
   SANDBOX_SUPERVISOR_TOKEN: "fixture-dedicated-token-with-32-characters",
   SANDBOX_COMPUTER_IMAGE: `fixture@sha256:${"a".repeat(64)}`,
 };
+it("refuses disabling network limits for untrusted tenants and malformed byte buckets", () => {
+  expect(() =>
+    sandboxConfig({ ...base, SANDBOX_UNTRUSTED_TENANTS: "true", SANDBOX_NETWORK_LIMITS: "false" }),
+  ).toThrow("host network limits");
+  expect(() => sandboxConfig({ ...base, SANDBOX_NETWORK_BURST_BYTES: "4096" })).toThrow("burst");
+  for (const key of [
+    "SANDBOX_NETWORK_BYTES_PER_SECOND",
+    "SANDBOX_NETWORK_TRANSFER_BYTES",
+    "SANDBOX_NETWORK_SPACE_DAILY_BYTES",
+    "SANDBOX_NETWORK_CHUNK_BYTES",
+    "SANDBOX_NETWORK_CONNECTIONS",
+    "SANDBOX_NETWORK_POLL_MS",
+  ])
+    expect(() => sandboxConfig({ ...base, [key]: "0" })).toThrow("Invalid");
+});
 it("keeps graphics opt-in and rejects a malformed graphical assertion", () => {
   expect(sandboxConfig(base).graphical).toBe(false);
   expect(sandboxConfig({ ...base, SANDBOX_GRAPHICAL: "true" }).graphical).toBe(true);

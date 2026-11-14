@@ -50,3 +50,6 @@ Lifecycle start passes trusted Space identity to the provider. Optional provider
 observations reconcile automatic stops with a generation/fence-checked PostgreSQL
 write and the normal state event; reads never provision and transport failure is
 not proof of a stop. Admission refusal reasons are additive lifecycle metadata.
+Provider observations also carry value-free per-start/daily transfer reasons;
+later stopped-state reads retain them without starting compute. Clients translate
+these codes through the shared catalogs.

@@ -5,6 +5,18 @@ import { releaseMetadataFile } from "@raypx/tooling/build/release";
 import { checkApi, checkWeb, checkDeploymentSession } from "../smoke/checks.js";
 import { Evidence } from "./evidence.js";
 
+export function assertDeploymentReadiness(
+  profile: "compose" | "railway",
+  checks: Record<string, string>,
+) {
+  const required = profile === "railway" ? ["database", "redis", "relay"] : ["database"];
+  if (
+    required.some((name) => checks[name] !== "ok") ||
+    (profile === "compose" && ("redis" in checks || "relay" in checks))
+  )
+    throw new Error("Deployment dependency readiness failed");
+}
+
 export function deploymentSmokePlatform(args: string[]): string {
   if (!args.length) return "linux/amd64";
   if (
@@ -354,12 +366,7 @@ export async function smokeDeployment(root: string, args: string[]) {
           const ready = (await (await fetch(`${base}/ready`)).json()) as {
             checks: Record<string, string>;
           };
-          if (
-            ready.checks.database !== "ok" ||
-            ready.checks.relay !== "ok" ||
-            (profile === "railway" ? ready.checks.redis !== "ok" : "redis" in ready.checks)
-          )
-            throw new Error("Deployment dependency readiness failed");
+          assertDeploymentReadiness(profile, ready.checks);
           await checkWeb(base);
           await checkApi(base, { origin, gateway: true });
           await checkDeploymentSession(base, fixture);

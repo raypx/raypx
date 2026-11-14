@@ -51,3 +51,14 @@ RLIMIT_NPROC and pins DNS via a root-owned read-only volume subpath. Startup dro
 only uncommitted atomic temporary files. Serialize home archive I/O to bound
 supervisor memory. Optional graphical acceptance is reported separately from the
 headless safety gate; screen-start failures retain an explicit availability reason.
+
+Start the window manager and await its EWMH desktop before mapping the browser;
+an X socket alone is not readiness. All phases share the bounded start deadline.
+
+Untrusted mode requires the separate Linux host network service. Its private Unix
+socket admits only the supervisor UID; it holds no Docker/database/model credential.
+Keep packet policing and quotas in the host kernel. Durable allowances fsync before
+enabling traffic; unknown reservations remain charged. UTC rules fence daily rollover.
+Read admitted byte counters rather than nft static quota options. Stop on exhaustion
+or unavailable accounting, preserving public reasons. Host-command control is an
+explicit validation adapter. Never log packets, commands or content.

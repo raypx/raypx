@@ -113,6 +113,17 @@ under generation/lease fences and emit the existing state events; they never
 provision during reads. Additive lifecycle availability reasons explain quota refusals.
 These controls are local to one supervisor; fleet quotas are not implemented.
 
+Untrusted mode also requires host-side network budgets. A separate root service
+admits only the supervisor UID over a private Unix socket; it holds no Docker or
+backend credentials. Durable reservations precede kernel packet allowances. Defaults
+are 1 MiB/s aggregate forwarded transfer, 1 GiB per start, 10 GiB per Space/UTC day,
+64 MiB reservation chunks and 64 tracked flows per protocol. Host pre-conntrack
+rules bound SYN/datagram floods; the filter policy permits public TCP 80/443 and
+the selected DNS resolver only. Exhaustion stops compute and returns translated
+lifecycle reasons, including subsequent reads of stopped computers. Packet policing,
+conservative reservations and control/provider-ingress exclusions are detailed in
+the [hosting guide](../development/sandbox-hosting.md#host-network-budgets).
+
 ## Device connectors
 
 The device connector is the bundled CLI daemon. It offers the device it runs on as
@@ -236,7 +247,7 @@ On the Linux Engine host, pass its deterministic bridge with `--bridge` and use
 script requires Docker's iptables backend, `iptables`, `ip6tables` and root; apply
 also verifies the bridge exists in the current host namespace. It blocks computer
 traffic to the host and private/reserved IPv4 destinations before and after DNAT.
-Public IPv4 follows Docker's policy; all computer IPv6 egress is denied. Set both
+Public IPv4 is restricted to TCP 80/443 and configured DNS; all computer IPv6 egress is denied. Set both
 egress assertions only after applying and verifying the rules on that Engine host.
 `SANDBOX_DNS_RESOLVER` selects one public IPv4 upstream (default `1.1.1.1`);
 pass that same address as `egress.sh --resolver ADDRESS`. Computers use the
@@ -256,10 +267,12 @@ replacement acceptance, with optional `--with-egress` host probes. Ordinary sour
 verification uses fakes and never invokes Docker. On 2026-11-14 the gate passed
 on macOS arm64 with a Linux arm64 Engine VM (29.5.2, API 1.54) under runc and
 runsc release-20261109.0: provider conformance 12/12 (six live, six reference)
-and eleven safety/input probes per runtime, including protected stdin/environment,
-inbox delivery and IPv4 egress enforcement. Separate runc graphical conformance
-passed; final runsc member graphical startup failed and that generation reports
-Screen unavailable. IPv6 enforcement was unavailable because
+and nineteen safety/input/network probes per runtime, including protected stdin/environment,
+inbox delivery, host cost controls and IPv4 egress enforcement. Separate graphical
+conformance passed under both runtimes: one live case and one reference case each,
+covering capture, input-driven pixel changes and stream closure. Waiting for EWMH
+readiness before launching the browser fixed the runsc startup race under the same
+container limits. IPv6 enforcement was unavailable because
 the VM has no usable IPv6 route. Native Linux distributions, amd64,
 other macOS Engine configurations, Windows and rootless engines remain unverified.
 CI wiring is not a passing run.

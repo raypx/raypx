@@ -101,22 +101,24 @@ export function createComputersService(
   async function get(scope: SpaceScope): Promise<SpaceComputer> {
     if (!provider) return { status: "not-configured" };
     let computer = await repository.get(scope);
-    if (computer?.state === "running" && !computer.leaseOwner && repository.observe) {
+    let unavailableReason: Extract<SpaceComputer, { status: "available" }>["unavailableReason"];
+    if (computer && computer.state !== "destroyed" && !computer.leaseOwner) {
       try {
         const live = await provider.get({ id: computer.id, generation: computer.generation });
-        if (live.state !== "running")
+        if (computer.state === "running" && live.state !== "running" && repository.observe)
           computer = await repository.observe(scope, computer, {
             state: live.state,
             homeRevision: live.homeRevision,
             failureCode: null,
           });
+        if (computer?.generation === live.generation) unavailableReason = live.unavailableReason;
       } catch {
         // A transport failure is not proof that compute stopped; a competing claim
         // may also have replaced the generation while observation was in flight.
         computer = await repository.get(scope);
       }
     }
-    return { status: "available", computer };
+    return { status: "available", computer, ...(unavailableReason ? { unavailableReason } : {}) };
   }
   async function fileAccess(
     scope: SpaceScope,

@@ -117,6 +117,16 @@ def start():
                 refusal("PROVIDER_UNAVAILABLE")
             time.sleep(0.05)
         spawn(["openbox", "--sm-disable"])
+        # Mapping a GTK window before the window manager publishes its EWMH
+        # desktop can strand the client during reparenting under runsc. A live
+        # X socket alone is not desktop readiness. Keep the same shared deadline.
+        while True:
+            desktop = desktop_command(["get_desktop"], deadline)
+            if desktop is not None and desktop.returncode == 0:
+                break
+            if time.monotonic() >= deadline:
+                refusal("PROVIDER_UNAVAILABLE")
+            time.sleep(0.05)
         browser = shutil.which("netsurf-gtk") or shutil.which("netsurf")
         if not browser:
             refusal("SCREEN_UNAVAILABLE")

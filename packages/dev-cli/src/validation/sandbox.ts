@@ -26,6 +26,7 @@ import {
   type SandboxEgressResult,
 } from "./sandbox-probes.js";
 import { readBunPin } from "./toolchain.js";
+import { acceptSandboxNetwork } from "./sandbox-network.js";
 
 /** All effects are injected so failure and resource ownership can be checked without an Engine. */
 export interface SandboxRuntime {
@@ -274,7 +275,7 @@ export async function executeSandbox(
     });
     const port = await runtime.port();
     const url = `http://127.0.0.1:${port}`;
-    const supervisorEnv = {
+    const supervisorEnv: NodeJS.ProcessEnv = {
       ...env,
       SANDBOX_LISTEN_ADDRESS: "127.0.0.1",
       SANDBOX_PORT: String(port),
@@ -499,6 +500,17 @@ export async function executeSandbox(
     }
     if (firewall) {
       await runtime.command(
+        "network-peer-credentials",
+        [
+          ...(firewall.length > 1 ? firewall.slice(0, -1) : ["env"]),
+          "python3",
+          "-I",
+          join(root, "packages/dev-cli/src/validation/sandbox-network-ipc.py"),
+          join(root, "infra/sandbox/host-network.py"),
+        ],
+        env,
+      );
+      await runtime.command(
         "egress-apply",
         [
           ...firewall,
@@ -511,6 +523,27 @@ export async function executeSandbox(
         ],
         env,
       );
+      await runtime.step("network-supervisor-ready", async () => {
+        await supervisor?.stop();
+        Object.assign(supervisorEnv, {
+          SANDBOX_NETWORK_LIMITS: "true",
+          SANDBOX_NETWORK_HOST_COMMAND: JSON.stringify(
+            firewall!.length > 1 ? firewall!.slice(0, -1) : ["env"],
+          ),
+          SANDBOX_NETWORK_HELPER: join(root, "infra/sandbox/host-network.py"),
+          SANDBOX_NETWORK_STATE_DIRECTORY: `/tmp/raypx-network-${plan.id}`,
+          SANDBOX_NETWORK_BYTES_PER_SECOND: "65536",
+          SANDBOX_NETWORK_BURST_BYTES: "131072",
+          SANDBOX_NETWORK_TRANSFER_BYTES: "524288",
+          SANDBOX_NETWORK_SPACE_DAILY_BYTES: "786432",
+          SANDBOX_NETWORK_CHUNK_BYTES: "65536",
+          SANDBOX_NETWORK_CONNECTIONS: "8",
+          SANDBOX_NETWORK_POLL_MS: "1000",
+        });
+        await ready(supervisorEnv);
+        probeGeneration += 1;
+        await call("create", probeGeneration);
+      });
       egress = await runtime.step("egress-probe", async () => {
         const value = await container();
         const gateway = value.NetworkSettings.Networks[plan.network]?.Gateway;
@@ -599,6 +632,15 @@ export async function executeSandbox(
         );
       });
       runtime.report(`egress-probe: ${egress}`);
+      await acceptSandboxNetwork(
+        plan,
+        runtime,
+        docker,
+        firewall.length > 1 ? firewall.slice(0, -1) : ["env"],
+        image,
+        url,
+        token,
+      );
     } else runtime.report(`egress-probe: ${egress}`);
     await runtime.step("privilege-and-kernel-escape", async () => {
       const result = JSON.parse(await probe(sandboxEscapeProbe)) as Record<string, boolean>;
@@ -842,6 +884,29 @@ os.unlink(site.getusersitepackages() + '/usercustomize.py')
         },
       ],
       [
+        "network-remove",
+        async () => {
+          if (firewall) {
+            const prefix = firewall.length > 1 ? firewall.slice(0, -1) : ["env"];
+            await runtime.capture([
+              ...prefix,
+              "python3",
+              "-I",
+              join(root, "infra/sandbox/host-network.py"),
+              "request",
+              `/tmp/raypx-network-${plan.id}`,
+              Buffer.from(
+                JSON.stringify({
+                  operation: "clear",
+                  namespace: plan.namespace,
+                  bridge: plan.bridge,
+                }),
+              ).toString("base64"),
+            ]);
+          }
+        },
+      ],
+      [
         "egress-remove",
         async () => {
           if (firewall)
@@ -921,10 +986,14 @@ export async function runSandboxValidation(root: string, args: string[]) {
             ...(body ? { body: JSON.stringify(body) } : {}),
             signal: AbortSignal.timeout(operation === "description" ? 1000 : 30_000),
           });
-          if (!response.ok)
+          if (!response.ok) {
+            const reason = (await response.json().catch(() => ({}))) as { code?: string };
+            const code =
+              reason.code && /^[A-Z_]{1,64}$/.test(reason.code) ? `: ${reason.code}` : "";
             throw new Error(
-              `Supervisor ${operation.split("/").at(-1)} failed (${response.status})`,
+              `Supervisor ${operation.split("/").at(-1)} failed (${response.status})${code}`,
             );
+          }
           if (operation.endsWith("/exec")) {
             const reader = response.body!.getReader();
             const chunks: Uint8Array[] = [];

@@ -209,6 +209,8 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
         DEPLOYMENT_STORAGE_LIMIT: 429,
         HOME_STORAGE_LIMIT: 429,
         CAPACITY_UNAVAILABLE: 503,
+        COMPUTER_TRANSFER_LIMIT: 429,
+        SPACE_DAILY_TRANSFER_LIMIT: 429,
       };
       return Response.json({ code }, { status: statuses[code] ?? 503 });
     }

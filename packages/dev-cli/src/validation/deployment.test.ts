@@ -3,6 +3,21 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { checkDeployment } from "./deployment.js";
+import { assertDeploymentReadiness } from "./deployment-smoke.js";
+
+it("accepts the current optional connector readiness in combined and Redis-backed deployments", () => {
+  expect(() => assertDeploymentReadiness("compose", { database: "ok" })).not.toThrow();
+  expect(() =>
+    assertDeploymentReadiness("railway", { database: "ok", redis: "ok", relay: "ok" }),
+  ).not.toThrow();
+  for (const checks of [{ database: "unavailable" }, { database: "ok", relay: "ok" }])
+    expect(() => assertDeploymentReadiness("compose", checks)).toThrow("readiness failed");
+  for (const checks of [
+    { database: "ok", redis: "ok" },
+    { database: "ok", redis: "ok", relay: "unavailable" },
+  ])
+    expect(() => assertDeploymentReadiness("railway", checks)).toThrow("readiness failed");
+});
 
 const repository = resolve(import.meta.dirname, "../../../..");
 const roots: string[] = [];

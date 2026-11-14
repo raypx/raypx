@@ -37,7 +37,9 @@ conformance has a separate result; unavailable Screen never counts as passed.
 probes privilege/kernel controls, fork/memory/disk exhaustion and peer network
 isolation, private UTF-8 stdin/environment scope, and bounded inbox writes with
 post-write accounting; evidence is under `.artifacts/sandbox-hosting/<runtime>/`.
-Its `--with-egress` case uses Engine-host controls and owned DROP counters;
+Its `--with-egress` case uses Engine-host controls and owned DROP counters, and
+checks network-policy peer credentials, rate/start/Space-day budgets, abuse ports,
+connection limits and pre-conntrack datagram policing;
 offline public HTTPS is explicitly unavailable. `--dns-resolver` selects the
 public IPv4 DNS upstream shared by the supervisor and firewall probe.
 `--engine-host-command` explicitly selects an argv prefix for root commands on a

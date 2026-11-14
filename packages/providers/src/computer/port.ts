@@ -44,6 +44,7 @@ export class ComputerError extends Error {
 export const providerComputerSchema = computerRefSchema.extend({
   state: computerStateSchema.exclude(["starting", "stopping", "failed"]),
   homeRevision: homeRevisionSchema.nullable(),
+  unavailableReason: computerAvailabilityReasonSchema.optional(),
 });
 export type ProviderComputer = z.infer<typeof providerComputerSchema>;
 export const commandSchema = z.strictObject({

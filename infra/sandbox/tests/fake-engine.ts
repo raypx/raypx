@@ -164,7 +164,14 @@ export function fakeEngine() {
           blkio_stats: { io_service_bytes_recursive: [{ op: "write", value: writeBytes }] },
         });
       if (suffix === "/json")
-        return Response.json({ State: { Running: c.running, Paused: c.paused } });
+        return Response.json({
+          State: { Running: c.running, Paused: c.paused },
+          NetworkSettings: {
+            Networks: Object.fromEntries(
+              networks.map((n) => [n.Name, { IPAddress: "172.25.0.2" }]),
+            ),
+          },
+        });
       if (suffix === "/start") {
         c.running = true;
         await c.provider.provision(c.ref);

@@ -22,9 +22,13 @@ it("renders scoped host and routed rules without executing any firewall command"
   expect(rules.filter((rule) => rule.includes(" -N "))).toEqual([
     "iptables -w -N RPX_E_0123456789",
   ]);
-  for (const rule of rules.filter((candidate) => !candidate.includes(" -N ")))
+  for (const rule of rules.filter(
+    (candidate) => !candidate.includes(" -N ") && !candidate.endsWith(" -j RETURN"),
+  ))
     expect(rule).toMatch(
-      new RegExp(`--comment raypx-sandbox-(egress:${bridge}|dns:${bridge}:1\\.1\\.1\\.1)`),
+      new RegExp(
+        `--comment raypx-sandbox-(egress:${bridge}|dns:${bridge}:1\\.1\\.1\\.1|ports:${bridge})`,
+      ),
     );
   for (const rule of rules.filter((candidate) => candidate.includes(" -I ")))
     expect(rule).toContain(` -i ${bridge} `);
@@ -36,6 +40,13 @@ it("renders scoped host and routed rules without executing any firewall command"
   expect(rules).toContain(
     `iptables -w -I DOCKER-USER 1 -i ${bridge} -m comment --comment raypx-sandbox-egress:${bridge} -j RPX_E_0123456789`,
   );
+});
+
+it("allows only public HTTP(S) and configured DNS, denying SMTP and amplification protocols", () => {
+  const { stdout } = dryRun();
+  expect(stdout).toContain("-p tcp -m multiport ! --dports 53,80,443");
+  expect(stdout).toContain("-p udp ! --dport 53");
+  expect(stdout).toContain(`--comment raypx-sandbox-ports:${bridge} -j DROP`);
 });
 
 it("restricts direct TCP and UDP DNS before and after DNAT to the configured resolver", () => {

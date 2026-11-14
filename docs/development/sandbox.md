@@ -121,7 +121,10 @@ passwordless sudo. The gate builds its own image, owns a temporary supervisor,
 runs provider conformance, isolation and home-replacement probes, and cleans only
 its labeled resources. No operator supervisor or database is needed. The egress
 variant checks public controls, configured/alternate DNS, a host-service canary,
-private ranges and metadata with owned DROP-counter evidence. Public connectivity
+private ranges and metadata with owned DROP-counter evidence. It also checks the
+host policy socket's peer-UID boundary, transfer rate, per-start and Space/day
+budgets, connection limits, abuse-port denial and pre-conntrack datagram policing.
+Public connectivity
 failure in both probe and control is unavailable; IPv6 needs a reachable control.
 
 The gate builds both default and graphical targets and records each image's byte
@@ -134,20 +137,22 @@ second and one MiB per PNG. Fixed graphical helpers have intrinsic container-sid
 deadlines (three seconds, or ten seconds for start); the backend's longer HTTP
 deadline does not leave input executing after it releases its control gate.
 
-On 2026-11-14 the final macOS arm64/Colima Linux arm64 gates passed 12/12 provider
-cases (six live and six reference) and all eleven safety/input probes under both runc and
+On 2026-11-14 the macOS arm64/Colima Linux arm64 gates passed 12/12 provider
+cases (six live and six reference) and all nineteen safety/input/network probes under both runc and
 runsc release-20261109.0. Separate runc graphical conformance passed both selected
 cases (one live and one reference), including 1024×768 PNG capture, input-driven
-pixel changes and stream closure after stop. The final runsc graphical capability
-probe passed, but its separate member session start failed: one live graphical
-case failed, one reference case passed, and ten cases were filtered. That generation
-reports `GRAPHICAL_RUNTIME_UNAVAILABLE`; no runsc graphical conformance success
-is claimed. The default image was 128,105,239 bytes and the graphical image
-280,464,118 bytes. The new private-input probe verifies UTF-8 stdin/environment
+pixel changes and stream closure after stop. Runsc passed those same two graphical
+cases, with ten unrelated cases filtered in each graphical run. Waiting for the
+window manager's EWMH readiness before starting the browser fixed its startup race
+without relaxing container controls. The private-input probe verifies UTF-8 stdin/environment
 delivery using hashes, temporary-input cleanup and no inheritance by the next
 command. Inbox acceptance writes and reads one maximum-size 1 MiB attachment
 through the Computer port, including post-write quota measurement.
 IPv4 private/host/metadata/DNS enforcement and public HTTPS/configured DNS passed.
+Network tests use an owned public-shaped fixture: 64 KiB/s with a 128 KiB burst,
+512 KiB per start, 768 KiB per Space/day, 64 KiB allowance chunks and eight flows
+per protocol. They require lifecycle stop/refusal reasons, live DROP counters,
+and a faster independent Engine-host control; see [production defaults](sandbox-hosting.md#host-network-budgets).
 IPv6 enforcement was unavailable because both host and computer lacked IPv6
 reachability. These measurements establish this Engine VM only; other platforms
 and packaged client behavior remain separate gates.

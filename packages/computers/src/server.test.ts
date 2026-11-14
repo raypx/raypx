@@ -62,6 +62,27 @@ it("reads without allocating and starts exactly the claimed team computer", asyn
   await service.start(scope);
   expect(provision).toHaveBeenCalledTimes(1);
 });
+it("renders persisted provider transfer reasons on later reads without provisioning", async () => {
+  const f = fixture();
+  const provider = createMemoryComputerProvider();
+  const service = createComputersService(f.repository, provider);
+  await service.start(scope);
+  await service.stop(scope);
+  vi.spyOn(provider, "get").mockResolvedValue({
+    id: f.row()!.id,
+    generation: f.row()!.generation,
+    state: "stopped",
+    homeRevision: null,
+    unavailableReason: "SPACE_DAILY_TRANSFER_LIMIT",
+  });
+  const provision = vi.spyOn(provider, "provision");
+  expect(await service.get(scope)).toMatchObject({
+    status: "available",
+    computer: { state: "stopped" },
+    unavailableReason: "SPACE_DAILY_TRANSFER_LIMIT",
+  });
+  expect(provision).not.toHaveBeenCalled();
+});
 it("commits a safe failure while preserving the known revision", async () => {
   const f = fixture();
   const provider = createMemoryComputerProvider();

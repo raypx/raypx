@@ -49,6 +49,8 @@ export const computerAvailabilityReasonSchema = z.enum([
   "DEPLOYMENT_STORAGE_LIMIT",
   "HOME_STORAGE_LIMIT",
   "CAPACITY_UNAVAILABLE",
+  "COMPUTER_TRANSFER_LIMIT",
+  "SPACE_DAILY_TRANSFER_LIMIT",
 ]);
 export const spaceComputerSchema = z.discriminatedUnion("status", [
   z.strictObject({ status: z.literal("not-configured") }),

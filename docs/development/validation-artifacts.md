@@ -127,10 +127,12 @@ lockfile change or missing Git base alone does not request Docker acceptance.
 
 On 2026-11-14 the gate passed on macOS arm64 with a Linux arm64 Engine VM
 (29.5.2, API 1.54), under runc and runsc release-20261109.0: provider conformance
-12/12 (six live, six reference) and eleven safety/input probes per runtime.
-Separate runc graphical conformance passed (one live, one reference); runsc
-graphical conformance had one live failure, one reference pass and ten filtered
-cases. Its affected generation reports `GRAPHICAL_RUNTIME_UNAVAILABLE`.
+12/12 (six live, six reference) and nineteen safety/input/network probes per runtime.
+Separate graphical conformance passed under both runtimes (one live, one reference,
+ten filtered cases each), including capture, input-driven pixel changes and stream
+closure. The network cases verify the host policy socket peer UID, bounded rate,
+per-start and Space/day stop/refusal, abuse ports, tracked connections and raw-table
+datagram policing before conntrack allocation.
 Public HTTPS and configured direct/file-resolver UDP/TCP DNS
 succeeded; private, metadata, gateway, host-service and alternate-DNS probes
 timed out with increasing owned DROP counters. IPv6 enforcement was unavailable

@@ -783,6 +783,8 @@
     "SPACE_STORAGE_LIMIT": "此空间已达到电脑存储上限。",
     "DEPLOYMENT_STORAGE_LIMIT": "电脑服务已达到存储上限。",
     "HOME_STORAGE_LIMIT": "此电脑已达到文件存储上限。",
-    "CAPACITY_UNAVAILABLE": "电脑资源暂不可用，请稍后重试。"
+    "CAPACITY_UNAVAILABLE": "电脑资源暂不可用，请稍后重试。",
+    "COMPUTER_TRANSFER_LIMIT": "此电脑已达到流量上限并停止。",
+    "SPACE_DAILY_TRANSFER_LIMIT": "此空间已达到每日流量上限，请在 UTC 零点后重试。"
   }
 }

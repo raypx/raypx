@@ -12,6 +12,7 @@ import {
 } from "@raypx/providers/computer";
 import type { SandboxConfig } from "./config.js";
 import type { Engine } from "./engine.js";
+import { hostNetwork, type NetworkPolicy } from "./network.js";
 import {
   MAX_COMPUTER_SCREEN_BYTES,
   MAX_COMPUTER_SCREEN_FPS,
@@ -38,8 +39,16 @@ export function createSupervisor(
     now?: () => number;
     usage?: typeof measureStorage;
     report?: (value: object) => void;
+    network?: NetworkPolicy;
   } = {},
-): ComputerProvider & { initialize(): Promise<void>; maintain(): Promise<void> } {
+): ComputerProvider & {
+  initialize(): Promise<void>;
+  maintain(): Promise<void>;
+  maintainNetwork(): Promise<void>;
+} {
+  const networkPolicy = config.networkLimits
+    ? (hostingOptions.network ?? hostNetwork(config))
+    : undefined;
   engine.configureCommandLimits({
     files: 1024,
     fileBytes: config.homeBytes,
@@ -85,6 +94,7 @@ export function createSupervisor(
     if (c.generation !== ref.generation) throw new ComputerError("STALE_GENERATION");
     if (running && c.state !== "running") throw new ComputerError("NOT_RUNNING");
     if (running) {
+      if (networkPolicy && !c.networkKey) throw new ComputerError("CAPACITY_UNAVAILABLE");
       if (now() - c.startedAt >= config.lifetimeMs) {
         await forceStop(c, "lifetime");
         throw new ComputerError("NOT_RUNNING");
@@ -133,6 +143,7 @@ export function createSupervisor(
     const volume = `rpx-${c.id}-${c.generation}-${crypto.randomUUID()}`;
     const inputVolume = `${volume}-input`;
     let container: string | undefined;
+    const networkKey = crypto.randomUUID();
     try {
       await engine.response("/volumes/create", "POST", {
         Name: volume,
@@ -155,6 +166,7 @@ export function createSupervisor(
           "raypx.supervisor": config.network,
           "raypx.space": c.spaceId,
           "raypx.role": "computer",
+          "raypx.network-key": networkKey,
         },
         HostConfig: {
           Runtime: config.runtime,
@@ -203,12 +215,27 @@ export function createSupervisor(
       });
       container = result.Id;
       await engine.response(`/containers/${container}/start`, "POST");
+      if (networkPolicy) {
+        const inspection = await engine.json<{
+          NetworkSettings: { Networks: Record<string, { IPAddress: string }> };
+        }>(`/containers/${container}/json`);
+        const ip = inspection.NetworkSettings.Networks[config.network]?.IPAddress;
+        if (!ip) throw new ComputerError("CAPACITY_UNAVAILABLE");
+        try {
+          await networkPolicy.register(c, ip, networkKey);
+        } catch (error) {
+          await networkPolicy.remove({ ...c, networkKey }).catch(() => {});
+          throw error;
+        }
+      }
       await verifyWriteAccounting(engine, container);
       return {
         ...c,
         container,
         volume,
         inputVolume,
+        networkKey: networkPolicy ? networkKey : null,
+        networkBytes: 0,
         startedAt: now(),
         lastActiveAt: now(),
         stopReason: null,
@@ -221,6 +248,9 @@ export function createSupervisor(
           .catch(() => {
             accountingHealthy = false;
           });
+      await networkPolicy?.remove({ ...c, networkKey }).catch(() => {
+        accountingHealthy = false;
+      });
       await engine.response(`/volumes/${inputVolume}`, "DELETE", undefined, [404]).catch(() => {
         accountingHealthy = false;
       });
@@ -239,6 +269,7 @@ export function createSupervisor(
           undefined,
           [404],
         );
+      await networkPolicy?.remove(c);
       if (c.inputVolume)
         await engine.response(`/volumes/${c.inputVolume}`, "DELETE", undefined, [404]);
       if (c.volume) await engine.response(`/volumes/${c.volume}`, "DELETE", undefined, [404]);
@@ -293,7 +324,8 @@ export function createSupervisor(
     c.state = "stopped";
     c.stopReason = reason;
     await store.write(c);
-    if ((reason === "idle" || reason === "lifetime" || reason === "engine") && c.volume) {
+    await networkPolicy?.remove(c);
+    if (reason !== "storage" && reason !== "measurement" && c.volume) {
       try {
         const validated = await validateHome(await exportStoppedHome(config, engine, c, auxiliary));
         await store.saveHome(c.id, validated.revision, validated.archive);
@@ -409,6 +441,12 @@ export function createSupervisor(
     await serialized(async () => {
       accountingHealthy = false;
       await reapOrphans();
+      if (networkPolicy)
+        await networkPolicy.reconcile(
+          (await store.all())
+            .filter((c) => c.state === "running" && c.networkKey)
+            .map((c) => c.networkKey!),
+        );
       for (const row of await store.all())
         await locked({ id: row.id, generation: row.generation }, async () => {
           const c = await current(row);
@@ -448,6 +486,38 @@ export function createSupervisor(
         });
       accountingHealthy = true;
     });
+  }
+  async function sampleNetwork(c: StoredComputer) {
+    if (!networkPolicy || c.state !== "running") return;
+    try {
+      const value = await networkPolicy.sample(c);
+      c.networkBytes = value.bytes;
+      report({
+        event: "sandbox.network",
+        computerId: c.id,
+        spaceId: c.spaceId,
+        bytes: value.bytes,
+        reservedBytes: value.reservedBytes,
+        spaceReservedBytes: value.spaceReservedBytes,
+      });
+      if (value.reason)
+        await forceStop(
+          c,
+          value.reason === "COMPUTER_TRANSFER_LIMIT" ? "transfer" : "space-transfer",
+        );
+      else await store.write(c);
+    } catch {
+      if (c.state === "running") await forceStop(c, "network");
+      throw new ComputerError("CAPACITY_UNAVAILABLE");
+    }
+  }
+  async function maintainNetwork() {
+    if (!networkPolicy) return;
+    for (const row of await store.all())
+      if (row.state === "running")
+        await locked({ id: row.id, generation: row.generation }, async () => {
+          await sampleNetwork(await current(row));
+        });
   }
   return {
     async initialize() {
@@ -505,6 +575,7 @@ export function createSupervisor(
       }
     },
     maintain,
+    maintainNetwork,
     async describe() {
       const restricted = config.restrictedEgress && config.hostRulesApplied;
       return {
@@ -517,6 +588,9 @@ export function createSupervisor(
         unenforced: restricted
           ? [
               "Host firewall rules are an operator assertion; the supervisor cannot verify them",
+              networkPolicy
+                ? "Network limits cover forwarded IP bytes, excluding private control streams and upstream ingress already received by the host"
+                : "Network transfer and connection budgets are not enabled",
               `Home disk usage is measured every ${config.reapMs} ms; writes may overshoot before stop. No filesystem hard quota`,
               "Cancellation covers a process group; detached descendants require container stop/destroy",
             ]
@@ -527,7 +601,12 @@ export function createSupervisor(
             ],
       };
     },
-    get: (ref) => locked(ref, async () => publicComputer(await current(ref))),
+    get: (ref) =>
+      locked(ref, async () => {
+        const c = await current(ref);
+        await sampleNetwork(c);
+        return publicComputer(c);
+      }),
     provision: (ref, context) =>
       serialized(() =>
         locked(ref, async () => {
@@ -630,6 +709,7 @@ export function createSupervisor(
             throw error;
           }
           await engine.response(`/containers/${c.container}/stop?t=10`, "POST");
+          await networkPolicy?.remove(c);
           c.state = "stopped";
           await store.write(c);
           report({

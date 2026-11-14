@@ -1,7 +1,7 @@
 [Unit]
 Description=Raypx private sandbox supervisor
-Requires=docker.service wg-quick@raypx-control.service
-After=docker.service wg-quick@raypx-control.service network-online.target
+Requires=docker.service wg-quick@raypx-control.service raypx-sandbox-network.service
+After=docker.service wg-quick@raypx-control.service raypx-sandbox-network.service network-online.target
 
 [Service]
 Type=simple
