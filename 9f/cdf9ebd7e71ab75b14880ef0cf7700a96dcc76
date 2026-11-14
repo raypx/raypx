@@ -1,0 +1,151 @@
+apps/api/AGENTS.md
+  s_f9cc0d01f49051::t_7698f451d4317c 405-410
+apps/api/src/conversations/stream.test.ts
+  s_f9cc0d01f49051::t_ec5ec0e8089e58 120,221
+apps/api/src/conversations/stream.ts
+  s_f9cc0d01f49051::t_650eee92a08bdc 93-96,212,219,221-234,245,252
+apps/api/src/env.test.ts
+  s_f9cc0d01f49051::t_91a8f5cc376893 9-22
+apps/api/src/env.ts
+  s_f9cc0d01f49051::t_d6f844c6e4b6ec 176-177
+apps/api/src/routers/rpc/approvals.ts
+  s_f9cc0d01f49051::t_11461c9581dca3 45-53
+apps/api/src/routers/rpc/spaces.ts
+  s_f9cc0d01f49051::t_2e01d4ca00acd2 202-208
+apps/api/src/runtime/agents.ts
+  s_f9cc0d01f49051::t_24b2db08fc3908 145
+apps/api/tests/helpers/agent-tools.ts
+  s_f9cc0d01f49051::t_99aba298fe1ee6 103-106
+apps/api/tests/helpers/space-stream.ts
+  s_f9cc0d01f49051::t_244b1e9e3b7d8a 47,54,57-60
+apps/api/tests/integration/conversation-history-rpc.test.ts
+  s_f9cc0d01f49051::t_4ea3d9e8b37f7d 1-291
+apps/api/tests/integration/conversation-stream.test.ts
+  s_f9cc0d01f49051::t_871c7e73ede05a 42,57-60,73,146,150-172
+apps/api/tests/integration/effective-approval-mode-rpc.test.ts
+  s_f9cc0d01f49051::t_d163a1cee106d7 1-43
+apps/api/tests/integration/routine-read-rpc.test.ts
+  s_f9cc0d01f49051::t_382e2035108143 1-129
+apps/api/tests/integration/run-activity-rpc.test.ts
+  s_f9cc0d01f49051::t_3b7f3f9364f801 1-317
+apps/api/tests/postgres/node/backend-gap-access.test.ts
+  s_f9cc0d01f49051::t_60e7760022bb9b 1-152
+apps/api/tests/postgres/node/conversation.test.ts
+  s_f9cc0d01f49051::t_f78efcda91f827 115-137,149,158-159,163-166,184,191,228-235
+docs/architecture/approvals.md
+  s_f9cc0d01f49051::t_863f56ee89147f 91-97
+docs/architecture/capabilities.md
+  s_f9cc0d01f49051::t_d62cb40191c777 138-149
+docs/architecture/domain.md
+  s_f9cc0d01f49051::t_a508207d431b75 139-146
+docs/architecture/events.md
+  s_f9cc0d01f49051::t_9ea249d55de99b 82,242-250,261-267,311-356
+docs/architecture/execution.md
+  s_f9cc0d01f49051::t_20d6af46b550b2 25-43,320-331
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_7baac9767bf2f1 24-29
+docs/architecture/spaces.md
+  s_f9cc0d01f49051::t_2033b668432ed7 75-77,139-141,175-179
+packages/agents/AGENTS.md
+  s_f9cc0d01f49051::t_70efee8a2abf76 136-148
+packages/agents/src/approvals.test.ts
+  s_f9cc0d01f49051::t_f58b31aa38fc08 149-152
+packages/agents/src/approvals.ts
+  s_f9cc0d01f49051::t_10ad9a462d053f 13,79-82,138,270-277
+packages/agents/src/conversations.ts
+  s_f9cc0d01f49051::t_1695f8768d1b67 17-19,39-47,72-77,102
+packages/agents/src/runner.test.ts
+  s_f9cc0d01f49051::t_1a7ce0ea6284b8 578-580
+packages/agents/src/server/activity.ts
+  s_f9cc0d01f49051::t_3bdf2108a56b45 1-14
+packages/agents/src/server/approvals.ts
+  s_f9cc0d01f49051::t_27d12c61fcdd72 314-340
+packages/agents/src/server/conversation-views.ts
+  s_f9cc0d01f49051::t_e90b2a184c7042 1-65
+packages/agents/src/server/conversations.ts
+  s_f9cc0d01f49051::t_286a01de45c551 55-57,171-178,1437,1547,1759-1767,1772-1777,1798,1807
+packages/agents/src/server/delegations.ts
+  s_f9cc0d01f49051::t_003c0b98e8f6da 187-190,238-240
+packages/agents/src/server/groups.ts
+  s_f9cc0d01f49051::t_35b03068d5999c 21,55-58,65-68
+packages/agents/src/server/history.ts
+  s_f9cc0d01f49051::t_da8b48619081e0 1-262
+packages/agents/src/server/postgres.ts
+  s_f9cc0d01f49051::t_1d24cb96ea150d 24,46-50,63-66,72-76,90-91,104,109,111-113,127-128,138-142
+packages/agents/src/views.test.ts
+  s_f9cc0d01f49051::t_f2fb72df31c992 4-24,29,32-49,54-58
+packages/agents/src/views.ts
+  s_f9cc0d01f49051::t_37fd7c26d00303 4,15,18-21,31
+packages/agents/tests/postgres/agents.test.ts
+  s_f9cc0d01f49051::t_2a1f95fcaf7774 45-73,79,81-88
+packages/agents/tests/postgres/conversation-history.test.ts
+  s_f9cc0d01f49051::t_0f28e1087c0baf 1-319
+packages/agents/tests/postgres/run-origin-activity.test.ts
+  s_f9cc0d01f49051::t_e2c06c3cfc8379 1-406
+packages/computers/tests/postgres/computers.test.ts
+  s_f9cc0d01f49051::t_446e3da99cf199 76-78
+packages/contracts/AGENTS.md
+  s_f9cc0d01f49051::t_2a5c8089c0d023 45-46,180-183
+packages/contracts/src/approvals.ts
+  s_f9cc0d01f49051::t_3fa596a189ea3a 9,30
+packages/contracts/src/conversation.ts
+  s_f9cc0d01f49051::t_443d0c512dd0c5 18-20,50-53,56-63,104-111
+packages/core/AGENTS.md
+  s_f9cc0d01f49051::t_6a96c0c0beb6da 22
+packages/core/src/agents.ts
+  s_f9cc0d01f49051::t_d9878d4529aeb1 25,37
+packages/core/src/approvals.ts
+  s_f9cc0d01f49051::t_d2eaf5cb7c86a2 69-76
+packages/core/src/conversation.ts
+  s_f9cc0d01f49051::t_d8fa41f9cbfc63 42-63,106,210-213
+packages/core/src/routines.ts
+  s_f9cc0d01f49051::t_4b568f5d638bdc 65-78,84
+packages/core/src/spaces.ts
+  s_f9cc0d01f49051::t_424cf034d114cd 147-150,176-181
+packages/database/AGENTS.md
+  s_f9cc0d01f49051::t_d998cc0358af55 37-38,197-201
+packages/database/drizzle-foundation/20261113231910_heavy_iron_monger/migration.sql
+  s_f9cc0d01f49051::t_0572c27702c47b 1-15
+packages/database/drizzle-foundation/20261113231910_heavy_iron_monger/snapshot.json
+  s_f9cc0d01f49051::t_a9147efffe22e0 1-444
+packages/database/src/schema.ts
+  s_f9cc0d01f49051::t_42c54e680519c5 62,69,420-437,553-558,1019-1021,1147-1152
+packages/jobs/AGENTS.md
+  s_f9cc0d01f49051::t_4ff43684c74ac6 63-66
+packages/jobs/src/routines/postgres.ts
+  s_f9cc0d01f49051::t_4cddc855fb2e2e 6-7,32,317-338,366,396-404
+packages/jobs/src/routines/service.test.ts
+  s_f9cc0d01f49051::t_70360b8cd06d33 200-223
+packages/jobs/src/routines/service.ts
+  s_f9cc0d01f49051::t_fdacd533c116ee 6,63,67-95,138-140
+packages/jobs/tests/postgres/routines.test.ts
+  s_f9cc0d01f49051::t_af962d231a8673 158-195
+packages/pages/package.json
+  s_f9cc0d01f49051::t_9b4d3bde74b7db 18-19
+packages/spaces/AGENTS.md
+  s_f9cc0d01f49051::t_26f6a4ad655469 21-22
+packages/spaces/src/server.ts
+  s_f9cc0d01f49051::t_f1505509c179af 75
+packages/spaces/src/server/fanout.ts
+  s_f9cc0d01f49051::t_4c786d7e052b5d 36-38
+packages/spaces/src/server/management.ts
+  s_f9cc0d01f49051::t_2e52dc708e8d6f 138,327,329-332,705
+packages/spaces/src/server/postgres.ts
+  s_f9cc0d01f49051::t_ddd02d36e969d8 141,145,149-153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9fcdf9ebd7e71ab75b14880ef0cf7700a96dcc76",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
