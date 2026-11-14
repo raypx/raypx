@@ -1,0 +1,19 @@
+packages/agents/src/client/workspace.component.test.tsx
+  s_f9cc0d01f49051::t_36719e9d1ec496 284-287,333-335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "170215ca7fc6f6f138b3564b8a5a36bc66017ea5",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
