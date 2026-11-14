@@ -281,8 +281,10 @@ it.each(["en", "zh"] as const)(
     test.mount(true);
     const approve = await screen.findByRole("button", { name: strings.approval.approve });
     expect(screen.getByRole("log")).not.toHaveTextContent("PRIVATE FILE BODY");
-    expect(screen.getByRole("status")).toHaveTextContent(
-      language === "en" ? "Approval requested: Write a file" : "请求审批：写入文件",
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        language === "en" ? "Approval requested: Write a file" : "请求审批：写入文件",
+      ),
     );
     const announcements: string[] = [];
     const live = screen.getByRole("status");
@@ -328,7 +330,9 @@ it.each(["en", "zh"] as const)(
       screen.queryByRole("button", { name: strings.approval.approve }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("log").querySelector("[data-approval-card]")).toBeNull();
-    expect(screen.getByRole("status")).toHaveTextContent(strings.approval.states.approved);
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(strings.approval.states.approved),
+    );
     await test.emit({
       type: "event",
       entry: {
