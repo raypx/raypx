@@ -45,6 +45,28 @@ export function browserModelFixture() {
       const groupCoordinator = input.instructions.includes("Fixture group coordinator.");
       const groupResponder = input.instructions.includes("Fixture group responder.");
       const child = Boolean(run?.parentRunId);
+      if (input.instructions.includes("Fixture workspace review."))
+        text = [
+          "## A clear starting point",
+          "",
+          "The workspace is ready. Here is a small example with **readable structure** and `inline code`.",
+          "",
+          "- Keep the conversation focused on the next useful result.",
+          "- Inspect completed tool work in the steps below.",
+          "- Review changes before allowing them.",
+          "",
+          "```ts",
+          'const workspace = { name: "Research", ready: true };',
+          "console.log(workspace.name);",
+          "```",
+          "",
+          "| Item | State | Next action |",
+          "| --- | --- | --- |",
+          "| Notes | Ready | Review the outline |",
+          "| Computer | Running | Open Files or Screen |",
+          "",
+          "A continuing conversation keeps the relevant work together. You can return to an earlier message without interrupting the current Run.",
+        ].join("\n");
       const results = (input.continuation ?? []).filter((entry) => entry.role === "toolResult");
       function toolCall(name: string, id: string, args: ToolCall["arguments"], prefix = "") {
         const request: AssistantMessage = {

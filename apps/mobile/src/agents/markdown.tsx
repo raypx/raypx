@@ -9,6 +9,8 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useThemeColor } from "heroui-native/hooks";
+import { Button } from "heroui-native/button";
+import * as Clipboard from "expo-clipboard";
 import { Renderer, useMarkdown, type MarkedStyles } from "react-native-marked";
 import { useCopy } from "../locale.js";
 
@@ -113,21 +115,8 @@ class NativeReplyRenderer extends Renderer {
     return this.link(alt?.trim() || title?.trim() || this.options.imageLabel, href);
   }
 
-  override code(text: string): ReactNode {
-    return (
-      <ScrollView
-        key={this.getKey()}
-        horizontal
-        className="my-2 rounded-lg bg-default"
-        contentContainerClassName="p-3"
-      >
-        <View>
-          <Text selectable className="font-mono text-sm leading-6 text-foreground">
-            {text}
-          </Text>
-        </View>
-      </ScrollView>
-    );
+  override code(text: string, language?: string): ReactNode {
+    return <CodeBlock key={this.getKey()} text={text} language={language} />;
   }
 
   // Horizontal scrolling is confined to tables and code on narrow phones.
@@ -154,6 +143,50 @@ class NativeReplyRenderer extends Renderer {
       </ScrollView>
     );
   }
+}
+
+function CodeBlock({ text, language }: { text: string; language?: string | undefined }) {
+  const { t } = useCopy();
+  const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
+  async function copy() {
+    setFailed(false);
+    try {
+      await Clipboard.setStringAsync(text);
+      setCopied(true);
+    } catch {
+      setFailed(true);
+    }
+  }
+  return (
+    <View className="my-2 gap-1 rounded-xl bg-muted">
+      <View className="flex-row items-center justify-between gap-2 px-3">
+        <Text numberOfLines={1} className="min-w-0 flex-1 font-mono text-xs text-muted-foreground">
+          {language?.trim().slice(0, 40) || t("mobile.code")}
+        </Text>
+        <Button
+          variant="ghost"
+          accessibilityLabel={t("mobile.copyCode")}
+          onPress={() => void copy()}
+          className="h-auto min-h-11 rounded-lg px-3 py-2"
+        >
+          <Button.Label className="text-xs text-muted-foreground">
+            {t(copied ? "mobile.copied" : "mobile.copyCode")}
+          </Button.Label>
+        </Button>
+      </View>
+      <ScrollView horizontal contentContainerClassName="px-3 pb-3">
+        <Text selectable className="font-mono text-sm leading-6 text-foreground">
+          {text}
+        </Text>
+      </ScrollView>
+      {failed && (
+        <Text accessibilityRole="alert" className="px-3 pb-3 text-sm text-foreground">
+          {t("mobile.copyError")}
+        </Text>
+      )}
+    </View>
+  );
 }
 
 /** Parse Markdown to native nodes inside the transcript's one virtualized list. */

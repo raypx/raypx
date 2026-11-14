@@ -50,6 +50,7 @@
     "vitest": "catalog:dev"
   },
   "peerDependencies": {
-    "react": "^19.3.0"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

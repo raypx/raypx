@@ -27,6 +27,7 @@ export function AgentForm({
   models,
   onSave,
   onClose,
+  finalFocus,
   onOpenModels,
   capabilities,
   spaceId,
@@ -39,6 +40,7 @@ export function AgentForm({
   spaceId?: SpaceId | undefined;
   agentId?: AgentId | undefined;
   onClose: () => void;
+  finalFocus?: (() => HTMLElement | false) | undefined;
   onOpenModels?: (() => void) | undefined;
 }) {
   const t = useTranslations("agents");
@@ -112,7 +114,11 @@ export function AgentForm({
         if (!open) onClose();
       }}
     >
-      <DialogContent closeLabel={t("close")} className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
+      <DialogContent
+        finalFocus={finalFocus}
+        closeLabel={t("close")}
+        className="max-h-[85dvh] overflow-y-auto sm:max-w-lg"
+      >
         <DialogHeader>
           <DialogTitle>{initial ? t("editAgent") : t("newAgent")}</DialogTitle>
         </DialogHeader>

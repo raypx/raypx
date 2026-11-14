@@ -58,40 +58,54 @@ export function registerTests() {
     const navigation = sidebar.getByRole("navigation", { name: "Raypx", exact: true });
     await expect(sidebar.getByRole("button", { name: "Space", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Space", exact: true })).toHaveCount(1);
-    await expect(page.getByRole("button", { name: "New Agent", exact: true })).toHaveCount(1);
-    await expect(sidebar.getByRole("button", { name: "New Agent", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      sidebar.getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "New group", exact: true })).toHaveCount(1);
     await expect(sidebar.getByRole("button", { name: "New group", exact: true })).toBeVisible();
     await expectSurfaceControls(page, sidebar);
     await expect(navigation.getByRole("group", { name: "Workspace", exact: true })).toHaveCount(0);
     await expect(navigation.getByRole("link", { name: "Pages", exact: true })).toBeVisible();
-    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
+    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toHaveCount(0);
+    await expect(sidebar.getByRole("button", { name: "New", exact: true })).toBeVisible();
     await expect(
       navigation.getByRole("link", { name: "Memory and templates", exact: true }),
     ).toHaveCount(0);
     for (const name of ["Projects", "Waiting", "Automations", "New session"])
       await expect(sidebar.getByRole("link", { name, exact: true })).toHaveCount(0);
-    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toHaveAttribute(
+    await expect(
+      page.locator("[data-workspace-home]").getByRole("heading", { level: 1 }),
+    ).toHaveText("What would you like to work on?");
+    await navigation.getByRole("link", { name: "Pages", exact: true }).click({ timeout: 5000 });
+    await expect(navigation.getByRole("link", { name: "Pages", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1);
+    await page.getByRole("link", { name: "Raypx", exact: true }).click({ timeout: 5000 });
+    await expect(page.locator("[data-workspace-home]")).toBeVisible({ timeout: 5000 });
     await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
     const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
     await expect(expand).toHaveAttribute("aria-expanded", "false");
     await expectSurfaceControls(page, sidebar);
-    for (const name of ["New Agent", "New group"]) {
-      const opener = sidebar.getByRole("button", { name, exact: true });
+    for (const [action, title] of [
+      ["Create Agent", "New Agent"],
+      ["New group", "New group"],
+    ] as const) {
+      const opener = page.getByRole("button", { name: action, exact: true });
       await expect(opener).toBeVisible();
       await opener.click({ timeout: 5000 });
-      const dialog = page.getByRole("dialog", { name, exact: true });
+      const dialog = page.getByRole("dialog", { name: title, exact: true });
       await expectSurfaceAtRest(page, dialog);
       await page.keyboard.press("Escape");
       await expect(dialog).toBeHidden();
       await expect(opener).toBeFocused();
     }
     await expect(navigation.getByRole("link", { name: "Pages", exact: true })).toBeVisible();
-    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
+    await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toHaveCount(0);
+    await expect(sidebar.getByRole("button", { name: "New", exact: true })).toBeVisible();
     await page.reload();
     await expect(expand).toHaveAttribute("aria-expanded", "false");
     const account = sidebar.getByRole("button", { name: "Account menu", exact: true });
@@ -132,14 +146,17 @@ export function registerTests() {
       await page.goto(`${base}/agents`);
       const title = locale === "zh" ? "智能体" : "Agents";
       const space = locale === "zh" ? "空间" : "Space";
-      const newAgent = locale === "zh" ? "新建智能体" : "New Agent";
+      const newAgent = locale === "zh" ? "创建智能体" : "Create Agent";
+      const agentDialog = locale === "zh" ? "新建智能体" : "New Agent";
       const newGroup = locale === "zh" ? "新建群组" : "New group";
       for (const width of [375, 1280]) {
         await page.setViewportSize({ width, height: 812 });
-        await expect(page.getByRole("heading", { name: title, exact: true })).toHaveCount(1);
+        await expect(
+          page.locator("[data-workspace-home]").getByRole("heading", { level: 1 }),
+        ).toHaveCount(1);
         await expect(
           page.getByRole("complementary").getByRole("link", { name: title, exact: true }),
-        ).toBeVisible();
+        ).toHaveCount(0);
         await expect(page.getByRole("button", { name: space, exact: true })).toHaveCount(1);
         await expect(
           page.getByRole("complementary").getByRole("button", { name: space, exact: true }),
@@ -148,10 +165,13 @@ export function registerTests() {
         const sidebar = page.getByRole("complementary");
         await expect(page.getByRole("button", { name: newGroup, exact: true })).toHaveCount(1);
         for (const name of [newAgent, newGroup]) {
-          const opener = sidebar.getByRole("button", { name, exact: true });
+          const opener = page.getByRole("button", { name, exact: true });
           await expect(opener).toBeVisible();
           await opener.click({ timeout: 5000 });
-          const dialog = page.getByRole("dialog", { name, exact: true });
+          const dialog = page.getByRole("dialog", {
+            name: name === newAgent ? agentDialog : newGroup,
+            exact: true,
+          });
           await expectSurfaceAtRest(page, dialog);
           await page.keyboard.press("Escape");
           await expect(dialog).toBeHidden();

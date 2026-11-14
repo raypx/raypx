@@ -22,7 +22,7 @@ Space/session endings with their expected codes; unknown endings stay generic.
 Unread terminal results share the eight-stream bound and expire after 20 seconds.
 The renderer forwards termination once to the shared socket port, stops polling
 and suppresses late results after local close. Go only bootstraps the channel.
-The shared Space menu and New Agent action occupy sidebar slots. The conversation
+The shared New action, Space control and sole Agent/group/recent directory occupy sidebar slots. The conversation
 header opens the shared team-computer lifecycle/files panel; its API reads and commands
 use the existing daemon-authenticated client without exposing credentials.
 Still working keeps outside-window active Runs reachable with Stop, targeted
@@ -40,6 +40,8 @@ directory and confirms trusted CLI-resolved account/Space metadata. Only a publi
 boolean returns to the renderer; connector credentials and one-use confirmations
 remain in finite bundled CLI calls. The separate outbound connector daemon does
 not reuse retained device task authority.
+Both Agents and Pages inject those confirmation ports into their shared workspace
+so Space Devices settings use the same native path from either destination.
 The existing native heartbeat polls its bounded pending directory-request queue.
 Only the current daemon-verified account and configured origin may claim a request;
 the host rechecks that session before the picker, dialog and final grant. Logout,
@@ -63,7 +65,8 @@ with English/Chinese labels, keyboard access and narrow layouts. Regenerate the
 route tree with TanStack tooling; never edit it by hand.
 
 Packaged routes use hash history. Settings is a lazy global dialog at the exact
-`settings` fragment, for example `#/agents#settings`. Preserve the background path,
+`settings` fragment, for example `#/agents#settings`; models and tools can use
+`settings/models` and `settings/tools` to focus the relevant section. Preserve the background path,
 search, mounted drafts and scroll; close through the matching history entry or
 remove only the fragment for a direct link.
 

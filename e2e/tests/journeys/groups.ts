@@ -17,7 +17,7 @@ const viewports = [
 
 async function createAgent(page: Page, name: string, instructions: string) {
   await page
-    .getByRole("button", { name: "New Agent", exact: true })
+    .getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true })
     .click({ timeout: actionTimeout });
   const dialog = page.getByRole("dialog");
   await expectSurfaceAtRest(page, dialog);
@@ -60,7 +60,7 @@ export function registerTests() {
     const suffix = `${info.project.name}-${crypto.randomUUID()}`;
     const spaceId = await createOwnedSpace(page, apiUrl, origin, `Group ${suffix}`);
     await page.goto(`${baseURL}/agents?spaceId=${spaceId}`, { timeout: actionTimeout });
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
+    await expect(page.locator("[data-workspace-home]")).toBeVisible();
     const coordinator = `协调者 Coordinator ${"long name ".repeat(4)}${suffix}`;
     const responder = `独立回复 Independent responder ${"长名称".repeat(12)}${suffix}`;
     const groupName = `协作讨论 Group conversation ${"long name 长名称 ".repeat(2)}${suffix}`;
@@ -146,6 +146,10 @@ export function registerTests() {
     await expect(
       page.getByText("Fixture coordinator is delegating.", { exact: true }),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: /^\d+ steps?/ })
+      .first()
+      .click({ timeout: actionTimeout });
     const delegated = page.locator("[data-delegated-work]").first();
     await expect(delegated).toBeVisible();
     const approval = page
@@ -167,6 +171,10 @@ export function registerTests() {
     }
     await page.reload({ timeout: actionTimeout });
     await expect(approval).toBeVisible();
+    await page
+      .getByRole("button", { name: /^\d+ steps?/ })
+      .first()
+      .click({ timeout: actionTimeout });
     await expect(delegated).toBeVisible();
     await expect(editor).toHaveValue("A draft while delegated work waits");
     await editor.fill("", { timeout: actionTimeout });
@@ -207,6 +215,10 @@ export function registerTests() {
     await expect(
       page.getByText("Fixture independent reply completed.", { exact: true }),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: /^\d+ steps?/ })
+      .first()
+      .click({ timeout: actionTimeout });
     await delegated.getByRole("button").first().click({ timeout: actionTimeout });
     await expect(delegated.locator(`[data-child-run-id="${childId}"]`)).toContainText("Finished");
     await expect(page.locator("[data-approval-card]")).toHaveCount(0);

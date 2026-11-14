@@ -21,8 +21,13 @@ it("renders paragraphs, lists, inline and fenced code, tables and safe links wit
     </ReplyMarkdown>,
   );
   expect(container.querySelector("p")?.textContent).toBe("Paragraph with inline.");
+  expect(container.firstElementChild?.classList.contains("[&_:not(pre)>code]:bg-muted")).toBe(true);
+  expect(container.firstElementChild?.classList.contains("[&_:not(pre)>code]:rounded-[3px]")).toBe(
+    true,
+  );
   expect(container.querySelectorAll("li")).toHaveLength(2);
   expect(container.querySelector("pre code")?.textContent).toBe("const n = 1;\n");
+  expect(container.querySelector("[data-code-language]")?.textContent).toBe("js");
   expect(screen.getByRole("table").textContent).toContain("X");
   expect(screen.getByRole("link", { name: "Safe" }).getAttribute("target")).toBe("_blank");
   expect(screen.getByRole("link", { name: "Safe" }).getAttribute("rel")).toBe(

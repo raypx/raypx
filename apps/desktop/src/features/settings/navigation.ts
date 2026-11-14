@@ -5,12 +5,15 @@ export function useSettingsNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const router = useRouter();
-  const opened = location.hash === "settings" || location.hash === "settings/models";
+  const opened =
+    location.hash === "settings" ||
+    location.hash === "settings/models" ||
+    location.hash === "settings/tools";
   return {
     opened,
-    open: (section?: "models") =>
+    open: (section?: "models" | "tools") =>
       navigate({
-        hash: section === "models" ? "settings/models" : "settings",
+        hash: section ? `settings/${section}` : "settings",
         search: true,
         replace: opened,
         state: (previous) =>

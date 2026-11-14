@@ -1,6 +1,8 @@
+import * as Clipboard from "expo-clipboard";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
 import { agentSchema, conversationIdSchema, directConversation } from "@raypx/core/agents";
+import { protectedInputRequestSchema } from "@raypx/core/protected-input";
 import {
   approvalRequestSchema,
   type ApprovalRequest,
@@ -17,7 +19,10 @@ import {
 import {
   ComputerController,
   ConversationController,
+  type DeviceComputersController,
+  type ComputerPort,
   type ApprovalPort,
+  type ProtectedInputsPort,
   type ConversationPort,
   type ConversationSnapshot,
   type ConversationSocketPort,
@@ -35,6 +40,8 @@ import { useLocales } from "../../tests/mocks/localization.js";
 import en from "@raypx/agents/messages/en";
 import { createTranslator } from "@raypx/i18n";
 import zh from "@raypx/agents/messages/zh";
+import { messages } from "../../locales/index.js";
+import { deviceComputerFixture } from "../../tests/fixtures/device-computer.js";
 
 afterEach(() => useLocales.mockReset());
 
@@ -128,6 +135,8 @@ async function harness(
   requests: ApprovalRequest[] = [],
   historyPort?: ConversationPort["history"],
   effective?: EffectiveApprovalMode,
+  devices?: DeviceComputersController,
+  protectedInputsPort?: ProtectedInputsPort,
 ) {
   const frames: ConversationClientFrame[] = [];
   const connections: Parameters<ConversationSocketPort["connect"]>[0][] = [];
@@ -158,11 +167,14 @@ async function harness(
     })),
     effects: vi.fn(async () => []),
   };
-  const computer = new ComputerController(agent.spaceId, {
-    get: async () => ({ status: "not-configured" }),
-    start: async () => ({ status: "not-configured" }),
-    stop: async () => ({ status: "not-configured" }),
-  });
+  const computerPort: ComputerPort = {
+    get: vi.fn<ComputerPort["get"]>(async () =>
+      devices ? { status: "available", computer: null } : { status: "not-configured" },
+    ),
+    start: vi.fn<ComputerPort["start"]>(async () => ({ status: "not-configured" })),
+    stop: vi.fn<ComputerPort["stop"]>(async () => ({ status: "not-configured" })),
+  };
+  const computer = new ComputerController(agent.spaceId, computerPort);
   const controller = new ConversationController({
     selection,
     owner: { origin: "https://raypx.example", accountId },
@@ -203,6 +215,8 @@ async function harness(
       item={item}
       controller={controller}
       computer={computer}
+      devices={devices}
+      protectedInputsPort={protectedInputsPort}
       accountId={accountId}
       onBack={onBack}
       onEdit={onEdit}
@@ -212,6 +226,7 @@ async function harness(
     view,
     controller,
     port,
+    computerPort,
     approvals,
     frames,
     stored,
@@ -224,11 +239,96 @@ async function harness(
       await view.unmount();
       controller.dispose();
       computer.dispose();
+      devices?.dispose();
     },
   };
 }
 
 describe("mobile Agent conversation", () => {
+  it("keeps one masked protected-input card with pending approvals across all tabs and preserves normal sending", async () => {
+    const request = protectedInputRequestSchema.parse({
+      ...selection,
+      id: crypto.randomUUID(),
+      runId: run().id,
+      memberAccountId: accountId,
+      toolCallId: "protected-call",
+      toolName: "computer_run_command",
+      target: ".",
+      input: {
+        name: "Access token",
+        purpose: "Authenticate once",
+        destination: { kind: "environment", variable: "TOKEN" },
+      },
+      untrustedInput: false,
+      provenanceKind: null,
+      state: "pending",
+      createdAt: time,
+      expiresAt: "2100-01-01T00:00:00.000Z",
+      resolvedAt: null,
+    });
+    const protectedInputs = {
+      pending: vi.fn(async () => [request]),
+      answer: vi.fn(async () => ({ ...request, state: "declined" as const })),
+    } satisfies ProtectedInputsPort;
+    const h = await harness(
+      { messages: [message()], runs: [run("waiting")], toolActivity: [toolCall()] },
+      [pendingRequest()],
+      undefined,
+      undefined,
+      undefined,
+      protectedInputs,
+    );
+    const input = findByLabel(h.view.root, "Protected input: Access token");
+    expect(input.props.secureTextEntry).toBe(true);
+    const value = crypto.randomUUID();
+    await changeText(input, value);
+    for (const label of ["Activity tab", "Files tab", "Conversation tab"]) {
+      await press(findByLabel(h.view.root, label));
+      expect(
+        h.view.root.findAll(
+          (node) =>
+            typeof node.type === "string" &&
+            node.props.accessibilityLabel === "Protected input: Access token",
+        ),
+      ).toHaveLength(1);
+      expect(findByLabel(h.view.root, "Approve")).toBeDefined();
+      expect(findByLabel(h.view.root, "Message").props.editable).toBe(true);
+    }
+    expect(textContent(h.view.root)).not.toContain(value);
+    expect(h.controller.getSnapshot().draft).toBe("");
+    expect([...h.stored.values()].join("")).not.toContain(value);
+    await changeText(findByLabel(h.view.root, "Message"), "Continue with a question");
+    await press(findByLabel(h.view.root, "Send"));
+    expect(h.port.send).toHaveBeenCalledExactlyOnceWith({
+      ...selection,
+      message: { idempotencyKey: "mobile-receipt", text: "Continue with a question" },
+    });
+    expect(protectedInputs.answer).not.toHaveBeenCalled();
+    await press(findByLabel(h.view.root, "Decline"));
+    expect(protectedInputs.answer).toHaveBeenCalledExactlyOnceWith({
+      spaceId: agent.spaceId,
+      requestId: request.id,
+      answer: { decision: "decline" },
+    });
+    await h.close();
+  });
+
+  it("keeps device selection reachable from the floating composer without starting the sandbox", async () => {
+    const devices = await deviceComputerFixture(agent.spaceId, conversation.id);
+    const h = await harness({}, [], undefined, undefined, devices.controller);
+    await press(findByLabel(h.view.root, "Computer: Work machine"));
+    expect(h.computerPort.start).not.toHaveBeenCalled();
+    expect(h.view.root.findAllByProps({ accessibilityLabel: "Start computer" })).toHaveLength(0);
+    expect(textContent(h.view.root)).toContain(en.agents.devices.warning);
+    expect(findByLabel(h.view.root, "Work machine · /work/project")).toBeDefined();
+    await press(findByLabel(h.view.root, "Team sandbox"));
+    expect(devices.port.select).toHaveBeenCalledExactlyOnceWith({ ...selection, selection: null });
+    await press(findByLabel(h.view.root, "Close computer panel"));
+    await press(findByLabel(h.view.root, "Computer: Stopped"));
+    expect(h.computerPort.start).toHaveBeenCalledOnce();
+    await h.close();
+  });
+
   it("renders snapshot history, streams text and replaces it with one committed reply", async () => {
     const h = await harness({ messages: [message()], runs: [run()], cursor: 2 });
     expect(textContent(h.view.root)).toContain("Member question");
@@ -330,10 +430,9 @@ describe("mobile Agent conversation", () => {
       ),
     ).toHaveLength(1);
     expect(
-      findByLabel(h.view.root, "Used 1 tool · Waiting for approval").props.accessibilityState
-        .expanded,
+      findByLabel(h.view.root, "1 step · Waiting for approval").props.accessibilityState.expanded,
     ).toBe(false);
-    await press(findByLabel(h.view.root, "Used 1 tool · Waiting for approval"));
+    await press(findByLabel(h.view.root, "1 step · Waiting for approval"));
     expect(toolRows(h.view.root)).toHaveLength(0);
     expect(findByLabel(h.view.root, "Message").props.editable).toBe(true);
     await changeText(findByLabel(h.view.root, "Message"), "Continue with a question");
@@ -363,7 +462,7 @@ describe("mobile Agent conversation", () => {
       type: "event",
       entry: { event: { ...fields, kind: "tool.started", sequence: 3, createdAt: time } },
     });
-    expect(findByLabel(h.view.root, "Used 1 tool · In progress")).toBeDefined();
+    expect(findByLabel(h.view.root, "1 step · Running")).toBeDefined();
     const cardFields = {
       ...fields,
       requestId: request.id,
@@ -393,7 +492,7 @@ describe("mobile Agent conversation", () => {
         (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Approve",
       ),
     ).toHaveLength(1);
-    await press(findByLabel(h.view.root, "Used 1 tool · Waiting for approval"));
+    await press(findByLabel(h.view.root, "1 step · Waiting for approval"));
     expect(toolRows(h.view.root)).toHaveLength(0);
     await h.frame({
       type: "event",
@@ -469,10 +568,10 @@ describe("mobile Agent conversation", () => {
       toolActivity,
       resolvedApprovals,
     });
-    expect(findByLabel(restored.view.root, "Used 1 tool").props.accessibilityState.expanded).toBe(
-      false,
-    );
-    await press(findByLabel(restored.view.root, "Used 1 tool"));
+    expect(
+      findByLabel(restored.view.root, "1 step · Running").props.accessibilityState.expanded,
+    ).toBe(false);
+    await press(findByLabel(restored.view.root, "1 step · Running"));
     expect(toolRows(restored.view.root)).toHaveLength(1);
     expect(textContent(toolRows(restored.view.root)[0]!)).toBe(activityText);
     expect(restored.port.send).not.toHaveBeenCalled();
@@ -576,7 +675,6 @@ it.each(["en", "zh"] as const)(
   async (language) => {
     useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
     const copy = language === "en" ? en.agents : zh.agents;
-    const t = createTranslator({ locale: language, messages: language === "en" ? en : zh });
     const request = pendingRequest();
     const h = await harness({
       messages: [{ ...message(), author: { kind: "member", accountId: "departed" } }],
@@ -600,7 +698,11 @@ it.each(["en", "zh"] as const)(
     });
     const departedName = copy.departedMember.replace("{name}", "Mei");
     expect(textContent(h.view.root)).toContain(departedName);
-    const activity = findByLabel(h.view.root, t("agents.activity.used", { count: 1 }));
+    const t = createTranslator({ locale: language, messages: messages[language] });
+    const activity = findByLabel(
+      h.view.root,
+      `${t("mobile.steps", { count: 1 })} · ${t("agents.succeeded")}`,
+    );
     await press(activity);
     expect(textContent(h.view.root)).toContain(
       copy.approval.answeredBy.replace("{member}", departedName),
@@ -815,14 +917,105 @@ it.each([
         },
       ],
     });
-    const t = createTranslator({ locale: language, messages: { en, zh }[language] });
-    let summary = t("agents.activity.used", { count: 1 });
+    const t = createTranslator({ locale: language, messages: messages[language] });
+    let summary = `${t("mobile.steps", { count: 1 })} · ${t("agents.succeeded")}`;
     if (outcome === "denied") summary += ` · ${t("agents.activity.failedCount", { count: 1 })}`;
     await press(findByLabel(h.view.root, summary));
     const text = textContent(toolRows(h.view.root)[0]!);
     expect(text).toContain(copy.approval.automatic[outcome]);
     expect(text).toContain(reason);
     expect(h.port.send).not.toHaveBeenCalled();
+    await h.close();
+  },
+);
+it("switches the main native column between Conversation, Activity and Files without losing its draft", async () => {
+  const h = await harness({
+    messages: [message()],
+    runs: [run()],
+    cursor: 2,
+    toolActivity: [toolCall()],
+  });
+  await changeText(findByLabel(h.view.root, "Message"), "Keep this draft");
+  await press(findByLabel(h.view.root, "Activity tab"));
+  expect(findByLabel(h.view.root, "Activity tab").props.accessibilityState.selected).toBe(true);
+  expect(textContent(h.view.root)).not.toContain("Member question");
+  expect(findByLabel(h.view.root, "1 step · Running")).toBeDefined();
+  await press(findByLabel(h.view.root, "Files tab"));
+  expect(textContent(h.view.root)).toContain("not configured");
+  await press(findByLabel(h.view.root, "Conversation tab"));
+  expect(textContent(h.view.root)).toContain("Member question");
+  expect(findByLabel(h.view.root, "Message").props.value).toBe("Keep this draft");
+  expect(h.port.send).not.toHaveBeenCalled();
+  await h.close();
+});
+
+it("copies a completed reply and prepares its question for an explicit retry", async () => {
+  const h = await harness({
+    messages: [message()],
+    runs: [run("succeeded")],
+    cursor: 3,
+    segments: [
+      {
+        ...selection,
+        id: "reply",
+        runId: run().id,
+        sequence: 3,
+        text: "A completed reply",
+        createdAt: time,
+      },
+    ],
+  });
+  vi.mocked(Clipboard.setStringAsync).mockClear();
+  expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
+  await press(findByLabel(h.view.root, "Copy reply"));
+  expect(Clipboard.setStringAsync).toHaveBeenCalledExactlyOnceWith("A completed reply");
+  await press(findByLabel(h.view.root, "Prepare retry"));
+  expect(h.controller.getSnapshot().draft).toBe("Member question");
+  expect(h.port.send).not.toHaveBeenCalled();
+  await changeText(findByLabel(h.view.root, "Message"), "A different draft");
+  expect(findByLabel(h.view.root, "Prepare retry").props.isDisabled).toBe(true);
+  await h.close();
+});
+
+it("keeps addressed approvals above the native composer while Activity is selected", async () => {
+  const h = await harness(
+    { messages: [message()], runs: [run("waiting")], cursor: 2, toolActivity: [toolCall()] },
+    [pendingRequest()],
+  );
+  await press(findByLabel(h.view.root, "Activity tab"));
+  expect(
+    h.view.root.findAll(
+      (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Approve",
+    ),
+  ).toHaveLength(1);
+  await changeText(findByLabel(h.view.root, "Message"), "I can keep writing");
+  expect(h.controller.getSnapshot().draft).toBe("I can keep writing");
+  await press(findByLabel(h.view.root, "Approve"));
+  expect(h.approvals.answer).toHaveBeenCalledExactlyOnceWith({
+    spaceId: agent.spaceId,
+    requestId: pendingRequest().id,
+    decision: "approved",
+  });
+  await h.close();
+});
+
+it.each(["cancelled", "waiting"] as const)(
+  "shows the %s Run state only once inline with its native steps",
+  async (state) => {
+    const h = await harness({
+      messages: [message()],
+      runs: [run(state)],
+      cursor: 3,
+      toolActivity: [{ ...toolCall(), finishedAt: time, outcome: "succeeded" }],
+    });
+    const status = en.agents[state];
+    const trigger = findByLabel(h.view.root, `1 step · ${status}`);
+    expect(trigger.props.accessibilityState.expanded).toBe(false);
+    expect(textContent(h.view.root).split(status)).toHaveLength(2);
+    const live = h.view.root.findAll(
+      (node) => typeof node.type === "string" && node.props.accessibilityLiveRegion === "polite",
+    );
+    expect(live.some((node) => textContent(node).includes(status))).toBe(true);
     await h.close();
   },
 );

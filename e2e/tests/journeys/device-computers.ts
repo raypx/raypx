@@ -126,8 +126,14 @@ export function registerTests() {
       }
       await page.setViewportSize({ width: 1440, height: 860 });
       await page.goto(agentsUrl, { timeout });
-      await page.getByRole("button", { name: /^Computer:/ }).click({ timeout });
+      const computerToggle = page.getByRole("button", { name: /^Computer:/ });
+      await expect(computerToggle).toHaveAttribute("aria-expanded", "true");
+      await computerToggle.click({ timeout });
+      await expect(computerToggle).toHaveAttribute("aria-expanded", "false");
+      await computerToggle.click({ timeout });
+      await expect(computerToggle).toHaveAttribute("aria-expanded", "true");
       const selector = page.getByRole("combobox", { name: "Run computer", exact: true });
+      await expectSurfaceAtRest(page, selector);
       await selector.click({ timeout });
       await page
         .getByRole("option", { name: `${deviceName} · ${directory}`, exact: true })
@@ -142,6 +148,23 @@ export function registerTests() {
           { timeout },
         )
         .toEqual({ deviceId, grantId: grant.id });
+      const reviewDirectory = fileURLToPath(new URL("../../../.artifacts/ui/", import.meta.url));
+      await mkdir(reviewDirectory, { recursive: true });
+      for (const theme of ["light", "dark"] as const) {
+        await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+        await page.evaluate((value) => localStorage.setItem("theme", value), theme);
+        await page.reload({ timeout });
+        await expect(selector).toContainText(deviceName);
+        await expect(
+          page.getByRole("button", { name: new RegExp(`^Computer: ${deviceName}`) }),
+        ).toBeVisible();
+        const computer = page.getByRole("complementary", { name: "Team computer", exact: true });
+        await expectSurfaceControls(page, computer);
+        await expectSurfaceControls(page, page.locator("#main"));
+        await capture(page, {
+          path: `${reviewDirectory}/${info.project.name}-1440x860-${theme}-device-selection.png`,
+        });
+      }
       await page
         .getByRole("button", { name: "Close computer panel", exact: true })
         .click({ timeout });

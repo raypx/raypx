@@ -21,6 +21,7 @@ import { FolderIcon } from "@raypx/icons/folder";
 
 import { cn } from "@raypx/ui/lib/utils";
 import { IconButton } from "@raypx/ui/icon-button";
+import { buttonVariants } from "@raypx/ui/components/ui/button";
 import { Logo } from "@raypx/ui/logo";
 import {
   Sidebar,
@@ -93,8 +94,10 @@ export interface ShellPage<Title extends string = string> {
   layout: PageLayout;
 }
 
-const itemClass =
-  "relative min-h-control-lg gap-2.5 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground aria-[current=page]:inset-ring-1 aria-[current=page]:inset-ring-sidebar-border motion-reduce:transition-none max-[760px]:min-h-control-xl [&_svg]:size-5 [&_svg]:stroke-[1.75]";
+const itemClass = cn(
+  buttonVariants({ variant: "ghost" }),
+  "relative w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal text-sidebar-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground sidebar-icon:justify-center sidebar-icon:px-0",
+);
 
 const pageLayouts: Record<PageLayout, string> = {
   // Settings and account stay in a reading column so labels sit with their controls.
@@ -102,7 +105,7 @@ const pageLayouts: Record<PageLayout, string> = {
   // List and detail workspaces.
   workbench: "max-w-400 px-6 pt-5 pb-8 @max-2xl/main:px-5",
   // Local tools use the whole main region.
-  tool: "flex h-full min-h-0 flex-col px-6 pt-5 pb-8 @max-2xl/main:px-5",
+  tool: "flex h-full min-h-0 flex-col",
 };
 
 export interface AppShellProps<To extends string> {
@@ -139,6 +142,10 @@ const ToolbarContext = createContext<ToolbarSlots | null>(null);
 const SidebarSlotsContext = createContext<{
   header: HTMLElement | null;
   primaryAction: HTMLElement | null;
+  navigation: HTMLElement | null;
+  directory: HTMLElement | null;
+  footer: HTMLElement | null;
+  collapsed: boolean;
 } | null>(null);
 
 /**
@@ -180,6 +187,31 @@ export function ShellPrimaryAction({ children }: { children: ReactNode }) {
   const slots = useContext(SidebarSlotsContext);
   if (!slots) return <>{children}</>;
   return slots.primaryAction ? createPortal(children, slots.primaryAction) : null;
+}
+
+export function useShellSidebarCollapsed() {
+  return useContext(SidebarSlotsContext)?.collapsed ?? false;
+}
+
+/** Feature navigation before application destinations. */
+export function ShellSidebarNavigation({ children }: { children: ReactNode }) {
+  const slots = useContext(SidebarSlotsContext);
+  if (!slots) return <>{children}</>;
+  return slots.navigation ? createPortal(children, slots.navigation) : null;
+}
+
+/** The feature directory is the sole conversation directory in the shell. */
+export function ShellSidebarDirectory({ children }: { children: ReactNode }) {
+  const slots = useContext(SidebarSlotsContext);
+  if (!slots) return <>{children}</>;
+  return slots.directory ? createPortal(children, slots.directory) : null;
+}
+
+/** Space role and member invitation controls beneath the pinned account row. */
+export function ShellSidebarFooter({ children }: { children: ReactNode }) {
+  const slots = useContext(SidebarSlotsContext);
+  if (!slots) return <>{children}</>;
+  return slots.footer ? createPortal(children, slots.footer) : null;
 }
 
 /** Shared project context with navigation supplied by the application. */
@@ -238,13 +270,13 @@ export function AppShell<To extends string>(props: AppShellProps<To>) {
         mobileBehavior="rail"
         style={
           {
-            "--sidebar-width": "var(--app-sidebar-width, 15rem)",
+            "--sidebar-width": "var(--app-sidebar-width, 13.75rem)",
             "--sidebar-width-icon": "var(--app-rail-width, 4rem)",
           } as CSSProperties
         }
         className={cn(
           "h-dvh min-h-0 overflow-hidden max-[420px]:[--app-rail-width:3.625rem]",
-          props.frame === "window" && "flex-col max-[1100px]:[--app-sidebar-width:11.875rem]",
+          props.frame === "window" && "flex-col",
         )}
       >
         <ShellContents {...props} />
@@ -279,9 +311,19 @@ function ShellContents<To extends string>({
   const [toolbarEnd, setToolbarEnd] = useState<HTMLElement | null>(null);
   const [sidebarHeader, setSidebarHeader] = useState<HTMLElement | null>(null);
   const [primaryAction, setPrimaryAction] = useState<HTMLElement | null>(null);
+  const [sidebarNavigation, setSidebarNavigation] = useState<HTMLElement | null>(null);
+  const [sidebarDirectory, setSidebarDirectory] = useState<HTMLElement | null>(null);
+  const [sidebarFooter, setSidebarFooter] = useState<HTMLElement | null>(null);
   const sidebarSlots = useMemo(
-    () => ({ header: sidebarHeader, primaryAction }),
-    [sidebarHeader, primaryAction],
+    () => ({
+      header: sidebarHeader,
+      primaryAction,
+      navigation: sidebarNavigation,
+      directory: sidebarDirectory,
+      footer: sidebarFooter,
+      collapsed,
+    }),
+    [sidebarHeader, primaryAction, sidebarNavigation, sidebarDirectory, sidebarFooter, collapsed],
   );
   const [claims, setClaims] = useState(0);
   const toolbar = useMemo<ToolbarSlots>(
@@ -295,35 +337,6 @@ function ShellContents<To extends string>({
     }),
     [toolbarStart, toolbarEnd],
   );
-  function renderAction(action: ShellAction) {
-    return (
-      <SidebarMenuItem key={action.label}>
-        <SidebarMenuButton
-          tooltip={action.label}
-          className={cn(
-            itemClass,
-            action.emphasis === "primary" &&
-              "bg-primary font-medium text-primary-foreground hover:bg-primary/85 hover:text-primary-foreground active:bg-primary/85 active:text-primary-foreground",
-          )}
-          {...(action.shortcut ? { "aria-keyshortcuts": action.shortcut.keys } : {})}
-          {...(action.render ? { render: action.render } : { onClick: action.onSelect })}
-        >
-          <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center">
-            {action.icon}
-          </span>
-          <span className="min-w-0 flex-1 truncate sidebar-icon:sr-only">{action.label}</span>
-          {action.shortcut && (
-            <kbd
-              aria-hidden="true"
-              className="ml-auto shrink-0 font-sans text-xs text-muted-foreground/70 sidebar-icon:hidden"
-            >
-              {action.shortcut.label}
-            </kbd>
-          )}
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    );
-  }
   function renderItem(item: ShellNavItem<To>) {
     return (
       <SidebarMenuItem key={item.to}>
@@ -337,7 +350,7 @@ function ShellContents<To extends string>({
               {...(item.exact ? { exact: true } : {})}
               className=""
             >
-              <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center">
+              <span aria-hidden="true" className="grid size-4 shrink-0 place-items-center">
                 {item.icon}
               </span>
               <span className="min-w-0 truncate sidebar-icon:sr-only">{item.label}</span>
@@ -370,38 +383,47 @@ function ShellContents<To extends string>({
       <TooltipContent side="bottom">{toggleLabel}</TooltipContent>
     </Tooltip>
   );
+  const brandLink = (
+    <LinkComponent
+      to={brand.to}
+      markActive={false}
+      aria-label={brand.label}
+      className="mx-1 flex min-h-9 w-fit max-w-full min-w-0 shrink-0 items-center rounded-md pointer-coarse:min-h-11 pointer-coarse:min-w-11 outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring [&_[data-slot=logo]>span]:hidden"
+    >
+      <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
+    </LinkComponent>
+  );
+  const commands = actions?.map((action) => (
+    <IconButton
+      key={action.label}
+      size="icon-sm"
+      label={action.label}
+      hint={action.shortcut ? `${action.label} (${action.shortcut.label})` : action.label}
+      {...(action.shortcut ? { "aria-keyshortcuts": action.shortcut.keys } : {})}
+      {...(action.render
+        ? { render: action.render, nativeButton: false, role: "link" }
+        : { onClick: action.onSelect })}
+    >
+      {action.icon}
+    </IconButton>
+  ));
   const header = (
     <header
       data-frame={frame}
       className={cn(
-        "@container/project-tools flex shrink-0 items-center gap-2 border-b border-border bg-background text-sm text-muted-foreground",
+        "@container/project-tools flex shrink-0 items-center gap-2 bg-background text-sm text-muted-foreground",
         windowed
-          ? "h-[max(3rem,var(--mygo-titlebar-height,0px))] pr-[max(0.75rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] pl-[max(0.75rem,calc(var(--mygo-titlebar-inset-left,0px)+0.5rem))] [--app-region:drag]"
-          : "h-12 px-4 max-[760px]:px-3 max-[540px]:has-[[data-project-links]]:grid max-[540px]:has-[[data-project-links]]:h-auto max-[540px]:has-[[data-project-links]]:grid-cols-[minmax(0,1fr)_auto] max-[540px]:has-[[data-project-links]]:gap-y-1 max-[540px]:has-[[data-project-links]]:py-1.5",
+          ? "min-h-[max(3rem,var(--mygo-titlebar-height,0px))] h-auto pr-[max(0.75rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] pl-[max(0.75rem,calc(var(--mygo-titlebar-inset-left,0px)+0.5rem))] [--app-region:drag]"
+          : "min-h-13 h-auto px-4 max-[760px]:px-3 max-[540px]:has-[[data-project-links]]:grid max-[540px]:has-[[data-project-links]]:h-auto max-[540px]:has-[[data-project-links]]:grid-cols-[minmax(0,1fr)_auto] max-[540px]:has-[[data-project-links]]:gap-y-1 max-[540px]:has-[[data-project-links]]:py-1.5",
       )}
     >
       {windowed ? (
         <div className="flex shrink-0 items-center gap-1 [--app-region:no-drag]">
+          {brandLink}
+          {commands}
           {sidebarToggle}
-          {actions?.map((action) => (
-            <IconButton
-              key={action.label}
-              size="icon-sm"
-              variant={action.emphasis === "primary" ? "default" : "ghost"}
-              label={action.label}
-              hint={action.shortcut ? `${action.label} (${action.shortcut.label})` : action.label}
-              {...(action.shortcut ? { "aria-keyshortcuts": action.shortcut.keys } : {})}
-              {...(action.render
-                ? { render: action.render, nativeButton: false, role: "link" }
-                : { onClick: action.onSelect })}
-            >
-              {action.icon}
-            </IconButton>
-          ))}
         </div>
-      ) : (
-        sidebarToggle
-      )}
+      ) : null}
       {claims === 0 &&
         breadcrumbs.map((crumb, index) => (
           <Fragment key={index}>
@@ -422,7 +444,10 @@ function ShellContents<To extends string>({
         ))}
       <div
         ref={setToolbarStart}
-        className="flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag] in-data-[frame=document]:max-[540px]:has-[[data-project-links]]:contents"
+        className={cn(
+          "flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag] in-data-[frame=document]:max-[540px]:has-[[data-project-links]]:contents",
+          claims > 0 && "flex-1",
+        )}
       />
       <div
         ref={setToolbarEnd}
@@ -454,28 +479,30 @@ function ShellContents<To extends string>({
               windowed && "absolute h-full",
             )}
           >
-            <SidebarHeader className="mb-4 shrink-0 gap-0 p-0">
-              <LinkComponent
-                to={brand.to}
-                markActive={false}
-                aria-label={brand.label}
-                className="mx-2.5 flex min-h-9 w-fit max-w-full min-w-0 items-center rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
-              >
-                <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
-              </LinkComponent>
+            <SidebarHeader className="mb-3 shrink-0 gap-0 p-0">
+              {!windowed && (
+                <div className="flex min-w-0 items-center justify-between gap-1 sidebar-icon:flex-col">
+                  {brandLink}
+                  <div className="flex shrink-0 items-center gap-0.5 sidebar-icon:flex-col">
+                    {commands}
+                    {sidebarToggle}
+                  </div>
+                </div>
+              )}
               {brand.description && (
                 <p className="mt-1 truncate px-2.5 text-xs text-muted-foreground sidebar-icon:hidden">
                   {brand.description}
                 </p>
               )}
               <div ref={setSidebarHeader} className="mt-2 min-w-0 empty:hidden" />
-              <div ref={setPrimaryAction} className="mt-3 min-w-0 empty:hidden" />
-              {!windowed && actions && actions.length > 0 && (
-                <SidebarMenu className="mt-3 gap-1">{actions.map(renderAction)}</SidebarMenu>
-              )}
+              <div
+                ref={setPrimaryAction}
+                className={cn("min-w-0 empty:hidden", windowed ? "mt-1" : "mt-3")}
+              />
             </SidebarHeader>
             <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">
-              <SidebarContent className="gap-4">
+              <SidebarContent className="gap-1">
+                <div ref={setSidebarNavigation} className="min-w-0 empty:hidden" />
                 {navigation.map((group, index) => (
                   <Fragment key={index}>
                     <SidebarGroup
@@ -498,19 +525,21 @@ function ShellContents<To extends string>({
                     {index === 0 && contextNavigation}
                   </Fragment>
                 ))}
+                <div ref={setSidebarDirectory} className="mt-3 min-w-0 empty:hidden" />
               </SidebarContent>
               {secondaryNavigation && secondaryNavigation.length > 0 && (
-                <SidebarFooter className="mt-auto shrink-0 border-t border-border px-0 pt-2 pb-0">
+                <SidebarFooter className="mt-auto shrink-0 px-0 pt-2 pb-0">
                   <SidebarMenu className="gap-1">{secondaryNavigation.map(renderItem)}</SidebarMenu>
                 </SidebarFooter>
               )}
             </nav>
             {account !== undefined && (
-              <SidebarFooter className="mt-1 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 sidebar-icon:flex-col">
+              <SidebarFooter className="mt-1 shrink-0 flex-row items-center gap-1 px-0 pt-2 pb-0 sidebar-icon:flex-col">
                 <div className="min-w-0 flex-1 sidebar-icon:w-full">{account}</div>
                 {accountAction}
               </SidebarFooter>
             )}
+            <div ref={setSidebarFooter} className="min-w-0 shrink-0 empty:hidden" />
           </Sidebar>
           <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             {!windowed && header}

@@ -76,7 +76,8 @@
     "./user-circle": "./src/icons/user-circle.ts",
     "./warning": "./src/icons/warning.ts",
     "./copy": "./src/icons/copy.ts",
-    "./more-horizontal": "./src/icons/more-horizontal.ts"
+    "./more-horizontal": "./src/icons/more-horizontal.ts",
+    "./filter": "./src/icons/filter.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

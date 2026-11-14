@@ -9,22 +9,31 @@ import {
   useState,
   useSyncExternalStore,
   type FormEvent,
-  type RefObject,
 } from "react";
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { cn } from "@raypx/ui/lib/utils";
 import { ReplyMarkdown } from "@raypx/blocks/markdown";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupTextarea,
-} from "@raypx/ui/components/ui/input-group";
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+} from "@raypx/ui/components/ui/dropdown-menu";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { InputGroupTextarea } from "@raypx/ui/components/ui/input-group";
 import { Empty, EmptyHeader, EmptyTitle, EmptyMedia } from "@raypx/ui/components/ui/empty";
 import { Alert, AlertDescription, AlertAction } from "@raypx/ui/components/ui/alert";
 import { IconButton } from "@raypx/ui/icon-button";
 import { HelpHint } from "@raypx/ui/help-hint";
+import { PlusIcon } from "@raypx/icons/plus";
+import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
+import { MonitorIcon } from "@raypx/icons/monitor";
+import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
+import { SettingsIcon } from "@raypx/icons/settings";
 import { AgentIcon } from "@raypx/icons/agent";
 import { CloseIcon } from "@raypx/icons/close";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
@@ -48,7 +57,6 @@ import {
   type ConversationDraftStore,
   type ConversationSocketPort,
   type ConversationPort,
-  type ApprovalCardView,
   type ApprovalPort,
 } from "../model.js";
 import { delegatedWork } from "../model/conversation.js";
@@ -64,6 +72,10 @@ import type { AgentsWorkspacePort } from "../model.js";
 import { ComputerIndicator, ComputerPanel } from "./computer.js";
 import { DeviceComputersController } from "../model/device-computers.js";
 import { ApprovalCard } from "./approval-card.js";
+import { ProtectedInputs } from "./protected-input.js";
+import { ComposerCard } from "./composer-card.js";
+import { ReplyActions } from "./reply-actions.js";
+import { ComputerFiles } from "./computer-files.js";
 import { ToolActivity } from "./tool-activity.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
@@ -81,14 +93,18 @@ const errorKeys = {
 } as const;
 
 interface AgentConversationProps {
+  onBack?: (() => void) | undefined;
+  onEditAgent?: (() => void) | undefined;
+  onDeleteAgent?: (() => void) | undefined;
   onLastActivity?: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
   composerReference?: { id: string; text: string } | undefined;
+  runReference?: { id: string; runId: string } | undefined;
   group?: GroupConversationView | undefined;
   agentDirectory?: readonly Agent[] | undefined;
   onManageParticipants?: (() => void) | undefined;
   capabilities?:
-    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers">
+    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers" | "protectedInputs">
     | undefined;
   item: AgentConversationView;
   port: ConversationPort;
@@ -111,9 +127,13 @@ interface AgentConversationProps {
 }
 
 export function AgentConversation({
+  onBack,
+  onEditAgent,
+  onDeleteAgent,
   onLastActivity,
   onOpenPage,
   composerReference,
+  runReference,
   group,
   agentDirectory,
   onManageParticipants,
@@ -194,8 +214,12 @@ export function AgentConversation({
   return (
     <ConversationContents
       item={item}
+      onBack={onBack}
+      onEditAgent={onEditAgent}
+      onDeleteAgent={onDeleteAgent}
       onOpenPage={onOpenPage}
       onLastActivity={onLastActivity}
+      runReference={runReference}
       group={group}
       agentDirectory={agentDirectory}
       onManageParticipants={onManageParticipants}
@@ -218,6 +242,10 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  runReference,
+  onBack,
+  onEditAgent,
+  onDeleteAgent,
   onLastActivity,
   onOpenPage,
   group,
@@ -239,6 +267,10 @@ function ConversationContents({
   onActivity,
   onComputerOpen,
 }: {
+  runReference: { id: string; runId: string } | undefined;
+  onBack: (() => void) | undefined;
+  onEditAgent: (() => void) | undefined;
+  onDeleteAgent: (() => void) | undefined;
   onLastActivity: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage: ((id: string) => void) | undefined;
   item: AgentConversationView;
@@ -246,7 +278,7 @@ function ConversationContents({
   agentDirectory: readonly Agent[] | undefined;
   onManageParticipants: (() => void) | undefined;
   capabilities:
-    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers">
+    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers" | "protectedInputs">
     | undefined;
   origin: string;
   controller: ConversationController;
@@ -269,6 +301,10 @@ function ConversationContents({
   const capabilityMenuTrigger = useRef<HTMLButtonElement>(null);
   const computerMenuOpener = useRef<HTMLButtonElement | null>(null);
   const [computerOpen, setComputerOpen] = useState(false);
+  const [contextOpen, setContextOpen] = useState(true);
+  const [capabilityTarget, setCapabilityTarget] = useState<HTMLDivElement | null>(null);
+  const [tab, setTab] = useState<"conversation" | "activity" | "files">("conversation");
+  const replyElements = useRef(new Map<string, HTMLElement>());
   const wide = useSyncExternalStore(subscribeWide, isWide, () => false);
   const computerState = useSyncExternalStore(
     computer.subscribe,
@@ -299,19 +335,28 @@ function ConversationContents({
   const selectedDevice = deviceState?.devices.find(
     (device) => device.id === deviceState.selection?.deviceId,
   );
+  const deviceSelectionKnown = !deviceState || (!deviceState.loading && !deviceState.error);
+  let computerStatus = t(computerStatusKey(computerState.status));
+  if (deviceState?.selection)
+    computerStatus = `${selectedDevice?.name ?? t("devices.unavailable")} · ${t(selectedDevice?.connected ? "devices.connected" : "devices.offline")}`;
+  else if (deviceState?.loading) computerStatus = t("loading");
+  else if (deviceState?.error) computerStatus = t("computerUnavailable");
   function openComputer(opener: HTMLButtonElement | null = computerTrigger.current) {
     computerMenuOpener.current = opener === computerTrigger.current ? null : opener;
+    if (wide) setContextOpen(true);
     setComputerOpen(true);
     onComputerOpen?.();
   }
   function computerFinalFocus() {
-    const inline = window.matchMedia?.("(min-width: 640px)").matches ?? true;
-    if (!inline && computerMenuOpener.current) return computerMenuOpener.current;
+    if (computerMenuOpener.current) return computerMenuOpener.current;
     return computerTrigger.current ?? false;
   }
   function closeComputer() {
     setComputerOpen(false);
-    if (wide) computerTrigger.current?.focus();
+    if (wide) {
+      setContextOpen(false);
+      computerTrigger.current?.focus();
+    }
   }
   const editor = useRef<HTMLTextAreaElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
@@ -370,9 +415,22 @@ function ConversationContents({
     };
   }, [targetRun, rows]);
   function openRun(runId: string) {
+    setTab("conversation");
     setTargetRun(runId);
     void controller.loadRun(runId as RunId);
   }
+  useEffect(() => {
+    if (!runReference || state.loading) return;
+    let cancelled = false;
+    void controller.loadRun(runReference.runId as RunId).then(() => {
+      if (cancelled) return;
+      setTab("conversation");
+      setTargetRun(runReference.runId);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [runReference, controller, state.loading]);
   const pendingCards = useMemo(
     () =>
       state.cards.filter(
@@ -392,6 +450,19 @@ function ConversationContents({
   const outsideRuns = runs.filter(
     (run) => run.outsideWindow && ["queued", "running", "waiting"].includes(run.state),
   );
+  function statusForRun(run: (typeof state.runs)[number] | undefined) {
+    if (!run || run.state === "succeeded") return undefined;
+    if (run.computerInputPaused) return t("screen.agentPaused");
+    const waitingOnWork =
+      delegatedWork(state, run.id).some((child) =>
+        ["queued", "running", "waiting"].includes(child.run.state),
+      ) &&
+      state.toolActivity.some(
+        (call) => call.runId === run.id && call.toolName === "agent_wait" && call.outcome === null,
+      );
+    if (waitingOnWork) return t("delegation.waiting");
+    return t(run.state === "running" ? "replying" : run.state);
+  }
   const memberName = (memberAccountId: string) =>
     conversationMemberLabel(memberAccountId, accountId, state.participants ?? [], members, {
       you: t("you"),
@@ -650,21 +721,37 @@ function ConversationContents({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 gap-4 overflow-clip">
+    <Tabs
+      value={tab}
+      onValueChange={(value) => {
+        if (value === "conversation" || value === "activity" || value === "files") setTab(value);
+      }}
+      className="min-h-0 min-w-0 flex-1 flex-row gap-6 overflow-clip data-[orientation=horizontal]:flex-row"
+    >
       <section
         aria-label={t("conversation")}
-        className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-4 overflow-clip"
+        className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-3 overflow-clip"
       >
         <ShellToolbar>
           <header
             data-conversation-header
-            className="flex h-full min-w-0 flex-1 flex-row flex-nowrap items-center gap-2"
+            className="flex h-full min-w-0 flex-1 flex-row flex-wrap items-center gap-x-2 gap-y-1 py-2 sm:flex-nowrap"
           >
+            {onBack && (
+              <IconButton
+                size="icon-sm"
+                label={t("back")}
+                className="shrink-0 sm:hidden"
+                onClick={onBack}
+              >
+                <ArrowLeftIcon aria-hidden="true" />
+              </IconButton>
+            )}
             <h1
               ref={title}
               tabIndex={-1}
               title={conversationName}
-              className="min-w-0 flex-1 truncate rounded-md text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="min-w-0 flex-1 truncate text-sm font-medium text-foreground outline-none focus-visible:underline focus-visible:decoration-muted-foreground focus-visible:underline-offset-4 sm:max-w-72"
             >
               {conversationName}
             </h1>
@@ -678,6 +765,15 @@ function ConversationContents({
                 <GroupAvatars agents={group.agents} />
               </Button>
             )}
+            <TabsList
+              variant="line"
+              aria-label={t("conversationViews")}
+              className="order-last basis-full justify-start gap-3 p-0 sm:order-none sm:mr-auto sm:basis-auto"
+            >
+              <TabsTrigger value="conversation">{t("conversation")}</TabsTrigger>
+              <TabsTrigger value="activity">{t("activity.title")}</TabsTrigger>
+              <TabsTrigger value="files">{t("files.title")}</TabsTrigger>
+            </TabsList>
             <div
               data-conversation-actions
               className="flex shrink-0 flex-row flex-nowrap items-center gap-1 whitespace-nowrap"
@@ -692,21 +788,46 @@ function ConversationContents({
                   onOpen={() => setComputerOpen(false)}
                   onOpenComputer={openComputer}
                   menuTrigger={capabilityMenuTrigger}
+                  workspace
+                  contextTarget={capabilityTarget}
+                  onEditAgent={onEditAgent}
+                  onDeleteAgent={onDeleteAgent}
                 />
               )}
+              {!capabilities && onEditAgent && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={<IconButton size="icon-sm" label={t("conversationActions")} />}
+                  >
+                    <MoreHorizontalIcon aria-hidden="true" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={onEditAgent}>{t("editAgent")}</DropdownMenuItem>
+                      {onDeleteAgent && (
+                        <DropdownMenuItem variant="destructive" onClick={onDeleteAgent}>
+                          {t("deleteAgent")}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <ComputerIndicator
+                compact
                 ref={computerTrigger}
                 state={computerState}
+                statusLabel={computerStatus}
                 deviceName={
                   deviceState?.selection
                     ? (selectedDevice?.name ?? t("devices.unavailable"))
                     : undefined
                 }
                 deviceConnected={selectedDevice?.connected}
-                open={computerOpen}
+                open={wide ? contextOpen : computerOpen}
                 panelId={panelId}
                 onOpen={() => {
-                  if (computerOpen) closeComputer();
+                  if (wide ? contextOpen : computerOpen) closeComputer();
                   else openComputer();
                 }}
               />
@@ -744,7 +865,11 @@ function ConversationContents({
             {t(state.sendCode)}
           </p>
         )}
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <TabsContent
+          value="conversation"
+          keepMounted
+          className="relative flex min-h-0 min-w-0 flex-1 flex-col data-hidden:hidden"
+        >
           {!state.loading && state.history && (
             <div className="flex shrink-0 flex-col items-center gap-2 py-2">
               {state.history.olderCursor ? (
@@ -782,7 +907,10 @@ function ConversationContents({
             className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring [overflow-anchor:none]"
             onScroll={trackReading}
           >
-            <div ref={content} className="flex min-h-full min-w-0 flex-col gap-2 pb-2">
+            <div
+              ref={content}
+              className="mx-auto flex min-h-full w-full min-w-0 max-w-[44rem] flex-col gap-4 px-1 pt-4 pb-6 sm:px-3"
+            >
               {(state.runsTruncated ||
                 state.segmentsTruncated ||
                 state.resolvedApprovalsTruncated ||
@@ -811,14 +939,17 @@ function ConversationContents({
                 </Empty>
               )}
               {rows.map((row, index) => {
-                if (row.kind === "activity")
+                if (row.kind === "activity") {
+                  const work = delegatedWork(state, row.runId);
                   return (
                     <ToolActivity
                       onOpenPage={onOpenPage}
                       key={row.id}
                       runId={row.runId}
+                      runStatus={statusForRun(state.runs.find((run) => run.id === row.runId))}
                       activity={row.activity}
                       pendingCount={row.pendingCount}
+                      additionalCount={work.length}
                       approvalPort={approvalPort}
                       answers={state.cards}
                       memberName={senderContext.hasOtherMembers ? memberName : undefined}
@@ -826,26 +957,23 @@ function ConversationContents({
                         spaceId: item.agent.spaceId,
                         conversationId: item.conversation.id,
                       }}
-                    />
-                  );
-                if (row.kind === "approval") {
-                  const asking = state.runs.find((run) => run.id === row.card.runId);
-                  return (
-                    <ApprovalCard
-                      key={row.id}
-                      card={row.card}
-                      agentName={group ? agentName(asking?.agentId) : undefined}
-                      taskSummary={asking?.parentRunId ? t("delegation.task") : undefined}
-                      accountId={accountId}
-                      memberName={memberName}
-                      onAnswer={(decision, allowTool) =>
-                        controller.answerApproval(row.card.requestId, decision, allowTool)
-                      }
-                      onExpired={() => void controller.refreshApprovals()}
-                      onAnswered={() => editor.current?.focus()}
-                    />
+                    >
+                      <DelegatedWork
+                        work={work}
+                        parentRunId={row.runId}
+                        agentName={group ? agentName : undefined}
+                        answers={state.cards}
+                        approvalPort={approvalPort}
+                        selection={{
+                          spaceId: item.agent.spaceId,
+                          conversationId: item.conversation.id,
+                        }}
+                        memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                      />
+                    </ToolActivity>
                   );
                 }
+                if (row.kind === "approval") return null;
                 const showSender = visibleSenders.has(row.id);
                 if (row.kind === "member" && row.agentId)
                   return (
@@ -854,7 +982,7 @@ function ConversationContents({
                       data-message-row={row.id}
                       data-message-id={row.id.startsWith("message:") ? row.id.slice(8) : row.id}
                       data-agent-message={row.agentId}
-                      className="flex min-w-0 flex-col gap-1 pr-6"
+                      className="flex min-w-0 flex-col gap-1"
                     >
                       {showSender && (
                         <h3 className="flex min-w-0 items-center gap-2 text-xs font-medium">
@@ -869,7 +997,7 @@ function ConversationContents({
                           {t("mentions.to", { name: row.targetAgentIds.map(agentName).join(", ") })}
                         </p>
                       )}
-                      <p className="max-w-[90%] rounded-lg border px-3 py-2 text-sm whitespace-pre-wrap wrap-anywhere">
+                      <p className="text-[15px] leading-7 whitespace-pre-wrap wrap-anywhere">
                         {row.text}
                       </p>
                     </article>
@@ -881,7 +1009,7 @@ function ConversationContents({
                       data-message-row={row.id}
                       data-message-id={row.id.startsWith("message:") ? row.id.slice(8) : row.id}
                       className={cn(
-                        "flex min-w-0 flex-col items-end gap-1 pl-6",
+                        "flex min-w-0 flex-col items-end gap-1 pl-8",
                         index > 0 && rows[index - 1]?.kind !== "member" && "mt-4",
                       )}
                     >
@@ -890,28 +1018,17 @@ function ConversationContents({
                           {memberName(row.sender.slice("member:".length))}
                         </h3>
                       )}
-                      <p className="max-w-[90%] rounded-lg bg-muted px-3 py-2 text-sm whitespace-pre-wrap wrap-anywhere">
+                      <p className="max-w-[90%] rounded-2xl bg-muted px-4 py-2.5 text-[15px] leading-6 whitespace-pre-wrap wrap-anywhere">
                         {row.text}
                       </p>
                     </article>
                   );
                 const run = row.run;
                 const work = run ? delegatedWork(state, run.id) : [];
-                const waitingOnWork =
-                  work.some((child) =>
-                    ["queued", "running", "waiting"].includes(child.run.state),
-                  ) &&
-                  state.toolActivity.some(
-                    (call) =>
-                      call.runId === run?.id &&
-                      call.toolName === "agent_wait" &&
-                      call.outcome === null,
-                  );
+                const hasSteps =
+                  work.length > 0 ||
+                  rows.some((entry) => entry.kind === "activity" && entry.runId === run?.id);
                 const producing = run?.state === "running" || run?.state === "queued";
-                let runStatus = run ? t(run.state) : "";
-                if (run?.state === "running") runStatus = t("replying");
-                if (waitingOnWork) runStatus = t("delegation.waiting");
-                if (run?.computerInputPaused) runStatus = t("screen.agentPaused");
                 const retryMessage = state.messages.find(
                   (message) => message.id === run?.messageId,
                 );
@@ -921,13 +1038,17 @@ function ConversationContents({
                 return (
                   <article
                     key={row.id}
+                    ref={(node) => {
+                      if (node) replyElements.current.set(row.id, node);
+                      else replyElements.current.delete(row.id);
+                    }}
                     data-message-row={row.id}
                     data-run-id={run?.id}
                     tabIndex={-1}
                     aria-busy={producing}
-                    className="flex min-w-0 flex-col pr-6"
+                    className="flex min-w-0 flex-col"
                   >
-                    <div className="flex w-fit min-w-0 max-w-[90%] flex-col gap-2">
+                    <div className="flex w-full min-w-0 flex-col gap-2">
                       {run?.trigger && run.trigger !== "message" && (
                         <p className="text-xs text-muted-foreground" data-run-origin>
                           {(run.provenanceKind ?? run.inboundProvenance?.kind) === "repository"
@@ -951,10 +1072,7 @@ function ConversationContents({
                           <span className="min-w-0 truncate">{agentName(row.agentId)}</span>
                         </h3>
                       )}
-                      <div
-                        data-reply-bubble
-                        className="min-w-0 rounded-lg border px-3 py-2 text-sm"
-                      >
+                      <div data-reply-bubble className="min-w-0 text-[15px] leading-7 sm:text-base">
                         {row.text && (
                           <ReplyMarkdown
                             copyLabel={t("copyCode")}
@@ -964,9 +1082,13 @@ function ConversationContents({
                             {row.text}
                           </ReplyMarkdown>
                         )}
-                        {run && run.state !== "succeeded" && (
+                        {run && run.state !== "succeeded" && (!hasSteps || run.failureCode) && (
                           <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className={row.text ? "mt-2" : undefined}>{runStatus}</span>
+                            {!hasSteps && (
+                              <span className={row.text ? "mt-2" : undefined}>
+                                {statusForRun(run)}
+                              </span>
+                            )}
                             {run.failureCode && (
                               <span className="wrap-anywhere">{t(run.failureCode)}</span>
                             )}
@@ -1016,20 +1138,55 @@ function ConversationContents({
                           <StopIcon aria-hidden="true" />
                         </IconButton>
                       )}
-                      {run && (
-                        <DelegatedWork
-                          work={work}
-                          parentRunId={run.id}
-                          agentName={group ? agentName : undefined}
-                          answers={state.cards}
-                          approvalPort={approvalPort}
-                          selection={{
-                            spaceId: item.agent.spaceId,
-                            conversationId: item.conversation.id,
-                          }}
-                          memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                      {row.text && run && (
+                        <ReplyActions
+                          text={row.text}
+                          getArticle={() => replyElements.current.get(row.id) ?? null}
+                          retryDisabled={retryDisabled}
+                          onRetry={
+                            !group && run.state === "succeeded" && retryMessage
+                              ? () => {
+                                  controller.setDraft(retryMessage.text);
+                                  editor.current?.focus();
+                                }
+                              : undefined
+                          }
+                          onSteer={
+                            ["queued", "running", "waiting"].includes(run.state)
+                              ? () => {
+                                  controller.beginSteering(run.id);
+                                  editor.current?.focus();
+                                }
+                              : undefined
+                          }
+                          onActivity={() => setTab("activity")}
                         />
                       )}
+                      {run &&
+                        work.length > 0 &&
+                        !rows.some(
+                          (entry) => entry.kind === "activity" && entry.runId === run.id,
+                        ) && (
+                          <ToolActivity
+                            runId={run.id}
+                            runStatus={statusForRun(run)}
+                            activity={[]}
+                            additionalCount={work.length}
+                          >
+                            <DelegatedWork
+                              work={work}
+                              parentRunId={run.id}
+                              agentName={group ? agentName : undefined}
+                              answers={state.cards}
+                              approvalPort={approvalPort}
+                              selection={{
+                                spaceId: item.agent.spaceId,
+                                conversationId: item.conversation.id,
+                              }}
+                              memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                            />
+                          </ToolActivity>
+                        )}
                     </div>
                   </article>
                 );
@@ -1047,279 +1204,580 @@ function ConversationContents({
             </div>
           </div>
           {away && (
-            <div className="absolute inset-x-0 bottom-2 flex justify-center">
-              <Button size="sm" variant="outline" onClick={latest}>
+            <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="pointer-events-auto shadow-sm"
+                onClick={latest}
+              >
                 <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
                 {t("latest")}
               </Button>
             </div>
           )}
-        </div>
-        <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-          <span key={announcement.revision}>{announcement.text}</span>
-        </p>
-        {state.pending && !state.sending && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <p className="text-xs text-muted-foreground">{t("pendingDelivery")}</p>
-            <Button variant="outline" size="sm" onClick={() => void retryDelivery()}>
-              {t("retryDelivery")}
-            </Button>
-          </div>
-        )}
-        {state.approvalsError && (
-          <div className="flex min-w-0 shrink-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <p>{t("approval.loadError")}</p>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={state.approvalsLoading}
-              onClick={() => void controller.refreshApprovals()}
-            >
-              {t("refresh")}
-            </Button>
-          </div>
-        )}
-        {(outsideRuns.length > 0 || state.activeRunsTruncated) && (
-          <div
-            role="region"
-            aria-label={t("stillWorking.title")}
-            data-still-working
-            className="max-h-[min(24rem,50dvh)] min-w-0 shrink-0 overflow-y-auto rounded-lg border sm:max-h-64"
-          >
-            <h3 className="px-3 pt-2 text-xs font-medium">{t("stillWorking.title")}</h3>
-            {outsideRuns.map((run) => (
-              <div key={run.id} data-active-run-id={run.id} className="min-w-0 space-y-2 px-3 py-2">
-                <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
-                  <div className="flex min-w-0 basis-full items-start justify-between gap-2 sm:basis-auto sm:flex-1">
-                    <span className="min-w-0 font-medium wrap-anywhere">
-                      {agentName(run.agentId)}
-                    </span>
-                    <span className="shrink-0 text-muted-foreground">
-                      {t(run.computerInputPaused ? "screen.agentPaused" : run.state)}
-                    </span>
+        </TabsContent>
+        <TabsContent
+          value="activity"
+          className="min-h-0 min-w-0 overflow-y-auto overscroll-contain"
+        >
+          <div className="mx-auto flex w-full min-w-0 max-w-[44rem] flex-col gap-6 px-1 py-5 sm:px-3">
+            {state.toolActivityTruncated && (
+              <p className="text-xs text-muted-foreground">{t("activity.truncated")}</p>
+            )}
+            {rows.filter((row) => row.kind === "activity").length === 0 &&
+              !runs.some((run) => !run.parentRunId && !run.outsideWindow) && (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>{t("activity.empty")}</EmptyTitle>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            {rows.map((row) => {
+              if (row.kind !== "activity") return null;
+              const run = state.runs.find((entry) => entry.id === row.runId);
+              return (
+                <section
+                  key={row.id}
+                  data-run-id={row.runId}
+                  className="flex min-w-0 flex-col gap-2"
+                >
+                  <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                    <span className="min-w-0 flex-1 truncate">{agentName(run?.agentId)}</span>
                   </div>
+                  <ToolActivity
+                    runId={row.runId}
+                    runStatus={statusForRun(run) ?? (run ? t("replyReady") : undefined)}
+                    activity={row.activity}
+                    pendingCount={row.pendingCount}
+                    defaultExpanded
+                    approvalPort={approvalPort}
+                    answers={state.cards}
+                    memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                    selection={{
+                      spaceId: item.agent.spaceId,
+                      conversationId: item.conversation.id,
+                    }}
+                    onOpenPage={onOpenPage}
+                  >
+                    <DelegatedWork
+                      work={delegatedWork(state, row.runId)}
+                      parentRunId={row.runId}
+                      agentName={group ? agentName : undefined}
+                      answers={state.cards}
+                      approvalPort={approvalPort}
+                      selection={{
+                        spaceId: item.agent.spaceId,
+                        conversationId: item.conversation.id,
+                      }}
+                      memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                    />
+                  </ToolActivity>
+                </section>
+              );
+            })}
+            {runs
+              .filter(
+                (run) =>
+                  !run.parentRunId &&
+                  !rows.some((row) => row.kind === "activity" && row.runId === run.id),
+              )
+              .map((run) => {
+                const work = delegatedWork(state, run.id);
+                if (run.outsideWindow) return null;
+                return (
+                  <section
+                    key={run.id}
+                    data-run-id={run.id}
+                    className="flex min-w-0 flex-col gap-2"
+                  >
+                    <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                      <span className="min-w-0 flex-1 truncate">{agentName(run.agentId)}</span>
+                      {work.length === 0 && <span>{statusForRun(run) ?? t("replyReady")}</span>}
+                    </div>
+                    {run.failureCode && (
+                      <p className="text-sm text-muted-foreground">{t(run.failureCode)}</p>
+                    )}
+                    <ToolActivity
+                      runId={run.id}
+                      runStatus={statusForRun(run)}
+                      activity={[]}
+                      additionalCount={work.length}
+                      defaultExpanded
+                    >
+                      <DelegatedWork
+                        work={work}
+                        parentRunId={run.id}
+                        agentName={group ? agentName : undefined}
+                        answers={state.cards}
+                        approvalPort={approvalPort}
+                        selection={{
+                          spaceId: item.agent.spaceId,
+                          conversationId: item.conversation.id,
+                        }}
+                        memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                      />
+                    </ToolActivity>
+                  </section>
+                );
+              })}
+          </div>
+        </TabsContent>
+        <TabsContent value="files" className="min-h-0 min-w-0 overflow-y-auto overscroll-contain">
+          <div className="mx-auto w-full min-w-0 max-w-[44rem] px-1 py-5 sm:px-3">
+            <h2 className="mb-3 text-sm font-medium">{t("devices.teamSandbox")}</h2>
+            {computer.files ? (
+              <ComputerFiles
+                controller={computer.files}
+                status={computerState.status}
+                refreshKey={state.toolActivity
+                  .filter((call) => call.finishedAt)
+                  .map((call) => `${call.runId}:${call.toolCallId}:${call.finishedAt}`)
+                  .join("|")}
+              />
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>{t("files.notConfigured")}</EmptyTitle>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </div>
+        </TabsContent>
+        <div className="mx-auto flex w-full min-w-0 max-w-[44rem] shrink-0 flex-col gap-2 px-1 pb-3 sm:px-3 sm:pb-4">
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            <span key={announcement.revision}>{announcement.text}</span>
+          </p>
+          {state.pending && !state.sending && (
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <p className="text-xs text-muted-foreground">{t("pendingDelivery")}</p>
+              <Button variant="outline" size="sm" onClick={() => void retryDelivery()}>
+                {t("retryDelivery")}
+              </Button>
+            </div>
+          )}
+          {state.approvalsError && (
+            <div className="flex min-w-0 shrink-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <p>{t("approval.loadError")}</p>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={state.approvalsLoading}
+                onClick={() => void controller.refreshApprovals()}
+              >
+                {t("refresh")}
+              </Button>
+            </div>
+          )}
+          {(outsideRuns.length > 0 || state.activeRunsTruncated) && (
+            <div
+              role="region"
+              aria-label={t("stillWorking.title")}
+              data-still-working
+              className="max-h-[min(24rem,50dvh)] min-w-0 shrink-0 overflow-y-auto rounded-lg border sm:max-h-64"
+            >
+              <h3 className="px-3 pt-2 text-xs font-medium">{t("stillWorking.title")}</h3>
+              {outsideRuns.map((run) => (
+                <div
+                  key={run.id}
+                  data-active-run-id={run.id}
+                  className="min-w-0 space-y-2 px-3 py-2"
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
+                    <div className="flex min-w-0 basis-full items-start justify-between gap-2 sm:basis-auto sm:flex-1">
+                      <span className="min-w-0 font-medium wrap-anywhere">
+                        {agentName(run.agentId)}
+                      </span>
+                      <span className="shrink-0 text-muted-foreground">
+                        {t(run.computerInputPaused ? "screen.agentPaused" : run.state)}
+                      </span>
+                    </div>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      disabled={state.history.loading !== null}
+                      onClick={() => openRun(run.id)}
+                    >
+                      {t("stillWorking.showRun")}
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => {
+                        controller.beginSteering(run.id);
+                        editor.current?.focus();
+                      }}
+                    >
+                      {t("stillWorking.steer")}
+                    </Button>
+                    <IconButton
+                      size="icon-xs"
+                      variant="ghost"
+                      label={t("mentions.stop", { name: agentName(run.agentId) })}
+                      disabled={stopping.has(run.id)}
+                      onClick={() => void stop(run.id)}
+                    >
+                      <StopIcon aria-hidden="true" />
+                    </IconButton>
+                  </div>
+                  {run.trigger && run.trigger !== "message" && (
+                    <p className="text-xs text-muted-foreground">
+                      {(run.provenanceKind ?? run.inboundProvenance?.kind) === "repository"
+                        ? t("origins.repository")
+                        : t(`origins.${run.trigger}`)}
+                    </p>
+                  )}
+                  {(run.untrustedInput ?? Boolean(run.inboundProvenance)) && (
+                    <p className="text-xs text-muted-foreground">{t("untrustedInput")}</p>
+                  )}
+                  {pendingCards
+                    .filter((card) => card.runId === run.id)
+                    .map((card) => (
+                      <ApprovalCard
+                        key={card.requestId}
+                        card={card}
+                        accountId={accountId}
+                        onAnswer={(decision, allowTool) =>
+                          controller.answerApproval(card.requestId, decision, allowTool)
+                        }
+                        onExpired={() => void controller.refreshApprovals()}
+                        onAnswered={() => editor.current?.focus()}
+                      />
+                    ))}
+                </div>
+              ))}
+              {state.activeRunsTruncated && (
+                <div className="flex flex-wrap items-center gap-2 px-3 pb-2 text-xs text-muted-foreground">
+                  <p className="min-w-0 flex-1">{t("stillWorking.truncated")}</p>
                   <Button
                     size="xs"
                     variant="ghost"
                     disabled={state.history.loading !== null}
-                    onClick={() => openRun(run.id)}
+                    onClick={() => void controller.loadLatest()}
                   >
-                    {t("stillWorking.showRun")}
+                    {t("refresh")}
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    onClick={() => {
-                      controller.beginSteering(run.id);
-                      editor.current?.focus();
-                    }}
-                  >
-                    {t("stillWorking.steer")}
-                  </Button>
-                  <IconButton
-                    size="icon-xs"
-                    variant="ghost"
-                    label={t("mentions.stop", { name: agentName(run.agentId) })}
-                    disabled={stopping.has(run.id)}
-                    onClick={() => void stop(run.id)}
-                  >
-                    <StopIcon aria-hidden="true" />
-                  </IconButton>
                 </div>
-                {run.trigger && run.trigger !== "message" && (
-                  <p className="text-xs text-muted-foreground">
-                    {(run.provenanceKind ?? run.inboundProvenance?.kind) === "repository"
-                      ? t("origins.repository")
-                      : t(`origins.${run.trigger}`)}
-                  </p>
-                )}
-                {(run.untrustedInput ?? Boolean(run.inboundProvenance)) && (
-                  <p className="text-xs text-muted-foreground">{t("untrustedInput")}</p>
-                )}
-                {pendingCards
-                  .filter((card) => card.runId === run.id)
-                  .map((card) => (
+              )}
+            </div>
+          )}
+          {state.steeringRunId && (
+            <div className="flex min-w-0 shrink-0 items-center gap-2 text-xs text-muted-foreground">
+              <span className="min-w-0 flex-1 truncate">
+                {t("stillWorking.targeted", {
+                  name: agentName(runs.find((run) => run.id === state.steeringRunId)?.agentId),
+                })}
+              </span>
+              <IconButton
+                size="icon-xs"
+                variant="ghost"
+                label={t("stillWorking.cancelSteering")}
+                disabled={!!state.pending}
+                onClick={() => controller.clearSteering()}
+              >
+                <CloseIcon aria-hidden="true" />
+              </IconButton>
+            </div>
+          )}
+          {pendingCards.filter((card) => !outsideRuns.some((run) => run.id === card.runId)).length >
+            0 && (
+            <div
+              data-pending-approvals
+              className="flex max-h-[min(18rem,30dvh)] min-w-0 shrink-0 flex-col gap-2 overflow-y-auto"
+            >
+              {pendingCards
+                .filter((card) => !outsideRuns.some((run) => run.id === card.runId))
+                .map((card) => {
+                  const asking = runs.find((run) => run.id === card.runId);
+                  return (
                     <ApprovalCard
                       key={card.requestId}
                       card={card}
                       accountId={accountId}
+                      agentName={group ? agentName(asking?.agentId) : undefined}
+                      taskSummary={asking?.parentRunId ? t("delegation.task") : undefined}
+                      memberName={memberName}
                       onAnswer={(decision, allowTool) =>
                         controller.answerApproval(card.requestId, decision, allowTool)
                       }
                       onExpired={() => void controller.refreshApprovals()}
                       onAnswered={() => editor.current?.focus()}
                     />
-                  ))}
-              </div>
-            ))}
-            {state.activeRunsTruncated && (
-              <div className="flex flex-wrap items-center gap-2 px-3 pb-2 text-xs text-muted-foreground">
-                <p className="min-w-0 flex-1">{t("stillWorking.truncated")}</p>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  disabled={state.history.loading !== null}
-                  onClick={() => void controller.loadLatest()}
-                >
-                  {t("refresh")}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-        {state.steeringRunId && (
-          <div className="flex min-w-0 shrink-0 items-center gap-2 text-xs text-muted-foreground">
-            <span className="min-w-0 flex-1 truncate">
-              {t("stillWorking.targeted", {
-                name: agentName(runs.find((run) => run.id === state.steeringRunId)?.agentId),
-              })}
-            </span>
-            <IconButton
-              size="icon-xs"
-              variant="ghost"
-              label={t("stillWorking.cancelSteering")}
-              disabled={!!state.pending}
-              onClick={() => controller.clearSteering()}
-            >
-              <CloseIcon aria-hidden="true" />
-            </IconButton>
-          </div>
-        )}
-        <form onSubmit={submit} className="min-w-0 shrink-0">
-          <Field>
-            <FieldLabel htmlFor={id} className="sr-only">
-              {t("message")}
-            </FieldLabel>
-            {group && mentionRange && (
-              <MentionPicker
-                agents={group.agents}
-                query={mentionRange.query}
-                editor={editor}
-                onClose={closeMentions}
-                onSelect={(agent) => {
-                  const caret = controller.addMention(
-                    mentionRange.start,
-                    mentionRange.end,
-                    agent.id,
-                    agent.name,
                   );
-                  mentionCaret.current = caret;
-                  closeMentions();
-                }}
-              />
-            )}
-            <InputGroup>
-              <InputGroupTextarea
-                ref={editor}
-                id={id}
-                value={state.draft}
-                rows={1}
-                maxLength={32_000}
-                placeholder={t("message")}
-                className="max-h-48 min-h-16 overflow-y-auto"
-                onChange={(event) => {
-                  controller.setDraft(event.currentTarget.value);
-                  updateMentionPicker(event.currentTarget);
-                }}
-                aria-keyshortcuts={group ? "Control+Shift+M Meta+Shift+M" : undefined}
-                onSelect={(event) => updateMentionPicker(event.currentTarget)}
-                onCompositionStart={() => {
-                  composing.current = true;
-                  setMentionRange(null);
-                }}
-                onCompositionEnd={(event) => {
-                  composing.current = false;
-                  controller.setDraft(event.currentTarget.value);
-                  updateMentionPicker(event.currentTarget);
-                }}
-                onKeyDown={(event) => {
-                  if (composing.current || event.nativeEvent.isComposing || event.keyCode === 229)
-                    return;
-                  if (
-                    group &&
-                    (event.ctrlKey || event.metaKey) &&
-                    event.shiftKey &&
-                    event.key.toLowerCase() === "m"
-                  ) {
-                    event.preventDefault();
-                    updateMentionPicker(event.currentTarget, true);
-                    return;
-                  }
-                  if (
-                    event.key !== "Enter" ||
-                    event.shiftKey ||
-                    composing.current ||
-                    event.nativeEvent.isComposing ||
-                    event.keyCode === 229
-                  )
-                    return;
-                  event.preventDefault();
-                  void send();
-                }}
-              />
-              <InputGroupAddon align="block-end" className="flex-wrap justify-end">
-                {group &&
-                  state.draft.trim() &&
-                  mentionIds(state.mentionTokens ?? []).length === 0 && (
-                    <span className="mr-auto min-w-0 text-xs wrap-anywhere text-muted-foreground">
-                      {t("mentions.noReply")}
-                    </span>
-                  )}
-                {appliedMode && (
-                  <span className="min-w-0 flex-1 text-xs wrap-anywhere text-muted-foreground">
-                    {t(
-                      modeSource !== "account_default"
-                        ? "spaceSettings.overridesDefault"
-                        : "spaceSettings.followsDefault",
-                    )}
-                    : {t(`approvalSettings.${appliedMode}`)}
-                  </span>
-                )}
-                <PendingApprovalControl
-                  cards={pendingCards.filter(
-                    (card) => !outsideRuns.some((run) => run.id === card.runId),
-                  )}
-                  history={history}
+                })}
+            </div>
+          )}
+          {capabilities?.protectedInputs && (
+            <ProtectedInputs
+              port={capabilities.protectedInputs}
+              spaceId={item.agent.spaceId}
+              conversationId={item.conversation.id}
+            />
+          )}
+          <form onSubmit={submit} className="min-w-0 shrink-0">
+            <Field>
+              <FieldLabel htmlFor={id} className="sr-only">
+                {t("message")}
+              </FieldLabel>
+              {group && mentionRange && (
+                <MentionPicker
+                  agents={group.agents}
+                  query={mentionRange.query}
+                  editor={editor}
+                  onClose={closeMentions}
+                  onSelect={(agent) => {
+                    const caret = controller.addMention(
+                      mentionRange.start,
+                      mentionRange.end,
+                      agent.id,
+                      agent.name,
+                    );
+                    mentionCaret.current = caret;
+                    closeMentions();
+                  }}
                 />
-                {showStop && active ? (
-                  <IconButton
-                    variant="default"
-                    label={t("stop")}
-                    disabled={stopping.size > 0}
-                    onClick={() => void stop(active.id)}
-                  >
-                    <StopIcon aria-hidden="true" />
-                  </IconButton>
-                ) : (
-                  <IconButton
-                    type="submit"
-                    variant="default"
-                    label={sendLabel}
-                    disabled={sendDisabled}
-                  >
-                    <SendIcon aria-hidden="true" />
-                  </IconButton>
+              )}
+              <ComposerCard
+                toolbar={
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={<IconButton size="icon-sm" label={t("addContext")} />}
+                      >
+                        <PlusIcon aria-hidden="true" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem onClick={() => setTab("files")}>
+                            {t("files.title")}
+                          </DropdownMenuItem>
+                          {onOpenPage && (
+                            <DropdownMenuItem onClick={() => onOpenPage("")}>
+                              {t("pagesContext")}
+                            </DropdownMenuItem>
+                          )}
+                          {onEditAgent && (
+                            <DropdownMenuItem onClick={onEditAgent}>
+                              {t("editAgent")}
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <div className="flex min-w-0 max-w-full items-center gap-0.5 rounded-full bg-muted/70 px-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="max-w-28 rounded-full"
+                        onClick={() => {
+                          if (group) onManageParticipants?.();
+                          else onEditAgent?.();
+                        }}
+                        disabled={group ? !onManageParticipants : !onEditAgent}
+                      >
+                        <AgentIcon data-icon="inline-start" aria-hidden="true" />
+                        <span className="truncate">{conversationName}</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-full"
+                        aria-label={t("composerComputer", {
+                          state: computerStatus,
+                        })}
+                        title={computerStatus}
+                        disabled={
+                          deviceState?.busy ||
+                          (deviceSelectionKnown &&
+                            !deviceState?.selection &&
+                            (computerState.pending !== null ||
+                              computerState.refreshing ||
+                              computerState.status === "loading" ||
+                              computerState.status === "starting" ||
+                              computerState.status === "stopping"))
+                        }
+                        onClick={() => {
+                          if (
+                            deviceSelectionKnown &&
+                            !deviceState?.selection &&
+                            ["stopped", "destroyed", "failed"].includes(computerState.status)
+                          )
+                            void computer.start();
+                          else
+                            openComputer(
+                              editor.current
+                                ?.closest("form")
+                                ?.querySelector<HTMLButtonElement>("[data-composer-computer]") ??
+                                null,
+                            );
+                        }}
+                        data-composer-computer
+                      >
+                        <MonitorIcon data-icon="inline-start" aria-hidden="true" />
+                        <span className="hidden lg:inline">{t("computerShort")}</span>
+                      </Button>
+                    </div>
+                    <div className="ml-auto flex min-w-0 items-center gap-1">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="max-w-28"
+                              aria-label={t("modelAndApproval")}
+                            />
+                          }
+                        >
+                          <span className="truncate">{item.agent.model.modelId}</span>
+                          <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="max-w-72">
+                          <DropdownMenuGroup>
+                            <DropdownMenuLabel>
+                              {t("model")}: {item.agent.model.modelId}
+                            </DropdownMenuLabel>
+                            {appliedMode && (
+                              <DropdownMenuLabel>
+                                {t(
+                                  modeSource !== "account_default"
+                                    ? "spaceSettings.overridesDefault"
+                                    : "spaceSettings.followsDefault",
+                                )}
+                                : {t(`approvalSettings.${appliedMode}`)}
+                              </DropdownMenuLabel>
+                            )}
+                            {onEditAgent && (
+                              <DropdownMenuItem onClick={onEditAgent}>
+                                <SettingsIcon aria-hidden="true" />
+                                {t("editAgent")}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {showStop && active ? (
+                        <IconButton
+                          variant="default"
+                          className="rounded-full"
+                          label={t("stop")}
+                          disabled={stopping.size > 0}
+                          onClick={() => void stop(active.id)}
+                        >
+                          <StopIcon aria-hidden="true" />
+                        </IconButton>
+                      ) : (
+                        <IconButton
+                          type="submit"
+                          variant="default"
+                          className="rounded-full"
+                          label={sendLabel}
+                          disabled={sendDisabled}
+                        >
+                          <SendIcon aria-hidden="true" />
+                        </IconButton>
+                      )}
+                    </div>
+                  </>
+                }
+              >
+                <InputGroupTextarea
+                  ref={editor}
+                  id={id}
+                  value={state.draft}
+                  rows={1}
+                  maxLength={32_000}
+                  placeholder={t("message")}
+                  className="max-h-48 min-h-20 overflow-y-auto px-4 pt-4 pb-2"
+                  onChange={(event) => {
+                    controller.setDraft(event.currentTarget.value);
+                    updateMentionPicker(event.currentTarget);
+                  }}
+                  aria-keyshortcuts={group ? "Control+Shift+M Meta+Shift+M" : undefined}
+                  onSelect={(event) => updateMentionPicker(event.currentTarget)}
+                  onCompositionStart={() => {
+                    composing.current = true;
+                    setMentionRange(null);
+                  }}
+                  onCompositionEnd={(event) => {
+                    composing.current = false;
+                    controller.setDraft(event.currentTarget.value);
+                    updateMentionPicker(event.currentTarget);
+                  }}
+                  onKeyDown={(event) => {
+                    if (composing.current || event.nativeEvent.isComposing || event.keyCode === 229)
+                      return;
+                    if (
+                      group &&
+                      (event.ctrlKey || event.metaKey) &&
+                      event.shiftKey &&
+                      event.key.toLowerCase() === "m"
+                    ) {
+                      event.preventDefault();
+                      updateMentionPicker(event.currentTarget, true);
+                      return;
+                    }
+                    if (
+                      event.key !== "Enter" ||
+                      event.shiftKey ||
+                      composing.current ||
+                      event.nativeEvent.isComposing ||
+                      event.keyCode === 229
+                    )
+                      return;
+                    event.preventDefault();
+                    void send();
+                  }}
+                />
+              </ComposerCard>
+              {group &&
+                state.draft.trim() &&
+                mentionIds(state.mentionTokens ?? []).length === 0 && (
+                  <p className="text-xs text-muted-foreground">{t("mentions.noReply")}</p>
                 )}
-              </InputGroupAddon>
-            </InputGroup>
-          </Field>
-        </form>
+            </Field>
+          </form>
+        </div>
       </section>
-      {wide && computerOpen && (
+      {wide && contextOpen && (
         <aside
           id={panelId}
           aria-label={t("computerTitle")}
-          className="flex w-72 min-w-0 shrink-0 flex-col border-l"
+          className="flex w-64 min-w-0 shrink-0 flex-col gap-4 overflow-x-hidden overflow-y-auto py-4 pr-2"
         >
-          <ComputerPanel
-            controller={computer}
-            devices={devices}
-            deviceSelected={!!deviceState?.selection}
-            onClose={closeComputer}
-            activity={activity ?? state.toolActivity}
-            approvalPort={approvalPort}
-            selection={{ spaceId: item.agent.spaceId, conversationId: item.conversation.id }}
-          />
+          <div className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border/60 bg-background">
+            <ComputerPanel
+              compact
+              focusOnMount={computerOpen}
+              showFiles={false}
+              showActivity={false}
+              controller={computer}
+              devices={devices}
+              deviceSelected={!!deviceState?.selection}
+              onClose={closeComputer}
+              activity={activity ?? state.toolActivity}
+              approvalPort={approvalPort}
+              selection={{ spaceId: item.agent.spaceId, conversationId: item.conversation.id }}
+            />
+          </div>
+          <div ref={setCapabilityTarget} />
+          {pendingCards.length > 0 && (
+            <div className="flex min-w-0 flex-col gap-2 rounded-xl border border-border/60 p-3">
+              <h2 className="text-xs font-medium text-muted-foreground">
+                {t("approval.states.pending")}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setTab("conversation");
+                  document.getElementById(`approval-${pendingCards[0]?.requestId}`)?.focus();
+                }}
+              >
+                {t("approval.pendingCount", { count: pendingCards.length })}
+              </Button>
+            </div>
+          )}
         </aside>
       )}
       {!wide && (
@@ -1336,6 +1794,7 @@ function ConversationContents({
         >
           <ComputerPanel
             sheet
+            showFiles={tab !== "files"}
             controller={computer}
             devices={devices}
             deviceSelected={!!deviceState?.selection}
@@ -1346,8 +1805,22 @@ function ConversationContents({
           />
         </CapabilitySheet>
       )}
-    </div>
+    </Tabs>
   );
+}
+
+function computerStatusKey(status: ReturnType<ComputerController["getSnapshot"]>["status"]) {
+  const keys = {
+    loading: "loading",
+    "not-configured": "computerNotConfigured",
+    stopped: "computerStopped",
+    destroyed: "computerStopped",
+    starting: "computerStarting",
+    running: "computerRunning",
+    stopping: "computerStopping",
+    failed: "computerFailed",
+  } as const;
+  return keys[status];
 }
 
 const wideQuery = "(min-width: 1280px)";
@@ -1364,50 +1837,4 @@ function subscribeWide(listener: () => void) {
 }
 function isWide() {
   return window.matchMedia?.(wideQuery).matches ?? false;
-}
-
-/** Visibility updates stay with the composer affordance, outside the transcript. */
-function PendingApprovalControl({
-  cards,
-  history,
-}: {
-  cards: readonly ApprovalCardView[];
-  history: RefObject<HTMLDivElement | null>;
-}) {
-  const t = useTranslations("agents");
-  const requestId = cards[0]?.requestId;
-  const [visible, setVisible] = useState<string | null>(null);
-  useEffect(() => {
-    if (!requestId || !history.current || typeof IntersectionObserver === "undefined") return;
-    const node = document.getElementById(`approval-${requestId}`);
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setVisible(entry?.isIntersecting ? requestId : null);
-      },
-      { root: history.current },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [requestId, history]);
-  if (!requestId || visible === requestId) return null;
-  return (
-    <Button
-      type="button"
-      size="sm"
-      variant="secondary"
-      className="mr-auto min-w-0 max-w-full shrink"
-      aria-controls={`approval-${requestId}`}
-      onClick={() => {
-        const node = document.getElementById(`approval-${requestId}`);
-        node?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
-        node?.focus({ preventScroll: true });
-      }}
-    >
-      <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
-      <span className="min-w-0 truncate">
-        {t("approval.pendingCount", { count: cards.length })}
-      </span>
-    </Button>
-  );
 }

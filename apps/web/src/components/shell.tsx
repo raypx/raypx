@@ -110,7 +110,9 @@ export function WebShell() {
       <AppShell
         brand={{ to: "/agents", label: siteName }}
         actions={actions}
-        navigation={[navigation.filter((item) => canAccessWebPage(access, item.to))]}
+        navigation={[
+          navigation.filter((item) => item.to !== "/agents" && canAccessWebPage(access, item.to)),
+        ]}
         secondaryNavigation={secondaryNavigation.filter((item) =>
           canAccessWebPage(access, item.to),
         )}

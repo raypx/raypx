@@ -151,7 +151,7 @@ export function registerTests() {
       expect(JSON.stringify({ snapshot, effects })).not.toContain("fixture-api-credential");
       await page
         .locator("[data-tool-activity]")
-        .getByRole("button", { name: /Used 2 tools/ })
+        .getByRole("button", { name: /2 steps/ })
         .click({ timeout });
       await expect(page.locator("[data-tool-call]")).toHaveCount(2);
       await page.getByRole("button", { name: "Review effects", exact: true }).click({ timeout });

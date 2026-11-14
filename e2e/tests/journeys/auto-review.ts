@@ -95,7 +95,7 @@ export function registerTests() {
       await page.reload({ timeout });
       await page
         .locator("[data-tool-activity]")
-        .getByRole("button", { name: /Used 1 tool/ })
+        .getByRole("button", { name: /^1 step$/ })
         .click({ timeout });
       const automatic = page.locator('[data-auto-review="approved"]');
       await expect(automatic).toContainText("Approved automatically");

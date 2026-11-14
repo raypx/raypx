@@ -1,3 +1,4 @@
+import { useId, type ReactNode } from "react";
 import type { ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
@@ -148,6 +149,10 @@ export function ToolActivity({
   approvalPort,
   selection,
   onOpenPage,
+  children,
+  additionalCount = 0,
+  defaultExpanded = false,
+  runStatus,
 }: {
   onOpenPage?: ((id: string) => void) | undefined;
   activity: readonly ToolCallActivity[];
@@ -157,9 +162,14 @@ export function ToolActivity({
   memberName?: ((id: string) => string) | undefined;
   approvalPort?: ApprovalPort | undefined;
   selection?: ConversationSelection | undefined;
+  children?: ReactNode;
+  additionalCount?: number;
+  defaultExpanded?: boolean;
+  runStatus?: string | undefined;
 }) {
   const t = useTranslations("agents");
-  const count = activity.length + pendingCount;
+  const statusId = useId();
+  const count = activity.length + pendingCount + additionalCount;
   if (!count) return null;
   const failed = activity.filter(
     (call) => call.outcome === "failed" || call.outcome === "refused",
@@ -174,12 +184,21 @@ export function ToolActivity({
   if (failed) status = t("activity.failedCount", { count: failed });
   if (unknown) status = t("activity.outcomes.unknown");
   if (pendingCount) status = t("approval.states.pending");
+  if (runStatus !== undefined) status = runStatus;
   return (
-    <Collapsible data-tool-activity={runId} className="min-w-0">
-      <CollapsibleTrigger render={<Button size="sm" variant="ghost" className="max-w-full" />}>
+    <Collapsible defaultOpen={defaultExpanded} data-tool-activity={runId} className="min-w-0">
+      <CollapsibleTrigger
+        aria-label={t("activity.steps", { count })}
+        aria-describedby={status ? statusId : undefined}
+        render={<Button size="sm" variant="ghost" className="max-w-full" />}
+      >
         <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
-        <span className="min-w-0 truncate">{t("activity.used", { count })}</span>
-        {status && <span className="min-w-0 truncate text-xs text-muted-foreground">{status}</span>}
+        <span className="min-w-0 truncate">{t("activity.steps", { count })}</span>
+        {status && (
+          <span id={statusId} className="min-w-0 truncate text-xs text-muted-foreground">
+            {status}
+          </span>
+        )}
       </CollapsibleTrigger>
       <CollapsibleContent animated>
         <div className="flex min-w-0 flex-col gap-2 py-2">
@@ -202,6 +221,7 @@ export function ToolActivity({
               activity={activity}
             />
           )}
+          {children}
         </div>
       </CollapsibleContent>
     </Collapsible>

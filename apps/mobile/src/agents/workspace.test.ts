@@ -341,3 +341,40 @@ it.each([
   await vi.waitFor(() => expect(h.workspace.getSnapshot().page.spaceId).toBe("space-two"));
   expect(h.workspace.getSnapshot().page.agents).not.toContainEqual(one);
 });
+
+it("carries durable group activity into the shared Recent projection", async () => {
+  const h = harness();
+  const group = conversationSchema.parse({
+    ...one.conversation,
+    id: "recent-group",
+    kind: "group",
+    name: "Recent group",
+    agentIds: [one.agent.id],
+  });
+  h.port.groups = {
+    listGroups: vi.fn(async () => [group]),
+    createGroup: vi.fn(),
+    getGroup: vi.fn(),
+    renameGroup: vi.fn(),
+    addGroupAgent: vi.fn(),
+    removeGroupAgent: vi.fn(),
+    deleteGroup: vi.fn(),
+  };
+  vi.mocked(h.port.conversations.snapshot).mockResolvedValue({
+    conversation: group,
+    cursor: 0,
+    messages: [],
+    runs: [],
+    segments: [],
+  });
+  h.workspace.setActive(true);
+  await h.workspace.refresh();
+  h.workspace.enterConversation();
+  const selected = h.workspace.groupConversation(h.workspace.getSnapshot().page.groups![0]!);
+  await vi.waitFor(() => expect(selected.conversation.getSnapshot().loading).toBe(false));
+  h.connections[0]!.onFrame({ type: "ready", version: 1 });
+  h.connections[0]!.onFrame(messageEvent({ ...one, conversation: group }));
+  h.workspace.leaveConversation();
+  expect(h.workspace.getSnapshot().page.groups?.[0]?.conversation.lastActivityAt).toBe(createdAt);
+  expect(h.workspace.getSnapshot().page.agents[0]?.agent.lastActivityAt).toBeUndefined();
+});

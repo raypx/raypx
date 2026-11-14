@@ -110,7 +110,7 @@ export function registerTests() {
     expect(ownerSession.status()).toBe(200);
     await page.setViewportSize(viewports[0]!);
     await page.goto(`${baseURL}/agents`, { timeout: actionTimeout });
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
+    await expect(page.locator("[data-workspace-home]")).toBeVisible();
 
     const suffix = `${info.project.name}-${crypto.randomUUID()}`;
     const spaceName = `Shared Space 团队 ${suffix}`;
@@ -132,7 +132,7 @@ export function registerTests() {
 
     const agentName = `Shared Agent ${suffix}`;
     await page
-      .getByRole("button", { name: "New Agent", exact: true })
+      .getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true })
       .click({ timeout: actionTimeout });
     const agentForm = page.getByRole("dialog", { name: "New Agent", exact: true });
     await agentForm

@@ -10,7 +10,13 @@ access. Every application screen requires login; execution stays on the backend.
 Expo Router owns `app/` routes. The root session boundary protects `(app)` and
 exposes `/login` only while signed out. Session restoration, refresh failures,
 expiry and verification must fail closed before protected screens mount.
-Agents is the authenticated home. `/groups` and `/group-conversation/[groupId]`
+The authenticated home has a centered composer over the selected Agent's existing
+scoped draft. A native Workspace modal is the sole directory: Search, New,
+capability navigation, collapsible Agents/Groups/Space/Recent, then account name,
+Space role and owner invitations. Recent combines the existing Agent/group list
+`lastActivityAt` projections. Sending from home is explicit and opens that Agent's
+conversation; selection and draft restoration never send. `/groups?create=1` opens
+the group editor directly. `/groups` and `/group-conversation/[groupId]`
 provide structural mentions and attributed concurrent replies. `/space-settings`
 provides members, roles, invitations and leave; `/join?token` previews and explicitly
 accepts invitations after login. `/routines`, `/space-memory`, `/pages` and `/resources`
@@ -66,7 +72,13 @@ Import components through their public subpaths. The root layout mounts a gestur
 root, SafeAreaProvider, HeroUINativeProviderRaw and the Select portal host. The
 provider respects system reduced motion. Computer controls use a native Modal
 bottom sheet without animation; destructive deletion/stop use native confirmation.
-Pending approval cards never disable the composer. Render replies as native
+Conversation, Activity and Files tabs switch the main native column without
+replacing its controller or draft. Files uses the shared bounded read-only
+ComputerFilesController, never starts compute, and clears preview state on exit.
+Member messages use compact right bubbles; Agent replies stay on the canvas with
+native Markdown, code-language/copy controls and quiet copy/retry actions. Retry
+only restores the triggering question for explicit Send. Pending approvals remain
+once above the floating composer in every tab and never disable it. Render replies as native
 Markdown without raw HTML, WebViews or shared DOM components.
 Import `src/global.css` once in the root layout.
 Use `className`, `contentContainerClassName` and color prop class names; wrap
@@ -129,10 +141,17 @@ codes for confirmation on the target machine, requests native directory selectio
 and lists/revokes grants or a machine with native destructive confirmation.
 The existing Computer sheet selects the team sandbox or a connected member device
 for the caller's next Run. An offline/revoked selection remains explicit and never
-falls back automatically. Shared `DeviceComputersController` projections refresh
+falls back automatically. Files remains a read-only Team sandbox view, labelled independently of the next-Run
+device selection. Composer controls wait for the current selection before starting
+the sandbox. Shared `DeviceComputersController` projections refresh
 on foreground and explicit Refresh; native Mobile holds no connector credential
 and cannot confirm a directory on another machine. Device commands retain the
 machine's OS permissions and are not sandboxed. Native iOS/Android acceptance
 remains a separate gate.
 
-Protected input uses the shared metadata controller with a native masked field. Values live only in a private ref, clear on submit/background/unmount and never enter SecureStore or drafts. Normal approval remains separate; no native device acceptance is implied.
+Protected input uses the shared metadata controller with a native masked field.
+Its card appears once with pending approvals above the composer in every tab;
+the bounded composer scroll region owns scrolling for both card types.
+Values live only in a private ref, clear on submit/background/unmount and never
+enter SecureStore or drafts. Normal approval remains separate; no native device
+acceptance is implied.

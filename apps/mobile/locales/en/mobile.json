@@ -7,5 +7,28 @@
     "connection": "Connection",
     "deployment": "Deployment"
   },
-  "resources": "Skills and tools"
+  "resources": "Skills and tools",
+  "workspace": "Workspace",
+  "new": "New",
+  "recent": "Recent",
+  "noRecent": "Your conversations will appear here.",
+  "homeQuestion": "What would you like to work on?",
+  "inviteMembers": "Invite members",
+  "agentActions": "Actions for {name}",
+  "chooseAgent": "Choose Agent",
+  "addContext": "Add context",
+  "copyReply": "Copy reply",
+  "replyActions": "Reply actions",
+  "copyError": "Could not copy. Select the text to copy it.",
+  "tabLabel": "{name} tab",
+  "steps": "{count, plural, one {# step} other {# steps}}",
+  "code": "Code",
+  "copyCode": "Copy code",
+  "copied": "Copied",
+  "tabs": {
+    "conversation": "Conversation",
+    "activity": "Activity",
+    "files": "Files"
+  },
+  "section": "{name} section"
 }

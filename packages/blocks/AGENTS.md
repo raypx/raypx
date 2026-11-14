@@ -16,7 +16,8 @@ Code outside `src/components/` stays private.
   breadcrumbs, notice slot and `#main`. Both frames fill the viewport and scroll
   main independently of navigation and the top bar. `frame="document"` uses browser
   spacing; `frame="window"` uses a full-width draggable title bar with MyGo's insets
-  for the native window buttons. The sidebar and main content start below it. Applications register
+  for the native window buttons. Logo, search and sidebar toggle share that strip;
+  the sidebar omits its duplicate brand row and starts below it. Applications register
   `#main` with their router's scroll restoration/reset behavior.
   Applications pass a `LinkComponent` adapting their router to `ShellLinkProps`;
   it sets `aria-current="page"` on active entries when `markActive` is true.
@@ -37,8 +38,12 @@ Code outside `src/components/` stays private.
   `ShellToolbar` (start) and `ShellActions` (end) portal page context, tabs, actions and
   scope switches into the top bar; a start toolbar replaces the page title. Outside an
   AppShell they render inline, so isolated views and tests keep their controls.
-  `ShellSidebarHeader` portals the feature-owned Space control below the brand;
-  `ShellPrimaryAction` places its primary action below that control in either frame.
+  `ShellPrimaryAction` places a quiet New action below the compact brand/search header.
+  `ShellSidebarNavigation` mounts feature shortcuts before application destinations;
+  `ShellSidebarDirectory` mounts the sole Agent/group/Space/recent directory below them.
+  `ShellSidebarFooter` keeps role/invitation controls beneath the pinned account row.
+  `ShellSidebarHeader` remains the optional scope header slot for existing compositions.
+  `useShellSidebarCollapsed` lets directory sections preserve rail access while folded.
   Applications and features own their data, accessible names and collapsed-rail content.
   `ShellProjectToolbar` groups a project and optional computer label with the
   application's tool links and back action. The application owns link selection.
@@ -52,8 +57,7 @@ Code outside `src/components/` stays private.
   width or gutters. `ShellPage<Title>` is the route metadata shape: applications
   declare `staticData.page` with a value-free message key, an optional `guestTitle`
   and the layout, and derive breadcrumbs and `layout` from the deepest match.
-  `actions` adds commands under the brand in documents and beside the sidebar toggle
-  in windows (`ShellAction`: a link element or button, with optional primary emphasis
+  `actions` adds compact commands beside the brand in both frames (`ShellAction`: a link element or button, with optional primary emphasis
   and a shortcut hint).
 - `command-palette`: `CommandPalette`, a ⌘K / Ctrl+K dialog over host-supplied groups,
   and `useCommandShortcut` for the platform's key hint. The host owns the open state.

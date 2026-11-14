@@ -7,14 +7,44 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useId,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { ShellToolbar, ShellSidebarHeader, ShellPrimaryAction } from "@raypx/blocks/shell";
-import { Avatar, AvatarFallback } from "@raypx/ui/components/ui/avatar";
+import {
+  ShellToolbar,
+  ShellPrimaryAction,
+  ShellSidebarNavigation,
+  ShellSidebarDirectory,
+  ShellSidebarFooter,
+  useShellSidebarCollapsed,
+} from "@raypx/blocks/shell";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@raypx/ui/components/ui/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@raypx/ui/components/ui/select";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
+import { FilterIcon } from "@raypx/icons/filter";
+import { CloseIcon } from "@raypx/icons/close";
+import { ChevronDownIcon } from "@raypx/icons/chevron-down";
+import { ClockIcon } from "@raypx/icons/clock";
+import { HistoryIcon } from "@raypx/icons/history";
+import { UserCircleIcon } from "@raypx/icons/user-circle";
+import { AdjustmentsIcon } from "@raypx/icons/adjustments";
+import { RoutinesPanel } from "@raypx/jobs/client";
+import { WorkspaceHome } from "./home.js";
 import { Empty, EmptyHeader, EmptyTitle, EmptyMedia } from "@raypx/ui/components/ui/empty";
 import { Alert, AlertDescription, AlertAction } from "@raypx/ui/components/ui/alert";
 import {
@@ -48,7 +78,6 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { AgentIcon } from "@raypx/icons/agent";
-import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { DeleteIcon } from "@raypx/icons/delete";
 import { EditIcon } from "@raypx/icons/edit";
 import { FolderIcon } from "@raypx/icons/folder";
@@ -72,14 +101,13 @@ import {
   type ConversationSocketPort,
   type ApprovalPort,
 } from "../model.js";
-import { GroupForm, GroupParticipants, GroupAvatars } from "./group-directory.js";
+import { GroupForm, GroupParticipants } from "./group-directory.js";
 import { AgentForm } from "./agent-form.js";
 import { SpaceForm } from "./space-form.js";
 import { AgentConversation } from "./conversation.js";
 import { browserConversationDrafts, browserConversationSocket } from "./browser-ports.js";
 import { useTranslations } from "./i18n.js";
 import type { ComputerScreenPort } from "../model/computer-screen.js";
-import { ActivityTime } from "./activity-time.js";
 import { compareLastActivity } from "../model/activity.js";
 
 function screenMethods(port: ComputerPort): Partial<ComputerScreenPort> {
@@ -140,6 +168,9 @@ export interface AgentsWorkspaceProps {
   groupId?: string;
   groups?: GroupsPort | undefined;
   onOpenModels?: (() => void) | undefined;
+  onOpenTools?: (() => void) | undefined;
+  onNewConversation?: ((spaceId: string) => void) | undefined;
+  onOpenExternal?: ((url: string) => void) | undefined;
   modelCatalogKey?: string | undefined;
   onNavigate?: (selection: { spaceId: string; agentId?: string; groupId?: string }) => void;
   socket?: ConversationSocketPort;
@@ -170,11 +201,25 @@ function AgentsWorkspaceContents({
   groups = client.groups,
   onNavigate,
   onOpenModels,
+  onOpenTools,
+  onNewConversation,
+  onOpenExternal,
   modelCatalogKey,
   socket,
   drafts,
 }: AgentsWorkspaceProps) {
   const t = useTranslations("agents");
+  const sidebarCollapsed = useShellSidebarCollapsed();
+  const agentFilterId = useId();
+  const filterTrigger = useRef<HTMLButtonElement>(null);
+  const firstAgentTrigger = useRef<HTMLButtonElement>(null);
+  const filterInput = useRef<HTMLInputElement>(null);
+  const [agentsSectionOpen, setAgentsSectionOpen] = useState(true);
+  const [agentFilterState, setAgentFilterState] = useState<{
+    spaceId: string | null;
+    text: string;
+    open: boolean;
+  }>({ spaceId: null, text: "", open: false });
   const [pageListeners] = useState(() => new Set<(event: SpaceEvent) => void>());
   const subscribePages = useCallback(
     (listener: (event: SpaceEvent) => void) => {
@@ -197,6 +242,19 @@ function AgentsWorkspaceContents({
       ),
     [page.groups],
   );
+  const agentFilter = agentFilterState.spaceId === page.spaceId ? agentFilterState.text : "";
+  const filterOpen = agentFilterState.spaceId === page.spaceId && agentFilterState.open;
+  const filteredAgents = useMemo(() => {
+    if (sidebarCollapsed || !filterOpen) return agentsByActivity;
+    const query = agentFilter.trim().toLocaleLowerCase();
+    return agentsByActivity.filter((entry) => entry.agent.name.toLocaleLowerCase().includes(query));
+  }, [agentFilter, filterOpen, sidebarCollapsed, agentsByActivity]);
+  useLayoutEffect(() => {
+    if (filterOpen && !sidebarCollapsed) filterInput.current?.focus();
+  }, [filterOpen, sidebarCollapsed]);
+  function setAgentFilter(text: string, open = true) {
+    setAgentFilterState({ spaceId: page.spaceId, text, open });
+  }
   const current = useRef(page);
   const mounted = useRef(true);
   const navigationRevision = useRef(0);
@@ -227,6 +285,23 @@ function AgentsWorkspaceContents({
   );
   const [spaceSettingsOpen, setSpaceSettingsOpen] = useState(false);
   const [routineTarget, setRoutineTarget] = useState<string | null>(null);
+  const [routinesOpen, setRoutinesOpen] = useState(false);
+  const [routinesAgentId, setRoutinesAgentId] = useState<string | null>(null);
+  const [runReference, setRunReference] = useState<{
+    conversationId: string;
+    id: string;
+    runId: string;
+  } | null>(null);
+  const routinesTrigger = useRef<HTMLButtonElement>(null);
+  const routinesReasonId = useId();
+  const lastAgentKey = JSON.stringify(["raypx_last_agent", origin, accountId, page.spaceId]);
+  const targetPreference = useMemo(() => lastAgentPreference(lastAgentKey), [lastAgentKey]);
+  const homeTargetId = useSyncExternalStore(
+    targetPreference.subscribe,
+    targetPreference.snapshot,
+    () => null,
+  );
+  const rememberTarget = targetPreference.set;
   const [spaceNotice, setSpaceNotice] = useState<
     "removed" | "unavailable" | "deleting" | "left" | "session-ended" | null
   >(null);
@@ -608,6 +683,8 @@ function AgentsWorkspaceContents({
     previousSelection.current = selectedRowId;
   }, [selectedRowId]);
   function chooseSpace(value: string) {
+    setAgentFilter("", false);
+    setAgentsSectionOpen(true);
     ++navigationRevision.current;
     setSpaceNotice(null);
     ++agentFormRevision.current;
@@ -622,6 +699,7 @@ function AgentsWorkspaceContents({
     onNavigate?.({ spaceId: value });
   }
   function chooseAgent(item: AgentConversationView) {
+    rememberTarget(item.agent.id);
     ++navigationRevision.current;
     closeParticipants();
     const nextPage = selectAgent(current.current, item.agent.id);
@@ -727,6 +805,8 @@ function AgentsWorkspaceContents({
     if (wasSelected) onNavigate?.({ spaceId: group.conversation.spaceId });
   }
   function back() {
+    setAgentFilter("", false);
+    setAgentsSectionOpen(true);
     ++navigationRevision.current;
     current.current = { ...current.current, agentId: null, groupId: null };
     setPage(current.current);
@@ -822,104 +902,469 @@ function AgentsWorkspaceContents({
     }
   }
 
+  const recent = [
+    ...agentsByActivity
+      .filter((entry) => entry.agent.lastActivityAt)
+      .map((entry) => ({
+        kind: "agent" as const,
+        id: entry.agent.id,
+        name: entry.agent.name,
+        lastActivityAt: entry.agent.lastActivityAt,
+        item: entry,
+      })),
+    ...groupsByActivity
+      .filter((entry) => entry.conversation.lastActivityAt)
+      .map((entry) => ({
+        kind: "group" as const,
+        id: entry.conversation.id,
+        name: entry.conversation.name ?? t("groups.title"),
+        lastActivityAt: entry.conversation.lastActivityAt,
+        item: entry,
+      })),
+  ]
+    .sort(compareLastActivity)
+    .slice(0, 30);
+  function edit(item: AgentConversationView) {
+    ++agentFormRevision.current;
+    setForm(item);
+  }
+  function createAgent() {
+    ++agentFormRevision.current;
+    setForm("new");
+  }
+  const currentHomeTarget =
+    page.agents.find((entry) => entry.agent.id === homeTargetId) ?? agentsByActivity[0];
+  const routineAgent =
+    page.agents.find((entry) => entry.agent.id === routinesAgentId) ?? currentHomeTarget;
+  let routinesDisabledReason: string | undefined;
+  if (loading) routinesDisabledReason = t("loading");
+  else if (page.agents.length === 0) routinesDisabledReason = t("noAgents");
+  const homeCreateAction =
+    sidebarCollapsed && !renderWorkspace && !selected && page.agents.length === 0;
+  const rowClass =
+    "w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal sidebar-icon:justify-center sidebar-icon:px-0";
+  function agentMenu(item: AgentConversationView, isRecent = false) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <IconButton
+              size="icon-sm"
+              label={t(isRecent ? "workspaceSidebar.recentActions" : "agentActions", {
+                name: item.agent.name,
+              })}
+              className="shrink-0 opacity-0 group-hover/directory-row:opacity-100 group-focus-within/directory-row:opacity-100 pointer-coarse:opacity-100 sidebar-icon:hidden"
+            />
+          }
+        >
+          <MoreHorizontalIcon aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => edit(item)}>
+              <EditIcon aria-hidden="true" />
+              {t("editAgent")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={deleting !== null}
+              onClick={() => void removeAgent(item)}
+            >
+              <DeleteIcon aria-hidden="true" />
+              {t("deleteAgent")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+  const spaceControl = (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            ref={spaceTrigger}
+            size="sm"
+            variant="ghost"
+            aria-label={t("space")}
+            disabled={loading}
+            className={rowClass}
+          />
+        }
+      >
+        <FolderIcon data-icon="inline-start" aria-hidden="true" />
+        <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
+          {membership?.space.name ?? t("space")}
+        </span>
+        <ChevronsUpDownIcon aria-hidden="true" className="size-3.5 shrink-0 sidebar-icon:hidden" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-52">
+        {page.spaces.length > 1 && (
+          <>
+            <DropdownMenuRadioGroup value={page.spaceId ?? ""} onValueChange={chooseSpace}>
+              {page.spaces.map(({ space }) => (
+                <DropdownMenuRadioItem key={space.id} value={space.id} data-value={space.id}>
+                  {space.name}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuGroup>
+          {management && (
+            <DropdownMenuItem onClick={() => setSpaceSettingsOpen(true)}>
+              <SettingsIcon aria-hidden="true" />
+              {t("spaceSettings.title")}
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={() => setNewSpace(true)}>
+            <PlusIcon aria-hidden="true" />
+            {t("newSpace")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-clip">
-      {client.protectedInputs && page.spaceId && (
-        <ProtectedInputs key={page.spaceId} port={client.protectedInputs} spaceId={page.spaceId} />
-      )}
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-clip">
       {!renderWorkspace && !selected && (
         <ShellToolbar>
-          <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
+          <span className="sr-only">{t("title")}</span>
         </ShellToolbar>
       )}
-      <ShellSidebarHeader>
-        {(page.spaces.length > 0 || loading) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  ref={spaceTrigger}
-                  variant="ghost"
-                  aria-label={t("space")}
-                  disabled={loading}
-                  className="w-full min-w-0 justify-start sidebar-icon:justify-center sidebar-icon:px-0"
-                />
-              }
-            >
-              <FolderIcon aria-hidden="true" className="size-5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
-                {page.spaces.find(({ space }) => space.id === page.spaceId)?.space.name ??
-                  t("space")}
-              </span>
-              <ChevronsUpDownIcon
-                aria-hidden="true"
-                className="size-4 shrink-0 sidebar-icon:hidden"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-52">
-              {page.spaces.length > 1 && (
-                <>
-                  <DropdownMenuRadioGroup value={page.spaceId ?? ""} onValueChange={chooseSpace}>
-                    {page.spaces.map(({ space }) => (
-                      <DropdownMenuRadioItem key={space.id} value={space.id} data-value={space.id}>
-                        {space.name}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <DropdownMenuGroup>
-                {management && (
-                  <DropdownMenuItem onClick={() => setSpaceSettingsOpen(true)}>
-                    <SettingsIcon aria-hidden="true" />
-                    {t("spaceSettings.title")}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => setNewSpace(true)}>
-                  <PlusIcon aria-hidden="true" />
-                  {t("newSpace")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </ShellSidebarHeader>
       {(page.spaceId || loading) && (
         <ShellPrimaryAction>
-          <div className="flex min-w-0 flex-col gap-1">
-            <Button
-              disabled={!page.spaceId || loading}
-              onClick={() => {
-                ++agentFormRevision.current;
-                setForm("new");
-              }}
-              className="w-full min-w-0 sidebar-icon:px-0"
-              aria-label={t("newAgent")}
-              title={t("newAgent")}
-            >
-              <AgentIcon data-icon="inline-start" aria-hidden="true" />
-              <span className="truncate sidebar-icon:hidden">{t("newAgent")}</span>
-            </Button>
-            {groups && (
-              <Button
-                ref={newGroupTrigger}
-                variant="ghost"
-                disabled={!page.spaceId || loading}
-                onClick={() => setNewGroup(true)}
-                className="w-full min-w-0 sidebar-icon:px-0"
-                aria-label={t("groups.new")}
-                title={t("groups.new")}
-              >
-                <PlusIcon data-icon="inline-start" aria-hidden="true" />
-                <span className="truncate sidebar-icon:hidden">{t("groups.new")}</span>
-              </Button>
-            )}
-          </div>
+          <Button
+            variant="ghost"
+            disabled={!page.spaceId || loading || page.agents.length === 0}
+            className="w-full min-w-0 justify-start gap-2 px-2 sidebar-icon:justify-center sidebar-icon:px-0"
+            aria-label={t("workspaceSidebar.new")}
+            onClick={() => {
+              if (page.spaceId && onNewConversation) onNewConversation(page.spaceId);
+              else back();
+            }}
+          >
+            <PlusIcon data-icon="inline-start" aria-hidden="true" />
+            <span className="sidebar-icon:hidden">{t("workspaceSidebar.new")}</span>
+          </Button>
         </ShellPrimaryAction>
       )}
+      {client.routines && page.spaceId && (
+        <ShellSidebarNavigation>
+          <Button
+            ref={routinesTrigger}
+            variant="ghost"
+            className={rowClass}
+            aria-label={t("routines")}
+            disabled={Boolean(routinesDisabledReason)}
+            aria-describedby={routinesDisabledReason ? routinesReasonId : undefined}
+            onClick={() => {
+              setRoutinesAgentId(selected?.agent.id ?? currentHomeTarget?.agent.id ?? null);
+              setRoutinesOpen(true);
+            }}
+          >
+            <ClockIcon data-icon="inline-start" aria-hidden="true" />
+            <span className="truncate sidebar-icon:hidden">{t("routines")}</span>
+          </Button>
+          {routinesDisabledReason && (
+            <p
+              id={routinesReasonId}
+              className="px-2 text-xs text-muted-foreground sidebar-icon:sr-only"
+            >
+              {routinesDisabledReason}
+            </p>
+          )}
+        </ShellSidebarNavigation>
+      )}
+      <ShellSidebarDirectory>
+        <div className="flex min-w-0 flex-col gap-4">
+          {onOpenTools && (
+            <Button
+              variant="ghost"
+              className={rowClass}
+              onClick={onOpenTools}
+              aria-label={t("workspaceSidebar.tools")}
+            >
+              <AdjustmentsIcon data-icon="inline-start" aria-hidden="true" />
+              <span className="truncate sidebar-icon:hidden">{t("workspaceSidebar.tools")}</span>
+            </Button>
+          )}
+          {(page.spaceId || loading) && (
+            <>
+              <DirectorySection
+                title={t("title")}
+                expanded={agentsSectionOpen}
+                onExpandedChange={(open) => {
+                  setAgentsSectionOpen(open);
+                  if (!open) setAgentFilter("", false);
+                }}
+                action={
+                  page.agents.length > 0 ? (
+                    <span className="flex items-center gap-0.5">
+                      {!sidebarCollapsed && (
+                        <IconButton
+                          ref={filterTrigger}
+                          size="icon-xs"
+                          label={t("workspaceSidebar.filterAgents")}
+                          aria-expanded={filterOpen}
+                          aria-controls={filterOpen ? agentFilterId : undefined}
+                          onClick={() => {
+                            setAgentsSectionOpen(true);
+                            setAgentFilter("", !filterOpen);
+                          }}
+                        >
+                          <FilterIcon aria-hidden="true" />
+                        </IconButton>
+                      )}
+                      <IconButton
+                        size="icon-xs"
+                        label={t("newAgent")}
+                        disabled={loading}
+                        onClick={createAgent}
+                      >
+                        <PlusIcon aria-hidden="true" />
+                      </IconButton>
+                    </span>
+                  ) : undefined
+                }
+              >
+                {filterOpen && !sidebarCollapsed && (
+                  <InputGroup id={agentFilterId} controlSize="sm" className="mb-2">
+                    <InputGroupAddon>
+                      <FilterIcon aria-hidden="true" />
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      ref={filterInput}
+                      aria-label={t("workspaceSidebar.filterAgents")}
+                      placeholder={t("workspaceSidebar.filterAgents")}
+                      value={agentFilter}
+                      onChange={(event) => setAgentFilter(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Escape") return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (agentFilter) {
+                          setAgentFilter("");
+                          return;
+                        }
+                        setAgentFilter("", false);
+                        filterTrigger.current?.focus();
+                      }}
+                    />
+                    {agentFilter && (
+                      <InputGroupAddon align="inline-end">
+                        <IconButton
+                          size="icon-xs"
+                          label={t("workspaceSidebar.clearFilter")}
+                          onClick={() => {
+                            setAgentFilter("");
+                            filterInput.current?.focus();
+                          }}
+                        >
+                          <CloseIcon aria-hidden="true" />
+                        </IconButton>
+                      </InputGroupAddon>
+                    )}
+                  </InputGroup>
+                )}
+                {!loading && page.agents.length === 0 && !homeCreateAction && (
+                  <div className="mx-1 flex flex-col gap-3 rounded-xl border border-border/60 bg-background/70 p-3 sidebar-icon:border-0 sidebar-icon:bg-transparent sidebar-icon:p-0">
+                    <p className="text-xs leading-5 text-muted-foreground sidebar-icon:hidden">
+                      {t("workspaceSidebar.emptyAgents")}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={createAgent}
+                      ref={firstAgentTrigger}
+                      aria-label={t("createAgent")}
+                      className="w-full min-w-0 sidebar-icon:px-0"
+                    >
+                      <PlusIcon data-icon="inline-start" aria-hidden="true" />
+                      <span className="truncate sidebar-icon:hidden">{t("createAgent")}</span>
+                    </Button>
+                  </div>
+                )}
+                {page.agents.length > 0 && (
+                  <ul className="flex min-w-0 flex-col gap-0.5">
+                    {filteredAgents.map((item) => (
+                      <li
+                        key={item.agent.id}
+                        className={cn(
+                          "group/directory-row flex min-w-0 items-center rounded-lg",
+                          item.agent.id === page.agentId && "bg-sidebar-accent",
+                        )}
+                      >
+                        <Button
+                          ref={(node) => {
+                            if (node) rowButtons.current.set(item.agent.id, node);
+                            else rowButtons.current.delete(item.agent.id);
+                          }}
+                          size="sm"
+                          variant="ghost"
+                          className={cn(rowClass, "flex-1")}
+                          aria-label={item.agent.name}
+                          title={item.agent.name}
+                          aria-current={item.agent.id === page.agentId ? "page" : undefined}
+                          onClick={() => chooseAgent(item)}
+                        >
+                          <AgentIcon data-icon="inline-start" aria-hidden="true" />
+                          <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
+                            {item.agent.name}
+                          </span>
+                        </Button>
+                        {agentMenu(item)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {page.agents.length > 0 && filteredAgents.length === 0 && (
+                  <p role="status" className="px-2 py-2 text-xs text-muted-foreground">
+                    {t("workspaceSidebar.noMatches")}
+                  </p>
+                )}
+              </DirectorySection>
+              {groups && (
+                <DirectorySection
+                  title={t("groups.title")}
+                  action={
+                    groupsByActivity.length > 0 ? (
+                      <IconButton
+                        ref={newGroupTrigger}
+                        size="icon-xs"
+                        label={t("groups.new")}
+                        disabled={loading}
+                        onClick={() => setNewGroup(true)}
+                      >
+                        <PlusIcon aria-hidden="true" />
+                      </IconButton>
+                    ) : undefined
+                  }
+                >
+                  <ul className="flex min-w-0 flex-col gap-0.5">
+                    {groupsByActivity.map((item) => (
+                      <li key={item.conversation.id}>
+                        <Button
+                          ref={(node) => {
+                            if (node) rowButtons.current.set(item.conversation.id, node);
+                            else rowButtons.current.delete(item.conversation.id);
+                          }}
+                          size="sm"
+                          variant="ghost"
+                          className={cn(
+                            rowClass,
+                            item.conversation.id === page.groupId && "bg-sidebar-accent",
+                          )}
+                          aria-label={item.conversation.name}
+                          title={item.conversation.name}
+                          aria-current={item.conversation.id === page.groupId ? "page" : undefined}
+                          onClick={() => chooseGroup(item)}
+                        >
+                          <UserCircleIcon data-icon="inline-start" aria-hidden="true" />
+                          <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
+                            {item.conversation.name}
+                          </span>
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  {groupsByActivity.length === 0 && (
+                    <Button
+                      ref={newGroupTrigger}
+                      size="sm"
+                      variant="ghost"
+                      className={rowClass}
+                      onClick={() => setNewGroup(true)}
+                      aria-label={t("groups.new")}
+                    >
+                      <PlusIcon data-icon="inline-start" aria-hidden="true" />
+                      <span className="truncate text-xs text-muted-foreground sidebar-icon:hidden">
+                        {t("groups.new")}
+                      </span>
+                    </Button>
+                  )}
+                </DirectorySection>
+              )}
+              <DirectorySection title={t("space")}>{spaceControl}</DirectorySection>
+              <DirectorySection title={t("workspaceSidebar.recent")}>
+                <ul className="flex min-w-0 flex-col gap-0.5">
+                  {recent.map((entry) => (
+                    <li
+                      key={`${entry.kind}:${entry.id}`}
+                      className="group/directory-row flex min-w-0 items-center rounded-lg"
+                    >
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(rowClass, "flex-1")}
+                        aria-label={t("workspaceSidebar.openRecent", { name: entry.name })}
+                        title={entry.name}
+                        onClick={() => {
+                          if (entry.kind === "agent") chooseAgent(entry.item);
+                          else chooseGroup(entry.item);
+                        }}
+                      >
+                        <HistoryIcon data-icon="inline-start" aria-hidden="true" />
+                        <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
+                          {entry.name}
+                        </span>
+                      </Button>
+                      {entry.kind === "agent" ? (
+                        agentMenu(entry.item, true)
+                      ) : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <IconButton
+                                size="icon-sm"
+                                label={t("workspaceSidebar.recentActions", { name: entry.name })}
+                                className="opacity-0 group-hover/directory-row:opacity-100 group-focus-within/directory-row:opacity-100 pointer-coarse:opacity-100 sidebar-icon:hidden"
+                              />
+                            }
+                          >
+                            <MoreHorizontalIcon aria-hidden="true" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem onClick={() => chooseGroup(entry.item)}>
+                                {t("conversation")}
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </DirectorySection>
+            </>
+          )}
+        </div>
+      </ShellSidebarDirectory>
+      {membership && (
+        <ShellSidebarFooter>
+          <p className="px-2 pb-1 text-xs text-muted-foreground sidebar-icon:hidden">
+            {t(`spaceSettings.roles.${membership.member.role}`)}
+          </p>
+          {membership.member.role === "owner" && management && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className={rowClass}
+              onClick={() => setSpaceSettingsOpen(true)}
+              aria-label={t("workspaceSidebar.invite")}
+            >
+              <PlusIcon data-icon="inline-start" aria-hidden="true" />
+              <span className="truncate text-xs sidebar-icon:hidden">
+                {t("workspaceSidebar.invite")}
+              </span>
+            </Button>
+          )}
+        </ShellSidebarFooter>
+      )}
       {spaceNotice && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="px-5 py-2 text-sm text-muted-foreground">
           {t(spaceExitKeys[spaceNotice])}
         </p>
       )}
@@ -943,25 +1388,23 @@ function AgentsWorkspaceContents({
           <EmptyTitle>{t("loading")}</EmptyTitle>
         </Empty>
       )}
+      {client.protectedInputs && page.spaceId && (renderWorkspace || !selected) && (
+        <ProtectedInputs
+          key={page.spaceId}
+          port={client.protectedInputs}
+          spaceId={page.spaceId}
+          className="mx-auto w-full max-w-[44rem] px-3 pt-3 sm:px-5"
+        />
+      )}
       {!loading && !failed && page.spaces.length === 0 && (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <AgentIcon aria-hidden="true" />
             </EmptyMedia>
-            <EmptyTitle>{t("noSpaces")}</EmptyTitle>
+            <h1 className="text-lg font-medium">{t("noSpaces")}</h1>
           </EmptyHeader>
           <Button onClick={() => setNewSpace(true)}>{t("newSpace")}</Button>
-        </Empty>
-      )}
-      {!renderWorkspace && !loading && !failed && page.spaceId && page.agents.length === 0 && (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <AgentIcon aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>{t("noAgents")}</EmptyTitle>
-          </EmptyHeader>
         </Empty>
       )}
       {renderWorkspace &&
@@ -976,170 +1419,68 @@ function AgentsWorkspaceContents({
           ),
           subscribe: subscribePages,
         })}
-      {!renderWorkspace && page.agents.length > 0 && (
-        <div className="flex min-h-0 min-w-0 flex-1 gap-6 overflow-clip">
-          <aside
-            aria-label={t("title")}
-            className={cn(
-              "min-h-0 min-w-0 flex-col overflow-x-hidden overflow-y-auto overscroll-contain @3xl/main:flex @3xl/main:w-72 @3xl/main:shrink-0",
-              selected ? "hidden" : "flex w-full",
-            )}
-          >
-            <h2 className="mb-2 px-3 text-xs font-medium text-muted-foreground">
-              {t("groups.direct")}
-            </h2>
-            <ul className="flex min-w-0 flex-col gap-1">
-              {agentsByActivity.map((item) => (
-                <li
-                  key={item.agent.id}
-                  className={cn(
-                    "flex min-w-0 items-center gap-1 rounded-lg pr-1",
-                    item.agent.id === page.agentId && "bg-muted ring-1 ring-border ring-inset",
-                  )}
-                >
-                  <Button
-                    ref={(node) => {
-                      if (node) rowButtons.current.set(item.agent.id, node);
-                      else rowButtons.current.delete(item.agent.id);
-                    }}
-                    variant="ghost"
-                    className="h-auto min-h-14 min-w-0 flex-1 justify-start py-2 text-left"
-                    aria-label={item.agent.name}
-                    title={item.agent.name}
-                    aria-current={item.agent.id === page.agentId ? "page" : undefined}
-                    onClick={() => chooseAgent(item)}
-                  >
-                    <Avatar aria-hidden="true">
-                      <AvatarFallback>
-                        {Array.from(item.agent.name.trim())[0]?.toUpperCase() ?? ""}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="truncate">{item.agent.name}</span>
-                      <span className="truncate text-xs font-normal text-muted-foreground">
-                        {page.models.find((model) => model.modelId === item.agent.model.modelId)
-                          ?.name ?? item.agent.model.modelId}
-                      </span>
-                      <ActivityTime value={item.agent.lastActivityAt} />
-                    </span>
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <IconButton
-                          size="icon-sm"
-                          label={t("agentActions", { name: item.agent.name })}
-                        />
-                      }
-                    >
-                      <MoreHorizontalIcon aria-hidden="true" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            ++agentFormRevision.current;
-                            setForm(item);
-                          }}
-                        >
-                          <EditIcon aria-hidden="true" />
-                          {t("editAgent")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          disabled={deleting !== null}
-                          onClick={() => void removeAgent(item)}
-                        >
-                          <DeleteIcon aria-hidden="true" />
-                          {t("deleteAgent")}
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </li>
-              ))}
-            </ul>
-            {groups && (
-              <section className="mt-6 flex min-w-0 flex-col gap-2" aria-label={t("groups.title")}>
-                <div className="flex min-w-0 items-center justify-between gap-2 px-3">
-                  <h2 className="text-xs font-medium text-muted-foreground">{t("groups.title")}</h2>
-                </div>
-                <ul className="flex min-w-0 flex-col gap-1">
-                  {groupsByActivity.map((item) => (
-                    <li key={item.conversation.id}>
-                      <Button
-                        ref={(node) => {
-                          if (node) rowButtons.current.set(item.conversation.id, node);
-                          else rowButtons.current.delete(item.conversation.id);
-                        }}
-                        variant="ghost"
-                        className={cn(
-                          "h-auto min-h-14 w-full min-w-0 justify-start py-2 text-left",
-                          item.conversation.id === page.groupId &&
-                            "bg-muted ring-1 ring-border ring-inset",
-                        )}
-                        aria-label={item.conversation.name}
-                        title={item.conversation.name}
-                        aria-current={item.conversation.id === page.groupId ? "page" : undefined}
-                        onClick={() => chooseGroup(item)}
-                      >
-                        <GroupAvatars agents={item.agents} />
-                        <span className="flex min-w-0 flex-1 flex-col gap-1">
-                          <span className="truncate">{item.conversation.name}</span>
-                          <ActivityTime value={item.conversation.lastActivityAt} />
-                        </span>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </aside>
-          {selected ? (
-            <div className="flex min-h-0 w-0 min-w-0 flex-1 flex-col gap-2 overflow-clip">
-              <div className="flex min-w-0 shrink-0 justify-start @3xl/main:hidden">
-                <Button variant="ghost" onClick={back}>
-                  <ArrowLeftIcon data-icon="inline-start" aria-hidden="true" />
-                  {t("back")}
-                </Button>
-              </div>
-              <AgentConversation
-                key={JSON.stringify([accountId, origin, selected.conversation.id])}
-                item={selected}
-                onOpenPage={onOpenPage}
-                composerReference={composerReference}
-                group={selectedGroup}
-                agentDirectory={page.agents.map((entry) => entry.agent)}
-                onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
-                capabilities={client}
-                port={conversationPort}
-                computerPort={computerPort}
-                approvalPort={approvalPort}
-                activity={activity[selected.agent.spaceId]}
-                onActivity={rememberActivity}
-                onComputerOpen={() => void refreshSpaceActivity()}
-                socket={eventSocket}
-                drafts={draftStore}
-                origin={origin}
-                accountId={accountId}
-                members={managementState?.members}
-                spaceSettings={managementState?.settings}
-                effectiveMode={managementState?.effectiveMode}
-                onLastActivity={rememberLastActivity}
-              />
-            </div>
-          ) : (
-            <Empty className="hidden @3xl/main:flex">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <AgentIcon aria-hidden="true" />
-                </EmptyMedia>
-                <EmptyTitle>{t("chooseAgent")}</EmptyTitle>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </div>
-      )}
+      {!renderWorkspace &&
+        !loading &&
+        !failed &&
+        page.spaceId &&
+        (selected ? (
+          <AgentConversation
+            key={JSON.stringify([accountId, origin, selected.conversation.id])}
+            item={selected}
+            runReference={
+              runReference?.conversationId === selected.conversation.id ? runReference : undefined
+            }
+            onBack={back}
+            onEditAgent={() => edit(selected)}
+            onDeleteAgent={selectedGroup ? undefined : () => void removeAgent(selected)}
+            onOpenPage={onOpenPage}
+            composerReference={composerReference}
+            group={selectedGroup}
+            agentDirectory={page.agents.map((entry) => entry.agent)}
+            onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
+            capabilities={client}
+            port={conversationPort}
+            computerPort={computerPort}
+            approvalPort={approvalPort}
+            activity={activity[selected.agent.spaceId]}
+            onActivity={rememberActivity}
+            onComputerOpen={() => void refreshSpaceActivity()}
+            socket={eventSocket}
+            drafts={draftStore}
+            origin={origin}
+            accountId={accountId}
+            members={managementState?.members}
+            spaceSettings={managementState?.settings}
+            effectiveMode={managementState?.effectiveMode}
+            onLastActivity={rememberLastActivity}
+          />
+        ) : (
+          <WorkspaceHome
+            agents={agentsByActivity}
+            deviceComputers={client.deviceComputers}
+            targetId={homeTargetId}
+            onTargetChange={rememberTarget}
+            onOpen={chooseAgent}
+            onEdit={edit}
+            onCreateAgent={homeCreateAction ? createAgent : undefined}
+            createAgentRef={firstAgentTrigger}
+            publicOrigin={invitationOrigin ?? origin}
+            onOpenExternal={onOpenExternal}
+            models={page.models}
+            mode={
+              managementState?.effectiveMode?.mode ??
+              managementState?.settings?.approvalMode ??
+              undefined
+            }
+            port={conversationPort}
+            computerPort={computerPort}
+            approvalPort={approvalPort}
+            socket={eventSocket}
+            drafts={draftStore}
+            origin={origin}
+            accountId={accountId}
+          />
+        ))}
       {newGroup && <GroupForm agents={page.agents} onSave={createGroup} onClose={closeGroupForm} />}
       {selectedGroup && groups && (
         <CapabilitySheet
@@ -1170,6 +1511,11 @@ function AgentsWorkspaceContents({
       {form && (
         <AgentForm
           initial={form === "new" ? null : form.agent}
+          finalFocus={
+            form === "new" && page.agents.length === 0
+              ? () => firstAgentTrigger.current ?? false
+              : undefined
+          }
           models={page.models}
           capabilities={client}
           spaceId={page.spaceId ?? undefined}
@@ -1218,6 +1564,66 @@ function AgentsWorkspaceContents({
           )}
         </CapabilitySheet>
       )}
+      {page.spaceId && client.routines && (
+        <CapabilitySheet
+          open={routinesOpen}
+          onClose={() => setRoutinesOpen(false)}
+          title={t("routines")}
+          closeLabel={t("close")}
+          finalFocus={() => routinesTrigger.current ?? false}
+          className="w-full sm:max-w-2xl"
+        >
+          {routinesOpen && routineAgent && (
+            <>
+              <div className="mb-4">
+                <Select
+                  items={page.agents.map((entry) => ({
+                    value: entry.agent.id,
+                    label: entry.agent.name,
+                  }))}
+                  value={routineAgent.agent.id}
+                  onValueChange={(value) => {
+                    if (value) setRoutinesAgentId(value);
+                  }}
+                >
+                  <SelectTrigger aria-label={t("workspaceHome.target")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="start" alignItemWithTrigger={false}>
+                    <SelectGroup>
+                      {page.agents.map((entry) => (
+                        <SelectItem
+                          key={entry.agent.id}
+                          value={entry.agent.id}
+                          data-value={entry.agent.id}
+                        >
+                          {entry.agent.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              <RoutinesPanel
+                showTitle={false}
+                spaceId={page.spaceId}
+                agentId={routineAgent.agent.id}
+                accountId={accountId}
+                port={client.routines}
+                onOpenRun={(runId) => {
+                  setRoutinesOpen(false);
+                  setRunReference({
+                    conversationId: routineAgent.conversation.id,
+                    runId,
+                    id: crypto.randomUUID(),
+                  });
+                  chooseAgent(routineAgent);
+                }}
+              />
+            </>
+          )}
+        </CapabilitySheet>
+      )}
       {routineTarget && page.spaceId && client.routines && (
         <CapabilitySheet
           open
@@ -1253,4 +1659,97 @@ function subscribeNothing() {
 }
 function emptyManagement() {
   return null;
+}
+
+function DirectorySection({
+  title,
+  action,
+  children,
+  expanded,
+  onExpandedChange,
+}: {
+  title: string;
+  action?: ReactNode;
+  children: ReactNode;
+  expanded?: boolean;
+  onExpandedChange?: (open: boolean) => void;
+}) {
+  const collapsed = useShellSidebarCollapsed();
+  const t = useTranslations("agents");
+  const [localOpen, setLocalOpen] = useState(true);
+  const open = expanded ?? localOpen;
+  const setOpen = onExpandedChange ?? setLocalOpen;
+  return (
+    <Collapsible
+      role="region"
+      aria-label={title}
+      open={collapsed || open}
+      onOpenChange={setOpen}
+      className="group/directory-section min-w-0"
+    >
+      {!collapsed && (
+        <div className="mb-1 flex min-w-0 items-center gap-1 px-2">
+          <CollapsibleTrigger
+            aria-label={t(open ? "workspaceSidebar.collapse" : "workspaceSidebar.expand", {
+              name: title,
+            })}
+            className="flex min-h-7 min-w-0 flex-1 items-center gap-1 rounded-md text-left text-xs text-muted-foreground pointer-coarse:min-h-11 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="min-w-0 flex-1 truncate">{title}</span>
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="size-3 opacity-0 transition-transform group-hover/directory-section:opacity-100 group-focus-within/directory-section:opacity-100 group-data-closed/collapsible:-rotate-90 motion-reduce:transition-none"
+            />
+          </CollapsibleTrigger>
+          <span className="opacity-0 group-hover/directory-section:opacity-100 group-focus-within/directory-section:opacity-100 pointer-coarse:opacity-100">
+            {action}
+          </span>
+        </div>
+      )}
+      {collapsed && action && <div className="flex justify-center">{action}</div>}
+      <CollapsibleContent>{children}</CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+/** Only the selected identity is a device preference; the directory remains server-owned. */
+function lastAgentPreference(key: string) {
+  let current: string | null = null;
+  let memoryOnly = false;
+  const listeners = new Set<() => void>();
+  return {
+    snapshot(this: void) {
+      if (memoryOnly) return current;
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return current;
+      }
+    },
+    subscribe(this: void, listener: () => void) {
+      listeners.add(listener);
+      function storageChanged(event: StorageEvent) {
+        if (event.key === key || event.key === null) {
+          memoryOnly = false;
+          listener();
+        }
+      }
+      window.addEventListener("storage", storageChanged);
+      return () => {
+        listeners.delete(listener);
+        window.removeEventListener("storage", storageChanged);
+      };
+    },
+    set(this: void, id: string) {
+      current = id;
+      try {
+        localStorage.setItem(key, id);
+        memoryOnly = false;
+      } catch {
+        memoryOnly = true;
+        // Keep the in-memory choice when device storage is unavailable.
+      }
+      for (const listener of listeners) listener();
+    },
+  };
 }

@@ -74,7 +74,8 @@ export function registerTests() {
       const destination = `${baseURL}/agents?spaceId=${spaceId}&agentId=${agent.id}`;
       await page.setViewportSize({ width: 1440, height: 860 });
       await page.goto(destination);
-      await page.getByRole("button", { name: /^Computer:/ }).click();
+      const ownerComputer = page.getByRole("complementary", { name: "Team computer", exact: true });
+      await expect(ownerComputer).toBeVisible({ timeout: 5000 });
       await page.getByRole("button", { name: "Start computer", exact: true }).click();
       const surface = page.getByRole("region", { name: "Screen", exact: true });
       await surface.getByRole("button", { name: "Start screen", exact: true }).click();
@@ -98,7 +99,9 @@ export function registerTests() {
       await input.press("a");
       await expect.poll(() => image.getAttribute("src")).not.toBe(first);
       await member.goto(destination);
-      await member.getByRole("button", { name: /^Computer:/ }).click();
+      await expect(
+        member.getByRole("complementary", { name: "Team computer", exact: true }),
+      ).toBeVisible({ timeout: 5000 });
       const other = member.getByRole("region", { name: "Screen", exact: true });
       await expect(
         other.getByText("Controlled by Control Browser Test", { exact: true }),
@@ -118,6 +121,11 @@ export function registerTests() {
           name: "Team computer",
           exact: true,
         });
+        if (viewport.width < 1280) {
+          const computer = page.getByRole("button", { name: /^Computer:/ });
+          await expect(computer).toHaveAttribute("aria-expanded", "false", { timeout: 5000 });
+          await computer.click({ timeout: 5000 });
+        }
         await expectSurfaceAtRest(page, panel);
         await expect(image).toBeVisible();
         // A responsive panel handoff ends the old viewer; explicitly retake its new view.

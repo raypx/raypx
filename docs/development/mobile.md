@@ -13,6 +13,35 @@ those workflows. This omission does not remove native groups, Space membership,
 routines, memory, resource availability, activity or approvals; the exact native,
 read-only and Web-handoff coverage is in [Product](../../PRODUCT.md#operating-context).
 
+## Workspace navigation
+
+The signed-in home centers the original logo, a short question and a rounded
+native composer. Its Agent picker selects the continuing conversation that Send
+will open; drafts remain scoped to that Agent and Space. A native Workspace
+drawer is the sole directory for Agents, Groups, the Space control and Recent.
+Recent combines existing list lastActivityAt projections; it never persists
+another history. Creation and management routes, routines, memory, Pages,
+resources, account and owner invitations remain reachable from that directory.
+
+Conversation, Activity and Files switch the main native content. Member messages
+use compact right-aligned bubbles; Agent replies stay on the canvas with safe
+Markdown, copy/retry controls and expandable actual steps. Activity preserves
+approvals, effects and delegated work. Files uses bounded read-only computer
+ports with loading, failure and unavailable states. The rounded composer stays
+above keyboard/safe-area insets, with active Runs and pending approvals close to
+input. Screen continues to use the phone Web client. Native source mocks verify
+these flows; device layout and accessibility still require native acceptance.
+Masked protected-input cards share the bounded region above the composer with
+pending approvals and remain mounted once across Conversation, Activity and Files.
+Their values stay in the private field ref, clear on submit/background/unmount,
+and never enter drafts or SecureStore. Supplying input remains separate from
+ordinary tool approval.
+The home and conversation Computer chips open the native selection sheet when a
+device is selected, loading or unavailable, without starting the team sandbox.
+Files explicitly identifies Team sandbox; its existing Space-scoped read port
+does not provide device-directory browsing. Pairing and grants remain in Space
+settings, with directory confirmation performed on the selected computer.
+
 ## Development
 
 Use the repository-pinned Bun 1.4.4 runtime:

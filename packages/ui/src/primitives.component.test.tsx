@@ -110,7 +110,7 @@ describe("form primitives", () => {
     expect(screen.getByRole("textbox", { name: "Workspace" })).toHaveFocus();
   });
 
-  it("keeps multiline input and addon buttons independently operable", async () => {
+  it("keeps multiline input and context usable while a send action is disabled", async () => {
     const user = userEvent.setup();
     render(
       <InputGroup>
@@ -118,16 +118,23 @@ describe("form primitives", () => {
         <InputGroupAddon align="block-end">
           <span>字数 / Characters</span>
           <Button>Attach</Button>
+          <Button type="submit" disabled>
+            Send
+          </Button>
         </InputGroupAddon>
       </InputGroup>,
     );
     const textarea = screen.getByRole("textbox", { name: "Notes" });
+    expect(textarea).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
     await user.click(screen.getByText("字数 / Characters"));
     expect(textarea).toHaveFocus();
     await user.keyboard("{End}{Enter}继续");
     expect(textarea).toHaveValue("草稿\n继续");
     await user.click(screen.getByRole("button", { name: "Attach" }));
     expect(screen.getByRole("button", { name: "Attach" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+    expect(textarea).toHaveValue("草稿\n继续");
   });
 });
 

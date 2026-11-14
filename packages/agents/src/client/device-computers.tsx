@@ -14,6 +14,8 @@ import {
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@raypx/ui/components/ui/empty";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useConfirmation } from "@raypx/ui/confirmation";
+import { IconButton } from "@raypx/ui/icon-button";
+import { RefreshIcon } from "@raypx/icons/refresh";
 import type { DeviceComputersController } from "../model/device-computers.js";
 import { useTranslations } from "./i18n.js";
 
@@ -183,7 +185,25 @@ export function DeviceComputerSelector({ controller }: { controller: DeviceCompu
         grant,
       })),
   );
-  if (!state.selection && state.devices.length === 0) return null;
+  if (!state.selection && state.devices.length === 0) {
+    if (state.error)
+      return (
+        <div className="flex min-w-0 flex-col items-start gap-2">
+          <p role="alert" className="text-sm text-destructive-text">
+            {t("devices.error")}
+          </p>
+          <IconButton
+            label={t("refresh")}
+            size="icon-sm"
+            disabled={state.loading || state.busy}
+            onClick={() => void controller.refresh()}
+          >
+            <RefreshIcon aria-hidden="true" />
+          </IconButton>
+        </div>
+      );
+    return null;
+  }
   const value = state.selection
     ? `${state.selection.deviceId}:${state.selection.grantId}`
     : "sandbox";
@@ -193,6 +213,7 @@ export function DeviceComputerSelector({ controller }: { controller: DeviceCompu
     ...choices.map(({ value: choiceValue, label }) => ({ value: choiceValue, label })),
   ];
   if (unavailable) options.push({ value, label: t("devices.unavailable") });
+  const selectedLabel = options.find((option) => option.value === value)?.label;
   return (
     <section className="flex min-w-0 flex-col gap-2" aria-label={t("devices.computer")}>
       <Field>
@@ -210,8 +231,10 @@ export function DeviceComputerSelector({ controller }: { controller: DeviceCompu
             }
           }}
         >
-          <SelectTrigger id={`${id}-computer`} className="w-full min-w-0">
-            <SelectValue />
+          <SelectTrigger id={`${id}-computer`} title={selectedLabel} className="w-full min-w-0">
+            <SelectValue>
+              <span className="min-w-0 truncate">{selectedLabel}</span>
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>

@@ -26,7 +26,9 @@ test(
     await signedInAccount(page);
     await page.goto(`${desktop}/`);
     await expect(page).toHaveURL(`${desktop}/agents`);
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toHaveCount(1);
+    await expect(
+      page.getByRole("heading", { name: "Create a Space to get started.", exact: true }),
+    ).toBeVisible();
     await page.route("**/api/auth/sign-out", async (route) => {
       await page.route("**/api/auth/get-session**", (session) => authResponse(session, null));
       return authResponse(route, { success: true });

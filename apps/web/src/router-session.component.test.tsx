@@ -19,7 +19,9 @@ it("opens Agents after sign-in without an explicit return destination", async ()
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
   fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
   await waitFor(() => expect(router.state.location.pathname).toBe("/agents"));
-  expect(await screen.findByRole("heading", { name: "Agents", level: 1 })).toBeVisible();
+  expect(
+    await screen.findByRole("heading", { name: "Create a Space to get started.", level: 1 }),
+  ).toBeVisible();
   expect(screen.queryByLabelText("Password")).toBeNull();
 });
 

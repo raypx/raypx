@@ -90,7 +90,7 @@ describe("AppShell", () => {
     expect(screen.getByRole("banner").className).toContain("[--app-region:drag]");
   });
 
-  it("keeps native window commands in the title bar when toggling the sidebar", () => {
+  it("keeps the native brand and commands together without a duplicate sidebar row", () => {
     const onSearch = vi.fn();
     renderShell("window", [
       {
@@ -108,16 +108,17 @@ describe("AppShell", () => {
     const header = within(screen.getByRole("banner"));
     fireEvent.click(header.getByRole("button", { name: "Collapse sidebar" }));
     expect(header.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();
+    const sidebar = within(screen.getByRole("complementary"));
     const search = header.getByRole("button", { name: "Search" });
+    expect(header.getByRole("link", { name: "Acme" })).toBeTruthy();
+    expect(sidebar.queryByRole("link", { name: "Acme" })).toBeNull();
+    expect(sidebar.queryByRole("button", { name: "Search" })).toBeNull();
     expect(search.getAttribute("aria-keyshortcuts")).toBe("Meta+K");
     fireEvent.click(search);
     expect(onSearch).toHaveBeenCalledOnce();
     expect(header.getByRole("link", { name: "Create another Agent" }).getAttribute("href")).toBe(
       "/agents",
     );
-    expect(
-      within(screen.getByRole("complementary")).queryByRole("button", { name: "Search" }),
-    ).toBe(null);
   });
 
   it("keeps document commands under the sidebar brand", () => {

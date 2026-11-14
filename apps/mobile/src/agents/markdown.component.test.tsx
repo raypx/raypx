@@ -1,3 +1,4 @@
+import * as Clipboard from "expo-clipboard";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Image, Linking } from "../../tests/mocks/react-native.js";
 import { findByLabel, press, renderNative, textContent } from "../../tests/native.js";
@@ -80,4 +81,31 @@ describe("native reply Markdown", () => {
     expect(textContent(view.root)).toContain("Could not open the link.");
     await view.unmount();
   });
+});
+
+it("labels fenced code and copies it only on a press", async () => {
+  const view = await renderNative(
+    <ReplyMarkdown text={"```typescript\nconst answer = 42;\n```"} />,
+  );
+  expect(textContent(view.root)).toContain("typescript");
+  expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
+  await press(findByLabel(view.root, "Copy code"));
+  expect(Clipboard.setStringAsync).toHaveBeenCalledExactlyOnceWith("const answer = 42;");
+  expect(textContent(view.root)).toContain("Copied");
+  await view.unmount();
+});
+
+it("keeps failed clipboard content selectable", async () => {
+  vi.mocked(Clipboard.setStringAsync).mockRejectedValueOnce(new Error("unavailable"));
+  const view = await renderNative(<ReplyMarkdown text={"```text\nKeep this text\n```"} />);
+  await press(findByLabel(view.root, "Copy code"));
+  expect(textContent(view.root)).toContain("Could not copy. Select the text to copy it.");
+  const body = view.root.find(
+    (node) =>
+      typeof node.type === "string" &&
+      node.props.selectable &&
+      textContent(node) === "Keep this text",
+  );
+  expect(body.props.selectable).toBe(true);
+  await view.unmount();
 });

@@ -328,6 +328,7 @@ it("hydrates child approvals in the flow and folds answered work into the child 
     requestId: "approval",
     decision: "approved",
   });
+  await user.click(screen.getByRole("button", { name: "1 step" }));
   await user.click(screen.getByRole("button", { name: "Delegated work (1)" }));
   const childRow = restored.container.querySelector('[data-child-run-id="child"]')!;
   await user.click(within(childRow as HTMLElement).getByRole("button"));

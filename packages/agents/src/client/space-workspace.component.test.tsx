@@ -383,10 +383,13 @@ it.each(["en", "zh"] as const)(
     const strings = catalogs[language].agents;
     const test = await fixture(language);
     await screen.findByText("Lin's team message");
+    fireEvent.click(screen.getByRole("button", { name: strings.modelAndApproval }));
     const override = await screen.findByText(
       `${strings.spaceSettings.overridesDefault}: ${strings.approvalSettings.never}`,
     );
     expect(override).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     const card = {
       kind: "card.resolved",
       requestId: "lin-approval",

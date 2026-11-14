@@ -69,9 +69,9 @@ export function registerTests() {
     const suffix = `${info.project.name}-${crypto.randomUUID()}`;
     const spaceId = await createOwnedSpace(page, apiUrl, origin, `Routine ${suffix}`);
     await page.goto(`${baseURL}/agents?spaceId=${spaceId}`, { timeout: 5_000 });
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
+    await expect(page.locator("[data-workspace-home]")).toBeVisible();
     const agentName = `团队例行检查 Long Agent name 团队例行检查 Long Agent name ${suffix}`;
-    await page.getByRole("button", { name: "New Agent", exact: true }).click();
+    await page.getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true }).click();
     const agentForm = page.getByRole("dialog");
     await settle(agentForm);
     await agentForm.getByRole("textbox", { name: "Name", exact: true }).fill(agentName);

@@ -7,5 +7,28 @@
     "connection": "连接",
     "deployment": "部署"
   },
-  "resources": "技能与工具"
+  "resources": "技能与工具",
+  "workspace": "工作区",
+  "new": "新建",
+  "recent": "最近",
+  "noRecent": "对话将显示在这里。",
+  "homeQuestion": "今天想做些什么？",
+  "inviteMembers": "邀请成员",
+  "agentActions": "{name}的操作",
+  "chooseAgent": "选择智能体",
+  "addContext": "添加上下文",
+  "copyReply": "复制回复",
+  "replyActions": "回复操作",
+  "copyError": "复制失败，请选择文本后复制。",
+  "tabLabel": "{name}标签页",
+  "steps": "{count} 个步骤",
+  "code": "代码",
+  "copyCode": "复制代码",
+  "copied": "已复制",
+  "tabs": {
+    "conversation": "对话",
+    "activity": "活动",
+    "files": "文件"
+  },
+  "section": "{name}分区"
 }

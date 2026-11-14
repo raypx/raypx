@@ -2,6 +2,8 @@ import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   createContext,
+  Children,
+  isValidElement,
   memo,
   useContext,
   useEffect,
@@ -22,7 +24,8 @@ const CopyContext = createContext<CopyLabels>({
 });
 
 const headingClassName = "mt-[1.25em] mb-[0.5em] font-semibold";
-const tableCellClassName = "border border-border px-[0.75em] py-[0.4em] text-left";
+const tableCellClassName =
+  "min-w-24 border border-border px-[0.75em] py-[0.4em] text-left wrap-normal break-normal";
 
 const components: Components = {
   p: ({ children }) => <p className="my-[0.8em]">{children}</p>,
@@ -58,9 +61,9 @@ const components: Components = {
     <code className={`font-mono text-[0.85em] ${className ?? ""}`}>{children}</code>
   ),
   table: ({ children }) => (
-    <table className="my-[0.8em] block max-w-full border-collapse overflow-x-auto">
-      {children}
-    </table>
+    <div className="my-[0.8em] max-w-full overflow-x-auto">
+      <table className="w-max min-w-80 border-collapse wrap-normal break-normal">{children}</table>
+    </div>
   ),
   th: ({ children }) => <th className={tableCellClassName}>{children}</th>,
   td: ({ children }) => <td className={tableCellClassName}>{children}</td>,
@@ -81,6 +84,17 @@ function CodeBlock({ children }: ComponentProps<"pre">) {
   const code = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
+  const source = Children.toArray(children).find(isValidElement);
+  let languageClass = "";
+  if (
+    source?.props &&
+    typeof source.props === "object" &&
+    "className" in source.props &&
+    typeof source.props.className === "string"
+  ) {
+    languageClass = source.props.className;
+  }
+  const language = languageClass.match(/(?:^|\s)language-([^\s]+)/)?.[1] ?? "";
   useEffect(() => {
     queueMicrotask(() => setCopied(false));
   }, [children]);
@@ -100,8 +114,14 @@ function CodeBlock({ children }: ComponentProps<"pre">) {
     }
   }
   return (
-    <div className="my-[0.8em] min-w-0 overflow-hidden rounded-lg border bg-muted/50">
-      <div className="flex justify-end border-b px-2 py-1">
+    <div className="my-[0.8em] min-w-0 overflow-hidden rounded-xl border border-border/60 bg-muted/50">
+      <div className="flex items-center justify-between gap-2 px-3 py-1">
+        <span
+          data-code-language
+          className="min-w-0 truncate font-mono text-xs text-muted-foreground"
+        >
+          {language}
+        </span>
         <IconButton
           size="icon-sm"
           label={copied ? copiedLabel : copyLabel}

@@ -1,10 +1,23 @@
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { agentSchema, conversationIdSchema, directConversation } from "@raypx/core/agents";
+import {
+  agentSchema,
+  conversationIdSchema,
+  conversationSchema,
+  directConversation,
+} from "@raypx/core/agents";
 import { spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
 import { applyAgents, applySpaces, createAgentsPageState } from "@raypx/agents/model";
-import { changeText, findByLabel, press, renderNative, textContent } from "../../tests/native.js";
+import {
+  act,
+  changeText,
+  findByLabel,
+  press,
+  renderNative,
+  textContent,
+} from "../../tests/native.js";
 import { AgentDirectory, AgentEditor } from "./directory.js";
+import { Alert } from "react-native";
 import { useLocales } from "../../tests/mocks/localization.js";
 
 afterEach(() => {
@@ -70,14 +83,23 @@ function directoryProps() {
 
 describe("mobile Agent directory", () => {
   it("opens conversations and management actions and omits a one-Space switcher", async () => {
+    const alert = vi.spyOn(Alert, "alert");
     const props = directoryProps();
-    const view = await renderNative(<AgentDirectory {...props} />);
+    const view = await renderNative(<AgentDirectory {...props} home={<></>} />);
+    await press(findByLabel(view.root, "Workspace"));
     expect(textContent(view.root)).toContain("Offered model");
     expect(textContent(view.root)).toContain("No activity yet");
     expect(view.root.findAll((node) => node.props.accessibilityLabel === "Space")).toHaveLength(0);
+    await press(findByLabel(view.root, "Actions for Ray"));
+    const actions = alert.mock.lastCall?.[2];
+    await act(async () => actions?.find((entry) => entry.text === "Delete Agent")?.onPress?.());
+    await press(findByLabel(view.root, "Actions for Ray"));
+    await act(async () =>
+      alert.mock.lastCall?.[2]?.find((entry) => entry.text === "Edit Agent")?.onPress?.(),
+    );
+    await press(findByLabel(view.root, "Workspace"));
     await press(findByLabel(view.root, "Ray"));
-    await press(findByLabel(view.root, "Edit Agent: Ray"));
-    await press(findByLabel(view.root, "Delete Agent: Ray"));
+    await press(findByLabel(view.root, "Workspace"));
     await press(findByLabel(view.root, "Account"));
     expect(props.onOpen).toHaveBeenCalledWith(item);
     expect(props.onEdit).toHaveBeenCalledWith(item);
@@ -89,7 +111,8 @@ describe("mobile Agent directory", () => {
   it("offers a switcher for several Spaces and refreshes the native list", async () => {
     const props = directoryProps();
     props.state.spaces = [membership, otherMembership];
-    const view = await renderNative(<AgentDirectory {...props} />);
+    const view = await renderNative(<AgentDirectory {...props} home={<></>} />);
+    await press(findByLabel(view.root, "Workspace"));
     expect(findByLabel(view.root, "Space")).toBeDefined();
     const list = view.root.find(
       (node) =>
@@ -227,14 +250,109 @@ it.each([
       },
     };
     props.state.agents = [item, active];
-    const view = await renderNative(<AgentDirectory {...props} />);
+    const view = await renderNative(<AgentDirectory {...props} home={<></>} />);
+    await press(findByLabel(view.root, language === "en" ? "Workspace" : "工作区"));
     expect(textContent(view.root)).toContain(label);
     const rows = view.root.findAll(
       (node) =>
         typeof node.type === "string" &&
         ["Ray", "Active Agent"].includes(node.props.accessibilityLabel),
     );
-    expect(rows.map((node) => node.props.accessibilityLabel)).toEqual(["Active Agent", "Ray"]);
+    expect(rows.slice(0, 2).map((node) => node.props.accessibilityLabel)).toEqual([
+      "Active Agent",
+      "Ray",
+    ]);
     await view.unmount();
   },
 );
+
+it("keeps create and invite actions in the native directory, with one first-Agent action", async () => {
+  const props = directoryProps();
+  props.state.agents = [];
+  const onGroups = vi.fn();
+  const onSpaceSettings = vi.fn();
+  const view = await renderNative(
+    <AgentDirectory
+      {...props}
+      home={<></>}
+      accountName="Alex"
+      onGroups={onGroups}
+      onSpaceSettings={onSpaceSettings}
+    />,
+  );
+  await press(findByLabel(view.root, "Workspace"));
+  expect(textContent(view.root)).toContain("Alex");
+  expect(textContent(view.root)).toContain("Owner");
+  expect(
+    view.root.findAll(
+      (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Create Agent",
+    ),
+  ).toHaveLength(1);
+  await press(findByLabel(view.root, "New group"));
+  expect(onGroups).toHaveBeenCalledOnce();
+  await press(findByLabel(view.root, "Workspace"));
+  await press(findByLabel(view.root, "Invite members"));
+  expect(onSpaceSettings).toHaveBeenCalledOnce();
+  await view.unmount();
+});
+
+it("combines direct and group activity in Recent and filters the unified directory", async () => {
+  const props = directoryProps();
+  props.state.agents = [{ ...item, agent: { ...agent, lastActivityAt: "2026-11-14T10:00:00Z" } }];
+  const group = {
+    conversation: conversationSchema.parse({
+      ...item.conversation,
+      id: "group",
+      kind: "group",
+      name: "Study group",
+      agentIds: [agent.id, "another"],
+      lastActivityAt: "2026-11-14T11:00:00Z",
+    }),
+    agents: [agent],
+  };
+  const onOpenGroup = vi.fn();
+  const view = await renderNative(
+    <AgentDirectory
+      {...props}
+      state={{ ...props.state, groups: [group] }}
+      home={<></>}
+      onOpenGroup={onOpenGroup}
+    />,
+  );
+  await press(findByLabel(view.root, "Workspace"));
+  const entries = view.root.findAll(
+    (node) =>
+      typeof node.type === "string" &&
+      ["Ray", "Study group"].includes(node.props.accessibilityLabel),
+  );
+  expect(entries.slice(-2).map((node) => node.props.accessibilityLabel)).toEqual([
+    "Study group",
+    "Ray",
+  ]);
+  await changeText(findByLabel(view.root, "Search"), "Study");
+  expect(
+    view.root.findAll(
+      (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Ray",
+    ),
+  ).toHaveLength(0);
+  await press(findByLabel(view.root, "Groups section"));
+  await press(findByLabel(view.root, "Study group"));
+  expect(onOpenGroup).toHaveBeenCalledExactlyOnceWith(group);
+  await view.unmount();
+});
+
+it("collapses native Agent rows without losing access to the create action", async () => {
+  const props = directoryProps();
+  const view = await renderNative(<AgentDirectory {...props} home={<></>} />);
+  await press(findByLabel(view.root, "Workspace"));
+  await press(findByLabel(view.root, "Agents section"));
+  expect(findByLabel(view.root, "Agents section").props.accessibilityState.expanded).toBe(false);
+  expect(
+    view.root.findAll(
+      (node) => typeof node.type === "string" && node.props.accessibilityLabel === "Ray",
+    ),
+  ).toHaveLength(0);
+  await press(findByLabel(view.root, "Create Agent"));
+  expect(props.onCreate).toHaveBeenCalledOnce();
+  await view.unmount();
+});

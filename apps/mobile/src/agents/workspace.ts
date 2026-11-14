@@ -73,8 +73,12 @@ export class MobileWorkspace {
   }
   private applyActivity() {
     const at = this.selected?.conversation.getSnapshot().lastActivityAt;
-    const existing = this.view.page.agents.find((entry) => entry.agent.id === this.selected?.id);
-    if (!at || !existing || existing.agent.lastActivityAt === at) return;
+    if (!at) return;
+    const id = this.selected?.id;
+    const existing = this.view.page.agents.find((entry) => entry.agent.id === id);
+    const group = this.view.page.groups?.find((entry) => `group:${entry.conversation.id}` === id);
+    if (existing?.agent.lastActivityAt === at || group?.conversation.lastActivityAt === at) return;
+    if (!existing && !group) return;
     this.update({
       page: {
         ...this.view.page,
@@ -87,6 +91,19 @@ export class MobileWorkspace {
               }
             : entry,
         ),
+        ...(group
+          ? {
+              groups:
+                this.view.page.groups?.map((entry) =>
+                  entry === group
+                    ? {
+                        ...entry,
+                        conversation: { ...entry.conversation, lastActivityAt: at },
+                      }
+                    : entry,
+                ) ?? [],
+            }
+          : {}),
       },
     });
   }

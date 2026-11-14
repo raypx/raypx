@@ -43,7 +43,7 @@ test(
     await settings.getByRole("button", { name: `Test ${editedName}`, exact: true }).click();
     await expect(settings.getByRole("status")).toHaveText("Connection succeeded");
     await settings.getByRole("button", { name: "Close", exact: true }).click();
-    await page.getByRole("button", { name: "New Agent", exact: true }).click();
+    await page.getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true }).click();
     const agent = page.getByRole("dialog", { name: "New Agent", exact: true });
     await agent.getByRole("combobox", { name: "Model", exact: true }).click();
     await expect(page.getByText("Your connections", { exact: true })).toBeVisible();

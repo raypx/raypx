@@ -130,6 +130,7 @@ export function ToolActivity({
   memberName,
   approvalPort,
   selection,
+  runStatus,
 }: {
   spaceId: string;
   origin: string;
@@ -138,6 +139,7 @@ export function ToolActivity({
   memberName?: ((id: string) => string) | undefined;
   approvalPort?: ApprovalPort | undefined;
   selection?: ConversationSelection | undefined;
+  runStatus?: string | undefined;
 }) {
   const { t } = useCopy();
   const [expanded, setExpanded] = useState(false);
@@ -152,7 +154,11 @@ export function ToolActivity({
   if (row.activity.some((call) => call.outcome === "unknown"))
     status = t("agents.activity.outcomes.unknown");
   if (row.pendingCount) status = t("agents.approval.states.pending");
-  const summary = [t("agents.activity.used", { count }), status].filter(Boolean).join(" · ");
+  if (runStatus) {
+    const detail = failed || status === t("agents.activity.outcomes.unknown") ? status : "";
+    status = [runStatus, detail].filter(Boolean).join(" · ");
+  }
+  const summary = [t("mobile.steps", { count }), status].filter(Boolean).join(" · ");
   if (!count) return null;
   return (
     <View className="min-w-0 gap-2">
@@ -163,7 +169,11 @@ export function ToolActivity({
         onPress={() => setExpanded((value) => !value)}
         className="h-auto min-h-12 min-w-0 justify-start px-3 py-2"
       >
-        <Button.Label numberOfLines={1} className="min-w-0 flex-1 text-sm text-muted-foreground">
+        <Button.Label
+          numberOfLines={1}
+          accessibilityLiveRegion={runStatus ? "polite" : undefined}
+          className="min-w-0 flex-1 text-sm text-muted-foreground"
+        >
           {summary}
         </Button.Label>
       </Button>

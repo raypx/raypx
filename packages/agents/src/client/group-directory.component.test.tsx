@@ -220,7 +220,7 @@ it("closes group creation with one Escape and returns focus to its opener", asyn
   await waitFor(() => expect(opener).toHaveFocus());
 });
 
-it("separates direct Agents and groups and opens the selected group conversation", async () => {
+it("keeps Agents and groups in sidebar sections and opens the selected group conversation", async () => {
   const space = spaceSchema.parse({ id: "space", name: "Team", createdAt: time, updatedAt: time });
   const member = spaceMemberSchema.parse({
     spaceId: space.id,
@@ -275,9 +275,11 @@ it("separates direct Agents and groups and opens the selected group conversation
       />
     </BrowserLanguageProvider>,
   );
-  await screen.findByRole("heading", { name: "Direct Agents" });
+  await screen.findByRole("button", { name: "Collapse Agents" });
   const section = screen.getByRole("region", { name: "Groups" });
-  expect(within(section).getByRole("button", { name: conversation.name ?? "" })).toBeEnabled();
+  expect(
+    await within(section).findByRole("button", { name: conversation.name ?? "" }),
+  ).toBeEnabled();
   expect(screen.getByRole("button", { name: agents[0]!.agent.name })).toBeEnabled();
   fireEvent.click(within(section).getByRole("button", { name: conversation.name ?? "" }));
   await screen.findByRole("log");

@@ -27,21 +27,38 @@ Account/security, administration/configuration, authentication, public Web pages
 and device preferences remain. Earlier device/account Memory code is retained for
 its remaining consumers; Agent/Space memory opens from the conversation capability
 surface and is a separate PostgreSQL-backed feature.
-The sidebar header owns Space selection and its New Space menu. An account without
-a Space first gets a New Space action. Navigation
-contains Agents, Pages, account controls and administration
-for administrators. The primary action creates an Agent; a first-run empty state
-offers one clear action to create the first Agent. Search and keyboard shortcuts
-target only available destinations. Agent forms use the backend's offered model
-names and show an explicit unavailable state when that catalog is empty.
+The single sidebar owns direct Agents, groups, the compact Space switcher and
+Recent conversations. Recent is derived from existing list lastActivityAt
+projections, without another persisted history or authorization boundary. Plain
+New opens the home composer and uses the last used or chosen Agent. Agent/group
+creation stays in their sections; an empty Space has one first-Agent action.
+Routines, Pages and Tools remain reachable above the directory; the account and
+owner invitation actions stay below it. Search targets current destinations.
+An account without a Space first gets New Space. Agent forms use the backend's
+offered models and show an explicit unavailable state for an empty catalog.
 
-The conversation header has a compact computer-state indicator. It opens a sheet
-below 1280px and a side panel beside the conversation at wider widths.
-The panel shows the current Space's team computer: stopped, starting, running,
-stopping, failed with its reason, or not configured on this server. Start is
-available when stopped, failures offer retry, and Stop requires confirmation.
-Pending commands and lifecycle transitions disable controls and guard repeated
-activation. `not-configured` is a quiet explicit state without controls.
+At /agents without a selection, the shared client shows a centered question and
+composer. Sending opens the chosen Agent's continuing conversation using the
+existing idempotent message port. The selected conversation fills the remaining
+canvas; there is no second Agent/group column. A sticky title bar switches
+Conversation, Activity and Files. The centered transcript uses member bubbles,
+plain Agent Markdown and expandable real steps. A floating composer keeps active
+Runs and pending approvals close to input. Wide layouts add context cards for
+Computer/Screen, approvals and routines/memory; narrow layouts keep sheets and
+explicit Back navigation. No synthetic activity or follow-up data is introduced.
+
+Addressed protected-input requests remain independent of loaded history. Their
+masked forms share the pending-approval stack above the composer in Conversation,
+Activity and Files. Home and Pages retain Space-wide request access. The metadata
+controller holds no supplied values; private fields clear on submission, decline,
+backgrounding and unmount, without entering drafts or query caches.
+
+The computer surface shows the current Space's team computer: stopped, starting,
+running, stopping, failed with its reason, or not configured on this server.
+Start is available when stopped, failures offer retry, and Stop requires
+confirmation. Pending commands and lifecycle transitions guard repeated
+activation. not-configured is a quiet explicit state without controls. Files
+remain bounded read-only computer access rather than local device files.
 
 Computer reads and commands use `computers.get/start/stop`. The model applies
 `computer.state` events, reads failure details through `get`, and refreshes on
@@ -129,7 +146,7 @@ from packaged WKWebView/WebView2 acceptance.
   active work outside the loaded history window, tool activity/effects and approvals.
   Push notifications remain roadmap work. OpenAPI management stays in
   Web/Desktop; Mobile can approve and inspect calls to configured operations.
-- Team computer lifecycle and stop confirmation are native. Screen viewing and
+- Team computer lifecycle, bounded read-only files and stop confirmation are native. Screen viewing and
   takeover use the phone Web client; Mobile has no Screen UI or input forwarding.
 - Mobile uses native controls for navigation, pickers and alerts.
 
@@ -161,6 +178,10 @@ directory per conversation/member. It says that execution runs on the machine
 without sandbox isolation, preserves unavailable selections and applies changes
 to the next Run. Device approval cards show the device, directory and bounded
 complete command. English and Chinese share the same controls and warnings.
+The redesigned home and conversation composer chips reflect this per-conversation
+selection and open the Computer card or sheet. Selecting a device never starts a
+team sandbox. The Files tab identifies Team sandbox explicitly because its
+Space-scoped read port has no device-directory selector.
 
 Desktop pairs through a native Cancel-default dialog and finite absolute bundled
 CLI calls. The connector queues remote directory requests; the native host checks

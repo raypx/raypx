@@ -14,15 +14,19 @@ it("redirects guests before private reads and preserves the validated conversati
 it("mounts the shared Agent workspace for a confirmed member without a deployment permission", async () => {
   signIn();
   await page("/agents");
-  expect(await screen.findByRole("heading", { name: "Agents", level: 1 })).toBeVisible();
-  expect(screen.getAllByRole("heading", { name: "Agents" })).toHaveLength(1);
+  expect(
+    await screen.findByRole("heading", { name: "Create a Space to get started.", level: 1 }),
+  ).toBeVisible();
+  expect(screen.getAllByRole("heading", { name: "Create a Space to get started." })).toHaveLength(
+    1,
+  );
   expect(screen.getByRole("main").firstElementChild?.className).toContain("h-full");
   await waitFor(() => expect(mocks.agentsSpaces).toHaveBeenCalledOnce());
   expect(screen.queryByRole("link", { name: "Projects" })).toBeNull();
   expect(screen.queryByRole("link", { name: "Waiting" })).toBeNull();
   expect(screen.queryByRole("link", { name: "Automations" })).toBeNull();
   expect(screen.queryByRole("link", { name: "New session" })).toBeNull();
-  expect(screen.getByRole("link", { name: "Agents" })).toBeVisible();
+  expect(screen.getByRole("link", { name: "Raypx" })).toHaveAttribute("href", "/agents");
   expect(screen.queryByRole("group", { name: "Workspace" })).toBeNull();
 });
 
@@ -37,7 +41,7 @@ it("does not mount private conversation reads while the session is unavailable",
 it("searches only existing member destinations through the command shortcut", async () => {
   signIn();
   await page("/agents");
-  await screen.findByRole("heading", { name: "Agents", level: 1 });
+  await screen.findByRole("heading", { name: "Create a Space to get started.", level: 1 });
   fireEvent.keyDown(window, { key: "k", ctrlKey: true });
   const palette = within(await screen.findByRole("dialog", { name: "Search" }));
   expect(palette.getByRole("option", { name: "Agents" })).toBeVisible();

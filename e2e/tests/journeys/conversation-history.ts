@@ -87,7 +87,9 @@ export function registerTests() {
       .pressSequentially(`History ${suffix}`, { timeout });
     await space.getByRole("button", { name: "Create Space", exact: true }).click({ timeout });
     await expect(space).toBeHidden();
-    await page.getByRole("button", { name: "New Agent", exact: true }).click({ timeout });
+    await page
+      .getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true })
+      .click({ timeout });
     const agent = page.getByRole("dialog", { name: "New Agent", exact: true });
     await expectSurfaceAtRest(page, agent);
     await agent

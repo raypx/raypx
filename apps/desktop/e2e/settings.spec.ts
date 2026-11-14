@@ -7,7 +7,9 @@ test(
   async ({ page }) => {
     const user = await signedInAccount(page);
     await page.goto(`${desktop}/agents`);
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toHaveCount(1);
+    await expect(
+      page.getByRole("heading", { name: "Create a Space to get started.", exact: true }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Account menu", exact: true }).click();
     await page.getByRole("menuitem", { name: "Account", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Account", exact: true })).toHaveCount(1);

@@ -20,25 +20,34 @@ operations use a fenced gate independently of concurrent model work.
 injected RPC, stream and draft ports. ComputerController owns the Space computer
 lifecycle projection, guarded commands and refreshes from events/reconnects. Applied state and cursor advance together;
 React lives only in `/client`. `/model` also exposes the existing structural
-mention helpers and foreground Space live controller for native consumers. Web and Desktop consume that shared workspace. The shell owns its single title;
-list/detail panes fill the tool layout, with a scrolling transcript and fixed composer.
-Space selection and New Agent mount into sidebar slots. The conversation header opens Routines and Space memory sheets through optional
-`routines` and `spaceMemory` ports, and the computer panel: a sheet below 1280px, an inline side panel
-at wider widths. `CapabilitySheet` owns all three sheets' heading focus and
-scoped tooltip Escape propagation; one Escape closes the sheet even with its
-close tooltip open. Final focus resolves the currently visible opener. The
-compact menu also opens the team computer, whose indicator remains on the bar.
-Computer Stop requires confirmation. Pending approvals appear once as
-cards; resolved requests fold into tool rows. The composer links to offscreen requests
-and shows one primary Stop or Send action. Sending uses the existing message port.
-Model conversation rows keep reply identity/order stable from queue through commit.
-The client reuses Blocks Markdown, keeps reading anchors, and announces Run lifecycle
-and approval changes without announcing streaming text or deadline ticks. Direct replies
-omit sender names; optional sender context supports multiple participants. The top bar
-owns the selected Agent name and computer indicator in one non-wrapping row.
-Only the name shrinks. Below 640px, Routines and Memory share an overflow menu;
-at wider widths they appear inline. Toolbar content is portaled outside `main`,
-so header responsiveness uses viewport breakpoints, not `@*/main` queries. Enter sends, Shift+Enter inserts a newline, and IME owns composition.
+mention helpers and foreground Space live controller for native consumers. Web and Desktop consume that shared workspace. The shell owns its single title.
+The sidebar is the sole directory: quiet New, collapsible Agent/group/Space/recent
+sections, one Create Agent action when empty, and owner invitations under the account.
+When the sidebar is a rail, empty home owns that sole Create Agent action; Pages
+retains sidebar creation. The Agent name filter opens/focuses a shared input;
+Escape clears its query, then closes and returns focus. The rail keeps every Agent
+reachable regardless of the retained expanded-sidebar filter.
+Recent derives from existing `lastActivityAt` list projections; no transcript previews
+or invented notification data are stored. A last-used Agent preference is scoped by
+origin, account and Space. The centered home composer uses the same device draft and
+idempotent-send controller without starting an invisible transcript. Sending opens
+that Agent conversation. `onOpenTools` and `onNewConversation` adapt app navigation;
+`renderWorkspace` keeps the directory around Pages. The conversation fills remaining
+width with a centered reading column and floating composer. The sticky toolbar owns
+Conversation/Activity/Files text tabs and context actions; below 640px tabs occupy a
+second row. Replies are plain Markdown and member messages are compact bubbles.
+Completed replies keep quiet actions and collapsible real steps, effects and delegated
+work. Pending approvals appear once above the composer with active Runs.
+
+A quiet right rail holds the computer/Screen and capability shortcuts at wide widths;
+narrow layouts use sheets. Routines and Space memory use injected optional ports.
+`CapabilitySheet` owns heading focus, one-Escape closure and return to the visible
+opener. Screen retains its independent Escape-release and expanded-dialog rules.
+Computer Stop requires confirmation. Model conversation rows keep reply identity
+and reading anchors stable through streaming/commit. Announce lifecycle and approval
+changes without announcing tokens or deadline ticks. Direct replies omit sender names;
+optional sender context supports groups. Enter sends, Shift+Enter inserts a newline,
+and IME owns composition. Toolbar portals use viewport breakpoints.
 Run metadata adds optional trigger/provenance fields for Mobile compatibility.
 Live Run metadata hydrates from snapshots without replacing the event cursor or live text.
 `/messages/en` and `/messages/zh` own the `agents` catalog; `/client/styles.css`

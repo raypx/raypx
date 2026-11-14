@@ -50,7 +50,9 @@ export function registerTests() {
       await page.setViewportSize(viewports[0]!);
       await page.goto(`${baseURL}/pages?spaceId=${spaceId}`, { timeout });
       await expect(page.getByRole("heading", { name: "Pages", exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: "New Agent", exact: true })).toHaveCount(1);
+      await expect(
+        page.getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true }),
+      ).toHaveCount(1);
       await expect(page.getByRole("button", { name: "New group", exact: true })).toHaveCount(1);
       const create = page.getByRole("button", { name: "New page", exact: true });
       await create.click({ timeout });
@@ -213,7 +215,7 @@ export function registerTests() {
       await approval.getByRole("button", { name: "Approve", exact: true }).click({ timeout });
       await expect(approval).toBeHidden();
       const activity = page.locator("[data-tool-activity]");
-      await activity.getByRole("button", { name: /^Used 1 tool/ }).click({ timeout });
+      await activity.getByRole("button", { name: /^1 step/ }).click({ timeout });
       await expect(activity.locator('[data-tool-outcome="succeeded"]')).toBeVisible();
       await activity.getByRole("button", { name: "Create page", exact: true }).click({ timeout });
       await expect(page.getByRole("heading", { name: producedTitle, exact: true })).toBeVisible();
@@ -243,7 +245,7 @@ export function registerTests() {
       await page.goto(conversationUrl, { timeout });
       await page
         .locator("[data-tool-activity]")
-        .getByRole("button", { name: /^Used 1 tool/ })
+        .getByRole("button", { name: /^1 step/ })
         .click({ timeout });
       await page.getByRole("button", { name: "Create page", exact: true }).click({ timeout });
       expect(new URL(page.url()).searchParams.get("pageId")).toBe(producedId);

@@ -120,7 +120,7 @@ export function ApprovalCard({
       aria-labelledby={id}
       aria-busy={card.answering}
       tabIndex={-1}
-      className="flex min-w-0 flex-col gap-2 rounded-lg border p-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <h3 id={id} className="min-w-0 font-medium wrap-anywhere">
         {toolOperationLabel(card, t)}

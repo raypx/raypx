@@ -60,9 +60,7 @@ export default function GroupConversationRoute() {
             params: { spaceId: group.conversation.spaceId },
           })
         }
-        onBack={() =>
-          router.replace({ pathname: "/groups", params: { spaceId: group.conversation.spaceId } })
-        }
+        onBack={() => router.replace("/")}
         onEdit={() =>
           router.push({ pathname: "/groups", params: { spaceId: group.conversation.spaceId } })
         }

@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
+import { cn } from "@raypx/ui/lib/utils";
 import { ProtectedInputsController, type ProtectedInputsPort } from "../model/protected-input.js";
 import type { ProtectedInputRequest } from "@raypx/core/protected-input";
 import type { SpaceId } from "@raypx/core/spaces";
@@ -20,8 +21,9 @@ function ProtectedInputForm({
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    const field = input.current;
     const clear = () => {
-      if (input.current) input.current.value = "";
+      if (field) field.value = "";
     };
     const hidden = () => {
       if (document.hidden) clear();
@@ -37,7 +39,7 @@ function ProtectedInputForm({
   return (
     <form
       data-protected-input
-      className="flex min-w-0 flex-col gap-2 rounded-lg border p-3"
+      className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3 text-sm"
       onSubmit={(event) => {
         event.preventDefault();
         const value = input.current?.value ?? "";
@@ -50,7 +52,7 @@ function ProtectedInputForm({
           <FieldLabel htmlFor={id}>
             {t("protectedInput.title", { name: request.input.name })}
           </FieldLabel>
-          <p className="text-xs text-muted-foreground" id={`${id}-purpose`}>
+          <p className="text-xs text-muted-foreground wrap-anywhere" id={`${id}-purpose`}>
             {request.input.purpose}
           </p>
           <p className="break-all text-xs text-muted-foreground">
@@ -93,7 +95,7 @@ function ProtectedInputForm({
         </Field>
       </FieldGroup>
       {request.state === "pending" && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button type="submit" size="sm" disabled={busy}>
             {t("protectedInput.submit")}
           </Button>
@@ -120,10 +122,12 @@ export function ProtectedInputs({
   port,
   spaceId,
   conversationId,
+  className,
 }: {
   port: ProtectedInputsPort;
   spaceId: SpaceId;
   conversationId?: string | undefined;
+  className?: string | undefined;
 }) {
   const t = useTranslations("agents");
   const controller = useMemo(() => new ProtectedInputsController(port, spaceId), [port, spaceId]);
@@ -150,7 +154,10 @@ export function ProtectedInputs({
   }, [controller]);
   return (
     <div
-      className="flex max-h-80 shrink-0 flex-col gap-2 overflow-y-auto"
+      className={cn(
+        "flex max-h-[min(24rem,45dvh)] min-w-0 shrink-0 flex-col gap-2 overflow-y-auto empty:hidden",
+        className,
+      )}
       aria-label={t("protectedInput.requests")}
     >
       {state.requests

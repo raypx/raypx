@@ -105,7 +105,10 @@ export function registerTests() {
       )?.id;
       expect(skillId).toBeTruthy();
       await page.goto(agentsUrl, { timeout });
-      const newAgent = page.getByRole("button", { name: "New Agent", exact: true });
+      const newAgent = page.getByRole("button", {
+        name: /^(?:New Agent|Create Agent)$/,
+        exact: true,
+      });
       await expect(newAgent).toHaveCount(1);
       await expect(page.getByRole("button", { name: "New group", exact: true })).toHaveCount(1);
       await newAgent.click({ timeout });
@@ -189,8 +192,8 @@ export function registerTests() {
       await expect(approval).toBeHidden();
       const activity = page
         .locator("[data-tool-activity]")
-        .filter({ has: page.getByRole("button", { name: /Used 1 tool/ }) });
-      await activity.getByRole("button", { name: /Used 1 tool/ }).click({ timeout });
+        .filter({ has: page.getByRole("button", { name: /1 step/ }) });
+      await activity.getByRole("button", { name: /1 step/ }).click({ timeout });
       const toolRow = activity.locator("[data-tool-call]");
       await expect(toolRow).toContainText(dynamicLabel);
       await expect(toolRow).toHaveAttribute("data-tool-outcome", "succeeded");

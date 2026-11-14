@@ -50,6 +50,8 @@ export function ComputerIndicator({
   ref,
   deviceName,
   deviceConnected,
+  statusLabel,
+  compact = false,
 }: {
   state: ComputerView;
   open: boolean;
@@ -58,9 +60,13 @@ export function ComputerIndicator({
   ref?: Ref<HTMLButtonElement>;
   deviceName?: string | undefined;
   deviceConnected?: boolean | undefined;
+  statusLabel?: string | undefined;
+  compact?: boolean;
 }) {
   const t = useTranslations("agents");
-  let status = state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status]);
+  let status =
+    statusLabel ??
+    (state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status]));
   if (deviceName)
     status = `${deviceName} · ${t(deviceConnected ? "devices.connected" : "devices.offline")}`;
   const label = t("computerIndicator", { state: status });
@@ -68,7 +74,7 @@ export function ComputerIndicator({
     <Button
       ref={ref}
       size="sm"
-      variant="ghost"
+      variant={compact ? "default" : "ghost"}
       className="shrink-0 flex-nowrap whitespace-nowrap"
       aria-label={label}
       title={label}
@@ -77,7 +83,11 @@ export function ComputerIndicator({
       onClick={onOpen}
     >
       <MonitorIcon data-icon="inline-start" aria-hidden="true" />
-      <span className="shrink-0 text-xs whitespace-nowrap">{status}</span>
+      {compact ? (
+        <span className="shrink-0 text-xs whitespace-nowrap">{t("computerShort")}</span>
+      ) : (
+        <span className="shrink-0 text-xs whitespace-nowrap">{status}</span>
+      )}
     </Button>
   );
 }
@@ -92,6 +102,10 @@ export function ComputerPanel({
   selection,
   devices,
   deviceSelected = false,
+  compact = false,
+  focusOnMount = true,
+  showFiles = true,
+  showActivity = true,
 }: {
   controller: ComputerController;
   onClose: () => void;
@@ -101,6 +115,10 @@ export function ComputerPanel({
   selection?: ConversationSelection | undefined;
   devices?: DeviceComputersController | null | undefined;
   deviceSelected?: boolean | undefined;
+  compact?: boolean;
+  focusOnMount?: boolean;
+  showFiles?: boolean;
+  showActivity?: boolean;
 }) {
   const t = useTranslations("agents");
   const state = useSyncExternalStore(
@@ -108,11 +126,18 @@ export function ComputerPanel({
     controller.getSnapshot,
     controller.getSnapshot,
   );
+  const deviceState = useSyncExternalStore(
+    devices?.subscribe ?? subscribeNoDevices,
+    devices?.getSnapshot ?? noDevices,
+    devices?.getSnapshot ?? noDevices,
+  );
+  const showSandbox =
+    !deviceSelected && !deviceState?.selection && !deviceState?.loading && !deviceState?.error;
   const title = useRef<HTMLHeadingElement>(null);
   const confirmation = useConfirmation();
   useLayoutEffect(() => {
-    if (!sheet) title.current?.focus();
-  }, [sheet]);
+    if (!sheet && focusOnMount) title.current?.focus();
+  }, [sheet, focusOnMount]);
   const disabled =
     state.pending !== null ||
     state.refreshing ||
@@ -138,10 +163,18 @@ export function ComputerPanel({
   const titleClass =
     "min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring";
   return (
-    <div className="box-border flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-6 overflow-x-hidden overflow-y-auto p-4">
+    <div className="box-border flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-3">
       {!sheet && (
         <header className="flex min-w-0 items-center justify-between gap-2">
-          <h2 ref={title} tabIndex={-1} className={titleClass}>
+          <h2
+            ref={title}
+            tabIndex={-1}
+            className={
+              compact
+                ? "min-w-0 truncate text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                : titleClass
+            }
+          >
             {t("computerTitle")}
           </h2>
           <IconButton label={t("computerClose")} size="icon-sm" onClick={onClose}>
@@ -150,7 +183,8 @@ export function ComputerPanel({
         </header>
       )}
       {devices && <DeviceComputerSelector controller={devices} />}
-      {!deviceSelected && (
+      {deviceState?.loading && <p className="text-sm text-muted-foreground">{t("loading")}</p>}
+      {showSandbox && (
         <section aria-label={t("computerStatus")} className="flex min-w-0 flex-col gap-3">
           <h3 className="text-xs font-medium text-muted-foreground">{t("computerStatus")}</h3>
           <p role="status" aria-live="polite" aria-atomic="true" className="text-sm wrap-anywhere">
@@ -192,10 +226,10 @@ export function ComputerPanel({
           )}
         </section>
       )}
-      {!deviceSelected && controller.screen && state.status !== "not-configured" && (
+      {showSandbox && controller.screen && state.status !== "not-configured" && (
         <ComputerScreen controller={controller.screen} status={state.status} />
       )}
-      {!deviceSelected && controller.files && (
+      {showFiles && showSandbox && controller.files && (
         <ComputerFiles
           controller={controller.files}
           status={state.status}
@@ -210,8 +244,17 @@ export function ComputerPanel({
             .join("|")}
         />
       )}
-      <ComputerActivity activity={activity} approvalPort={approvalPort} selection={selection} />
+      {showActivity && (
+        <ComputerActivity activity={activity} approvalPort={approvalPort} selection={selection} />
+      )}
       {confirmation.dialog}
     </div>
   );
+}
+
+function subscribeNoDevices() {
+  return () => {};
+}
+function noDevices() {
+  return null;
 }

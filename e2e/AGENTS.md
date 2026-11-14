@@ -125,4 +125,9 @@ fake connector only after the member answers. Traces/video are disabled around
 pairing codes; optional captures after clearing the code use `.artifacts/device/`.
 This browser gate establishes no native dialog, real command or packaged result.
 
-protected-input.spec.ts runs the shared masked-input journey on Web and Desktop with the owned backend. It verifies ordinary approval, durable reload, supply/decline and event/effect/storage leak checks. Trace/video/automatic screenshots are disabled around generated sensitive values.
+`protected-input.spec.ts` runs the shared masked-input journey on Web and Desktop
+with the owned backend. It verifies ordinary approval, durable reload, supply/decline
+and event/effect/storage leak checks. The pending form stays once above the composer
+in all three tabs. Opt-in light/dark screenshots at 1440×860 and 375×812 are saved
+under `.artifacts/ui/` before any value is generated or entered. Trace, video and
+automatic screenshots stay disabled around generated sensitive values.

@@ -55,11 +55,33 @@ export async function expectSurfaceControls(page: Page, surface: Locator) {
               const y = box.top + box.height / 2;
               if (y <= bounds.top || y >= bounds.bottom || x <= bounds.left || x >= bounds.right)
                 continue;
+              let clipped = false;
+              for (
+                let parent = control.parentElement;
+                parent && parent !== node;
+                parent = parent.parentElement
+              ) {
+                const parentStyle = getComputedStyle(parent);
+                const parentBox = parent.getBoundingClientRect();
+                const clipsX = parentStyle.overflowX !== "visible";
+                const clipsY = parentStyle.overflowY !== "visible";
+                if (
+                  (clipsX && (x <= parentBox.left || x >= parentBox.right)) ||
+                  (clipsY && (y <= parentBox.top || y >= parentBox.bottom))
+                ) {
+                  clipped = true;
+                  break;
+                }
+              }
+              if (clipped) continue;
               const label = control.getAttribute("aria-label") ?? control.textContent ?? "Control";
               if (box.left < bounds.left - 0.5 || box.right > bounds.right + 0.5)
                 failures.push(`${label} extends outside its container`);
               const hit = document.elementFromPoint(x, y);
-              if (!hit || !control.contains(hit)) failures.push(`${label} is obscured`);
+              if (!hit || !control.contains(hit))
+                failures.push(
+                  `${label} is obscured at ${Math.round(x)},${Math.round(y)} by ${hit?.tagName ?? "nothing"} (${hit?.getAttribute("data-slot") ?? hit?.getAttribute("role") ?? "surface"})`,
+                );
             }
             if (node.scrollWidth > node.clientWidth + 1) failures.push("Surface overflows");
             if (document.documentElement.scrollWidth > window.innerWidth)

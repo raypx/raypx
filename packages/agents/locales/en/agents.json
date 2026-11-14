@@ -17,7 +17,6 @@
   "unavailableModel": "Unavailable model: {model}",
   "noModels": "No models are available.",
   "noAgents": "No Agents in this Space",
-  "chooseAgent": "Choose an Agent to open its conversation.",
   "emptyConversation": "Start a conversation",
   "conversation": "Conversation",
   "message": "Message",
@@ -140,7 +139,6 @@
   },
   "activity": {
     "title": "Activity",
-    "used": "{count, plural, one {Used # tool} other {Used # tools}}",
     "empty": "No tool activity in this Space yet.",
     "failedCount": "{count, plural, one {# failed} other {# failed}}",
     "duration": "{seconds} s",
@@ -155,7 +153,8 @@
       "unknown": "Outcome unknown"
     },
     "active": "Active {time}",
-    "none": "No activity yet"
+    "none": "No activity yet",
+    "steps": "{count, plural, one {# step} other {# steps}}"
   },
   "effects": {
     "open": "Review effects",
@@ -437,7 +436,6 @@
   },
   "groups": {
     "title": "Groups",
-    "direct": "Direct Agents",
     "new": "New group",
     "create": "Create group",
     "name": "Group name",
@@ -692,5 +690,41 @@
     "answered": "Supplied. Waiting for the operation.",
     "error": "Could not confirm the request. Refresh before trying again.",
     "requests": "Protected input requests"
-  }
+  },
+  "workspaceSidebar": {
+    "new": "New",
+    "recent": "Recent",
+    "emptyAgents": "Make room for your next idea. Create an Agent to begin.",
+    "tools": "Tools",
+    "invite": "Invite members",
+    "openRecent": "Open recent conversation: {name}",
+    "recentActions": "Recent conversation actions for {name}",
+    "collapse": "Collapse {name}",
+    "expand": "Expand {name}",
+    "filterAgents": "Filter Agents",
+    "clearFilter": "Clear filter",
+    "noMatches": "No matching Agents"
+  },
+  "workspaceHome": {
+    "heading": "What would you like to work on?",
+    "placeholder": "Ask anything…",
+    "createHint": "Choose Create Agent in the sidebar to begin.",
+    "target": "Choose an Agent",
+    "computer": "Computer",
+    "context": "Add context",
+    "modelMenu": "Model and approval mode",
+    "privacy": "Privacy",
+    "help": "Help"
+  },
+  "conversationViews": "Conversation views",
+  "conversationActions": "Conversation actions",
+  "copyReply": "Copy reply",
+  "replyCopied": "Reply copied",
+  "copyReplyError": "Select the reply and copy it manually.",
+  "replyActions": "Reply actions",
+  "addContext": "Add context",
+  "pagesContext": "Pages",
+  "computerShort": "Computer",
+  "composerComputer": "Computer context: {state}",
+  "modelAndApproval": "Model and approval mode"
 }

@@ -136,6 +136,7 @@
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="toggle-group-item"],
     [data-slot="tabs-trigger"],
+    [data-slot="collapsible-trigger"],
     select {
       min-height: var(--control-height-xl);
     }

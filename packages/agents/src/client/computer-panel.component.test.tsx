@@ -133,7 +133,7 @@ it.each([false, true])(
       "max-w-full",
       "overflow-x-hidden",
       "overflow-y-auto",
-      "p-4",
+      "p-3",
     );
     expect(scroll).not.toHaveClass("overflow-x-clip");
     expect(files).toHaveClass("w-full", "min-w-0", "max-w-full");

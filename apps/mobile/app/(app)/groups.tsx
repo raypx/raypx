@@ -11,7 +11,9 @@ import { Action, Screen } from "../../src/ui.js";
 export default function GroupsRoute() {
   const workspace = useWorkspace();
   const view = useWorkspaceView();
-  const selected = parseAgentSelection(useLocalSearchParams());
+  const params = useLocalSearchParams();
+  const selected = parseAgentSelection(params);
+  const create = params.create === "1";
   const router = useRouter();
   const { t } = useCopy();
   const [controller, setController] = useState<MobileGroupsController | null>(null);
@@ -29,12 +31,13 @@ export default function GroupsRoute() {
       next = new MobileGroupsController(admittedSpaceId, workspace.port.groups);
       setController(next);
       void next.load();
+      if (create) next.edit();
     });
     return () => {
       cancelled = true;
       next?.dispose();
     };
-  }, [workspace, admittedSpaceId]);
+  }, [workspace, admittedSpaceId, create]);
   if (controller && controller.spaceId === spaceId && membership)
     return (
       <GroupsScreen

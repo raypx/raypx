@@ -102,7 +102,7 @@ it("surfaces waiting and failed calls on the collapsed summary", async () => {
     <ToolActivity origin="https://app.example.test" spaceId="space" row={row([], 1)} />,
   );
   expect(
-    findByLabel(view.root, "Used 1 tool · Waiting for approval").props.accessibilityState.expanded,
+    findByLabel(view.root, "1 step · Waiting for approval").props.accessibilityState.expanded,
   ).toBe(false);
   await view.update(
     <ToolActivity
@@ -111,9 +111,7 @@ it("surfaces waiting and failed calls on the collapsed summary", async () => {
       row={row([{ ...call, outcome: "failed" }])}
     />,
   );
-  expect(findByLabel(view.root, "Used 1 tool · 1 failed").props.accessibilityState.expanded).toBe(
-    false,
-  );
+  expect(findByLabel(view.root, "1 step · 1 failed").props.accessibilityState.expanded).toBe(false);
   await view.unmount();
 });
 
@@ -168,7 +166,7 @@ it.each([null, { id: pageIdSchema.parse("exact-page"), version: 2 }])(
         row={row([{ ...call, toolName: "agent_page_update", target: "not-an-id", page }])}
       />,
     );
-    await press(findByLabel(view.root, "Used 1 tool · In progress"));
+    await press(findByLabel(view.root, "1 step · In progress"));
     await press(findByLabel(view.root, en.agents.tools.updatePage));
     const suffix = page ? "&pageId=exact-page" : "";
     expect(Linking.openURL).toHaveBeenCalledExactlyOnceWith(
@@ -187,7 +185,7 @@ it("shows a recoverable error when the system cannot open a Page", async () => {
       row={row([{ ...call, toolName: "agent_page_read", page: null }])}
     />,
   );
-  await press(findByLabel(view.root, "Used 1 tool · In progress"));
+  await press(findByLabel(view.root, "1 step · In progress"));
   await press(findByLabel(view.root, en.agents.tools.readPage));
   expect(textContent(view.root)).toContain("Could not open the link.");
   await view.unmount();
@@ -266,7 +264,7 @@ it("uses the replacement member answer instead of an older automatic approval", 
     />
   );
   const view = await renderNative(tree([old]));
-  await press(findByLabel(view.root, "Used 1 tool"));
+  await press(findByLabel(view.root, "1 step"));
   expect(textContent(view.root)).toContain("Approved automatically");
   await view.update(tree([old, replacement]));
   expect(textContent(view.root)).not.toContain("Approved automatically");

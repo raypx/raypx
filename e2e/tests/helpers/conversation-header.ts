@@ -4,19 +4,13 @@ import { expectSurfaceAtRest } from "./geometry.js";
 /** Visibility alone does not establish that a control is inside the fixed toolbar or hittable. */
 export async function expectConversationHeaderControls(page: Page) {
   const header = page.locator("[data-conversation-header]");
-  const menu = header.getByRole("button", { name: "Routines and memory", exact: true });
-  await expect(header).toBeVisible();
+  await expect(header).toBeVisible({ timeout: 3000 });
   await expectSurfaceAtRest(page, header);
-  await expect(header.getByRole("button", { name: /^Computer:/ })).toBeVisible();
-  if (page.viewportSize()!.width < 640) {
-    await expect(menu).toBeVisible();
-    await expect(header.getByRole("button", { name: "Routines", exact: true })).toBeHidden();
-    await expect(header.getByRole("button", { name: "Memory", exact: true })).toBeHidden();
-  } else {
-    await expect(menu).toBeHidden();
-    await expect(header.getByRole("button", { name: "Routines", exact: true })).toBeVisible();
-    await expect(header.getByRole("button", { name: "Memory", exact: true })).toBeVisible();
-  }
+  for (const name of ["Conversation", "Activity", "Files"])
+    await expect(header.getByRole("tab", { name, exact: true })).toBeVisible({ timeout: 3000 });
+  await expect(
+    header.getByRole("button", { name: "Conversation actions", exact: true }),
+  ).toBeVisible({ timeout: 3000 });
   await expect
     .poll(
       () =>
@@ -69,7 +63,11 @@ export async function expectConversationHeaderControls(page: Page) {
             const actions = node
               .querySelector("[data-conversation-actions]")
               ?.getBoundingClientRect();
-            if (!name || !actions || name.right > actions.left)
+            if (!name || !actions) failures.push("Conversation title/actions are missing");
+            else if (
+              Math.min(name.right, actions.right) > Math.max(name.left, actions.left) &&
+              Math.min(name.bottom, actions.bottom) > Math.max(name.top, actions.top)
+            )
               failures.push("Agent name overlaps header actions");
             return failures;
           },
@@ -78,8 +76,7 @@ export async function expectConversationHeaderControls(page: Page) {
         ),
       {
         timeout: 3000,
-        message:
-          "Header controls must fit inside one top-bar row, without overlap or obscured hit targets",
+        message: "Header title, tabs and controls must fit without overlap or obscured hit targets",
       },
     )
     .toEqual([]);
@@ -93,7 +90,7 @@ export async function openConversationCapability(page: Page, name: "Routines" | 
     await inline.click({ timeout: 2000 });
     return inline;
   }
-  const menu = header.getByRole("button", { name: "Routines and memory", exact: true });
+  const menu = header.getByRole("button", { name: "Conversation actions", exact: true });
   await menu.click({ timeout: 2000 });
   await page.getByRole("menuitem", { name, exact: true }).click({ timeout: 2000 });
   return menu;

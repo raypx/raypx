@@ -1,3 +1,4 @@
+import { useSettingsNavigation } from "../features/settings/navigation.js";
 import { AgentsWorkspace } from "@raypx/agents/client";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { spaceIdSchema } from "@raypx/core/spaces";
@@ -9,11 +10,13 @@ import { agentsClient } from "../features/agents/client.js";
 
 import { useMemo } from "react";
 import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
-import { isDesktop, getBridge } from "../lib/desktop.js";
+import { isDesktop, getBridge, pairDeviceConnector, grantDeviceDirectory } from "../lib/desktop.js";
 import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { desktopReturnTo } from "../features/auth/return-to.js";
 import { desktopConversationSocket } from "../features/agents/socket.js";
+
+const nativeDeviceConfirmation = { pair: pairDeviceConnector, grant: grantDeviceDirectory };
 
 export const Route = createFileRoute("/pages")({
   ssr: false,
@@ -41,6 +44,7 @@ function PagesPage() {
   );
 }
 function SignedInPages({ accountId }: { accountId: string }) {
+  const settings = useSettingsNavigation();
   const signOut = useDesktopSignOut();
   const port: PagesClientPort = agentsClient.pages;
   const selection = Route.useSearch();
@@ -49,6 +53,11 @@ function SignedInPages({ accountId }: { accountId: string }) {
   return (
     <AgentsWorkspace
       client={agentsClient}
+      nativeDeviceConfirmation={isDesktop() ? nativeDeviceConfirmation : undefined}
+      onOpenTools={() => void settings.open("tools")}
+      onNewConversation={(spaceId) =>
+        void navigate({ to: "/agents", search: { spaceId: spaceIdSchema.parse(spaceId) } })
+      }
       onSessionEnded={() => signOut.sessionEnded("/agents")}
       groups={agentsClient.conversations}
       spaceManagement={agentsClient.spaces}

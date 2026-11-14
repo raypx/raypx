@@ -66,27 +66,58 @@ motion. Conversation examples do not autoplay. Authentication and legal pages
 render without entrances or loops. Label sample content and never invent usage,
 customer results, testimonials or pricing.
 
-Both sidebars put the sole Space switcher in their header and make Create Agent
-the primary action. An empty Agent list offers one clear first-Agent action.
-They lead to Agents and retain reachable account/security, device
-preferences and permission-filtered administration/configuration. Retained Memory
-views manage the earlier device/account records; do not imply they are Agent/Space
-memory. Remove navigation for features whose required pages are gone. Do not show
-New session, projects, session shortcuts, Waiting or the guest editor. Desktop
-keeps its sidebar toggle and Search clear of native window buttons. Search covers
-available pages and actions; removed workflows never appear as results. Use
-consistent 20px icons with 1.75 strokes, visible keyboard focus and labelled collapsed-rail tooltips.
-Keep one fixed footer for account and settings. Guests get a direct sign-in action;
-the account menu manages an existing account only.
+The signed-in workspace has one directory: a quiet sidebar about 220px wide,
+collapsible to a labelled icon rail. Its background sits one neutral step from
+the canvas, with no heavy dividing border. The top row holds the original logo,
+notifications when available, Search and collapse. A plain New row starts a
+conversation with the last used or chosen Agent. Flat Routines, Pages and Tools
+rows precede collapsible Agents, Groups, Space and Recent sections. Muted section
+labels reveal actions on hover and keyboard focus. An empty Agent section has one
+inviting card and one Create Agent action; group creation has one clear section
+action. Recent combines existing direct/group list projections, sorts by
+lastActivityAt and uses dense truncated single-line rows with an overflow menu.
+Never invent conversation titles or activity. The account avatar, name and actual
+role stay at the bottom, with Invite members below for owners. Account/security,
+device preferences and permission-filtered administration remain reachable.
+Search contains current destinations and actions only. Desktop keeps its native
+window-control insets clear and device settings available at /login#settings.
 
-The shell owns one page title through its toolbar slots. A page may replace that
-title with context, never render the title twice. Actions and scope controls sit at
-the end; long English/Chinese labels truncate or wrap without covering controls.
-At 375px keep the navigation rail and show either the Agent list or the selected
-conversation, with a labelled back action. At 1280px the list and conversation can
-sit side by side. Keep the transcript scrollable and composer reachable without
-horizontal page overflow. Unsent text stays scoped to the selected conversation;
-restoring it never sends. Theme and language remain reachable in either width.
+At /agents with no conversation selected, leave the canvas open. Vertically
+center the original logo mark, one short question heading and a rounded composer
+about 600px wide. A multiline input sits over a compact toolbar: add context,
+Agent target, Computer state/start, model and approval controls, then round Send.
+Use actual available context and configuration; unavailable actions explain why.
+Sending opens the chosen Agent's continuing conversation. Small muted legal/help
+links sit at the foot of the canvas. Do not invent suggested follow-ups.
+
+A selected conversation fills the remaining workspace without a second directory
+column. Its sticky top bar owns one truncated Agent/group title, a Back action
+at narrow widths, Conversation/Activity/Files text tabs and capability/overflow
+actions. The reading column centers at 680–720px, with 15–16px text and comfortable
+line height. Member messages form compact right-aligned neutral bubbles; Agent
+replies are plain Markdown on the canvas. Headings, lists, inline code, labelled
+copyable code blocks and horizontally bounded tables preserve safe rendering.
+Completed replies have quiet copy/retry/steer actions and a real N steps fold
+for tool activity, effects, approvals and delegated work. Activity shows the Run
+timeline; Files shows bounded computer files. Wide screens add quiet context
+cards for the Computer/Screen, pending approvals and memory/routines. Narrow
+screens retain accessible sheets with their existing focus and Escape rules.
+The composer floats at the bottom of the reading column, with Still working and
+pending approvals immediately above it. Addressed protected-input forms share
+that rounded card stack across all conversation tabs, with masked fields and
+visible destination, expiry and privacy details. Values stay separate from the
+composer and clear when leaving the surface. Keep history paging, reading anchors,
+streaming, draft isolation and every existing lifecycle control.
+
+Chrome uses 13–14px text, small line icons and hairline separators only where they
+help reading. Cards use rounded-xl corners. Soft shadows belong to floating
+composers and overlays; ordinary rows remain flat. Icon buttons gain a surface on
+hover/focus. Long English/Chinese labels truncate or wrap without covering
+controls, and coarse pointers retain 44px targets. At 375px keep explicit labelled
+navigation and a reachable composer without horizontal page overflow. Theme and
+language remain reachable at every width. Mobile follows the same directory,
+home and Conversation/Activity/Files hierarchy using native controls, keyboard
+avoidance and safe areas; Screen still uses the phone Web client.
 
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.
@@ -141,23 +172,22 @@ accurately, with explicit stop and retry editing. Announce Run lifecycle changes
 without announcing every streamed token. A failed-Run retry restores text for a
 new explicit Send; an uncertain delivery retains its receipt identity.
 
-The Computer surface adds a compact conversation-header state indicator,
-opening a sheet on narrow screens and a side panel on wide screens. Show lifecycle
-state, failure reasons and guarded start/stop controls; confirm Stop. An
-unconfigured server shows one quiet explicit state with no controls. Screen is a
-separate section with explicit graphical start/stop, a fitted live image, view pause
-and exclusive Take/Release control. Show the control holder, remaining lease and
-Agent input pause. Forward keys only from the focused controlled screen; Tab keeps
-normal navigation and Escape releases control without closing the panel. Keep file
+The Computer surface exposes the actual Space lifecycle in the composer and
+conversation context. Wide layouts use a quiet rail card; narrow layouts open a
+sheet. Show failure reasons and guarded start/stop controls; confirm Stop. An
+unconfigured server shows one quiet explicit state with no controls. Screen keeps
+explicit graphical start/stop, a fitted live image, view pause and exclusive
+Take/Release control. Show the control holder, remaining lease and Agent input
+pause. Forward keys only from the focused controlled screen; Tab keeps normal
+navigation and Escape releases control without closing the panel. Keep file
 previews and tool activity bounded. Screen frames have no entrance or transition.
 Expand opens a large dialog with the same live view and controls, using the existing
 controller and stream. While controlling, Escape releases control and keeps the
 dialog open; the next Escape closes it and restores focus to Expand.
-Phase 1 replies have no tools, approval cards or recovery. Do not add ornamental
-activity, fake progress or controls for later capabilities. When those phases
-arrive, chat keeps useful progress and results while tool lifecycle belongs in the
-activity view. Keep failures, unavailable states and uncertain outcomes explicit.
-Current durable conversations render real tool activity and addressed approval
+Render actual progress and results; keep tool lifecycle in Activity and the
+reply's steps. Do not add ornamental activity, fake progress or controls for
+unavailable capabilities. Keep failures, unavailable states and uncertain outcomes
+explicit. Durable conversations render real tool activity and addressed approval
 cards. Active Runs outside the loaded history window use a compact Still working
 strip above the composer, with Agent attribution, state and direct controls.
 Space HTTP APIs live beside remote tools in settings; operation and approval rows

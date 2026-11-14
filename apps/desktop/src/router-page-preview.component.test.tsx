@@ -31,7 +31,12 @@ vi.mock("./features/agents/client.js", () => ({ agentsClient: { pages: mocks.pag
 vi.mock("./features/agents/socket.js", () => ({
   desktopConversationSocket: () => ({ connect: vi.fn() }),
 }));
-vi.mock("./lib/desktop.js", () => ({ isDesktop: () => mocks.native, getBridge: mocks.getBridge }));
+vi.mock("./lib/desktop.js", () => ({
+  isDesktop: () => mocks.native,
+  getBridge: mocks.getBridge,
+  pairDeviceConnector: vi.fn(async () => true),
+  grantDeviceDirectory: vi.fn(async () => true),
+}));
 vi.mock("@raypx/agents/client", () => ({
   AgentsWorkspace: ({ renderWorkspace }: AgentsWorkspaceProps) =>
     renderWorkspace?.({

@@ -99,10 +99,10 @@ export function ComputerSheet({
     state.error === "load" ||
     state.status === "starting" ||
     state.status === "stopping";
-  const canStart =
-    !deviceState.selection && (state.status === "stopped" || state.status === "failed");
-  const canStop =
-    !deviceState.selection && (state.status === "running" || state.status === "stopping");
+  const sandboxSelected =
+    !deviceState.selection && (!devices || (!deviceState.loading && !deviceState.error));
+  const canStart = sandboxSelected && (state.status === "stopped" || state.status === "failed");
+  const canStop = sandboxSelected && (state.status === "running" || state.status === "stopping");
   let displayStatus = t(
     state.error === "load" ? "agents.computerUnavailable" : statusKeys[state.status],
   );

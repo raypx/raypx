@@ -18,8 +18,27 @@ pure shared tokens, not DOM components.
 `@raypx/agents/model` owns Space/Agent/group selection, history windows, event/cursor
 convergence and draft/send receipts. `/client` renders the Web/Desktop workspace;
 Mobile supplies a native view and ports. The shell owns widths, gutters and one
-page title. The sidebar has the Space switcher and Agent/group directory. Narrow
-layouts preserve explicit Back navigation, selection and focus.
+page title. A single quiet 220px sidebar owns the Agent/group directory, compact
+Space switcher and Recent list; there is no second list beside chat. Recent sorts
+existing list lastActivityAt values without extra authority or fabricated titles.
+Plain New opens the centered home composer, whose explicit Agent choice controls
+where Send goes. Agent and group creation remain distinct section actions, with
+one inviting first-Agent action in an empty Space. Account and owner invitations
+stay at the foot. Collapsed/narrow navigation keeps labels, focus and explicit
+Back navigation. The original logo and neutral tokens are unchanged.
+Agent section actions include a local name filter. Opening it expands the section
+and focuses its labelled input; Escape clears a nonempty query, then closes the
+empty filter and returns focus to its opener. Collapsing the sidebar keeps the
+full directory reachable. In an empty narrow home, the sole Create Agent action
+moves to the canvas so its purpose remains visible beside the icon rail.
+
+Home uses one short question and a roughly 600px floating rounded composer.
+Conversation uses a centered 680–720px reading column and the same composer
+anatomy: multiline input, context, target/Computer, model/approval controls and
+round Send. Member messages are compact right bubbles; Agent Markdown sits on
+the canvas at 15–16px. UI text is 13–14px, cards rounded-xl, separators hairline
+and shadows limited to floating surfaces. No synthetic follow-ups or notification
+counts appear.
 
 ## Conversations and capabilities
 
@@ -44,11 +63,28 @@ status into activity. Tool rows contain bounded names/targets/status and duratio
 not raw arguments or private output. Unknown effects remain explicit. Delegated
 work appears under the parent activity without fabricating child replies.
 
-The header's computer indicator opens a sheet below 1280px and a side panel above.
+Protected-input forms sit with pending approvals above the composer in every
+conversation tab. Use the same rounded neutral cards, a masked uncontrolled
+field and the existing independent metadata controller. Normal approval stays
+separate. Values never enter the composer, drafts or caches and clear on submit,
+decline, backgrounding and unmount. Home and the Pages workspace retain addressed
+Space requests when no conversation column is mounted.
+
+The sticky conversation bar has Conversation, Activity and Files text tabs,
+one Agent/group title and capability/overflow actions. Completed replies expose
+quiet actions and a real steps fold, preserving tool/effect/approval/delegation
+inspection. Activity contains the existing timeline; Files contains bounded
+computer access. Wide layouts use quiet right-rail context cards for Computer,
+Screen, pending approvals and capability shortcuts. Narrow layouts retain sheets.
 Show real lifecycle/failure state, guard repeat commands and confirm Stop. File
 previews are bounded read-only access and do not start compute. No configured
 provider means an unavailable state without lifecycle controls. Computer tools
 still require backend admission and approval/effect policy.
+The Computer context card and narrow sheet keep the per-conversation device picker.
+The composer chip reflects that selection and opens its controls; it never starts
+the team sandbox while a device selection is active or still loading. Files is
+explicitly labelled Team sandbox because its read port is Space-scoped and cannot
+browse a selected device directory. Devices management stays in Space settings.
 
 Screen is a separate computer section. Its optional port mounts only while the
 computer panel is open. Pixel state is disposable and never enters draft storage.
@@ -65,8 +101,8 @@ controlling, Escape releases input and leaves the dialog open. A subsequent
 Escape closes it and returns focus to Expand. Keep this behavior for the screen
 surface and composed-text field, and retain the explicit Release control action.
 
-Routines and Space memory open header sheets, or the compact overflow menu at
-narrow widths. Pages mounts at `/pages` with versions, restore and sharing. Web
+Routines and Space memory remain reachable through sidebar/context shortcuts
+and the compact conversation overflow menu; narrow layouts retain their sheets. Pages mounts at `/pages` with versions, restore and sharing. Web
 can embed sandboxed authenticated documents; Desktop always opens Web preview.
 Models, approval policy, Skills and Tools compose account settings. Closing editors
 clears one-time secrets; failed mutations preserve ordinary drafts for retry.

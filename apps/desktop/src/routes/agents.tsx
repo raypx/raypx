@@ -1,3 +1,4 @@
+import { getBridge, isDesktop, pairDeviceConnector, grantDeviceDirectory } from "../lib/desktop.js";
 import { useMemo, useState } from "react";
 import { useTranslations } from "../i18n.js";
 import { AgentsWorkspace } from "@raypx/agents/client";
@@ -11,7 +12,6 @@ import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
 import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { desktopReturnTo } from "../features/auth/return-to.js";
-import { pairDeviceConnector, grantDeviceDirectory, isDesktop } from "../lib/desktop.js";
 
 const nativeDeviceConfirmation = { pair: pairDeviceConnector, grant: grantDeviceDirectory };
 
@@ -55,6 +55,15 @@ function SignedInAgents({ accountId }: { accountId: string }) {
     <AgentsWorkspace
       client={agentsClient}
       nativeDeviceConfirmation={isDesktop() ? nativeDeviceConfirmation : undefined}
+      onOpenExternal={(url) => {
+        if (!isDesktop()) {
+          window.open(url, "_blank", "noopener,noreferrer");
+          return;
+        }
+        void getBridge()
+          .then((bridge) => bridge.request.openExternal({ url }))
+          .catch(() => {});
+      }}
       onSessionEnded={() => signOut.sessionEnded("/agents")}
       groups={agentsClient.conversations}
       spaceManagement={agentsClient.spaces}
@@ -83,6 +92,7 @@ function SignedInAgents({ accountId }: { accountId: string }) {
       }
       modelCatalogKey={settingsHash}
       onOpenModels={() => void settings.open("models")}
+      onOpenTools={() => void settings.open("tools")}
       onNavigate={(next) => void navigate({ search: parseAgentSelection(next) })}
     />
   );

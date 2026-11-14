@@ -123,8 +123,12 @@ it("redirects guests to sign-in with the conversation return path before reads o
 it("injects the account-bound native socket into the shared workspace after login", async () => {
   mocks.account = "owner";
   await page("/agents");
-  expect(await screen.findByRole("heading", { name: "Agents", level: 1 })).toBeTruthy();
-  expect(screen.getAllByRole("heading", { name: "Agents" })).toHaveLength(1);
+  expect(
+    await screen.findByRole("heading", { name: "Create a Space to get started.", level: 1 }),
+  ).toBeTruthy();
+  expect(screen.getAllByRole("heading", { name: "Create a Space to get started." })).toHaveLength(
+    1,
+  );
   expect(screen.getByRole("main").firstElementChild?.className).toContain("h-full");
   await waitFor(() => expect(mocks.spaces).toHaveBeenCalledOnce());
   expect(mocks.socket).toHaveBeenCalledWith("owner");

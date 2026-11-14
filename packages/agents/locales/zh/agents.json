@@ -17,7 +17,6 @@
   "unavailableModel": "不可用的模型：{model}",
   "noModels": "暂无可用模型。",
   "noAgents": "此空间暂无智能体",
-  "chooseAgent": "选择智能体以打开对话。",
   "emptyConversation": "开始对话",
   "conversation": "对话",
   "message": "消息",
@@ -140,7 +139,6 @@
   },
   "activity": {
     "title": "活动",
-    "used": "使用了{count}个工具",
     "empty": "此空间暂无工具活动。",
     "failedCount": "{count}个失败",
     "duration": "{seconds}秒",
@@ -155,7 +153,8 @@
       "unknown": "结果未知"
     },
     "active": "{time}活跃",
-    "none": "暂无活动"
+    "none": "暂无活动",
+    "steps": "{count} 个步骤"
   },
   "effects": {
     "open": "查看操作记录",
@@ -437,7 +436,6 @@
   },
   "groups": {
     "title": "群组",
-    "direct": "Agent 私聊",
     "new": "新建群组",
     "create": "创建群组",
     "name": "群组名称",
@@ -692,5 +690,41 @@
     "answered": "已提供，等待操作执行。",
     "error": "无法确认请求状态，请刷新后再试。",
     "requests": "受保护输入请求"
-  }
+  },
+  "workspaceSidebar": {
+    "new": "新建",
+    "recent": "最近",
+    "emptyAgents": "从一个想法开始，创建你的第一位 Agent。",
+    "tools": "工具",
+    "invite": "邀请成员",
+    "openRecent": "打开最近会话：{name}",
+    "recentActions": "{name} 的最近会话操作",
+    "collapse": "收起{name}",
+    "expand": "展开{name}",
+    "filterAgents": "筛选智能体",
+    "clearFilter": "清除筛选",
+    "noMatches": "没有匹配的智能体"
+  },
+  "workspaceHome": {
+    "heading": "今天想一起做些什么？",
+    "placeholder": "输入你的想法…",
+    "createHint": "在侧边栏创建 Agent，即可开始。",
+    "target": "选择 Agent",
+    "computer": "电脑",
+    "context": "添加上下文",
+    "modelMenu": "模型与审批模式",
+    "privacy": "隐私",
+    "help": "帮助"
+  },
+  "conversationViews": "会话视图",
+  "conversationActions": "会话操作",
+  "copyReply": "复制回复",
+  "replyCopied": "已复制回复",
+  "copyReplyError": "请选择回复并手动复制。",
+  "replyActions": "回复操作",
+  "addContext": "添加上下文",
+  "pagesContext": "页面",
+  "computerShort": "计算机",
+  "composerComputer": "计算机上下文：{state}",
+  "modelAndApproval": "模型与审批模式"
 }

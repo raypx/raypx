@@ -68,6 +68,7 @@ function AgentsPage() {
           }
           modelCatalogKey={settingsHash}
           onOpenModels={() => void settings.open("models")}
+          onOpenTools={() => void settings.open("tools")}
           onNavigate={(next) => void navigate({ search: parseAgentSelection(next) })}
         />
       )}

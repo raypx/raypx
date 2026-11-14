@@ -85,7 +85,8 @@ it.each([
     const router = await page(locale);
     expect(router.state.location.pathname).toBe("/agents");
     const nav = within(screen.getByRole("navigation", { name: "Raypx" }));
-    expect(nav.getByRole("link", { name: agents }).getAttribute("href")).toBe("/agents");
+    expect(screen.getByRole("link", { name: "Raypx" }).getAttribute("href")).toBe("/agents");
+    expect(nav.queryByRole("link", { name: agents })).toBeNull();
     expect(nav.getByRole("link", { name: pages }).getAttribute("href")).toBe("/pages");
     expect(nav.queryByRole("group", { name: /Workspace|工作区/ })).toBeNull();
     expect(nav.queryByRole("link", { name: removed })).toBeNull();

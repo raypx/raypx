@@ -1,5 +1,5 @@
 import { type ComponentRef, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { AppState, Text, View, ScrollView } from "react-native";
+import { AppState, Text, View } from "react-native";
 import { Input } from "heroui-native/input";
 import { Label } from "heroui-native/label";
 import { TextField } from "heroui-native/text-field";
@@ -35,7 +35,7 @@ function ProtectedInputForm({
     };
   }, []);
   return (
-    <View className="gap-2 rounded-lg border border-border p-3">
+    <View className="gap-3 rounded-lg border border-border p-4">
       <TextField>
         <Label>{t("agents.protectedInput.title", { name: request.input.name })}</Label>
         <Text className="text-sm text-foreground">{request.input.purpose}</Text>
@@ -139,11 +139,7 @@ export function ProtectedInputs({
   const requests = state.requests.filter((r) => r.conversationId === conversationId);
   if (!requests.length && !state.error) return null;
   return (
-    <ScrollView
-      className="max-h-80 shrink-0"
-      contentContainerClassName="gap-2 p-3"
-      keyboardShouldPersistTaps="handled"
-    >
+    <View className="gap-2">
       {requests.map((request) => (
         <ProtectedInputForm
           key={request.id}
@@ -157,6 +153,6 @@ export function ProtectedInputs({
           {t("agents.protectedInput.error")}
         </Text>
       )}
-    </ScrollView>
+    </View>
   );
 }

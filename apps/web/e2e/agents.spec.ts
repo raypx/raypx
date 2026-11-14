@@ -88,8 +88,7 @@ async function expectConversationGeometry(page: Page, name: string, sheetOpen = 
     const indicator = page.getByRole("button", { name: "Computer: Running", exact: true });
     await expect(indicator).toBeVisible();
     expect(await indicator.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
-    const status = indicator.getByText("Running", { exact: true });
-    expect(await status.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+    await expect(indicator).toHaveAccessibleName("Computer: Running");
     await expect(heading).toHaveAccessibleName(name);
     await expectSurfaceAtRest(page, indicator);
     const indicatorBox = await indicator.boundingBox();
@@ -127,7 +126,7 @@ test(
       .getByRole("button", { name: "Sign in", exact: true })
       .click({ timeout: actionTimeout });
     await expect(page).toHaveURL(/\/agents(?:\?|$)/);
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toHaveCount(1);
+    await expect(page.locator("[data-workspace-home]")).toBeVisible();
     await page
       .getByRole("button", { name: "Space", exact: true })
       .click({ timeout: actionTimeout });
@@ -143,7 +142,7 @@ test(
       .click({ timeout: actionTimeout });
     await expect(spaceForm).toBeHidden();
     await page
-      .getByRole("button", { name: "New Agent", exact: true })
+      .getByRole("button", { name: /^(?:New Agent|Create Agent)$/, exact: true })
       .click({ timeout: actionTimeout });
     const dialog = page.getByRole("dialog");
     await dialog
@@ -237,9 +236,9 @@ test(
     await expect(page.getByText(writePrompt, { exact: true })).toHaveCount(1);
     await editor.fill("", { timeout: actionTimeout });
     await expect(page.locator("[data-tool-call]")).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "Used 1 tool Waiting for approval", exact: true }),
-    ).toBeVisible();
+    const waitingSteps = page.getByRole("button", { name: "1 step", exact: true });
+    await expect(waitingSteps).toBeVisible();
+    await expect(waitingSteps).toHaveAccessibleDescription("Waiting for approval");
     await expect(approval.getByText("browser-fixture.txt", { exact: true })).toHaveCount(1);
     await expect(
       approval.getByText("Write file: browser-fixture.txt", { exact: true }),
@@ -272,11 +271,11 @@ test(
       expect(history!.y + history!.height).toBeLessThanOrEqual(composer!.y);
       expect(main!.y + main!.height - composer!.y - composer!.height).toBeLessThan(64);
       await expectConversationGeometry(page, name);
-      await computer.click({ timeout: actionTimeout });
       const panel = page.getByRole(width < 1280 ? "dialog" : "complementary", {
         name: "Team computer",
         exact: true,
       });
+      if (!(await panel.isVisible())) await computer.click({ timeout: actionTimeout });
       await expect(panel).toBeVisible();
       await expectConversationGeometry(page, name, width < 1280);
       expect(await panel.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
@@ -287,7 +286,9 @@ test(
       // The indicator returns to the accessibility tree after the narrow sheet closes.
       await expectConversationGeometry(page, name);
       if (width >= 1280) {
-        const row = page.getByRole("button", { name, exact: true });
+        const row = page
+          .getByRole("navigation", { name: "Raypx", exact: true })
+          .getByRole("button", { name, exact: true });
         await expect(row).toBeVisible();
         await expect(row).toHaveAttribute("title", name);
         await expect(row).toHaveAttribute("aria-current", "page");
@@ -300,7 +301,7 @@ test(
     await expect(approval).toHaveCount(0);
     await expect(editor).toBeFocused();
     const activity = page.locator("[data-tool-activity]").first();
-    const activityToggle = activity.getByRole("button", { name: /^Used 1 tool/ });
+    const activityToggle = activity.getByRole("button", { name: /^1 step/ });
     await expect(activityToggle).toHaveAttribute("aria-expanded", "false");
     await activityToggle.click({ timeout: actionTimeout });
     await expect(activity.getByText("Write a file", { exact: true })).toBeVisible();
@@ -327,13 +328,8 @@ test(
     ]) {
       await page.setViewportSize(viewport);
       await expectConversationGeometry(page, name);
-      await computer.click({ timeout: actionTimeout });
-      await expectConversationGeometry(page, name, viewport.width < 1280);
-      const panel = page.getByRole(viewport.width < 1280 ? "dialog" : "complementary", {
-        name: "Team computer",
-        exact: true,
-      });
-      const files = panel.getByRole("region", { name: "Files", exact: true });
+      await page.getByRole("tab", { name: "Files", exact: true }).click({ timeout: actionTimeout });
+      const files = page.getByRole("tabpanel").getByRole("region", { name: "Files", exact: true });
       await files
         .getByRole("treeitem", { name: "browser-fixture.txt", exact: true })
         .click({ timeout: actionTimeout });
@@ -341,27 +337,21 @@ test(
         "A deterministic browser approval fixture.",
       );
       await expect(files.getByText("42 bytes", { exact: true })).toHaveCount(2);
-      await expect(
-        panel
-          .getByRole("region", { name: "Activity", exact: true })
-          .getByText("Succeeded", { exact: true }),
-      ).toBeVisible();
-      // The sheet slides in; measure only after it has come to rest inside the viewport.
-      await expect
-        .poll(async () => {
-          const box = await panel.boundingBox();
-          return box!.x + box!.width;
-        })
-        .toBeLessThanOrEqual(viewport.width);
-      for (const surface of [panel, files, files.locator("pre")]) {
+      for (const surface of [files, files.locator("pre")]) {
         await expectSurfaceAtRest(page, surface);
         expect(await surface.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
         const box = await surface.boundingBox();
         expect(box!.x).toBeGreaterThanOrEqual(0);
         expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
       }
-      await panel
-        .getByRole("button", { name: "Close computer panel", exact: true })
+      await page
+        .getByRole("tab", { name: "Activity", exact: true })
+        .click({ timeout: actionTimeout });
+      await expect(
+        page.getByRole("tabpanel").getByText("Succeeded", { exact: true }),
+      ).toBeVisible();
+      await page
+        .getByRole("tab", { name: "Conversation", exact: true })
         .click({ timeout: actionTimeout });
     }
     await page.reload({ timeout: actionTimeout });
@@ -371,7 +361,7 @@ test(
     await activityToggle.click({ timeout: actionTimeout });
     await expect(activity.locator('[data-tool-call="browser-write-file"]')).toHaveCount(1);
     expect(await activity.locator("[data-tool-call]").allTextContents()).toEqual(activityHistory);
-    await computer.click({ timeout: actionTimeout });
+    await page.getByRole("tab", { name: "Files", exact: true }).click({ timeout: actionTimeout });
     const restoredFiles = page.getByRole("region", { name: "Files", exact: true });
     await restoredFiles
       .getByRole("treeitem", { name: "browser-fixture.txt", exact: true })
@@ -380,18 +370,23 @@ test(
       restoredFiles.getByRole("region", { name: "File preview", exact: true }),
     ).toContainText("A deterministic browser approval fixture.");
     await page
-      .getByRole("button", { name: "Close computer panel", exact: true })
+      .getByRole("tab", { name: "Conversation", exact: true })
       .click({ timeout: actionTimeout });
+    await page
+      .getByRole("button", { name: "Conversation actions", exact: true })
+      .click({ timeout: actionTimeout });
+    await expect(page.getByRole("menuitem", { name: "Edit Agent", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     await page.setViewportSize({ width: 375, height: 812 });
     await page
       .getByRole("button", { name: "Back to Agents", exact: true })
       .click({ timeout: actionTimeout });
-    await expect(page.getByRole("button", { name, exact: true })).toBeFocused();
-    await page
-      .getByRole("button", { name: `Actions for ${name}`, exact: true })
-      .click({ timeout: actionTimeout });
-    await expect(page.getByRole("menuitem", { name: "Edit Agent", exact: true })).toBeVisible();
-    await page.keyboard.press("Escape");
+    await expect(
+      page
+        .getByRole("navigation", { name: "Raypx", exact: true })
+        .getByRole("button", { name, exact: true }),
+    ).toBeFocused();
+    await expect(page.locator("[data-workspace-home]")).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);

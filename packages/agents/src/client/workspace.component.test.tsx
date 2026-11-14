@@ -6,7 +6,11 @@ import { createBrowserI18n } from "@raypx/i18n/browser";
 import { agentSchema, conversationSchema } from "@raypx/core/agents";
 import { messageSchema, runSchema } from "@raypx/core/conversation";
 import { approvalRequestSchema } from "@raypx/core/approvals";
+import { protectedInputRequestSchema } from "@raypx/core/protected-input";
 import { spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
+import type { DeviceComputer, DeviceComputerSelection } from "@raypx/core/computers";
+import type { DeviceComputersPort } from "../model/device-computers.js";
+import { computerRecord, deferred } from "../../tests/support/computer-fixture.js";
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import type {
   AgentsWorkspacePort,
@@ -18,7 +22,7 @@ import type {
   SpaceManagementPort,
 } from "../model.js";
 import { AgentConversation } from "./conversation.js";
-import { AgentsWorkspace } from "./workspace.js";
+import { AgentsWorkspace, type AgentsWorkspaceProps } from "./workspace.js";
 import commonEn from "@raypx/i18n/messages/en";
 import commonZh from "@raypx/i18n/messages/zh";
 import blocksEn from "@raypx/blocks/messages/en";
@@ -171,6 +175,7 @@ function fixture({
     frame?: "document" | "window",
     onNavigate?: (selection: { spaceId: string; agentId?: string }) => void,
     composerReference?: { id: string; text: string },
+    renderWorkspace?: AgentsWorkspaceProps["renderWorkspace"],
   ) {
     const workspace = (
       <AgentsWorkspace
@@ -182,6 +187,7 @@ function fixture({
         {...(selected ? { agentId: agent.id } : {})}
         {...(onNavigate ? { onNavigate } : {})}
         {...(composerReference ? { composerReference } : {})}
+        {...(renderWorkspace ? { renderWorkspace } : {})}
       />
     );
     return render(
@@ -224,6 +230,187 @@ function fixture({
     },
   };
 }
+
+function enableDeviceComputer(client: AgentsWorkspacePort) {
+  const device: DeviceComputer = {
+    id: "018e2c42-08e0-4000-8000-000000000001",
+    name: "My machine",
+    platform: "darwin",
+    connected: true,
+    connectionState: "connected",
+    createdAt: time,
+    grants: [
+      {
+        id: "018e2c42-08e0-4000-8000-000000000002",
+        spaceId: agent.spaceId,
+        directory: "/my/project",
+        revision: 1,
+        revokedAt: null,
+      },
+    ],
+  };
+  let selection: DeviceComputerSelection | null = {
+    deviceId: device.id,
+    grantId: device.grants[0]!.id,
+  };
+  const port: DeviceComputersPort = {
+    list: vi.fn(async () => ({ devices: [device] })),
+    getSelection: vi.fn(async () => ({ selection })),
+    select: vi.fn(async (input) => {
+      selection = input.selection;
+      return { selection };
+    }),
+    createPairing: vi.fn(),
+    requestGrant: vi.fn(),
+    revokeGrant: vi.fn(),
+    revoke: vi.fn(),
+  };
+  const start = vi.fn(async () => ({ status: "not-configured" as const }));
+  client.deviceComputers = port;
+  client.computers = {
+    get: async () => ({
+      status: "available",
+      computer: { ...computerRecord(), spaceId: agent.spaceId },
+    }),
+    start,
+    stop: async () => ({ status: "not-configured" }),
+  };
+  return { port, start, device };
+}
+
+it.each(["en", "zh"] as const)(
+  "keeps the chosen conversation's device selection in the %s home Computer chip",
+  async (language) => {
+    const context = fixture({ language });
+    const { port, start } = enableDeviceComputer(context.client);
+    const strings = catalogs[language].agents;
+    context.mount();
+    const label = strings.computerIndicator.replace(
+      "{state}",
+      `My machine · ${strings.devices.connected}`,
+    );
+    const chip = await screen.findByRole("button", { name: label });
+    expect(port.getSelection).toHaveBeenCalledWith({
+      spaceId: agent.spaceId,
+      conversationId: conversation.id,
+    });
+    await userEvent.click(chip);
+    const panel = await screen.findByRole("dialog", { name: strings.computerTitle });
+    expect(
+      within(panel).getByRole("combobox", { name: strings.devices.computer }),
+    ).toHaveTextContent("My machine");
+    expect(within(panel).getByText(strings.devices.warning)).toBeInTheDocument();
+    expect(
+      within(panel).queryByRole("button", { name: strings.computerStart }),
+    ).not.toBeInTheDocument();
+    expect(start).not.toHaveBeenCalled();
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "opens selected device controls from the %s conversation chip before allowing a sandbox start",
+  async (language) => {
+    const context = fixture({ language });
+    const { port, start } = enableDeviceComputer(context.client);
+    const strings = catalogs[language].agents;
+    context.mount(true);
+    const state = `My machine · ${strings.devices.connected}`;
+    await screen.findByRole("button", {
+      name: strings.computerIndicator.replace("{state}", state),
+    });
+    await userEvent.click(
+      screen.getByRole("button", { name: strings.composerComputer.replace("{state}", state) }),
+    );
+    const panel = await screen.findByRole("dialog", { name: strings.computerTitle });
+    const picker = within(panel).getByRole("combobox", { name: strings.devices.computer });
+    expect(picker).toHaveTextContent("My machine");
+    expect(start).not.toHaveBeenCalled();
+    await userEvent.click(picker);
+    await userEvent.click(await screen.findByRole("option", { name: strings.devices.teamSandbox }));
+    await waitFor(() =>
+      expect(port.select).toHaveBeenCalledWith({
+        spaceId: agent.spaceId,
+        conversationId: conversation.id,
+        selection: null,
+      }),
+    );
+    await userEvent.click(within(panel).getByRole("button", { name: strings.computerClose }));
+    await userEvent.click(
+      await screen.findByRole("button", {
+        name: strings.composerComputer.replace("{state}", strings.computerStopped),
+      }),
+    );
+    await waitFor(() => expect(start).toHaveBeenCalledOnce());
+  },
+);
+
+it("labels the bounded Files tab as Team sandbox when a device is selected", async () => {
+  const context = fixture();
+  enableDeviceComputer(context.client);
+  const listDirectory = vi.fn(async () => ({
+    status: "available" as const,
+    entries: [],
+    truncated: false,
+  }));
+  context.client.computers.get = async () => ({
+    status: "available",
+    computer: { ...computerRecord("running"), spaceId: agent.spaceId },
+  });
+  context.client.computers.listDirectory = listDirectory;
+  context.client.computers.readFile = vi.fn();
+  context.mount(true);
+  await screen.findByRole("button", { name: "Computer: My machine · Connected" });
+  await userEvent.click(screen.getByRole("tab", { name: "Files" }));
+  expect(await screen.findByRole("heading", { name: "Team sandbox" })).toBeInTheDocument();
+  await waitFor(() =>
+    expect(listDirectory).toHaveBeenCalledWith({ spaceId: agent.spaceId, path: ".", limit: 100 }),
+  );
+});
+
+it.each([
+  [false, "loading"],
+  [true, "loading"],
+  [false, "error"],
+  [true, "error"],
+] as const)(
+  "opens Computer controls without starting the sandbox while selection is %s %s",
+  async (selected, scenario) => {
+    const context = fixture();
+    const { port, device, start } = enableDeviceComputer(context.client);
+    const selection = { deviceId: device.id, grantId: device.grants[0]!.id };
+    const pending = deferred<{ selection: DeviceComputerSelection }>();
+    let recovered = false;
+    port.getSelection = vi.fn(async () => {
+      if (scenario === "loading") return pending.promise;
+      if (!recovered) throw new Error("Fixture unavailable");
+      return { selection };
+    });
+    context.mount(selected);
+    const status = en.agents[scenario === "loading" ? "loading" : "computerUnavailable"];
+    const name = selected ? `Computer context: ${status}` : `Computer: ${status}`;
+    const chip = await screen.findByRole("button", { name });
+    expect(chip).toBeEnabled();
+    await userEvent.click(chip);
+    const panel = await screen.findByRole("dialog", { name: "Team computer" });
+    expect(start).not.toHaveBeenCalled();
+    expect(within(panel).queryByRole("button", { name: "Start computer" })).not.toBeInTheDocument();
+    const expectedAlert = scenario === "error" ? en.agents.devices.error : null;
+    if (expectedAlert) await within(panel).findByRole("alert");
+    expect(within(panel).queryByRole("alert")?.textContent ?? null).toBe(expectedAlert);
+    if (scenario === "loading") {
+      await act(async () => pending.resolve({ selection }));
+    } else {
+      recovered = true;
+      await userEvent.click(within(panel).getByRole("button", { name: "Refresh" }));
+    }
+    await waitFor(() =>
+      expect(within(panel).getByRole("combobox", { name: "Run computer" })).toHaveTextContent(
+        "My machine",
+      ),
+    );
+    expect(start).not.toHaveBeenCalled();
+  },
+);
 
 it.each(["en", "zh"] as const)(
   "keeps the composer usable while waiting, announces a request once and resolves it in %s",
@@ -828,6 +1015,51 @@ it("switches Send to Stop for the selected conversation and back after cancellat
   expect(within(screen.getByRole("log")).getByText("Stopped")).toBeInTheDocument();
 });
 
+it.each([
+  ["en", "cancelled"],
+  ["zh", "cancelled"],
+  ["en", "waiting"],
+  ["zh", "waiting"],
+] as const)("shows the %s %s Run status once beside its steps", async (language, state) => {
+  const strings = catalogs[language].agents;
+  const test = fixture({
+    language,
+    snapshot: {
+      conversation,
+      messages: [message],
+      runs: [{ ...run, state }],
+      segments: [],
+      cursor: 3,
+      toolActivity: [
+        {
+          runId: run.id,
+          toolCallId: "read-one",
+          toolName: "computer_read_file",
+          target: "notes.txt",
+          argumentSummary: "Read note",
+          startedAt: time,
+          finishedAt: time,
+          outcome: "succeeded",
+          durationMs: 0,
+          exitStatus: null,
+        },
+      ],
+    },
+  });
+  test.mount(true);
+  const log = await screen.findByRole("log");
+  const status = strings[state];
+  const steps = await within(log).findByRole("button", {
+    name: language === "en" ? "1 step" : "1 个步骤",
+  });
+  expect(steps).toHaveTextContent(status);
+  expect(steps).toHaveAccessibleDescription(status);
+  expect(within(log).getAllByText(status)).toHaveLength(1);
+  await userEvent.click(screen.getByRole("tab", { name: strings.activity.title }));
+  const activity = screen.getByRole("tabpanel", { name: strings.activity.title });
+  expect(within(activity).getAllByText(status)).toHaveLength(1);
+});
+
 it("follows output only while pinned and offers an explicit jump when reading older messages", async () => {
   const test = fixture({
     snapshot: { conversation, messages: [message], runs: [run], segments: [], cursor: 3 },
@@ -885,7 +1117,7 @@ it("follows output only while pinned and offers an explicit jump when reading ol
 });
 
 it.each(["en", "zh"] as const)(
-  "truncates long %s Agent names with accessible full names, secondary models and a row menu",
+  "truncates long %s Agent names in dense rows with accessible full names and a row menu",
   async (language) => {
     const name =
       language === "zh"
@@ -896,10 +1128,15 @@ it.each(["en", "zh"] as const)(
     const row = await screen.findByRole("button", { name });
     expect(row).toHaveAttribute("title", name);
     expect(within(row).getByText(name)).toHaveClass("truncate");
-    expect(within(row).getByText("Fixture model")).toHaveClass("truncate");
-    expect(row.querySelector('[data-slot="avatar-fallback"]')).toHaveTextContent(
-      Array.from(name)[0]!,
-    );
+    const target = screen.getByRole("combobox", {
+      name: catalogs[language].agents.workspaceHome.target,
+    });
+    expect(target).toHaveAttribute("title", name);
+    expect(within(target).getByText(name)).toHaveClass("min-w-0", "truncate");
+    expect(row.querySelector('[data-icon="inline-start"]')).toHaveAttribute("aria-hidden", "true");
+    expect(
+      screen.getByRole("button", { name: catalogs[language].agents.workspaceHome.modelMenu }),
+    ).toHaveTextContent("Fixture model");
     expect(screen.queryByRole("menuitem")).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", {
@@ -966,14 +1203,22 @@ it("shows one sender for consecutive messages and no status for a completed repl
 
 it("shows an empty Space with one create action and a selection state when Agents exist", async () => {
   const test = fixture({ items: [] });
+  enableCapabilityTestPorts(test.client);
   const view = test.mount();
-  await screen.findByText("No Agents in this Space");
-  expect(screen.getAllByRole("button", { name: "New Agent" })).toHaveLength(1);
-  fireEvent.click(screen.getByRole("button", { name: "New Agent" }));
+  await screen.findByText(en.agents.workspaceSidebar.emptyAgents);
+  expect(screen.getByRole("button", { name: "Routines" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Routines" })).toHaveAccessibleDescription(
+    en.agents.noAgents,
+  );
+  expect(screen.getAllByRole("button", { name: "Create Agent" })).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "Create Agent" }));
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
   view.unmount();
   fixture().mount();
-  expect(await screen.findByText("Choose an Agent to open its conversation.")).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: en.agents.workspaceHome.heading }),
+  ).toBeInTheDocument();
+  expect(await screen.findByRole("textbox", { name: "Message" })).toBeInTheDocument();
 });
 
 it("shows no Spaces, loading, and a directory failure with an explicit retry", async () => {
@@ -1319,19 +1564,25 @@ it.each([
           expect(node).toHaveClass("min-w-0", "overflow-clip");
         }
         expect(pane).toHaveClass("w-0", "flex-1");
-        expect(pane.parentElement?.parentElement).toHaveClass("w-0", "flex-1");
+        expect(pane.parentElement).toHaveClass("data-[orientation=horizontal]:flex-row");
+        expect(pane.parentElement?.parentElement).toHaveClass("min-w-0", "flex-1");
         expect(title.parentElement).toHaveClass("min-w-0");
         expect(title).toHaveClass("min-w-0", "flex-1", "truncate");
         expect(title).toHaveAttribute("title", name);
         expect(trigger.parentElement).toHaveClass("shrink-0", "whitespace-nowrap");
         expect(trigger.parentElement).not.toHaveClass("truncate");
         expect(within(pane).queryByRole("heading", { level: 3, name })).not.toBeInTheDocument();
-        expect(bubble.parentElement).toHaveClass("min-w-0", "w-fit", "max-w-[90%]");
-        expect(bubble).toHaveClass("min-w-0", "border");
+        expect(bubble.parentElement).toHaveClass("min-w-0", "w-full");
+        expect(bubble).toHaveClass("min-w-0", "text-[15px]");
+        expect(bubble).not.toHaveClass("border", "rounded-lg");
         expect(editor.closest("form")).toHaveClass("min-w-0");
       }
       expect(title).toHaveAccessibleName(name);
       expectShrinkableConversation();
+      const initiallyOpen = width >= 1280;
+      expect(trigger).toHaveAttribute("aria-expanded", String(initiallyOpen));
+      if (initiallyOpen) fireEvent.click(trigger);
+      await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
       fireEvent.click(trigger);
       const heading = await screen.findByRole("heading", {
         name: language === "en" ? "Team computer" : "团队电脑",
@@ -1369,86 +1620,149 @@ it.each([
 );
 
 it.each(["en", "zh"] as const)(
-  "attaches pending navigation to the composer only while its card is offscreen in %s",
+  "keeps addressed approvals above the composer across reading tabs without blocking a message in %s",
   async (language) => {
-    let notify: IntersectionObserverCallback = () => {};
-    const disconnect = vi.fn();
-    let root: Element | Document | null | undefined;
-    vi.stubGlobal(
-      "IntersectionObserver",
-      class {
-        constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
-          notify = callback;
-          root = options?.root;
-        }
-        observe() {}
-        disconnect = disconnect;
-      },
-    );
-    try {
-      const request = approvalRequestSchema.parse({
-        id: "pending-navigation",
-        spaceId: agent.spaceId,
-        conversationId: conversation.id,
-        runId: run.id,
-        memberAccountId: "account",
-        toolCallId: "call",
-        toolName: "computer_write_file",
-        arguments: { path: "file.txt", content: "body" },
-        target: "file.txt",
-        argumentSummary: "Write file: file.txt",
-        state: "pending",
-        createdAt: time,
-        expiresAt: "2100-01-01T00:00:00Z",
-        resolvedAt: null,
-        answeredByAccountId: null,
-      });
-      const view = fixture({
-        language,
-        approvals: { pending: async () => [request], answer: vi.fn(), effects: async () => [] },
-      }).mount(true);
-      const control = await screen.findByRole("button", {
-        name: language === "en" ? "Review 1 approval" : "查看1个待审批请求",
-      });
-      const card = view.container.querySelector<HTMLElement>("[data-approval-card]")!;
-      const scroll = vi.fn();
-      card.scrollIntoView = scroll;
-      expect(root).toBe(screen.getByRole("log"));
-      expect(control.closest('[data-slot="input-group"]')).not.toBeNull();
-      expect(control).toHaveAttribute("aria-controls", card.id);
-      fireEvent.click(control);
-      expect(scroll).toHaveBeenCalledExactlyOnceWith({ block: "nearest", behavior: "instant" });
-      expect(card).toHaveFocus();
-      const rect = card.getBoundingClientRect();
-      const entry = {
-        target: card,
-        isIntersecting: true,
-        intersectionRatio: 1,
-        boundingClientRect: rect,
-        intersectionRect: rect,
-        rootBounds: rect,
-        time: 0,
-      } satisfies IntersectionObserverEntry;
-      act(() => notify([entry], {} as IntersectionObserver));
-      expect(
-        screen.queryByRole("button", { name: /Review 1 approval|查看1个待审批请求/ }),
-      ).not.toBeInTheDocument();
-      act(() =>
-        notify(
-          [{ ...entry, isIntersecting: false, intersectionRatio: 0 }],
-          {} as IntersectionObserver,
-        ),
-      );
-      expect(
-        screen.getByRole("button", { name: /Review 1 approval|查看1个待审批请求/ }),
-      ).toBeInTheDocument();
-      view.unmount();
-      expect(disconnect).toHaveBeenCalledOnce();
-    } finally {
-      vi.unstubAllGlobals();
-    }
+    const request = approvalRequestSchema.parse({
+      id: "pending-navigation",
+      spaceId: agent.spaceId,
+      conversationId: conversation.id,
+      runId: run.id,
+      memberAccountId: "account",
+      toolCallId: "call",
+      toolName: "computer_write_file",
+      arguments: { path: "file.txt", content: "body" },
+      target: "file.txt",
+      argumentSummary: "Write file: file.txt",
+      state: "pending",
+      createdAt: time,
+      expiresAt: "2100-01-01T00:00:00Z",
+      resolvedAt: null,
+      answeredByAccountId: null,
+    });
+    const test = fixture({
+      language,
+      approvals: { pending: async () => [request], answer: vi.fn(), effects: async () => [] },
+    });
+    const view = test.mount(true);
+    const strings = { en, zh }[language].agents;
+    const approve = await screen.findByRole("button", { name: strings.approval.approve });
+    const card = approve.closest("[data-approval-card]")!;
+    const band = view.container.querySelector("[data-pending-approvals]")!;
+    expect(band).toContainElement(card as HTMLElement);
+    expect(band).toHaveClass("min-w-0", "overflow-y-auto");
+    expect(screen.getByRole("log")).not.toContainElement(card as HTMLElement);
+    const editor = screen.getByRole("textbox", { name: strings.message });
+    expect(band.parentElement).toContainElement(editor);
+    fireEvent.click(screen.getByRole("tab", { name: strings.activity.title }));
+    expect(approve).toBeVisible();
+    fireEvent.click(screen.getByRole("tab", { name: strings.files.title }));
+    expect(approve).toBeVisible();
+    expect(view.container.querySelectorAll("[data-approval-card]")).toHaveLength(1);
+    fireEvent.change(editor, { target: { value: "Keep working while approval waits" } });
+    expect(screen.getByRole("button", { name: strings.send })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: strings.send }));
+    await waitFor(() => expect(test.send).toHaveBeenCalledOnce());
+    expect(approve).toBeVisible();
   },
 );
+
+function pendingProtectedInput(conversationId: string = conversation.id) {
+  return protectedInputRequestSchema.parse({
+    id: crypto.randomUUID(),
+    spaceId: agent.spaceId,
+    conversationId,
+    runId: run.id,
+    memberAccountId: "account",
+    toolCallId: "protected-call",
+    toolName: "computer_run_command",
+    target: ".",
+    input: {
+      name: "Access token",
+      purpose: "Authenticate once",
+      destination: { kind: "environment", variable: "TOKEN" },
+    },
+    untrustedInput: false,
+    provenanceKind: null,
+    state: "pending",
+    createdAt: time,
+    expiresAt: "2100-01-01T00:00:00Z",
+    resolvedAt: null,
+  });
+}
+
+it.each(["en", "zh"] as const)(
+  "keeps a single masked request beside the composer across reading tabs and scoped to its conversation in %s",
+  async (language) => {
+    const request = pendingProtectedInput();
+    const otherRequest = pendingProtectedInput("another-conversation");
+    const test = fixture({ language });
+    test.client.protectedInputs = {
+      pending: vi.fn(async () => [request, otherRequest]),
+      answer: vi.fn(),
+    };
+    const view = test.mount(true);
+    const strings = { en, zh }[language].agents;
+    const label = strings.protectedInput.title.replace("{name}", request.input.name);
+    const input = await screen.findByLabelText(label);
+    const card = input.closest("[data-protected-input]");
+    const editor = await screen.findByRole("textbox", { name: strings.message });
+    expect(input).toHaveAttribute("type", "password");
+    expect(card?.parentElement?.parentElement).toContainElement(editor);
+    expect(screen.getByRole("log")).not.toContainElement(input);
+    const value = crypto.randomUUID();
+    fireEvent.change(input, { target: { value } });
+    for (const tab of [strings.activity.title, strings.files.title, strings.conversation]) {
+      fireEvent.click(screen.getByRole("tab", { name: tab }));
+      expect(input).toBeVisible();
+      expect(input).toHaveValue(value);
+      expect(view.container.querySelectorAll("[data-protected-input]")).toHaveLength(1);
+    }
+    fireEvent.change(editor, { target: { value: "Continue the conversation" } });
+    fireEvent.click(screen.getByRole("button", { name: strings.send }));
+    await waitFor(() => expect(test.send).toHaveBeenCalledOnce());
+    expect([...test.storage.values()].join("")).not.toContain(value);
+    view.unmount();
+    expect(input).toHaveValue("");
+  },
+);
+
+it.each(["home", "pages"] as const)(
+  "keeps Space-wide protected requests reachable on %s without duplicate forms",
+  async (surface) => {
+    const request = pendingProtectedInput();
+    const otherRequest = pendingProtectedInput("another-conversation");
+    const test = fixture();
+    test.client.protectedInputs = {
+      pending: vi.fn(async () => [request, otherRequest]),
+      answer: vi.fn(),
+    };
+    const renderWorkspace = surface === "pages" ? () => <main>Page workspace</main> : undefined;
+    const view = test.mount(false, undefined, undefined, undefined, renderWorkspace);
+    await waitFor(() =>
+      expect(view.container.querySelectorAll("[data-protected-input]")).toHaveLength(2),
+    );
+    expect(view.container.querySelectorAll("input[type=password]")).toHaveLength(2);
+  },
+);
+
+it("clears a home protected value when entering a conversation without duplicating the form", async () => {
+  const request = pendingProtectedInput();
+  const test = fixture();
+  test.client.protectedInputs = {
+    pending: vi.fn(async () => [request]),
+    answer: vi.fn(),
+  };
+  const view = test.mount();
+  const input = await screen.findByLabelText("Protected input: Access token");
+  fireEvent.change(input, { target: { value: crypto.randomUUID() } });
+  fireEvent.click(screen.getByRole("button", { name: agent.name }));
+  await screen.findByRole("log");
+  expect(input).toHaveValue("");
+  await waitFor(() =>
+    expect(view.container.querySelectorAll("[data-protected-input]")).toHaveLength(1),
+  );
+  expect(screen.getByLabelText("Protected input: Access token")).toHaveValue("");
+});
 
 it.each(["queued", "running", "waiting"] as const)(
   "uses one primary composer action while %s and preserves keyboard behavior",
@@ -1467,11 +1781,19 @@ it.each(["queued", "running", "waiting"] as const)(
     expect(stop).toHaveClass("bg-primary", "text-primary-foreground");
     const editor = screen.getByRole("textbox", { name: "Message" });
     const form = editor.closest("form")!;
-    expect(within(form).getAllByRole("button")).toHaveLength(1);
+    expect(
+      within(form)
+        .getAllByRole("button")
+        .filter((button) => button.classList.contains("bg-primary")),
+    ).toHaveLength(1);
     fireEvent.change(editor, { target: { value: "More detail" } });
     const send = await screen.findByRole("button", { name: "Send message during reply" });
     expect(send).toBeEnabled();
-    expect(within(form).getAllByRole("button")).toHaveLength(1);
+    expect(
+      within(form)
+        .getAllByRole("button")
+        .filter((button) => button.classList.contains("bg-primary")),
+    ).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Stop reply" })).not.toBeInTheDocument();
     fireEvent.keyDown(editor, { key: "Enter", shiftKey: true });
     fireEvent.compositionStart(editor);
@@ -1540,8 +1862,9 @@ it.each(["en", "zh"] as const)(
     const log = screen.getByRole("log");
     expect(within(log).queryByRole("heading")).not.toBeInTheDocument();
     const bubble = log.querySelector("[data-reply-bubble]")!;
-    expect(bubble.parentElement).toHaveClass("w-fit", "max-w-[90%]");
-    expect(log.firstElementChild).toHaveClass("gap-2");
+    expect(bubble.parentElement).toHaveClass("w-full", "min-w-0");
+    expect(bubble).not.toHaveClass("border");
+    expect(log.firstElementChild).toHaveClass("gap-4", "max-w-[44rem]");
     expect(screen.getAllByRole("heading", { name: agent.name })).toHaveLength(1);
     view.rerender(contents(true, true));
     expect(within(log).getByRole("heading", { name: agent.name })).toBeInTheDocument();
@@ -1583,7 +1906,7 @@ it("keeps an exchange tight and separates the next member turn", async () => {
   await screen.findByText("Answer 1");
   expect(screen.getByText("Hello Agent").closest("article")).not.toHaveClass("mt-4");
   expect(screen.getByText("Next exchange").closest("article")).toHaveClass("mt-4");
-  expect(screen.getByRole("log").firstElementChild).toHaveClass("gap-2");
+  expect(screen.getByRole("log").firstElementChild).toHaveClass("gap-4", "max-w-[44rem]");
 });
 
 it.each([
@@ -1640,7 +1963,7 @@ it.each(
     ),
   ),
 )(
-  "keeps the portaled $frame header in one row at $width px with a long $language name",
+  "keeps the portaled $frame title, tabs and capability controls shrinkable at $width px with a long $language name",
   async ({ frame, language, width }) => {
     vi.stubGlobal(
       "matchMedia",
@@ -1666,8 +1989,13 @@ it.each(
       const header = title.parentElement!;
       const actions = header.querySelector("[data-conversation-actions]")!;
       expect(header.closest("header[data-frame]")).toHaveAttribute("data-frame", frame);
-      expect(header).toHaveClass("h-full", "min-w-0", "flex-row", "flex-nowrap");
-      expect([...header.children]).toEqual([title, actions]);
+      expect(header).toHaveClass("h-full", "min-w-0", "flex-row", "flex-wrap", "sm:flex-nowrap");
+      expect(header).toContainElement(title);
+      expect(header).toContainElement(actions as HTMLElement);
+      const tabs = within(header).getByRole("tablist", { name: strings.conversationViews });
+      expect(tabs).toHaveClass("order-last", "basis-full", "sm:basis-auto");
+      for (const label of [strings.conversation, strings.activity.title, strings.files.title])
+        expect(within(tabs).getByRole("tab", { name: label })).toBeInTheDocument();
       expect(title).toHaveClass("min-w-0", "flex-1", "truncate");
       expect(title).not.toHaveClass("shrink-0");
       expect(title).toHaveAttribute("title", name);
@@ -1686,13 +2014,11 @@ it.each(
           name: strings.computerIndicator.replace("{state}", strings.computerNotConfigured),
         }),
       ).not.toHaveClass("truncate");
-      const inline = header.querySelector("[data-capability-inline]")!;
-      expect(inline).toHaveClass("hidden", "sm:flex", "shrink-0", "flex-row", "flex-nowrap");
-      const menu = within(header).getByRole("button", { name: strings.capabilityMenu });
-      expect(menu.parentElement).toHaveClass("shrink-0", "sm:hidden");
-      for (const node of [header, actions, inline]) {
-        expect(node.className).not.toMatch(/flex-col|(?:^| )flex-wrap(?: |$)|@[^ ]*\/main/);
-      }
+      expect(header.querySelector("[data-capability-inline]")).toBeNull();
+      const menu = within(header).getByRole("button", { name: strings.conversationActions });
+      expect(menu.parentElement).toHaveClass("shrink-0");
+      expect(menu.parentElement).not.toHaveClass("sm:hidden");
+      for (const node of [header, actions]) expect(node.className).not.toMatch(/@[^ ]*\/main/);
     } finally {
       vi.unstubAllGlobals();
     }
@@ -1765,12 +2091,14 @@ it.each(
         memory: "Memory",
         computer: "Computer: Not configured on this server",
       };
-      const inline = screen.getByRole("button", { name: inlineNames[kind] });
-      const menu = screen.getByRole("button", { name: "Routines and memory" });
-      if (opener === "menu") {
+      const inline =
+        kind === "computer" ? screen.getByRole("button", { name: inlineNames[kind] }) : null;
+      const menu = screen.getByRole("button", { name: "Conversation actions" });
+      const fromMenu = opener === "menu" || kind !== "computer";
+      if (fromMenu) {
         await user.click(menu);
         await user.click(await screen.findByRole("menuitem", { name: names[kind] }));
-      } else await user.click(inline);
+      } else await user.click(inline!);
       const sheet = await screen.findByRole("dialog", { name: names[kind] });
       await waitFor(() =>
         expect(within(sheet).getByRole("heading", { name: names[kind] })).toHaveFocus(),
@@ -1791,8 +2119,7 @@ it.each(
       expect(close).toHaveFocus();
       await user.keyboard("{Escape}");
       await waitFor(() => expect(screen.queryByRole("dialog", { name: names[kind] })).toBeNull());
-      let returnTo = inline;
-      if (width < 640 && (kind !== "computer" || opener === "menu")) returnTo = menu;
+      const returnTo = fromMenu ? menu : inline;
       await waitFor(() => expect(returnTo).toHaveFocus());
       expect(computer).toHaveAttribute("aria-expanded", "false");
     } finally {
@@ -1966,7 +2293,7 @@ it.each(["removed", "deleting"] as const)(
   },
 );
 it.each(["en", "zh"] as const)(
-  "keeps one primary New Agent and a separate secondary New group in the empty sidebar (%s)",
+  "keeps one clear Create Agent path as the empty sidebar collapses (%s)",
   async (language) => {
     const f = fixture({ items: [], language });
     f.client.groups = {
@@ -1983,21 +2310,29 @@ it.each(["en", "zh"] as const)(
     await act(async () => {
       f.mount(false, "document");
     });
-    await screen.findByText(copy.noAgents);
+    await screen.findByText(copy.workspaceSidebar.emptyAgents);
     const sidebar = screen.getByRole("complementary");
-    const primary = within(sidebar).getByRole("button", { name: copy.newAgent });
+    const sidebarCreate = within(sidebar).getByRole("button", { name: copy.createAgent });
     const secondary = within(sidebar).getByRole("button", { name: copy.groups.new });
-    expect(screen.getAllByRole("button", { name: copy.newAgent })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: copy.createAgent })).toHaveLength(1);
     expect(screen.getAllByRole("button", { name: copy.groups.new })).toHaveLength(1);
-    expect(primary).toHaveClass("bg-primary");
+    expect(sidebarCreate).not.toHaveClass("bg-primary");
     expect(secondary).not.toHaveClass("bg-primary");
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: common.collapseSidebar }));
-    expect(primary).toBeVisible();
+    expect(sidebarCreate).not.toBeInTheDocument();
+    expect(within(sidebar).queryByRole("button", { name: copy.createAgent })).toBeNull();
+    const primary = within(screen.getByRole("main")).getByRole("button", {
+      name: copy.createAgent,
+    });
+    expect(screen.getAllByRole("button", { name: copy.createAgent })).toHaveLength(1);
+    expect(primary).toHaveClass("bg-primary");
     expect(secondary).toBeVisible();
     for (const opener of [primary, secondary]) {
       await user.click(opener);
-      await screen.findByRole("dialog", { name: opener.getAttribute("aria-label")! });
+      await screen.findByRole("dialog", {
+        name: opener === primary ? copy.newAgent : copy.groups.new,
+      });
       await user.keyboard("{Escape}");
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
       await waitFor(() => expect(opener).toHaveFocus());
@@ -2452,5 +2787,127 @@ it.each(["en", "zh"] as const)(
       ).not.toBeInTheDocument(),
     );
     expect(f.readSnapshot).toHaveBeenCalledTimes(2);
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "keeps empty-Space Agent creation in the Pages sidebar while collapsed (%s)",
+  async (language) => {
+    const test = fixture({ items: [], language });
+    const copy = catalogs[language].agents;
+    test.mount(false, "document", undefined, undefined, () => <h1>Pages fixture</h1>);
+    await screen.findByRole("heading", { name: "Pages fixture" });
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("button", { name: catalogs[language].common.collapseSidebar }),
+    );
+    const sidebar = screen.getByRole("complementary");
+    expect(within(sidebar).getByRole("button", { name: copy.createAgent })).toBeEnabled();
+    expect(screen.getAllByRole("button", { name: copy.createAgent })).toHaveLength(1);
+    expect(
+      within(screen.getByRole("main")).queryByRole("button", { name: copy.createAgent }),
+    ).toBeNull();
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "filters Agents by name, resets with Escape and retains rail access (%s)",
+  async (language) => {
+    const other = {
+      agent: { ...agent, id: agentSchema.shape.id.parse("research-agent"), name: "Research Agent" },
+      conversation: {
+        ...conversation,
+        id: conversationSchema.shape.id.parse("research-conversation"),
+      },
+    };
+    const test = fixture({ language, items: [{ agent, conversation }, other] });
+    const copy = catalogs[language].agents;
+    await act(async () => {
+      test.mount(false, "document");
+    });
+    const section = await screen.findByRole("region", { name: copy.title });
+    await within(section).findByRole("button", { name: agent.name });
+    const user = userEvent.setup();
+    await user.click(
+      within(section).getByRole("button", {
+        name: copy.workspaceSidebar.collapse.replace("{name}", copy.title),
+      }),
+    );
+    const trigger = within(section).getByRole("button", {
+      name: copy.workspaceSidebar.filterAgents,
+    });
+    await user.click(trigger);
+    const input = await within(section).findByRole("textbox", {
+      name: copy.workspaceSidebar.filterAgents,
+    });
+    expect(input).toHaveFocus();
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    await user.type(input, "  RESEARCH  ");
+    expect(within(section).queryByRole("button", { name: agent.name })).toBeNull();
+    expect(within(section).getByRole("button", { name: other.agent.name })).toBeVisible();
+    await user.click(
+      within(section).getByRole("button", { name: copy.workspaceSidebar.clearFilter }),
+    );
+    expect(input).toHaveValue("");
+    expect(input).toHaveFocus();
+    expect(within(section).getByRole("button", { name: agent.name })).toBeVisible();
+    await user.type(input, "no matching name");
+    expect(within(section).getByRole("status")).toHaveTextContent(copy.workspaceSidebar.noMatches);
+    expect(within(section).getByRole("button", { name: copy.newAgent })).toBeEnabled();
+    await user.keyboard("{Escape}");
+    expect(input).toHaveValue("");
+    expect(input).toHaveFocus();
+    expect(within(section).queryByRole("status")).toBeNull();
+    await user.keyboard("{Escape}");
+    expect(within(section).queryByRole("textbox")).toBeNull();
+    expect(trigger).toHaveFocus();
+    await user.click(trigger);
+    const reopened = within(section).getByRole("textbox", {
+      name: copy.workspaceSidebar.filterAgents,
+    });
+    await user.type(reopened, "Research");
+    await user.click(
+      screen.getByRole("button", { name: catalogs[language].common.collapseSidebar }),
+    );
+    expect(within(section).queryByRole("textbox")).toBeNull();
+    expect(within(section).getByRole("button", { name: agent.name })).toBeVisible();
+    expect(within(section).getByRole("button", { name: other.agent.name })).toBeVisible();
+    await user.click(screen.getByRole("button", { name: catalogs[language].common.expandSidebar }));
+    const restored = within(section).getByRole("textbox", {
+      name: copy.workspaceSidebar.filterAgents,
+    });
+    expect(restored).toHaveValue("Research");
+    expect(restored).toHaveFocus();
+    expect(within(section).queryByRole("button", { name: agent.name })).toBeNull();
+    expect(test.send).not.toHaveBeenCalled();
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "returns first-Agent form focus to the visible action after sidebar expansion (%s)",
+  async (language) => {
+    localStorage.setItem("raypx_sidebar_open", "false");
+    const test = fixture({ items: [], language });
+    const copy = catalogs[language].agents;
+    await act(async () => {
+      test.mount(false, "document");
+    });
+    const main = screen.getByRole("main");
+    const user = userEvent.setup();
+    await user.click(within(main).getByRole("button", { name: copy.createAgent }));
+    await screen.findByRole("dialog", { name: copy.newAgent });
+    await act(async () => {
+      localStorage.setItem("raypx_sidebar_open", "true");
+      window.dispatchEvent(
+        new StorageEvent("storage", { key: "raypx_sidebar_open", newValue: "true" }),
+      );
+    });
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const opener = within(screen.getByRole("complementary")).getByRole("button", {
+      name: copy.createAgent,
+    });
+    expect(screen.getAllByRole("button", { name: copy.createAgent })).toHaveLength(1);
+    await waitFor(() => expect(opener).toHaveFocus());
   },
 );

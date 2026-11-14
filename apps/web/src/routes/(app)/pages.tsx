@@ -1,3 +1,4 @@
+import { useSettingsNavigation } from "../../features/settings/navigation.js";
 import { AgentsWorkspace } from "@raypx/agents/client";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { spaceIdSchema } from "@raypx/core/spaces";
@@ -35,12 +36,17 @@ function PagesPage() {
   );
 }
 function SignedInPages({ accountId }: { accountId: string }) {
+  const settings = useSettingsNavigation();
   const port: PagesClientPort = agentsClient.pages;
   const selection = Route.useSearch();
   const navigate = Route.useNavigate();
   return (
     <AgentsWorkspace
       client={agentsClient}
+      onOpenTools={() => void settings.open("tools")}
+      onNewConversation={(spaceId) =>
+        void navigate({ to: "/agents", search: { spaceId: spaceIdSchema.parse(spaceId) } })
+      }
       onSessionEnded={() =>
         void navigate({ to: "/login", search: { returnTo: "/agents" }, replace: true })
       }
