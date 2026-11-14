@@ -116,11 +116,19 @@ describe("native shared Spaces", () => {
     await controller.load(true);
     const props = settingsProps(controller);
     const view = await renderNative(<SpaceSettingsScreen {...props} />);
-    expect(textContent(view.root)).toContain("Ari · Owner");
+    expect(textContent(view.root)).toContain("Ari");
+    expect(textContent(view.root)).toContain("Owner");
+    expect(
+      view.root.findAll((node) => node.props.accessibilityLabel === "Change role for Ari"),
+    ).toHaveLength(0);
+    expect(
+      view.root.findAll((node) => node.props.accessibilityLabel === "Remove Ari"),
+    ).toHaveLength(0);
     expect(textContent(view.root)).toContain("Ask before changes");
     expect(textContent(view.root)).toContain("Space overrides your approval default");
-    await press(findByLabel(view.root, "Leave Space"));
-    expect(props.onLeave).toHaveBeenCalledOnce();
+    expect(findByLabel(view.root, "Leave Space").props.accessibilityState.disabled).toBe(true);
+    expect(textContent(view.root)).toContain("This Space must keep at least one owner.");
+    expect(props.onLeave).not.toHaveBeenCalled();
     await press(findByLabel(view.root, "Cancel invitation"));
     expect(props.onRevoke).toHaveBeenCalledWith(invitation.id);
     await view.unmount();
@@ -130,7 +138,8 @@ describe("native shared Spaces", () => {
     const { controller, port } = fixture(false);
     await controller.load(false);
     const view = await renderNative(<SpaceSettingsScreen {...settingsProps(controller)} />);
-    expect(textContent(view.root)).toContain("Ari · Member");
+    expect(textContent(view.root)).toContain("Ari");
+    expect(textContent(view.root)).toContain("Member");
     expect(
       view.root.findAll((node) => node.props.accessibilityLabel === "Create invitation"),
     ).toHaveLength(0);

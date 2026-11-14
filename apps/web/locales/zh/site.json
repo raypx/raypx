@@ -34,20 +34,23 @@
     "disabled": "已暂停发送",
     "allowMail": "发送账户邮件",
     "from": "发件人",
-    "fromHint": "使用已在 Resend 验证域名下的邮箱，可填写发件人显示名称。",
-    "apiKey": "Resend API Key",
+    "fromHint": "使用已验证发信域名的地址，可附带显示名称。",
+    "apiKey": "邮件服务 API 密钥",
     "enterKey": "首次配置时必填。",
     "keepKey": "留空则保留已保存的密钥。",
     "locale": "邮件默认语言",
     "unavailable": "暂时无法读取或保存邮件设置，请重试。",
     "forbidden": "仅部署管理员可管理邮件设置。",
     "conflict": "其他管理员已修改邮件设置。请加载最新配置后再保存。",
-    "invalidInput": "请检查发件人地址和 Resend API Key。",
+    "invalidInput": "请检查发件人地址和邮件服务 API 密钥。",
     "sendTest": "发送测试邮件",
     "testHint": "使用已保存的设置，仅发送至当前账号邮箱。",
     "testSending": "发送中…",
     "testSent": "邮件服务已接受测试邮件，请检查收件箱。",
-    "testFailed": "测试邮件发送失败。请检查发件人、密钥及发送状态后重试。"
+    "testFailed": "测试邮件发送失败。请检查发件人、密钥及发送状态后重试。",
+    "testTitle": "测试发送",
+    "testSaveFirst": "保存更改后才能发送测试邮件。",
+    "testConfigureFirst": "保存并启用邮件设置后，即可测试发送。"
   },
   "storage": {
     "title": "对象存储",
@@ -65,12 +68,12 @@
     "operatorEndpoint": "请先由部署人员配置这个 S3 兼容端点。",
     "invalidInput": "请检查存储配置。存储位置变更时需要填写两个密钥字段。",
     "unavailable": "暂时无法读取或保存对象存储设置，请重试。",
-    "forbidden": "仅已验证邮箱的管理员可以管理对象存储。",
+    "forbidden": "只有部署管理员可以管理对象存储。",
     "conflict": "对象存储设置已变更，请重新加载配置后再保存。",
     "reload": "重新加载对象存储设置",
     "enabledSetting": "启用存储配置"
   },
   "setupTitle": "设置你的部署",
-  "setupHint": "你是部署管理员。请在下方配置邮件并发送测试邮件，也可稍后再设置。默认开放注册，配置邮件前不要求邮箱验证。",
+  "setupHint": "配置邮件，用于验证邮箱和找回密码。可稍后设置；未配置邮件时创建的账号仍可使用密码登录。",
   "setupSkip": "暂时跳过"
 }

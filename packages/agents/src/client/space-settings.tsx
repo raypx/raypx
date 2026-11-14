@@ -7,6 +7,7 @@ import {
   type SpaceRole,
 } from "@raypx/core/spaces";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/ui/avatar";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Dialog,
@@ -73,7 +74,7 @@ const auditActions = {
 } as const;
 
 function displayDate(value: string, locale: string) {
-  return new Date(value).toLocaleString(locale);
+  return new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
 }
 function initials(name: string) {
   return name
@@ -213,10 +214,12 @@ function GeneralSettings({
   const t = useTranslations("agents");
   const id = useId();
   const confirmation = useConfirmation();
+  const lastOwner = owner && state.members.filter((member) => member.role === "owner").length < 2;
   const [name, setName] = useState(state.space?.name ?? "");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [typedName, setTypedName] = useState("");
   async function leave() {
+    if (lastOwner) return;
     if (
       await confirmation.confirm({
         title: t("spaceSettings.leaveTitle"),
@@ -289,7 +292,8 @@ function GeneralSettings({
         <div className="flex flex-wrap gap-2 border-t pt-4">
           <Button
             variant="outline"
-            disabled={!!state.busy || state.deleting}
+            disabled={!!state.busy || state.deleting || lastOwner}
+            aria-describedby={lastOwner ? `${id}-last-owner` : undefined}
             onClick={() => void leave()}
           >
             {t("spaceSettings.leave")}
@@ -302,6 +306,11 @@ function GeneralSettings({
             {t("spaceSettings.delete")}
           </Button>
         </div>
+      )}
+      {lastOwner && (
+        <p id={`${id}-last-owner`} className="text-xs text-muted-foreground">
+          {t("spaceSettings.errors.SPACE_LAST_OWNER")}
+        </p>
       )}
       <Dialog
         open={deleteOpen}
@@ -376,7 +385,13 @@ function MembersSettings({
   const t = useTranslations("agents");
   const locale = useLocale();
   const confirmation = useConfirmation();
+  const reasonId = useId();
+  const ownerCount = state.members.filter((member) => member.role === "owner").length;
+  function restricted(member: SpaceDirectoryMember) {
+    return member.accountId === controller.accountId || (member.role === "owner" && ownerCount < 2);
+  }
   async function changeRole(member: SpaceDirectoryMember) {
+    if (restricted(member)) return;
     const role = member.role === "owner" ? "member" : "owner";
     if (
       await confirmation.confirm({
@@ -391,6 +406,7 @@ function MembersSettings({
       await controller.updateMemberRole(member.accountId, role);
   }
   async function remove(member: SpaceDirectoryMember) {
+    if (restricted(member)) return;
     if (
       await confirmation.confirm({
         title: t("spaceSettings.removeTitle", { name: member.name }),
@@ -407,52 +423,65 @@ function MembersSettings({
       aria-label={t("spaceSettings.sections.members")}
     >
       <ul className="flex min-w-0 flex-col divide-y divide-border">
-        {state.members.map((member) => (
-          <li
-            key={member.accountId}
-            data-member-id={member.accountId}
-            className="flex min-w-0 flex-wrap items-start gap-3 py-3"
-          >
-            <Avatar>
-              <AvatarImage src={member.image ?? undefined} alt="" />
-              <AvatarFallback>{initials(member.name)}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium wrap-anywhere">{member.name || t("member")}</p>
-              <p className="text-xs text-muted-foreground">
-                {t(`spaceSettings.roles.${member.role}`)}
-              </p>
-              {member.email && (
-                <p className="text-xs wrap-anywhere text-muted-foreground">{member.email}</p>
-              )}
-              <p className="text-xs tabular-nums text-muted-foreground">
-                {t("spaceSettings.joined", { date: displayDate(member.createdAt, locale) })}
-              </p>
-            </div>
-            {owner && (
-              <div className="flex w-full flex-wrap gap-2 pl-11 sm:w-auto sm:pl-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t("spaceSettings.changeRole", { name: member.name })}
-                  disabled={!!state.busy}
-                  onClick={() => void changeRole(member)}
-                >
-                  {t(`spaceSettings.${member.role === "owner" ? "makeMember" : "makeOwner"}`)}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t("spaceSettings.removeNamed", { name: member.name })}
-                  disabled={!!state.busy}
-                  onClick={() => void remove(member)}
-                >
-                  {t("spaceSettings.remove")}
-                </Button>
+        {state.members.map((member) => {
+          const lastOwner = member.role === "owner" && ownerCount < 2;
+          return (
+            <li
+              key={member.accountId}
+              data-member-id={member.accountId}
+              className="flex min-w-0 flex-wrap items-start gap-3 py-3"
+            >
+              <Avatar>
+                <AvatarImage src={member.image ?? undefined} alt="" />
+                <AvatarFallback>{initials(member.name)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium wrap-anywhere">{member.name || t("member")}</p>
+                <Badge variant="secondary">{t(`spaceSettings.roles.${member.role}`)}</Badge>
+                {member.email && (
+                  <p className="text-xs wrap-anywhere text-muted-foreground">{member.email}</p>
+                )}
+                <p className="text-xs tabular-nums text-muted-foreground">
+                  <time
+                    dateTime={member.createdAt}
+                    title={new Date(member.createdAt).toLocaleString(locale)}
+                  >
+                    {t("spaceSettings.joined", { date: displayDate(member.createdAt, locale) })}
+                  </time>
+                </p>
               </div>
-            )}
-          </li>
-        ))}
+              {owner && member.accountId !== controller.accountId && (
+                <div className="flex w-full flex-wrap gap-2 pl-11 sm:w-auto sm:pl-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("spaceSettings.changeRole", { name: member.name })}
+                    disabled={!!state.busy || lastOwner}
+                    aria-describedby={lastOwner ? reasonId : undefined}
+                    onClick={() => void changeRole(member)}
+                  >
+                    {t(`spaceSettings.${member.role === "owner" ? "makeMember" : "makeOwner"}`)}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("spaceSettings.removeNamed", { name: member.name })}
+                    disabled={!!state.busy || lastOwner}
+                    aria-describedby={lastOwner ? reasonId : undefined}
+                    onClick={() => void remove(member)}
+                  >
+                    {t("spaceSettings.remove")}
+                  </Button>
+                  {lastOwner && (
+                    <p id={reasonId} className="w-full text-xs text-muted-foreground">
+                      {t("spaceSettings.errors.SPACE_LAST_OWNER")}
+                    </p>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
       {state.removal && (
         <div role="status" className="flex min-w-0 flex-col gap-2 border-t pt-4">
@@ -573,10 +602,20 @@ function InvitationSettings({
                 {t("spaceSettings.invitedBy", { name: invitation.inviterName })}
               </p>
               <p className="text-xs tabular-nums text-muted-foreground">
-                {t("spaceSettings.created", { date: displayDate(invitation.createdAt, locale) })}
+                <time
+                  dateTime={invitation.createdAt}
+                  title={new Date(invitation.createdAt).toLocaleString(locale)}
+                >
+                  {t("spaceSettings.created", { date: displayDate(invitation.createdAt, locale) })}
+                </time>
               </p>
               <p className="text-xs tabular-nums text-muted-foreground">
-                {t("spaceSettings.expires", { date: displayDate(invitation.expiresAt, locale) })}
+                <time
+                  dateTime={invitation.expiresAt}
+                  title={new Date(invitation.expiresAt).toLocaleString(locale)}
+                >
+                  {t("spaceSettings.expires", { date: displayDate(invitation.expiresAt, locale) })}
+                </time>
               </p>
             </div>
             <Button
@@ -848,6 +887,7 @@ function AuditSettings({
                 </p>
                 <time
                   dateTime={entry.createdAt}
+                  title={new Date(entry.createdAt).toLocaleString(locale)}
                   className="text-xs tabular-nums text-muted-foreground"
                 >
                   {displayDate(entry.createdAt, locale)}

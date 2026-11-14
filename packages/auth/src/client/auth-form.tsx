@@ -255,6 +255,7 @@ export function AuthForm({
                   <FieldLabel htmlFor="auth-setup-token">{t("setupToken")}</FieldLabel>
                   <Input
                     id="auth-setup-token"
+                    aria-describedby="auth-setup-token-hint"
                     name="setupToken"
                     type="password"
                     autoComplete="off"
@@ -263,6 +264,9 @@ export function AuthForm({
                     controlSize="xl"
                     maxLength={512}
                   />
+                  <p id="auth-setup-token-hint" className="text-xs leading-5 text-muted-foreground">
+                    {t("setupTokenHint")}
+                  </p>
                 </Field>
               )}
               {mode === "signup" && (invitationRequired || invitationToken) && (
@@ -270,6 +274,7 @@ export function AuthForm({
                   <FieldLabel htmlFor="auth-invitation">{t("invitationLink")}</FieldLabel>
                   <Input
                     id="auth-invitation"
+                    aria-describedby="auth-invitation-hint"
                     name="invitation"
                     type="password"
                     autoComplete="off"
@@ -279,6 +284,9 @@ export function AuthForm({
                     controlSize="xl"
                     maxLength={2048}
                   />
+                  <p id="auth-invitation-hint" className="text-xs leading-5 text-muted-foreground">
+                    {t("invitationHint")}
+                  </p>
                 </Field>
               )}
               {config.name && (

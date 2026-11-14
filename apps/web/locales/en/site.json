@@ -34,20 +34,23 @@
     "disabled": "Sending paused",
     "allowMail": "Send account emails",
     "from": "Sender",
-    "fromHint": "Use an address on a verified Resend domain, with an optional display name.",
-    "apiKey": "Resend API key",
+    "fromHint": "Use an address on your verified sending domain, with an optional display name.",
+    "apiKey": "Email service API key",
     "enterKey": "Required for first-time setup.",
     "keepKey": "Leave blank to keep the saved key.",
     "locale": "Default email language",
     "unavailable": "Email settings are unavailable. Try again.",
     "forbidden": "Only a deployment administrator can manage email settings.",
     "conflict": "The email settings changed. Load the latest configuration before saving.",
-    "invalidInput": "Check the sender address and Resend API key.",
+    "invalidInput": "Check the sender address and email service API key.",
     "sendTest": "Send test email",
     "testHint": "Uses saved settings and sends only to your account email.",
     "testSending": "Sending…",
     "testSent": "The mail service accepted the test email. Check your inbox.",
-    "testFailed": "Could not send the test email. Check the sender, key and delivery status, then try again."
+    "testFailed": "Could not send the test email. Check the sender, key and delivery status, then try again.",
+    "testTitle": "Test delivery",
+    "testSaveFirst": "Save your changes before sending a test email.",
+    "testConfigureFirst": "Save and enable email settings to test delivery."
   },
   "storage": {
     "title": "Object storage",
@@ -65,12 +68,12 @@
     "operatorEndpoint": "Ask the deployment operator to set this S3-compatible endpoint first.",
     "invalidInput": "Check the storage settings and provide both keys if the location changed.",
     "unavailable": "Object storage settings are unavailable. Try again.",
-    "forbidden": "Only a verified administrator can manage object storage.",
+    "forbidden": "Only a deployment administrator can manage object storage.",
     "conflict": "The storage settings changed. Load the latest configuration before saving.",
     "reload": "Reload storage settings",
     "enabledSetting": "Enable storage configuration"
   },
   "setupTitle": "Set up your deployment",
-  "setupHint": "You are the deployment administrator. Configure email below and send a test email. You can do this later; sign-ups are open and email verification is skipped until mail is configured.",
+  "setupHint": "Configure email for verification and password recovery. You can skip this step; accounts created before mail is configured can keep signing in with their password.",
   "setupSkip": "Skip for now"
 }

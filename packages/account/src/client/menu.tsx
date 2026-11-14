@@ -81,37 +81,52 @@ export function AccountMenu({
             {c(pending ? "loading" : "signIn")}
           </span>
         </TooltipTrigger>
-        <TooltipContent side="top">{c("signIn")}</TooltipContent>
+        <TooltipContent role="tooltip" side="top">
+          {c("signIn")}
+        </TooltipContent>
       </Tooltip>
     );
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        aria-label={c("accountMenu")}
-        aria-busy={pending || busy}
-        disabled={pending || busy}
-        className={cn(
-          "flex items-center rounded-lg text-left text-foreground outline-none transition-colors duration-150 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-accent motion-reduce:transition-none",
-          variant === "header"
-            ? "size-8 justify-center"
-            : "min-h-12 w-full gap-2.5 px-2 py-2 sidebar-icon:justify-center sidebar-icon:px-0",
-        )}
-      >
-        <Avatar name={user.name || user.email} {...(user.image ? { imageUrl: user.image } : {})} />
-        <span className={variant === "header" ? "hidden" : "min-w-0 flex-1 sidebar-icon:hidden"}>
-          <span className="block truncate text-[13px] font-medium">
-            {pending ? c("loading") : user.name || user.email}
-          </span>
-          <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
-        </span>
-        {variant === "sidebar" && (
-          <ChevronsUpDownIcon
-            aria-hidden="true"
-            size={15}
-            className="shrink-0 text-muted-foreground sidebar-icon:hidden"
+      <Tooltip disabled={open || pending || busy}>
+        <TooltipTrigger
+          data-slot="dropdown-menu-trigger"
+          render={
+            <DropdownMenuTrigger
+              aria-label={c("accountMenu")}
+              aria-busy={pending || busy}
+              disabled={pending || busy}
+              className={cn(
+                "flex items-center rounded-lg text-left text-foreground outline-none transition-colors duration-150 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-accent motion-reduce:transition-none",
+                variant === "header"
+                  ? "size-8 justify-center"
+                  : "min-h-12 w-full gap-2.5 px-2 py-2 sidebar-icon:justify-center sidebar-icon:px-0",
+              )}
+            />
+          }
+        >
+          <Avatar
+            name={user.name || user.email}
+            {...(user.image ? { imageUrl: user.image } : {})}
           />
-        )}
-      </DropdownMenuTrigger>
+          <span className={variant === "header" ? "hidden" : "min-w-0 flex-1 sidebar-icon:hidden"}>
+            <span className="block truncate text-[13px] font-medium">
+              {pending ? c("loading") : user.name || user.email}
+            </span>
+            <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
+          </span>
+          {variant === "sidebar" && (
+            <ChevronsUpDownIcon
+              aria-hidden="true"
+              size={15}
+              className="shrink-0 text-muted-foreground sidebar-icon:hidden"
+            />
+          )}
+        </TooltipTrigger>
+        <TooltipContent role="tooltip" side="top">
+          {c("accountMenu")}
+        </TooltipContent>
+      </Tooltip>
       <DropdownMenuContent
         side={variant === "header" ? "bottom" : "top"}
         align={variant === "header" ? "end" : "start"}

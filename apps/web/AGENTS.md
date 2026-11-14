@@ -62,7 +62,7 @@ The command palette searches available pages and settings, with no background
 project/session reads. Account/admin entries remain permission-filtered.
 The landing and auth layouts share `PublicHeader`, `PublicBackdrop`, original
 logos and theme/language controls. Public examples are labelled and static,
-show conversations only and never mount execution clients or private queries.
+show current workspace capabilities and never mount execution clients or private queries.
 Hero trails/frame light pause offscreen/in hidden tabs; reduced motion is static.
 The public logo palette stays decorative. The workbench remains neutral.
 
@@ -127,4 +127,14 @@ Space settings shares the wide category rows/narrow Select pattern with Desktop.
 Safe renderer review points are registered through page-review; the screenshot matrix
 never captures issued links, pairing codes or supplied protected input.
 
-Fresh signup opens skippable Email setup for the initial administrator. Keep setup/invitation values in masked form fields/headers. No-mail signup establishes a session immediately; mail-required signup keeps verification. No-mail accounts retain access with a dismissible verification reminder. Email settings test saved delivery; Users holds one-time recovery links only in dialog memory.
+Fresh signup opens skippable Email setup for the initial administrator. Setup and
+invitation fields are masked, labelled and described; keep their values out of storage.
+No-mail signup establishes a session immediately; mail-required signup keeps verification.
+No-mail accounts retain access with a dismissible verification reminder. Onboarding
+uses one PageHeader; test email uses saved settings, visible disabled reasons and safe
+result/retry feedback. Users holds recovery links only in dialog memory, with a masked
+field, explicit Copy and localized expiry. Never capture an issued recovery link.
+
+Public landing uses a static redesigned composer, six capability specimens, workflow,
+client coverage and deployment boundaries checked against PRODUCT.md/roadmap. Both
+languages and auth side facts must describe current scope; examples perform no private I/O.

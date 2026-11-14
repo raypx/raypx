@@ -180,6 +180,7 @@ export function AttachmentDownloads({
       {attachments?.map((attachment) => (
         <View key={attachment.id} className="gap-1">
           <AttachmentThumbnail
+            key={JSON.stringify([spaceId, conversationId, attachment.id, attachment.mediaType])}
             attachment={attachment}
             port={port}
             spaceId={spaceId}
@@ -230,6 +231,8 @@ function AttachmentThumbnail({
   spaceId: SpaceId;
   conversationId: ConversationId;
 }) {
+  const { t } = useCopy();
+  const [loaded, setLoaded] = useState(false);
   const [uri, setUri] = useState<string | null>(null);
   useEffect(() => {
     if (!port || !attachment.mediaType.startsWith("image/")) return;
@@ -244,13 +247,28 @@ function AttachmentThumbnail({
       current = false;
     };
   }, [port, spaceId, conversationId, attachment.id, attachment.mediaType]);
-  return uri ? (
-    <Image
-      source={{ uri }}
-      accessibilityLabel={attachment.name}
-      className="size-20 rounded-xl"
-      resizeMode="cover"
-      onError={() => setUri(null)}
-    />
-  ) : null;
+  if (!attachment.mediaType.startsWith("image/")) return null;
+  return (
+    <View className="relative size-20 items-center justify-center overflow-hidden rounded-xl bg-muted">
+      <Text
+        accessibilityLabel={t("agents.attachments.image")}
+        className="text-2xl text-muted-foreground"
+      >
+        ▧
+      </Text>
+      {uri && (
+        <Image
+          source={{ uri }}
+          accessibilityLabel={attachment.name}
+          className={loaded ? "absolute inset-0 size-20" : "absolute inset-0 size-20 opacity-0"}
+          resizeMode="cover"
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            setUri(null);
+            setLoaded(false);
+          }}
+        />
+      )}
+    </View>
+  );
 }

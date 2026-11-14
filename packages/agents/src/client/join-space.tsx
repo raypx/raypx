@@ -65,7 +65,17 @@ export function JoinSpaceView({
         </>
       )}
       <p className="text-xs tabular-nums text-muted-foreground">
-        {t("spaceSettings.expires", { date: new Date(preview.expiresAt).toLocaleString(locale) })}
+        <time
+          dateTime={preview.expiresAt}
+          title={new Date(preview.expiresAt).toLocaleString(locale)}
+        >
+          {t("spaceSettings.expires", {
+            date: new Date(preview.expiresAt).toLocaleString(locale, {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }),
+          })}
+        </time>
       </p>
       {state.error && (
         <p role="alert" className="text-sm text-destructive-text">

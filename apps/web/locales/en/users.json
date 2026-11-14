@@ -82,5 +82,8 @@
   "resetLinkExpires": "Expires at {time}.",
   "issueResetLink": "Issue one-time reset link",
   "resetLinkFailed": "Could not issue a link. Check access and whether mail is configured, then try again.",
-  "closeResetLink": "Close reset link"
+  "closeResetLink": "Close reset link",
+  "copyResetLink": "Copy reset link",
+  "resetLinkCopied": "Link copied",
+  "resetLinkCopyFailed": "Could not copy the link. Try again before closing this dialog."
 }

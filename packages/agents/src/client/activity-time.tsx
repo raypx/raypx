@@ -19,7 +19,11 @@ export function ActivityTime({ value }: { value?: string | null | undefined }) {
       </span>
     );
   return (
-    <time dateTime={value} className="truncate text-xs font-normal text-muted-foreground">
+    <time
+      dateTime={value}
+      title={new Date(value).toLocaleString(locale)}
+      className="truncate text-xs font-normal text-muted-foreground"
+    >
       {t("activity.active", { time: relativeActivityTime(value, locale, now) })}
     </time>
   );

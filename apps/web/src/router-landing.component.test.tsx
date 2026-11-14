@@ -6,9 +6,9 @@ import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 it("keeps the public homepage free of private workspace reads and retired destinations", async () => {
   await page("/");
   expect(
-    screen.getByRole("heading", { name: "A continuing conversation with your Agents." }),
+    screen.getByRole("heading", { name: "Agents that keep the conversation going." }),
   ).toBeVisible();
-  expect(screen.getByRole("figure", { name: "Conversation example" })).toBeVisible();
+  expect(screen.getByRole("figure", { name: "Workspace example" })).toBeVisible();
   const nav = within(screen.getByRole("navigation", { name: "Workspace" }));
   expect(nav.getByRole("link", { name: "Open Agents" })).toHaveAttribute("href", "/agents");
   for (const name of ["Projects", "Waiting", "Automations", "Sessions"])
@@ -36,7 +36,9 @@ it("opens Agents directly for a signed-in account and translates public content"
   ).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Language" }));
   fireEvent.click(await screen.findByRole("menuitemradio", { name: "简体中文" }));
-  expect(await screen.findByRole("heading", { name: "与 Agent 持续对话。" })).toBeVisible();
+  expect(
+    await screen.findByRole("heading", { name: "让智能体持续工作，让对话不断延续。" }),
+  ).toBeVisible();
   expect(router.state.location.pathname).toBe("/");
 });
 

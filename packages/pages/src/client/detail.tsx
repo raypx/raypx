@@ -412,8 +412,14 @@ export function PageDetail({
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {accountNames?.[version.author.accountId] ?? t("member")} ·{" "}
-                      <time dateTime={version.updatedAt}>
-                        {new Date(version.updatedAt).toLocaleString(locale)}
+                      <time
+                        dateTime={version.updatedAt}
+                        title={new Date(version.updatedAt).toLocaleString(locale)}
+                      >
+                        {new Date(version.updatedAt).toLocaleString(locale, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
                       </time>
                     </p>
                   </div>

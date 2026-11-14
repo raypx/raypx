@@ -234,3 +234,11 @@ Computer admission reasons remain the backend's value-free projection; no client
 quota meter or editable limit is implied. Missing historical names use translated
 fallbacks instead of internal IDs. Native bundle export and component tests remain
 separate from native screenshot, keyboard and accessibility acceptance.
+
+The public landing and authentication introduction describe this implemented scope,
+including configuration requirements and the distinct Web/Desktop/Mobile limits.
+Public UI illustrations are labelled static examples and issue no private reads.
+
+Public product copy does not promise verification for every signup. Client notices
+reflect deployment bootstrap, invitation-only registration and configured mail;
+optional verification reminders do not change server-owned account admission.

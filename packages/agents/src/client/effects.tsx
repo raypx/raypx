@@ -12,6 +12,7 @@ import {
 import type { ApprovalPort, ConversationSelection } from "../model.js";
 import { toolDisplayLabel, toolOperationLabel } from "../model/tool-label.js";
 import { useTranslations } from "./i18n.js";
+import { useLocale } from "@raypx/i18n/browser";
 
 export function EffectRecords({
   port,
@@ -27,6 +28,7 @@ export function EffectRecords({
     | undefined;
 }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [effects, setEffects] = useState<Effect[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -103,8 +105,12 @@ export function EffectRecords({
                 <time
                   className="tabular-nums wrap-anywhere"
                   dateTime={effect.completedAt ?? effect.createdAt}
+                  title={new Date(effect.completedAt ?? effect.createdAt).toLocaleString(locale)}
                 >
-                  {effect.completedAt ?? effect.createdAt}
+                  {new Date(effect.completedAt ?? effect.createdAt).toLocaleString(locale, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
                 </time>
               </li>
             ))}

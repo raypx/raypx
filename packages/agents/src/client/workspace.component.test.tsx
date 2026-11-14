@@ -1999,11 +1999,18 @@ it.each(
       const header = title.parentElement!;
       const actions = header.querySelector("[data-conversation-actions]")!;
       expect(header.closest("header[data-frame]")).toHaveAttribute("data-frame", frame);
-      expect(header).toHaveClass("h-full", "min-w-0", "flex-row", "flex-wrap", "sm:flex-nowrap");
+      expect(header).toHaveClass(
+        "grid",
+        "w-full",
+        "min-w-0",
+        "grid-cols-[auto_minmax(0,1fr)_auto]",
+        "sm:flex",
+        "sm:flex-nowrap",
+      );
       expect(header).toContainElement(title);
       expect(header).toContainElement(actions as HTMLElement);
       const tabs = within(header).getByRole("tablist", { name: strings.conversationViews });
-      expect(tabs).toHaveClass("order-last", "basis-full", "sm:basis-auto");
+      expect(tabs).toHaveClass("col-span-3", "row-start-2", "min-w-0", "flex-nowrap", "sm:w-auto");
       for (const label of [strings.conversation, strings.activity.title, strings.files.title])
         expect(within(tabs).getByRole("tab", { name: label })).toBeInTheDocument();
       expect(title).toHaveClass("min-w-0", "flex-1", "truncate");

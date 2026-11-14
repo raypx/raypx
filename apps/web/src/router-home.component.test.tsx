@@ -25,8 +25,8 @@ it("server renders the public Agent introduction before a browser session resolv
       <RouterProvider router={router} />
     </BrowserLanguageProvider>,
   );
-  expect(html).toContain("A continuing conversation with your Agents.");
-  expect(html).toContain("Conversation example");
+  expect(html).toContain("Agents that keep the conversation going.");
+  expect(html).toContain("Workspace example");
   expect(html).toContain('href="/agents"');
   expect(html).toContain('aria-busy="true"');
   for (const retired of ["/projects", "/tasks", "/approvals", "/automations"])

@@ -42,7 +42,7 @@ export function SpaceSettingsScreen({
     controller.getSnapshot,
     controller.getSnapshot,
   );
-  const { t } = useCopy();
+  const { t, locale } = useCopy();
   const copyGeneration = useRef(0);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -51,6 +51,10 @@ export function SpaceSettingsScreen({
     membership.member.role;
   const owner = role === "owner";
   const busy = !!state.busy || state.loading;
+  const ownerCount = state.members.filter((member) => member.role === "owner").length;
+  function shortDate(value: string) {
+    return new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+  }
   const issued = state.issuedInvitation;
   const link = issued ? `raypx-mobile://join?token=${encodeURIComponent(issued.token)}` : "";
   function closeInvitation() {
@@ -104,23 +108,31 @@ export function SpaceSettingsScreen({
           </Text>
           {state.members.map((member) => (
             <View key={member.accountId} className="gap-2 border-b border-border py-2">
-              <Text className="text-base text-foreground">
-                {member.name || t("agents.member")} ·{" "}
-                {t(`agents.spaceSettings.roles.${member.role}`)}
+              <Text className="text-base text-foreground">{member.name || t("agents.member")}</Text>
+              <View className="self-start rounded-full bg-muted px-2 py-1">
+                <Text className="text-xs text-foreground">
+                  {t(`agents.spaceSettings.roles.${member.role}`)}
+                </Text>
+              </View>
+              <Text
+                accessibilityLabel={new Date(member.createdAt).toLocaleString(locale)}
+                className="text-xs text-muted-foreground"
+              >
+                {t("agents.spaceSettings.joined", { date: shortDate(member.createdAt) })}
               </Text>
-              {owner && (
+              {owner && member.accountId !== controller.accountId && (
                 <View className="flex-row flex-wrap gap-2">
                   <Action
                     label={t("agents.spaceSettings.changeRole", { name: member.name })}
                     secondary
-                    disabled={busy}
+                    disabled={busy || (member.role === "owner" && ownerCount < 2)}
                     onPress={() => onRole(member)}
                   />
                   {member.accountId !== controller.accountId && (
                     <Action
                       label={t("agents.spaceSettings.removeNamed", { name: member.name })}
                       secondary
-                      disabled={busy}
+                      disabled={busy || (member.role === "owner" && ownerCount < 2)}
                       onPress={() => onRemove(member)}
                     />
                   )}
@@ -149,8 +161,13 @@ export function SpaceSettingsScreen({
                   <Text className="text-sm text-foreground">
                     {t("agents.spaceSettings.invitedBy", { name: invitation.inviterName })}
                   </Text>
-                  <Text className="text-sm text-muted-foreground">
-                    {t("agents.spaceSettings.expires", { date: invitation.expiresAt })}
+                  <Text
+                    accessibilityLabel={t("agents.spaceSettings.expires", {
+                      date: new Date(invitation.expiresAt).toLocaleString(locale),
+                    })}
+                    className="text-sm text-muted-foreground"
+                  >
+                    {t("agents.spaceSettings.expires", { date: shortDate(invitation.expiresAt) })}
                   </Text>
                   <Action
                     label={t("agents.spaceSettings.cancelInvitation")}
@@ -162,10 +179,15 @@ export function SpaceSettingsScreen({
               ))}
             </>
           )}
+          {owner && ownerCount < 2 && (
+            <Text className="text-xs text-muted-foreground">
+              {t("agents.spaceSettings.errors.SPACE_LAST_OWNER")}
+            </Text>
+          )}
           <Action
             label={t("agents.spaceSettings.leave")}
             secondary
-            disabled={busy}
+            disabled={busy || (owner && ownerCount < 2)}
             onPress={onLeave}
           />
         </View>
@@ -246,7 +268,7 @@ export function JoinSpaceScreen({
     controller.getSnapshot,
     controller.getSnapshot,
   );
-  const { t } = useCopy();
+  const { t, locale } = useCopy();
   const preview = state.preview;
   const busy = state.status === "loading" || state.status === "joining";
   return (
@@ -275,8 +297,18 @@ export function JoinSpaceScreen({
               <Text className="text-sm text-muted-foreground">
                 {t("agents.spaceSettings.invitedBy", { name: preview.inviterName })}
               </Text>
-              <Text className="text-sm text-muted-foreground">
-                {t("agents.spaceSettings.expires", { date: preview.expiresAt })}
+              <Text
+                accessibilityLabel={t("agents.spaceSettings.expires", {
+                  date: new Date(preview.expiresAt).toLocaleString(locale),
+                })}
+                className="text-sm text-muted-foreground"
+              >
+                {t("agents.spaceSettings.expires", {
+                  date: new Date(preview.expiresAt).toLocaleString(locale, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }),
+                })}
               </Text>
               <Text className="text-base text-foreground">
                 {t("agents.spaceSettings.joinShares")}

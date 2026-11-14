@@ -71,7 +71,12 @@ const columns = column.columns([
             <span className="block text-muted-foreground">{user.email}</span>
             <span className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground @3xl/main:hidden">
               {t(user.emailVerified ? "verified" : "unverified")}
-              <time dateTime={user.createdAt}>{date.format(new Date(user.createdAt))} UTC</time>
+              <time
+                dateTime={user.createdAt}
+                title={`${new Date(user.createdAt).toLocaleString(date.resolvedOptions().locale, { timeZone: "UTC" })} UTC`}
+              >
+                {date.format(new Date(user.createdAt))} UTC
+              </time>
             </span>
           </div>
         </div>
@@ -115,7 +120,11 @@ const columns = column.columns([
     cell: function RegisteredCell({ getValue }) {
       const { date } = useUserTableContext();
       return (
-        <time dateTime={getValue()} className="text-xs tabular-nums">
+        <time
+          dateTime={getValue()}
+          title={`${new Date(getValue()).toLocaleString(date.resolvedOptions().locale, { timeZone: "UTC" })} UTC`}
+          className="text-xs tabular-nums"
+        >
           {date.format(new Date(getValue()))} UTC
         </time>
       );

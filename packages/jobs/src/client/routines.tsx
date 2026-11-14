@@ -1,7 +1,7 @@
 import { ClockIcon } from "@raypx/icons/clock";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useLocale } from "@raypx/i18n/browser";
 import type { Routine, RoutineHistory } from "@raypx/core/routines";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -58,6 +58,24 @@ function formatTime(value: string, timezone: string, locale: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function RoutineTime({
+  value,
+  timezone,
+  locale,
+  children,
+}: {
+  value: string;
+  timezone: string;
+  locale: string;
+  children?: ReactNode;
+}) {
+  return (
+    <time dateTime={value} title={new Date(value).toLocaleString(locale, { timeZone: timezone })}>
+      {children ?? formatTime(value, timezone, locale)}
+    </time>
+  );
 }
 
 export function RoutinesPanel(props: RoutinesPanelProps) {
@@ -234,10 +252,17 @@ export function RoutinesPanel(props: RoutinesPanelProps) {
             </div>
             {routine.nextDueAt && routine.triggers.schedule ? (
               <p className="text-xs text-muted-foreground tabular-nums">
-                {t("nextDue", {
-                  time: formatTime(routine.nextDueAt, routine.triggers.schedule.timezone, locale),
-                  zone: routine.triggers.schedule.timezone,
-                })}
+                <RoutineTime
+                  value={routine.nextDueAt}
+                  timezone={routine.triggers.schedule.timezone}
+                  locale={locale}
+                >
+                  {" "}
+                  {t("nextDue", {
+                    time: formatTime(routine.nextDueAt, routine.triggers.schedule.timezone, locale),
+                    zone: routine.triggers.schedule.timezone,
+                  })}
+                </RoutineTime>
               </p>
             ) : null}
             <p className="text-xs text-muted-foreground">
@@ -525,7 +550,13 @@ function RoutineEditor({
                             <p>{t("nextOccurrences")}</p>
                             <ul className="list-inside list-disc tabular-nums">
                               {occurrences.map((value) => (
-                                <li key={value}>{formatTime(value, form.timezone, locale)}</li>
+                                <li key={value}>
+                                  <RoutineTime
+                                    value={value}
+                                    timezone={form.timezone}
+                                    locale={locale}
+                                  />
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -748,11 +779,15 @@ function RoutineHistoryDialog({
                 ) : null}
               </div>
               <p className="text-xs text-muted-foreground tabular-nums">
-                {t("dueAt", { time: formatTime(entry.dueAt, zone, locale), zone })}
+                <RoutineTime value={entry.dueAt} timezone={zone} locale={locale}>
+                  {t("dueAt", { time: formatTime(entry.dueAt, zone, locale), zone })}
+                </RoutineTime>
               </p>
               {entry.startedAt ? (
                 <p className="text-xs text-muted-foreground tabular-nums">
-                  {t("startedAt", { time: formatTime(entry.startedAt, zone, locale), zone })}
+                  <RoutineTime value={entry.startedAt} timezone={zone} locale={locale}>
+                    {t("startedAt", { time: formatTime(entry.startedAt, zone, locale), zone })}
+                  </RoutineTime>
                 </p>
               ) : null}
               {routineDelayMinutes(entry) !== null ? (

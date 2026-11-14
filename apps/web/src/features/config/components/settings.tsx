@@ -110,8 +110,7 @@ export function ConfigurationSettings({
   }
   return (
     <section className="flex min-w-0 flex-col gap-6">
-      <PageHeader title={t("title")} description={t("intro")} />
-      {setup && <BootstrapOnboarding />}
+      {setup ? <BootstrapOnboarding /> : <PageHeader title={t("title")} description={t("intro")} />}
       {accountId && !session.error ? (
         <Tabs value={tab} onValueChange={(value) => setTab(String(value))} className="gap-4">
           <TabsList

@@ -99,6 +99,16 @@ export function registerTests() {
             .and(page.locator(`[data-value="${value}"]`))
             .click();
         }
+        if (value === "members") {
+          const rows = settings.locator("[data-member-id]");
+          await expect(rows).toHaveCount(1);
+          await expect(rows.getByRole("button")).toHaveCount(0);
+          await expect(rows.locator('[data-slot="badge"]')).toHaveText("Owner");
+          await expect(rows.locator("time")).toHaveAttribute("title", /.+/);
+          await expect(settings).toHaveAttribute("data-slot", "dialog-content");
+          const bounds = await settings.boundingBox();
+          expect(bounds!.width).toBeGreaterThan(800);
+        }
         await review(`space-${value}`);
       }
       await page.keyboard.press("Escape");

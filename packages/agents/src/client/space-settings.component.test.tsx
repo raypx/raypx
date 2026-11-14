@@ -10,7 +10,7 @@ import {
   SpaceManagementController,
   type SpaceManagementPort,
 } from "../model/space-management.js";
-import { CapabilitySheet } from "./capability-sheet.js";
+import { SpaceSettingsDialog } from "./space-settings-dialog.js";
 import { SpaceSettingsPanel } from "./space-settings.js";
 import { JoinSpaceView } from "./join-space.js";
 import en from "../../locales/en/index.js";
@@ -185,6 +185,31 @@ it.each(["en", "zh"] as const)(
   },
 );
 
+it.each(["en", "zh"] as const)(
+  "hides self-management and explains last-owner leave in %s",
+  async (language) => {
+    const { port } = await mount({ language });
+    const copy = { en, zh }[language].agents;
+    expect(screen.getByRole("button", { name: copy.spaceSettings.leave })).toBeDisabled();
+    expect(screen.getByText(copy.spaceSettings.errors.SPACE_LAST_OWNER)).toBeVisible();
+    await section(copy.spaceSettings.sections.members, copy.spaceSettings.section);
+    const row = document.querySelector('[data-member-id="owner"]') as HTMLElement;
+    expect(within(row).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(row).getByText(copy.spaceSettings.roles.owner)).toHaveAttribute(
+      "data-slot",
+      "badge",
+    );
+    const date = row.querySelector("time")!;
+    expect(date).toHaveAttribute("dateTime", time);
+    expect(date).toHaveAttribute("title", new Date(time).toLocaleString(language));
+    expect(date.textContent).toContain(
+      new Date(time).toLocaleString(language, { dateStyle: "medium", timeStyle: "short" }),
+    );
+    expect(port.updateMemberRole).not.toHaveBeenCalled();
+    expect(port.removeMember).not.toHaveBeenCalled();
+  },
+);
+
 it("gives members read-only General, Members and Approvals without requesting owner data", async () => {
   const { port } = await mount({ role: "member" });
   expect(screen.getByRole("textbox", { name: "Space name" })).toHaveAttribute("readonly");
@@ -222,17 +247,19 @@ it("requires the typed Space name and shows the last-private refusal", async () 
   );
 });
 
-it("confirms a role change and shows a last-owner refusal without a local change", async () => {
-  const { port } = await mount();
+it("retains the role when a permitted change races a last-owner refusal", async () => {
+  const port = fixture();
+  port.members.mockResolvedValueOnce([owner, { ...member, role: "owner" }]);
+  await mount({ port });
   port.updateMemberRole.mockRejectedValueOnce({ message: "SPACE_LAST_OWNER" });
   await section("Members");
-  await userEvent.click(screen.getByRole("button", { name: "Change role for Alex" }));
-  const dialog = await screen.findByRole("alertdialog", { name: "Change role for Alex?" });
+  await userEvent.click(screen.getByRole("button", { name: "Change role for Mei" }));
+  const dialog = await screen.findByRole("alertdialog", { name: "Change role for Mei?" });
   await userEvent.click(within(dialog).getByRole("button", { name: "Make member" }));
   await waitFor(() =>
     expect(port.updateMemberRole).toHaveBeenCalledWith({
       spaceId,
-      accountId: "owner",
+      accountId: "member",
       role: "member",
     }),
   );
@@ -428,7 +455,7 @@ function SheetFixture({ controller }: { controller: SpaceManagementController })
       <button ref={opener} type="button" onClick={() => setOpen(true)}>
         Open settings
       </button>
-      <CapabilitySheet
+      <SpaceSettingsDialog
         open={open}
         onClose={() => setOpen(false)}
         title="Space settings"
@@ -441,12 +468,12 @@ function SheetFixture({ controller }: { controller: SpaceManagementController })
           onExit={() => {}}
           onOpenRoutine={() => {}}
         />
-      </CapabilitySheet>
+      </SpaceSettingsDialog>
     </>
   );
 }
 
-it("closes the settings sheet with one Escape and returns focus to its opener", async () => {
+it("closes the settings dialog with one Escape and returns focus to its opener", async () => {
   const controller = new SpaceManagementController({
     spaceId,
     accountId: "owner",

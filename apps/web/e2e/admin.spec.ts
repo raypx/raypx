@@ -206,10 +206,10 @@ test(
       ]);
       await capture(page, { path: test.info().outputPath("admin-storage.png"), fullPage: true });
     });
-    await test.step("rotate the Resend key and save email settings on a narrow screen", async () => {
+    await test.step("rotate the email service key and save email settings on a narrow screen", async () => {
       await page.getByRole("tab", { name: "邮件", exact: true }).click();
       const panel = page.getByRole("tabpanel", { name: "邮件", exact: true });
-      const key = panel.getByLabel("Resend API Key", { exact: true });
+      const key = panel.getByLabel("邮件服务 API 密钥", { exact: true });
       await expect(key).toHaveValue("");
       await key.fill("re_browser_fixture");
       await panel.getByRole("switch", { name: "发送账户邮件", exact: true }).click();

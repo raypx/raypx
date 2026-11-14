@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/browser";
 import { useTranslations } from "../../../i18n.js";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Read-only audit snapshots need keyboard scrolling. */
 import { useState } from "react";
@@ -76,6 +77,7 @@ function dateRange(from: string, to: string) {
   return { from: new Date(start).toISOString(), to: new Date(end).toISOString() };
 }
 export function AuditLog() {
+  const locale = useLocale();
   const c = useTranslations("common"),
     t = useTranslations("dash");
   const session = authClient.useSession();
@@ -134,8 +136,16 @@ export function AuditLog() {
           {query.data.entries.map((entry) => (
             <TableRow key={entry.id}>
               <TableCell className="text-xs tabular-nums">
-                <time dateTime={entry.startedAt}>
-                  {entry.startedAt.replace("T", " ").slice(0, 19)} UTC
+                <time
+                  dateTime={entry.startedAt}
+                  title={`${new Date(entry.startedAt).toLocaleString(locale, { timeZone: "UTC" })} UTC`}
+                >
+                  {new Date(entry.startedAt).toLocaleString(locale, {
+                    timeZone: "UTC",
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}{" "}
+                  UTC
                 </time>
               </TableCell>
               <TableCell className="max-w-40 whitespace-normal wrap-anywhere">
@@ -312,8 +322,16 @@ export function AuditLog() {
             <DialogTitle>{t("details")}</DialogTitle>
             {selected && (
               <DialogDescription>
-                <time dateTime={selected.startedAt}>
-                  {selected.startedAt.replace("T", " ").replace(/Z$/, " UTC")}
+                <time
+                  dateTime={selected.startedAt}
+                  title={`${new Date(selected.startedAt).toLocaleString(locale, { timeZone: "UTC" })} UTC`}
+                >
+                  {new Date(selected.startedAt).toLocaleString(locale, {
+                    timeZone: "UTC",
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}{" "}
+                  UTC
                 </time>
               </DialogDescription>
             )}

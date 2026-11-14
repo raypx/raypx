@@ -82,5 +82,8 @@
   "resetLinkExpires": "过期时间：{time}。",
   "issueResetLink": "签发一次性重置链接",
   "resetLinkFailed": "签发失败。请确认权限和邮件配置状态后重试。",
-  "closeResetLink": "关闭重置链接"
+  "closeResetLink": "关闭重置链接",
+  "copyResetLink": "复制重置链接",
+  "resetLinkCopied": "已复制链接",
+  "resetLinkCopyFailed": "未能复制链接，请在关闭对话框前重试。"
 }

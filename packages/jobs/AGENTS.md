@@ -12,3 +12,6 @@ coalescing; use durable occurrence/delivery identity and database time. Ingress
 signatures bind delivery ID, event kind and bounded body. Secrets stay encrypted;
 webhook keys are digest-only and never exposed by metadata reads. Run check/test
 and serial test:postgres against an explicit disposable database.
+
+Schedule previews and routine history show localized minutes with exact ISO time
+elements and full localized timestamp tooltips in the selected schedule time zone.

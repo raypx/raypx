@@ -177,8 +177,14 @@ export function PageSharing({
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {t("created")}:{" "}
-                  <time dateTime={link.createdAt}>
-                    {new Date(link.createdAt).toLocaleString(locale)}
+                  <time
+                    dateTime={link.createdAt}
+                    title={new Date(link.createdAt).toLocaleString(locale)}
+                  >
+                    {new Date(link.createdAt).toLocaleString(locale, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
                   </time>
                 </p>
               </div>

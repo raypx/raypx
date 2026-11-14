@@ -35,3 +35,6 @@ PostgreSQL and browser sandbox checks remain separate acceptance gates.
 
 Member-facing author and maintainer labels use supplied names or translated fallbacks;
 opaque account/Agent identifiers remain selectors and never replace missing names.
+
+List/version/share dates show localized minutes without seconds; time elements keep
+the exact ISO instant and a full timestamp tooltip.

@@ -69,6 +69,15 @@ export async function expectConversationHeaderControls(page: Page) {
               Math.min(name.bottom, actions.bottom) > Math.max(name.top, actions.top)
             )
               failures.push("Agent name overlaps header actions");
+            if (innerWidth < 640 && name && actions) {
+              const tabs = [...node.querySelectorAll('[role="tab"]')].map((tab) =>
+                tab.getBoundingClientRect(),
+              );
+              if (tabs.some((tab) => tab.top < Math.max(name.bottom, actions.bottom) - 0.5))
+                failures.push("Tabs must occupy the second header row");
+              if (tabs.some((tab) => Math.abs(tab.top - tabs[0]!.top) > 0.5))
+                failures.push("Tabs must stay on one line");
+            }
             return failures;
           },
           undefined,

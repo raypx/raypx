@@ -167,4 +167,12 @@ by Space with relative times. Attachment thumbnails remain disposable native sta
 Files shares complete bounded reads through a cache-only file, deleting it afterwards;
 truncated previews explain why full download is unavailable.
 
-Native signup and password recovery remain Web handoffs, including setup token/invitation states. Session admission accepts the server no-mail exemption without displaying the email as verified. Account offers a dismissible verification reminder when delivery exists; native device acceptance remains separate.
+Native signup and password recovery remain Web handoffs, including setup token and
+invitation states. Session admission accepts the server no-mail exemption without
+showing the email as verified. Account offers a neutral, dismissible verification
+card when delivery exists, with bounded send/failure state. Native device acceptance
+remains separate.
+
+Member rows hide self-management actions and disable known last-owner changes/leave
+with a reason. Roles are pills; localized short dates keep a full accessible date label.
+Image previews keep a neutral fallback until the authenticated raster decodes.

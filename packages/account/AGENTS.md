@@ -46,4 +46,8 @@ and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects o
 JSON nested strings, one format per namespace/language. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.
 
-Administrator permission projection includes users.password.reset for the API-owned audited no-mail recovery-link action. Email ownership does not define Space membership.
+Administrator permission projection includes `users.password.reset` for the API-owned
+audited no-mail recovery-link action. Email ownership does not define Space membership.
+
+Account menu triggers retain a hover/focus tooltip in header and icon-rail modes;
+the tooltip closes while the menu is open. Preserve its accessible name and avatar.

@@ -89,10 +89,14 @@ export function DevicesSettings({ controller }: { controller: DeviceComputersCon
           <p className="text-xs text-muted-foreground">{t("devices.pairingInstructions")}</p>
           <time
             dateTime={state.pairing.expiresAt}
+            title={new Date(state.pairing.expiresAt).toLocaleString(locale)}
             className="text-xs tabular-nums text-muted-foreground"
           >
             {t("devices.expires", {
-              time: new Date(state.pairing.expiresAt).toLocaleTimeString(locale),
+              time: new Date(state.pairing.expiresAt).toLocaleTimeString(locale, {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
             })}
           </time>
         </Field>

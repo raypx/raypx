@@ -782,13 +782,13 @@ function ConversationContents({
         <ShellToolbar>
           <header
             data-conversation-header
-            className="flex h-full min-w-0 flex-1 flex-row flex-wrap items-center gap-x-2 gap-y-1 py-2 sm:flex-nowrap"
+            className="grid w-full min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 py-2 sm:flex sm:flex-nowrap"
           >
             {onBack && (
               <IconButton
                 size="icon-sm"
                 label={t("back")}
-                className="shrink-0 sm:hidden"
+                className="col-start-1 row-start-1 shrink-0 sm:hidden"
                 onClick={onBack}
               >
                 <ArrowLeftIcon aria-hidden="true" />
@@ -798,24 +798,17 @@ function ConversationContents({
               ref={title}
               tabIndex={-1}
               title={conversationName}
-              className="min-w-0 flex-1 truncate text-sm font-medium text-foreground outline-none focus-visible:underline focus-visible:decoration-muted-foreground focus-visible:underline-offset-4 sm:max-w-72"
+              className={cn(
+                "col-start-2 row-start-1 min-w-0 flex-1 truncate text-sm font-medium text-foreground outline-none focus-visible:underline focus-visible:decoration-muted-foreground focus-visible:underline-offset-4 sm:max-w-72",
+                !onBack && "col-span-2 col-start-1",
+              )}
             >
               {conversationName}
             </h1>
-            {group && (
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label={t("groups.participants")}
-                onClick={onManageParticipants}
-              >
-                <GroupAvatars agents={group.agents} />
-              </Button>
-            )}
             <TabsList
               variant="line"
               aria-label={t("conversationViews")}
-              className="order-last basis-full justify-start gap-3 p-0 sm:order-none sm:mr-auto sm:basis-auto"
+              className="col-span-3 row-start-2 w-full min-w-0 flex-nowrap justify-start gap-3 p-0 sm:mr-auto sm:w-auto"
             >
               <TabsTrigger value="conversation">{t("conversation")}</TabsTrigger>
               <TabsTrigger value="activity">{t("activity.title")}</TabsTrigger>
@@ -823,8 +816,18 @@ function ConversationContents({
             </TabsList>
             <div
               data-conversation-actions
-              className="flex shrink-0 flex-row flex-nowrap items-center gap-1 whitespace-nowrap"
+              className="col-start-3 row-start-1 flex shrink-0 flex-row flex-nowrap items-center gap-1 whitespace-nowrap"
             >
+              {group && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={t("groups.participants")}
+                  onClick={onManageParticipants}
+                >
+                  <GroupAvatars agents={group.agents} />
+                </Button>
+              )}
               {capabilities && (
                 <CapabilityPanels
                   item={item}

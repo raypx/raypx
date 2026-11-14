@@ -16,6 +16,9 @@ import {
 import { apiUrl, authClient, webUrl } from "../client.js";
 import { useQuery } from "@tanstack/react-query";
 import type { SocialProvider } from "@raypx/core/auth";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
+import { MailIcon } from "@raypx/icons/mail";
 
 function authLinkLocation(to: AuthFormLinkProps["to"], returnTo: string) {
   if (to === "account") return { to: returnTo };
@@ -51,7 +54,6 @@ function AuthLink({ to, className, children }: AuthFormLinkProps) {
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const { completeSignIn } = useRouteContext({ from: "/(auth)" });
   const configuration = useQuery(publicConfigurationQuery());
-  const t = useTranslations("auth");
   const hash = useLocation({ select: (location) => location.hash });
   const g = useTranslations("guest");
   const router = useRouter();
@@ -114,11 +116,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       }
       invitationToken={/^[a-f0-9]{64}$/.test(hash) ? hash : ""}
       registrationNotice={
-        configuration.data?.bootstrap ? (
-          <p role="status" className="text-sm text-muted-foreground">
-            {t("firstAdministrator")}
-          </p>
-        ) : undefined
+        <RegistrationNotice
+          bootstrap={configuration.data?.bootstrap === true}
+          invitationRequired={
+            configuration.data?.registrationEnabled === false && !configuration.data.bootstrap
+          }
+        />
       }
       mode={completeSignIn ? "login" : mode}
       completeOnMount={completeSignIn}
@@ -154,5 +157,25 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       )}
       LinkComponent={AuthLink}
     />
+  );
+}
+
+function RegistrationNotice({
+  bootstrap,
+  invitationRequired,
+}: {
+  bootstrap: boolean;
+  invitationRequired: boolean;
+}) {
+  const t = useTranslations("auth");
+  if (!bootstrap && !invitationRequired) return null;
+  const Icon = bootstrap ? ShieldCheckIcon : MailIcon;
+  return (
+    <Alert role="status" className="rounded-xl bg-muted/30 p-4">
+      <Icon aria-hidden="true" />
+      <AlertDescription className="leading-6">
+        {t(bootstrap ? "firstAdministrator" : "invitationRequiredNotice")}
+      </AlertDescription>
+    </Alert>
   );
 }

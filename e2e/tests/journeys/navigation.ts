@@ -90,6 +90,16 @@ export function registerTests() {
     const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
     await expect(expand).toHaveAttribute("aria-expanded", "false");
     await expectSurfaceControls(page, sidebar);
+    for (const name of ["Space", "New group", "Tools", "Account menu"]) {
+      const icon = sidebar.getByRole("button", { name, exact: true });
+      await icon.focus();
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Shift+Tab");
+      await expect(icon).toBeFocused();
+      await expect(page.getByRole("tooltip", { name, exact: true })).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("tooltip", { name, exact: true })).toBeHidden();
+    }
     for (const [action, title] of [
       ["Create Agent", "New Agent"],
       ["New group", "New group"],

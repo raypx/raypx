@@ -124,9 +124,19 @@ export function MobileRoutinesScreen({
                   {t("routines.nextOccurrences")}
                 </Text>
                 {occurrences.map((time) => (
-                  <Text key={time} className="text-sm text-foreground">
-                    {new Date(time).toLocaleString(locale, { timeZone: form.timezone })} (
-                    {form.timezone})
+                  <Text
+                    key={time}
+                    accessibilityLabel={new Date(time).toLocaleString(locale, {
+                      timeZone: form.timezone,
+                    })}
+                    className="text-sm text-foreground"
+                  >
+                    {new Date(time).toLocaleString(locale, {
+                      timeZone: form.timezone,
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}{" "}
+                    ({form.timezone})
                   </Text>
                 ))}
               </View>
@@ -251,8 +261,14 @@ export function MobileRoutinesScreen({
               <Text className="text-base text-foreground">
                 {t(`routines.${routineLastOutcome(item)}`)}
               </Text>
-              <Text className="text-sm text-muted-foreground">
-                {new Date(item.dueAt).toLocaleString(locale)}
+              <Text
+                accessibilityLabel={new Date(item.dueAt).toLocaleString(locale)}
+                className="text-sm text-muted-foreground"
+              >
+                {new Date(item.dueAt).toLocaleString(locale, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
               </Text>
               {routineDelayMinutes(item) !== null ? (
                 <Text className="text-sm text-foreground">

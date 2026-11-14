@@ -18,7 +18,7 @@ test(
     await page.goto(web + "/");
     await expect(
       page.getByRole("heading", {
-        name: "A continuing conversation with your Agents.",
+        name: "Agents that keep the conversation going.",
         exact: true,
       }),
     ).toBeVisible();

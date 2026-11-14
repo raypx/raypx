@@ -56,10 +56,14 @@ it.each(["en", "zh"] as const)(
     expect(await within(dialog).findByText(strings.effects.states.unknown)).toBeVisible();
     expect(port.effects).toHaveBeenCalledExactlyOnceWith({ spaceId: selection.spaceId, runId });
     expect(within(dialog).getByText(strings.tools.writeFile)).toBeVisible();
-    expect(within(dialog).getByText(effect.createdAt)).toHaveAttribute(
-      "datetime",
-      effect.createdAt,
+    const date = within(dialog).getByText(
+      new Date(effect.createdAt).toLocaleString(language, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
     );
+    expect(date).toHaveAttribute("datetime", effect.createdAt);
+    expect(date).toHaveAttribute("title", new Date(effect.createdAt).toLocaleString(language));
     expect(within(dialog).queryByText("PRIVATE OUTPUT")).not.toBeInTheDocument();
     expect(
       within(dialog).queryByRole("button", { name: /retry|continue|重试|继续/i }),

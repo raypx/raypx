@@ -145,4 +145,20 @@ directory states. JSONL evidence under `.artifacts/pages/` supplies the before/a
 index; native device screenshots remain separate. `playwright.review.config.ts`
 reviews already-running owned compiled servers without starting or rebuilding them.
 
-bootstrap.spec.ts uses the exclusive bootstrap-server.ts fixture on an empty disposable loopback database, with fake mail transport and production auth/configuration composition. It is opt-in via BOOTSTRAP_E2E_API_URL; run separately from the seeded workspace fixture. Trace/video/screenshots stay off around credentials and one-time recovery links.
+bootstrap.spec.ts uses the exclusive bootstrap-server.ts fixture on an empty disposable
+loopback database, with fake mail transport and production auth/configuration composition.
+It is opt-in via BOOTSTRAP_E2E_API_URL; run separately from the seeded workspace fixture.
+Trace/video/screenshots stay off around credentials and one-time recovery links.
+
+RAYPX_PAGE_REVIEW_DIRECTORY selects an evidence directory (default .artifacts/pages);
+RAYPX_PAGE_REVIEW_MATCH filters named matrix checkpoints for focused visual review.
+Public landing and auth review cover four widths and both languages; owned attachment
+acceptance waits for a decoded nonempty image through the authorized download path.
+
+RAYPX_PAGE_REVIEW_WIDTHS may select 1440, 1024, 768 or 390; the default remains all
+four. admission-visual covers bootstrap, invitation-only, no-mail, Email setup/results,
+optional reminders and reset confirmation in en/zh. Only empty masked fields and the
+pre-issue reset confirmation are captured; issued recovery credentials never are.
+
+Capture may reveal a supplied locator after each resize so lower-page result states
+remain visible at narrow widths; original scroll positions are restored afterwards.

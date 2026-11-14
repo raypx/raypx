@@ -336,8 +336,14 @@ function PagesSession({
                     </span>
                     <span>
                       {t("updated")}:{" "}
-                      <time dateTime={page.updatedAt}>
-                        {new Date(page.updatedAt).toLocaleString(locale)}
+                      <time
+                        dateTime={page.updatedAt}
+                        title={new Date(page.updatedAt).toLocaleString(locale)}
+                      >
+                        {new Date(page.updatedAt).toLocaleString(locale, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
                       </time>
                     </span>
                     <span className="max-w-full truncate">

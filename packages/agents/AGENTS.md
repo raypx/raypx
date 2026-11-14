@@ -240,3 +240,9 @@ authenticated bounded downloads. Files keeps breadcrumbs and tree keyboard contr
 only untruncated reads can be downloaded. Remote display labels omit opaque server
 identities while exact policy identities stay unchanged. Historical audit fallbacks
 never display internal member or resource IDs.
+
+Space settings uses SpaceSettingsDialog, a wide bounded centered dialog. Member rows
+hide self-management and disable known last-owner actions with a reason. Short localized
+dates retain exact tooltips. The conversation header uses an explicit narrow two-row
+grid; feature-owned rail buttons use hover/focus tooltips. Attachment fallback stays
+visible until the authenticated raster finishes decoding, and returns on failure.

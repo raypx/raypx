@@ -15,6 +15,7 @@ import {
   useState,
   useSyncExternalStore,
   type ReactNode,
+  type ComponentProps,
 } from "react";
 import {
   ShellToolbar,
@@ -66,6 +67,8 @@ import { SpaceLiveController } from "../model/space-live.js";
 import { SpaceManagementController, type SpaceManagementPort } from "../model/space-management.js";
 import type { ApprovalSettingsPort } from "../model/approval-settings.js";
 import { SpaceSettingsPanel } from "./space-settings.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
+import { SpaceSettingsDialog } from "./space-settings-dialog.js";
 import {
   DeviceComputersController,
   type NativeDeviceConfirmation,
@@ -1022,7 +1025,7 @@ function AgentsWorkspaceContents({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button
+          <WorkspaceNavigationButton
             ref={spaceTrigger}
             size="sm"
             variant="ghost"
@@ -1075,7 +1078,7 @@ function AgentsWorkspaceContents({
       )}
       {(page.spaceId || loading) && (
         <ShellPrimaryAction>
-          <Button
+          <WorkspaceNavigationButton
             variant="ghost"
             disabled={!page.spaceId || loading || page.agents.length === 0}
             className="w-full min-w-0 justify-start gap-2 px-2 sidebar-icon:justify-center sidebar-icon:px-0"
@@ -1087,12 +1090,12 @@ function AgentsWorkspaceContents({
           >
             <PlusIcon data-icon="inline-start" aria-hidden="true" />
             <span className="sidebar-icon:hidden">{t("workspaceSidebar.new")}</span>
-          </Button>
+          </WorkspaceNavigationButton>
         </ShellPrimaryAction>
       )}
       {client.routines && page.spaceId && (
         <ShellSidebarNavigation>
-          <Button
+          <WorkspaceNavigationButton
             ref={routinesTrigger}
             variant="ghost"
             className={rowClass}
@@ -1106,7 +1109,7 @@ function AgentsWorkspaceContents({
           >
             <ClockIcon data-icon="inline-start" aria-hidden="true" />
             <span className="truncate sidebar-icon:hidden">{t("routines")}</span>
-          </Button>
+          </WorkspaceNavigationButton>
           {routinesDisabledReason && (
             <p
               id={routinesReasonId}
@@ -1120,7 +1123,7 @@ function AgentsWorkspaceContents({
       <ShellSidebarDirectory>
         <div className="flex min-w-0 flex-col gap-4">
           {onOpenTools && (
-            <Button
+            <WorkspaceNavigationButton
               variant="ghost"
               className={rowClass}
               onClick={onOpenTools}
@@ -1128,7 +1131,7 @@ function AgentsWorkspaceContents({
             >
               <AdjustmentsIcon data-icon="inline-start" aria-hidden="true" />
               <span className="truncate sidebar-icon:hidden">{t("workspaceSidebar.tools")}</span>
-            </Button>
+            </WorkspaceNavigationButton>
           )}
           {(page.spaceId || loading) && (
             <>
@@ -1213,7 +1216,7 @@ function AgentsWorkspaceContents({
                     <p className="text-xs leading-5 text-muted-foreground sidebar-icon:hidden">
                       {t("workspaceSidebar.emptyAgents")}
                     </p>
-                    <Button
+                    <WorkspaceNavigationButton
                       size="sm"
                       variant="secondary"
                       onClick={createAgent}
@@ -1223,7 +1226,7 @@ function AgentsWorkspaceContents({
                     >
                       <PlusIcon data-icon="inline-start" aria-hidden="true" />
                       <span className="truncate sidebar-icon:hidden">{t("createAgent")}</span>
-                    </Button>
+                    </WorkspaceNavigationButton>
                   </div>
                 )}
                 {page.agents.length > 0 && (
@@ -1236,7 +1239,7 @@ function AgentsWorkspaceContents({
                           item.agent.id === page.agentId && "bg-sidebar-accent",
                         )}
                       >
-                        <Button
+                        <WorkspaceNavigationButton
                           ref={(node) => {
                             if (node) rowButtons.current.set(item.agent.id, node);
                             else rowButtons.current.delete(item.agent.id);
@@ -1253,7 +1256,7 @@ function AgentsWorkspaceContents({
                           <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
                             {item.agent.name}
                           </span>
-                        </Button>
+                        </WorkspaceNavigationButton>
                         {agentMenu(item)}
                       </li>
                     ))}
@@ -1285,7 +1288,7 @@ function AgentsWorkspaceContents({
                   <ul className="flex min-w-0 flex-col gap-0.5">
                     {groupsByActivity.map((item) => (
                       <li key={item.conversation.id}>
-                        <Button
+                        <WorkspaceNavigationButton
                           ref={(node) => {
                             if (node) rowButtons.current.set(item.conversation.id, node);
                             else rowButtons.current.delete(item.conversation.id);
@@ -1305,12 +1308,12 @@ function AgentsWorkspaceContents({
                           <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
                             {item.conversation.name}
                           </span>
-                        </Button>
+                        </WorkspaceNavigationButton>
                       </li>
                     ))}
                   </ul>
                   {groupsByActivity.length === 0 && (
-                    <Button
+                    <WorkspaceNavigationButton
                       ref={newGroupTrigger}
                       size="sm"
                       variant="ghost"
@@ -1322,7 +1325,7 @@ function AgentsWorkspaceContents({
                       <span className="truncate text-xs text-muted-foreground sidebar-icon:hidden">
                         {t("groups.new")}
                       </span>
-                    </Button>
+                    </WorkspaceNavigationButton>
                   )}
                 </DirectorySection>
               )}
@@ -1334,7 +1337,7 @@ function AgentsWorkspaceContents({
                       key={`${entry.kind}:${entry.id}`}
                       className="group/directory-row flex min-w-0 items-center rounded-lg"
                     >
-                      <Button
+                      <WorkspaceNavigationButton
                         size="sm"
                         variant="ghost"
                         className={cn(rowClass, "flex-1")}
@@ -1349,7 +1352,7 @@ function AgentsWorkspaceContents({
                         <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
                           {entry.name}
                         </span>
-                      </Button>
+                      </WorkspaceNavigationButton>
                       {entry.kind === "agent" ? (
                         agentMenu(entry.item, true)
                       ) : (
@@ -1388,7 +1391,7 @@ function AgentsWorkspaceContents({
             {t(`spaceSettings.roles.${membership.member.role}`)}
           </p>
           {membership.member.role === "owner" && management && (
-            <Button
+            <WorkspaceNavigationButton
               size="sm"
               variant="ghost"
               className={rowClass}
@@ -1399,7 +1402,7 @@ function AgentsWorkspaceContents({
               <span className="truncate text-xs sidebar-icon:hidden">
                 {t("workspaceSidebar.invite")}
               </span>
-            </Button>
+            </WorkspaceNavigationButton>
           )}
         </ShellSidebarFooter>
       )}
@@ -1594,7 +1597,7 @@ function AgentsWorkspaceContents({
         />
       )}
       {management && membership && (
-        <CapabilitySheet
+        <SpaceSettingsDialog
           open={spaceSettingsOpen}
           onClose={() => {
             management.clearIssuedInvitation();
@@ -1603,7 +1606,6 @@ function AgentsWorkspaceContents({
           title={t("spaceSettings.title")}
           closeLabel={t("close")}
           finalFocus={() => spaceTrigger.current ?? false}
-          className="data-[side=right]:w-full data-[side=right]:sm:max-w-2xl"
         >
           {spaceSettingsOpen && (
             <SpaceSettingsPanel
@@ -1619,7 +1621,7 @@ function AgentsWorkspaceContents({
               }}
             />
           )}
-        </CapabilitySheet>
+        </SpaceSettingsDialog>
       )}
       {page.spaceId && client.routines && (
         <CapabilitySheet
@@ -1716,6 +1718,24 @@ function subscribeNothing() {
 }
 function emptyManagement() {
   return null;
+}
+
+/** Every feature-owned rail destination retains a name on hover and keyboard focus. */
+function WorkspaceNavigationButton({ children, ...props }: ComponentProps<typeof Button>) {
+  const label = props["aria-label"] ?? props.title;
+  return (
+    <Tooltip disabled={props.disabled}>
+      <TooltipTrigger
+        data-slot="button"
+        render={<Button {...props} title={props.title ?? label} />}
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent role="tooltip" side="right">
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function DirectorySection({

@@ -115,6 +115,14 @@ it("loads an authenticated image thumbnail and releases its URL when leaving his
   await waitFor(() =>
     expect(document.querySelector("img")).toHaveAttribute("src", "blob:review-thumbnail"),
   );
+  const image = document.querySelector("img")!;
+  expect(image).toHaveClass("opacity-0");
+  expect(document.querySelector("[data-attachment-fallback]")).toBeVisible();
+  fireEvent.load(image);
+  expect(image).not.toHaveClass("opacity-0");
+  fireEvent.error(image);
+  expect(document.querySelector("img")).toBeNull();
+  expect(document.querySelector("[data-attachment-fallback]")).toBeVisible();
   expect(download).toHaveBeenCalledWith({ ...selection, id: attachment.id });
   expect(screen.getByRole("button", { name: "Download drawing.png" })).toBeEnabled();
   view.unmount();

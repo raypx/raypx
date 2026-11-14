@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import type { ApiClient } from "@raypx/client/api";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { authClient, apiOrigin } from "./auth.js";
@@ -32,10 +32,13 @@ export function EmailVerificationReminder({
   }, [api]);
   if (!available || verified || dismissed) return null;
   return (
-    <>
-      <Text className="text-base text-foreground">{t("auth.verifyReminder")}</Text>
+    <View className="gap-3 rounded-xl border border-border bg-muted/20 p-4">
+      <Text accessibilityRole="header" className="text-base font-semibold text-foreground">
+        {t("auth.verify")}
+      </Text>
+      <Text className="text-sm leading-6 text-muted-foreground">{t("auth.verifyReminder")}</Text>
       <Action
-        label={t(sent ? "auth.verifySent" : "auth.resend")}
+        label={t(sent ? "auth.verifySent" : "auth.verifyAction")}
         disabled={actions.busy || sent}
         busy={actions.busy}
         onPress={() => {
@@ -44,6 +47,6 @@ export function EmailVerificationReminder({
       />
       <Action label={t("auth.dismissReminder")} secondary onPress={() => setDismissed(true)} />
       {actions.error && <Text accessibilityRole="alert">{t(actionErrorKey(actions.error))}</Text>}
-    </>
+    </View>
   );
 }

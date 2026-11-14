@@ -56,15 +56,18 @@ for glows, gradient marks and selection accents, never for controls or text that
 be read, and may show example interfaces with fixed sample data when each frame is
 labelled as an example. The workbench never uses the logo palette.
 
-The homepage shows a centered hero, a labelled static conversation example, a
-three-step Space/Agent/conversation overview, links to available screens and a
-clearly marked later-capabilities section. Its authentication side region uses
-the same implemented product facts. Do not depict tool approvals or computer execution as
-available in an example unless their status is explicitly labelled. Decorative hero trails and frame light may animate on the
-existing timeline, pause offscreen/in hidden tabs and become static with reduced
-motion. Conversation examples do not autoplay. Authentication and legal pages
-render without entrances or loops. Label sample content and never invent usage,
-customer results, testimonials or pricing.
+The homepage presents the implemented product: a centered hero with the redesigned
+composer, capability sections with small labelled static UI examples, a three-step
+Space/Agent/conversation strip, client coverage and a self-hosting/security note.
+Cover shared Spaces/groups, configured computers, approvals/rules/Auto/protected input,
+routines/triggers, memory/Pages, skills/MCP/HTTP tools, attachments and notifications.
+State optional configuration and client limits. The authentication side region uses
+current product facts. Never render stale phase promises as product limitations.
+Decorative hero trails and frame light may animate on the existing timeline, pause
+offscreen/in hidden tabs and become static with reduced motion. Examples do not
+autoplay or mount execution clients. Authentication and legal pages render without
+entrances or loops. Label sample content and never invent usage, customer results,
+testimonials or pricing.
 
 The signed-in workspace has one directory: a quiet sidebar about 220px wide,
 collapsible to a labelled icon rail. Its background sits one neutral step from
@@ -128,7 +131,7 @@ Respect reduced motion, narrow screens, long Chinese/English content and large f
 
 Authentication uses one centered, bordered panel with a 16px radius. Web keeps the
 original logo and theme/language controls in a shared public header. At 1024px and
-above, the panel caps at 60rem and pairs the form with numbered phase 1 product
+above, the panel caps at 60rem and pairs the form with numbered current product
 facts in a static side region; narrower screens use one column
 and natural document scrolling. The form caps at 25rem. Desktop uses a compact
 single-column panel inside its native title-bar frame, with the return-to-workspace
@@ -210,7 +213,10 @@ Settings uses a scope heading followed by one selected category. Wide layouts sh
 quiet labelled category rows; narrow layouts use a labelled Select with the same
 choices. Keep ordinary drafts mounted while switching categories and discard private
 fields when their editor closes. Desktop uses the same category structure as Web;
-Space settings owns its member/owner-filtered second level. Panels use one outer
+Space settings owns its member/owner-filtered second level in a wide centered dialog
+with bounded independent scrolling, matching account settings. Member roles use badges;
+self-management actions are hidden and last-owner leave/demotion/removal is unavailable
+with a reason. The backend remains authoritative. Panels use one outer
 padding region, flat divided lists and 24px section spacing. Do not nest a second
 padded page inside a capability sheet.
 
@@ -228,3 +234,17 @@ remain explicit. Files keeps keyboard tree navigation, breadcrumbs, bounded prev
 and a download action only for complete reads; an incomplete preview explains why
 full download is unavailable. Member-facing labels use available names and translated
 historical fallbacks, with internal identity retained only for selection and policy.
+
+List dates use short localized date/time formats without seconds or relative times.
+Keep the exact instant in a time element and full timestamp tooltip; native uses an
+accessible full-date label. Image thumbnails retain a neutral file-type fallback
+while decoding or after failure. Narrow conversation headers explicitly use one
+title/actions row and one unbroken tabs row. Every icon-rail destination has a name
+and a hover/focus tooltip.
+
+Account admission notices reflect bootstrap and configured mail, with short hints for
+masked setup/invitation fields. Email onboarding uses one page header and a secondary
+Skip action. Delivery tests explain disabled reasons and distinguish service acceptance
+from inbox delivery. Optional verification reminders use a neutral dismissible card;
+they never block an admitted account. Administrator recovery confirms the recipient
+before issuing a one-time link, then offers a masked field, Copy and localized expiry.

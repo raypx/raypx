@@ -108,3 +108,6 @@ hooks through type-only catalog imports; applications supply the shared provider
 - Web sign-in supports passkeys, Resend email codes and TOTP with backup codes. Desktop OAuth requires explicit displayed-account consent, PKCE/state/issuer validation and current-account verification. Security changes revoke connectors.
 
 Email ownership and admission differ: emailVerificationSkipped is server-owned and never client-input. API can own transactional registration; Auth skips signup mail without delivery and establishes sessions only for admitted accounts. Mail-configured new password accounts must verify. Safe completion metadata contains no session token. Forms accept masked setup/invitation fields; never persist their values.
+
+Setup and invitation fields retain descriptive labels/hints and password-manager opt-out.
+Their presence is injected by the application; it never grants admission or bootstrap authority.

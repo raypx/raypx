@@ -24,11 +24,11 @@ export function LandingLayout() {
     >
       <PublicBackdrop />
       <PublicHeader siteName={siteName} sticky>
-        <nav aria-label={c("home")} className="mr-auto hidden items-center gap-1 md:flex">
+        <nav aria-label={c("home")} className="mr-auto hidden items-center gap-1 lg:flex">
           {[
+            ["#capabilities", t("explore")],
             ["#workflow", t("howTitle")],
-            ["#workspace", c("workspace")],
-            ["#computers", t("nextTitle")],
+            ["#clients", t("clientsTitle")],
           ].map(([href, label]) => (
             <a key={href} href={href} className={buttonVariants({ variant: "ghost", size: "sm" })}>
               {label}

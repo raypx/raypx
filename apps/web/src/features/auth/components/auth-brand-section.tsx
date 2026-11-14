@@ -9,15 +9,15 @@ import { DotGrid } from "../../../components/artwork.js";
 import { accentGradient } from "../../../components/brand-accent.js";
 
 /**
- * Product facts beside the authentication form. Decoration uses the logo palette and an
- * example approval labelled as such; nothing here moves or reads account state.
+ * Product facts beside the authentication form. No email-admission promise, animation
+ * or private account read belongs in this static panel.
  */
 export function AuthBrandSection() {
   const t = useTranslations("guest");
   const features = [
-    { icon: MonitorIcon, text: t("stepSpaceHint") },
-    { icon: ShieldCheckIcon, text: t("stepAgentHint") },
-    { icon: CodeFolderIcon, text: t("stepConversationHint") },
+    { icon: MonitorIcon, text: t("authFactAgents") },
+    { icon: ShieldCheckIcon, text: t("authFactControl") },
+    { icon: CodeFolderIcon, text: t("authFactTogether") },
   ] as const;
   return (
     <aside className="relative isolate hidden min-w-0 flex-col justify-center gap-9 overflow-hidden border-l border-border bg-muted/30 p-10 lg:flex">
@@ -33,10 +33,10 @@ export function AuthBrandSection() {
       <div className="flex flex-col gap-3">
         <span aria-hidden="true" className={cn("h-1 w-10 rounded-full", accentGradient)} />
         <h2 className="text-2xl leading-tight font-semibold tracking-tight text-balance">
-          {t("title")}
+          {t("authTitle")}
         </h2>
         <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
-          {t("heroSummary")}
+          {t("authSummary")}
         </p>
       </div>
       <ol className="relative flex flex-col gap-3.5">

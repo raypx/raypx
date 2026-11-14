@@ -11,6 +11,7 @@ import { InputGroupAddon } from "@raypx/ui/components/ui/input-group";
 import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
 import { CloseIcon } from "@raypx/icons/close";
+import { cn } from "@raypx/ui/lib/utils";
 import { FileTextIcon } from "@raypx/icons/file-text";
 import type { MessageAttachment } from "@raypx/core/conversation";
 import type { AttachmentsController, MessageAttachmentsPort } from "../model/attachments.js";
@@ -218,6 +219,12 @@ export function MessageAttachments({
         {attachments.map((attachment) => (
           <li key={attachment.id} className="flex min-w-0 max-w-full flex-col gap-1">
             <AttachmentFile
+              key={JSON.stringify([
+                selection.spaceId,
+                selection.conversationId,
+                attachment.id,
+                attachment.mediaType,
+              ])}
               attachment={attachment}
               port={port}
               selection={selection}
@@ -256,7 +263,7 @@ function AttachmentFile({
 }) {
   const t = useTranslations("agents");
   const [thumbnail, setThumbnail] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState<string | null>(null);
   const image = attachment.mediaType.startsWith("image/");
   const { spaceId, conversationId } = selection;
   useEffect(() => {
@@ -272,7 +279,7 @@ function AttachmentFile({
         setThumbnail(url);
       })
       .catch(() => {
-        if (current) setFailed(true);
+        if (current) setThumbnail(null);
       });
     return () => {
       current = false;
@@ -291,18 +298,24 @@ function AttachmentFile({
       onClick={onDownload}
       className="h-auto min-w-0 max-w-full justify-start gap-3 rounded-xl p-2 text-left"
     >
-      {thumbnail && !failed ? (
-        <img
-          src={thumbnail}
-          alt=""
-          className="size-14 shrink-0 rounded-lg object-cover"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <FileTextIcon aria-hidden="true" className="size-5" />
-        </span>
-      )}
+      <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted text-muted-foreground">
+        <FileTextIcon data-attachment-fallback aria-hidden="true" className="size-5" />
+        {thumbnail && (
+          <img
+            src={thumbnail}
+            alt=""
+            className={cn(
+              "absolute inset-0 size-full object-cover",
+              loaded !== thumbnail && "opacity-0",
+            )}
+            onLoad={() => setLoaded(thumbnail)}
+            onError={() => {
+              setThumbnail(null);
+              setLoaded(null);
+            }}
+          />
+        )}
+      </span>
       <span className="flex min-w-0 flex-col gap-1 pr-2">
         <span className="max-w-48 truncate">{attachment.name}</span>
         <span className="text-xs font-normal text-muted-foreground">

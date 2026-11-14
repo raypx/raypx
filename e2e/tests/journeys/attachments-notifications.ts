@@ -5,7 +5,7 @@ import { ownedApi } from "../helpers/owned-api.js";
 import { capture } from "../helpers/capture.js";
 const endpoint = process.env.CONTROL_E2E_API_URL;
 const png = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+yGIoAAAAASUVORK5CYII=",
+  "iVBORw0KGgoAAAANSUhEUgAAAGAAAABICAIAAACGBWc0AAACHElEQVR4nO3ay23DMAwGYIXoXJ7FC2gaL8A9cvNde3iMImlR5FHrSVKiwv/QQ4rS0RdKltxcjuNwlvNA5HcWA0rHOigRA0rEgBIxoEQMKBEDSsSAEjGgRL7cRNn3/eWVZVkaa8LEOu7kxaJcJjis7hkK1a00TwcxRT3QnjeJqueabqC9ZNh1RrqBBGJAiRhQIgaUiAFNDbSUbP/q9oq6gVz2sG0nzZUZzmLxfWDjgV79FItDtD/uYOkgRFzX1U0R+g5CxL+fE2SeKaYDCB8aZ44mogTCN5EJjMiAUL9FnzUIlcOBgAIyG3nvhwbCrj3yo8NnBDI6yIP46MJkJLcPQmqjdxEOI5AcM9IZnVmQG4HGpcdHFWiNQFgHm1lZ71lDnMWwwShThxARFE0uXzJsKiPoooPlRSoGTGIEvXoHS0pVD7XdSMHzIN82yMY/h45LD2YUJJkmLUWg78KM0bKEN6PqUuNOMU+936krCN3v6/hfcabdYEVZGGHXg8+XYN0rlxaH0faEXvYkoWYNwvsnIaNTdJXYf1ZRtn1CCJKX27atqYPm1nHZfQSfqZNv1H8NCp10Mo2gb/uErjo5RvDhOkmjJ6DP1Ikb9VmDwmA6ESOQb58wpM6Z0S+Q6ZwZ3YBMJxK5NSgMPLMiTQQy7RP06LwYSXyR3A/2BCM/27axA3m1OhJrkFeuwwvk9eswAvkpdG6L9PV67f0e3Mj5Bq/B6/Z5QeIrAAAAAElFTkSuQmCC",
   "base64",
 );
 async function signIn(page: Page, baseURL: string, email = "control-e2e@example.com") {
@@ -101,6 +101,11 @@ export function registerTests() {
         page.getByText("Attachment input: images=1; files=1 completed.", { exact: true }),
       ).toBeVisible();
       await page.reload();
+      const thumbnail = page
+        .getByRole("button", { name: "Download image.png", exact: true })
+        .locator("img");
+      await expect(thumbnail).toHaveJSProperty("naturalWidth", 96);
+      await expect(thumbnail).toHaveCSS("opacity", "1");
       const chip = page.getByRole("button", { name: "Download notes.txt", exact: true });
       await expect(chip).toBeVisible();
       const download = page.waitForEvent("download");

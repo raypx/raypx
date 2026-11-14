@@ -142,6 +142,11 @@ function ResendForm({
     if (!conflict) save.reset();
   }
   const status = !saved.values ? "notConfigured" : saved.values.enabled ? "enabled" : "disabled";
+  function testDisabledReason() {
+    if (dirty) return t("testSaveFirst");
+    if (status !== "enabled") return t("testConfigureFirst");
+    return undefined;
+  }
   return (
     <form
       aria-busy={busy}
@@ -249,7 +254,11 @@ function ResendForm({
           edited();
         }}
       />
-      <TestEmail disabled={busy || dirty || status !== "enabled"} />
+      <TestEmail
+        key={`${saved.revision}:${dirty}:${status}`}
+        disabled={busy || dirty || status !== "enabled"}
+        disabledReason={testDisabledReason()}
+      />
       {(save.isError || reload.isError) && (
         <div className="flex flex-col items-start gap-2 border-t border-border px-4 py-4 sm:px-6">
           <Alert variant="destructive">

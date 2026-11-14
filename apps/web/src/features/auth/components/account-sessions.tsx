@@ -159,16 +159,31 @@ export function AccountSessions({
               </div>
               <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
                 <ClockIcon aria-hidden="true" className="size-3.5 shrink-0" />
-                <span>
+                <time
+                  dateTime={new Date(session.createdAt).toISOString()}
+                  title={format.dateTime(new Date(session.createdAt), {
+                    dateStyle: "full",
+                    timeStyle: "long",
+                  })}
+                >
                   {t("created", {
                     date: format.dateTime(new Date(session.createdAt), "timestamp"),
                   })}
-                </span>
+                </time>
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {t("expires", {
-                  date: format.dateTime(new Date(session.expiresAt), "timestamp"),
-                })}
+                <time
+                  dateTime={new Date(session.expiresAt).toISOString()}
+                  title={format.dateTime(new Date(session.expiresAt), {
+                    dateStyle: "full",
+                    timeStyle: "long",
+                  })}
+                >
+                  {" "}
+                  {t("expires", {
+                    date: format.dateTime(new Date(session.expiresAt), "timestamp"),
+                  })}
+                </time>
               </p>
               {session.ipAddress && (
                 <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">

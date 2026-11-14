@@ -193,7 +193,10 @@ Web and Desktop use one scope heading and category navigation. Shared
 `SettingsNavigation` supplies quiet rows on wide screens and a labelled Select on
 narrow screens. Desktop category hashes include preferences, approvals, models,
 skills, tools and diagnostics; visits preserve ordinary drafts until close. Space
-settings uses the same pattern with fresh role-filtered choices. Feature panels own
+settings uses the same pattern in a wide centered dialog with fresh role-filtered choices.
+Member rows use role badges and short localized dates with exact timestamp tooltips.
+They hide self-management actions and disable known last-owner changes; the backend
+still rechecks authority. Last-owner leave is disabled with an explicit reason. Feature panels own
 their inner rows; the shell or sheet supplies outer gutters.
 
 Notifications group source kinds by Space and show unread state and relative times;
@@ -211,3 +214,18 @@ feature journeys supply real approvals, devices, protected input and attachments
 Captures restore viewport, theme and reading positions. Pairing codes, issued links
 and supplied protected values remain excluded. These are renderer fixtures; native
 Mobile layout and packaged Desktop acceptance require their own environments.
+
+Public landing sections describe current capabilities and client/configuration limits,
+with static composer and capability specimens rather than mounted execution clients.
+The authentication side panel uses the same current facts. List timestamps retain their
+ISO value and full tooltip while displaying localized dates/minutes or relative time.
+Conversation headers use an explicit two-row grid below 640px; rail destinations retain
+hover/focus tooltips and accessible names. Thumbnails retain their fallback until image
+decode succeeds and keep using the session-authorized attachment port.
+
+Account bootstrap uses the public bootstrap/setup-token/mail flags only to render
+admission controls. Shared Auth keeps setup/invitation inputs masked and described.
+Email onboarding has one header and a Skip action; tests use saved delivery settings
+and show acceptance/failure with retry. Reminders remain optional and dismissible on
+Web and native Mobile. Recovery links stay in dialog memory, masked with explicit Copy;
+only pre-issue confirmation is safe for screenshot review.
