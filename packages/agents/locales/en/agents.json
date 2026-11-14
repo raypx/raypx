@@ -678,5 +678,19 @@
     "nextRun": "Applies to your next Run in this conversation. Active Runs keep their computer.",
     "approvalDevice": "Device: {name}",
     "grantInstructions": "On the selected machine, confirm in Desktop or run this command and choose a directory:"
+  },
+  "protectedInput": {
+    "title": "Protected input: {name}",
+    "environment": "Command environment: {variable}",
+    "http": "One HTTP bearer credential",
+    "untrusted": "Outside input influenced this Run ({source}). Check the destination before supplying a value.",
+    "external": "external content",
+    "privacy": "Used once for this operation. Never sent to the model or saved in chat. Normal approval still applies.",
+    "expires": "Expires at {time}",
+    "submit": "Supply once",
+    "decline": "Decline",
+    "answered": "Supplied. Waiting for the operation.",
+    "error": "Could not confirm the request. Refresh before trying again.",
+    "requests": "Protected input requests"
   }
 }

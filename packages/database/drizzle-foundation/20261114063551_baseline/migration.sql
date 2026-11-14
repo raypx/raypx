@@ -1029,6 +1029,32 @@ CREATE TABLE "passkey" (
 	"aaguid" text
 );
 --> statement-breakpoint
+CREATE TABLE "protected_input_requests" (
+	"space_id" text,
+	"conversation_id" text NOT NULL,
+	"run_id" text NOT NULL,
+	"id" text,
+	"member_account_id" text NOT NULL,
+	"tool_call_id" text NOT NULL,
+	"tool_name" text NOT NULL,
+	"call_hash" text NOT NULL,
+	"target" text NOT NULL,
+	"input" jsonb NOT NULL,
+	"untrusted_input" boolean NOT NULL,
+	"provenance_kind" text,
+	"state" text DEFAULT 'pending' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"resolved_at" timestamp with time zone,
+	"ciphertext" text,
+	"wrapped_data_key" text,
+	"key_id" text,
+	CONSTRAINT "protected_input_requests_pkey" PRIMARY KEY("space_id","id"),
+	CONSTRAINT "protected_input_requests_state_check" CHECK ("state" in ('pending', 'answered', 'declined', 'expired', 'consumed', 'cancelled')),
+	CONSTRAINT "protected_input_requests_secret_check" CHECK (("state" = 'answered' and "ciphertext" is not null and "wrapped_data_key" is not null and "key_id" is not null) or ("state" <> 'answered' and "ciphertext" is null and "wrapped_data_key" is null and "key_id" is null)),
+	CONSTRAINT "protected_input_requests_hash_check" CHECK ("call_hash" ~ '^[a-f0-9]{64}$')
+);
+--> statement-breakpoint
 CREATE TABLE "rate_limit" (
 	"id" text PRIMARY KEY,
 	"key" text NOT NULL UNIQUE,
@@ -1451,6 +1477,9 @@ CREATE UNIQUE INDEX "page_versions_mutation_idx" ON "page_versions" ("space_id",
 CREATE INDEX "pages_list_idx" ON "pages" ("space_id","updated_at","id");--> statement-breakpoint
 CREATE INDEX "pages_agent_idx" ON "pages" ("space_id","agent_id");--> statement-breakpoint
 CREATE INDEX "passkey_user_idx" ON "passkey" ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "protected_input_requests_call_idx" ON "protected_input_requests" ("space_id","run_id","tool_call_id");--> statement-breakpoint
+CREATE INDEX "protected_input_requests_pending_idx" ON "protected_input_requests" ("space_id","member_account_id","created_at") WHERE "state" in ('pending', 'answered');--> statement-breakpoint
+CREATE INDEX "protected_input_requests_expiry_idx" ON "protected_input_requests" ("expires_at") WHERE "state" in ('pending', 'answered');--> statement-breakpoint
 CREATE INDEX "rate_limit_last_request_idx" ON "rate_limit" ("last_request");--> statement-breakpoint
 CREATE INDEX "routine_events_run_idx" ON "routine_events" ("space_id","conversation_id","run_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "routine_occurrences_event_ref_idx" ON "routine_occurrences" ("space_id","routine_id","id","conversation_id","run_id");--> statement-breakpoint
@@ -1603,6 +1632,7 @@ ALTER TABLE "pages" ADD CONSTRAINT "pages_space_id_spaces_id_fkey" FOREIGN KEY (
 ALTER TABLE "pages" ADD CONSTRAINT "pages_space_id_id_page_identities_space_id_id_fkey" FOREIGN KEY ("space_id","id") REFERENCES "page_identities"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "pages" ADD CONSTRAINT "pages_space_id_agent_id_agents_space_id_id_fkey" FOREIGN KEY ("space_id","agent_id") REFERENCES "agents"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "passkey" ADD CONSTRAINT "passkey_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "protected_input_requests" ADD CONSTRAINT "protected_input_requests_LmSBODWJJa03_fkey" FOREIGN KEY ("space_id","conversation_id","run_id","member_account_id") REFERENCES "conversation_runs"("space_id","conversation_id","id","member_account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "routine_deliveries" ADD CONSTRAINT "routine_deliveries_EeSVBPayrLDN_fkey" FOREIGN KEY ("space_id","routine_id","occurrence_id") REFERENCES "routine_occurrences"("space_id","routine_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "routine_events" ADD CONSTRAINT "routine_events_qLqIQAOmCo5u_fkey" FOREIGN KEY ("space_id","routine_id","occurrence_id","conversation_id","run_id") REFERENCES "routine_occurrences"("space_id","routine_id","id","conversation_id","run_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "routine_events" ADD CONSTRAINT "routine_events_84fGpONFbGNB_fkey" FOREIGN KEY ("space_id","conversation_id","run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint

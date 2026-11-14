@@ -44,6 +44,7 @@ export default function ConversationScreen() {
         origin={workspace.owner.origin}
         initialRunId={target.success ? target.data : undefined}
         approvalPort={workspace.port.approvals}
+        protectedInputsPort={workspace.port.protectedInputs}
         onRoutines={() =>
           router.push({
             pathname: "/routines",

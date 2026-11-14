@@ -23,7 +23,9 @@ availability and write-only credentials; Mobile shows their activity and approva
 Client coverage and separate acceptance gates are documented in PRODUCT.md.
 Auto review uses a separately configured deployment model with bounded, durable,
 fail-closed decisions. Untrusted input, HTTP changes and unlisted commands still ask.
-Protected input and hosted computers remain unimplemented. Member-owned device
+Protected input supports one-use sandbox command environments and HTTP bearer credentials;
+values stay outside model history, events and checkpoints. Device/file/MCP input
+destinations and hosted computers remain unimplemented. Member-owned device
 computers use a separate outbound-only CLI connector, locally confirmed Space
 directory grants and per-operation checks. Device commands require approval or an
 exact executable Allow even in Never ask; Auto never approves them. macOS arm64

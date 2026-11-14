@@ -160,6 +160,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       computerScreens,
       conversationModels,
       agentApprovals,
+      protectedInputs,
       modelConnections,
       routines,
       spaceMemory,
@@ -191,6 +192,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       spaceDeletionWorker,
       modelConnections,
       agentApprovals,
+      protectedInputs,
       runner,
       stopClaiming: () => {
         routineWorker.stop();
@@ -234,6 +236,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
           : {}),
         modelConnections,
         agentApprovals,
+        protectedInputs,
         computers,
         computerScreens,
         spaces,

@@ -1076,6 +1076,67 @@ export const approvalRules = pgTable(
     ),
   ],
 );
+export const protectedInputRequests = pgTable(
+  "protected_input_requests",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    runId: text("run_id").notNull(),
+    id: text("id").notNull(),
+    memberAccountId: text("member_account_id").notNull(),
+    toolCallId: text("tool_call_id").notNull(),
+    toolName: text("tool_name").notNull(),
+    callHash: text("call_hash").notNull(),
+    target: text("target").notNull(),
+    input: jsonb("input").$type<Record<string, unknown>>().notNull(),
+    untrustedInput: boolean("untrusted_input").notNull(),
+    provenanceKind: text("provenance_kind"),
+    state: text("state", {
+      enum: ["pending", "answered", "declined", "expired", "consumed", "cancelled"],
+    })
+      .notNull()
+      .default("pending"),
+    createdAt: date("created_at").notNull().defaultNow(),
+    expiresAt: date("expires_at").notNull(),
+    resolvedAt: date("resolved_at"),
+    ciphertext: text("ciphertext"),
+    wrappedDataKey: text("wrapped_data_key"),
+    keyId: text("key_id"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.id] }),
+    uniqueIndex("protected_input_requests_call_idx").on(
+      table.spaceId,
+      table.runId,
+      table.toolCallId,
+    ),
+    index("protected_input_requests_pending_idx")
+      .on(table.spaceId, table.memberAccountId, table.createdAt)
+      .where(sql`${table.state} in ('pending', 'answered')`),
+    index("protected_input_requests_expiry_idx")
+      .on(table.expiresAt)
+      .where(sql`${table.state} in ('pending', 'answered')`),
+    foreignKey({
+      columns: [table.spaceId, table.conversationId, table.runId, table.memberAccountId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+        conversationRuns.memberAccountId,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "protected_input_requests_state_check",
+      sql`${table.state} in ('pending', 'answered', 'declined', 'expired', 'consumed', 'cancelled')`,
+    ),
+    check(
+      "protected_input_requests_secret_check",
+      sql`(${table.state} = 'answered' and ${table.ciphertext} is not null and ${table.wrappedDataKey} is not null and ${table.keyId} is not null) or (${table.state} <> 'answered' and ${table.ciphertext} is null and ${table.wrappedDataKey} is null and ${table.keyId} is null)`,
+    ),
+    check("protected_input_requests_hash_check", sql`${table.callHash} ~ '^[a-f0-9]{64}$'`),
+  ],
+);
+
 export const approvalRequests = pgTable(
   "approval_requests",
   {

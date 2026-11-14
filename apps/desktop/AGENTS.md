@@ -219,3 +219,5 @@ including browser acceptance. Pages keeps editing, versions, restore and sharing
 available and offers Web preview at the configured Web origin. The handoff opens
 the system browser through the native bridge, or a separate tab in browser builds.
 It never copies cookies or recreates backend HTML in the renderer.
+
+Protected input uses the shared uncontrolled masked form through the existing session API transport. No value is stored in renderer drafts or passed to the device connector journal. Packaged transport acceptance remains separate.

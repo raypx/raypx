@@ -137,6 +137,7 @@ oRPC and Pi. The policy, verification and release gates in
 - [Run execution and recovery](execution.md)
 - [Conversations and the event stream](events.md)
 - [Approvals and effects](approvals.md)
+- [Protected input and single-operation delivery](protected-input.md)
 - [Computers, the supervisor and device connectors](computers.md)
 - [Spaces, membership and settings](spaces.md)
 - [Routines, memory, pages and connections](capabilities.md)

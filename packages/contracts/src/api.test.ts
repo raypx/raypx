@@ -34,6 +34,7 @@ describe("foundation contract", () => {
       "configuration",
       "devices",
       "tasks",
+      "protectedInputs",
       "approvals",
       "relay",
       "account",

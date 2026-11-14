@@ -24,7 +24,8 @@
     "./pages": "./src/pages.ts",
     "./skills": "./src/skills.ts",
     "./mcp-servers": "./src/mcp-servers.ts",
-    "./openapi-servers": "./src/openapi-servers.ts"
+    "./openapi-servers": "./src/openapi-servers.ts",
+    "./protected-input": "./src/protected-input.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

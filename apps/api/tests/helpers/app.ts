@@ -14,6 +14,7 @@ const services = [
   "spaceMemory",
   "modelConnections",
   "agentApprovals",
+  "protectedInputs",
   "computers",
   "computerScreens",
   "spaces",

@@ -203,3 +203,5 @@ expose only safe metadata; registration, changes, tests and deletion require an
 owner. Credentials are input-only; source documents are accepted once on create.
 `send.message.steerRunId` optionally addresses one active Run, including queued or
 delegated work, without loading its message. It cannot combine Agent mentions.
+
+protectedInputs.pending/answer are additive renderer/session procedures. Pending and answer outputs are explicit metadata projections; only the answer input accepts a value. No event or stream protocol version changes.

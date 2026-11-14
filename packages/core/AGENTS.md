@@ -108,3 +108,5 @@ all/selected Agent availability and write-only bearer/header credential inputs.
 Exact `openapi_<server>__<operation>` names join tool rules without extending built-ins.
 
 `/computers` adds member-safe device computers, per-Space directory-grant metadata and device/grant selections. Device rows carry no credential or connection owner. Computer scope/provider add `device`; a device grant has no Agent owner. Device process descriptions state that directory grants are not sandbox isolation.
+
+/protected-input owns bounded value-free request/destination/lifecycle schemas and the input-only answer schema. Supported destinations are sandbox command environments and one-call HTTP bearer credentials.

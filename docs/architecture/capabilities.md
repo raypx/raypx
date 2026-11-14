@@ -317,3 +317,8 @@ Action review independently selects a deployment offer with
 without borrowing another member's connection. Member model selection and shared
 Space ownership do not grant reviewer configuration. No optional Space reviewer
 model choice is exposed. See [automatic review](approvals.md#automatic-review).
+
+Protected input supplies one sandbox command environment or one HTTP bearer
+credential without entering model context. Normal approval remains independent;
+remote MCP, device and file destinations are unsupported. See
+[request lifecycle and disclosure boundary](protected-input.md).

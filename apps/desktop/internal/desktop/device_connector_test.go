@@ -3,7 +3,9 @@ package desktop
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -37,10 +39,17 @@ func (u *deviceUI) ConfirmDeviceDirectoryGrant(value DeviceConfirmation) (bool, 
 	return u.accept, u.dialogErr
 }
 
+func nativeSelectedDirectory() string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(`C:\`, "native", "selected")
+	}
+	return "/native/selected"
+}
+
 func confirmationFixture() JSON {
 	return JSON{
 		"serverOrigin": "https://raypx.com", "accountId": "member", "accountLabel": "Member", "spaceLabel": "Space",
-		"deviceName": "Machine", "spaceId": "space", "deviceId": "device", "path": "/native/selected",
+		"deviceName": "Machine", "spaceId": "space", "deviceId": "device", "path": nativeSelectedDirectory(),
 		"confirmationId": "private-confirmation", "expiresAt": time.Now().Add(time.Minute).UTC().Format(time.RFC3339Nano),
 	}
 }
@@ -49,7 +58,7 @@ func TestDeviceConnectorRequiresNativeConfirmationWithTrustedLabels(t *testing.T
 	for _, grant := range []bool{false, true} {
 		for _, accept := range []bool{false, true} {
 			t.Run(map[bool]string{false: "pair", true: "grant"}[grant]+map[bool]string{false: " cancel", true: " accept"}[accept], func(t *testing.T) {
-				ui := &deviceUI{path: "/native/selected", accept: accept}
+				ui := &deviceUI{path: nativeSelectedDirectory(), accept: accept}
 				calls := []JSON{}
 				config, _ := ParseConfig(nil)
 				desktop, err := New(config, t.TempDir(), Options{Client: &testNative{}, DeviceNative: func(_ context.Context, input JSON) (JSON, error) {
@@ -84,13 +93,13 @@ func TestDeviceConnectorRequiresNativeConfirmationWithTrustedLabels(t *testing.T
 				expected := JSON{"action": "pair_prepare", "serverOrigin": config.APIURL, "code": "PAIR-CODE"}
 				dialogs := ui.pairs
 				if grant {
-					expected = JSON{"action": "grant_prepare", "serverOrigin": config.APIURL, "spaceId": "space", "deviceId": "device", "path": "/native/selected"}
+					expected = JSON{"action": "grant_prepare", "serverOrigin": config.APIURL, "spaceId": "space", "deviceId": "device", "path": nativeSelectedDirectory()}
 					dialogs = ui.grants
 				}
 				if !reflect.DeepEqual(calls[0], expected) || len(dialogs) != 1 || dialogs[0].AccountLabel != "Member" || dialogs[0].SpaceLabel != "Space" || dialogs[0].ServerOrigin != config.APIURL {
 					t.Fatalf("untrusted metadata reached native confirmation: %#v %#v", calls, dialogs)
 				}
-				if grant && dialogs[0].Directory != "/native/selected" {
+				if grant && dialogs[0].Directory != nativeSelectedDirectory() {
 					t.Fatal("native picked path replaced")
 				}
 				if accept && (len(calls) != 3 || len(calls[1]) != 2 || calls[1]["confirmationId"] != "private-confirmation") {
@@ -114,7 +123,7 @@ func TestDeviceConnectorRefusesChangedOrExpiredNativeMetadata(t *testing.T) {
 		{"deviceId", "other-device"}, {"path", "/other/path"},
 	} {
 		t.Run(scenario.key, func(t *testing.T) {
-			ui := &deviceUI{path: "/native/selected", accept: true}
+			ui := &deviceUI{path: nativeSelectedDirectory(), accept: true}
 			calls := 0
 			config, _ := ParseConfig(nil)
 			desktop, err := New(config, t.TempDir(), Options{Client: &testNative{}, DeviceNative: func(_ context.Context, input JSON) (JSON, error) {
@@ -256,7 +265,7 @@ func TestPendingDeviceGrantRequiresCurrentSessionThroughNativeConfirmation(t *te
 				t.Fatal(err)
 			}
 			defer desktop.Close()
-			ui := &deviceUI{path: "/native/selected", accept: scenario.accept, beforeDialog: func() { signedOut = scenario.endAfterDialog }}
+			ui := &deviceUI{path: nativeSelectedDirectory(), accept: scenario.accept, beforeDialog: func() { signedOut = scenario.endAfterDialog }}
 			desktop.UI = ui
 			desktop.pollDeviceGrants()
 			if claims != scenario.claims || ui.picks != scenario.picks || len(ui.grants) != scenario.dialogs || confirms != scenario.confirms {

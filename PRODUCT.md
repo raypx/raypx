@@ -186,3 +186,13 @@ stay unverified. There are no customer endorsements or pricing claims to reuse.
 English and Chinese are first-class. Preserve keyboard focus, accessible labels,
 reduced motion, touch targets, phone layouts and stable reading positions during
 streaming. Native component mocks do not establish device accessibility acceptance.
+
+Protected input is available in Web/Desktop and native Mobile through a dedicated
+masked form. The initiating current member supplies a value for one sandbox command
+environment or one registered HTTP bearer credential after normal tool approval.
+Requests pause durably, survive executor restart and can be declined or expire.
+Encrypted values are deleted on consumption, expiry or Run end; values never enter
+chat, model context or client drafts. Exact command echoes are scrubbed. Device,
+file, generic MCP and graphical destinations remain unsupported. Source, database,
+renderer browser and real-Engine acceptance are separate from packaged Desktop and
+native Mobile device acceptance. See [boundaries](docs/architecture/protected-input.md).

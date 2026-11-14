@@ -12,6 +12,7 @@ import {
   conversationMessages as messages,
   conversationEvents as events,
   approvalRequests,
+  protectedInputRequests,
   conversationRunAttempts as attempts,
   conversationRunCheckpoints as checkpoints,
   conversationRunMemoryPins as memoryPins,
@@ -205,6 +206,22 @@ export function createConversationsRepository(
     sequence: number,
     fence = 0,
   ) {
+    await tx
+      .update(protectedInputRequests)
+      .set({
+        state: "cancelled",
+        ciphertext: null,
+        wrappedDataKey: null,
+        keyId: null,
+        resolvedAt: options.now?.() ?? new Date(),
+      })
+      .where(
+        and(
+          eq(protectedInputRequests.spaceId, scope.spaceId),
+          eq(protectedInputRequests.runId, run.id),
+          inArray(protectedInputRequests.state, ["pending", "answered"]),
+        ),
+      );
     const cancelled = await tx
       .update(approvalRequests)
       .set({

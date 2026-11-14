@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "fef438a3-cc08-4ce8-8a5e-44526c5ec7fa",
+  "id": "ea441afa-6567-4b9a-ada0-7ad9782e2adf",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -1500,6 +1500,25 @@
         "n|type|public.passkey",
         "n|rel|public.passkey_pkey",
         "n|rel|public.passkey_credential_id_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "protected_input_requests"
+      ],
+      "writes": [
+        "s|tbl|public.protected_input_requests",
+        "n|tbl|public.protected_input_requests",
+        "e|tbl|public.protected_input_requests",
+        "n|rel|public.protected_input_requests",
+        "n|type|public.protected_input_requests",
+        "n|rel|public.protected_input_requests_pkey"
       ],
       "reads": [
         "n|sch|public"
@@ -4280,6 +4299,70 @@
         "n|tbl|public.passkey",
         "n|sch|public",
         "n|col|public.passkey.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "protected_input_requests",
+        "protected_input_requests_call_idx"
+      ],
+      "writes": [
+        "s|idx|public.protected_input_requests_call_idx",
+        "n|idx|public.protected_input_requests_call_idx",
+        "e|idx|public.protected_input_requests_call_idx",
+        "n|rel|public.protected_input_requests_call_idx"
+      ],
+      "reads": [
+        "n|tbl|public.protected_input_requests",
+        "n|sch|public",
+        "n|col|public.protected_input_requests.space_id",
+        "n|col|public.protected_input_requests.run_id",
+        "n|col|public.protected_input_requests.tool_call_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "protected_input_requests",
+        "protected_input_requests_pending_idx"
+      ],
+      "writes": [
+        "s|idx|public.protected_input_requests_pending_idx",
+        "n|idx|public.protected_input_requests_pending_idx",
+        "e|idx|public.protected_input_requests_pending_idx",
+        "n|rel|public.protected_input_requests_pending_idx"
+      ],
+      "reads": [
+        "n|tbl|public.protected_input_requests",
+        "n|sch|public",
+        "n|col|public.protected_input_requests.space_id",
+        "n|col|public.protected_input_requests.member_account_id",
+        "n|col|public.protected_input_requests.created_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "protected_input_requests",
+        "protected_input_requests_expiry_idx"
+      ],
+      "writes": [
+        "s|idx|public.protected_input_requests_expiry_idx",
+        "n|idx|public.protected_input_requests_expiry_idx",
+        "e|idx|public.protected_input_requests_expiry_idx",
+        "n|rel|public.protected_input_requests_expiry_idx"
+      ],
+      "reads": [
+        "n|tbl|public.protected_input_requests",
+        "n|sch|public",
+        "n|col|public.protected_input_requests.expires_at"
       ]
     },
     {
@@ -7981,6 +8064,35 @@
       "statementTarget": [
         "table",
         "public",
+        "protected_input_requests"
+      ],
+      "writes": [
+        "s|fk|public.protected_input_requests.protected_input_requests_LmSBODWJJa03_fkey",
+        "n|fk|public.protected_input_requests.protected_input_requests_LmSBODWJJa03_fkey",
+        "e|fk|public.protected_input_requests.protected_input_requests_LmSBODWJJa03_fkey",
+        "n|con|public.protected_input_requests.protected_input_requests_LmSBODWJJa03_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.protected_input_requests",
+        "n|sch|public",
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.protected_input_requests.space_id",
+        "n|col|public.protected_input_requests.conversation_id",
+        "n|col|public.protected_input_requests.run_id",
+        "n|col|public.protected_input_requests.member_account_id",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "n|col|public.conversation_runs.member_account_id",
+        "e|uniqueness|public.conversation_runs.conversation_id.id.member_account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
         "routine_deliveries"
       ],
       "writes": [
@@ -9321,6 +9433,12 @@
     {
       "schema": "public",
       "name": "passkey",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "protected_input_requests",
       "isRlsEnabled": false,
       "entityType": "tables"
     },
@@ -18107,6 +18225,253 @@
     },
     {
       "schema": "public",
+      "table": "protected_input_requests",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "conversation_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "run_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "member_account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "tool_call_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "tool_name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "call_hash",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "target",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "input",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "untrusted_input",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "provenance_kind",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "state",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "resolved_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "ciphertext",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "wrapped_data_key",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "key_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
       "table": "rate_limit",
       "name": "id",
       "type": "text",
@@ -24029,6 +24394,97 @@
     },
     {
       "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_call_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "run_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "tool_call_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_pending_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "member_account_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"state\" in ('pending', 'answered')",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_expiry_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "expires_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"state\" in ('pending', 'answered')",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
       "table": "rate_limit",
       "name": "rate_limit_last_request_idx",
       "nameExplicit": true,
@@ -27186,6 +27642,29 @@
     },
     {
       "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_LmSBODWJJa03_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "run_id",
+        "member_account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversation_runs",
+      "columnsTo": [
+        "space_id",
+        "conversation_id",
+        "id",
+        "member_account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
       "table": "routine_deliveries",
       "name": "routine_deliveries_EeSVBPayrLDN_fkey",
       "nameExplicit": false,
@@ -28450,6 +28929,17 @@
     },
     {
       "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_pkey",
+      "columns": [
+        "space_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "routine_deliveries",
       "name": "routine_deliveries_pkey",
       "columns": [
@@ -29673,6 +30163,27 @@
       "table": "pages",
       "name": "pages_title_check",
       "value": "length(\"title\") between 1 and 200",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_state_check",
+      "value": "\"state\" in ('pending', 'answered', 'declined', 'expired', 'consumed', 'cancelled')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_secret_check",
+      "value": "(\"state\" = 'answered' and \"ciphertext\" is not null and \"wrapped_data_key\" is not null and \"key_id\" is not null) or (\"state\" <> 'answered' and \"ciphertext\" is null and \"wrapped_data_key\" is null and \"key_id\" is null)",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "protected_input_requests",
+      "name": "protected_input_requests_hash_check",
+      "value": "\"call_hash\" ~ '^[a-f0-9]{64}$'",
       "entityType": "checks"
     },
     {

@@ -65,6 +65,7 @@ export class EffectInProgressError extends Error {
 }
 /** Prepared by the one computer-tool definition, before policy or execution. */
 export interface ApprovalCall {
+  protectedInput?: import("@raypx/core/protected-input").ProtectedInputSpec;
   id: string;
   name: ToolName;
   arguments: Record<string, unknown>;

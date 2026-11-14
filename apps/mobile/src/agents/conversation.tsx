@@ -1,3 +1,5 @@
+import { ProtectedInputs } from "./protected-input.js";
+import type { ProtectedInputsPort } from "@raypx/agents/model";
 import {
   type ComponentRef,
   useCallback,
@@ -54,6 +56,7 @@ export function AgentConversation({
   item,
   group,
   approvalPort,
+  protectedInputsPort,
   onRoutines,
   onMemory,
   onResources,
@@ -69,6 +72,7 @@ export function AgentConversation({
   item?: AgentConversationView | undefined;
   group?: GroupConversationView | undefined;
   approvalPort?: ApprovalPort | undefined;
+  protectedInputsPort?: ProtectedInputsPort | undefined;
   onRoutines?: (() => void) | undefined;
   onMemory?: (() => void) | undefined;
   onResources?: (() => void) | undefined;
@@ -356,6 +360,14 @@ export function AgentConversation({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View className="w-full max-w-[960px] flex-1 self-center">
+          {protectedInputsPort && (
+            <ProtectedInputs
+              key={spaceId}
+              port={protectedInputsPort}
+              spaceId={spaceId}
+              conversationId={conversationId}
+            />
+          )}
           <View className="gap-2 border-b border-border px-4 py-2">
             <View className="flex-row flex-wrap items-center justify-between gap-2">
               <Action label={t("agents.back")} secondary onPress={onBack} />

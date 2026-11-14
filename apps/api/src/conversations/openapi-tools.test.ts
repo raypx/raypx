@@ -168,3 +168,36 @@ it("rejects invalid arguments before approval/effect creation", async () => {
   ).toThrow("INVALID_ARGUMENTS");
   expect(f.service.call).not.toHaveBeenCalled();
 });
+
+it("keeps one-call credentials outside prepared arguments and checkpoint catalogs", async () => {
+  const f = fixture();
+  const current = run();
+  const signal = new AbortController().signal;
+  await f.tools.initialize?.(scope, current, signal);
+  const name = openApiToolName(serverId, "report");
+  const input = {
+    name: "Access token",
+    purpose: "Authenticate once",
+    destination: { kind: "http-bearer" },
+  };
+  const prepared = f.tools.prepare(
+    { type: "toolCall", id: "protected", name, arguments: { protectedInput: input } },
+    current,
+  );
+  const value = crypto.randomUUID();
+  await expect(f.tools.execute(scope, current, prepared, signal)).rejects.toMatchObject({
+    code: "INVALID_ARGUMENTS",
+  });
+  await f.tools.executeProtected!(scope, current, prepared, signal, value);
+  expect(f.service.call).toHaveBeenCalledWith(
+    scope,
+    current.agentId,
+    current.id,
+    expect.anything(),
+    "report",
+    {},
+    signal,
+    { type: "bearer", value },
+  );
+  expect(JSON.stringify([prepared, f.tools.snapshot?.(current)]).includes(value)).toBe(false);
+});

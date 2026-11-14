@@ -20,6 +20,7 @@ import {
 import {
   createConversationsRepository,
   createApprovalsRepository,
+  createProtectedInputsService,
   createComputerUseQueue,
   cancelSpaceRuns,
 } from "@raypx/agents/server/postgres";
@@ -117,6 +118,10 @@ export async function composeAgents(
   const deploymentSecrets = knownComputerSecrets(environment);
   const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(db));
   const keys = applicationSecretKeyProvider(environment.APP_KEY);
+  const protectedInputs = createProtectedInputsService(db, {
+    seal: (binding, value) => sealStoredSecret(keys, "protected-input", binding, value),
+    open: (binding, sealed) => openStoredSecret(keys, "protected-input", binding, sealed),
+  });
   const pages = createPagesService(createPagesRepository(db));
   const skills = createSkillsService(createSkillsRepository(db));
   const mcpServers = createMcpServers(createMcpServersRepository(db), keys, createMcpTransport());
@@ -170,7 +175,7 @@ export async function composeAgents(
       logger
         .createLogger({ operation })
         .emit({ status: 200, code: "OK", runId, durationMs, ...timings }),
-    { tools, approvals: agentApprovals },
+    { tools, approvals: agentApprovals, protectedInputs },
     {
       leaseMs: environment.RUN_LEASE_MS,
       heartbeatMs: environment.RUN_HEARTBEAT_MS,
@@ -239,6 +244,7 @@ export async function composeAgents(
     computerProvider,
     conversationModels,
     agentApprovals,
+    protectedInputs,
     modelConnections,
   };
 }

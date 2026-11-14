@@ -61,3 +61,9 @@ export {
   type ComputerScreenInputGate,
 } from "./computer-tools.js";
 export { EFFECT_INTENT_TIMEOUT_MS } from "./tool-limits.js";
+export {
+  ProtectedInputError,
+  scrubProtectedOutput,
+  type ProtectedInputsService,
+  type ProtectedInputCipher,
+} from "./protected-input.js";

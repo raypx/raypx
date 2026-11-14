@@ -32,6 +32,11 @@ export function withDeviceComputerTools(
   const selected = new Map<string, { tools: ComputerTools; grant: DeviceRunGrant }>();
   const forRun = (run: ExecutionRun) => selected.get(attempt(run))?.tools ?? base;
   return {
+    executeProtected(scope, run, call, signal, value) {
+      if (selected.has(attempt(run)) || !base.executeProtected)
+        throw new ComputerToolsError("INVALID_ARGUMENTS");
+      return base.executeProtected(scope, run, call, signal, value);
+    },
     definitions: (run) => (run ? forRun(run).definitions(run) : base.definitions()),
     guardInput: (call) => base.guardInput?.(call),
     modelContent: (run, call, output) =>
@@ -133,6 +138,7 @@ export function withDeviceComputerTools(
       const prepared = (run ? forRun(run) : base).prepare(call, run);
       const grant = run ? selected.get(attempt(run))?.grant : undefined;
       if (!grant) return prepared;
+      if (prepared.protectedInput) throw new ComputerToolsError("INVALID_ARGUMENTS");
       let command: string | undefined;
       if (prepared.name === "computer_run_command") {
         command = JSON.stringify({

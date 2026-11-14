@@ -64,6 +64,7 @@ function approvalError(error: unknown): never {
 
 export function mobileWorkspacePort(client: ApiClient): AgentsWorkspacePort {
   return {
+    protectedInputs: client.protectedInputs,
     spaces: client.spaces,
     agents: client.agents,
     conversations: client.conversations,

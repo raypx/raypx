@@ -28,6 +28,7 @@ import {
 export * from "./tasks.js";
 export * from "./config.js";
 import { configurationContract } from "./config.js";
+import { protectedInputsContract } from "./protected-input.js";
 import { agentApprovalsContract } from "./approvals.js";
 import { jobsContract } from "./jobs.js";
 export * from "./jobs.js";
@@ -165,6 +166,7 @@ export const apiContract = {
         }),
       ),
   },
+  protectedInputs: protectedInputsContract,
   approvals: {
     ...agentApprovalsContract,
     list: httpRead("/approvals", "approvals", "List pending approvals")

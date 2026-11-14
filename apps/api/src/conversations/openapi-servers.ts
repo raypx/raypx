@@ -327,6 +327,7 @@ export function createOpenApiServers(
       operationId: string,
       args: Record<string, unknown>,
       signal: AbortSignal,
+      protectedCredential?: OpenApiCredential,
     ) {
       await this.checkPinned(scope, agentId, [pin], runId);
       const row = await repository.get(scope, pin.serverId);
@@ -335,7 +336,9 @@ export function createOpenApiServers(
           item.operationId === operationId && row.selectedOperationIds.includes(operationId),
       );
       if (!operation) throw new OpenApiServerError("NOT_FOUND");
-      const suppliedHeaders = await headers(scope, row, runId);
+      const suppliedHeaders = protectedCredential
+        ? credentialHeaders(protectedCredential)
+        : await headers(scope, row, runId);
       guard(args, secrets(suppliedHeaders));
       const result = await transport.call(row.url, suppliedHeaders, operation, args, signal);
       guard(result, secrets(suppliedHeaders));

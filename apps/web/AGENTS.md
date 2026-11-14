@@ -119,3 +119,5 @@ reference. Account settings compose Skills and remote Tools; Agent forms enable 
 member's available resources. Remote credentials remain write-only.
 
 Tools settings also compose Space-owner HTTP API management beside remote servers: one-time OpenAPI imports, explicit operation selection, write-only credentials and all/selected Agent availability. API activity and approvals use the shared conversation views.
+
+Protected input renders the shared independent addressed request form, including outside-window Runs. Values never join the home composer, conversation drafts or query caches.

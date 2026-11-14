@@ -124,3 +124,5 @@ The command remains pending with the always-approve reviewer and reaches the
 fake connector only after the member answers. Traces/video are disabled around
 pairing codes; optional captures after clearing the code use `.artifacts/device/`.
 This browser gate establishes no native dialog, real command or packaged result.
+
+protected-input.spec.ts runs the shared masked-input journey on Web and Desktop with the owned backend. It verifies ordinary approval, durable reload, supply/decline and event/effect/storage leak checks. Trace/video/automatic screenshots are disabled around generated sensitive values.

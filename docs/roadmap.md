@@ -115,7 +115,10 @@ outcomes with unknown-outcome guards. Subsequent slices add durable Run recovery
 client approval controls and bounded Auto review with a deployment-selected,
 tool-less model. Automatic decisions are durable and visible with their reasons;
 untrusted input, mutating HTTP operations and unlisted commands still ask. Protected
-input remains deferred. PostgreSQL, browser and live Docker acceptance are separate gates.
+input adds addressed masked forms, encrypted single-use storage, durable waiting
+and restart recovery for sandbox command environments and one-call HTTP bearer
+credentials. See [scope and conservative limits](architecture/protected-input.md).
+PostgreSQL, browser and live Docker acceptance are separate gates.
 
 Backend egress follow-up: the supervisor selects one DNS upstream and host rules
 restrict direct UDP/TCP DNS to it. The real-Engine gate now checks public HTTPS,
@@ -239,6 +242,11 @@ Acceptance:
   including refusals. Missing audit storage blocks the write.
 
 ## 7. Devices and reach
+
+Protected input is implemented for the shared Web/Desktop workspace and native
+Mobile. Only the initiating member supplies a value; normal approval remains
+independent. Device, file, generic MCP and graphical destinations remain unsupported.
+See [protected input](architecture/protected-input.md) for lifecycle and acceptance.
 
 Implemented graphical slice: optional graphical computer image, private bounded
 screen capture/input/streaming, member viewing and PostgreSQL exclusive expiring

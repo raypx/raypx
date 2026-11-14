@@ -106,6 +106,7 @@ async function nativeEventsFixture(page: Page) {
       "/rpc/deviceComputers/list": { devices: [] },
       "/rpc/deviceComputers/getSelection": { selection: null },
       "/rpc/approvals/pending": [],
+      "/rpc/protectedInputs/pending": [],
       "/rpc/approvals/settings": { revision: 0, mode: "ask", rules: [], availableModes },
       "/rpc/approvals/effectiveMode": {
         spaceId,

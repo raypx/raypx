@@ -12,6 +12,7 @@ export async function renderNative(element: ReactElement) {
         focus() {},
         blur() {},
         setNativeProps() {},
+        clear() {},
         scrollTo() {},
         scrollToEnd() {},
         scrollToIndex() {},

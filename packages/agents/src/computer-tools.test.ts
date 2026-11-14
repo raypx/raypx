@@ -92,6 +92,32 @@ function fixture(knownSecrets: string[] | (() => readonly string[]) = []) {
   return { tools, provider, service, repository, prepare, execute, row: () => row };
 }
 
+it("refuses a known deployment credential even when a member supplies it through protected input", async () => {
+  const value = crypto.randomUUID();
+  const f = fixture([value]);
+  const execute = vi.spyOn(f.provider, "execute");
+  const prepared = f.prepare("computer_run_command", {
+    executable: "echo",
+    argv: [],
+    cwd: ".",
+    protectedInput: {
+      name: "Access token",
+      purpose: "Authenticate once",
+      destination: { kind: "environment", variable: "TOKEN" },
+    },
+  });
+  const result = await f.tools.executeProtected!(
+    scope,
+    run,
+    prepared,
+    new AbortController().signal,
+    value,
+  );
+  expect(JSON.parse(result)).toMatchObject({ state: "failed", content: "SECRET_INPUT" });
+  expect(execute).not.toHaveBeenCalled();
+  expect(result.includes(value)).toBe(false);
+});
+
 it("exposes graphical tools only after capability admission and keeps image bytes out of results", async () => {
   const f = fixture();
   const signal = new AbortController().signal;

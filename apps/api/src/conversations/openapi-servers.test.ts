@@ -216,3 +216,39 @@ it("refuses credentials in operation metadata and response content before persis
   ).rejects.toMatchObject({ code: "OPERATION_FAILED" });
   expect(JSON.stringify(server)).not.toContain(token);
 });
+
+it("uses a protected bearer override for one operation and never retains it in the server or credential catalog", async () => {
+  const f = fixture();
+  const server = await f.service.create(scope(), configuration, { document });
+  const agent = agentIdSchema.parse("agent");
+  const signal = new AbortController().signal;
+  const [pin] = await f.service.catalog(scope(), agent, "protected-run", signal);
+  const value = crypto.randomUUID();
+  await f.service.call(scope(), agent, "protected-run", pin!, "read", {}, signal, {
+    type: "bearer",
+    value,
+  });
+  expect(f.transport.call).toHaveBeenLastCalledWith(
+    configuration.url,
+    { authorization: `Bearer ${value}` },
+    expect.anything(),
+    {},
+    signal,
+  );
+  expect(
+    JSON.stringify([
+      server,
+      f.service.protectedValues(),
+      [...f.rows.values()],
+      [...f.sealed.values()],
+    ]).includes(value),
+  ).toBe(false);
+  await f.service.call(scope(), agent, "protected-run", pin!, "read", {}, signal);
+  expect(f.transport.call).toHaveBeenLastCalledWith(
+    configuration.url,
+    {},
+    expect.anything(),
+    {},
+    signal,
+  );
+});

@@ -529,7 +529,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@raypx/contracts": "workspace:*",
-        "@raypx/control": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/providers": "workspace:*",

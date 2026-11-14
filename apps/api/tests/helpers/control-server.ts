@@ -19,6 +19,7 @@ import {
   createConversationsRepository,
   createConversationFanout,
   createApprovalsRepository,
+  createProtectedInputsService,
   createComputerUseQueue,
   cancelSpaceRuns,
 } from "@raypx/agents/server/postgres";
@@ -168,6 +169,11 @@ const openApiServers = createOpenApiServers(
   applicationSecretKeyProvider("browser-fixture-api-encryption-key"),
   createOpenApiTransport(),
 );
+const protectedKeys = applicationSecretKeyProvider("browser-fixture-protected-encryption");
+const protectedInputs = createProtectedInputsService(connection.db, {
+  seal: (binding, value) => sealStoredSecret(protectedKeys, "protected-input", binding, value),
+  open: (binding, sealed) => openStoredSecret(protectedKeys, "protected-input", binding, sealed),
+});
 const protectedValues = () => [
   ...modelConnections.protectedValues(),
   ...mcpServers.protectedValues(),
@@ -221,6 +227,7 @@ const runner = new ConversationRunner(
       protectedValues,
     ),
     approvals: agentApprovals,
+    protectedInputs,
   },
   {
     recallMemory: (scope, run) => spaceMemory.recall(scope, run.agentId),
@@ -293,6 +300,7 @@ const app = createApiApp({
   deviceConnector,
   modelConnections,
   agentApprovals,
+  protectedInputs,
   routines,
   spaceMemory,
   pages,

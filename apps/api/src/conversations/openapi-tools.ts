@@ -7,6 +7,7 @@ import {
 } from "@raypx/agents/server";
 import { MAX_TOOL_RESULT } from "@raypx/core/approvals";
 import { z } from "zod";
+import { protectedInputSpecSchema } from "@raypx/core/protected-input";
 import { matchesOpenApiSchema, OpenApiTransportError } from "@raypx/providers/openapi";
 import { OpenApiServerError, type OpenApiServersService } from "./openapi-servers.js";
 
@@ -89,8 +90,18 @@ export function withOpenApiTools(
           readOnly: tool.readOnly,
           definition: {
             name,
-            description: `${tool.method} ${tool.label}`,
-            parameters: tool.inputSchema,
+            description: `${tool.method} ${tool.label}. Request protectedInput for a one-call bearer credential; never put its value in chat or arguments.`,
+            parameters: {
+              ...tool.inputSchema,
+              properties: {
+                ...(tool.inputSchema.properties as object),
+                protectedInput: z.toJSONSchema(
+                  protectedInputSpecSchema.extend({
+                    destination: protectedInputSpecSchema.shape.destination.options[1],
+                  }),
+                ),
+              },
+            },
           },
         });
       }
@@ -162,7 +173,12 @@ export function withOpenApiTools(
       )
         throw new ComputerToolsError("INVALID_ARGUMENTS");
       guard(call, "SECRET_INPUT");
-      if (!matchesOpenApiSchema(call.arguments, binding.operation.inputSchema))
+      const { protectedInput: rawInput, ...operationArguments } = call.arguments;
+      const input =
+        rawInput === undefined ? undefined : protectedInputSpecSchema.safeParse(rawInput);
+      if (input && (!input.success || input.data.destination.kind !== "http-bearer"))
+        throw new ComputerToolsError("INVALID_ARGUMENTS");
+      if (!matchesOpenApiSchema(operationArguments, binding.operation.inputSchema))
         throw new ComputerToolsError("INVALID_ARGUMENTS");
       const path = call.arguments.path;
       if (
@@ -183,10 +199,12 @@ export function withOpenApiTools(
         argumentSummary: `${binding.operation.method} ${binding.operation.label}`,
         changes: true,
         readOnlyHttp: binding.readOnly,
+        ...(input?.success ? { protectedInput: input.data } : {}),
       };
     },
     async execute(scope, run, call, signal) {
       if (!call.name.startsWith("openapi_")) return base.execute(scope, run, call, signal);
+      if (call.protectedInput) throw new ComputerToolsError("INVALID_ARGUMENTS");
       const binding = bindings.get(run.id)?.get(call.name);
       if (!binding) throw new ComputerToolsError("INVALID_TOOL");
       guard(call, "SECRET_INPUT");
@@ -231,6 +249,46 @@ export function withOpenApiTools(
             : "OPERATION_FAILED";
         return JSON.stringify({ source: "remote", untrusted: true, state: "failed", code });
       }
+    },
+    async executeProtected(scope, run, call, signal, value) {
+      if (!call.name.startsWith("openapi_")) {
+        if (!base.executeProtected) throw new ComputerToolsError("INVALID_TOOL");
+        return base.executeProtected(scope, run, call, signal, value);
+      }
+      const prepared = this.prepare(
+        {
+          type: "toolCall",
+          id: call.id,
+          name: call.name,
+          arguments: call.arguments as ToolCall["arguments"],
+        },
+        run,
+      );
+      const binding = bindings.get(run.id)?.get(call.name);
+      if (!binding || prepared.protectedInput?.destination.kind !== "http-bearer")
+        throw new ComputerToolsError("INVALID_ARGUMENTS");
+      const { protectedInput: _input, ...args } = call.arguments;
+      const result = await service.call(
+        scope,
+        run.agentId,
+        run.id,
+        binding,
+        binding.remoteName,
+        args,
+        signal,
+        { type: "bearer", value },
+      );
+      guard(result, "SECRET_OUTPUT");
+      const output = JSON.stringify({
+        source: "remote",
+        untrusted: true,
+        state: result.isError ? "failed" : "succeeded",
+        status: result.status,
+        content: result.content,
+        truncated: result.truncated,
+      });
+      if (output.length > MAX_TOOL_RESULT) throw new ComputerToolsError("SECRET_OUTPUT");
+      return output;
     },
     release(run) {
       catalogs.delete(run.id);

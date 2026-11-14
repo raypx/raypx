@@ -29,6 +29,7 @@ export interface ApiAppOptions {
   spaceMemory: import("@raypx/memory/space-server").SpaceMemoryService;
   routineEmailRelayToken?: string;
   modelConnections: import("../conversations/connections.js").ModelConnectionsService;
+  protectedInputs: import("@raypx/agents/server").ProtectedInputsService;
   agentApprovals: import("@raypx/agents/server").ApprovalsService;
   computers: import("@raypx/computers/server").ComputersService;
   computerScreens: import("@raypx/computers/server").ComputerScreensService;

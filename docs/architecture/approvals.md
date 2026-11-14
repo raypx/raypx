@@ -144,7 +144,8 @@ attempt, a matching effect fence or lifecycle metadata to classify an intent.
 `approvals.effects` exposes up to 512 records for a selected Space/Run. Unknown
 effects are never replayed automatically; no exactly-once external effect is claimed.
 
-Protected input is deferred. Known deployment secret values are rejected from
+Protected input uses a separate addressed, encrypted one-use request lifecycle; see
+[delivery, recovery and limits](protected-input.md). Known deployment secret values are rejected from
 tool arguments before records or Computer calls, and from output before effects
 or model history. Tool results carry an untrusted-data label; this label does not
 grant authority. Approval decisions remain durable request records and immutable
@@ -269,7 +270,7 @@ still reuses its recorded outcome without dispatching or asking again.
 These limits, deployment-only selection, coarse persistent taint, confidence
 threshold and interrupted-claim fallback settle details left open by the original
 guide conservatively. Deterministic fixtures validate protocol and policy, not
-real-model judgment quality. Protected input remains deferred.
+real-model judgment quality. Protected input never uses the review model.
 
 ## Device commands
 

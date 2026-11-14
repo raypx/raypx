@@ -50,6 +50,7 @@ export default function GroupConversationRoute() {
         accountId={workspace.owner.accountId}
         origin={workspace.owner.origin}
         approvalPort={workspace.port.approvals}
+        protectedInputsPort={workspace.port.protectedInputs}
         onRoutines={() =>
           router.push({ pathname: "/routines", params: { spaceId: group.conversation.spaceId } })
         }

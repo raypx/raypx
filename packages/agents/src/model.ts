@@ -172,3 +172,5 @@ export {
   type ApprovalSettingsPort,
   type ApprovalSettingsView,
 } from "./model/approval-settings.js";
+
+export { ProtectedInputsController, type ProtectedInputsPort } from "./model/protected-input.js";

@@ -1,3 +1,4 @@
+import { createProtectedInputHandlers } from "./protected-input.js";
 import { createDeviceComputersHandlers } from "./device-computers.js";
 import { createPagesHandlers } from "./pages.js";
 import { createSkillsHandlers } from "./skills.js";
@@ -55,6 +56,7 @@ export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadi
     devices: createDevicesHandlers(setup),
     tasks: createTasksHandlers(setup),
     approvals: createApprovalsHandlers(setup),
+    protectedInputs: createProtectedInputHandlers(setup),
     relay: createRelayHandlers(setup),
     account: createAccountHandlers(setup),
   });
@@ -66,6 +68,10 @@ export function createRpcRoutes(
   logger: ApiAppOptions["logger"],
 ) {
   const routes = new Hono<ApiRouterEnv>();
+  routes.use("/protectedInputs/*", async (c, next) => {
+    c.header("cache-control", "no-store");
+    await next();
+  });
   routes.use("/attachments/*", limitAttachmentBody);
   const rpc = new RPCHandler(router, {
     plugins: [

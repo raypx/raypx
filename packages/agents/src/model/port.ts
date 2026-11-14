@@ -153,6 +153,7 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  protectedInputs?: import("./protected-input.js").ProtectedInputsPort;
   deviceComputers?: DeviceComputersPort;
   skills?: AgentSkillsPort;
   mcpServers?: AgentMcpPort;

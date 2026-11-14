@@ -31,6 +31,7 @@ import {
 import { EffectInProgressError, EffectUnknownError, type ApprovalsService } from "./approvals.js";
 import { ComputerToolsError, type ComputerTools } from "./computer-tools.js";
 import { toolCompletion } from "./tool-lifecycle.js";
+import type { ProtectedInputsService } from "./protected-input.js";
 
 export interface ModelTurn extends Pick<RunExecution, "instructions" | "history"> {
   /** Canonical model history after the initial conversation context. */
@@ -38,6 +39,7 @@ export interface ModelTurn extends Pick<RunExecution, "instructions" | "history"
   tools?: Tool[];
 }
 export interface RunTools {
+  protectedInputs?: ProtectedInputsService;
   tools: ComputerTools;
   approvals: ApprovalsService;
   maxToolRounds?: number;
@@ -392,6 +394,7 @@ export class ConversationRunner {
     this.scanning = (async () => {
       while (this.scanAgain && this.accepting && !this.closed) {
         this.scanAgain = false;
+        await this.toolRuntime?.protectedInputs?.cleanup();
         const [runnable, backup] = await Promise.all([
           this.repository.scanRunnable(),
           this.repository.claimBackupJobs(this.ownerId, this.options.leaseMs),
@@ -572,8 +575,52 @@ export class ConversationRunner {
         isError = true;
       } else {
         try {
+          if (prepared.protectedInput) {
+            if (
+              !this.toolRuntime.protectedInputs ||
+              !this.toolRuntime.tools.executeProtected ||
+              prepared.device
+            )
+              throw new ComputerToolsError("INVALID_ARGUMENTS");
+            const state = await this.toolRuntime.protectedInputs.wait(
+              scope,
+              run,
+              prepared,
+              controller.signal,
+            );
+            if (controller.signal.aborted) throw new AttemptInterrupted();
+            if (state !== "answered" && state !== "consumed") {
+              return {
+                role: "toolResult",
+                toolCallId: call.id,
+                toolName: call.name,
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({
+                      untrusted: true,
+                      state: "failed",
+                      code: `PROTECTED_INPUT_${state.toUpperCase()}`,
+                    }),
+                  },
+                ],
+                isError: true,
+                timestamp: Date.now(),
+              };
+            }
+          }
           const operation = () =>
-            this.toolRuntime!.tools.execute(scope, run, prepared, controller.signal);
+            prepared.protectedInput
+              ? this.toolRuntime!.protectedInputs!.consume(scope, run, prepared, (value) =>
+                  this.toolRuntime!.tools.executeProtected!(
+                    scope,
+                    run,
+                    prepared,
+                    controller.signal,
+                    value,
+                  ),
+                )
+              : this.toolRuntime!.tools.execute(scope, run, prepared, controller.signal);
           const drive = (execute: () => Promise<string>) =>
             this.toolRuntime!.tools.withDriver
               ? this.toolRuntime!.tools.withDriver(scope, run, prepared, controller.signal, execute)

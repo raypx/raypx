@@ -125,6 +125,11 @@ not sandbox isolation. The product says so where the grant is given.
 - Output that returns to the model is bounded. A known secret value in output is
   redacted before it reaches the conversation.
 
+Protected input now implements single-operation sandbox command environments with
+encrypted addressed requests and exact output scrubbing. Device journal payloads,
+file writes and graphical input do not accept it. See
+[protected input](protected-input.md) for recovery and disclosure limits.
+
 ## Initial Computer slice
 
 `@raypx/core/computers` owns the records; `@raypx/computers/server` owns the

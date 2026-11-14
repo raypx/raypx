@@ -678,5 +678,19 @@
     "nextRun": "适用于你在此对话中发起的下一次运行。已有运行保持原计算机。",
     "approvalDevice": "设备：{name}",
     "grantInstructions": "请在所选机器的桌面端确认，或运行此命令并选择目录："
+  },
+  "protectedInput": {
+    "title": "受保护输入：{name}",
+    "environment": "命令环境变量：{variable}",
+    "http": "仅本次 HTTP 凭据",
+    "untrusted": "此运行受到外部内容影响（{source}）。提供值前请核对目标。",
+    "external": "外部内容",
+    "privacy": "仅用于本次操作，不发送给模型，不保存到聊天。仍需正常审批。",
+    "expires": "到期时间：{time}",
+    "submit": "仅提供一次",
+    "decline": "拒绝",
+    "answered": "已提供，等待操作执行。",
+    "error": "无法确认请求状态，请刷新后再试。",
+    "requests": "受保护输入请求"
   }
 }

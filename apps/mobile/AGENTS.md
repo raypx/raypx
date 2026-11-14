@@ -134,3 +134,5 @@ on foreground and explicit Refresh; native Mobile holds no connector credential
 and cannot confirm a directory on another machine. Device commands retain the
 machine's OS permissions and are not sandboxed. Native iOS/Android acceptance
 remains a separate gate.
+
+Protected input uses the shared metadata controller with a native masked field. Values live only in a private ref, clear on submit/background/unmount and never enter SecureStore or drafts. Normal approval remains separate; no native device acceptance is implied.

@@ -37,6 +37,7 @@ export function browserModelFixture() {
       const requestsPage = lastMessage?.text.startsWith(pagePrefix) ?? false;
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
       const requestsAutoWrite = lastMessage?.text.startsWith("Fixture Auto write ") ?? false;
+      const requestsProtected = lastMessage?.text === "Fixture protected command";
       const requestsDeviceCommand = lastMessage?.text === "Fixture device command";
       const requestsRealDevice = lastMessage?.text === "Fixture real device roundtrip";
       const autoUntrustedPrefix = "Fixture Auto untrusted ";
@@ -60,6 +61,17 @@ export function browserModelFixture() {
         stream.end(request);
         return stream;
       }
+      if (requestsProtected && !results.some((entry) => entry.toolName === "computer_run_command"))
+        return toolCall("computer_run_command", "browser-protected-command", {
+          executable: "echo",
+          argv: ["Protected operation complete"],
+          cwd: ".",
+          protectedInput: {
+            name: "Access token",
+            purpose: "Authenticate this operation",
+            destination: { kind: "environment", variable: "PROTECTED_TOKEN" },
+          },
+        });
       if (
         requestsDeviceCommand &&
         !results.some((entry) => entry.toolName === "computer_run_command")
@@ -200,7 +212,8 @@ export function browserModelFixture() {
         requestsAutoWrite ||
         requestsAutoUntrusted ||
         requestsDeviceCommand ||
-        requestsRealDevice
+        requestsRealDevice ||
+        requestsProtected
       )
         queueMicrotask(complete);
       return stream;
