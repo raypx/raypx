@@ -1,0 +1,282 @@
+apps/mobile/tests/mocks/clipboard.ts
+  s_c1fb076f1136bf::t_a7fb5779e2d241 1-2
+apps/mobile/src/agents/conversation.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 95-98,105-107,245-247,263-265,267,276-285,301-303,320,372-376,381-383,652-656,666-686,693-701
+  s_c1fb076f1136bf::t_63b77691ed98ea 224-237,709-716
+  s_c1fb076f1136bf::t_97ae94b50b2b0a 266
+  s_c1fb076f1136bf::t_9abb1d3d6b2ea6 36,59,73,118-126
+  s_c1fb076f1136bf::t_93331d868ebaf8 101,127-132
+  s_c1fb076f1136bf::t_066801a777006a 210-214
+  s_c1fb076f1136bf::t_a508d162a2a7d9 23-25,34,54-58,67-72,92-93,99-100,102-104,108-109,243,305,308,319,370,377-380,517,718,732
+  s_c1fb076f1136bf::t_fddf4452bffea0 223,238
+  s_c1fb076f1136bf::t_ddb76c384bc65c 268-275
+  s_c1fb076f1136bf::t_ff2cf377fca93c 94
+  s_c1fb076f1136bf::t_d9f115c8121a52 565
+apps/mobile/src/groups/controller.ts
+  s_c1fb076f1136bf::t_5694fa0dc52af4 1-6,23-29,34-37,40-42,66-71,76-78,88-91,122-127,148-155
+  s_c1fb076f1136bf::t_27c1b9ee73f02d 7-22,30-33,38-39,43-65,72-75,79-87,92-94,96-102,119-121,128-137,140-141,143-147,156-157
+  s_c1fb076f1136bf::t_1148f2333d00b7 95,103-118,138-139,142
+apps/mobile/src/agents/provider.component.test.tsx
+  s_c1fb076f1136bf::t_ec27dde36d7207 4-5,24,34-39,48-49,53
+  s_c1fb076f1136bf::t_031b03abf59557 3,9-13,40-47,50-52
+apps/mobile/src/groups/mention-suggestions.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 8-17,20-49
+  s_c1fb076f1136bf::t_2960ceb5ccbeb2 1-7,18-19,50
+apps/mobile/src/agents/workspace.ts
+  s_c1fb076f1136bf::t_5694fa0dc52af4 117-119,160-164,167-177
+  s_c1fb076f1136bf::t_d55ae46c819f32 3,7,11-12,19,42,57-58,97-116,120-129,148,154,157,200-207,209,211,220,229,249
+apps/mobile/locales/en/mobile-capabilities.json
+  s_c1fb076f1136bf::t_cb7a6276e52c38 1-10,13
+  s_c1fb076f1136bf::t_6590d4baf08e84 11-12
+apps/mobile/locales/en/index.ts
+  s_c1fb076f1136bf::t_5694fa0dc52af4 14-25
+  s_c1fb076f1136bf::t_a7fb5779e2d241 4-7
+  s_c1fb076f1136bf::t_ff2cf377fca93c 10-13
+apps/mobile/src/agents/tool-activity.tsx
+  s_c1fb076f1136bf::t_06ba9af66a97db 8-9,14,118-119,126-127
+  s_c1fb076f1136bf::t_5694fa0dc52af4 79-81,159-166
+apps/mobile/src/agents/conversation.component.test.tsx
+  s_c1fb076f1136bf::t_ddb76c384bc65c 757-758,760-768,770
+  s_c1fb076f1136bf::t_d646a985eb3bcc 759
+  s_c1fb076f1136bf::t_fddf4452bffea0 769
+apps/mobile/locales/en/mobile-resources.json
+  s_c1fb076f1136bf::t_f4d09651179c6f 1-19,24-35
+  s_c1fb076f1136bf::t_3a88203445eaf6 20-23
+apps/mobile/src/capabilities/layout.tsx
+  s_c1fb076f1136bf::t_90b5f97e82f568 56,87
+  s_c1fb076f1136bf::t_e8c40b0a753abe 12-44,46-55,57-60,62-77,79-86,88-104
+  s_c1fb076f1136bf::t_cb7a6276e52c38 1-11,45,61,78,105
+PRODUCT.md
+  s_c1fb076f1136bf::t_5694fa0dc52af4 53-77
+apps/mobile/src/ui.tsx
+  s_c1fb076f1136bf::t_97ae94b50b2b0a 46
+apps/mobile/src/capabilities/routines-controller.test.ts
+  s_c1fb076f1136bf::t_09c75cd0886b83 1-7,15-23,34-38,52-54,57-58,61-67,77-79,86-88
+  s_c1fb076f1136bf::t_e8c40b0a753abe 8-14,24-33,39-51,55-56,59-60,68-76,80-85
+apps/mobile/app/(app)/index.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 89-104
+apps/mobile/src/agents/effects.component.test.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 11-58
+  s_c1fb076f1136bf::t_da66bf51ca8edd 1-10,59-65
+apps/mobile/src/agents/effects-controller.test.ts
+  s_c1fb076f1136bf::t_5694fa0dc52af4 7-58,65
+  s_c1fb076f1136bf::t_d9dab072c687a6 1-6,59-64
+apps/mobile/src/resources/routes.component.test.tsx
+  s_c1fb076f1136bf::t_aa92467abafc60 1-7,13-14,18-22,25,41-49,52-54,58-62,65-70,73-74,78-80,83-93
+  s_c1fb076f1136bf::t_5694fa0dc52af4 8-12,15-17,23-24,26-40,50-51,55-57,63-64,71-72,75-77,81-82
+apps/mobile/src/agents/directory.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 96-115
+  s_c1fb076f1136bf::t_538b778edbdebd 40-43,59-62
+apps/mobile/src/agents/workspace.test.ts
+  s_c1fb076f1136bf::t_0349e1d58ae584 338
+  s_c1fb076f1136bf::t_b60e152a3bdc76 11,14,76-77,140,143,292-294,311,316-324,330-334,339-343
+  s_c1fb076f1136bf::t_5694fa0dc52af4 139,295-310,312-315,325-329,335-337
+packages/agents/src/model.ts
+  s_c1fb076f1136bf::t_40423a590440c3 142
+  s_c1fb076f1136bf::t_3a5d1756b8894e 154-155
+apps/mobile/src/agents/provider.tsx
+  s_c1fb076f1136bf::t_30b2f82db2871d 117-118,137-149
+  s_c1fb076f1136bf::t_e90cc1821cca79 119-122
+  s_c1fb076f1136bf::t_ec27dde36d7207 123
+  s_c1fb076f1136bf::t_2411bff3af6c37 150
+apps/mobile/app/(app)/group-conversation/[groupId].tsx
+  s_c1fb076f1136bf::t_d43ab2d43bb95f 1-16,42,86
+  s_c1fb076f1136bf::t_5694fa0dc52af4 17-41,43-85
+AGENTS.md
+  s_c1fb076f1136bf::t_5694fa0dc52af4 15-18
+apps/mobile/src/resources/screens.component.test.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 10-12,18-53,56-61,73-120,124-137,147-164,167-174
+  s_c1fb076f1136bf::t_967b6f508b687e 142-146,165-166,175-176
+  s_c1fb076f1136bf::t_deacd8368af446 1-9,13-17,54-55,62-72,121-123,138-141,177-179
+apps/mobile/package.json
+  s_c1fb076f1136bf::t_5694fa0dc52af4 24-27,31
+apps/mobile/src/groups/screens.tsx
+  s_c1fb076f1136bf::t_27c1b9ee73f02d 1-9,16-21,29-30,34,40-41,95,98-99,112,175,203
+  s_c1fb076f1136bf::t_2960ceb5ccbeb2 31-33
+  s_c1fb076f1136bf::t_5694fa0dc52af4 10-15,22-28,35-39,42-94,96-97,100-111,113-174,176-202
+apps/mobile/app/(app)/space-settings.tsx
+  s_c1fb076f1136bf::t_d43ab2d43bb95f 1-18,20-21,25-27,29,32,36,41-43,52-58,149
+  s_c1fb076f1136bf::t_2960ceb5ccbeb2 19,28,48
+  s_c1fb076f1136bf::t_6d72ef60a827f1 49-51
+  s_c1fb076f1136bf::t_5694fa0dc52af4 22-24,30-31,33-35,37-40,44-47,59-148
+apps/mobile/app/(app)/routines.tsx
+  s_c1fb076f1136bf::t_d522ec28531086 10,14,41-47,49-55
+  s_c1fb076f1136bf::t_63e4e4afc0ee8f 48
+  s_c1fb076f1136bf::t_e8c40b0a753abe 1,18-40,56-94
+  s_c1fb076f1136bf::t_c4a4fe08b1f6cd 2-9,11-13,15-17,95
+apps/mobile/app/(app)/pages.tsx
+  s_c1fb076f1136bf::t_4411c248cb5219 1
+apps/mobile/src/spaces/screens.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 6-10,17-26,36-40,45-47,58-227,230-237,239-243,247-313
+  s_c1fb076f1136bf::t_2960ceb5ccbeb2 29-34
+  s_c1fb076f1136bf::t_6d72ef60a827f1 1,42,53
+  s_c1fb076f1136bf::t_3a5d1756b8894e 2-5,11-16,27-28,35,41,43-44,48-52,54-57,228-229,238,244-246,314
+apps/mobile/src/capabilities/memory-screen.tsx
+  s_c1fb076f1136bf::t_90b5f97e82f568 18
+  s_c1fb076f1136bf::t_e8c40b0a753abe 11-17,19-24,29-38,41-192,194-240
+  s_c1fb076f1136bf::t_c4a4fe08b1f6cd 1-6,8-10,25-28,39-40,193,241
+  s_c1fb076f1136bf::t_7caac1fffb2531 7
+apps/mobile/tests/capabilities.ts
+  s_c1fb076f1136bf::t_e8c40b0a753abe 12-45,48-61,63-67,69-70,75-78,80-84
+  s_c1fb076f1136bf::t_09c75cd0886b83 1-11,46-47,62,68,71-74,79,85-89
+apps/mobile/src/capabilities/memory-controller.test.ts
+  s_c1fb076f1136bf::t_09c75cd0886b83 1-9,23-26,38-41,44-50,57-61,64-65,69-72
+  s_c1fb076f1136bf::t_e8c40b0a753abe 10-22,27-37,42-43,51-56,62-63,66-68
+apps/mobile/src/capabilities/routines-screen.component.test.tsx
+  s_c1fb076f1136bf::t_612dfe9c2c21ae 1-2,11-17,80-82,90,99-101,104-105
+  s_c1fb076f1136bf::t_e8c40b0a753abe 3-10,18-79,83-89,91-98,102-103
+packages/agents/AGENTS.md
+  s_c1fb076f1136bf::t_5694fa0dc52af4 13-14
+apps/mobile/src/agents/ports.ts
+  s_c1fb076f1136bf::t_40423a590440c3 71-77
+  s_c1fb076f1136bf::t_13e1a4a60859f2 145
+docs/architecture/clients.md
+  s_c1fb076f1136bf::t_5694fa0dc52af4 106-111
+apps/mobile/src/capabilities/agent-chooser.tsx
+  s_c1fb076f1136bf::t_d522ec28531086 8-16,26-58
+  s_c1fb076f1136bf::t_6590d4baf08e84 1-7,17-25,59
+apps/mobile/src/destination.ts
+  s_c1fb076f1136bf::t_5694fa0dc52af4 15-27
+  s_c1fb076f1136bf::t_9abb1d3d6b2ea6 38
+  s_c1fb076f1136bf::t_8754a67211d687 10-14,29,31
+apps/mobile/src/resources/controllers.test.ts
+  s_c1fb076f1136bf::t_967b6f508b687e 164-168,174,179-180,183-187,194-196,202,207-212,216,219-224,227-232
+  s_c1fb076f1136bf::t_a9a1636027c0ba 1-2,8-15,22-39,48-51,59,66-70,76-104,110,120-125,129,133-139,149-154,157-158,161-163,233
+  s_c1fb076f1136bf::t_5694fa0dc52af4 3-7,16-21,40-47,52-58,60-65,71-75,105-109,111-119,126-128,130-132,140-148,155-156,159-160,169-173,175-178,181-182,188-193,197-201,203-206,213-215,217-218,225-226
+apps/mobile/src/capabilities/routines-screen.tsx
+  s_c1fb076f1136bf::t_cb7a6276e52c38 1-3,12-17,36,38,47,63-64,226,340
+  s_c1fb076f1136bf::t_e8c40b0a753abe 4-11,18-26,30-35,39-46,48-62,65,67-225,227-339
+  s_c1fb076f1136bf::t_90b5f97e82f568 27-29,37,66
+docs/development/mobile.md
+  s_c1fb076f1136bf::t_ddb76c384bc65c 219
+  s_c1fb076f1136bf::t_5694fa0dc52af4 128-143,196-198,206-218,220-261,301-302,315-317
+apps/mobile/app/(app)/space-memory.tsx
+  s_c1fb076f1136bf::t_c4a4fe08b1f6cd 2-7,9-11,13-15,77
+  s_c1fb076f1136bf::t_63e4e4afc0ee8f 40
+  s_c1fb076f1136bf::t_d522ec28531086 8,12,33-39,41-47
+  s_c1fb076f1136bf::t_e8c40b0a753abe 1,16-32,48-76
+apps/mobile/src/agents/approval-card.tsx
+  s_c1fb076f1136bf::t_d9f115c8121a52 20,34
+  s_c1fb076f1136bf::t_066801a777006a 78-82
+apps/mobile/app/(app)/join.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 24-27,30-39
+  s_c1fb076f1136bf::t_d43ab2d43bb95f 1-23,28-29,40
+apps/mobile/src/capabilities/routines-controller.ts
+  s_c1fb076f1136bf::t_e8c40b0a753abe 24-29,35-47,58-62,65-66,71-76,80-82,86-91,96-102,108-111,117-120,127-128,142-164
+  s_c1fb076f1136bf::t_9907037a2dbf5f 1-23,30-34,48-57,63-64,67-70,77-79,83-85,92-95,103-107,112-116,121-126,129-141,165
+apps/mobile/tests/native.tsx
+  s_c1fb076f1136bf::t_043333e128a0b6 14,18
+apps/mobile/app/(app)/resources.tsx
+  s_c1fb076f1136bf::t_4411c248cb5219 1
+apps/mobile/locales/zh/mobile.json
+  s_c1fb076f1136bf::t_ff2cf377fca93c 9-10
+apps/mobile/src/resources/routes.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 18-20,22-34,48-59,61-67,74-80,83-89,91-102
+  s_c1fb076f1136bf::t_4411c248cb5219 1-14,16,35-40,45,47,68-73,81-82,90,103
+  s_c1fb076f1136bf::t_7edc571405e3e0 15,17,21,41-44,46,60
+apps/mobile/src/groups/conversation.component.test.tsx
+  s_c1fb076f1136bf::t_5694fa0dc52af4 4-18,22-41,43-65,71-80,82-85,87-90,92-105,108-146,149-159,169-171,173-176,183-187,190-193,197-201,203-204,209-214,218-227,229-238,242-257,259-263
+  s_c1fb076f1136bf::t_125209c2015597 1-3,19-21,42,66-68,70,81,86,91,106,147-148,160-168,172,177-182,188-189,194-196,202,205-207,215-217,228,239-241,258,264-267
+  s_c1fb076f1136bf::t_5be629dcadc843 69,107,208
+apps/mobile/src/capabilities/agent-chooser.component.test.tsx
+  s_c1fb076f1136bf::t_6590d4baf08e84 1-10,20,37-41
+  s_c1fb076f1136bf::t_d522ec28531086 11-19,21-36
+apps/mobile/AGENTS.md
+  s_c1fb076f1136bf::t_ddb76c384bc65c 22
+  s_c1fb076f1136bf::t_5694fa0dc52af4 13-21,31-34
+apps/mobile/tests/resources.ts
+  s_c1fb076f1136bf::t_967b6f508b687e 5,80-81
+  s_c1fb076f1136bf::t_a9a1636027c0ba 1-4,6-12,76-79,82,104-105,120-121,135-137
+  s_c1fb076f1136bf::t_5694fa0dc52af4 13-75,83-103,106-119,122-134
+package.json
+  s_c1fb076f1136bf::t_96bb94c42b6467 100-101
+apps/mobile/src/agents/approval-card.component.test.tsx
+  s_c1fb076f1136bf::t_066801a777006a 41-61
+apps/mobile/src/agents/effects.tsx
+  s_c1fb076f1136bf::t_b11c9da766f1cd 1-5,12-17,24-29,35,107
+  s_c1fb076f1136bf::t_5694fa0dc52af4 6-11,18-23,31,34,36-106
+  s_c1fb076f1136bf::t_d9f115c8121a52 30,32-33
+apps/mobile/src/spaces/screens.component.test.tsx
+  s_c1fb076f1136bf::t_370a0f1dbbace3 1,8-13,29,46-47,51,65-66,79,96-99,110-114,117-118,128-129,132-133,141-142,147-151,157-158,170-175,192-193,208-209,228-229
+  s_c1fb076f1136bf::t_5694fa0dc52af4 2-7,14-28,30-45,48-50,52-64,67-78,80-95,100-109,115-116,119-127,130-131,134-140,143-146,152-156,159-169,176-191,194-207,210-227
+apps/mobile/src/agents/ports.test.ts
+  s_c1fb076f1136bf::t_13e1a4a60859f2 67-76
+docs/development/testing.md
+  s_c1fb076f1136bf::t_5694fa0dc52af4 230-232
+apps/mobile/locales/zh/mobile-capabilities.json
+  s_c1fb076f1136bf::t_6590d4baf08e84 11-12
+  s_c1fb076f1136bf::t_cb7a6276e52c38 1-10,13
+apps/mobile/locales/zh/index.ts
+  s_c1fb076f1136bf::t_ff2cf377fca93c 10-13
+  s_c1fb076f1136bf::t_a7fb5779e2d241 4-7
+  s_c1fb076f1136bf::t_5694fa0dc52af4 14-25
+apps/mobile/src/groups/controller.test.ts
+  s_c1fb076f1136bf::t_5694fa0dc52af4 13-21,26-37,48-50,60-64,66-68,80-81,85-86,90-91,98-107,113-119,128-138,145-150,153-154,160-171
+  s_c1fb076f1136bf::t_778d9ba2b1b0bc 1-12,22-25,38-47,51-59,65,69-79,82-84,87-89,92-97,108-112,120-127,139-140,177
+  s_c1fb076f1136bf::t_7236bdf7d8add8 141-144,151-152,155-159,172-176
+apps/mobile/src/groups/screens.component.test.tsx
+  s_c1fb076f1136bf::t_778d9ba2b1b0bc 1-4,13-19,31,41,49-55,78-79,120,123,136,139,142-143,159-161,174,179-180
+  s_c1fb076f1136bf::t_5694fa0dc52af4 5-12,20-30,32-40,42-48,56-77,80-86,88-119,121-122,124-135,137-138,140-141,144-158,162-173,175-178
+  s_c1fb076f1136bf::t_1750b2feb91fff 87
+apps/mobile/src/resources/controllers.ts
+  s_c1fb076f1136bf::t_3a88203445eaf6 17,210-211,217-218,223-227,233-235,241-242,245,247-248,254-255
+  s_c1fb076f1136bf::t_f4d09651179c6f 12-16,18-27,34-36,49-59,61-70,83-98,105-108,115-118,123,127,134-145,152-153,162-172,179-185,192-193,195-196,202,206,264-265,268,273-274
+  s_c1fb076f1136bf::t_1ffe5e4dda1f29 60
+  s_c1fb076f1136bf::t_ed04117321987c 186,194,246
+  s_c1fb076f1136bf::t_5694fa0dc52af4 1-11,28-33,37-48,71-82,99-104,109-114,119-122,124-126,128-133,146-151,154-161,173-178,187-191,197-201,203-205,207-209,212-216,219-222,228-232,236-240,243-244,249-253,256-263,266-267,269-272
+apps/mobile/src/destination.test.ts
+  s_c1fb076f1136bf::t_043333e128a0b6 12,30-34,37-38
+  s_c1fb076f1136bf::t_5694fa0dc52af4 13-29
+  s_c1fb076f1136bf::t_0349e1d58ae584 35-36
+apps/mobile/locales/zh/mobile-resources.json
+  s_c1fb076f1136bf::t_3a88203445eaf6 20-23
+  s_c1fb076f1136bf::t_f4d09651179c6f 1-19,24-35
+apps/mobile/src/capabilities/memory-controller.ts
+  s_c1fb076f1136bf::t_38a23f0a7e20a9 59,67-69,109
+  s_c1fb076f1136bf::t_9907037a2dbf5f 1-2,17-26,35-37,49-58,70,74-82,86,93-95,106-108,110,115-117,123-141,145-153,159-166,183
+  s_c1fb076f1136bf::t_e8c40b0a753abe 3-16,27-34,38-48,60-66,71-73,83-85,87-92,96-105,111-114,118-122,142-144,154-158,167-182
+apps/mobile/src/resources/screens.tsx
+  s_c1fb076f1136bf::t_293093489d2546 66,155
+  s_c1fb076f1136bf::t_e823562a903789 30-36
+  s_c1fb076f1136bf::t_3a88203445eaf6 13,278,335
+  s_c1fb076f1136bf::t_92cd32efa4950d 2-12,14-17,29,37-39,45-48,56-62,67,85-91,99,109-110,115-123,128,138-141,145-151,156-157,178-184,192,195,201,211,230,296-307,333-334,336-340,350,366
+  s_c1fb076f1136bf::t_4411c248cb5219 1
+  s_c1fb076f1136bf::t_5694fa0dc52af4 18-28,40-44,49-55,63-65,68-84,92-98,100-108,111-114,124-127,129-137,142-144,152-154,158-177,185-191,193-194,196-200,202-210,212-229,231-277,279-295,308-332,341-349,351-365
+apps/mobile/src/agents/effects-controller.ts
+  s_c1fb076f1136bf::t_b11c9da766f1cd 1-16,22-24,28-41,46-54,59
+  s_c1fb076f1136bf::t_5694fa0dc52af4 17-21,25-27,42-45,55-58
+apps/mobile/vitest.config.ts
+  s_c1fb076f1136bf::t_a7fb5779e2d241 26
+apps/mobile/src/capabilities/memory-screen.component.test.tsx
+  s_c1fb076f1136bf::t_e8c40b0a753abe 4-11,18-19,21,24-60,62-74,79-81,90-91
+  s_c1fb076f1136bf::t_612dfe9c2c21ae 1-3,12-15,22-23,75-78,82-89,92-93
+  s_c1fb076f1136bf::t_90b5f97e82f568 16-17,20,61
+apps/mobile/app/(app)/conversation/[agentId].tsx
+  s_c1fb076f1136bf::t_538b778edbdebd 45
+  s_c1fb076f1136bf::t_9abb1d3d6b2ea6 2-3,15,44
+  s_c1fb076f1136bf::t_5694fa0dc52af4 46-63
+apps/mobile/locales/en/mobile.json
+  s_c1fb076f1136bf::t_ff2cf377fca93c 9-10
+apps/mobile/app/(app)/groups.tsx
+  s_c1fb076f1136bf::t_d43ab2d43bb95f 1-19,21,25-27,30-32,38,76
+  s_c1fb076f1136bf::t_5694fa0dc52af4 22-24,33-36,39-75
+  s_c1fb076f1136bf::t_2960ceb5ccbeb2 20,28-29,37
+bun.lock
+  s_c1fb076f1136bf::t_cea890c6d1d443 180-183,187,1173,2870-2871
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2074540986fd50b97580e375d634cf0016605ac3",
+  "prompts": {},
+  "sessions": {
+    "s_c1fb076f1136bf": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d7e9-a9f2-7f32-961c-703fc63efe45",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
