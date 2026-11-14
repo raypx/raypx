@@ -160,6 +160,17 @@ export function replyFixture(toolRuntime?: RunTools) {
         rounds: 0,
         completed: false,
       };
+      const originatingRequest = messages.find(
+        (message) =>
+          message.id === run.messageId &&
+          message.author.kind === "member" &&
+          message.author.accountId === run.memberAccountId,
+      );
+      if (originatingRequest)
+        run.trustedInstructionSummary = JSON.stringify({
+          agentInstructions: "Be helpful",
+          memberRequest: originatingRequest.text,
+        });
       checkpoints.set(run.id, structuredClone(checkpoint));
       return {
         scope: f.scope,

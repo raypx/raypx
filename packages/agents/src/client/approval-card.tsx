@@ -146,6 +146,11 @@ export function ApprovalCard({
       {summary && (
         <pre className="min-w-0 font-mono text-xs whitespace-pre-wrap wrap-anywhere">{summary}</pre>
       )}
+      {card.review?.reason && (
+        <p className="min-w-0 text-xs text-muted-foreground whitespace-pre-wrap wrap-anywhere">
+          {card.review.reason}
+        </p>
+      )}
       {!addressed && (
         <p className="text-xs text-muted-foreground wrap-anywhere">
           {t("approval.waitingFor", {

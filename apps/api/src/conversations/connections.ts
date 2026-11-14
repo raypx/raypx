@@ -130,6 +130,7 @@ export function createModelConnections(
     },
     models(deployment: ConversationModels): ConversationModels {
       return {
+        ...(deployment.reviewModel ? { reviewModel: deployment.reviewModel } : {}),
         async list(scope: SpaceScope) {
           const connections = await repository.list(scope.member.accountId, scope.spaceId);
           const memberModels = connections.flatMap((connection) =>

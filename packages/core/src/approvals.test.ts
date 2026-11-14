@@ -10,7 +10,7 @@ import { conversationEventSchema, runStateSchema } from "./conversation.js";
 
 it("reserves Auto for an explicit unavailable-mode response", () => {
   expect(approvalModeInputSchema.parse("auto")).toBe("auto");
-  expect(approvalModeSchema.safeParse("auto").success).toBe(false);
+  expect(approvalModeSchema.safeParse("auto").success).toBe(true);
   expect(runStateSchema.parse("waiting")).toBe("waiting");
 });
 

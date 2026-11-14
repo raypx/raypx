@@ -6,6 +6,19 @@ import {
   getWorkerEnvironment,
 } from "./env.js";
 afterEach(() => vi.unstubAllEnvs());
+it("shares the opaque review model selection across API and recovery workers", () => {
+  const configured = { APPROVAL_REVIEW_MODEL_ID: "review-main", APPROVAL_DEFAULT_MODE: "auto" };
+  expect(getApiEnvironment(configured).APPROVAL_REVIEW_MODEL_ID).toBe("review-main");
+  expect(getWorkerEnvironment(configured).APPROVAL_REVIEW_MODEL_ID).toBe("review-main");
+  expect(getWorkerEnvironment(configured).APPROVAL_DEFAULT_MODE).toBe("auto");
+  expect(getApiEnvironment({}).APPROVAL_REVIEW_MODEL_ID).toBeUndefined();
+  expect(
+    getWorkerEnvironment({ APPROVAL_REVIEW_MODEL_ID: "" }).APPROVAL_REVIEW_MODEL_ID,
+  ).toBeUndefined();
+  expect(() => getApiEnvironment({ APPROVAL_REVIEW_MODEL_ID: "a".repeat(201) })).toThrow(
+    "Invalid environment variables",
+  );
+});
 it("publishes only an explicitly configured HTTP API origin for routine ingress", () => {
   expect(getApiEnvironment({}).publicApiOrigin).toBeNull();
   expect(getApiEnvironment({ AUTH_URL: "" }).publicApiOrigin).toBeNull();

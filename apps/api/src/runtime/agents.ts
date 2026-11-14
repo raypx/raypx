@@ -82,11 +82,16 @@ export async function composeAgents(
   const conversationModels =
     createModels?.() ??
     modelConnections.models(
-      createDeploymentModels(environment.AGENT_MODELS, environment.AGENT_MODEL_CREDENTIALS),
+      createDeploymentModels(
+        environment.AGENT_MODELS,
+        environment.AGENT_MODEL_CREDENTIALS,
+        environment.APPROVAL_REVIEW_MODEL_ID,
+      ),
     );
   const agentApprovals = createApprovalsService(createApprovalsRepository(db), {
     defaultMode: environment.APPROVAL_DEFAULT_MODE,
     requestTtlMs: environment.APPROVAL_REQUEST_TTL_MS,
+    ...(conversationModels.reviewModel ? { reviewModel: conversationModels.reviewModel } : {}),
   });
   const repository = createConversationsRepository(db, undefined, {
     timeoutMs: environment.RUN_ATTEMPT_TIMEOUT_MS,
@@ -182,6 +187,7 @@ export async function composeAgents(
     },
     afterMemberRemoved: (scope, accountId) => runner.cancelMember(scope.spaceId, accountId),
     afterDeletionClaimed: (spaceId) => runner.cancelMember(spaceId),
+    reviewModelAvailable: () => conversationModels.reviewModel?.available() ?? false,
   });
   const spaceDeletionWorker = createSpaceDeletionWorker(db, computerProvider, {
     intervalMs: environment.RUN_RECOVERY_INTERVAL_MS,

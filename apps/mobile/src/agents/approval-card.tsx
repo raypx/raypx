@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { Switch } from "heroui-native/switch";
 import {
   toolOperationLabel,
+  automaticApprovalState,
   openApiOperationKind,
   approvalDeadlineProminent,
   approvalDuration,
@@ -40,6 +41,7 @@ export function ApprovalCard({
   const [remember, setRemember] = useState(false);
   const refreshedExpiry = useRef<string | null>(null);
   const pending = card.state === "pending";
+  const automatic = automaticApprovalState(card);
   const remaining = approvalRemainingSeconds(card, now);
   useEffect(() => {
     if (!pending) return;
@@ -97,8 +99,15 @@ export function ApprovalCard({
         </Text>
       ) : null}
       <Text accessibilityLiveRegion="polite" className="text-sm text-muted-foreground">
-        {t(`agents.approval.states.${card.state}`)}
+        {automatic
+          ? t(`agents.approval.automatic.${automatic}`)
+          : t(`agents.approval.states.${card.state}`)}
       </Text>
+      {card.review?.reason ? (
+        <Text selectable className="text-sm text-muted-foreground">
+          {card.review.reason}
+        </Text>
+      ) : null}
       {pending ? (
         <>
           <Text

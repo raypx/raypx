@@ -84,10 +84,16 @@ CREATE TABLE "approval_requests" (
 	"expires_at" timestamp with time zone NOT NULL,
 	"resolved_at" timestamp with time zone,
 	"answered_by_account_id" text,
+	"review" jsonb,
+	"review_model_id" text,
+	"review_started_at" timestamp with time zone,
+	"review_fence" bigint,
+	"review_effect_key" text,
 	CONSTRAINT "approval_requests_pkey" PRIMARY KEY("space_id","conversation_id","id"),
 	CONSTRAINT "approval_requests_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
 	CONSTRAINT "approval_requests_state_check" CHECK ("state" in ('pending', 'approved', 'denied', 'expired', 'cancelled')),
-	CONSTRAINT "approval_requests_resolution_check" CHECK (("state" = 'pending' and "resolved_at" is null and "answered_by_account_id" is null) or ("state" in ('approved', 'denied') and "resolved_at" is not null and "answered_by_account_id" is not null and "answered_by_account_id" = "member_account_id") or ("state" in ('expired', 'cancelled') and "resolved_at" is not null and "answered_by_account_id" is null)),
+	CONSTRAINT "approval_requests_resolution_check" CHECK (("state" = 'pending' and "resolved_at" is null and "answered_by_account_id" is null) or ("state" in ('approved', 'denied') and "resolved_at" is not null and (("answered_by_account_id" is not null and "answered_by_account_id" = "member_account_id") or ("answered_by_account_id" is null and "review" is not null and (("state" = 'approved' and "review"->>'verdict' = 'approve') or ("state" = 'denied' and "review"->>'verdict' = 'deny'))))) or ("state" in ('expired', 'cancelled') and "resolved_at" is not null and "answered_by_account_id" is null)),
+	CONSTRAINT "approval_requests_review_check" CHECK (("review_started_at" is null and "review_model_id" is null and "review_fence" is null and "review_effect_key" is null and "review" is null) or ("review_started_at" is not null and "review_model_id" is not null and "review_fence" is not null and "review_effect_key" is not null and length("review_model_id") between 1 and 256 and "review_fence" >= 0 and "review_effect_key" ~ '^[a-f0-9]{64}$' and ("review" is null or (jsonb_typeof("review") = 'object' and "review" ?& array['modelId', 'verdict', 'reason', 'startedAt', 'completedAt', 'durationMs', 'fence'] and jsonb_typeof("review"->'modelId') = 'string' and "review"->>'modelId' = "review_model_id" and "review"->>'verdict' in ('approve', 'ask', 'deny') and jsonb_typeof("review"->'reason') = 'string' and length("review"->>'reason') between 1 and 256 and ("review"->>'fence')::numeric = "review_fence" and ("review"->>'durationMs')::numeric >= 0 and ("review"->>'startedAt')::timestamptz = "review_started_at" and ("review"->>'completedAt')::timestamptz >= "review_started_at")))),
 	CONSTRAINT "approval_requests_bounds_check" CHECK (length("argument_summary") <= 1024 and length("target") between 1 and 1024 and jsonb_typeof("arguments") = 'object' and length("arguments"::text) <= 262144 and "expires_at" > "created_at")
 );
 --> statement-breakpoint
@@ -108,7 +114,7 @@ CREATE TABLE "approval_settings" (
 	"mode" text NOT NULL,
 	"revision" integer DEFAULT 0 NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "approval_settings_mode_check" CHECK ("mode" in ('ask', 'never'))
+	CONSTRAINT "approval_settings_mode_check" CHECK ("mode" in ('ask', 'never', 'auto'))
 );
 --> statement-breakpoint
 CREATE TABLE "cloud_job" (
@@ -340,6 +346,7 @@ CREATE TABLE "conversation_effects" (
 	"conversation_id" text NOT NULL,
 	"run_id" text NOT NULL,
 	"fence" bigint DEFAULT 0 NOT NULL,
+	"approval_request_id" text,
 	"tool_call_id" text NOT NULL,
 	"tool_name" text NOT NULL,
 	"argument_hash" text NOT NULL,
@@ -1161,7 +1168,7 @@ CREATE TABLE "space_settings_overrides" (
 	"approval_mode" text NOT NULL,
 	"updated_by_account_id" text NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "space_settings_overrides_mode_check" CHECK ("approval_mode" in ('ask', 'never'))
+	CONSTRAINT "space_settings_overrides_mode_check" CHECK ("approval_mode" in ('ask', 'never', 'auto'))
 );
 --> statement-breakpoint
 CREATE TABLE "space_skills" (
@@ -1251,6 +1258,8 @@ CREATE INDEX "agent_mcp_servers_owner_idx" ON "agent_mcp_servers" ("account_id",
 CREATE INDEX "agent_member_skills_skill_idx" ON "agent_member_skills" ("skill_id","account_id");--> statement-breakpoint
 CREATE INDEX "agent_space_skills_skill_idx" ON "agent_space_skills" ("space_id","skill_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "approval_requests_id_idx" ON "approval_requests" ("space_id","id");--> statement-breakpoint
+CREATE UNIQUE INDEX "approval_requests_review_effect_idx" ON "approval_requests" ("space_id","conversation_id","run_id","id","review_effect_key");--> statement-breakpoint
+CREATE INDEX "approval_requests_review_budget_idx" ON "approval_requests" ("space_id","run_id") WHERE "review_started_at" is not null;--> statement-breakpoint
 CREATE UNIQUE INDEX "approval_requests_event_ref_idx" ON "approval_requests" ("space_id","conversation_id","run_id","id");--> statement-breakpoint
 CREATE INDEX "approval_requests_call_idx" ON "approval_requests" ("space_id","conversation_id","run_id","tool_call_id");--> statement-breakpoint
 CREATE INDEX "approval_requests_resolved_idx" ON "approval_requests" ("space_id","conversation_id","resolved_at" DESC NULLS LAST,"id" DESC NULLS LAST) WHERE "state" <> 'pending';--> statement-breakpoint
@@ -1416,6 +1425,7 @@ ALTER TABLE "control_task" ADD CONSTRAINT "control_task_user_id_user_id_fkey" FO
 ALTER TABLE "conversation_counters" ADD CONSTRAINT "conversation_counters_VRyqPxfEewzC_fkey" FOREIGN KEY ("space_id","conversation_id") REFERENCES "conversations"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_delegations" ADD CONSTRAINT "conversation_delegations_6AKQohdM5emf_fkey" FOREIGN KEY ("space_id","conversation_id","parent_run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_delegations" ADD CONSTRAINT "conversation_delegations_xfb5rSMKKnZj_fkey" FOREIGN KEY ("space_id","conversation_id","child_run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "conversation_effects" ADD CONSTRAINT "conversation_effects_review_request_fk" FOREIGN KEY ("space_id","conversation_id","run_id","approval_request_id","key") REFERENCES "approval_requests"("space_id","conversation_id","run_id","id","review_effect_key") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_effects" ADD CONSTRAINT "conversation_effects_J2IU0GLCoiuz_fkey" FOREIGN KEY ("space_id","conversation_id","run_id") REFERENCES "conversation_runs"("space_id","conversation_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_events" ADD CONSTRAINT "conversation_events_kN24Tt1VblKw_fkey" FOREIGN KEY ("space_id","page_id") REFERENCES "page_identities"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "conversation_events" ADD CONSTRAINT "conversation_events_xpK9yYjL1Xi2_fkey" FOREIGN KEY ("space_id","conversation_id") REFERENCES "conversations"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint

@@ -140,3 +140,13 @@ at rest, use explicit short timeouts and isolate each case's resources. Retained
 `perf:tasks` measures device-task helpers independently. Browser fixtures establish
 no packaged WebView, Mobile device or installer result. Unrun platforms remain
 unverified.
+
+## Automatic approval display
+
+Approval mode controls enable Auto only from the server's availability projection
+and show its actual reason code when unavailable. Space mode exceptions and
+effective-mode labels include Auto. Automatic decisions show “Approved automatically”
+or their denial state with the bounded review reason, distinctly from member
+answers, including after reload. They retain the independent Run Stop action.
+Mobile's native account mode picker uses the shared revisioned model; Space mode
+exception management retains its Web handoff.

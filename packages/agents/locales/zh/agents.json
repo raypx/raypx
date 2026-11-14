@@ -132,7 +132,11 @@
     "minutesLeft": "剩余{count}分钟",
     "secondsLeft": "剩余{count}秒",
     "requestedBy": "{name} 请求审批",
-    "childTask": "任务：{task}"
+    "childTask": "任务：{task}",
+    "automatic": {
+      "approved": "已自动批准",
+      "denied": "已自动拒绝"
+    }
   },
   "activity": {
     "title": "活动",

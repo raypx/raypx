@@ -36,6 +36,8 @@ import type { SpaceManagement, SpaceScope, SpaceMemberRemoval } from "../server.
 
 export type SpaceTransaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 export interface SpaceManagementHooks {
+  /** Deployment review capability; it grants no Space access or member credentials. */
+  reviewModelAvailable?(): boolean | Promise<boolean>;
   /** Cancels Runs/cards with the same transaction as the membership change. */
   beforeMemberRemoved(tx: SpaceTransaction, spaceId: string, accountId: string): Promise<void>;
   /** Process-local abort is supplementary to committed cancellation and notification. */
@@ -738,7 +740,8 @@ export function createSpaceManagement(db: Database, hooks: SpaceManagementHooks)
         context(scope, "settings.approval_override_set", scope.spaceId),
         async (tx) => {
           await admitted(tx, scope, true);
-          if (mode === "auto") throw new SpaceMutationError("REVIEW_MODEL_NOT_CONFIGURED");
+          if (mode === "auto" && !(await hooks.reviewModelAvailable?.()))
+            throw new SpaceMutationError("REVIEW_MODEL_NOT_CONFIGURED");
           const values = {
             spaceId: scope.spaceId,
             approvalMode: mode,

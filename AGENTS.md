@@ -21,8 +21,10 @@ a bounded Still working strip with Stop, targeted steering, approvals and a
 trigger-page jump. Only Space owners manage HTTP API definitions, operations,
 availability and write-only credentials; Mobile shows their activity and approvals.
 Client coverage and separate acceptance gates are documented in PRODUCT.md.
-Auto review, protected input, hosted computers and the replacement
-device connector remain unimplemented. Do not describe roadmap targets as delivered.
+Auto review uses a separately configured deployment model with bounded, durable,
+fail-closed decisions. Untrusted input, HTTP changes and unlisted commands still ask.
+Protected input, hosted computers and the replacement device connector remain
+unimplemented. Do not describe roadmap targets as delivered.
 Optional graphical computers and member takeover use the private Computer port,
 session-authorized screen streams and PostgreSQL control grants; Mobile has no Screen UI.
 The retained CLI/daemon, SQLite profiles, enrollment and remote projections are

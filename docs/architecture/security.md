@@ -82,6 +82,16 @@ them; these guards are released when the execution attempt settles.
 - A Run that received untrusted content keeps asking for writes in Ask and Auto.
   See [approvals](approvals.md#untrusted-input).
 
+Auto's reviewer has no tools and receives a fixed server-owned policy, a trusted
+instruction summary, explicit provenance flags and the structured request as
+quoted data. Outside content cannot modify its policy. The backend refuses
+automatic approval before inference for untrusted provenance/arguments, mutating
+HTTP operations and commands outside exact Allow rules. A Block rule is refused
+in every mode. Once tool, Page, file or API content enters a Run, later changes
+conservatively remain untrusted, including after checkpoint recovery. Review
+errors, malformed or oversized responses, low confidence, deadline, interrupted
+claims and exhausted budget ask the member. No model input is logged.
+
 Agent-to-Agent messages keep the originating Run's member and are refused across
 Spaces. Delegated children inherit the member and untrusted provenance, with
 shared-memory access restricted by the parent's permission. Group participation

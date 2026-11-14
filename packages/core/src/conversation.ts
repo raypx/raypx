@@ -8,7 +8,7 @@ import {
 import { agentIdSchema, agentModelChoiceSchema, conversationIdSchema } from "./agents.js";
 import { spaceIdSchema } from "./spaces.js";
 import { runIdSchema } from "./run-identity.js";
-import { approvalCardFields } from "./approvals.js";
+import { approvalCardFields, approvalReviewSchema } from "./approvals.js";
 import { pageIdSchema, pageSchema } from "./pages.js";
 
 export { runIdSchema } from "./run-identity.js";
@@ -56,6 +56,7 @@ export const resolvedApprovalSummarySchema = z.strictObject({
   outcome: z.enum(["approved", "denied", "expired", "cancelled"]),
   answeredByAccountId: z.string().min(1).max(128).nullable(),
   resolvedAt: z.iso.datetime(),
+  review: approvalReviewSchema.optional(),
 });
 export type ResolvedApprovalSummary = z.infer<typeof resolvedApprovalSummarySchema>;
 /** A history boundary, independent of the event replay/ACK cursor. */
@@ -227,6 +228,7 @@ export const conversationEventSchema = z
       ...eventFields,
       ...approvalCardFields,
       kind: z.literal("card.resolved"),
+      review: approvalReviewSchema.optional(),
       outcome: z.enum(["approved", "denied", "expired", "cancelled"]),
       answeredByAccountId: z.string().min(1).max(128).nullable(),
     }),

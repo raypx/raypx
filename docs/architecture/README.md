@@ -19,6 +19,11 @@ approval/effect pipeline and the remote-tool DNS-pinned HTTP adapter. Web/Deskto
 owners manage API definitions and write-only credentials; Mobile renders calls
 and addressed approvals.
 
+Auto approval uses an independently configured tool-less reviewer. Durable review
+claims, fenced decisions and conservative provenance gates keep failures and
+untrusted actions addressed to the member; all clients show automatic decisions
+and reasons. See [approvals](approvals.md#automatic-review).
+
 The shared `/agents` workspace is the signed-in home in Web and Desktop. Project
 and session pages, Waiting, New session and the guest task editor/handoff are
 removed from those clients, along with dependent Automations screens. The retained

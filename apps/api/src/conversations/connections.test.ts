@@ -317,3 +317,16 @@ it("falls back to offered deployment identifiers even when they share the connec
     { modelId, name: "Deployment", source: "deployment" },
   ]);
 });
+
+it("retains the deployment reviewer without borrowing a member connection or its secret", async () => {
+  const f = fixture();
+  const reviewModel = { available: () => true, resolve: vi.fn(async () => undefined) };
+  f.deployment.reviewModel = reviewModel;
+  await f.service.create("owner", configuration, credential);
+  const models = f.service.models(f.deployment);
+  expect(models.reviewModel).toBe(reviewModel);
+  expect(await models.reviewModel!.available()).toBe(true);
+  expect(await models.reviewModel!.resolve(scope())).toBeUndefined();
+  expect(f.secrets.read).not.toHaveBeenCalled();
+  expect(f.transport.resolve).not.toHaveBeenCalled();
+});

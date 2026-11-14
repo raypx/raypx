@@ -42,6 +42,8 @@ a host-network canary and reports unavailable IPv6 separately.
 `*_test` or `*_test_<lane>` database without starting or stopping PostgreSQL.
 Without that option it provisions its own temporary cluster; inherited URLs never
 select a database.
+With `--with-e2e`, `--visual` after the separator belongs to the browser wrapper;
+remaining journey arguments pass through to Playwright.
 
 ## Constraints
 

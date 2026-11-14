@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
+import type { ApprovalCardView } from "@raypx/agents/model";
 import { Linking } from "../../tests/mocks/react-native.js";
-import { openApiToolNameSchema } from "@raypx/core/approvals";
+import { approvalRequestIdSchema, openApiToolNameSchema } from "@raypx/core/approvals";
 import { pageIdSchema } from "@raypx/core/pages";
 import { afterEach, expect, it, vi } from "vitest";
 import { toolActivitySchema } from "@raypx/core/conversation";
@@ -221,3 +222,58 @@ it.each(["en", "zh"] as const)(
     await view.unmount();
   },
 );
+
+it("uses the replacement member answer instead of an older automatic approval", async () => {
+  const old: ApprovalCardView = {
+    requestId: approvalRequestIdSchema.parse("old-auto"),
+    runId: call.runId,
+    toolCallId: call.toolCallId,
+    toolName: "computer_read_file",
+    target: call.target,
+    argumentSummary: call.argumentSummary,
+    memberAccountId: "member",
+    expiresAt: call.startedAt,
+    createdAt: call.startedAt,
+    sequence: 10,
+    state: "approved",
+    answeredByAccountId: null,
+    answering: false,
+    error: null,
+    review: {
+      modelId: "review",
+      verdict: "approve",
+      reason: "Matches the request.",
+      startedAt: call.startedAt,
+      completedAt: call.startedAt,
+      durationMs: 0,
+      fence: 1,
+    },
+  };
+  const replacement: ApprovalCardView = {
+    ...old,
+    requestId: approvalRequestIdSchema.parse("new-member"),
+    sequence: 1,
+    state: "pending",
+    review: { ...old.review!, verdict: "ask" },
+  };
+  const tree = (answers: ApprovalCardView[]) => (
+    <ToolActivity
+      origin="https://app.example.test"
+      spaceId="space"
+      row={row([{ ...call, finishedAt: call.startedAt, outcome: "succeeded" }])}
+      answers={answers}
+      memberName={() => "Ari"}
+    />
+  );
+  const view = await renderNative(tree([old]));
+  await press(findByLabel(view.root, "Used 1 tool"));
+  expect(textContent(view.root)).toContain("Approved automatically");
+  await view.update(tree([old, replacement]));
+  expect(textContent(view.root)).not.toContain("Approved automatically");
+  await view.update(
+    tree([old, { ...replacement, state: "approved", answeredByAccountId: "member" }]),
+  );
+  expect(textContent(view.root)).not.toContain("Approved automatically");
+  expect(textContent(view.root)).toContain("Answered by Ari");
+  await view.unmount();
+});

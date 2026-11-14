@@ -5,6 +5,7 @@ import {
   computerToolNameSchema,
   mcpToolNameSchema,
   type ApprovalRule,
+  type ApprovalSettingsState,
 } from "@raypx/core/approvals";
 import {
   ApprovalSettingsController,
@@ -25,18 +26,22 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-async function mount(language: "en" | "zh" = "en", rules: ApprovalRule[] = []) {
+async function mount(
+  language: "en" | "zh" = "en",
+  rules: ApprovalRule[] = [],
+  modes: ApprovalSettingsState["availableModes"] = availableModes,
+) {
   const settings = vi.fn<ApprovalSettingsPort["settings"]>(async () => ({
     mode: "ask",
     rules,
     revision: 0,
-    availableModes,
+    availableModes: modes,
   }));
   const updateSettings = vi.fn<ApprovalSettingsPort["updateSettings"]>(
     async ({ expectedRevision, ...saved }) => ({
       ...saved,
       revision: expectedRevision + 1,
-      availableModes,
+      availableModes: modes,
     }),
   );
   const controller = new ApprovalSettingsController({ settings, updateSettings });
@@ -314,4 +319,25 @@ it("offers members registered selected API operations as exact Allow and Block c
       decision: "block",
     },
   ]);
+});
+
+it.each(["en", "zh"] as const)("enables and saves Auto when available in %s", async (language) => {
+  const strings = { en, zh }[language].agents;
+  const modes = availableModes.map((entry) => ({
+    ...entry,
+    available: true as const,
+    reasonCode: null,
+  }));
+  const { updateSettings } = await mount(language, [], modes);
+  const auto = screen.getByRole("radio", { name: strings.approvalSettings.auto });
+  expect(auto).not.toHaveAttribute("aria-disabled", "true");
+  fireEvent.click(auto);
+  expect(auto).toHaveAttribute("aria-checked", "true");
+  fireEvent.click(screen.getByRole("button", { name: strings.save }));
+  await waitFor(() =>
+    expect(updateSettings).toHaveBeenCalledWith({ mode: "auto", rules: [], expectedRevision: 0 }),
+  );
+  expect(
+    screen.queryByText(strings.approvalSettings.reasons.REVIEW_MODEL_NOT_CONFIGURED),
+  ).not.toBeInTheDocument();
 });

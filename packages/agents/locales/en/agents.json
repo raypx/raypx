@@ -132,7 +132,11 @@
     "minutesLeft": "{count} min left",
     "secondsLeft": "{count} s left",
     "requestedBy": "Requested by {name}",
-    "childTask": "Task: {task}"
+    "childTask": "Task: {task}",
+    "automatic": {
+      "approved": "Approved automatically",
+      "denied": "Denied automatically"
+    }
   },
   "activity": {
     "title": "Activity",

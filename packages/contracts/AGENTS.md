@@ -49,7 +49,9 @@ account. Settings return their revision and mode availability; updates require
 expectedRevision and return current settings on an explicit stale-edit conflict.
 `approvals.effectiveMode` selects a Space and returns only the caller's effective
 mode, override/account source and mode availability; it never returns rules.
-Auto is accepted only to return explicit unavailability. Card events carry
+Auto availability is resolved by the backend; unavailable review configuration
+keeps an explicit reason. Requests, resolved card events and history summaries
+compose optional bounded review evidence from Core. Card events carry
 bounded summaries and targets, never exact arguments or file/command content.
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 

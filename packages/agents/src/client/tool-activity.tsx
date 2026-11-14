@@ -6,7 +6,13 @@ import {
   CollapsibleContent,
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
-import type { ApprovalCardView, ApprovalPort, ConversationSelection } from "../model.js";
+import {
+  automaticApprovalState,
+  approvalForToolCall,
+  type ApprovalCardView,
+  type ApprovalPort,
+  type ConversationSelection,
+} from "../model.js";
 import { toolOperationLabel, openApiOperationKind } from "../model/tool-label.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
@@ -51,6 +57,7 @@ function ToolActivityRow({
   const toolName = toolOperationLabel(call, t);
   const operationKind = openApiOperationKind(call);
   const refusal = interactionCode(call);
+  const automatic = answer ? automaticApprovalState(answer) : null;
   const pageTool =
     call.toolName === "agent_page_create" ||
     call.toolName === "agent_page_update" ||
@@ -99,6 +106,15 @@ function ToolActivityRow({
             </span>
           )}
       </span>
+      {automatic && (
+        <div
+          data-auto-review={automatic}
+          className="flex min-w-0 flex-col gap-1 text-muted-foreground"
+        >
+          <span>{t(`approval.automatic.${automatic}`)}</span>
+          <span className="whitespace-pre-wrap wrap-anywhere">{answer?.review?.reason}</span>
+        </div>
+      )}
       {answer?.answeredByAccountId &&
         memberName &&
         (answer.state === "approved" || answer.state === "denied") && (
@@ -172,9 +188,7 @@ export function ToolActivity({
               <ToolActivityRow
                 key={JSON.stringify([call.runId, call.toolCallId])}
                 call={call}
-                answer={answers?.find(
-                  (entry) => entry.runId === call.runId && entry.toolCallId === call.toolCallId,
-                )}
+                answer={approvalForToolCall(answers ?? [], call)}
                 memberName={memberName}
                 onOpenPage={onOpenPage}
               />

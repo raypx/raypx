@@ -108,7 +108,7 @@ function fixture() {
     })),
     setApprovalOverride: vi.fn<SpaceManagementPort["setApprovalOverride"]>(async ({ mode }) => ({
       spaceId,
-      approvalMode: mode === "auto" ? "ask" : mode,
+      approvalMode: mode,
       updatedAt: time,
     })),
     clearApprovalOverride: vi.fn<SpaceManagementPort["clearApprovalOverride"]>(async () => ({
@@ -126,6 +126,7 @@ async function mount(
     role?: "owner" | "member";
     port?: ReturnType<typeof fixture>;
     effective?: Pick<EffectiveApprovalMode, "mode" | "source">;
+    approvals?: ApprovalSettingsState;
   } = {},
 ) {
   const port = options.port ?? fixture();
@@ -141,7 +142,7 @@ async function mount(
     spaceId,
     accountId: role,
     port,
-    accountApprovals: { settings: async () => accountSettings },
+    accountApprovals: { settings: async () => options.approvals ?? accountSettings },
     effectiveApprovals: { effectiveMode },
   });
   await controller.load(role === "owner");
@@ -500,6 +501,8 @@ it.each([
   ["zh", "account_default", "ask"],
   ["en", "space_override", "never"],
   ["zh", "space_override", "never"],
+  ["en", "space_override", "auto"],
+  ["zh", "account_default", "auto"],
 ] as const)(
   "shows a member's effective approval mode and %s %s source",
   async (language, source, mode) => {
@@ -526,5 +529,38 @@ it.each([
     expect(port.settings).not.toHaveBeenCalled();
     expect(port.setApprovalOverride).not.toHaveBeenCalled();
     expect(port.clearApprovalOverride).not.toHaveBeenCalled();
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "permits the available Auto Space override in %s",
+  async (language) => {
+    const copy = { en, zh }[language].agents;
+    const approvals: ApprovalSettingsState = {
+      ...accountSettings,
+      availableModes: accountSettings.availableModes.map((entry) => ({
+        ...entry,
+        available: true as const,
+        reasonCode: null,
+      })),
+    };
+    const { port } = await mount({
+      language,
+      approvals,
+      effective: { mode: "auto", source: "space_override" },
+    });
+    await section(copy.spaceSettings.sections.approvals, copy.spaceSettings.section);
+    await userEvent.click(screen.getByRole("combobox", { name: copy.spaceSettings.override }));
+    const auto = await screen.findByRole("option", { name: copy.approvalSettings.auto });
+    expect(auto).not.toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(auto);
+    await waitFor(() =>
+      expect(port.setApprovalOverride).toHaveBeenCalledWith({ spaceId, mode: "auto" }),
+    );
+    expect(
+      await screen.findByText(
+        `${copy.spaceSettings.effectiveMode}: ${copy.approvalSettings.auto} · ${copy.spaceSettings.overridesDefault}`,
+      ),
+    ).toBeVisible();
   },
 );

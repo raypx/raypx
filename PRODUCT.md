@@ -78,24 +78,38 @@ acceptance remains unverified.
 
 ## Capabilities and Constraints
 
-| Area                  | Implemented behavior                                                                                                                                                                                                                                      |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Conversations         | One continuing direct conversation per Agent; bounded initial/older history, gap loading, streamed text, committed segments, acknowledged replay and snapshots. Web/Desktop include virtual and full-text reading modes.                                  |
-| Runs                  | PostgreSQL leases, fenced attempts, checkpoints, steering, explicit stop, worker recovery and graceful handover. Model/connection/resource choices are pinned for resume. Active work stays reachable outside loaded history on all clients.              |
-| Computers             | Space team lifecycle, bounded files/tools, durable homes and generation checks through the private supervisor; optional graphical viewing and exclusive member takeover in Web/Desktop. Host egress rules require explicit setup.                         |
-| Approvals and effects | Ask and Never ask, exact Allow/Block rules, addressed expiring requests, conversation cards and durable effect intents/outcomes. Unknown effects block automatic replay. Auto review and protected input are unavailable.                                 |
-| Routines              | Cron with time zones, keyed webhooks, authenticated email relay and signed repository events; manual tests, pause/resume, deduplication, coalesced catch-up and linked Run history.                                                                       |
-| Memory                | Versioned Agent or shared Space documents, editing/removal/restore, bounded recall pinned into Run checkpoints and permission-checked Agent writes.                                                                                                       |
-| Pages                 | Markdown/HTML documents, immutable versions, conflict checks, restore, sandboxed serving and revocable optional version-pinned share links. Agent writes expose Page links in activity.                                                                   |
-| Skills and tools      | Account skills and Space-learned text skills, bounded non-executing imports, per-member Agent selection and remote HTTP MCP servers, plus Space-owned selected OpenAPI operations with write-only credentials. Backend command/stdio servers are refused. |
-| Models                | Member-owned encrypted model connections with all/selected Space availability, offered model choices and bounded connection testing; deployment models remain available when configured.                                                                  |
-| Shared work           | Owner/member management, single-use invitations, approval overrides, audit history, named groups, explicit Agent mentions, concurrent replies and bounded delegated child Runs with inherited authority.                                                  |
+| Area                  | Implemented behavior                                                                                                                                                                                                                                             |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Conversations         | One continuing direct conversation per Agent; bounded initial/older history, gap loading, streamed text, committed segments, acknowledged replay and snapshots. Web/Desktop include virtual and full-text reading modes.                                         |
+| Runs                  | PostgreSQL leases, fenced attempts, checkpoints, steering, explicit stop, worker recovery and graceful handover. Model/connection/resource choices are pinned for resume. Active work stays reachable outside loaded history on all clients.                     |
+| Computers             | Space team lifecycle, bounded files/tools, durable homes and generation checks through the private supervisor; optional graphical viewing and exclusive member takeover in Web/Desktop. Host egress rules require explicit setup.                                |
+| Approvals and effects | Ask, Never ask and configured Auto review, exact Allow/Block rules, addressed expiring requests and durable effect intents/outcomes. Automatic decisions show their reason. Untrusted changes ask; unknown effects block replay. Protected input is unavailable. |
+| Routines              | Cron with time zones, keyed webhooks, authenticated email relay and signed repository events; manual tests, pause/resume, deduplication, coalesced catch-up and linked Run history.                                                                              |
+| Memory                | Versioned Agent or shared Space documents, editing/removal/restore, bounded recall pinned into Run checkpoints and permission-checked Agent writes.                                                                                                              |
+| Pages                 | Markdown/HTML documents, immutable versions, conflict checks, restore, sandboxed serving and revocable optional version-pinned share links. Agent writes expose Page links in activity.                                                                          |
+| Skills and tools      | Account skills and Space-learned text skills, bounded non-executing imports, per-member Agent selection and remote HTTP MCP servers, plus Space-owned selected OpenAPI operations with write-only credentials. Backend command/stdio servers are refused.        |
+| Models                | Member-owned encrypted model connections with all/selected Space availability, offered model choices and bounded connection testing; deployment models remain available when configured.                                                                         |
+| Shared work           | Owner/member management, single-use invitations, approval overrides, audit history, named groups, explicit Agent mentions, concurrent replies and bounded delegated child Runs with inherited authority.                                                         |
 
 Web/Desktop expose routines and Space memory from the conversation header,
 Space settings and group controls from the workspace, and Pages from navigation.
 Tool lifecycle belongs in activity; approvals stay actionable without disabling
 the composer. Delegated work stays under its parent activity. Pending requests,
 failures and uncertain outcomes remain explicit.
+
+Auto requires a deployment-selected review model from the configured model offers.
+It makes a separate, tool-less review before an otherwise pending action. Errors,
+uncertainty, interrupted reviews and exhausted limits ask the member. Untrusted
+Run provenance or previously read tool/Page/API content prevents automatic review
+approval, as do HTTP changes and commands outside exact Allow rules. Block always
+wins. Every tool result conservatively taints subsequent changes, including later
+Runs retaining that conversation history. A recorded review is reused after recovery; stopping a Run prevents a late
+review from authorizing work. Web/Desktop and Mobile distinguish automatic
+decisions and reasons from member answers. Space owners can select Auto as an
+approval-mode exception; reviewer model selection remains deployment-only.
+The reviewer never approves pointer/keyboard input. Screenshots are untrusted;
+subsequent changes ask even with an exact Allow. Trusted input Allow rules retain
+their explicit authorization before any untrusted content is observed.
 
 A bounded Still working strip above the composer shows active Runs whose triggering
 messages are outside loaded history, with Agent, state and origin/untrusted

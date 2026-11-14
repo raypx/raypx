@@ -86,6 +86,12 @@ Conversation. Requests and effects cascade with their Run, not with current memb
 Member/account removal cancels active Runs/requests and retains their history;
 current membership still gates request admission and execution fences. The active Run index includes
 `waiting` as well as `running`.
+Approval requests also retain a one-shot review claim, exact effect key and bounded
+review verdict/reason/timing/fence JSON. Claim columns and JSON evidence are checked
+together; resolved automatic decisions have no answering member. Effect records
+optionally reference the exact request and effect key with one composite
+Space/Conversation/Run/request/key foreign key. Interrupted claims remain durable
+and cannot consume inference twice; execution policy belongs to Agents/server.
 
 Durable Runs add lease owner/expiry, monotonically increasing fences and immutable
 model/connection/computer selectors. Historical resource selectors survive removal

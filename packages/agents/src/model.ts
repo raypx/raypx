@@ -91,6 +91,8 @@ export {
   approvalDuration,
   approvalDeadlineProminent,
   approvalExtraSummary,
+  automaticApprovalState,
+  approvalForToolCall,
   activityForRun,
   type ApprovalCardView,
   type ApprovalCardError,
@@ -158,3 +160,9 @@ export {
 } from "./model/openapi-servers.js";
 
 export { mentionQueryAt, mentionIds } from "./model/mentions.js";
+
+export {
+  ApprovalSettingsController,
+  type ApprovalSettingsPort,
+  type ApprovalSettingsView,
+} from "./model/approval-settings.js";

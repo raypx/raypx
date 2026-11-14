@@ -29,8 +29,43 @@ export interface ApprovalCardView {
   sequence: number;
   state: ApprovalState;
   answeredByAccountId: string | null;
+  review?: ApprovalRequest["review"] | undefined;
   answering: boolean;
   error: ApprovalCardError | null;
+}
+
+/** A reviewed request later answered by a member keeps the member attribution. */
+export function automaticApprovalState(
+  card: Pick<ApprovalCardView, "state" | "answeredByAccountId" | "review">,
+): "approved" | "denied" | null {
+  if (card.answeredByAccountId !== null) return null;
+  if (card.state === "approved" && card.review?.verdict === "approve") return "approved";
+  if (card.state === "denied" && card.review?.verdict === "deny") return "denied";
+  return null;
+}
+
+function approvalPriority(card: ApprovalCardView) {
+  if (card.state === "pending") return 2;
+  if (card.answeredByAccountId !== null || card.review?.verdict === "ask") return 1;
+  return 0;
+}
+
+/** A replacement member request supersedes its immutable automatic decision. */
+export function approvalForToolCall(
+  cards: readonly ApprovalCardView[],
+  call: Pick<ToolActivity, "runId" | "toolCallId">,
+): ApprovalCardView | undefined {
+  let current: ApprovalCardView | undefined;
+  for (const card of cards) {
+    if (card.runId !== call.runId || card.toolCallId !== call.toolCallId) continue;
+    if (
+      !current ||
+      approvalPriority(card) > approvalPriority(current) ||
+      (approvalPriority(card) === approvalPriority(current) && card.sequence >= current.sequence)
+    )
+      current = card;
+  }
+  return current;
 }
 
 /** Countdown is presentation only; the server owns request expiration. */
@@ -135,6 +170,7 @@ export class ApprovalProjection {
         previous && Number.isInteger(previous.sequence) ? previous.sequence : event.sequence,
       state: resolved ? event.outcome : "pending",
       answeredByAccountId: resolved ? event.answeredByAccountId : null,
+      review: resolved ? event.review : previous?.review,
       answering: resolved ? false : (previous?.answering ?? false),
       error: resolved ? null : (previous?.error ?? null),
     });
@@ -192,6 +228,7 @@ export class ApprovalProjection {
         sequence: previous?.sequence ?? position(summary.runId),
         state: summary.outcome,
         answeredByAccountId: summary.answeredByAccountId,
+        review: summary.review,
         answering: false,
         error: null,
       });
@@ -233,6 +270,7 @@ export class ApprovalProjection {
       sequence,
       state: request.state,
       answeredByAccountId: request.answeredByAccountId,
+      review: request.review,
       answering: request.state === "pending" && (previous?.answering ?? false),
       error: request.state === "pending" ? (previous?.error ?? null) : null,
     });

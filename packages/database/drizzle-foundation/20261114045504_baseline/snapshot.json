@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "ae8992f1-aee1-498e-bd72-e69831dc683f",
+  "id": "630285b6-b181-4a11-ba64-efb208199a63",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -2054,6 +2054,51 @@
         "n|sch|public",
         "n|col|public.approval_requests.space_id",
         "n|col|public.approval_requests.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "approval_requests",
+        "approval_requests_review_effect_idx"
+      ],
+      "writes": [
+        "s|idx|public.approval_requests_review_effect_idx",
+        "n|idx|public.approval_requests_review_effect_idx",
+        "e|idx|public.approval_requests_review_effect_idx",
+        "n|rel|public.approval_requests_review_effect_idx"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.approval_requests.space_id",
+        "n|col|public.approval_requests.conversation_id",
+        "n|col|public.approval_requests.run_id",
+        "n|col|public.approval_requests.id",
+        "n|col|public.approval_requests.review_effect_key"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "approval_requests",
+        "approval_requests_review_budget_idx"
+      ],
+      "writes": [
+        "s|idx|public.approval_requests_review_budget_idx",
+        "n|idx|public.approval_requests_review_budget_idx",
+        "e|idx|public.approval_requests_review_budget_idx",
+        "n|rel|public.approval_requests_review_budget_idx"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.approval_requests.space_id",
+        "n|col|public.approval_requests.run_id"
       ]
     },
     {
@@ -5697,6 +5742,37 @@
         "n|col|public.conversation_runs.conversation_id",
         "n|col|public.conversation_runs.id",
         "e|uniqueness|public.conversation_runs.conversation_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_effects"
+      ],
+      "writes": [
+        "s|fk|public.conversation_effects.conversation_effects_review_request_fk",
+        "n|fk|public.conversation_effects.conversation_effects_review_request_fk",
+        "e|fk|public.conversation_effects.conversation_effects_review_request_fk",
+        "n|con|public.conversation_effects.conversation_effects_review_request_fk"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_effects",
+        "n|sch|public",
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.conversation_effects.space_id",
+        "n|col|public.conversation_effects.conversation_id",
+        "n|col|public.conversation_effects.run_id",
+        "n|col|public.conversation_effects.approval_request_id",
+        "n|col|public.conversation_effects.key",
+        "n|col|public.approval_requests.space_id",
+        "n|col|public.approval_requests.conversation_id",
+        "n|col|public.approval_requests.run_id",
+        "n|col|public.approval_requests.id",
+        "n|col|public.approval_requests.review_effect_key",
+        "e|uniqueness|public.approval_requests.conversation_id.id.review_effect_key.run_id.space_id"
       ]
     },
     {
@@ -9721,6 +9797,71 @@
     },
     {
       "schema": "public",
+      "table": "approval_requests",
+      "name": "review",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
+      "name": "review_model_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
+      "name": "review_started_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
+      "name": "review_fence",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
+      "name": "review_effect_key",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
       "table": "approval_rules",
       "name": "account_id",
       "type": "text",
@@ -11613,6 +11754,19 @@
       "notNull": true,
       "dimensions": 0,
       "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_effects",
+      "name": "approval_request_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
       "generated": null,
       "identity": null,
       "entityType": "columns"
@@ -19541,6 +19695,83 @@
     {
       "schema": "public",
       "table": "approval_requests",
+      "name": "approval_requests_review_effect_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "conversation_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "run_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "review_effect_key",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
+      "name": "approval_requests_review_budget_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "run_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"review_started_at\" is not null",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
       "name": "approval_requests_event_ref_idx",
       "nameExplicit": true,
       "columns": [
@@ -24048,6 +24279,31 @@
     {
       "schema": "public",
       "table": "conversation_effects",
+      "name": "conversation_effects_review_request_fk",
+      "nameExplicit": true,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "run_id",
+        "approval_request_id",
+        "key"
+      ],
+      "schemaTo": "public",
+      "tableTo": "approval_requests",
+      "columnsTo": [
+        "space_id",
+        "conversation_id",
+        "run_id",
+        "id",
+        "review_effect_key"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_effects",
       "name": "conversation_effects_J2IU0GLCoiuz_fkey",
       "nameExplicit": false,
       "columns": [
@@ -27303,7 +27559,14 @@
       "schema": "public",
       "table": "approval_requests",
       "name": "approval_requests_resolution_check",
-      "value": "(\"state\" = 'pending' and \"resolved_at\" is null and \"answered_by_account_id\" is null) or (\"state\" in ('approved', 'denied') and \"resolved_at\" is not null and \"answered_by_account_id\" is not null and \"answered_by_account_id\" = \"member_account_id\") or (\"state\" in ('expired', 'cancelled') and \"resolved_at\" is not null and \"answered_by_account_id\" is null)",
+      "value": "(\"state\" = 'pending' and \"resolved_at\" is null and \"answered_by_account_id\" is null) or (\"state\" in ('approved', 'denied') and \"resolved_at\" is not null and ((\"answered_by_account_id\" is not null and \"answered_by_account_id\" = \"member_account_id\") or (\"answered_by_account_id\" is null and \"review\" is not null and ((\"state\" = 'approved' and \"review\"->>'verdict' = 'approve') or (\"state\" = 'denied' and \"review\"->>'verdict' = 'deny'))))) or (\"state\" in ('expired', 'cancelled') and \"resolved_at\" is not null and \"answered_by_account_id\" is null)",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
+      "name": "approval_requests_review_check",
+      "value": "(\"review_started_at\" is null and \"review_model_id\" is null and \"review_fence\" is null and \"review_effect_key\" is null and \"review\" is null) or (\"review_started_at\" is not null and \"review_model_id\" is not null and \"review_fence\" is not null and \"review_effect_key\" is not null and length(\"review_model_id\") between 1 and 256 and \"review_fence\" >= 0 and \"review_effect_key\" ~ '^[a-f0-9]{64}$' and (\"review\" is null or (jsonb_typeof(\"review\") = 'object' and \"review\" ?& array['modelId', 'verdict', 'reason', 'startedAt', 'completedAt', 'durationMs', 'fence'] and jsonb_typeof(\"review\"->'modelId') = 'string' and \"review\"->>'modelId' = \"review_model_id\" and \"review\"->>'verdict' in ('approve', 'ask', 'deny') and jsonb_typeof(\"review\"->'reason') = 'string' and length(\"review\"->>'reason') between 1 and 256 and (\"review\"->>'fence')::numeric = \"review_fence\" and (\"review\"->>'durationMs')::numeric >= 0 and (\"review\"->>'startedAt')::timestamptz = \"review_started_at\" and (\"review\"->>'completedAt')::timestamptz >= \"review_started_at\")))",
       "entityType": "checks"
     },
     {
@@ -27338,7 +27601,7 @@
       "schema": "public",
       "table": "approval_settings",
       "name": "approval_settings_mode_check",
-      "value": "\"mode\" in ('ask', 'never')",
+      "value": "\"mode\" in ('ask', 'never', 'auto')",
       "entityType": "checks"
     },
     {
@@ -27828,7 +28091,7 @@
       "schema": "public",
       "table": "space_settings_overrides",
       "name": "space_settings_overrides_mode_check",
-      "value": "\"approval_mode\" in ('ask', 'never')",
+      "value": "\"approval_mode\" in ('ask', 'never', 'auto')",
       "entityType": "checks"
     },
     {

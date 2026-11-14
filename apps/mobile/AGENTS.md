@@ -18,6 +18,10 @@ compose their shared feature models. Capability links without an Agent offer a c
 Pages use the configured Web origin without authenticated native document frames.
 Resource definitions/credentials and HTTP API management remain Web/Desktop;
 account skill/server enablement and Space availability switches are native.
+Account approvals edit Ask, Never ask and available Auto through the shared
+revisioned model while preserving exact rules. Never ask requires native confirmation;
+unavailable modes display the server reason. Automatic approval/denial reasons
+render as text in activity and survive bounded history hydration.
 
 `/conversation/[agentId]` selects a conversation
 with `spaceId`; `/agent` creates or edits an Agent, `/space` creates a Space and

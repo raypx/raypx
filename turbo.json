@@ -3,7 +3,7 @@
   "ui": "stream",
   "envMode": "loose",
   "globalDependencies": ["test.config.ts", "test.dom.ts", "bunfig.toml"],
-  "globalEnv": ["NODE_ENV", "CI", "LANG", "TZ", "RAYPX_CACHE_PLATFORM"],
+  "globalEnv": ["NODE_ENV", "CI", "LANG", "TZ", "RAYPX_CACHE_PLATFORM", "APPROVAL_REVIEW_MODEL_ID"],
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"],

@@ -48,7 +48,7 @@ starts. Each missing capability is an explicit state in the product.
 ## Deploys
 
 - The unreleased `next` database is disposable. Its migration payload now contains
-  one generated baseline, `20261114031842_baseline`, rather than the earlier chain.
+  one generated baseline, `20261114045504_baseline`, rather than the earlier chain.
   Use a fresh, isolated database for this baseline; an existing disposable `next`
   database must be recreated explicitly by its operator. This is not an upgrade
   procedure and imports no earlier schema, ledger or data. Never reset or migrate
@@ -147,3 +147,10 @@ IPv6 enforcement is unavailable when the Engine-host control cannot reach IPv6;
 a reachable control requires a computer timeout and an owned IPv6 DROP counter.
 An embedded-DNS SERVFAIL is unavailable only alongside an independently observed
 host upstream network failure; direct upstream SERVFAIL remains a failure.
+
+## Review model operations
+
+`APPROVAL_REVIEW_MODEL_ID` optionally selects the independent action reviewer
+from `AGENT_MODELS` using `AGENT_MODEL_CREDENTIALS`. Configure API and worker
+roles alike. Without a resolvable selection, Auto is unavailable; persisted Auto
+settings ask the member. Review never falls back to Never ask or ambient keys.

@@ -135,7 +135,10 @@ const modelConnections = createModelConnections(
   model.connectionTransport,
 );
 const conversationModels = modelConnections.models(model.models);
-const agentApprovals = createApprovalsService(createApprovalsRepository(connection.db));
+const agentApprovals = createApprovalsService(
+  createApprovalsRepository(connection.db),
+  model.models.reviewModel ? { reviewModel: model.models.reviewModel } : {},
+);
 const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(connection.db));
 const pages = createPagesService(createPagesRepository(connection.db));
 const skills = createSkillsService(createSkillsRepository(connection.db));
@@ -201,6 +204,7 @@ const runner = new ConversationRunner(
   },
 );
 const spaceManagement = createSpaceManagement(connection.db, {
+  reviewModelAvailable: () => model.models.reviewModel?.available() ?? false,
   beforeMemberRemoved: async (tx, spaceId, accountId) => {
     await revokeComputerScreenControl(tx, spaceId, accountId);
     await cancelSpaceRuns(tx, spaceId, accountId);

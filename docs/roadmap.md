@@ -111,9 +111,11 @@ approval modes, lists and effects. See [computers](architecture/computers.md) an
 Implemented backend second slice: bounded Computer tool rounds, lazy start,
 Ask/Never ask account settings, exact Allow/Block rules, addressed expiring
 approvals, conversation card events, cancellation and durable effect intents/
-outcomes with unknown-outcome guards. Auto review, protected input, client UI and
-durable Run recovery remain outside this slice. PostgreSQL, loopback stream and
-live Docker acceptance remain separate, unclaimed gates.
+outcomes with unknown-outcome guards. Subsequent slices add durable Run recovery,
+client approval controls and bounded Auto review with a deployment-selected,
+tool-less model. Automatic decisions are durable and visible with their reasons;
+untrusted input, mutating HTTP operations and unlisted commands still ask. Protected
+input remains deferred. PostgreSQL, browser and live Docker acceptance are separate gates.
 
 Backend egress follow-up: the supervisor selects one DNS upstream and host rules
 restrict direct UDP/TCP DNS to it. The real-Engine gate now checks public HTTPS,
@@ -276,5 +278,4 @@ provider. Each needs its own decision when a concrete workflow requires it.
 ## Open questions
 
 - Which hosted sandbox provider passes the conformance suite and fits the port.
-- Whether the first release ships Auto review or only Ask and Never ask.
 - Whether Claude and Codex continue as tools inside a computer or are dropped.

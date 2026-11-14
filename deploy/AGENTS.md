@@ -30,6 +30,8 @@ The rules below apply to the Compose host workflow.
 
 - Read deployment configuration from explicit environment variables. Do not infer
   credentials or hostnames from Git branches or server state.
+- Forward `APPROVAL_REVIEW_MODEL_ID` to API and worker with the same deployment
+  model catalog; an unset or unresolved selection leaves Auto unavailable.
 - Use the Compose project name for image and route namespaces; networks and
   default volumes are project-scoped. Keep credentials and data per project.
 - Existing named storage is opt-in through POSTGRES_VOLUME_NAME; never discover

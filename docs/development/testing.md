@@ -273,3 +273,26 @@ policy/locales/style without external services. The default merge-base with
 `origin/canary` can include earlier committed branch changes; inspect the printed
 baseline and selection before interpreting the scope. Report the
 actual commands, passes, skips and unavailable checks; never infer an unrun gate.
+
+## Auto review acceptance
+
+Auto review suites inject a deterministic tool-less model for all verdicts,
+malformed output, deadlines, confidence and durable per-Run budget. Injection cases
+include untrusted Page/tool/API content that asks the reviewer to approve; backend
+policy preserves Ask independently of the fixture verdict. PostgreSQL cases cover
+claims, recovery without a second review, fences, stop and same-Space keys.
+
+`auto-review.spec.ts` runs on Web and Desktop with the owned backend. An
+always-approve reviewer passes a safe requested file write; reload preserves its
+automatic label and reason. Reading a Page containing approval instructions makes
+the next write ask the member. Repeat it with:
+
+```sh
+bun run test backends \
+  --database-url postgres://raypx@127.0.0.1:55439/raypx_next_test \
+  --with-e2e -- auto-review.spec.ts --workers=1 --repeat-each=3 --visual
+```
+
+Opt-in screenshots of the mode picker and automatic row at 1440×860 and 375×812
+are written to `.artifacts/auto/`. Real-provider quality, packaged Desktop and
+native Mobile device acceptance remain separate from deterministic browser tests.

@@ -38,7 +38,7 @@ export const toolNameSchema = z.union([
   openApiToolNameSchema,
 ]);
 export type ToolName = z.infer<typeof toolNameSchema>;
-export const approvalModeSchema = z.enum(["ask", "never"]);
+export const approvalModeSchema = z.enum(["ask", "never", "auto"]);
 export type ApprovalMode = z.infer<typeof approvalModeSchema>;
 // Accept the explicit choice at the boundary so the service can report unavailability.
 export const approvalModeInputSchema = z.enum(["ask", "never", "auto"]);
@@ -87,6 +87,17 @@ export const effectiveApprovalModeSchema = z.strictObject({
 });
 export type EffectiveApprovalMode = z.infer<typeof effectiveApprovalModeSchema>;
 export const approvalRequestIdSchema = z.string().min(1).max(128).brand<"ApprovalRequestId">();
+/** Bounded review evidence, never model input or private tool arguments. */
+export const approvalReviewSchema = z.strictObject({
+  modelId: z.string().min(1).max(256),
+  verdict: z.enum(["approve", "ask", "deny"]),
+  reason: z.string().min(1).max(256),
+  startedAt: z.iso.datetime(),
+  completedAt: z.iso.datetime(),
+  durationMs: z.number().int().nonnegative(),
+  fence: z.number().int().nonnegative(),
+});
+export type ApprovalReview = z.infer<typeof approvalReviewSchema>;
 export const approvalStateSchema = z.enum([
   "pending",
   "approved",
@@ -129,6 +140,7 @@ export const approvalRequestSchema = z.strictObject({
   expiresAt: z.iso.datetime(),
   resolvedAt: z.iso.datetime().nullable(),
   answeredByAccountId: z.string().min(1).max(128).nullable(),
+  review: approvalReviewSchema.optional(),
 });
 export type ApprovalRequest = z.infer<typeof approvalRequestSchema>;
 export const effectSchema = z.strictObject({

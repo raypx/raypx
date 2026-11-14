@@ -24,7 +24,9 @@ domains remain explicit independent entries. Schemas are the single source of in
 - `/approvals` owns account modes, revisioned settings and mode availability,
   member-safe effective mode/source projections,
   exact-tool rules, Space approval requests and bounded effect records.
-  Auto reports the stable REVIEW_MODEL_NOT_CONFIGURED reason.
+  Modes include Auto; unresolved review configuration reports the stable
+  REVIEW_MODEL_NOT_CONFIGURED reason. Optional bounded review evidence records
+  model/verdict/reason/timing/fence on requests and resolved conversation summaries/events.
 - `/spaces` owns Space IDs, names, membership roles and pure membership matching,
   profile-backed directory projections, token-free invitation projections, sharing
   previews, approval overrides, append-only audit records and independent Space

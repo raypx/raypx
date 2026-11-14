@@ -304,6 +304,10 @@ reset. Materialize the window once before deletion, even with stale device stati
 ## Administrator configuration
 
 `src/config/` owns the typed non-secret site settings and PostgreSQL repository.
+`APPROVAL_REVIEW_MODEL_ID` selects one opaque deployment offer from `AGENT_MODELS`.
+API and workers expose Auto only when that model and its protected credential
+resolve. Review uses a separate tool-less bounded request; missing access asks the
+member. Member model connections cannot override the deployment review selection.
 `types.ts` defines the reader, service and repository ports. Inject `ConfigReader`
 into read-only consumers; `createRuntime` exposes `config` and accepts a
 `createConfigRepository(db, audit)` factory scoped to its owned connection.

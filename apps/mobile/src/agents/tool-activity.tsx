@@ -3,6 +3,8 @@ import { Linking, Text, View } from "react-native";
 import { Button } from "heroui-native/button";
 import {
   toolOperationLabel,
+  automaticApprovalState,
+  approvalForToolCall,
   openApiOperationKind,
   type ApprovalCardView,
   type ApprovalPort,
@@ -45,6 +47,7 @@ function ToolCallRow({
   }
   const name = toolOperationLabel(call, (key) => t(`agents.${key}`));
   const operationKind = openApiOperationKind(call);
+  const automatic = answer ? automaticApprovalState(answer) : null;
   return (
     <View
       testID={`tool:${call.runId}:${call.toolCallId}`}
@@ -79,7 +82,17 @@ function ToolCallRow({
       <Text selectable className="text-sm text-muted-foreground">
         {call.argumentSummary}
       </Text>
-      {answer && answer.state !== "pending" && (
+      {automatic ? (
+        <View testID={`auto-review:${automatic}`} className="gap-1">
+          <Text className="text-xs text-muted-foreground">
+            {t(`agents.approval.automatic.${automatic}`)}
+          </Text>
+          <Text selectable className="text-xs text-muted-foreground">
+            {answer?.review?.reason}
+          </Text>
+        </View>
+      ) : null}
+      {answer && !automatic && answer.state !== "pending" && (
         <Text className="text-xs text-muted-foreground">
           {t(`agents.approval.states.${answer.state}`)}
           {answer.answeredByAccountId && memberName
@@ -170,9 +183,7 @@ export function ToolActivity({
               call={call}
               spaceId={spaceId}
               origin={origin}
-              answer={answers.find(
-                (answer) => answer.runId === call.runId && answer.toolCallId === call.toolCallId,
-              )}
+              answer={approvalForToolCall(answers, call)}
               memberName={memberName}
             />
           ))}

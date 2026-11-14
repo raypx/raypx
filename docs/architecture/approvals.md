@@ -69,7 +69,8 @@ model history or a log.
 
 ## Implemented backend computer slice
 
-Account settings persist `ask` or `never`; `auto` is explicitly unavailable.
+Account settings persist `ask`, `never` or `auto`; Auto requires a resolvable
+deployment review model as described below.
 `APPROVAL_DEFAULT_MODE` selects the first persisted account default (`ask` when
 unset). A Space owner can set or clear an approval-mode exception; policy resolution
 uses that override before the executing member's default. Rules always belong to
@@ -86,13 +87,13 @@ Screenshots are bounded reads but also record effects. Effects and activity reta
 only image metadata; the bounded PNG enters private model context with an untrusted
 label. Recovery without a committed image result reports its absence rather than
 recapturing the effect. Pointer and keyboard calls are changes with the same
-Block/Allow, Ask/Never ask, fence and unknown-outcome checks. Member takeover pauses
+Block/Allow, Ask/Auto/Never ask, fence and unknown-outcome checks. Member takeover pauses
 screen input and commands on screen-capable providers before effect admission,
 records `computerInputPaused` on the waiting Run and resumes after release/expiry.
 
 `approvals.settings/updateSettings` use the session account. Their responses add
 `revision` and `availableModes`, containing `{ mode, available, reasonCode }` for
-Ask, Never ask and Auto. Auto reports `REVIEW_MODEL_NOT_CONFIGURED`; available
+Ask, Never ask and Auto. Unconfigured Auto reports `REVIEW_MODEL_NOT_CONFIGURED`; available
 modes have a null reason. Updating requires `expectedRevision`. A stale edit
 returns `CONFLICT` with `APPROVAL_SETTINGS_CONFLICT` and the current settings in
 error data, without changing them. Remembering a new Allow rule from a card also
@@ -122,8 +123,8 @@ executor polls requests; pending-list reads and answers also expire due requests
 Expiration resolves the card as `expired` and returns an explicit failed tool
 result to the model. A waiting Run retains its Agent's queue slot; a new message
 is accepted and queues its own Run. Stop atomically cancels pending requests.
-There is no approval or Run recovery scheduler. A request can still be answered
-after its executor dies, but answering does not recreate that executor.
+Worker recovery resumes the checkpoint and reuses the existing addressed request
+after its executor dies. Answering a card does not create a second Run.
 
 Effect keys are SHA-256 over the Run ID, tool-call ID, exact tool name and a
 SHA-256 of canonical JSON arguments (object keys sorted, array order preserved).
@@ -153,15 +154,14 @@ Refused and failed answers are audited with safe codes and no rule contents.
 
 Phase 4 persists inbound provenance on webhook, email and repository Runs.
 The approval policy checks Block first, then read-only/Never ask, then untrusted
-write policy, then Allow. Consequently an Allow rule cannot bypass Ask for a
-change in an inbound Run; the same policy requires Ask for Auto if that mode is
-configured in a later slice. Auto itself remains unavailable without a review
-model. Saving/updating memory uses the same policy, addressed request, effect and
+write policy, then Allow. Consequently an Allow rule cannot bypass Ask or Auto for
+a change in an inbound Run. Auto remains unavailable without a review model.
+Saving/updating memory uses the same policy, addressed request, effect and
 fence checks as other changes. Memory tool summaries contain no memory text.
 
 Group context from another Agent, Agent-message triggers and different-member
 steering persist the same untrusted-input flag. Ask therefore requires a card for
-changes even with an exact Allow rule; the policy would do the same in Auto.
+changes even with an exact Allow rule; the policy does the same in Auto.
 Delegation inherits this flag and the originating member. Child requests use the
 child Run ID in the same Conversation, and remain answerable only by that member.
 Delegating or messaging an Agent provides no additional credentials, approval
@@ -184,3 +184,89 @@ classification. Every HTTP call records intent/outcome, including reads, so a
 completed result replays without redispatch and an unknown result is never retried
 automatically. The configured API credential is absent from the approval arguments,
 summaries and effect results.
+
+## Automatic review
+
+`APPROVAL_REVIEW_MODEL_ID` selects one opaque offer in the existing deployment
+`AGENT_MODELS` catalog. It resolves only with that offer's explicit credential in
+`AGENT_MODEL_CREDENTIALS` and valid transport model. API and workers need the same
+configuration. There is no ambient credential or implicit main-model fallback.
+Auto availability is computed from that resolution. Saving Auto while unavailable
+is refused; an existing Auto account default or Space exception remains Auto and
+asks if its reviewer later becomes unavailable. It never becomes Never ask.
+Space owners can choose an Auto mode exception. Reviewer selection is deployment-only;
+the optional Space-specific model selector is not implemented.
+
+When policy would ask, eligible Auto requests use a separate tool-less completion
+with a fixed server-owned prompt. Its bounded JSON input contains the structured
+request as quoted data, a server-assembled trusted instruction summary and explicit
+provenance flags. The main model cannot change this prompt or supply a review
+decision. The expected JSON verdict is `approve`, `ask` or `deny`, with a brief
+reason and confidence. Approve resolves the addressed request automatically; deny
+refuses it; ask preserves its member controls. Automatic results retain null
+`answeredByAccountId`, and client activity distinguishes them from member answers.
+The reason is plain text. Stop remains available independently of review.
+
+The trusted summary combines the pinned Agent instructions and original member
+request. The request defines the task; Agent instructions constrain behavior and
+cannot grant unrelated authority. Missing member-authored task context asks.
+
+Precedence and conservative exclusions:
+
+- Exact Block refuses in every mode before a request or model review.
+- Reads retain their existing policy. Exact Allow bypasses review for eligible
+  trusted actions; it cannot bypass untrusted-change policy.
+- Any untrusted Run provenance, untrusted argument derivation, or prior untrusted
+  tool, file, Page, skill, memory or API content prevents automatic approval of a
+  later change. Every tool result conservatively taints the remaining Run, even
+  a server-produced write receipt. The checkpoint preserves this across recovery;
+  retained untrusted conversation history also taints subsequent Runs.
+  No dependency classifier tries to prove that later arguments are unrelated.
+- Mutating HTTP API operations ask in Auto unless an exact Allow already authorizes
+  the trusted action. A review model cannot approve them.
+- Commands outside exact executable Allow rules always ask in Auto. Shell text,
+  argv prefixes and model judgments never widen an executable rule.
+- `computer_pointer` and `computer_keyboard` are never approved by the reviewer,
+  even before a screenshot. Unlisted input asks the addressed member in Auto;
+  a trusted exact Allow retains its explicit authorization, and Block always wins.
+  `computer_screenshot` remains a bounded read. Its image and metadata are untrusted
+  tool content: once observed, every subsequent change asks in Ask/Auto, including
+  pointer/keyboard calls with an exact Allow. This taint survives checkpoints,
+  recovery and retained conversation history. An image-free recovered screenshot
+  result never restores trust or causes an automatic recapture.
+- Missing trusted instructions, model failures, malformed/oversized output,
+  confidence below 0.9, timeout, interruption and exhausted limits ask.
+
+Enabled external tool catalogs, skill metadata and any recalled memory context
+also taint the Run before inference, because these references are labelled
+untrusted. After any steering revision, Auto asks rather than judging against a
+superseded original request. Ineligible requests are never sent to the reviewer.
+
+Each review has a five-second deadline and 256 output-token limit. Input is capped
+at 24,000 UTF-16 units and response text at 2,048; oversize asks. A Run has at most
+eight durable review claims, shared by recovered attempts. These fixed limits
+bound review cost rather than exposing model-controlled budgets.
+
+PostgreSQL commits the request's review claim before inference. Same-Space keys
+bind its Run, request and deterministic effect identity. A completed decision
+records model ID, verdict, bounded reason, start/end timestamps, duration and
+execution fence. Only the current live fenced attempt may commit it. Stop,
+membership removal, expiry and an earlier member answer defeat a late result.
+The commit rechecks the effective mode and exact rules: a switch to Ask preserves
+the member decision, and a newly added Block refuses the action before emitting
+an automatic approval.
+Recovery reuses a completed decision; a claim interrupted before completion becomes
+Ask and is never sent to a reviewer again. Claiming a request twice never spends
+another review. Effect execution still requires current authority and the existing
+intent/outcome protocol; recording approval does not establish an external effect.
+
+If recovery finds an unexecuted automatic approval whose authority became untrusted
+or whose instructions were steered, its immutable decision remains history and a
+replacement member-addressed request asks without another model call. Client rows
+prefer that pending request and its eventual member answer. A completed effect
+still reuses its recorded outcome without dispatching or asking again.
+
+These limits, deployment-only selection, coarse persistent taint, confidence
+threshold and interrupted-claim fallback settle details left open by the original
+guide conservatively. Deterministic fixtures validate protocol and policy, not
+real-model judgment quality. Protected input remains deferred.

@@ -5,8 +5,10 @@ import {
   createApprovalsService,
   createComputerTools,
   EFFECT_INTENT_TIMEOUT_MS,
+  StaleRunFenceError,
   type ApprovalsRepository,
   type ComputerScreenInputGate,
+  type ApprovalReviewModels,
 } from "@raypx/agents/server";
 import { createComputersService, type ComputersRepository } from "@raypx/computers/server";
 import {
@@ -28,6 +30,7 @@ export function agentToolsFixture(
     requestTtlMs?: number;
     maxToolRounds?: number;
     screenControl?: ComputerScreenInputGate;
+    reviewModel?: ApprovalReviewModels;
   } = {},
 ) {
   let clock = new Date("2026-01-01T00:00:00.000Z");
@@ -35,6 +38,7 @@ export function agentToolsFixture(
   const requests: ApprovalRequest[] = [];
   const effects: Effect[] = [];
   const accountSettings = new Map<string, RevisionedApprovalSettings>();
+  const reviewClaims = new Map<string, { runId: string; startedAt: string; fence: number }>();
   function expireEffects(scope: SpaceScope, runId: string, at: Date) {
     for (const effect of effects)
       if (
@@ -74,7 +78,11 @@ export function agentToolsFixture(
       memberAccountId: request.memberAccountId,
       expiresAt: request.expiresAt,
       ...(kind === "card.resolved"
-        ? { outcome: request.state, answeredByAccountId: request.answeredByAccountId }
+        ? {
+            outcome: request.state,
+            answeredByAccountId: request.answeredByAccountId,
+            ...(request.review ? { review: request.review } : {}),
+          }
         : {}),
     });
   }
@@ -212,6 +220,34 @@ export function agentToolsFixture(
     async cancelRequest(scope, _run, id, at) {
       resolve(findRequest(scope, id), "cancelled", null, at);
     },
+    async claimReview(scope, run, id, _modelId, _effectKey, budget, at) {
+      const active = requireRun(scope, run.id);
+      if (!["running", "waiting"].includes(active.state)) throw new StaleRunFenceError();
+      const request = findRequest(scope, id);
+      const existing = reviewClaims.get(id);
+      const budgetExhausted =
+        [...reviewClaims.values()].filter((claim) => claim.runId === run.id).length >= budget;
+      const claimed = !existing && !budgetExhausted && request.state === "pending";
+      const claim = existing ?? { runId: run.id, startedAt: at.toISOString(), fence: run.fence };
+      if (claimed) reviewClaims.set(id, claim);
+      return {
+        claimed,
+        request: structuredClone(request),
+        startedAt: claim.startedAt,
+        fence: claim.fence,
+        budgetExhausted,
+      };
+    },
+    async completeReview(scope, run, id, review, at) {
+      const active = requireRun(scope, run.id);
+      if (!["running", "waiting"].includes(active.state)) throw new StaleRunFenceError();
+      const request = findRequest(scope, id);
+      if (request.state !== "pending" || request.review) return structuredClone(request);
+      request.review = structuredClone(review);
+      if (review.verdict === "approve") resolve(request, "approved", null, at);
+      if (review.verdict === "deny") resolve(request, "denied", null, at);
+      return structuredClone(request);
+    },
     async listEffects(scope, runId, at) {
       requireRun(scope, runId);
       expireEffects(scope, runId, at);
@@ -265,6 +301,7 @@ export function agentToolsFixture(
     now,
     pollIntervalMs: 2,
     requestTtlMs: options.requestTtlMs ?? 300_000,
+    ...(options.reviewModel ? { reviewModel: options.reviewModel } : {}),
   });
   const provider = createMemoryComputerProvider();
   let computer: Computer | null = null;

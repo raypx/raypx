@@ -57,9 +57,9 @@ it("protects configured credential values at the tool boundary", () => {
     knownComputerSecrets(getApiEnvironment({ AGENT_MODEL_CREDENTIALS: '{"primary":3}' })),
   ).toThrow("Invalid deployment model configuration");
 });
-it("defaults to Ask and rejects Auto deployment configuration", () => {
+it("defaults to Ask and accepts an explicit Auto deployment default", () => {
   expect(getApiEnvironment({}).APPROVAL_DEFAULT_MODE).toBe("ask");
   expect(getApiEnvironment({ APPROVAL_DEFAULT_MODE: "never" }).APPROVAL_DEFAULT_MODE).toBe("never");
-  expect(() => getApiEnvironment({ APPROVAL_DEFAULT_MODE: "auto" })).toThrow("Invalid environment");
+  expect(getApiEnvironment({ APPROVAL_DEFAULT_MODE: "auto" }).APPROVAL_DEFAULT_MODE).toBe("auto");
   expect(() => getApiEnvironment({ APPROVAL_REQUEST_TTL_MS: "0" })).toThrow("Invalid environment");
 });

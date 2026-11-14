@@ -17,6 +17,8 @@ Creating another Space atomically creates its owner membership and audit records
 directory and mutations, audit pagination and ordered Space events. Its PostgreSQL
 constructor requires transactional Run/card cancellation from API; construction
 performs no I/O. Membership mutations serialize on the Space row and recheck roles.
+Auto approval overrides require the injected deployment reviewer availability;
+the capability never changes Space admission or supplies member credentials.
 Removed memberships retain `removed_at` tombstones for same-Space resource keys;
 only rows with no removal time grant access. `removal_reason` preserves removed/left
 for stable stream closure after lost hints. Removal pauses retained routines and

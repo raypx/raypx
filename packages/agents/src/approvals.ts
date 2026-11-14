@@ -11,12 +11,20 @@ import {
   type ToolName,
   type Effect,
   type EffectiveApprovalMode,
+  type ApprovalReview,
 } from "@raypx/core/approvals";
 import type { RunId } from "@raypx/core/conversation";
 import { StaleRunFenceError, type ExecutionRun } from "./conversations.js";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { computerToolResult } from "./computer-tools.js";
 import { EFFECT_INTENT_TIMEOUT_MS } from "./tool-limits.js";
+import {
+  autoReviewIneligibility,
+  reviewApproval,
+  REVIEW_RUN_BUDGET,
+  type ApprovalReviewModels,
+} from "./approval-reviewer.js";
+export type { ApprovalReviewModel, ApprovalReviewModels } from "./approval-reviewer.js";
 
 export class ApprovalOperationError extends Error {
   constructor(
@@ -65,6 +73,8 @@ export interface ApprovalCall {
   changes: boolean;
   readOnlyAnnotated?: boolean;
   readOnlyHttp?: boolean;
+  /** Conservative argument provenance supplied by the executor, never the model. */
+  argumentsUntrusted?: boolean;
 }
 export interface ApprovalSettingsInput {
   mode: ApprovalMode | "auto";
@@ -114,6 +124,28 @@ export interface ApprovalsRepository {
     now: Date,
   ): Promise<ApprovalRequest>;
   cancelRequest(scope: SpaceScope, run: ExecutionRun, id: string, now: Date): Promise<void>;
+  claimReview?(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    id: string,
+    modelId: string,
+    effectKey: string,
+    budget: number,
+    now: Date,
+  ): Promise<{
+    claimed: boolean;
+    request: ApprovalRequest;
+    startedAt: string;
+    fence: number;
+    budgetExhausted: boolean;
+  }>;
+  completeReview?(
+    scope: SpaceScope,
+    run: ExecutionRun,
+    id: string,
+    review: ApprovalReview,
+    now: Date,
+  ): Promise<ApprovalRequest>;
   listEffects(
     scope: SpaceScope,
     runId: RunId,
@@ -179,7 +211,7 @@ export function approvalDisposition(
   )
     return "approved";
   if (!call.changes || settings.mode === "never") return "approved";
-  if (untrustedInput) return "ask";
+  if (untrustedInput || call.argumentsUntrusted) return "ask";
   if (rules.some((rule) => rule.decision === "allow")) return "approved";
   return "ask";
 }
@@ -200,6 +232,11 @@ function canonicalJson(value: unknown): string {
 async function digest(value: string) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+async function effectIdentity(run: ExecutionRun, call: ApprovalCall) {
+  const argumentHash = await digest(canonicalJson(call.arguments));
+  const key = await digest(canonicalJson([run.id, call.id, call.name, argumentHash]));
+  return { key, argumentHash };
 }
 function boundedResult(value: string) {
   if (value.length <= MAX_TOOL_RESULT) return value;
@@ -237,6 +274,8 @@ export function createApprovalsService(
     requestTtlMs?: number;
     pollIntervalMs?: number;
     now?: () => Date;
+    reviewModel?: ApprovalReviewModels;
+    reviewTimeoutMs?: number;
   } = {},
 ): ApprovalsService {
   const defaultMode = options.defaultMode ?? "ask";
@@ -245,13 +284,21 @@ export function createApprovalsService(
   const now = options.now ?? (() => new Date());
   if (![requestTtlMs, pollIntervalMs].every((value) => Number.isSafeInteger(value) && value > 0))
     throw new RangeError("Invalid approval timing");
-  function settingsState(value: RevisionedApprovalSettings): ApprovalSettingsState {
+  async function reviewAvailable() {
+    try {
+      return Boolean(await options.reviewModel?.available());
+    } catch {
+      return false;
+    }
+  }
+  async function settingsState(value: RevisionedApprovalSettings): Promise<ApprovalSettingsState> {
+    const available = await reviewAvailable();
     return approvalSettingsStateSchema.parse({
       ...value,
       availableModes: [
         { mode: "ask", available: true, reasonCode: null },
         { mode: "never", available: true, reasonCode: null },
-        { mode: "auto", available: false, reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+        { mode: "auto", available, reasonCode: available ? null : "REVIEW_MODEL_NOT_CONFIGURED" },
       ],
     });
   }
@@ -274,12 +321,14 @@ export function createApprovalsService(
       return {
         spaceId: scope.spaceId,
         ...value,
-        availableModes: settingsState({ mode: value.mode, rules: [], revision: 0 }).availableModes,
+        availableModes: (await settingsState({ mode: value.mode, rules: [], revision: 0 }))
+          .availableModes,
       };
     },
     getSettings: settings,
     async updateSettings(accountId, input) {
-      if (input.mode === "auto") throw new ApprovalOperationError("MODE_UNAVAILABLE");
+      if (input.mode === "auto" && !(await reviewAvailable()))
+        throw new ApprovalOperationError("MODE_UNAVAILABLE");
       const value = approvalSettingsSchema.parse({ mode: input.mode, rules: input.rules });
       try {
         return settingsState(
@@ -287,7 +336,7 @@ export function createApprovalsService(
         );
       } catch (error) {
         if (error instanceof ApprovalSettingsConflictError)
-          throw new ApprovalSettingsConflictError(settingsState(error.settings));
+          throw new ApprovalSettingsConflictError(await settingsState(error.settings));
         throw error;
       }
     },
@@ -297,12 +346,34 @@ export function createApprovalsService(
     listEffects: (scope, runId) => repository.listEffects(scope, runId, now()),
     async authorize(scope, run, call, signal) {
       if (signal.aborted) return "cancelled";
+      // Refresh the attempt's authoritative provenance before any Allow shortcut.
+      const effects = await repository.listEffects(scope, run.id, now(), run);
+      const policy = await runSettings(scope, run);
       const action = approvalDisposition(
-        await runSettings(scope, run),
+        policy,
         call,
         run.untrustedInput || Boolean(run.inboundProvenance),
       );
       if (action !== "ask") return action;
+      let identity: Awaited<ReturnType<typeof effectIdentity>> | undefined;
+      if (
+        effects.some(
+          (effect) =>
+            effect.toolCallId === call.id &&
+            effect.toolName === call.name &&
+            (effect.state === "succeeded" || effect.state === "failed"),
+        )
+      ) {
+        identity = await effectIdentity(run, call);
+        if (
+          effects.some(
+            (effect) =>
+              effect.key === identity!.key &&
+              (effect.state === "succeeded" || effect.state === "failed"),
+          )
+        )
+          return "approved";
+      }
       const createdAt = now();
       const request = await repository.createRequest(
         scope,
@@ -312,6 +383,58 @@ export function createApprovalsService(
         createdAt,
       );
       let current = request;
+      if (
+        policy.mode === "auto" &&
+        current.state === "pending" &&
+        !autoReviewIneligibility(run, call) &&
+        options.reviewModel &&
+        repository.claimReview &&
+        repository.completeReview
+      ) {
+        let model;
+        try {
+          model = await options.reviewModel.resolve(scope);
+        } catch {
+          /* ask on resolution failure */
+        }
+        if (model && !signal.aborted) {
+          identity ??= await effectIdentity(run, call);
+          const claim = await repository.claimReview(
+            scope,
+            run,
+            current.id,
+            model.modelId,
+            identity.key,
+            REVIEW_RUN_BUDGET,
+            now(),
+          );
+          current = claim.request;
+          if (current.state === "pending" && !current.review && !claim.budgetExhausted) {
+            let review: ApprovalReview;
+            if (claim.claimed) {
+              review = await reviewApproval(model, run, call, new Date(claim.startedAt), signal, {
+                ...(options.reviewTimeoutMs === undefined
+                  ? {}
+                  : { timeoutMs: options.reviewTimeoutMs }),
+                now,
+              });
+            } else {
+              const completedAt = now();
+              review = {
+                modelId: model.modelId,
+                verdict: "ask",
+                reason: "An interrupted review requires a member decision.",
+                startedAt: claim.startedAt,
+                completedAt: completedAt.toISOString(),
+                durationMs: Math.max(0, completedAt.getTime() - Date.parse(claim.startedAt)),
+                fence: claim.fence,
+              };
+            }
+            if (!signal.aborted)
+              current = await repository.completeReview(scope, run, current.id, review, now());
+          }
+        }
+      }
       while (current.state === "pending" && !signal.aborted) {
         await pause(
           Math.min(pollIntervalMs, Math.max(1, Date.parse(current.expiresAt) - now().getTime())),
@@ -354,8 +477,7 @@ export function createApprovalsService(
         ) === "blocked"
       )
         return computerToolResult("refused", "BLOCKED");
-      const argumentHash = await digest(canonicalJson(call.arguments));
-      const key = await digest(canonicalJson([run.id, call.id, call.name, argumentHash]));
+      const { key, argumentHash } = await effectIdentity(run, call);
       if (gate) {
         const known = (await repository.listEffects(scope, run.id, now(), run)).find(
           (effect) => effect.key === key,

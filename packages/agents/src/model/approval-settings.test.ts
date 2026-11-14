@@ -251,3 +251,30 @@ it("creates MCP rules only from tested exact tools", async () => {
     decision: "allow",
   });
 });
+
+it("selects Auto only when the server reports a resolvable review model", async () => {
+  const h = fixture();
+  await h.controller.load();
+  h.controller.setMode("auto");
+  expect(h.controller.getSnapshot().draft?.mode).toBe("ask");
+  const modes = availableModes.map((entry) => ({
+    ...entry,
+    available: true as const,
+    reasonCode: null,
+  }));
+  h.settings.mockResolvedValue({ ...initial, revision: 0, availableModes: modes });
+  h.updateSettings.mockImplementation(async ({ expectedRevision, ...saved }) => ({
+    ...saved,
+    revision: expectedRevision + 1,
+    availableModes: modes,
+  }));
+  await h.controller.load();
+  h.controller.setMode("auto");
+  expect(h.controller.getSnapshot().draft?.mode).toBe("auto");
+  await expect(
+    h.controller.save(async () => {
+      throw new Error("Auto needs no Never confirmation");
+    }),
+  ).resolves.toBe(true);
+  expect(h.updateSettings).toHaveBeenCalledWith({ mode: "auto", rules: [], expectedRevision: 0 });
+});

@@ -14,6 +14,8 @@ import {
   approvalDuration,
   approvalDeadlineProminent,
   approvalExtraSummary,
+  automaticApprovalState,
+  approvalForToolCall,
 } from "./approvals.js";
 import { ConversationController } from "./controller.js";
 import type { ApprovalPort, ConversationSnapshot, ConversationSocketPort } from "./port.js";
@@ -361,4 +363,100 @@ describe("approval controller", () => {
     expect(h.controller.getSnapshot().draft).toBe("");
     h.controller.dispose();
   });
+});
+
+it("retains reviewed decisions through live events, pending reads and historical hydration", () => {
+  const review = {
+    modelId: "review-model",
+    verdict: "approve" as const,
+    reason: "Matches the requested note.",
+    startedAt: createdAt,
+    completedAt: createdAt,
+    durationMs: 0,
+    fence: 1,
+  };
+  const state = new ApprovalProjection(selection);
+  state.applyEvent({
+    ...cardEvent(),
+    kind: "card.resolved",
+    outcome: "approved",
+    answeredByAccountId: null,
+    review,
+  });
+  expect(state.getSnapshot()[0]?.review).toEqual(review);
+  expect(automaticApprovalState(state.getSnapshot()[0]!)).toBe("approved");
+  state.hydrate([request()], () => 2);
+  expect(state.getSnapshot()[0]?.review).toEqual(review);
+  const history = new ApprovalProjection(selection);
+  history.hydrateResolved(
+    [
+      {
+        requestId,
+        runId,
+        toolCallId: "tool-call",
+        outcome: "approved",
+        answeredByAccountId: null,
+        resolvedAt: createdAt,
+        review,
+      },
+    ],
+    [
+      {
+        runId,
+        toolCallId: "tool-call",
+        toolName: "computer_write_file",
+        target: "file.txt",
+        argumentSummary: "Write note",
+        startedAt: createdAt,
+        finishedAt: createdAt,
+        outcome: "succeeded",
+        durationMs: 0,
+        exitStatus: null,
+      },
+    ],
+    () => 1,
+  );
+  expect(history.getSnapshot()[0]?.review).toEqual(review);
+  expect(automaticApprovalState(history.getSnapshot()[0]!)).toBe("approved");
+  const memberAnswer = request({
+    state: "approved",
+    answeredByAccountId: "member",
+    review: { ...review, verdict: "ask" },
+  });
+  history.receive(memberAnswer, 1);
+  expect(automaticApprovalState(history.getSnapshot()[0]!)).toBeNull();
+});
+
+it("uses replacement requests over retained automatic decisions, including synthetic history positions", () => {
+  const state = new ApprovalProjection(selection);
+  const review = {
+    modelId: "review",
+    verdict: "approve" as const,
+    reason: "Matches the request.",
+    startedAt: createdAt,
+    completedAt: createdAt,
+    durationMs: 0,
+    fence: 1,
+  };
+  state.receive(request({ state: "approved", review }), 10);
+  const replacement = request({
+    id: approvalRequestIdSchema.parse("replacement"),
+    review: { ...review, verdict: "ask" },
+  });
+  // History hydration positions can precede a live event's sequence.
+  state.receive(replacement, 1);
+  const call = { runId, toolCallId: replacement.toolCallId };
+  expect(approvalForToolCall(state.getSnapshot(), call)?.requestId).toBe(replacement.id);
+  expect(automaticApprovalState(approvalForToolCall(state.getSnapshot(), call)!)).toBeNull();
+  state.receive(
+    { ...replacement, state: "approved", answeredByAccountId: "member", resolvedAt: createdAt },
+    1,
+  );
+  for (const cards of [state.getSnapshot(), [...state.getSnapshot()].reverse()]) {
+    const current = approvalForToolCall(cards, call)!;
+    expect(current.requestId).toBe(replacement.id);
+    expect(current.answeredByAccountId).toBe("member");
+    expect(automaticApprovalState(current)).toBeNull();
+  }
+  expect(state.getSnapshot()).toHaveLength(2);
 });

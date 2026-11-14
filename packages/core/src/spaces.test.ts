@@ -64,6 +64,10 @@ it("keeps invitation tokens out of public stored projections and preserves stric
       .success,
   ).toBe(true);
   expect(
+    spaceSettingsSchema.safeParse({ spaceId: "space", approvalMode: "auto", updatedAt: null })
+      .success,
+  ).toBe(true);
+  expect(
     spaceDirectoryMemberSchema.safeParse({
       spaceId: "space",
       accountId: "account",

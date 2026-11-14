@@ -779,6 +779,15 @@ export class ConversationRunner {
       }
       run.untrustedInput ||=
         checkpoint.untrustedInput || checkpoint.memory?.untrustedInput || false;
+      if (checkpoint.memory?.context || checkpoint.skills?.length) {
+        run.untrustedInput = true;
+        if (!checkpoint.untrustedInput) {
+          checkpoint.untrustedInput = true;
+          storing = true;
+          await this.repository.saveCheckpoint(scope, run, checkpoint);
+          storing = false;
+        }
+      }
       const history = [...input.history];
       if (checkpoint.skills?.length)
         history.unshift({
@@ -819,6 +828,17 @@ export class ConversationRunner {
           return this.repository.delegate !== undefined;
         }),
       ];
+      if (
+        definitions.some((tool) => tool.name.startsWith("mcp_") || tool.name.startsWith("openapi_"))
+      ) {
+        run.untrustedInput = true;
+        if (!checkpoint.untrustedInput) {
+          checkpoint.untrustedInput = true;
+          storing = true;
+          await this.repository.saveCheckpoint(scope, run, checkpoint);
+          storing = false;
+        }
+      }
       for (;;) {
         if (controller.signal.aborted) throw new AttemptInterrupted();
         await this.toolRuntime?.approvals.assertContinuable(scope, run);
@@ -828,7 +848,10 @@ export class ConversationRunner {
           const call = checkpoint.pendingCalls[0]!;
           const output = await this.toolResult(scope, run, call, controller);
           checkpoint.continuation.push(output);
-          if (run.untrustedInput) checkpoint.untrustedInput = true;
+          // Every external/tool response is untrusted data. Without argument-level
+          // information flow tracking, conservatively taint all later calls.
+          run.untrustedInput = true;
+          checkpoint.untrustedInput = true;
           checkpoint.pendingCalls.shift();
           storing = true;
           const text =

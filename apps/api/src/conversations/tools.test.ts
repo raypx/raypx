@@ -321,8 +321,14 @@ it("addresses requests to one member, rejects a second answer, and can remember 
   });
   await expect.poll(() => f.calls.length).toBe(2);
   f.calls[1]!.toolCalls([write("allowed-later")]);
+  await expect.poll(() => f.requests.length).toBe(2);
+  await f.rpc.approvals.answer({
+    spaceId: f.spaceId,
+    requestId: f.requests[1]!.id,
+    decision: "approved",
+  });
   await expect.poll(() => f.calls.length).toBe(3);
-  expect(f.requests).toHaveLength(1);
+  expect(f.requests).toHaveLength(2);
   expect(f.effects).toHaveLength(2);
   f.calls[2]!.complete();
 });
@@ -543,4 +549,101 @@ it("returns approval mode availability and a current-settings conflict for stale
     message: "APPROVAL_MODE_UNAVAILABLE",
     data: { reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
   });
+});
+
+it("exposes configured Auto and resolves a safe write with automatic review evidence through RPC", async () => {
+  const complete = vi.fn(async () =>
+    JSON.stringify({
+      verdict: "approve",
+      reason: "The requested change is bounded and reversible.",
+      confidence: 1,
+    }),
+  );
+  const f = fixture({
+    reviewModel: {
+      available: () => true,
+      resolve: async () => ({ modelId: "fixture-review", complete }),
+    },
+  });
+  const writeFile = vi.spyOn(f.provider, "write");
+  expect((await f.rpc.approvals.settings({})).availableModes).toContainEqual({
+    mode: "auto",
+    available: true,
+    reasonCode: null,
+  });
+  await f.rpc.approvals.updateSettings({ mode: "auto", rules: [], expectedRevision: 0 });
+  expect(await f.rpc.approvals.effectiveMode({ spaceId: f.spaceId })).toMatchObject({
+    mode: "auto",
+    source: "account_default",
+  });
+  await startWrite(f);
+  await expect.poll(() => f.calls.length).toBe(2);
+  expect(complete).toHaveBeenCalledTimes(1);
+  expect(complete).toHaveBeenCalledWith(expect.objectContaining({ maxOutputTokens: 256 }));
+  expect(writeFile).toHaveBeenCalledTimes(1);
+  expect(await f.rpc.approvals.pending({ spaceId: f.spaceId })).toEqual([]);
+  expect(f.requests[0]).toMatchObject({
+    state: "approved",
+    answeredByAccountId: null,
+    review: {
+      modelId: "fixture-review",
+      verdict: "approve",
+      reason: "The requested change is bounded and reversible.",
+    },
+  });
+  const resolved = f.log.find((entry) => entry.event.kind === "card.resolved");
+  expect(resolved?.event).toMatchObject({
+    answeredByAccountId: null,
+    review: { modelId: "fixture-review", verdict: "approve" },
+  });
+  f.calls[1]!.complete("Written");
+});
+
+it("keeps Auto unavailable when resolution disappears and asks for an untrusted Run without review", async () => {
+  let available = true;
+  const complete = vi.fn(async () => '{"verdict":"approve","reason":"Approved","confidence":1}');
+  const f = fixture({
+    reviewModel: {
+      available: () => available,
+      resolve: async () => (available ? { modelId: "fixture-review", complete } : undefined),
+    },
+  });
+  await f.rpc.approvals.updateSettings({ mode: "auto", rules: [], expectedRevision: 0 });
+  const claim = f.repository.claimNext.bind(f.repository);
+  f.repository.claimNext = async (...args) => {
+    const execution = await claim(...args);
+    if (execution) execution.run.untrustedInput = true;
+    return execution;
+  };
+  await f.send();
+  await expect.poll(() => f.calls.length).toBe(1);
+  f.calls[0]!.toolCalls([write()]);
+  await expect.poll(() => f.requests.length).toBe(1);
+  expect(complete).not.toHaveBeenCalled();
+  expect((await f.rpc.approvals.pending({ spaceId: f.spaceId }))[0]?.state).toBe("pending");
+  available = false;
+  const settings = await f.rpc.approvals.settings({});
+  expect(settings.mode).toBe("auto");
+  expect(settings.availableModes).toContainEqual({
+    mode: "auto",
+    available: false,
+    reasonCode: "REVIEW_MODEL_NOT_CONFIGURED",
+  });
+  await f.rpc.conversations.stop({ ...f.selection, runId: f.runs[0]!.id });
+});
+
+it("falls back to a pending member request when a selected Auto reviewer cannot resolve", async () => {
+  let available = true;
+  const f = fixture({
+    reviewModel: { available: () => available, resolve: async () => undefined },
+  });
+  await f.rpc.approvals.updateSettings({ mode: "auto", rules: [], expectedRevision: 0 });
+  available = false;
+  const writeFile = vi.spyOn(f.provider, "write");
+  await startWrite(f);
+  await expect.poll(() => f.requests.length).toBe(1);
+  expect(writeFile).not.toHaveBeenCalled();
+  expect((await f.rpc.approvals.settings({})).mode).toBe("auto");
+  expect((await f.rpc.approvals.pending({ spaceId: f.spaceId }))[0]?.state).toBe("pending");
+  await f.rpc.conversations.stop({ ...f.selection, runId: f.runs[0]!.id });
 });

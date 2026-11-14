@@ -2,8 +2,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { runIdSchema, type ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
-import { openApiToolNameSchema } from "@raypx/core/approvals";
+import { approvalRequestIdSchema, openApiToolNameSchema } from "@raypx/core/approvals";
 import { pageIdSchema } from "@raypx/core/pages";
+import type { ApprovalCardView } from "../model.js";
 import { ComputerActivity, ToolActivity } from "./tool-activity.js";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
@@ -249,3 +250,123 @@ it.each(["en", "zh"] as const)(
     expect(screen.getByText({ en, zh }[language].agents.openapi.readOnly)).toBeVisible();
   },
 );
+
+it.each(["en", "zh"] as const)(
+  "distinguishes automatic review outcomes and member answers in %s",
+  (language) => {
+    const strings = { en, zh }[language].agents;
+    const answer: ApprovalCardView = {
+      requestId: approvalRequestIdSchema.parse("request"),
+      runId: call.runId,
+      toolCallId: call.toolCallId,
+      toolName: "computer_write_file",
+      target: call.target,
+      argumentSummary: call.argumentSummary,
+      memberAccountId: "member",
+      expiresAt: call.startedAt,
+      createdAt: call.startedAt,
+      sequence: 1,
+      state: "approved",
+      answeredByAccountId: null,
+      answering: false,
+      error: null,
+      review: {
+        modelId: "review-model",
+        verdict: "approve",
+        reason: "Matches the requested note. <b>safe text</b>",
+        startedAt: call.startedAt,
+        completedAt: call.startedAt,
+        durationMs: 1,
+        fence: 2,
+      },
+    };
+    const tree = (value: ApprovalCardView) => (
+      <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+        <ToolActivity
+          activity={[call]}
+          runId={call.runId}
+          answers={[value]}
+          memberName={() => "Ari"}
+        />
+      </BrowserLanguageProvider>
+    );
+    const view = render(tree(answer));
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByText(strings.approval.automatic.approved)).toBeVisible();
+    expect(screen.getByText(answer.review!.reason)).toBeVisible();
+    expect(view.container.querySelector("[data-auto-review='approved'] b")).toBeNull();
+    view.rerender(
+      tree({ ...answer, state: "denied", review: { ...answer.review!, verdict: "deny" } }),
+    );
+    expect(screen.getByText(strings.approval.automatic.denied)).toBeVisible();
+    view.rerender(
+      tree({
+        ...answer,
+        answeredByAccountId: "member",
+        review: { ...answer.review!, verdict: "ask" },
+      }),
+    );
+    expect(screen.queryByText(strings.approval.automatic.approved)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(strings.spaceSettings.approvedBy.replace("{name}", "Ari")),
+    ).toBeVisible();
+  },
+);
+
+it("replaces retained automatic attribution with the replacement request and member answer", () => {
+  const old: ApprovalCardView = {
+    requestId: approvalRequestIdSchema.parse("old-auto"),
+    runId: call.runId,
+    toolCallId: call.toolCallId,
+    toolName: "computer_write_file",
+    target: call.target,
+    argumentSummary: call.argumentSummary,
+    memberAccountId: "member",
+    expiresAt: call.startedAt,
+    createdAt: call.startedAt,
+    sequence: 10,
+    state: "approved",
+    answeredByAccountId: null,
+    answering: false,
+    error: null,
+    review: {
+      modelId: "review",
+      verdict: "approve",
+      reason: "Matches the request.",
+      startedAt: call.startedAt,
+      completedAt: call.startedAt,
+      durationMs: 0,
+      fence: 1,
+    },
+  };
+  const replacement: ApprovalCardView = {
+    ...old,
+    requestId: approvalRequestIdSchema.parse("new-member"),
+    sequence: 1,
+    state: "pending",
+    review: {
+      ...old.review!,
+      verdict: "ask",
+      reason: "Changed instructions require a member decision.",
+    },
+  };
+  const tree = (answers: ApprovalCardView[]) => (
+    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <ToolActivity
+        activity={[call]}
+        runId={call.runId}
+        answers={answers}
+        memberName={() => "Ari"}
+      />
+    </BrowserLanguageProvider>
+  );
+  const view = render(tree([old]));
+  fireEvent.click(screen.getByRole("button"));
+  expect(screen.getByText("Approved automatically")).toBeVisible();
+  view.rerender(tree([old, replacement]));
+  expect(screen.queryByText("Approved automatically")).not.toBeInTheDocument();
+  expect(view.container.querySelector("[data-auto-review]")).toBeNull();
+  view.rerender(tree([old, { ...replacement, state: "approved", answeredByAccountId: "member" }]));
+  expect(screen.queryByText("Approved automatically")).not.toBeInTheDocument();
+  expect(screen.getByText("Approved by Ari")).toBeVisible();
+});

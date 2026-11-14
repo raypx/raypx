@@ -9,6 +9,7 @@ export default {
   NODE_ENV: "derived",
   AGENT_MODELS: "input",
   AGENT_MODEL_CREDENTIALS: "input",
+  APPROVAL_REVIEW_MODEL_ID: "input",
   APPROVAL_DEFAULT_MODE: "input",
   APPROVAL_REQUEST_TTL_MS: "input",
   RUN_RECOVERY_INTERVAL_MS: "input",

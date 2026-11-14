@@ -77,6 +77,68 @@ const command: ApprovalCall = {
   changes: true,
 };
 
+it.each(["computer_pointer", "computer_keyboard"] as const)(
+  "keeps exact rules ahead of Auto review for %s and asks on untrusted input",
+  (name) => {
+    const input: ApprovalCall = { ...write, name };
+    const allow = { toolName: name, executable: null, decision: "allow" as const };
+    const block = { ...allow, decision: "block" as const };
+    expect(approvalDisposition({ mode: "auto", rules: [] }, input)).toBe("ask");
+    expect(approvalDisposition({ mode: "auto", rules: [allow] }, input)).toBe("approved");
+    expect(approvalDisposition({ mode: "auto", rules: [allow] }, input, true)).toBe("ask");
+    expect(approvalDisposition({ mode: "auto", rules: [allow, block] }, input)).toBe("blocked");
+    expect(approvalDisposition({ mode: "never", rules: [block] }, input)).toBe("blocked");
+  },
+);
+
+it("keeps screenshots as reads with Block precedence in Auto", () => {
+  const screenshot: ApprovalCall = {
+    ...write,
+    name: "computer_screenshot",
+    arguments: {},
+    changes: false,
+  };
+  expect(approvalDisposition({ mode: "auto", rules: [] }, screenshot)).toBe("approved");
+  expect(approvalDisposition({ mode: "auto", rules: [] }, screenshot, true)).toBe("approved");
+  expect(
+    approvalDisposition(
+      {
+        mode: "auto",
+        rules: [{ toolName: "computer_screenshot", executable: null, decision: "block" }],
+      },
+      screenshot,
+    ),
+  ).toBe("blocked");
+});
+
+it.each(["computer_pointer", "computer_keyboard"] as const)(
+  "asks the member for unlisted %s before a screenshot without invoking the reviewer",
+  async (name) => {
+    const complete = vi.fn(async () =>
+      JSON.stringify({ verdict: "approve", reason: "Approved", confidence: 1 }),
+    );
+    const { service, requests } = fixture({
+      requestTtlMs: 60_000,
+      reviewModel: {
+        available: () => true,
+        resolve: async () => ({ modelId: "review-fixture", complete }),
+      },
+    });
+    await service.updateSettings("owner", { mode: "auto", rules: [], expectedRevision: 0 });
+    const pending = service.authorize(
+      scope,
+      { ...run, trustedInstructionSummary: "Use the graphical screen" },
+      { ...write, name },
+      new AbortController().signal,
+    );
+    await vi.waitFor(() => expect(requests.size).toBe(1), { interval: 1 });
+    expect(complete).not.toHaveBeenCalled();
+    await service.answer(scope, [...requests.values()][0]!.id, { decision: "denied" });
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await pending).toBe("denied");
+  },
+);
+
 it.each(["ask", "auto"] as const)(
   "requires %s approval for another Agent's content even with an exact Allow rule",
   (mode) => {
@@ -116,10 +178,14 @@ it("addresses an Agent-triggered child's approval to its originating member", as
   expect(await pending).toBe("approved");
 });
 
-function fixture() {
+function fixture(options: Parameters<typeof createApprovalsService>[1] = {}) {
   const requests = new Map<string, ApprovalRequest>();
   const effects = new Map<string, Effect>();
   let settings: RevisionedApprovalSettings | undefined;
+  const reviews = new Map<
+    string,
+    { modelId: string; startedAt: string; fence: number; runId: string }
+  >();
   function expireEffects(selected: SpaceScope, runId: string, now: Date) {
     for (const effect of effects.values())
       if (
@@ -176,6 +242,14 @@ function fixture() {
       });
     },
     async createRequest(selected, currentRun, call, expiresAt, createdAt) {
+      const existing = [...requests.values()].find(
+        (request) =>
+          request.runId === currentRun.id &&
+          request.toolCallId === call.id &&
+          request.toolName === call.name &&
+          JSON.stringify(request.arguments) === JSON.stringify(call.arguments),
+      );
+      if (existing) return existing;
       const request = approvalRequestSchema.parse({
         id: String(requests.size + 1),
         spaceId: selected.spaceId,
@@ -231,6 +305,33 @@ function fixture() {
       const request = requests.get(id)!;
       if (request.state === "pending") resolve(request, "cancelled", now);
     },
+    async claimReview(_scope, currentRun, id, modelId, _effectKey, budget, now) {
+      const prior = reviews.get(id);
+      const budgetExhausted =
+        !prior &&
+        [...reviews.values()].filter((review) => review.runId === currentRun.id).length >= budget;
+      const claim = prior ?? {
+        modelId,
+        startedAt: now.toISOString(),
+        fence: currentRun.fence,
+        runId: currentRun.id,
+      };
+      if (!prior && !budgetExhausted) reviews.set(id, claim);
+      return {
+        claimed: !prior && !budgetExhausted,
+        budgetExhausted,
+        request: requests.get(id)!,
+        startedAt: claim.startedAt,
+        fence: claim.fence,
+      };
+    },
+    async completeReview(_scope, _run, id, review, now) {
+      let request: ApprovalRequest = { ...requests.get(id)!, review };
+      requests.set(id, request);
+      if (review.verdict !== "ask")
+        request = resolve(request, review.verdict === "approve" ? "approved" : "denied", now);
+      return request;
+    },
     async listEffects(selected, runId, now) {
       expireEffects(selected, runId, now);
       return [...effects.values()].filter(
@@ -269,7 +370,11 @@ function fixture() {
       });
     },
   };
-  const service = createApprovalsService(repository, { requestTtlMs: 20, pollIntervalMs: 1 });
+  const service = createApprovalsService(repository, {
+    requestTtlMs: 20,
+    pollIntervalMs: 1,
+    ...options,
+  });
   return { service, repository, requests, effects };
 }
 beforeEach(() => {
@@ -277,6 +382,151 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
 });
 afterEach(() => vi.useRealTimers());
+
+it.each(["approve", "deny"] as const)(
+  "resolves an eligible Auto request with durable %s evidence",
+  async (verdict) => {
+    const complete = vi.fn(async () =>
+      JSON.stringify({ verdict, reason: "The bounded action fits the request.", confidence: 0.99 }),
+    );
+    const { service, requests } = fixture({
+      reviewModel: {
+        available: () => true,
+        resolve: async () => ({ modelId: "review-fixture", complete }),
+      },
+    });
+    await service.updateSettings("owner", { mode: "auto", rules: [], expectedRevision: 0 });
+    expect((await service.getSettings("owner")).availableModes[2]).toMatchObject({
+      available: true,
+      reasonCode: null,
+    });
+    expect(
+      await service.authorize(
+        scope,
+        { ...run, trustedInstructionSummary: "Write a note" },
+        write,
+        new AbortController().signal,
+      ),
+    ).toBe(verdict === "approve" ? "approved" : "denied");
+    expect([...requests.values()][0]).toMatchObject({
+      answeredByAccountId: null,
+      review: { modelId: "review-fixture", verdict, fence: 1 },
+    });
+    expect(complete).toHaveBeenCalledTimes(1);
+  },
+);
+
+it("limits review claims to eight per Run and asks after the budget", async () => {
+  const complete = vi.fn(async () =>
+    JSON.stringify({ verdict: "approve", reason: "The action fits.", confidence: 1 }),
+  );
+  const { service, requests } = fixture({
+    reviewModel: {
+      available: () => true,
+      resolve: async () => ({ modelId: "review-fixture", complete }),
+    },
+  });
+  await service.updateSettings("owner", { mode: "auto", rules: [], expectedRevision: 0 });
+  const trusted = { ...run, trustedInstructionSummary: "Write notes" };
+  for (let i = 0; i < 8; i++)
+    expect(
+      await service.authorize(
+        scope,
+        trusted,
+        { ...write, id: `write-${i}` },
+        new AbortController().signal,
+      ),
+    ).toBe("approved");
+  const pending = service.authorize(
+    scope,
+    trusted,
+    { ...write, id: "write-budget" },
+    new AbortController().signal,
+  );
+  await vi.advanceTimersByTimeAsync(1);
+  const request = [...requests.values()].at(-1)!;
+  expect(request.state).toBe("pending");
+  expect(request.review).toBeUndefined();
+  expect(complete).toHaveBeenCalledTimes(8);
+  await service.answer(scope, request.id, { decision: "denied" });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await pending).toBe("denied");
+});
+
+it("reuses a completed effect after later untrusted context without another card or review", async () => {
+  const complete = vi.fn(async () =>
+    JSON.stringify({ verdict: "approve", reason: "The action fits.", confidence: 1 }),
+  );
+  const { service, requests } = fixture({
+    reviewModel: {
+      available: () => true,
+      resolve: async () => ({ modelId: "review-fixture", complete }),
+    },
+  });
+  await service.updateSettings("owner", { mode: "auto", rules: [], expectedRevision: 0 });
+  const trusted = { ...run, trustedInstructionSummary: "Write a note" };
+  expect(await service.authorize(scope, trusted, write, new AbortController().signal)).toBe(
+    "approved",
+  );
+  const operation = vi.fn(async () => computerToolResult("succeeded", "done"));
+  await service.executeEffect(scope, trusted, write, operation, new AbortController().signal);
+  const changed = { ...trusted, untrustedInput: true, instructionRevision: 1 };
+  expect(await service.authorize(scope, changed, write, new AbortController().signal)).toBe(
+    "approved",
+  );
+  await service.executeEffect(scope, changed, write, operation, new AbortController().signal);
+  expect(requests.size).toBe(1);
+  expect(complete).toHaveBeenCalledTimes(1);
+  expect(operation).toHaveBeenCalledTimes(1);
+});
+
+it("reuses recorded review decisions and never reviews an interrupted claim twice", async () => {
+  const controller = new AbortController();
+  const complete = vi.fn(() => new Promise<string>(() => {}));
+  const reviewModel = {
+    available: () => true,
+    resolve: async () => ({ modelId: "review-fixture", complete }),
+  };
+  const { service, repository, requests } = fixture({ reviewModel, requestTtlMs: 20_000 });
+  await service.updateSettings("owner", { mode: "auto", rules: [], expectedRevision: 0 });
+  const trusted = { ...run, trustedInstructionSummary: "Write a note" };
+  const first = service.authorize(scope, trusted, write, controller.signal);
+  await vi.waitFor(() => expect(complete).toHaveBeenCalledTimes(1));
+  controller.abort("handover");
+  expect(await first).toBe("cancelled");
+  const resumed = createApprovalsService(repository, { reviewModel, pollIntervalMs: 1 });
+  const pending = resumed.authorize(
+    scope,
+    { ...trusted, fence: 2 },
+    write,
+    new AbortController().signal,
+  );
+  await vi.waitFor(() =>
+    expect([...requests.values()][0]?.review).toMatchObject({ verdict: "ask", fence: 1 }),
+  );
+  const request = [...requests.values()][0]!;
+  expect(request.review).toMatchObject({ verdict: "ask", fence: 1 });
+  expect(complete).toHaveBeenCalledTimes(1);
+  await service.answer(scope, request.id, { decision: "approved" });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await pending).toBe("approved");
+  expect(
+    await resumed.authorize(scope, { ...trusted, fence: 2 }, write, new AbortController().signal),
+  ).toBe("approved");
+  expect(complete).toHaveBeenCalledTimes(1);
+});
+
+it.each(["ask", "auto"] as const)(
+  "argument provenance retains precedence over Allow in %s",
+  (mode) => {
+    expect(
+      approvalDisposition(
+        { mode, rules: [{ toolName: write.name, executable: null, decision: "allow" }] },
+        { ...write, argumentsUntrusted: true },
+      ),
+    ).toBe("ask");
+  },
+);
 
 it("uses the Space mode and Run actor even when another member wakes the Run", async () => {
   const { service, repository, requests } = fixture();

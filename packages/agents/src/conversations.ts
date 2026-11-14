@@ -109,6 +109,8 @@ export interface ExecutionRun extends Run {
   delegationDepth?: number;
   instructionRevision?: number;
   delegationTask?: string | null;
+  /** Pinned instructions and originating member request only; never persisted in review evidence. */
+  trustedInstructionSummary?: string;
 }
 export class StaleRunFenceError extends Error {
   constructor() {

@@ -114,12 +114,15 @@ export const spaceSettingsOverrides = pgTable(
     spaceId: text("space_id")
       .primaryKey()
       .references(() => spaces.id, { onDelete: "cascade" }),
-    approvalMode: text("approval_mode", { enum: ["ask", "never"] }).notNull(),
+    approvalMode: text("approval_mode", { enum: ["ask", "never", "auto"] }).notNull(),
     updatedByAccountId: text("updated_by_account_id").notNull(),
     updatedAt: date("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    check("space_settings_overrides_mode_check", sql`${table.approvalMode} in ('ask', 'never')`),
+    check(
+      "space_settings_overrides_mode_check",
+      sql`${table.approvalMode} in ('ask', 'never', 'auto')`,
+    ),
   ],
 );
 export const spaceAudit = pgTable(
@@ -902,11 +905,13 @@ export const approvalSettings = pgTable(
     accountId: text("account_id")
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
-    mode: text("mode", { enum: ["ask", "never"] }).notNull(),
+    mode: text("mode", { enum: ["ask", "never", "auto"] }).notNull(),
     revision: integer("revision").notNull().default(0),
     updatedAt: date("updated_at").notNull().defaultNow(),
   },
-  (table) => [check("approval_settings_mode_check", sql`${table.mode} in ('ask', 'never')`)],
+  (table) => [
+    check("approval_settings_mode_check", sql`${table.mode} in ('ask', 'never', 'auto')`),
+  ],
 );
 export const modelConnections = pgTable(
   "model_connections",
@@ -1092,10 +1097,25 @@ export const approvalRequests = pgTable(
     expiresAt: date("expires_at").notNull(),
     resolvedAt: date("resolved_at"),
     answeredByAccountId: text("answered_by_account_id"),
+    review: jsonb("review").$type<Record<string, unknown>>(),
+    reviewModelId: text("review_model_id"),
+    reviewStartedAt: date("review_started_at"),
+    reviewFence: bigint("review_fence", { mode: "number" }),
+    reviewEffectKey: text("review_effect_key"),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
     uniqueIndex("approval_requests_id_idx").on(table.spaceId, table.id),
+    uniqueIndex("approval_requests_review_effect_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.runId,
+      table.id,
+      table.reviewEffectKey,
+    ),
+    index("approval_requests_review_budget_idx")
+      .on(table.spaceId, table.runId)
+      .where(sql`${table.reviewStartedAt} is not null`),
     uniqueIndex("approval_requests_event_ref_idx").on(
       table.spaceId,
       table.conversationId,
@@ -1150,7 +1170,11 @@ export const approvalRequests = pgTable(
     ),
     check(
       "approval_requests_resolution_check",
-      sql`(${table.state} = 'pending' and ${table.resolvedAt} is null and ${table.answeredByAccountId} is null) or (${table.state} in ('approved', 'denied') and ${table.resolvedAt} is not null and ${table.answeredByAccountId} is not null and ${table.answeredByAccountId} = ${table.memberAccountId}) or (${table.state} in ('expired', 'cancelled') and ${table.resolvedAt} is not null and ${table.answeredByAccountId} is null)`,
+      sql`(${table.state} = 'pending' and ${table.resolvedAt} is null and ${table.answeredByAccountId} is null) or (${table.state} in ('approved', 'denied') and ${table.resolvedAt} is not null and ((${table.answeredByAccountId} is not null and ${table.answeredByAccountId} = ${table.memberAccountId}) or (${table.answeredByAccountId} is null and ${table.review} is not null and ((${table.state} = 'approved' and ${table.review}->>'verdict' = 'approve') or (${table.state} = 'denied' and ${table.review}->>'verdict' = 'deny'))))) or (${table.state} in ('expired', 'cancelled') and ${table.resolvedAt} is not null and ${table.answeredByAccountId} is null)`,
+    ),
+    check(
+      "approval_requests_review_check",
+      sql`(${table.reviewStartedAt} is null and ${table.reviewModelId} is null and ${table.reviewFence} is null and ${table.reviewEffectKey} is null and ${table.review} is null) or (${table.reviewStartedAt} is not null and ${table.reviewModelId} is not null and ${table.reviewFence} is not null and ${table.reviewEffectKey} is not null and length(${table.reviewModelId}) between 1 and 256 and ${table.reviewFence} >= 0 and ${table.reviewEffectKey} ~ '^[a-f0-9]{64}$' and (${table.review} is null or (jsonb_typeof(${table.review}) = 'object' and ${table.review} ?& array['modelId', 'verdict', 'reason', 'startedAt', 'completedAt', 'durationMs', 'fence'] and jsonb_typeof(${table.review}->'modelId') = 'string' and ${table.review}->>'modelId' = ${table.reviewModelId} and ${table.review}->>'verdict' in ('approve', 'ask', 'deny') and jsonb_typeof(${table.review}->'reason') = 'string' and length(${table.review}->>'reason') between 1 and 256 and (${table.review}->>'fence')::numeric = ${table.reviewFence} and (${table.review}->>'durationMs')::numeric >= 0 and (${table.review}->>'startedAt')::timestamptz = ${table.reviewStartedAt} and (${table.review}->>'completedAt')::timestamptz >= ${table.reviewStartedAt})))`,
     ),
     check(
       "approval_requests_bounds_check",
@@ -1166,6 +1190,7 @@ export const conversationEffects = pgTable(
     conversationId: text("conversation_id").notNull(),
     runId: text("run_id").notNull(),
     fence: bigint("fence", { mode: "number" }).notNull().default(0),
+    approvalRequestId: text("approval_request_id"),
     toolCallId: text("tool_call_id").notNull(),
     toolName: text("tool_name").notNull(),
     argumentHash: text("argument_hash").notNull(),
@@ -1178,6 +1203,23 @@ export const conversationEffects = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.key] }),
+    foreignKey({
+      name: "conversation_effects_review_request_fk",
+      columns: [
+        table.spaceId,
+        table.conversationId,
+        table.runId,
+        table.approvalRequestId,
+        table.key,
+      ],
+      foreignColumns: [
+        approvalRequests.spaceId,
+        approvalRequests.conversationId,
+        approvalRequests.runId,
+        approvalRequests.id,
+        approvalRequests.reviewEffectKey,
+      ],
+    }).onDelete("cascade"),
     index("conversation_effects_run_idx").on(table.spaceId, table.conversationId, table.runId),
     foreignKey({
       columns: [table.spaceId, table.conversationId, table.runId],

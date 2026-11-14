@@ -6,6 +6,7 @@ it("uses only explicitly selected disposable local databases and keeps browser f
   expect(backendPlan(["--database-url", url, "--with-e2e", "--", "--workers=1"])).toEqual({
     databaseURL: url,
     withE2E: true,
+    visual: false,
     browserArgs: ["--workers=1"],
   });
   expect(backendPlan([]).databaseURL).toBeUndefined();
@@ -18,6 +19,20 @@ it("uses only explicitly selected disposable local databases and keeps browser f
   ])
     expect(() => backendPlan(["--database-url", value])).toThrow("disposable loopback");
   expect(() => backendPlan(["--", "--workers=1"])).toThrow("require --with-e2e");
+});
+
+it("routes visual intent to the browser wrapper while preserving owned journey arguments", () => {
+  const plan = backendPlan([
+    "--with-e2e",
+    "--",
+    "auto-review.spec.ts",
+    "--workers=1",
+    "--repeat-each=3",
+    "--visual",
+  ]);
+  expect(plan.visual).toBe(true);
+  expect(plan.browserArgs).toEqual(["auto-review.spec.ts", "--workers=1", "--repeat-each=3"]);
+  expect(() => backendPlan(["--", "--visual"])).toThrow("require --with-e2e");
 });
 
 it("replaces operator endpoints without forcing test JSX transforms into production browser builds", () => {

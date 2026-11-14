@@ -20,6 +20,9 @@ Deployments can also set protected runtime JSON:
   opaque choice exposed to clients.
 - `AGENT_MODEL_CREDENTIALS`: maps each credential ID to its secret. Do not use
   build arguments, client variables or Agent records for credentials.
+- `APPROVAL_REVIEW_MODEL_ID`: optional opaque ID from `AGENT_MODELS` for the
+  separate tool-less reviewer. Missing/unresolvable selection disables Auto;
+  it never selects a member connection or an ambient credential implicitly.
 
 Empty defaults permit startup without model offers. Invalid configuration fails
 startup safely; a missing model/connection fails the Run explicitly. Deployment

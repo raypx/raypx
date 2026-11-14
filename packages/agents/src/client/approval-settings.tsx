@@ -314,7 +314,8 @@ export function ApprovalSettingsEditor({
               value={draft.mode}
               aria-label={t("approvalSettings.mode")}
               onValueChange={(value) => {
-                if (value === "ask" || value === "never") controller.setMode(value);
+                if (value === "ask" || value === "never" || value === "auto")
+                  controller.setMode(value);
               }}
             >
               {state.availableModes.map((entry) => (

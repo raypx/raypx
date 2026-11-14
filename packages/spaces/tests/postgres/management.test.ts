@@ -350,6 +350,23 @@ it("owner approval overrides are explicit and clearing restores the absence of a
   ).toEqual([]);
 });
 
+it("enables an Auto Space override only while the configured reviewer resolves", async () => {
+  const f = await fixture();
+  let available = true;
+  const configured = createSpaceManagement(first.db, {
+    ...hooks,
+    reviewModelAvailable: async () => available,
+  });
+  await expectCode(configured.setApprovalOverride(f.memberScope, "auto"), "SPACE_OWNER_REQUIRED");
+  expect(await configured.setApprovalOverride(f.scope, "auto")).toMatchObject({
+    approvalMode: "auto",
+  });
+  available = false;
+  await expectCode(configured.setApprovalOverride(f.scope, "auto"), "REVIEW_MODEL_NOT_CONFIGURED");
+  expect(await configured.settings(f.scope)).toMatchObject({ approvalMode: "auto" });
+  expect(await configured.clearApprovalOverride(f.scope)).toMatchObject({ approvalMode: null });
+});
+
 it("appends success, refusal and failure audit rows without exposing private routine details", async () => {
   const f = await fixture();
   await management.rename(f.scope, { name: "Success" });

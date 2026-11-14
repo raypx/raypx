@@ -725,7 +725,7 @@ function OverrideSettings({
             .map((entry) => (
               <p key={entry.mode} className="text-xs text-muted-foreground">
                 {t(`approvalSettings.${entry.mode}`)}:{" "}
-                {t("spaceSettings.errors.REVIEW_MODEL_NOT_CONFIGURED")}
+                {entry.reasonCode && t(`approvalSettings.reasons.${entry.reasonCode}`)}
               </p>
             ))}
         </>

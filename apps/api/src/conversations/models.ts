@@ -1,9 +1,14 @@
 import { z } from "zod";
 import { AiError, createAiClient, type Message } from "@raypx/ai";
-import { RunResourceUnavailableError, type ModelAccess } from "@raypx/agents/server";
+import {
+  RunResourceUnavailableError,
+  type ModelAccess,
+  type ApprovalReviewModels,
+} from "@raypx/agents/server";
 import type { SpaceScope } from "@raypx/spaces/server";
 
 export interface ConversationModels extends ModelAccess {
+  reviewModel?: ApprovalReviewModels;
   list(
     this: void,
     scope: SpaceScope,
@@ -23,6 +28,7 @@ const catalogSchema = z.array(
 export function createDeploymentModels(
   catalogJson: string,
   credentialsJson: string,
+  reviewModelId?: string,
 ): ConversationModels {
   let catalog: z.infer<typeof catalogSchema>;
   let credentials: Record<string, string>;
@@ -35,7 +41,62 @@ export function createDeploymentModels(
     throw new Error("Invalid deployment model configuration");
   }
   const client = createAiClient();
+  function reviewSelection() {
+    if (!reviewModelId) return undefined;
+    const entry = catalog.find((candidate) => candidate.modelId === reviewModelId);
+    if (!entry || !Object.hasOwn(credentials, entry.credentialId)) return undefined;
+    const apiKey = credentials[entry.credentialId];
+    if (!apiKey) return undefined;
+    try {
+      const selection = { provider: entry.provider, model: entry.model };
+      client.resolveModel(selection);
+      return { selection, apiKey };
+    } catch {
+      return undefined;
+    }
+  }
+  const reviewModel: NonNullable<ConversationModels["reviewModel"]> = {
+    available: () => Boolean(reviewSelection()),
+    async resolve() {
+      const configured = reviewSelection();
+      if (!configured || !reviewModelId) return undefined;
+      return {
+        modelId: reviewModelId,
+        async complete(input) {
+          if (
+            input.systemPrompt.includes(configured.apiKey) ||
+            input.input.includes(configured.apiKey)
+          )
+            throw new AiError("AI_REQUEST_FAILED");
+          const result = await client.complete(
+            configured.selection,
+            {
+              systemPrompt: input.systemPrompt,
+              messages: [{ role: "user", content: input.input, timestamp: 0 }],
+              tools: [],
+            },
+            {
+              signal: input.signal,
+              apiKey: configured.apiKey,
+              env: {},
+              maxTokens: input.maxOutputTokens,
+              timeoutMs: 5_000,
+            },
+          );
+          if (result.content.some((part) => part.type === "toolCall"))
+            throw new AiError("AI_REQUEST_FAILED");
+          const text = result.content
+            .filter((part) => part.type === "text")
+            .map((part) => part.text)
+            .join("");
+          if (text.includes(configured.apiKey)) throw new AiError("AI_REQUEST_FAILED");
+          return text;
+        },
+      };
+    },
+  };
   return {
+    reviewModel,
     async list() {
       return catalog
         .filter((entry) => Object.hasOwn(credentials, entry.credentialId))

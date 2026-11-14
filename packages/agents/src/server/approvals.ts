@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, isNotNull, lte, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   approvalSettings as settings,
@@ -15,6 +15,7 @@ import {
 } from "@raypx/database/schema";
 import {
   approvalRequestSchema,
+  approvalReviewSchema,
   revisionedApprovalSettingsSchema,
   effectSchema,
   type ApprovalRequest,
@@ -34,7 +35,7 @@ import {
 } from "../approvals.js";
 import { publishConversationNotice } from "./conversations.js";
 import { EFFECT_INTENT_TIMEOUT_MS } from "../tool-limits.js";
-import type { ExecutionRun } from "../conversations.js";
+import { StaleRunFenceError, type ExecutionRun } from "../conversations.js";
 import { assertRunFence } from "./fence.js";
 import { finishToolEvent } from "./tool-events.js";
 import { toolCompletion } from "../tool-lifecycle.js";
@@ -57,16 +58,25 @@ async function settingsView(tx: Transaction, row: typeof settings.$inferSelect) 
   });
 }
 function requestView(row: typeof requests.$inferSelect): ApprovalRequest {
-  const { fence: _fence, ...request } = row;
+  const {
+    fence: _fence,
+    review: _review,
+    reviewModelId: _model,
+    reviewStartedAt: _started,
+    reviewFence: _reviewFence,
+    reviewEffectKey: _effectKey,
+    ...request
+  } = row;
   return approvalRequestSchema.parse({
     ...request,
     createdAt: row.createdAt.toISOString(),
     expiresAt: row.expiresAt.toISOString(),
     resolvedAt: row.resolvedAt?.toISOString() ?? null,
+    ...(row.review ? { review: approvalReviewSchema.parse(row.review) } : {}),
   });
 }
 function effectView(row: typeof effects.$inferSelect) {
-  const { fence: _fence, ...effect } = row;
+  const { fence: _fence, approvalRequestId: _approval, ...effect } = row;
   return effectSchema.parse({
     ...effect,
     createdAt: row.createdAt.toISOString(),
@@ -192,6 +202,7 @@ export function createApprovalsRepository(
             ...approvalCardData(request),
             outcome: request.state,
             answeredByAccountId: request.answeredByAccountId,
+            ...(request.review ? { review: request.review } : {}),
           };
     await tx.insert(events).values({
       spaceId: scope.spaceId,
@@ -574,7 +585,11 @@ export function createApprovalsRepository(
           active.memberAccountId !== run.memberAccountId
         )
           throw new ApprovalOperationError("NOT_FOUND");
-        const [existing] = await tx
+        run.untrustedInput ||= active.untrustedInput || active.inboundProvenance !== null;
+        run.instructionRevision = active.instructionRevision;
+        const requireMember =
+          run.untrustedInput || call.argumentsUntrusted || active.instructionRevision > 0;
+        const existingRequests = await tx
           .select()
           .from(requests)
           .where(
@@ -588,8 +603,33 @@ export function createApprovalsRepository(
             ),
           )
           .orderBy(asc(requests.createdAt), asc(requests.id))
-          .limit(1);
+          .limit(512);
+        const existing = existingRequests.find(
+          (candidate) =>
+            !(
+              requireMember &&
+              candidate.state === "approved" &&
+              candidate.answeredByAccountId === null &&
+              candidate.review?.verdict === "approve"
+            ),
+        );
         if (existing) return requestView(existing);
+        const invalidated = existingRequests.find(
+          (candidate) => requireMember && candidate.review?.verdict === "approve",
+        );
+        const fallback = invalidated?.review
+          ? approvalReviewSchema.parse({
+              ...invalidated.review,
+              verdict: "ask",
+              reason: "Changed authority requires a member decision.",
+              completedAt: createdAt.toISOString(),
+              durationMs: Math.max(
+                0,
+                createdAt.getTime() - Date.parse(String(invalidated.review.startedAt)),
+              ),
+              fence: run.fence,
+            })
+          : undefined;
         if (active.state !== "running") throw new ApprovalOperationError("ALREADY_RESOLVED");
         const [row] = await tx
           .insert(requests)
@@ -607,6 +647,15 @@ export function createApprovalsRepository(
             target: call.target,
             expiresAt,
             createdAt,
+            ...(fallback
+              ? {
+                  review: fallback,
+                  reviewStartedAt: new Date(fallback.startedAt),
+                  reviewModelId: fallback.modelId,
+                  reviewFence: run.fence,
+                  reviewEffectKey: invalidated!.reviewEffectKey,
+                }
+              : {}),
           })
           .returning();
         const request = requestView(row!);
@@ -630,13 +679,191 @@ export function createApprovalsRepository(
     async cancelRequest(scope, run, id, now) {
       await poll(scope, run, id, now, true, run);
     },
+    async claimReview(scope, run, id, modelId, effectKey, budget, now) {
+      return db.transaction(async (tx) => {
+        await lock(tx, scope, run.conversationId);
+        await assertRunFence(tx, scope, run);
+        const [current] = await tx.select().from(requests).where(requestSelection(scope, id));
+        if (!current || current.runId !== run.id || current.memberAccountId !== run.memberAccountId)
+          throw new ApprovalOperationError("NOT_FOUND");
+        const result = (claimed: boolean, budgetExhausted = false) => ({
+          claimed,
+          budgetExhausted,
+          request: requestView(current),
+          startedAt: (current.reviewStartedAt ?? now).toISOString(),
+          fence: current.reviewFence ?? run.fence,
+        });
+        if (current.state !== "pending" || current.reviewStartedAt) return result(false);
+        const prior = await tx
+          .select({ id: requests.id })
+          .from(requests)
+          .where(
+            and(
+              eq(requests.spaceId, scope.spaceId),
+              eq(requests.runId, run.id),
+              isNotNull(requests.reviewStartedAt),
+            ),
+          )
+          .limit(budget);
+        if (prior.length >= budget) return result(false, true);
+        const [claimed] = await tx
+          .update(requests)
+          .set({
+            reviewModelId: modelId,
+            reviewStartedAt: now,
+            reviewFence: run.fence,
+            reviewEffectKey: effectKey,
+          })
+          .where(
+            and(
+              requestSelection(scope, id),
+              isNull(requests.reviewStartedAt),
+              eq(requests.state, "pending"),
+            ),
+          )
+          .returning();
+        if (!claimed) return result(false);
+        await audit.append(
+          tx,
+          id,
+          {
+            spaceId: scope.spaceId,
+            actorAccountId: run.memberAccountId,
+            action: "approval.reviewed",
+            targetId: id,
+          },
+          "pending",
+        );
+        return {
+          claimed: true,
+          budgetExhausted: false,
+          request: requestView(claimed),
+          startedAt: now.toISOString(),
+          fence: run.fence,
+        };
+      });
+    },
+    async completeReview(scope, run, id, input, now) {
+      return db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, run.conversationId);
+        const active = await assertRunFence(tx, scope, run);
+        const [current] = await tx.select().from(requests).where(requestSelection(scope, id));
+        if (
+          !current ||
+          current.runId !== run.id ||
+          !current.reviewStartedAt ||
+          !current.reviewModelId
+        )
+          throw new ApprovalOperationError("NOT_FOUND");
+        if (current.state !== "pending" || current.review) return requestView(current);
+        // Only an Ask fallback may settle a review claimed by an older owner.
+        if (input.verdict !== "ask" && current.reviewFence !== run.fence)
+          throw new StaleRunFenceError();
+        let accepted = input;
+        // Settings mutations lock the account row before editing exact rules.
+        // Hold it through the verdict so a completed edit wins before dispatch.
+        const [accountPolicy] = await tx
+          .select({ mode: settings.mode })
+          .from(settings)
+          .where(eq(settings.accountId, run.memberAccountId))
+          .for("share");
+        const [override] = await tx
+          .select({ mode: spaceSettingsOverrides.approvalMode })
+          .from(spaceSettingsOverrides)
+          .where(eq(spaceSettingsOverrides.spaceId, scope.spaceId))
+          .for("share");
+        const [blocked] = await tx
+          .select({ decision: rules.decision })
+          .from(rules)
+          .where(
+            and(
+              eq(rules.accountId, run.memberAccountId),
+              eq(rules.toolName, current.toolName),
+              isNull(rules.executable),
+              eq(rules.decision, "block"),
+            ),
+          )
+          .limit(1);
+        if (input.verdict === "approve" && (override?.mode ?? accountPolicy?.mode) !== "auto")
+          accepted = {
+            ...input,
+            verdict: "ask",
+            reason: "The approval policy changed; a member decision is required.",
+          };
+        if (
+          input.verdict === "approve" &&
+          (active.untrustedInput ||
+            active.inboundProvenance ||
+            active.instructionRevision !== (run.instructionRevision ?? 0))
+        )
+          accepted = {
+            ...input,
+            verdict: "ask",
+            reason: "Changed instructions require a member decision.",
+          };
+        if (blocked)
+          accepted = {
+            ...input,
+            verdict: "deny",
+            reason: "An exact Block rule refuses this action.",
+          };
+        const review = approvalReviewSchema.parse({
+          ...accepted,
+          modelId: current.reviewModelId,
+          startedAt: current.reviewStartedAt.toISOString(),
+          fence: current.reviewFence,
+        });
+        const [updated] = await tx
+          .update(requests)
+          .set({ review })
+          .where(requestSelection(scope, id))
+          .returning();
+        const request = requestView(updated!);
+        await audit.append(
+          tx,
+          id,
+          {
+            spaceId: scope.spaceId,
+            actorAccountId: run.memberAccountId,
+            action: "approval.reviewed",
+            targetId: id,
+          },
+          "succeeded",
+          review.verdict.toUpperCase(),
+        );
+        if (review.verdict === "ask") return request;
+        if (Date.parse(request.expiresAt) <= now.getTime())
+          return resolveRequest(
+            tx,
+            scope,
+            request,
+            "expired",
+            null,
+            now,
+            counter.sequence + 1,
+            run.fence,
+          );
+        return resolveRequest(
+          tx,
+          scope,
+          request,
+          review.verdict === "approve" ? "approved" : "denied",
+          null,
+          now,
+          counter.sequence + 1,
+          run.fence,
+        );
+      });
+    },
     async listEffects(scope, runId, now, execution) {
       return db.transaction(async (tx) => {
         let observer: Pick<ExecutionRun, "id" | "conversationId" | "fence">;
         if (execution) {
           if (execution.id !== runId) throw new SpaceNotFound();
           await lock(tx, scope, execution.conversationId);
-          await assertRunFence(tx, scope, execution);
+          const active = await assertRunFence(tx, scope, execution);
+          execution.untrustedInput ||= active.untrustedInput || active.inboundProvenance !== null;
+          execution.instructionRevision = active.instructionRevision;
           observer = execution;
         } else observer = await lockObservedRun(tx, scope, runId);
         await expireIntents(tx, scope, runId, now, observer);
@@ -678,8 +905,22 @@ export function createApprovalsRepository(
             blocked: open.state,
             retryAt: open.createdAt.getTime() + EFFECT_INTENT_TIMEOUT_MS,
           };
+        const [reviewed] = await tx
+          .select({ id: requests.id })
+          .from(requests)
+          .where(
+            and(
+              eq(requests.spaceId, scope.spaceId),
+              eq(requests.conversationId, run.conversationId),
+              eq(requests.runId, run.id),
+              eq(requests.reviewEffectKey, effect.key),
+            ),
+          )
+          .orderBy(desc(requests.createdAt), desc(requests.id))
+          .limit(1);
         await tx.insert(effects).values({
           ...effect,
+          approvalRequestId: reviewed?.id ?? null,
           fence: run.fence,
           createdAt: new Date(effect.createdAt),
           completedAt: null,

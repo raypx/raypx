@@ -110,3 +110,9 @@ Expansion must reuse the viewer stream and grant. Verify the first Escape
 releases control while the dialog remains open and the next Escape closes it
 with focus restored to its opener. These renderer checks establish no native
 Mobile Screen support or packaged WebView result.
+
+Auto review acceptance uses the always-approve fixture reviewer through the real
+approval service. A requested safe file write resolves automatically with its
+reason after reload; a Page carrying injected approval instructions forces the
+next write to the member. `auto-review.spec.ts` runs on both renderers and saves
+opt-in mode/decision screenshots under `.artifacts/auto/`.

@@ -633,6 +633,8 @@ it.each([
   ["zh", "ask", "account_default"],
   ["en", "never", "space_override"],
   ["zh", "never", "space_override"],
+  ["en", "auto", "space_override"],
+  ["zh", "auto", "account_default"],
 ] as const)(
   "shows the native viewer's effective approval mode in %s from %s %s",
   async (language, mode, source) => {
@@ -768,3 +770,59 @@ it("steers a visible direct Run only after explicit selection and send", async (
   });
   await h.close();
 });
+
+it.each([
+  ["en", "approve", "approved"],
+  ["zh", "approve", "approved"],
+  ["en", "deny", "denied"],
+  ["zh", "deny", "denied"],
+] as const)(
+  "shows %s automatic %s decisions after history hydration",
+  async (language, verdict, outcome) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const copy = { en, zh }[language].agents;
+    const request = pendingRequest();
+    const reason = "Matches the requested note. <b>quoted data</b>";
+    const h = await harness({
+      messages: [message()],
+      runs: [run("succeeded")],
+      cursor: 5,
+      toolActivity: [
+        {
+          ...toolCall(),
+          finishedAt: time,
+          outcome: outcome === "approved" ? "succeeded" : "refused",
+          durationMs: 0,
+        },
+      ],
+      resolvedApprovals: [
+        {
+          requestId: request.id,
+          runId: request.runId,
+          toolCallId: request.toolCallId,
+          outcome,
+          answeredByAccountId: null,
+          resolvedAt: time,
+          review: {
+            modelId: "review-model",
+            verdict,
+            reason,
+            startedAt: time,
+            completedAt: time,
+            durationMs: 0,
+            fence: 1,
+          },
+        },
+      ],
+    });
+    const t = createTranslator({ locale: language, messages: { en, zh }[language] });
+    let summary = t("agents.activity.used", { count: 1 });
+    if (outcome === "denied") summary += ` · ${t("agents.activity.failedCount", { count: 1 })}`;
+    await press(findByLabel(h.view.root, summary));
+    const text = textContent(toolRows(h.view.root)[0]!);
+    expect(text).toContain(copy.approval.automatic[outcome]);
+    expect(text).toContain(reason);
+    expect(h.port.send).not.toHaveBeenCalled();
+    await h.close();
+  },
+);

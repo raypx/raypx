@@ -49,6 +49,8 @@ export {
   type ApprovalAnswer,
   type ApprovalOutcome,
   type ApprovalSettingsInput,
+  type ApprovalReviewModel,
+  type ApprovalReviewModels,
 } from "./approvals.js";
 export {
   createComputerTools,

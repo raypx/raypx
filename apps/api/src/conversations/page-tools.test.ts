@@ -56,7 +56,7 @@ it("refuses model-supplied Page activity metadata rather than copying it from ar
     ).toThrow("INVALID_ARGUMENTS");
   expect(s.create).not.toHaveBeenCalled();
 });
-it("asks for Page changes from a routine Run, records effects, and obeys exact Allow without a special routine bypass", async () => {
+it("asks for routine Page changes and asks again after untrusted results even with an exact Allow", async () => {
   const f = agentToolsFixture();
   cleanups.push(() => f.runner.close());
   const s = service();
@@ -116,13 +116,15 @@ it("asks for Page changes from a routine Run, records effects, and obeys exact A
       arguments: { id: s.saved()!.id, expectedVersion: 1, body: "Updated report" },
     },
   ]);
+  await expect.poll(() => f.requests.length).toBe(2);
+  await f.agentApprovals.answer(f.scope, f.requests[1]!.id, { decision: "approved" });
   await expect.poll(() => f.calls.length).toBe(3);
   expect(checkpoints.mock.calls.map((call) => call[3]?.page)).toEqual([
     { id: s.saved()!.id, version: 1 },
     { id: s.saved()!.id, version: 2 },
   ]);
   expect(s.update).toHaveBeenCalledTimes(1);
-  expect(f.requests).toHaveLength(1);
+  expect(f.requests).toHaveLength(2);
   expect(f.effects.map((effect) => [effect.toolName, effect.state])).toEqual([
     ["agent_page_create", "succeeded"],
     ["agent_page_update", "succeeded"],

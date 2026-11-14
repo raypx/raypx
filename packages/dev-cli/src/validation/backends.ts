@@ -77,7 +77,12 @@ export function backendPlan(args: string[]) {
       );
     }
   }
-  return { databaseURL, withE2E: values["with-e2e"], browserArgs };
+  return {
+    databaseURL,
+    withE2E: values["with-e2e"],
+    visual: browserArgs.includes("--visual"),
+    browserArgs: browserArgs.filter((value) => value !== "--visual"),
+  };
 }
 
 /** Provision owned services, or use only an explicitly selected disposable local database. */
@@ -239,6 +244,7 @@ export async function validateBackends(root: string, args: string[]) {
             "--no-env-file",
             cli,
             "e2e",
+            ...(plan.visual ? ["--visual"] : []),
             "--",
             "--reporter=list,json",
             ...plan.browserArgs,

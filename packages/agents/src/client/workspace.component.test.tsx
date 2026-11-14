@@ -1469,7 +1469,7 @@ it.each(["queued", "running", "waiting"] as const)(
     const form = editor.closest("form")!;
     expect(within(form).getAllByRole("button")).toHaveLength(1);
     fireEvent.change(editor, { target: { value: "More detail" } });
-    const send = screen.getByRole("button", { name: "Send message during reply" });
+    const send = await screen.findByRole("button", { name: "Send message during reply" });
     expect(send).toBeEnabled();
     expect(within(form).getAllByRole("button")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Stop reply" })).not.toBeInTheDocument();
@@ -1480,8 +1480,9 @@ it.each(["queued", "running", "waiting"] as const)(
     fireEvent.keyDown(editor, { key: "Enter", keyCode: 229 });
     expect(test.send).not.toHaveBeenCalled();
     fireEvent.change(editor, { target: { value: " " } });
-    expect(screen.getByRole("button", { name: "Stop reply" })).toBeEnabled();
+    expect(await screen.findByRole("button", { name: "Stop reply" })).toBeEnabled();
     fireEvent.change(editor, { target: { value: "More detail" } });
+    expect(await screen.findByRole("button", { name: "Send message during reply" })).toBeEnabled();
     fireEvent.keyDown(editor, { key: "Enter" });
     await waitFor(() => expect(test.send).toHaveBeenCalledOnce());
     expect(test.send).toHaveBeenCalledWith(

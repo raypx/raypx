@@ -88,6 +88,7 @@ export async function snapshotAttribution(
       outcome: approvals.state,
       answeredByAccountId: approvals.answeredByAccountId,
       resolvedAt: approvals.resolvedAt,
+      review: approvals.review,
     })
     .from(approvals)
     .where(
@@ -115,6 +116,7 @@ export async function snapshotAttribution(
       .map((row) =>
         resolvedApprovalSummarySchema.parse({
           ...row,
+          review: row.review ?? undefined,
           resolvedAt: row.resolvedAt?.toISOString(),
         }),
       ),

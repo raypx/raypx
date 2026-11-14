@@ -58,7 +58,7 @@ export const spaceInvitationAcceptanceSchema = z.strictObject({
 });
 export const spaceSettingsSchema = z.strictObject({
   spaceId: spaceIdSchema,
-  approvalMode: z.enum(["ask", "never"]).nullable(),
+  approvalMode: z.enum(["ask", "never", "auto"]).nullable(),
   updatedAt: z.iso.datetime().nullable(),
 });
 export type SpaceSettings = z.infer<typeof spaceSettingsSchema>;

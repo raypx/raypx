@@ -309,3 +309,11 @@ Web/Desktop's Tools settings manage APIs next to remote servers, with connection
 testing, operation selection, credential replacement and confirmed deletion.
 Mobile shows activity and addressed approval cards, including read/change labels;
 management remains in Web/Desktop.
+
+### Review model selection
+
+Action review independently selects a deployment offer with
+`APPROVAL_REVIEW_MODEL_ID`. It uses the same protected deployment credential map,
+without borrowing another member's connection. Member model selection and shared
+Space ownership do not grant reviewer configuration. No optional Space reviewer
+model choice is exposed. See [automatic review](approvals.md#automatic-review).

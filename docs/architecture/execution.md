@@ -121,6 +121,10 @@ default:
   deployment adapter. Provider/model selectors must exist in Pi's default catalog.
 - `AGENT_MODEL_CREDENTIALS`: an object mapping `credentialId` to the API key.
   Keep it in protected runtime settings, never a build argument or a domain row.
+- `APPROVAL_REVIEW_MODEL_ID`: optional opaque deployment model ID used only for
+  independent action review. It must resolve through that catalog and credential
+  map. Configure the same selection on API and workers. No selection or an
+  unavailable offer leaves Auto unavailable and existing Auto settings ask.
 
 For example, a catalog entry can map `"assistant-main"` to an exact Pi provider
 and model with `"credentialId": "deployment-main"`; the protected map supplies

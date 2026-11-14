@@ -85,6 +85,15 @@ exception falls back to the Run actor's account default, with that actor's exact
 tool/executable rules. Approval answers append Space audit intents and commit
 their terminal evidence with the decision; missing audit storage blocks the write.
 API owns credentials and configuration.
+Auto uses an injected, tool-less review model with a fixed server prompt, bounded
+input/output, five-second timeout, confidence threshold and eight durable claims
+per Run. The approval request claims review before inference; interrupted claims
+ask without another model call. Verdicts, bounded reasons, timing and fences remain
+on the addressed request and resolved event; same-Space keys bind eventual effects.
+Stop/fence checks and fresh mode/Block/provenance checks guard verdict commits.
+All tool results, recalled memory, enabled skill/remote metadata and other-member
+history taint the checkpoint. Changes after steering ask. Completed effects replay;
+unexecuted automatic decisions under changed authority need a new member request.
 Deletion cascades durable Run records with their Space. Computer pin identities
 remain historical selectors so a missing computer produces an explicit failure.
 
@@ -179,6 +188,14 @@ Credentials stay outside observable drafts and clear on submit and unmount.
 OpenAPI card/activity labels use bounded summaries and classify GET/HEAD as reads.
 Exact names remain rule identities; members can choose registered operations for
 Allow/Block settings using safe metadata. API effects use the existing inspector.
+
+Auto availability comes from server settings. `/model` exports the revisioned
+ApprovalSettingsController for DOM and native account mode pickers. Approval
+projections retain bounded review evidence through events and history; terminal
+review decisions with no member answer show automatic attribution and the reason
+as plain text. A replacement member request and its answer supersede the earlier
+automatic status for the same tool call without deleting review evidence. Member
+answers keep their own attribution.
 
 Exact strip steering uses optional `send.message.steerRunId`, rather than choosing
 a Run from its Agent name. The selected target is visible/cancellable and is frozen
