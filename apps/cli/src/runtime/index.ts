@@ -1,186 +1,23 @@
-import { createLocalRouter } from "./router.js";
-import { PiHost } from "./agents/pi/host.js";
-import { InstanceRuntime } from "./instances/index.js";
-import { instanceKeys } from "./instances/keys.js";
-import { join } from "node:path";
-import { type LocalMethod } from "@raypx/contracts/local";
-import { MemoryRuntime } from "./memory/index.js";
-import { AgentRuntime, readLocalTask } from "./agents/index.js";
-import { FileRuntime } from "./files/index.js";
-import { JobRuntime } from "./jobs/index.js";
-import { ProcessRuntime } from "./process/index.js";
-import { BundledBun } from "./process/bun.js";
-import { StateStore, profilePath, acquireLock } from "./state/index.js";
-import { LocalError } from "./errors.js";
-
-import { recordDiagnostic } from "../diagnostics.js";
-import type { RuntimeOptions } from "./options.js";
-
+import { localParams, type LocalMethod } from "@raypx/contracts/local";
 import { ProfileStorage } from "./sqlite/index.js";
-
-export function createRuntime(options: RuntimeOptions = {}) {
-  const scheduler = options.mode === "stdio" || options.mode === "daemon";
-  const emit = options.emit ?? (() => {});
-  const storage = new ProfileStorage(profilePath(options));
-  const instances = new InstanceRuntime(profilePath(options), {
-    keys: instanceKeys(storage.database),
-    onProgress: (status, id) =>
-      recordDiagnostic(options.recordDiagnostic, { operation: "instance.enrollment", status, id }),
-  });
-  const instanceAccess = options.instanceAccess ?? instances;
-  let state: StateStore;
-  try {
-    state = new StateStore(storage);
-  } catch (error) {
-    storage.close();
-    throw error;
-  }
-  const bun = new BundledBun(join(state.directory, "bun"));
-  const environment = () => bun.environment();
-  let releaseOwner: (() => void) | undefined;
-  const ownAgents = () => {
-    if (releaseOwner) return;
-    const release = acquireLock(state.directory, "agents-owner");
-    if (!release)
-      throw new LocalError("HOST_RUNNING", "An execution host already owns this profile");
-    releaseOwner = release;
-  };
-  let agentHost: AgentRuntime | undefined;
-  const getAgents = (): AgentRuntime => {
-    ownAgents();
-    return (agentHost ??= new AgentRuntime(
-      state,
-      (pendingRequest, change) =>
-        emit({
-          version: 1,
-          event: "agent.changed",
-          data: {
-            ...(pendingRequest ? { pendingRequest } : {}),
-            ...(change ? { change, local: change.local } : {}),
-          },
-        }),
-      {
-        resolveContext: (selection, target, prompt) =>
-          getMemory().resolve(selection, target, prompt),
-        environment,
-        pi,
-        assertInstance: () => instanceAccess.assert(),
-        ...(options.agentExecutables ? { executables: options.agentExecutables } : {}),
-        ...(options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {}),
-      },
-    ));
-  };
-  const files = new FileRuntime(state);
-  const processes = new ProcessRuntime(
-    emit,
-    process.env.RAYPX_HERDR_BINARY,
-    environment,
-    state.directory,
-  );
-  const pi = new PiHost(state, files, processes);
-  const jobs = new JobRuntime(state, files, processes, emit, {
-    record: options.recordDiagnostic,
-    ingress: options.routineIngress,
-    assertInstance: () => instanceAccess.assert(),
-    runPi: (...args) => getAgents().runPiAutomation(...args),
-    readPi: (id) => readLocalTask(state, id),
-  });
-  let memory: MemoryRuntime | undefined;
-  const getMemory = (): MemoryRuntime =>
-    (memory ??= new MemoryRuntime(state.db, (target) => getAgents().validateProject(target)));
-  let closing = false;
-  let closingPromise: Promise<void> | undefined;
-  const pending = new Set<Promise<unknown>>();
-  let refreshing: Promise<import("@raypx/instances").InstanceStatus> | undefined;
-  const refreshInstance = () => {
-    if (refreshing) return refreshing;
-    refreshing = (async () => {
-      const status = await instances.refresh();
-      if (status.state === "revoked") {
-        await Promise.allSettled([
-          jobs.close(),
-          processes.close(),
-          ...(agentHost ? [agentHost.close()] : []),
-          ...(options.onInstanceRevoked ? [options.onInstanceRevoked()] : []),
-        ]);
-      }
-      return status;
-    })().finally(() => {
-      refreshing = undefined;
-    });
-    return refreshing;
-  };
-  const syncInstance = () => {
-    if (!closing) void refreshInstance().catch(() => {});
-  };
-  try {
-    if (options.mode === "daemon") ownAgents();
-    if (scheduler) jobs.startScheduler();
-  } catch (error) {
-    releaseOwner?.();
-    storage.close();
-    throw error;
-  }
-  const instanceTimer = options.instanceAccess ? undefined : setInterval(syncInstance, 300_000);
-  instanceTimer?.unref();
-  if (!options.instanceAccess) syncInstance();
-
-  const dispatch = createLocalRouter({
-    instances,
-    instanceAccess,
-    getAgents,
-    getMemory,
-    files,
-    jobs,
-    processes,
-    state,
-    pi,
-    bun,
-    refreshInstance,
-    options: { ...options, scheduler },
-  });
+import { profilePath } from "./state/index.js";
+import { LocalError } from "./errors.js";
+import manifest from "../../package.json";
+export function createRuntime(options: { dataDir?: string; profile?: string } = {}) {
+  const directory = profilePath(options);
+  const storage = new ProfileStorage(directory);
+  let closed = false;
   return {
-    state,
-    instances,
-    instanceAccess,
-    files,
-    jobs,
-    processes,
-    get agents() {
-      return getAgents();
+    state: { db: storage.database, directory },
+    async request(method: LocalMethod, raw: unknown, _client?: string, signal?: AbortSignal) {
+      signal?.throwIfAborted();
+      if (closed) throw new LocalError("CLOSING", "Desktop session transport is stopping");
+      localParams[method].parse(raw);
+      return { version: manifest.version, protocolVersion: 1 as const, owner: "daemon" as const };
     },
-    activeAgentTaskIds: () => agentHost?.activeTaskIds() ?? [],
-    stopAgentTasks: (ids: readonly string[]) => agentHost?.stopTasks(ids),
-    request(method: LocalMethod, raw: unknown, signal?: AbortSignal): Promise<unknown> {
-      if (closing)
-        return Promise.reject(new LocalError("CLOSING", "Local engine is shutting down"));
-      const operation = (async () => {
-        return dispatch(method, raw, signal);
-      })();
-      pending.add(operation);
-      void operation.then(
-        () => pending.delete(operation),
-        () => pending.delete(operation),
-      );
-      return operation;
-    },
-    close() {
-      if (closingPromise) return closingPromise;
-      closing = true;
-      if (instanceTimer) clearInterval(instanceTimer);
-      closingPromise = (async () => {
-        // Stop producers and cancel execution first. File requests already
-        // accepted must finish their state lookups before SQLite is closed.
-        await Promise.allSettled([
-          jobs.close(),
-          processes.close(),
-          ...(agentHost ? [agentHost.close()] : []),
-        ]);
-        await Promise.allSettled([...pending, ...(refreshing ? [refreshing] : [])]);
-        storage.close();
-        releaseOwner?.();
-      })();
-      return closingPromise;
+    async close() {
+      closed = true;
+      storage.close();
     },
   };
 }

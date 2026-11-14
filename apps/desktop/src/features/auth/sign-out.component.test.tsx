@@ -65,9 +65,7 @@ function SignOutPage() {
 async function page(onCommit?: (fixture: ReturnType<typeof desktopFixture>) => void) {
   const fixture = desktopFixture();
   const session = vi.fn(async () => true);
-  const detach = vi.fn(async () => true);
   fixture.setNative("controlSession", session);
-  fixture.setNative("controlDetach", detach);
   const root = createRootRoute({
     component: () => (
       <DesktopSignOutProvider>
@@ -107,7 +105,7 @@ async function page(onCommit?: (fixture: ReturnType<typeof desktopFixture>) => v
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
-  return { ...fixture, router, queries, session, detach };
+  return { ...fixture, router, queries, session };
 }
 
 it.each(["manual", "online", "engine"] as const)(
@@ -134,33 +132,9 @@ it.each(["manual", "online", "engine"] as const)(
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
     expect(fixture.session).toHaveBeenCalledTimes(2);
     expect(fixture.session).toHaveBeenLastCalledWith({ accountId: null });
-    expect(fixture.detach).toHaveBeenCalledTimes(1);
     expect(fixture.queries.getQueryData(["local-history"])).toBe("preserve");
   },
 );
-
-it("retains the retry after detaching fails and deduplicates concurrent recovery signals", async () => {
-  let recovered = false;
-  const fixture = await page((desktop) => {
-    // Recovery can arrive when the alert appears, before passive effects run.
-    if (recovered || !screen.queryByRole("alert")) return;
-    recovered = true;
-    window.dispatchEvent(new Event("online"));
-    window.dispatchEvent(new Event("online"));
-    desktop.emit({ version: 1, event: "engine.status", data: { status: "ready" } });
-  });
-  const pending = deferred<boolean>();
-  fixture.detach.mockRejectedValueOnce(new Error("offline")).mockReturnValueOnce(pending.promise);
-  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
-  await waitFor(() => expect(fixture.detach).toHaveBeenCalledTimes(2));
-  expect(screen.getByRole("button", { name: "Sign out" })).toBeDisabled();
-  await act(async () => pending.resolve(true));
-  await waitFor(() => expect(fixture.router.state.location.pathname).toBe("/login"));
-  expect(screen.queryByRole("alert")).toBeNull();
-  expect(mocks.signOut).toHaveBeenCalledTimes(1);
-  expect(fixture.session).toHaveBeenCalledTimes(2);
-  expect(fixture.detach).toHaveBeenCalledTimes(2);
-});
 
 it("keeps account caches and host authorization when web sign-out fails", async () => {
   mocks.signOut.mockResolvedValue({ error: { code: "UNAVAILABLE" } });
@@ -169,7 +143,6 @@ it("keeps account caches and host authorization when web sign-out fails", async 
   await waitFor(() => expect(screen.getByRole("button", { name: "Sign out" })).toBeEnabled());
   await act(async () => window.dispatchEvent(new Event("online")));
   expect(fixture.session).not.toHaveBeenCalled();
-  expect(fixture.detach).not.toHaveBeenCalled();
   expect(mocks.reset).not.toHaveBeenCalled();
   expect(fixture.queries.getQueryData(["remote", "owner"])).toBe("private");
   expect(fixture.router.state.location.pathname).toBe("/");
@@ -184,7 +157,6 @@ it("does not revoke host authorization merely on mounting or reconnecting", asyn
   });
   expect(mocks.signOut).not.toHaveBeenCalled();
   expect(fixture.session).not.toHaveBeenCalled();
-  expect(fixture.detach).not.toHaveBeenCalled();
 });
 
 it("lets explicit logout own navigation while session loss and delayed host cleanup race", async () => {

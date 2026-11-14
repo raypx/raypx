@@ -1,7 +1,7 @@
 # Dev CLI commands and checks
 
 `@raypx/dev-cli` implements `raypx-dev`, the repository engineering executable.
-It is separate from the retained product/device CLI, `raypx`. Use
+It is separate from the device CLI, `raypx`. Use
 `bun run raypx-dev <command>` from the root without installing a global link.
 Workspace scripts declaring Dev CLI as a direct dependency can invoke it directly.
 Its [workspace instructions](../../packages/dev-cli/AGENTS.md) define boundaries.

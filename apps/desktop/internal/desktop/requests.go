@@ -3,7 +3,6 @@ package desktop
 import (
 	"context"
 	"errors"
-	"path/filepath"
 )
 
 func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, error) {
@@ -23,8 +22,6 @@ func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, 
 		return d.Runtime(), nil
 	case "get_channel":
 		return d.Client.Channel(ctx)
-	case "repair_connector":
-		return d.repair(ctx, input)
 	case "get_analytics_preferences":
 		return d.Preferences.Read()["analytics"], nil
 	case "save_analytics_preferences":
@@ -48,24 +45,6 @@ func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, 
 			return nil, errors.New("Native shell unavailable")
 		}
 		return true, d.UI.OpenExternal(u)
-	case "pick_directory":
-		if d.UI == nil {
-			return nil, errors.New("Directory picker unavailable")
-		}
-		path, err := d.UI.PickDirectory()
-		if err != nil {
-			return nil, err
-		}
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		if path == "" {
-			return nil, nil
-		}
-		if !filepath.IsAbs(path) {
-			return nil, errors.New("Invalid directory selection")
-		}
-		return d.Client.Native(ctx, JSON{"action": "pick", "path": path})
 	case "pair_device_connector":
 		return d.pairDeviceConnector(ctx, input)
 	case "grant_device_directory":

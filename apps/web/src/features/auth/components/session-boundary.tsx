@@ -9,7 +9,7 @@ import { LockIcon } from "@raypx/icons/lock";
 import { authClient } from "../client.js";
 import { safeReturnTo } from "../return-to.js";
 
-export function SignInLink({
+function SignInLink({
   children,
   returnTo,
   variant = "default",

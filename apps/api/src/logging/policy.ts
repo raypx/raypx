@@ -35,7 +35,6 @@ export const apiEventPolicy = {
       "verifications",
       "oauthTokens",
       "rateLimits",
-      "contextReceipts",
       "claimed",
       "reconciled",
       "failed",

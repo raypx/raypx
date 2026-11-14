@@ -5,11 +5,9 @@ import type { DesktopPlatform } from "./platform.js";
 // Lazy delegates let application composition own native discovery and connection.
 const applicationPlatform: DesktopPlatform = {
   isDesktop: () => desktop.isDesktop(),
-  hasTerminalHooks: () => desktop.hasTerminalHooks(),
   getBridge: () => desktop.getBridge(),
   getDesktopRuntime: () => desktop.getDesktopRuntime(),
   onLocalEvent: (listener) => desktop.onLocalEvent(listener),
-  pickDirectory: () => desktop.pickDirectory(),
   pairDeviceConnector: (code) => desktop.pairDeviceConnector(code),
   grantDeviceDirectory: (input) => desktop.grantDeviceDirectory(input),
   restartEngine: (replace) => desktop.restartEngine(replace),

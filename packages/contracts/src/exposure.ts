@@ -1,6 +1,6 @@
 import { defineMeta, type AnyProcedureContract } from "@orpc/contract";
 
-type ApiConsumer = "renderer" | "native" | "host" | "web";
+type ApiConsumer = "renderer" | "web";
 
 const [exposeApiTo, getApiConsumer] = defineMeta(
   "raypx.apiExposure",

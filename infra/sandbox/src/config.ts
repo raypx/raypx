@@ -17,7 +17,7 @@ export interface SandboxConfig {
   network: string;
   bridge: string;
 }
-export function privateAddress(address: string) {
+function privateAddress(address: string) {
   if (!isIP(address)) return false;
   if (address === "::1" || /^f[cd][0-9a-f]{2}:/i.test(address)) return true;
   const [a, b] = address.split(".").map(Number);

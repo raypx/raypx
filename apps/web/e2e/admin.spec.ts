@@ -194,13 +194,13 @@ test(
       await expect(siteName).toHaveValue("Raypx");
       await expect(save).toBeDisabled();
     });
-    await test.step("pause attachment uploads with the existing credentials", async () => {
+    await test.step("disable storage configuration with the existing credentials", async () => {
       await page.getByRole("tab", { name: "对象存储", exact: true }).click();
       const panel = page.getByRole("tabpanel", { name: "对象存储", exact: true });
       await expect(panel.getByLabel("访问密钥", { exact: true })).toHaveValue("");
-      await panel.getByRole("switch", { name: "允许上传附件", exact: true }).click();
+      await panel.getByRole("switch", { name: "启用存储配置", exact: true }).click();
       await panel.getByRole("button", { name: "保存修改", exact: true }).click();
-      await expect(panel.getByText("已暂停上传", { exact: true })).toBeVisible();
+      await expect(panel.getByText("配置已停用", { exact: true })).toBeVisible();
       expect(storageWrites).toEqual([
         { revision: 2, values: { ...storage.values, enabled: false } },
       ]);

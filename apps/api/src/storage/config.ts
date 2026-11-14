@@ -2,7 +2,6 @@ import type { z } from "zod";
 import { and, eq, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import { storageConfiguration } from "@raypx/database/schema";
-import { createS3Storage } from "@raypx/storage/s3";
 import {
   storageCredentialsSchema,
   storageLocationSchema,
@@ -10,7 +9,7 @@ import {
 } from "@raypx/contracts/api";
 import type { StorageSettingsService } from "../config/types.js";
 import { ConfigError } from "../config/service.js";
-import { createConfigReads, type ConfigReads } from "../config/reads.js";
+import { type ConfigReads } from "../config/reads.js";
 import { configurationCipher } from "../config/credentials.js";
 import type { AuditService } from "../admin/audit.js";
 import { writeAuditedSetting } from "../config/audited-write.js";
@@ -76,25 +75,6 @@ export async function saveStorageConfiguration(
       updatedAt: sql`now()`,
       revision: sql`${storageConfiguration.revision} + 1`,
     },
-  });
-}
-
-/** Each upload observes the current database configuration. Credentials stay in the API process. */
-export function databaseStorage(db: Database, secret: string, reads = createConfigReads()) {
-  return reads.source("storage", async () => {
-    const [row] = await db
-      .select()
-      .from(storageConfiguration)
-      .where(eq(storageConfiguration.id, id));
-    if (!row?.enabled) return null;
-    const { endpoint, bucket, region } = row;
-    const location = { endpoint, bucket, region };
-    const cleartext = await configurationCipher(secret, purpose, id).open(
-      row.credentials,
-      associatedData(location),
-    );
-    const credentials = storageCredentialsSchema.parse(JSON.parse(cleartext));
-    return createS3Storage(storageConfigSchema.parse({ ...location, ...credentials }));
   });
 }
 

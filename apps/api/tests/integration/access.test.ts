@@ -89,10 +89,10 @@ it("checks remote permissions before reading private services", async () => {
     fetch: async (input, init) => app.fetch(new Request(input, init)),
   });
   for (const read of [
-    () => client.tasks.list({}),
-    () => client.approvals.list({}),
-    () => client.jobs.list({}),
-    () => client.memory.list({}),
+    () => client.configuration.get({}),
+    () => client.configuration.storage({}),
+    () => client.configuration.resend({}),
+    () => client.admin.overview({}),
   ])
     await expect(read()).rejects.toMatchObject({ code: "FORBIDDEN" });
 });

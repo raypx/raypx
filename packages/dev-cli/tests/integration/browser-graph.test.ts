@@ -109,24 +109,18 @@ it("stages the matching CLI for native packaging and acceptance only", () => {
   expect(build).toContain("desktop#check");
   expect(build).not.toContain("cli#build");
   expect(build).not.toContain("desktop#build:renderer");
-  for (const name of [
-    "native:build",
-    "native:smoke",
-    "native:smoke:interactive",
-    "native:agents",
-  ]) {
+  for (const name of ["native:build", "native:smoke", "native:smoke:interactive"]) {
     const plan = graph("desktop", name);
     expect(ids(plan)).toEqual(expect.arrayContaining(["desktop#build", "cli#build"]));
     expect(plan.find((task) => task.taskId === `desktop#${name}`)?.cacheable).toBe(false);
   }
 });
 
-it("full verification builds Bun services and the optional edge without deploying providers", () => {
+it("full verification builds Bun services without deploying providers", () => {
   const plan = verificationPlan(model, [], { full: true });
   const tasks = ids(turboPlan(root, executionTasks(plan, model.rootName)));
   expect(tasks).toContain("api#build");
   expect(tasks).toContain("web#build");
   expect(tasks).not.toContain("relay#build");
-  expect(tasks).toContain("relay-cloudflare#build");
   expect(tasks.some((task) => /#(?:deploy|plan(?::[^#]+)?|dev)$/.test(task))).toBe(false);
 });

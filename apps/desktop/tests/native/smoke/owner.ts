@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { resolve, join } from "node:path";
-import { performanceEnvironment } from "@raypx/tooling/performance";
+import { nativeSmokeEnvironment } from "./environment.js";
 
 export async function smokeOwnerIdentity(directory: string) {
   const endpoint = await Bun.file(join(directory, "profiles/native-smoke/daemon.json")).json();
@@ -61,7 +61,7 @@ async function command(
     "../../../resources/bin",
     platform === "win32" ? "raypx.exe" : "raypx",
   );
-  const env = performanceEnvironment(process.env);
+  const env = nativeSmokeEnvironment(process.env);
   // The explicit HTTPS cookie acceptance phase may use its configured fixture API.
   for (const key of ["HTTP_PROXY", "HTTPS_PROXY"]) delete env[key];
   return (options.run ?? run)(
@@ -70,8 +70,6 @@ async function command(
     {
       ...env,
       RAYPX_HOME: join(directory, "config"),
-      CLAUDE_CONFIG_DIR: join(directory, "claude"),
-      CODEX_HOME: join(directory, "codex"),
     },
   );
 }
@@ -101,40 +99,4 @@ export async function startSmokeOwner(directory: string, options: Options = {}) 
 export async function restartSmokeOwner(directory: string, options: Options = {}) {
   const result = await command("restart", directory, options);
   return result !== undefined && result.code === 0;
-}
-
-/** Test driver authority stays in Bun; the native host never exposes this router. */
-export async function smokeOwnerRequest(directory: string, method: string, params: unknown) {
-  const endpoint = await Bun.file(join(directory, "profiles/native-smoke/daemon.json")).json();
-  const base = endpoint.socket ? "http://localhost" : `http://127.0.0.1:${endpoint.port}`;
-  const client = crypto.randomUUID();
-  const lease = new AbortController();
-  const transport = {
-    ...(endpoint.socket ? { unix: endpoint.socket } : { proxy: false as const }),
-    signal: AbortSignal.any([lease.signal, AbortSignal.timeout(30_000)]),
-    redirect: "error" as const,
-  };
-  const headers = { authorization: `Bearer ${endpoint.token}` };
-  try {
-    const events = await fetch(`${base}/events?client=${client}`, { ...transport, headers });
-    assert.equal(events.status, 200, "Smoke driver could not open a daemon client lease");
-    const id = crypto.randomUUID();
-    const response = await fetch(`${base}/rpc?client=${client}`, {
-      ...transport,
-      method: "POST",
-      headers: { ...headers, "content-type": "application/json" },
-      body: JSON.stringify({ version: 1, id, method, params }),
-    });
-    assert.equal(response.status, 200, `Smoke daemon request failed: ${method}`);
-    const packet = (await response.json()) as {
-      id: string;
-      result?: unknown;
-      error?: { code: string };
-    };
-    assert.equal(packet.id, id);
-    if (packet.error) throw new Error(packet.error.code);
-    return packet.result;
-  } finally {
-    lease.abort();
-  }
 }

@@ -8,7 +8,6 @@ root with `bun install`.
 | ---------------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
 | `@raypx/infra-railway` | Railway backend, Web and gateway service definitions                | [Railway](railway/README.md)                    |
 | `sandbox`              | Private Computer supervisor and prepared image; Engine socket owner | [Local sandbox](../docs/development/sandbox.md) |
-| `relay-cloudflare`     | Retained device Relay ingress and container deployment              | [Cloudflare](cloudflare/README.md)              |
 
 Run focused checks from the repository root:
 

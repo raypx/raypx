@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { startBrowserPreview } from "@raypx/tooling/browser-server";
+import { startBrowserPreview } from "./browser-server.js";
 
 const server = await startBrowserPreview({
   directory: resolve(import.meta.dirname, "../../../apps/desktop/artifacts/browser/client"),

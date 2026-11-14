@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import { createApiClient } from "@raypx/client/api";
-import { controlAuth } from "@raypx/control/testing";
+import { testSession } from "../helpers/session.js";
 import { SpaceNotFound, spaceIdSchema } from "@raypx/core/spaces";
 import { openApiServerSchema } from "@raypx/core/openapi-servers";
 import { resolveSpaceScope } from "@raypx/spaces/server";
@@ -76,7 +76,7 @@ it("resolves fresh membership for every API command and strips credentials from 
       },
     },
     openApiServers: service,
-    readSession: async () => controlAuth(actor),
+    readSession: async () => testSession(actor),
     allowedOrigins: ["https://web.example.test"],
     logger,
   });
@@ -145,7 +145,7 @@ it("returns stable refusal codes without disclosing raw backend errors", async (
         throw new OpenApiServerError("OWNER_REQUIRED");
       },
     } as unknown as OpenApiServersService,
-    readSession: async () => controlAuth(actor),
+    readSession: async () => testSession(actor),
     allowedOrigins: ["https://web.example.test"],
   });
   const client = createApiClient({

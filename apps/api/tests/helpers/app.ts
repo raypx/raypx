@@ -22,15 +22,10 @@ const services = [
   "agents",
   "conversations",
   "conversationModels",
-  "instances",
   "administration",
   "config",
   "storageSettings",
   "resendSettings",
-  "control",
-  "cloudJobs",
-  "memory",
-  "attachments",
 ] as const satisfies readonly (keyof ApiAppOptions)[];
 
 /** A service the test did not supply fails loudly at its first use, not as a 503. */
@@ -56,9 +51,6 @@ export function testAppOptions(overrides: TestAppOptions = {}): ApiAppOptions {
     authHandler: async () => new Response(null),
     readSession: async () => null,
     allowedOrigins: [],
-    resolveContext: async () => {
-      throw new Error("Test application has no context resolver");
-    },
     ...(missing as Pick<ApiAppOptions, (typeof services)[number]>),
     ...overrides,
   };

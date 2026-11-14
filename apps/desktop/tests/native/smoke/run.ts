@@ -24,8 +24,6 @@ async function run(smokePhase: string, directory: string, restoredServer = false
   await runMyGoSmoke(installation, smokePhase, directory, {
     ...process.env,
     RAYPX_HOME: join(directory, "config"),
-    CLAUDE_CONFIG_DIR: join(directory, "claude"),
-    CODEX_HOME: join(directory, "codex"),
     RAYPX_NATIVE_SMOKE: "1",
     RAYPX_NATIVE_SMOKE_UI: ui,
     RAYPX_NATIVE_SMOKE_PHASE: smokePhase,

@@ -136,7 +136,6 @@ never grants access or replaces server checks. Account-scoped reads do not let
 administrators access another person's devices or content.
 
 Retained CLI projects, approvals, schedules and memory remain local after
-first-time instance enrollment; current Desktop does not expose their old pages.
 Device preferences need no login. This role policy governs account-owned remote work
 and Web administration, not device ownership or OS command permissions.
 
@@ -275,39 +274,12 @@ in `ALLOWED_ORIGINS`; sibling Web/API subdomains also require the existing
 
 ### Behavior and boundaries
 
-Better Auth handles authorization code exchange, state binding and sessions. Only
-verified provider email can establish a session. New users follow the existing
-registration switch and receive the member role. Verified existing accounts can
-link by the same verified email; an unverified local account cannot be implicitly
-linked. Provider names alone never bypass email verification.
-
-Web returns through `/login?oauth=success` to refresh the account, recover any
-visitor draft and resume the validated application destination. It opens
-`/agents` by default. Cancelling authorization returns to login with a translated
-error and preserves that destination. Completion failures can retry the session
-refresh without repeating provider authorization. No task or approval executes
-as a result of login.
-
-Desktop's sign-in button opens the configured `web_url` in the system browser.
-The user reviews the computer and the active Web account, then authorizes the
-Desktop session. They can switch accounts in the browser when needed. An
-existing profile accepts only the account and API origin in its enrollment.
-The daemon redeems the loopback code with PKCE at Better Auth's standard OAuth
-token endpoint on `api_url`, then exchanges the verified OIDC result for a
-separate Desktop session. The API serves OIDC discovery and signing keys.
-For authentication testing, start with a fresh Raypx foundation database and
-apply the repository migrations. The `account-authentication` migration creates
-the current OAuth, passkey and two-factor schema without a data backfill. If a
-disposable test database already ran the draft authentication migrations, use a
-new test database for this version.
-An expired or cancelled request can be restarted from Desktop. First-time device
-registration follows sign-in.
-
-Host reauthorization opens the same system-browser flow. Sign in again with the
-account bound to the profile, then approve. API requires a session created after
-the request starts, and Desktop uses that authentication time to renew the Host
-grant. Existing local work remains attached during the renewal.
-See ADR 0063.
+Desktop opens the system browser and requires explicit consent for the displayed
+account. PKCE, state, issuer and callback verification protect the exchange. The
+daemon verifies the current account, stores cookies in its encrypted private
+session database and bridges bounded server requests/events. Switching account or
+signing out revokes the affected connector. Enrollment, offline identity receipts
+and Host reauthorization do not exist. See [Desktop](desktop.md).
 
 ### Sign-in methods and account protection
 
@@ -337,14 +309,12 @@ widget configuration. API returns the public site key to the Web form and
 validates each challenge token before sending mail. Compose forwards both
 values. On Railway, set both on the API service.
 
-### CLI and organizational accounts
+### Device pairing
 
-`raypx login` uses instance enrollment. Its browser approval issues a signed
-receipt for offline work. OAuth Device Authorization can be added when a CLI
-command has an online API scope to request. Project access is currently bound
-to personal accounts. Organization membership and enterprise SSO require a
-project permission model and a policy for who can provision members and identity
-providers.
+The connector uses short-lived pairing claims and native consent, followed by
+separate Space directory confirmation. Pairing grants no Space access. Shared
+Spaces use the backend membership/invitation model. See
+[device computers](device-connector.md).
 
 ### Verification
 

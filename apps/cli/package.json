@@ -5,45 +5,23 @@
   "type": "module",
   "scripts": {
     "dev": "bun run src/main.ts",
-    "check": "bun scripts/generate-sqlite.ts --check && tsc --noEmit --project tsconfig.json && bun run perf:check",
+    "check": "bun scripts/generate-sqlite.ts --check && tsc --noEmit --project tsconfig.json",
     "test": "bun --bun vitest run",
     "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
     "test:integration": "bun --bun vitest run tests/integration",
     "build": "bun scripts/generate-sqlite.ts --check && bun scripts/build.ts",
     "smoke": "bun run tests/smoke/artifact.ts",
-    "smoke:tui": "bun run tests/smoke/tui.ts",
-    "smoke:herdr-terminal": "bun run tests/smoke/herdr-terminal.ts",
-    "prepare:herdr": "bun run scripts/prepare-herdr.ts",
-    "smoke:terminal": "bun run tests/smoke/terminal-hooks.ts",
-    "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts",
-    "smoke:daemon-agents": "bun run tests/smoke/daemon-agents.ts",
-    "smoke:pi": "bun run tests/smoke/pi-runner.ts",
-    "perf:tasks": "bun --bun vitest run tests/integration/runtime/agents/snapshot --reporter=verbose --silent=false",
-    "eval:agents": "bun --no-env-file tests/evals/run.ts",
-    "db:generate": "bun scripts/generate-sqlite.ts",
-    "perf": "bun perf/run.ts",
-    "perf:check": "tsc --noEmit --project perf/tsconfig.json"
+    "db:generate": "bun scripts/generate-sqlite.ts"
   },
   "dependencies": {
-    "@raypx/ai": "workspace:*",
-    "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
-    "@raypx/core": "workspace:*",
-    "@raypx/instances": "workspace:*",
     "@raypx/logger": "workspace:*",
-    "@raypx/memory": "workspace:*",
-    "@raypx/providers": "workspace:*",
     "@raypx/runtime-node": "workspace:*",
     "citty": "catalog:",
-    "confbox": "catalog:",
-    "croner": "catalog:",
     "drizzle-orm": "catalog:",
-    "semver": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@earendil-works/pi-agent-core": "catalog:",
-    "@hona/strobe": "catalog:dev",
     "@orpc/server": "catalog:",
     "@raypx/drizzle-kit": "workspace:*",
     "@raypx/testing": "workspace:*",
@@ -51,33 +29,7 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
-    "@types/semver": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vitest": "catalog:dev"
-  },
-  "herdr": {
-    "version": "0.9.5",
-    "assets": {
-      "darwin-arm64": {
-        "name": "herdr-macos-aarch64",
-        "sha256": "fb77c2232a05a8035421382c894392f4174e4e38a18e48af3dd0290157c3a7e2"
-      },
-      "darwin-x64": {
-        "name": "herdr-macos-x86_64",
-        "sha256": "5fb0a908ec7f6745e3e245738b06bfad56c46391c391ab3c0955fbead01f1369"
-      },
-      "linux-arm64": {
-        "name": "herdr-linux-aarch64",
-        "sha256": "17d7536f2da50859523680ef279dffcac8e4a235f4e46fe8da6c2ec44141897c"
-      },
-      "linux-x64": {
-        "name": "herdr-linux-x86_64",
-        "sha256": "14d9e8bc8b4a9e0118d77c32266f76d461f09b40342eb23752960bd89f59929d"
-      },
-      "win32-x64": {
-        "name": "herdr-windows-x86_64.zip",
-        "sha256": "d2c6c9c971c43a0bfdde8c692a9a1a7a45c3e4807cd01ae45662b4734fac1cbf"
-      }
-    }
   }
 }

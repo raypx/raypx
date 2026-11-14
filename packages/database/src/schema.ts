@@ -1557,241 +1557,6 @@ export const mailConfiguration = pgTable("mail_configuration", {
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
 
-export const sessionAttachment = pgTable(
-  "session_attachment",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    deviceId: text("device_id").notNull(),
-    projectId: text("project_id").notNull(),
-    name: text("name").notNull(),
-    content: text("content").notNull(),
-    ready: boolean("ready").notNull().default(false),
-    expiresAt: date("expires_at").notNull(),
-  },
-  (table) => [
-    index("session_attachment_owner_idx").on(table.userId, table.expiresAt),
-    index("session_attachment_expiry_idx").on(table.expiresAt),
-  ],
-);
-
-// Control records are separate from authentication and never contain CLI credentials.
-export const controlOwner = pgTable("control_owner", {
-  securityEpoch: integer("security_epoch").notNull().default(0),
-  securityRevokedAt: date("security_revoked_at"),
-  userId: text("user_id")
-    .primaryKey()
-    .references(() => user.id, { onDelete: "cascade" }),
-});
-const controlRecord = (name: string) =>
-  pgTable(
-    name,
-    {
-      id: text("id").notNull(),
-      userId: text("user_id")
-        .notNull()
-        .references(() => user.id, { onDelete: "cascade" }),
-      deviceId: text("device_id").notNull(),
-      body: jsonb("body").notNull(),
-    },
-    (table) => [
-      primaryKey({ columns: [table.userId, table.id] }),
-      index(`${name}_device_idx`).on(table.userId, table.deviceId),
-      ...(name === "control_credential" ? [index("control_credential_hash_idx").on(table.id)] : []),
-      ...(name === "control_request"
-        ? [index("control_request_task_idx").on(table.userId, sql`(${table.body}->>'taskId')`)]
-        : []),
-      ...(name === "control_command"
-        ? [
-            index("control_command_context_owner_idx")
-              .on(
-                table.userId,
-                sql`coalesce(${table.body}->>'capturedAt',${table.body}->'context'->>'capturedAt','')`,
-                table.id,
-              )
-              .where(sql`jsonb_typeof(${table.body}->'context')='object'`),
-            index("control_command_context_expiry_idx")
-              .on(
-                sql`coalesce(${table.body}->>'capturedAt',${table.body}->'context'->>'capturedAt','')`,
-                table.userId,
-                table.id,
-              )
-              .where(sql`jsonb_typeof(${table.body}->'context')='object'`),
-          ]
-        : []),
-      ...(name === "control_event"
-        ? [
-            index("control_event_activity_idx")
-              .on(
-                table.userId,
-                sql`(${table.body}->>'taskId')`,
-                sql`((${table.body}->'event'->'entry'->>'order')::bigint)`,
-              )
-              .where(sql`${table.body}->'event'->>'kind' = 'activity'`),
-            index("control_event_task_cursor_idx")
-              .on(
-                table.userId,
-                sql`(${table.body}->>'taskId')`,
-                sql`((${table.body}->>'cursor')::bigint)`,
-              )
-              .where(sql`${table.body}->'event'->>'kind' != 'activity'`),
-            index("control_event_replay_idx")
-              .on(table.userId, table.deviceId, sql`((${table.body}->>'cursor')::bigint)`)
-              .where(sql`${table.body}->'event'->>'kind' != 'activity'`),
-            index("control_event_stream_idx").on(
-              table.userId,
-              table.deviceId,
-              sql`(${table.body}->>'streamId')`,
-              sql`((${table.body}->>'cursor')::bigint)`,
-            ),
-          ]
-        : []),
-    ],
-  );
-export const controlDevice = controlRecord("control_device");
-export const controlProject = controlRecord("control_project");
-export const controlTask = controlRecord("control_task");
-export const controlRequest = controlRecord("control_request");
-export const controlEvent = controlRecord("control_event");
-export const controlCommand = controlRecord("control_command");
-export const controlGrant = controlRecord("control_grant");
-export const controlCredential = controlRecord("control_credential");
-export const controlObservedSession = controlRecord("control_observed_session");
-export const controlObservedRequest = controlRecord("control_observed_request");
-
-export const cloudJob = pgTable(
-  "cloud_job",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
-    cron: text("cron").notNull(),
-    timezone: text("timezone").notNull(),
-    enabled: boolean("enabled").notNull(),
-    action: jsonb("action").notNull(),
-    revision: integer("revision").notNull(),
-    nextRunAt: date("next_run_at"),
-    ...timestamps(),
-  },
-  (table) => [
-    index("cloud_job_owner_idx").on(table.userId, table.createdAt, table.id),
-    index("cloud_job_due_idx")
-      .on(table.nextRunAt, table.id)
-      .where(sql`${table.enabled}=true`),
-  ],
-);
-export const cloudJobRun = pgTable(
-  "cloud_job_run",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    jobId: text("job_id")
-      .notNull()
-      .references(() => cloudJob.id, { onDelete: "cascade" }),
-    jobRevision: integer("job_revision").notNull(),
-    trigger: text("trigger").notNull(),
-    scheduledFor: date("scheduled_for").notNull(),
-    startedAt: date("started_at").notNull(),
-    checkedAt: date("checked_at").notNull().defaultNow(),
-    finishedAt: date("finished_at"),
-    status: text("status").notNull(),
-    action: jsonb("action").notNull(),
-    taskId: text("task_id"),
-    code: text("code"),
-    sync: jsonb("sync"),
-  },
-  (table) => [
-    uniqueIndex("cloud_job_run_schedule_idx")
-      .on(table.jobId, table.scheduledFor)
-      .where(sql`${table.trigger}='schedule'`),
-    index("cloud_job_run_history_idx").on(table.userId, table.jobId, table.startedAt, table.id),
-    index("cloud_job_run_active_idx")
-      .on(table.checkedAt, table.id)
-      .where(sql`${table.status} in ('dispatching','running','waiting','unknown')`),
-  ],
-);
-
-// Account context libraries retain immutable revisions; archiving never deletes history.
-export const contextDocument = pgTable(
-  "context_document",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    kind: text("kind").notNull(),
-    name: text("name").notNull(),
-    category: text("category").notNull(),
-    content: text("content").notNull(),
-    project: jsonb("project"),
-    revision: integer("revision").notNull(),
-    archived: boolean("archived").notNull().default(false),
-    ...timestamps(),
-  },
-  (table) => [
-    index("context_document_owner_idx").on(table.userId, table.updatedAt, table.id),
-    uniqueIndex("context_document_canonical_id_idx").on(sql`lower(${table.id})`),
-  ],
-);
-// Body-free deletion receipts reserve IDs so pinned references can never change identity.
-export const contextDeletion = pgTable(
-  "context_deletion",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    revision: integer("revision").notNull(),
-    deletedAt: timestamp("deleted_at").notNull().defaultNow(),
-  },
-  (table) => [index("context_deletion_owner_idx").on(table.userId)],
-);
-export const contextVersion = pgTable(
-  "context_version",
-  {
-    documentId: text("document_id")
-      .notNull()
-      .references(() => contextDocument.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    revision: integer("revision").notNull(),
-    body: jsonb("body").notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.documentId, table.revision] }),
-    index("context_version_owner_idx").on(table.userId, table.documentId, table.revision),
-  ],
-);
-
-export const runtimeInstance = pgTable(
-  "runtime_instance",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    body: jsonb("body").notNull(),
-  },
-  (table) => [index("runtime_instance_owner_idx").on(table.userId, table.id)],
-);
-export const instanceEnrollment = pgTable(
-  "instance_enrollment",
-  {
-    id: text("id").primaryKey(),
-    codeHash: text("code_hash").notNull().unique(),
-    expiresAt: date("expires_at").notNull(),
-    body: jsonb("body").notNull(),
-  },
-  (table) => [index("instance_enrollment_expiry_idx").on(table.expiresAt)],
-);
-
 // Independent of account lifetimes: immutable terminal management history.
 export const adminAudit = pgTable(
   "admin_audit",
@@ -2556,7 +2321,7 @@ export const openApiServerAgents = pgTable(
   ],
 );
 
-/** Restricted connector identities are separate from retained control devices and enrollment. */
+/** Restricted connector identities bind member-owned devices to an account and origin. */
 export const deviceComputers = pgTable(
   "device_computers",
   {
@@ -2821,33 +2586,14 @@ export const schema = {
   oauthConsent,
   oauthClientAssertion,
   adminAudit,
-  runtimeInstance,
-  instanceEnrollment,
-  contextDocument,
-  contextDeletion,
-  contextVersion,
-  cloudJob,
-  cloudJobRun,
   systemConfiguration,
   storageConfiguration,
   mailConfiguration,
-  sessionAttachment,
   user,
   session,
   account,
   verification,
   rateLimit,
-  controlOwner,
-  controlDevice,
-  controlProject,
-  controlTask,
-  controlRequest,
-  controlEvent,
-  controlCommand,
-  controlGrant,
-  controlCredential,
-  controlObservedSession,
-  controlObservedRequest,
 };
 export const relations = defineRelations(schema, (r) => ({
   user: {

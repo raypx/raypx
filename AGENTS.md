@@ -32,10 +32,11 @@ exact executable Allow even in Never ask; Auto never approves them. macOS arm64
 real-daemon acceptance is separate from packaged Desktop and unverified platforms.
 Optional graphical computers and member takeover use the private Computer port,
 session-authorized screen streams and PostgreSQL control grants; Mobile has no Screen UI.
-The retained CLI/daemon, SQLite profiles, enrollment and remote projections are
-separate from server Agent state until their replacement phase. Desktop still uses
-MyGo/Go and the bundled Bun CLI. The retired native host is archived separately;
-do not reintroduce it.
+The CLI supplies the outbound-only device connector and a separate private Desktop
+session daemon. That daemon owns encrypted Desktop cookies, bounded selected-origin
+HTTP and server-event transport only; it owns no Agent execution or scheduling.
+Desktop still uses MyGo/Go and the bundled Bun CLI. Earlier device profiles,
+enrollment, local tasks and remote projections are removed without importing data.
 
 ## Workspaces and boundaries
 
@@ -60,17 +61,17 @@ do not reintroduce it.
 - Resolve fresh Space membership at each request. Require Space-scoped repository
   ports, filter by `space_id` before limiting and use same-Space foreign keys.
   Resource selectors and deployment administrator roles never grant Space access.
-- Keep new Agent execution in the backend, separate from the retained private CLI
-  harness. Vendor SDKs stay in adapters. Add packages only for established
+- Keep Agent execution in the backend, separate from device I/O and Desktop session
+  transport. Vendor SDKs stay in adapters. Add packages only for established
   responsibilities and actual consumers; do not create speculative entries.
 - `@raypx/computers` owns Space-scoped computer lifecycle and persistence.
   `@raypx/providers/computer` owns the Computer port and its providers;
   `infra/sandbox` is the private supervisor and alone holds the Docker socket.
   Clients consume lifecycle contracts, never provider credentials or execution ports.
-- Remote and local device contracts have separate public entries. Desktop launches
-  its bundled CLI by absolute path and never imports CLI source. Preserve existing
-  enrollment/account/origin isolation while that device runtime remains; it does
-  not authorize a Space or turn local history into server conversation history.
+- Connector transport and private Desktop contracts have separate public entries.
+  Desktop launches its bundled CLI by absolute path and never imports CLI source.
+  Connector credentials bind one account/origin; Desktop session selection grants
+  no Space or device authority.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 
 ## Toolchain
@@ -81,8 +82,6 @@ do not reintroduce it.
 - Bun is the only JavaScript runtime. Root `packageManager` pins it; tooling reads that pin and
   `raypx-dev policy` rejects drift in devEngines, Dockerfiles, CI and documented versions,
   and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
-- The optional Cloudflare Relay ingress runs in the provider-managed Workers
-  runtime; its container and all local tooling still use the pinned Bun runtime.
 - Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
   the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
   Desktop uses the MyGo Go host; its bundled CLI retains the pinned Bun runtime.
@@ -125,7 +124,7 @@ do not reintroduce it.
   owns include patterns, projects and overrides using native defineConfig/mergeConfig;
   do not introduce custom config factories or option schemas. Application Vite plugins
   must not enter the test runner.
-- Each release candidate/platform compiles one production CLI payload. Consumers set `RAYPX_CLI_PAYLOAD`, verify its immutable inventory and never implicitly build. Sign CLI/Herdr before sharing the payload; outer Desktop signing cannot rewrite it. Strobe consumes prepared artifacts only, retains ownership markers and runs uncached in private homes.
+- Each release candidate/platform compiles one production CLI payload. Consumers set `RAYPX_CLI_PAYLOAD`, verify its immutable inventory and never implicitly build. Sign the CLI before sharing the payload; outer Desktop signing cannot rewrite it. Acceptance uses prepared artifacts and private temporary homes.
 - Reusable repository validation belongs in Dev CLI's `src/validation/`. `.artifacts/`
   holds generated evidence only; never store authored scripts there. `clean:artifacts`
   removes that evidence and test reports without removing builds or user data.
@@ -145,13 +144,13 @@ do not reintroduce it.
   Avoid nested ternary expressions; use simple ternaries only when they improve readability.
 - Do not log credentials, tokens, cookies, passwords or private file content.
 - PostgreSQL owns new Agent/conversation/Run state. Clients render it and express intent;
-  client caches, drafts and retained CLI SQLite profiles are never a second authority.
+  client caches, drafts and connector receipts are never a second authority.
   Drafts and uncertain-send receipts stay device-local, scoped by server origin,
   account, Space and conversation. Restoration never sends a message.
-- Device preferences and retained CLI SQLite profiles stay local and survive logout.
-  Existing device execution still requires one account/origin-bound enrollment;
-  its signed identity permits indefinite offline use after online logout. Gate remote data and
-  Host authorization separately. Never transfer a profile to another account/origin.
+- Device preferences survive logout. Connector consent/receipts stay in restricted
+  account/origin-bound storage. Desktop cookies live only in the private
+  `desktop-session.sqlite` session store; keys come from native OS storage.
+  Never read, import or rewrite earlier profile databases or credential stores.
 - Current functionality is the initial baseline. Support current protocols and data formats
   only. Do not add legacy fallback, compatibility aliases or automatic imports of old data.
   Reject unsupported versions.
@@ -215,25 +214,20 @@ external outcomes. Worker startup owns scans; runtime construction performs no I
 
 The backend owns Runs, approvals, effects, events, routines and delegation. Child
 Runs inherit the initiating member's authority. Default SERVER_ROLE=all combines
-API, worker and Relay; split API/worker coordination uses PostgreSQL. The retained
-both value also combines those roles. Redis is required only for split retained
-device transport, not new Run coordination. Do not implement new Agent authority
-in the renderer, Go host or device profile. The outbound-only device connector
-uses native-confirmed Space grants without owning Agent execution. Retained local
-tasks/session transport still use their independent daemon and profile.
+API, worker and connector Relay; split API/worker coordination uses PostgreSQL.
+Redis is optional in combined roles and required for split connector frame routing;
+it also supports optional sessions, rate limits and configuration invalidation.
+No legacy role alias, v5 Relay endpoint or account/device read projection remains.
 
-Until replaced, the existing macOS/Windows daemon still owns device execution,
-approval arbitration, replay, restricted credentials and Desktop session transport.
-Native bootstraps over authenticated private IPC (Unix socket or token-guarded
-loopback on Windows); the renderer uses a separate authenticated loopback WebSocket.
-GUI Quit does not stop daemon tasks. Existing Relay routes device messages and API
-stores their read projections; `@raypx/control` owns their authorization rules.
-Retained device Relay uses direct calls in combined roles and a private Redis
-broker across split processes. This transport does not authorize new Space Runs.
+The outbound-only device connector checks native-confirmed Space directory grants
+without owning Agent execution. Its journals are bounded consent/transport receipts.
+The independent Desktop session daemon uses authenticated private IPC (Unix socket
+or token-guarded loopback on Windows), with a separate bounded renderer WebSocket.
+Only the session daemon holds Desktop cookies. Go supplies OS keys, native dialogs,
+preferences and finite bundled CLI bootstrap. GUI Quit releases its UI binding and
+leaves the connector and accepted server Runs independent.
 
-Preserve native opt-in without exposing cookies or host secrets to the renderer.
-Explicit logout/account changes revoke the affected remote binding. Never publish
-the local method router or provider credentials. Desktop connection settings remain
-user-level runtime TOML; server origins isolate sessions, device history, settings
-and remote authorization. Replace these boundaries only with their owning roadmap
-phase, and remove obsolete code rather than add compatibility or data imports.
+Desktop runtime TOML selects exact server origins. Origin/account changes close
+old event streams; explicit sign-out clears session selection. No renderer holds
+connector credentials, cookies, native capabilities or administrative tokens.
+The connector and Desktop session database never import earlier device data.

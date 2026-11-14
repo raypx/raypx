@@ -3,12 +3,7 @@ import { join } from "node:path";
 import { imports } from "../repo/architecture.js";
 import { resolveImport, workspaceFor } from "../repo/workspaces.js";
 import { discover } from "../repository.js";
-import {
-  relatedTaskLifecycle,
-  workspaceGraph,
-  taskRef,
-  type WorkspaceGraph,
-} from "../workspace-graph.js";
+import { workspaceGraph, taskRef, type WorkspaceGraph } from "../workspace-graph.js";
 import { testLayer, testSources } from "../validation/test-sources.js";
 import type { VerificationPlan } from "./plan.js";
 
@@ -34,7 +29,6 @@ export function localTests(
   if (!plan.tasks.some((task) => task.endsWith("#test"))) return [];
   const index = discover(root);
   const changed = plan.files.filter((file) => !documentation.test(file));
-  const lifecycle = relatedTaskLifecycle(model, changed);
   const broad = plan.full || plan.reasons.length > 0;
   const parsed = new Map<string, { paths: string[]; opaque: boolean }>();
   function edges(file: string) {
@@ -107,17 +101,9 @@ export function localTests(
       if (broad)
         return all(plan.full ? "Full verification" : "Shared or unknown verification inputs");
       const own = changed.filter((file) => file.startsWith(member.path + "/"));
-      const lifecycleFile = lifecycle?.workspace === member.name ? lifecycle.file : undefined;
       if (!own.length) {
         if (!changed.every((file) => testOnly.test(file)))
           return all("Affected consumer: run its complete suite");
-        if (lifecycleFile)
-          return {
-            ...entry,
-            mode: "related",
-            files: [lifecycleFile],
-            reasons: ["The CLI lifecycle suite launches the changed API relay fixture"],
-          };
         return { ...entry, mode: "none", reasons: ["Only another workspace's tests changed"] };
       }
       if (own.some((file) => !existsSync(join(root, file)))) return all("Deleted or renamed input");
@@ -137,7 +123,6 @@ export function localTests(
       if (!sources.length)
         return all("No ordinary test sources found; let the runner validate its suite");
       const files = new Set(own);
-      if (lifecycleFile) files.add(`${member.path}/${lifecycleFile}`);
       const sourceChanged = own.some((file) => !testOnly.test(file));
       try {
         const selected = sources.filter(

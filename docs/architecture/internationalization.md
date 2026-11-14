@@ -16,31 +16,25 @@ comparison and reads i18n's static locale policy through workspace discovery.
 | Auth      | auth                                                  |
 | Account   | access                                                |
 | Agents    | agents                                                |
-| Tasks     | tasks, including terminalApproval (retained runtime)  |
 | Memory    | memory                                                |
-| Jobs      | routines; automations (retained runtime)              |
+| Jobs      | routines                                              |
 | Analytics | analytics                                             |
 | Blocks    | settings                                              |
-| Instances | instances                                             |
 | Pages     | pages                                                 |
 | Skills    | skills                                                |
 | Mobile    | mobile, mobile-capabilities, mobile-resources         |
 | API       | api                                                   |
 | Web       | dash, users, site, guest, legal, desktopAuthorization |
-| Desktop   | engine, desktopLogin, localWorkspace                  |
+| Desktop   | engine, desktopLogin                                  |
 
 Shared owners expose pure `/messages/en` and `/messages/zh` entries without React,
 UI or execution code. App catalogs remain private. Web and Desktop compose only their consumed
-shared entries and private namespaces through explicit object assembly. The retained
-Tasks catalog is outside Agent renderer composition; native task notifications
-still consume its language entries. Jobs contributes the routines capability copy.
+shared entries and private namespaces through explicit object assembly. Jobs
+contributes routines capability copy.
 Mobile composes common, Auth, Agents, Jobs, Memory, Pages and Skills plus its
 private native catalogs through a platform-neutral translator. Devtools'
 private `locales` dictionary loads only with Devtools and never enters app messages.
 UI primitives continue to receive caller-provided labels.
-
-Terminal approval copy lives at `tasks.terminalApproval.*`; the workspace return
-label is `common.backToWorkspace`. Neither has a compatibility alias.
 
 ## Formats and types
 

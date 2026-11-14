@@ -4,7 +4,10 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const probeArtifact = vi.hoisted(() => vi.fn(async (_options: unknown) => {}));
 vi.mock("../repo/artifact.js", () => ({ probeArtifact }));
 const { probeApi, probeWeb } = await import("./artifacts.js");
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 beforeEach(() => {
   probeArtifact.mockClear();
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -53,7 +56,27 @@ it("runs all backend roles from the same prepared output with no auth input on r
   );
   expect(options.map((value) => value.output)).toEqual(Array(3).fill("/repo/apps/api/.output"));
   const environments = options.map((value) => value.environment("http://127.0.0.1:1234"));
-  expect(environments.map((value) => value.SERVER_ROLE)).toEqual(["api", "both", "relay"]);
-  expect(environments[1]).not.toHaveProperty("REDIS_URL");
+  expect(environments.map((value) => value.SERVER_ROLE)).toEqual(["api", "all", "relay"]);
+  for (const value of environments.slice(0, 2)) expect(value).not.toHaveProperty("REDIS_URL");
   expect(environments[2]).not.toHaveProperty("AUTH_SECRET");
+});
+
+it("accepts only the sanitized PostgreSQL startup refusal in offline artifact verification", async () => {
+  vi.stubEnv("TEST_DATABASE_URL", undefined);
+  const refused = new Error(
+    "api exited during startup: Backend startup failed. Check runtime role, configuration, database availability and migrations.",
+  );
+  probeArtifact.mockRejectedValueOnce(refused).mockRejectedValueOnce(refused);
+  await expect(probeApi("/repo")).resolves.toBeUndefined();
+  expect(probeArtifact).toHaveBeenCalledTimes(3);
+});
+it("keeps unrelated artifact startup failures visible", async () => {
+  vi.stubEnv("TEST_DATABASE_URL", undefined);
+  probeArtifact.mockRejectedValueOnce(new Error("bundle is incomplete"));
+  await expect(probeApi("/repo")).rejects.toThrow("bundle is incomplete");
+});
+it("refuses an operator database before launching an artifact", async () => {
+  vi.stubEnv("TEST_DATABASE_URL", "postgres://fixture@db.internal/production");
+  await expect(probeApi("/repo")).rejects.toThrow("explicit disposable loopback test database");
+  expect(probeArtifact).not.toHaveBeenCalled();
 });

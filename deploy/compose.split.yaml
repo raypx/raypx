@@ -1,6 +1,6 @@
 # Optional distributed topology. Every role uses the SAME backend image.
 # Durable Run API/worker coordination requires PostgreSQL only. Configure REDIS_URL
-# for device Computer frames and retained device transport across separate roles.
+# for device Computer frames across separate roles.
 # docker compose -f deploy/compose.yaml -f deploy/compose.split.yaml ...
 services:
   api:

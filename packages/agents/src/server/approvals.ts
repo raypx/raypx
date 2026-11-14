@@ -86,7 +86,7 @@ function effectView(row: typeof effects.$inferSelect) {
   });
 }
 /** Cards deliberately omit the exact arguments, including file contents. */
-export function approvalCardData(request: ApprovalRequest) {
+function approvalCardData(request: ApprovalRequest) {
   return {
     toolCallId: request.toolCallId,
     toolName: request.toolName,

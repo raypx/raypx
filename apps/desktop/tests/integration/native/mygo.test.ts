@@ -16,21 +16,19 @@ async function fixture(version = config.version) {
   const desktop = await mkdtemp(join(tmpdir(), "raypx-mygo-prepare-"));
   roots.push(desktop);
   const payload = join(desktop, "payload");
-  await mkdir(join(payload, "herdr"), { recursive: true });
+  await mkdir(payload, { recursive: true });
   const cli = join(payload, process.platform === "win32" ? "raypx.exe" : "raypx");
   await writeFile(cli, "standalone CLI fixture");
-  await writeFile(join(payload, "herdr/runtime.json"), "{}");
   await writeFile(join(payload, "LICENSE"), "fixture");
   await writeFile(join(payload, "README.txt"), "fixture");
   await sealCliPayload(payload, {
-    format: 1,
+    format: 2,
     commit: "a".repeat(40),
     platform: process.platform,
     arch: process.arch,
     version: config.version,
     builtAt: 1,
     bunVersion: Bun.version,
-    herdrVersion: "fixture",
   });
   vi.spyOn(Bun, "spawn").mockReturnValue({
     stdout: new Response(`${version}\n`).body,

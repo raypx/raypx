@@ -1,8 +1,6 @@
 import type { DesktopApiRequest, DesktopApiResponse } from "../../../api.js";
 import type { DesktopRuntime } from "../../../bridge.js";
-import { join } from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
-import { smokeOwnerRequest, stopSmokeOwner } from "./owner.js";
+import { stopSmokeOwner } from "./owner.js";
 import { connectSmoke } from "./driver.js";
 
 const endpoint = process.env.RAYPX_NATIVE_SMOKE_SOCKET;
@@ -54,8 +52,6 @@ export const apiOrigin = await (async () => {
 const runtime = () => invoke<DesktopRuntime>("get_runtime", {});
 export const engine = {
   status: async () => (await runtime()).engine,
-  features: async () => (await runtime()).features ?? { localTerminalApprovals: false },
-  request: (method: string, params: unknown) => smokeOwnerRequest(directory, method, params),
   rendererRequest: (method: string, params: unknown) => invoke("local_request", { method, params }),
   start: () => invoke<boolean>("restart_engine", {}),
   replaceOwner: () => invoke<boolean>("restart_engine", { replaceOwner: true }),
@@ -73,88 +69,10 @@ export const nativeWindow = {
     driver.request<WindowState>("window", { action: "resize", width, height }),
 };
 /** The tray menu's own actions. */
-export function trayAction(action: "show" | "hide" | "pending" | "quit") {
+export function trayAction(action: "show" | "hide" | "quit") {
   return driver.request("tray", { action });
 }
 export async function quitDesktop() {
   await trayAction("quit").catch(() => {});
   driver.close();
-}
-
-type Throughput = { count: number; bytes: number; intact: boolean; ordered: boolean };
-
-async function evaluateThroughput(step: string, script: string): Promise<Throughput> {
-  const result = (await evaluate(`
-    try {
-      return {value: await (async () => { ${script} })()};
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "";
-      return {code: /^[A-Z][A-Z0-9_]{1,63}$/.test(message) ? message : "UNKNOWN_ERROR"};
-    }
-  `)) as { value: Throughput } | { code: string };
-  if ("code" in result) throw new Error(`Daemon throughput ${step} failed: ${result.code}`);
-  return result.value;
-}
-
-export async function measureNativeStream() {
-  const project = join(directory, "channel-throughput");
-  await mkdir(project, { recursive: true });
-  const text = "x".repeat(1024 * 1024);
-  await writeFile(join(project, "payload.txt"), text);
-  const root = (await smokeOwnerRequest(directory, "roots.register", { path: project })) as {
-    id: string;
-  };
-  const started = performance.now();
-  const renderer = await evaluateThroughput(
-    "file reads",
-    `let count=0,bytes=0,intact=true;for(let index=0;index<20;index++){const result=await window.__raypxSmokeRequest('local_request',{method:'files.read',params:{rootId:${JSON.stringify(root.id)},path:'payload.txt'}});count++;bytes+=result.text.length;intact&&=result.text==='x'.repeat(1024*1024);}return {count,bytes,intact,ordered:count===20}`,
-  );
-  const elapsedMs = performance.now() - started;
-  // The smoke runner is a real Bun executable on both platforms. The Windows
-  // runtime.info Bun shim is a batch file intended for invocation by a shell.
-  const events = await evaluateThroughput(
-    "tool events",
-    `
-    const ids = Array.from({length: 8}, () => crypto.randomUUID());
-    let count = 0, bytes = 0, intact = true, ordered = true, previous;
-    const observe = ({detail}) => {
-      if (previous !== undefined && detail.sequence !== previous + 1) ordered = false;
-      previous = detail.sequence;
-      const {event} = detail;
-      if (event.event !== 'tool.finished' || !ids.includes(event.data.id)) return;
-      ordered &&= event.data.id === ids[count];
-      const expected = String(count) + ':' + 'x'.repeat(256 * 1024 - 2);
-      intact &&= event.data.output === expected && event.data.exitCode === 0;
-      bytes += event.data.output.length;
-      count++;
-    };
-    window.addEventListener('raypx-smoke-local-event', observe);
-    try {
-      for (let index = 0; index < ids.length; index++) {
-        await window.__raypxSmokeRequest('local_request', {method: 'tools.run', params: {
-          id: ids[index], executable: ${JSON.stringify(process.execPath)}, cwd: ${JSON.stringify(project)},
-          args: ['-e', "process.stdout.write(" + JSON.stringify(String(index) + ':') + "+'x'.repeat(256*1024-2))"], timeoutMs: 10000,
-        }});
-      }
-      const deadline = Date.now() + 5000;
-      while (count < ids.length && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
-      return {count, bytes, intact, ordered};
-    } finally {
-      window.removeEventListener('raypx-smoke-local-event', observe);
-    }
-  `,
-  );
-  await smokeOwnerRequest(directory, "roots.remove", { id: root.id });
-  return {
-    renderer,
-    events,
-    packets: 20,
-    bytes: 20 * 1024 * 1024,
-    elapsedMs,
-    bytesPerSecond: (20 * 1024 * 1024) / (elapsedMs / 1000),
-  };
-}
-
-export async function measureNativeCors() {
-  return (await import("./cors.js")).measureNativeCors(driver);
 }

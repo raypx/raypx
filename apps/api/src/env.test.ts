@@ -39,8 +39,8 @@ it("defaults to every role and allows PostgreSQL-only split API and worker roles
   expect(getApiEnvironment({ SERVER_ROLE: "api" }).SERVER_ROLE).toBe("api");
   expect(getServerRole({ SERVER_ROLE: "relay" })).toBe("relay");
   expect(getServerRole({ SERVER_ROLE: "worker" })).toBe("worker");
-  expect(getServerRole({ SERVER_ROLE: "both" })).toBe("both");
-  expect(getApiEnvironment({ SERVER_ROLE: "both" }).SERVER_ROLE).toBe("both");
+  expect(() => getServerRole({ SERVER_ROLE: "both" })).toThrow("Invalid option");
+  expect(() => getApiEnvironment({ SERVER_ROLE: "both" })).toThrow("Invalid environment variables");
   expect(() => getServerRole({ SERVER_ROLE: "unknown" })).toThrow("Invalid option");
   expect(() => getApiEnvironment({ SERVER_ROLE: "relay" })).toThrow(
     "Invalid environment variables",

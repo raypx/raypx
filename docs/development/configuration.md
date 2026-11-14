@@ -42,7 +42,7 @@ See [S3 configuration](object-storage.md).
 | Open registration  | On            | API accepts new email/password accounts; off preserves existing sign-in |
 | Background cleanup | On            | Allows the next cleanup run, provided deployment `JOBS_ENABLED=true`    |
 
-`JOBS_ENABLED` remains false by default and gates Nitro maintenance/retained
+`JOBS_ENABLED` remains false by default and gates Nitro maintenance/
 account jobs. It does not disable durable Run recovery or Space routine worker scans. The
 page can pause and resume cleanup without rebuilding once that gate is enabled.
 It cannot override a disabled deployment. Retention, batch limits and the 15-minute

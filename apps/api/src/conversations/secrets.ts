@@ -9,12 +9,7 @@ export {
 } from "./secret-envelope.js";
 
 import type { SecretKeyProvider, SecretStore } from "./secret-types.js";
-export type {
-  WrappedDataKey,
-  SecretKeyProvider,
-  SealedSecret,
-  SecretStore,
-} from "./secret-types.js";
+export type { SecretKeyProvider, SealedSecret, SecretStore } from "./secret-types.js";
 
 /** Construction is pure; writes are performed atomically by the connection repository. */
 export function createPostgresSecretStore(db: Database, keys: SecretKeyProvider): SecretStore {

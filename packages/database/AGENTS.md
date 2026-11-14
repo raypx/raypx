@@ -11,13 +11,13 @@ current execution leases and fences.
 
 PostgreSQL authority for accounts, Spaces, Agents, conversations, durable Runs,
 approvals/effects, computers, routines, memory, Pages, skills, model/MCP/OpenAPI resources
-and sharing/delegation. Retained account/device projections stay distinct.
+and sharing/delegation. Device connectors use the current scoped computer schema.
 
 ## Interface
 
 `.`: connectDatabase and migrateDatabase. `/connection`: runtime connection/types without migration imports.
 `/schema`: current domain/auth tables (including `rate_limit`), Space-scoped
-relations and retained control projections. `/env`: validated database configuration.
+relations. `/env`: validated database configuration.
 
 ## Ownership
 
@@ -35,7 +35,7 @@ Finished-event JSON has a generated Page ID with the same composite foreign key.
 
 PostgreSQL authority for accounts, Spaces, Agents, conversations, durable Runs,
 approvals/effects, computers, routines, memory, Pages, skills, model/MCP/OpenAPI resources
-and sharing/delegation. Retained account/device projections stay distinct.
+and sharing/delegation. Device connectors use the current scoped computer schema.
 
 `spaces`, `space_members`, `agents` and `conversations` add the server-owned domain
 without replacing device records. Space-owned primary keys start with `space_id`;
@@ -148,39 +148,6 @@ and last-editor metadata. API owns validation, permissions and compare-and-swap.
 
 `storage_configuration` stores the S3 endpoint, bucket and encrypted credentials.
 `mail_configuration` stores the revisioned Resend sender, locale, delivery switch and encrypted key.
-`session_attachment` stores account- and project-scoped text projections with
-publication and expiry metadata. API owns encryption, object writes and admission.
-
-`control_credential` stores only restricted host credential hashes/expiry; API owns
-issuance and revocation. `control_observed_session` and `control_observed_request`
-store bounded observed projections separately from managed tasks. Their migrations
-are generated with the Raypx schema and never applied to a retired database.
-
-`control_owner.security_epoch/security_revoked_at` fence host credentials and stale
-bootstrap cookies during security revocation. Auth/API own their transition policy.
-
-`cloud_job` stores account-owned plans with CAS revisions and captured device epochs.
-Its UUID is the create request ID. `cloud_job_run` snapshots each immutable action;
-its primary key is also the managed task/command ID, with a separate unique scheduled
-occurrence index. Internal checked-at timestamps support fair active reconciliation
-and are absent from public DTOs. API owns claiming, overlap and uncertainty policy.
-Deleting a plan cascades its run log only; managed control tasks are separate.
-
-`context_document` stores current account-owned memory/templates; `context_version`
-stores complete immutable revisions. API owns CAS, quota, idempotency and restore
-policy. Read resolution joins current eligibility with selected revisions in one
-MVCC snapshot without the account write lock. Archive never deletes either table.
-The global `lower(id)` unique index enforces canonical document identity and supports
-case-insensitive creation retries without scanning other owners' documents.
-
-Partial context-command owner/window and expiry indexes cover only full context bodies;
-compacted unknown-delivery receipts remain outside replay/body maintenance scans.
-
-`context_deletion` stores body-free owner/revision receipts. API deletion removes the
-source and cascades its versions atomically; the reserved canonical ID prevents reuse.
-
-`runtime_instance` stores account/origin-bound public instance identities and revocation revisions. `instance_enrollment` stores ten-minute pending records with hashed approval codes and host tokens. API serializes ownership with instance advisory locks. These are registration records, separate from remote Host grants and local Agent persistence.
-
 `admin_audit` stores durable administration intents and terminal outcomes, with
 bounded non-secret change snapshots. Actor/target IDs deliberately have no cascading
 foreign keys: historical evidence survives account deletion. API owns transaction
@@ -236,6 +203,6 @@ indexes support the independently bounded snapshot/history projection.
 The historical credential wrapping identity grants no account authority; API
 resolves current Space membership before exposing metadata or dispatching tools.
 
-Device Computer state is separate from retained `control_device` and instance enrollment: `device_computers` stores account/origin-bound restricted-credential digests and expiring connection fences; `device_computer_pairings` stores one-use five-minute hashes. `device_space_devices`, `device_directory_grants` and `device_computer_selections` use composite same-Space/member ownership keys. Each directory grant references a device Computer. `device_connector_operations/events` retain bounded sequenced outcomes before ACK and cascade with the original Run. Command audit intents and terminal outcomes are append-only Space evidence; credentials and private output are never logs. Approval requests add nullable bounded device presentation metadata. The generated disposable baseline is recorded below.
+Device Computer state uses current connector records: `device_computers` stores account/origin-bound restricted-credential digests and expiring connection fences; `device_computer_pairings` stores one-use five-minute hashes. `device_space_devices`, `device_directory_grants` and `device_computer_selections` use composite same-Space/member ownership keys. Each directory grant references a device Computer. `device_connector_operations/events` retain bounded sequenced outcomes before ACK and cascade with the original Run. Command audit intents and terminal outcomes are append-only Space evidence; credentials and private output are never logs. Approval requests add nullable bounded device presentation metadata. The generated disposable baseline is recorded below.
 
-protected_input_requests binds Space/Conversation/Run/actor and one canonical call hash. Only answered rows may hold the encrypted envelope; consumption, expiry and cancellation clear all envelope columns. Same-Space actor foreign keys cascade with Runs. The regenerated disposable baseline is 20261114063551_baseline.
+protected_input_requests binds Space/Conversation/Run/actor and one canonical call hash. Only answered rows may hold the encrypted envelope; consumption, expiry and cancellation clear all envelope columns. Same-Space actor foreign keys cascade with Runs. The regenerated disposable baseline is 20261114073022_baseline.

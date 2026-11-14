@@ -5,7 +5,6 @@ import { createSkillsHandlers } from "./skills.js";
 import { createOpenApiServersHandlers } from "./openapi-servers.js";
 import { createMcpServersHandlers } from "./mcp-servers.js";
 import { Hono } from "hono";
-import { limitAttachmentBody } from "../../middleware/attachment-limit.js";
 import { RPCHandler } from "@orpc/server/fetch";
 import { TimeoutHandlerPlugin } from "@orpc/server/plugins";
 import { createRpcLoggingPlugin } from "../../logging.js";
@@ -14,18 +13,9 @@ import { createAdministrationHandlers } from "./admin.js";
 import { createRpcSetup } from "./setup.js";
 import type { ApiAppOptions } from "../../app/options.js";
 import type { ReadReadiness } from "../../app/readiness.js";
-import { createInstancesHandlers } from "./instances.js";
-import { createMemoryHandlers } from "./memory.js";
-import { createJobsHandlers } from "./jobs.js";
-import { createHostsHandlers } from "./hosts.js";
-import { createObservedHandlers } from "./observed.js";
 import { createConfigHandlers } from "./config.js";
-import { createDevicesHandlers } from "./devices.js";
-import { createTasksHandlers } from "./tasks.js";
 import { createApprovalsHandlers } from "./approvals.js";
-import { createRelayHandlers } from "./relay.js";
 import { createAccountHandlers } from "./account.js";
-import { createAttachmentHandlers } from "./attachments.js";
 import { createSpaceHandlers } from "./spaces.js";
 import { createModelConnectionsHandlers } from "./model-connections.js";
 import { createRoutineHandlers } from "./routines.js";
@@ -46,18 +36,9 @@ export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadi
     ...createSpaceHandlers(setup),
     modelConnections: createModelConnectionsHandlers(setup),
     admin: createAdministrationHandlers(setup, readReadiness),
-    attachments: createAttachmentHandlers(setup),
-    instances: createInstancesHandlers(setup),
-    memory: createMemoryHandlers(setup),
-    jobs: createJobsHandlers(setup),
-    hosts: createHostsHandlers(setup),
-    observed: createObservedHandlers(setup),
     configuration: createConfigHandlers(setup),
-    devices: createDevicesHandlers(setup),
-    tasks: createTasksHandlers(setup),
     approvals: createApprovalsHandlers(setup),
     protectedInputs: createProtectedInputHandlers(setup),
-    relay: createRelayHandlers(setup),
     account: createAccountHandlers(setup),
   });
 }
@@ -72,7 +53,6 @@ export function createRpcRoutes(
     c.header("cache-control", "no-store");
     await next();
   });
-  routes.use("/attachments/*", limitAttachmentBody);
   const rpc = new RPCHandler(router, {
     plugins: [
       new TimeoutHandlerPlugin({ timeout }),

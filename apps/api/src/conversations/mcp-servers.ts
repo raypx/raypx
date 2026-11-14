@@ -95,7 +95,7 @@ function validateHeaders(headers: McpCredentialHeaders): McpCredentialHeaders {
   }
   return normalized;
 }
-export async function mcpServerFingerprint(server: McpServer): Promise<string> {
+async function mcpServerFingerprint(server: McpServer): Promise<string> {
   const bytes = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(JSON.stringify([server.id, server.url])),

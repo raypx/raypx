@@ -64,10 +64,7 @@ function publicConnection(row: StoredModelConnection): ModelConnection {
 export function connectionModelId(id: string, model: string): string {
   return `connection:${id}:${model}`;
 }
-export async function connectionFingerprint(
-  connection: ModelConnection,
-  model: string,
-): Promise<string> {
+async function connectionFingerprint(connection: ModelConnection, model: string): Promise<string> {
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(
@@ -197,4 +194,3 @@ export function createModelConnections(
     },
   };
 }
-export type ModelConnectionsService = ReturnType<typeof createModelConnections>;

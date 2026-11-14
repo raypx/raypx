@@ -24,9 +24,8 @@ draft ports.
 Web and Desktop. Project/session pages, Waiting, New session and guest task drafts
 are removed, together with dependent Automations and Desktop project tools.
 Account/security, administration/configuration, authentication, public Web pages
-and device preferences remain. Earlier device/account Memory code is retained for
-its remaining consumers; Agent/Space memory opens from the conversation capability
-surface and is a separate PostgreSQL-backed feature.
+and device preferences remain. Agent/Space memory uses the server-owned repositories
+and opens from the conversation capability surface.
 The single sidebar owns direct Agents, groups, the compact Space switcher and
 Recent conversations. Recent is derived from existing list lastActivityAt
 projections, without another persisted history or authorization boundary. Plain
@@ -107,12 +106,13 @@ regions; a polite status announces reply activity and completion.
 - The MyGo host wraps the same Web UI in the system WebView.
 - Desktop chooses a server on first run and signs in through the system browser with
   OAuth and PKCE.
-- Desktop adds native notifications, the application menu and the device
+- Desktop adds the application menu and the device
   connector. It launches the bundled CLI by absolute path and never imports CLI
   source.
 - Granting a Space access to this device asks for native confirmation. The device
   connector keeps running after the window closes, so granted work continues.
 - The renderer receives no credentials.
+- Native notifications for server Agent Runs are not implemented; approvals remain in the shared workspace.
 
 The daemon bridges `/events` through bounded private open/read/send/close methods
 on the existing renderer channel. It fixes the destination and session headers;
@@ -188,6 +188,5 @@ CLI calls. The connector queues remote directory requests; the native host check
 the current cookie session and configured origin before showing a picker and
 confirmation. It rechecks before confirming the one-use token. Grant requests for
 other machines route through the backend. Headless devices use explicit interactive
-CLI consent; browser confirmation alone grants nothing. Retained instance
-enrollment no longer gates the server workspace; its independent runtime remains.
+CLI consent; browser confirmation alone grants nothing. The retired instance enrollment and device-owned execution runtime are removed.
 See [device setup](../development/device-connector.md).

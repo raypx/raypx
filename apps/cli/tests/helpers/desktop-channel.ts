@@ -3,7 +3,7 @@ import type { DesktopChannel } from "@raypx/contracts/desktop";
 import { daemonFetch, type DaemonEndpoint } from "../../src/runtime/daemon/endpoint.js";
 import { localFetch, type LocalAddress } from "../../src/runtime/local-http.js";
 
-export const pageOrigin = `mygo://${"a".repeat(32)}`;
+const pageOrigin = `mygo://${"a".repeat(32)}`;
 type Packet = {
   type: string;
   id?: string;

@@ -89,10 +89,9 @@ async function run(command: string[], cwd = desktop) {
 }
 export async function prepare(
   rendererRequired = true,
-  paths: { desktop: string; cli: string; renderer?: string; herdr?: string } = {
+  paths: { desktop: string; cli: string; renderer?: string } = {
     desktop,
     cli,
-    herdr: join(payload, "herdr"),
     renderer: smoke ? "artifacts/native-smoke/client" : "dist/client",
   },
 ) {

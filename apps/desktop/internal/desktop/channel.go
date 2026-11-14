@@ -26,7 +26,6 @@ type SessionKey func(profileDirectory string, create bool) ([]byte, error)
 type SessionReset func(profileDirectory string) ([]byte, error)
 type NativeClient interface {
 	Status() JSON
-	Features() JSON
 	Start() bool
 	Refresh() bool
 	ResetSessions() bool
@@ -44,7 +43,6 @@ type binding struct {
 	Protocol   int           `json:"protocolVersion"`
 	Capability string        `json:"nativeCapability"`
 	Address    nativeAddress `json:"nativeAddress"`
-	Features   JSON          `json:"features"`
 	Recovery   any           `json:"recovery"`
 }
 
@@ -64,7 +62,6 @@ type DaemonClient struct {
 	binding    *binding
 	client     *http.Client
 	status     JSON
-	features   JSON
 }
 
 func NewDaemonClient(cli CLIConfig, config Config, pageOrigin string, key SessionKey) *DaemonClient {
@@ -73,15 +70,13 @@ func NewDaemonClient(cli CLIConfig, config Config, pageOrigin string, key Sessio
 	if _, err := rand.Read(owner); err != nil {
 		panic("native owner identity unavailable")
 	}
-	return &DaemonClient{ownerId: hex.EncodeToString(owner), cli: cli, config: config, pageOrigin: pageOrigin, key: key, lifetime: ctx, cancel: cancel, status: JSON{"status": "starting"}, features: JSON{"localTerminalApprovals": false}}
+	return &DaemonClient{ownerId: hex.EncodeToString(owner), cli: cli, config: config, pageOrigin: pageOrigin, key: key, lifetime: ctx, cancel: cancel, status: JSON{"status": "starting"}}
 }
 func (c *DaemonClient) Status() JSON   { c.mu.Lock(); defer c.mu.Unlock(); return clone(c.status) }
-func (c *DaemonClient) Features() JSON { c.mu.Lock(); defer c.mu.Unlock(); return clone(c.features) }
 func (c *DaemonClient) fail(code string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.status = JSON{"status": "error", "code": code, "message": code}
-	c.features = JSON{"localTerminalApprovals": false}
 }
 
 type boundedOutput struct {
@@ -222,10 +217,7 @@ func (c *DaemonClient) startLocked() bool {
 	if !filepath.IsAbs(prepare.Profile) {
 		return fail(errors.New("INVALID_BOOTSTRAP"))
 	}
-	input := JSON{"action": "bootstrap", "protocol": 1, "ownerId": c.ownerId, "apiUrl": c.config.APIURL, "pageOrigin": c.pageOrigin, "configDirs": c.config.Directories}
-	if c.config.Directories == nil {
-		delete(input, "configDirs")
-	}
+	input := JSON{"action": "bootstrap", "protocol": 1, "ownerId": c.ownerId, "apiUrl": c.config.APIURL, "pageOrigin": c.pageOrigin}
 	if c.key != nil {
 		if key, err := c.key(prepare.Profile, prepare.CreateKey); err == nil && len(key) == 32 {
 			input["key"] = base64.StdEncoding.EncodeToString(key)
@@ -256,7 +248,6 @@ func (c *DaemonClient) startLocked() bool {
 	c.mu.Lock()
 	c.binding = &next
 	c.client = client
-	c.features = next.Features
 	c.status = JSON{"status": "ready", "sessionRecovery": next.Recovery}
 	c.mu.Unlock()
 	if previousClient != nil {
@@ -270,12 +261,6 @@ func (c *DaemonClient) startLocked() bool {
 }
 func (c *DaemonClient) Native(parent context.Context, input JSON) (any, error) {
 	timeout := 4 * time.Second
-	switch input["action"] {
-	case "pick":
-		timeout = 30 * time.Second
-	case "stop_quit_tasks":
-		timeout = 15 * time.Second
-	}
 	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
 	stop := context.AfterFunc(c.lifetime, cancel)

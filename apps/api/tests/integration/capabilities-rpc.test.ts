@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { createApiClient, type ApiClient } from "@raypx/client/api";
-import { controlAuth } from "@raypx/control/testing";
+import { testSession } from "../helpers/session.js";
 import { agentIdSchema } from "@raypx/core/agents";
 import {
   pageBodySchema,
@@ -110,7 +110,7 @@ const scopedPageList = z.strictObject({
 });
 
 function fixture() {
-  const auth = controlAuth(accountId);
+  const auth = testSession(accountId);
   const scope = resolveSpaceScope(
     { spaceId, accountId, role: "owner", createdAt: now },
     accountId,

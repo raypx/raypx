@@ -8,7 +8,6 @@ import jobs from "@raypx/jobs/messages/zh";
 import memory from "@raypx/memory/messages/zh";
 import analytics from "@raypx/analytics/messages/zh";
 import blocks from "@raypx/blocks/messages/zh";
-import instances from "@raypx/instances/messages/zh";
 import desktopLogin from "./desktopLogin.json" with { type: "json" };
 import engine from "./engine.json" with { type: "json" };
 import localWorkspace from "./localWorkspace.json" with { type: "json" };
@@ -24,7 +23,6 @@ export default {
   ...jobs,
   ...analytics,
   ...blocks,
-  ...instances,
   desktopLogin,
   engine,
   localWorkspace,

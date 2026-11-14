@@ -4,7 +4,8 @@
   "workspaces": {
     ".": {
       "entry": ["deploy/manifests.ts", "deploy/sources.ts"],
-      "ignoreDependencies": ["@raypx/testing", "turbo"]
+      "ignoreDependencies": ["@raypx/testing", "turbo"],
+      "ignoreBinaries": ["expo"]
     },
     "apps/api": {
       "entry": [
@@ -13,10 +14,8 @@
         "src/runtime/plugin.ts",
         "src/jobs/runtime/*.ts",
         "vite.app.config.ts",
-        "tests/helpers/control-server.ts",
+        "tests/helpers/workspace-server.ts",
         "tests/fixtures/deployment.ts",
-        "tests/fixtures/relay-process.ts",
-        "tests/fixtures/task-lifecycle-relay.ts",
         "tests/types/*.ts"
       ]
     },
@@ -27,10 +26,7 @@
         "vite.app.config.ts",
         "scripts/host/*.ts",
         "tests/native/fixtures/*.ts",
-        "e2e/**/*.spec.ts",
-        "perf/*.bench.ts",
-        "perf/browser/main.tsx",
-        "perf/browser/vite.app.config.ts"
+        "e2e/**/*.spec.ts"
       ]
     },
     "apps/web": {
@@ -45,7 +41,6 @@
       "entry": [
         "tests/smoke/*.ts",
         "tests/fixtures/**/*.{ts,mjs}",
-        "perf/*.bench.ts",
         "scripts/*.ts",
         "drizzle.config.ts"
       ],
@@ -73,14 +68,14 @@
     "infra/railway": {
       "entry": ["scripts/iac-preload.ts"]
     },
-    "infra/cloudflare": {
-      "entry": ["src/index.ts", "vite.app.config.ts"]
-    },
     "packages/runtime-node": {
       "entry": ["src/*.ts"]
     },
     "packages/i18n": {
       "entry": ["tests/types/*.ts"]
+    },
+    "apps/mobile": {
+      "entry": ["app/**/*.{ts,tsx}", "tests/mocks/*.{ts,tsx}"]
     }
   }
 }

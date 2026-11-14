@@ -142,11 +142,11 @@ describe("API diagnostic events", () => {
         environment: "test",
         operation: "job.cleanup",
         body: secret.body,
-        job: { name: "maintenance:cleanup", contextReceipts: "2", prompt: secret.body },
+        job: { name: "maintenance:cleanup", rateLimits: "2", prompt: secret.body },
       },
     });
     await runtime().flush();
-    expect(events[0]?.job).toEqual({ name: "maintenance:cleanup", contextReceipts: "2" });
+    expect(events[0]?.job).toEqual({ name: "maintenance:cleanup", rateLimits: "2" });
     expect(runtime().stats()).toMatchObject({ delivered: 1, pending: 0, failed: 0 });
     expectPrivateDataAbsent();
   });

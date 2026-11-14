@@ -33,7 +33,7 @@ func requireInstanceHeld(t *testing.T, directory string) {
 func TestDesktopRejectsCanceledAndClosedSaves(t *testing.T) {
 	directory := t.TempDir()
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil}})
+	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil}, Client: &shutdownNative{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,6 +63,12 @@ type blockedShutdownUI struct {
 	release chan struct{}
 }
 
+func (*blockedShutdownUI) ConfirmDevicePairing(host.DeviceConfirmation) (bool, error) {
+	return false, nil
+}
+func (*blockedShutdownUI) ConfirmDeviceDirectoryGrant(host.DeviceConfirmation) (bool, error) {
+	return false, nil
+}
 func (*blockedShutdownUI) IsVisible() bool           { return false }
 func (*blockedShutdownUI) Hide() bool                { return true }
 func (*blockedShutdownUI) OpenExternal(string) error { return nil }
@@ -75,7 +81,7 @@ func (ui *blockedShutdownUI) PickDirectory() (string, error) {
 func TestDesktopCloseBoundsDialogWaitAndRetainsLock(t *testing.T) {
 	directory := t.TempDir()
 	config, _ := host.ParseConfig(nil)
-	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil}})
+	desktop, err := host.New(config, directory, host.Options{CLI: host.CLIConfig{Binary: "/unstarted-cli", Version: "0.1.0", Args: nil}, Client: &shutdownNative{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +94,7 @@ func TestDesktopCloseBoundsDialogWaitAndRetainsLock(t *testing.T) {
 	})
 	requestDone := make(chan error, 1)
 	go func() {
-		_, err := desktop.Request(context.Background(), "pick_directory", host.JSON{})
+		_, err := desktop.Request(context.Background(), "grant_device_directory", host.JSON{"spaceId": "space", "deviceId": "device"})
 		requestDone <- err
 	}()
 	awaitShutdownSignal(t, ui.started, "directory picker did not start")
@@ -125,4 +131,17 @@ func TestDesktopCloseBoundsDialogWaitAndRetainsLock(t *testing.T) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+}
+
+type shutdownNative struct{}
+
+func (*shutdownNative) Status() host.JSON                    { return host.JSON{"status": "ready"} }
+func (*shutdownNative) Start() bool                          { return true }
+func (*shutdownNative) Refresh() bool                        { return true }
+func (*shutdownNative) ResetSessions() bool                  { return true }
+func (*shutdownNative) ReplaceOwner() bool                   { return true }
+func (*shutdownNative) Close()                               {}
+func (*shutdownNative) Channel(context.Context) (any, error) { return nil, nil }
+func (*shutdownNative) Native(context.Context, host.JSON) (any, error) {
+	return host.JSON{"accountId": "member", "serverOrigin": "https://raypx.com"}, nil
 }

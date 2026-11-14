@@ -40,9 +40,9 @@ The rules below apply to the Compose host workflow.
   have no published host ports; the management panel stays behind SSH.
 - Default to `SERVER_ROLE=all`: API, recovery worker and Relay in one backend without Redis.
   compose.split.yaml selects api/worker/relay roles from the same image; new Run
-  coordination uses PostgreSQL only. Optional Redis routes device Computer frames and retained device
-  transport across processes. Split roles share DEVICE_CONNECTOR_ORIGIN. update.sh --split selects that topology.
-- Run additive, backward-compatible migrations against that environment's isolated database before replacing API or Relay. Use update.sh; migration failure must preserve the old API and Relay.
+  coordination uses PostgreSQL only. Redis is required for device Computer frames
+  routed across processes. Split roles share DEVICE_CONNECTOR_ORIGIN. update.sh --split selects that topology.
+- Apply the current baseline only to a fresh isolated database; do not import older state. Use update.sh; migration failure must preserve the old API and Relay.
 - Require a digest-pinned PostgreSQL image and a project-private Traefik ingress network. Trust exact proxy addresses, never a shared container subnet.
 - Build versioned images sequentially with a bounded container builder. Preserve
   previous image versions and persistent volumes for rollbacks.

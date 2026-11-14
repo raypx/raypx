@@ -58,8 +58,7 @@ account, Space and Conversation. Restoration and failed-Run retry only restore
 editing state. Never resend without an explicit action or render provider content as HTML.
 
 `/server` exposes database-free repository ports and Agent/Conversation projections.
-`/server/postgres` implements persistence. These are separate from device-owned
-tasks and execution. Core owns the
+`/server/postgres` implements persistence. Agent execution stays in the backend; device I/O uses the Computer port. Core owns the
 schemas; API resolves a fresh SpaceScope through Spaces on every request.
 
 Every read and mutation requires that scope and filters by `space_id` in SQL.

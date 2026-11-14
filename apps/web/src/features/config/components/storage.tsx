@@ -144,7 +144,7 @@ function StorageForm({
             orientation="horizontal"
             className="justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5"
           >
-            <FieldLabel htmlFor="s3-enabled">{t("allowUploads")}</FieldLabel>
+            <FieldLabel htmlFor="s3-enabled">{t("enabledSetting")}</FieldLabel>
             <Switch
               id="s3-enabled"
               checked={values.enabled}

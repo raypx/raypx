@@ -9,7 +9,7 @@ import { createRelayRuntime } from "./relay.js";
 import { createWorkerRuntime } from "./worker.js";
 import { migrateApiDatabase } from "./migrations.js";
 
-export async function createBackendRuntime(inputs: Record<string, string | undefined>) {
+async function createBackendRuntime(inputs: Record<string, string | undefined>) {
   const role = getServerRole(inputs);
   if (role === "relay")
     return { role: "relay" as const, ...(await createRelayRuntime(getRelayEnvironment(inputs))) };

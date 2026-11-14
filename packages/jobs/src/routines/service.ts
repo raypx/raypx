@@ -13,7 +13,7 @@ import type {
   RoutinesService,
 } from "./types.js";
 
-export const ROUTINE_BODY_BYTES = 65_536;
+const ROUTINE_BODY_BYTES = 65_536;
 function randomKey() {
   return Array.from(crypto.getRandomValues(new Uint8Array(32)), (value) =>
     value.toString(16).padStart(2, "0"),

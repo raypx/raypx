@@ -1,151 +1,12 @@
-import { instanceStatusSchema } from "@raypx/instances";
 import { z } from "zod";
-import {
-  localParams,
-  fileEntrySchema,
-  rootGrantSchema,
-  type LocalParams,
-  type LocalMethod,
-} from "./local.js";
-import { deviceSchema, deviceProjectSchema } from "./tasks.js";
-import {
-  taskSchema,
-  modelSelectionSchema,
-  modelCatalogSchema,
-  taskContinuationSchema,
-  taskReviewSchema,
-  capabilitySchema,
-  agentEventSchema,
-  humanRequestSchema,
-  taskActivitySchema,
-  taskContextSnapshotSchema,
-} from "@raypx/core/tasks";
-import { observedProjectionSchema, terminalRequestSchema } from "./terminal.js";
-import {
-  contextDocumentSchema,
-  contextDocumentSummarySchema,
-  contextVersionSchema,
-  contextDeleteResultSchema,
-} from "@raypx/core/memory";
-import { jobDefinitionSchema, jobRunSchema } from "@raypx/core/jobs";
-import { agentRunStatusSchema } from "@raypx/core/agent-runs";
-
-const settings = localParams["approvals.local.configure"];
-const connector = z.object({
-  provider: z.enum(["claude", "codex"]),
-  installed: z.boolean(),
-  modified: z.boolean(),
-  requiresTrust: z.boolean(),
-  error: z.string().nullable(),
-  hookInstalled: z.boolean().optional(),
-  updateAvailable: z.boolean().optional(),
-  settingsFile: z.string().optional(),
-  repairable: z.boolean().optional(),
-});
-const connectorAction = z
-  .object({
-    provider: z.enum(["claude", "codex"]),
-    requiresTrust: z.boolean(),
-    preservedModified: z.boolean(),
-  })
-  .passthrough();
-const fileContent = z.object({ text: z.string(), version: z.string() });
-const acknowledged = z.object({ accepted: z.boolean() });
-const cancelled = z.object({ cancelled: z.boolean() });
-
-/** Methods used by the renderer, with replies owned by the local protocol rather than callers. */
+import { localParams, type LocalParams, type LocalMethod } from "./local.js";
 export const localResults = {
-  "instance.status": instanceStatusSchema,
-  "instance.begin": z.object({
-    registered: z.boolean(),
-    code: z.string().optional(),
-    expiresAt: z.iso.datetime().optional(),
+  "runtime.info": z.object({
+    version: z.string(),
+    protocolVersion: z.literal(1),
+    owner: z.literal("daemon"),
   }),
-  "instance.poll": z.object({ status: z.enum(["pending", "approved"]) }),
-  "instance.refresh": instanceStatusSchema,
-  "memory.list": z.array(contextDocumentSummarySchema),
-  "memory.get": contextDocumentSchema,
-  "memory.create": contextDocumentSchema,
-  "memory.update": contextDocumentSchema,
-  "memory.archive": contextDocumentSchema,
-  "memory.delete": contextDeleteResultSchema,
-  "memory.history": z.array(contextVersionSchema),
-  "memory.restore": contextDocumentSchema,
-  "memory.resolve": taskContextSnapshotSchema,
-  "roots.list": z.array(rootGrantSchema),
-  "roots.remove": z.object({ removed: z.literal(true) }),
-  "files.list": z.object({
-    entries: z.array(fileEntrySchema),
-    total: z.number(),
-    offset: z.number(),
-  }),
-  "files.stat": fileEntrySchema,
-  "files.read": fileContent,
-  "files.write": fileContent,
-  "files.mkdir": fileEntrySchema,
-  "files.move": fileEntrySchema,
-  "files.delete": z.object({ deleted: z.literal(true) }),
-  "jobs.list": z.array(jobDefinitionSchema),
-  "jobs.create": jobDefinitionSchema,
-  "jobs.update": jobDefinitionSchema,
-  "jobs.delete": z.object({ deleted: z.literal(true) }),
-  "jobs.run": jobRunSchema,
-  "jobs.history": z.array(jobRunSchema),
-  "jobs.triggerInfo": z.object({
-    webhook: z.object({ url: z.url(), key: z.string() }).nullable(),
-    github: z.object({ url: z.url(), key: z.string() }).nullable().optional(),
-    email: z.email().nullable(),
-  }),
-  "jobs.rotateWebhook": z.object({ url: z.url(), key: z.string() }),
-  "tools.run": z.object({
-    id: z.string(),
-    exitCode: z.number(),
-    output: z.string(),
-    cancelled: z.boolean(),
-  }),
-  "tools.cancel": cancelled,
-  "terminal.open": z.object({ id: z.string() }),
-  "terminal.input": acknowledged,
-  "terminal.paste": acknowledged,
-  "terminal.key": acknowledged,
-  "terminal.mouse": acknowledged,
-  "terminal.scroll": acknowledged,
-  "terminal.resize": acknowledged,
-  "terminal.close": cancelled,
-  "agents.models.list": modelCatalogSchema,
-  "agents.models.default": z.object({ default: modelSelectionSchema.nullable() }),
-  "agents.models.setDefault": z.object({ default: modelSelectionSchema.nullable() }),
-  "agents.projects": z.array(deviceProjectSchema),
-  "agents.capabilities": z.array(capabilitySchema),
-  "agents.configure": z.object({ configured: z.literal(true) }),
-  "agents.local.device": deviceSchema,
-  "agents.local.list": z.array(taskSchema),
-  "agents.local.get": z.object({
-    task: taskSchema,
-    runStatus: agentRunStatusSchema,
-    piContinuation: taskContinuationSchema.optional(),
-    review: taskReviewSchema.optional(),
-    events: z.array(z.object({ cursor: z.number(), event: agentEventSchema })),
-    requests: z.array(humanRequestSchema),
-    activity: z.array(taskActivitySchema),
-    activityBefore: z.number().optional(),
-  }),
-  "agents.local.approvals": z.array(humanRequestSchema),
-  "agents.local.execute": z.discriminatedUnion("ok", [
-    z.object({ ok: z.literal(true), value: z.unknown() }),
-    z.object({ ok: z.literal(false), code: z.string() }),
-  ]),
-  "agents.local.clear": z.object({ removed: z.number() }),
-  "agents.local.detach": z.object({ detached: z.literal(true) }),
-  "approvals.local.settings": settings,
-  "approvals.local.configure": settings,
-  "approvals.local.list": observedProjectionSchema,
-  "approvals.local.get": terminalRequestSchema,
-  "approvals.local.decide": terminalRequestSchema,
-  "connectors.status": z.array(connector),
-  "connectors.install": connectorAction,
-  "connectors.uninstall": connectorAction,
-} as const satisfies Partial<Record<LocalMethod, z.ZodType>>;
+} as const satisfies Record<LocalMethod, z.ZodType>;
 export type LocalClientMethod = keyof typeof localResults;
 export type LocalResult<M extends LocalClientMethod> = z.output<(typeof localResults)[M]>;
 export type LocalTransport = (method: LocalClientMethod, params: unknown) => Promise<unknown>;
@@ -162,6 +23,6 @@ export function createLocalClient(transport: LocalTransport): LocalClient {
     const validated = localParams[method].parse(params);
     const value = await transport(method, validated);
     // Indexing a schema map loses the method/reply correlation inside the implementation.
-    return localResults[method].parse(value) as LocalResult<M>;
+    return localResults[method].parse(value);
   };
 }

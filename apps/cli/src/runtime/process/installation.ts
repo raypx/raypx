@@ -14,14 +14,13 @@ import { cliBuild } from "../daemon/build.js";
 import { LocalError } from "../errors.js";
 
 export interface InstallationManifest {
-  format: 1;
+  format: 2;
   commit: string;
   platform: string;
   arch: string;
   version: string;
   builtAt: number;
   bunVersion: string;
-  herdrVersion: string;
   files: Record<string, string>;
 }
 const suffix = process.platform === "win32" ? ".exe" : "";
@@ -64,14 +63,13 @@ export function verifyInstallation(
     !Number.isSafeInteger(manifest.builtAt) ||
     manifest.builtAt <= 0 ||
     typeof manifest.version !== "string" ||
-    manifest.format !== 1 ||
+    manifest.format !== 2 ||
     manifest.platform !== process.platform ||
     manifest.arch !== process.arch ||
-    typeof manifest.bunVersion !== "string" ||
-    typeof manifest.herdrVersion !== "string"
+    typeof manifest.bunVersion !== "string"
   )
     throw new LocalError("HOST_VERSION_MISMATCH", "CLI resources do not match this build");
-  for (const required of ["raypx" + suffix, "herdr/runtime.json", "LICENSE", "README.txt"])
+  for (const required of ["raypx" + suffix, "LICENSE", "README.txt"])
     if (!manifest.files[required])
       throw new LocalError("INSTALLATION_CONFLICT", "Incomplete CLI runtime manifest");
   const found = new Set<string>();

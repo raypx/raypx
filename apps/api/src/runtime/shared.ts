@@ -1,17 +1,13 @@
 import type { ConversationModels } from "../conversations/models.js";
 import { composeAgents } from "./agents.js";
-import { InstanceService } from "@raypx/instances/server";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
 import { createAgentsRepository } from "@raypx/agents/server/postgres";
-import { createInstanceSigner, instanceDigest, verifyProof } from "@raypx/instances/crypto";
-import { createInstanceRepository } from "../instances/repository.js";
 import { createConfigRepository } from "../config/repository.js";
 import { createAccessPolicy } from "../access.js";
 import { createConfigService } from "../config/service.js";
 import { createConfigReads } from "../config/reads.js";
 import { createResendSettings, databaseMailer } from "../config/resend.js";
 import type { ConfigRepository } from "../config/types.js";
-import type { ObjectStorage } from "@raypx/storage";
 import { createAuditedAuthAdapter } from "../admin/auth-adapter.js";
 import {
   createAdministrationRepository,
@@ -28,19 +24,7 @@ import type { RedisResources } from "./redis.js";
 import type { ApiEnvironment } from "../env.js";
 import { createAdapters, createAuthConfig } from "./adapters.js";
 import { createLifecycle } from "./lifecycle.js";
-import {
-  CloudJobsService,
-  type CloudJobExecutor,
-  type CloudJobsRepository,
-} from "@raypx/jobs/server";
-import { JobError } from "@raypx/core/jobs";
-import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
-import { createScheduleTick } from "../jobs/tick.js";
-import type { ContextLibraryRepository } from "@raypx/memory/server";
-import { createStorageSettings, databaseStorage } from "../storage/config.js";
-import { createSessionAttachments } from "../storage/attachments.js";
-import { composeControl } from "./control.js";
-import type { ControlService } from "@raypx/control";
+import { createStorageSettings } from "../storage/config.js";
 
 export interface RuntimeProviders {
   createModels?: () => ConversationModels;
@@ -49,19 +33,13 @@ export interface RuntimeProviders {
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
   createConfigRepository?: (db: Database, audit: AuditService) => ConfigRepository;
   createAdministrationRepository?: (db: Database) => AdministrationRepository;
-  createJobsRepository?: (db: Database) => CloudJobsRepository;
-  createContextRepository?: (db: Database) => ContextLibraryRepository;
   /** Override the database-configured S3 provider for attachments. */
-  storage?: ObjectStorage;
 }
 
 export interface RuntimeResources extends RuntimeProviders {
   logger: ApiLogging;
   /** Header owned by the platform entry, independently of configurable auth forwarding headers. */
   clientIpHeader?: string;
-  onRevoke?: (userId: string, deviceId: string) => Promise<void>;
-  createJobExecutor?: (control: ControlService) => CloudJobExecutor;
-  relayReadiness?: () => Promise<void>;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
   /** Owned by the runtime: sessions, rate limits and configuration notifications. */
@@ -82,15 +60,6 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const reads = createConfigReads(redis?.configNotifications);
     lifecycle.own(async () => reads.close());
     const mailer = databaseMailer(db, environment.APP_KEY, reads);
-    const signer = createInstanceSigner(environment.APP_KEY);
-    const instances = new InstanceService({
-      origin: environment.AUTH_URL,
-      repository: createInstanceRepository(db),
-      digest: instanceDigest,
-      verify: verifyProof,
-      issue: (binding) => signer.issue(binding),
-      issuerKey: signer.publicKey,
-    });
     const access = createAccessPolicy();
     const administration = (
       resources.createAdministrationRepository ?? createAdministrationRepository
@@ -102,37 +71,11 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       access,
       reads,
     });
-    const { control, projects, memory, resolveContext } = composeControl(
-      db,
-      resources.createContextRepository,
-    );
-    const injectedStorage = resources.storage;
-    const readInjectedStorage = async () => injectedStorage ?? null;
-    const attachments = createSessionAttachments(
-      db,
-      injectedStorage
-        ? { read: readInjectedStorage, readCached: readInjectedStorage }
-        : databaseStorage(db, environment.APP_KEY, reads),
-      projects,
-    );
-    const unavailable = async (): Promise<never> => {
-      throw new JobError("CONTROL_UNAVAILABLE");
-    };
-    const cloudJobs = new CloudJobsService({
-      repository: (resources.createJobsRepository ?? createCloudJobsRepository)(db),
-      executor: resources.createJobExecutor?.(control) ?? {
-        validate: unavailable,
-        execute: unavailable,
-        task: unavailable,
-      },
-      enabled: environment.JOBS_ENABLED,
-    });
     async function revokeDeviceComputers(accountId: string) {
       await deviceComputersRepository.revokeAccount(accountId);
     }
     const auth = createAuth({
-      revokeHostAuthorizations: async (userId, sessionId) => {
-        await control.credentials.revokeHostAuthorizations(userId, sessionId);
+      revokeDeviceConnectors: async (userId) => {
         await revokeDeviceComputers(userId);
       },
       registrationAllowed: async () => (await config.read()).values.registrationEnabled,
@@ -207,11 +150,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       auth,
       audit,
       administration,
-      attachments,
-      control,
       config,
-      cloudJobs,
-      memory,
       readSession,
       jobs: {
         cleanup: createCleanupJob({
@@ -220,7 +159,6 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
           configuration: config,
           enabled: environment.JOBS_ENABLED,
         }),
-        tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
         deviceComputers,
@@ -244,7 +182,6 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         conversations,
         conversationModels,
         agents: createAgentsRepository(db),
-        instances,
         audit,
         administration,
         access,
@@ -253,12 +190,6 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         storageSettings: createStorageSettings(db, environment.APP_KEY, audit, reads),
         resendSettings: createResendSettings(db, environment.APP_KEY, audit, reads),
         jobsEnabled: environment.JOBS_ENABLED,
-        control,
-        cloudJobs,
-        memory,
-        attachments,
-        resolveContext,
-        ...(resources.onRevoke ? { onRevoke: resources.onRevoke } : {}),
         authHandler: (request) => auth.handler(request),
         readSession,
         allowedOrigins: environment.allowedOrigins,
@@ -266,8 +197,14 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         logger,
         readiness: {
           ...readiness,
+          ...(environment.SERVER_ROLE === "all" && environment.REDIS_URL
+            ? {
+                relay: async () => {
+                  if (!deviceConnector.ready()) throw new Error("Connector unavailable");
+                },
+              }
+            : {}),
           ...(computerProvider ? { sandbox: () => computerProvider.describe() } : {}),
-          ...(resources.relayReadiness ? { relay: resources.relayReadiness } : {}),
         },
         ...(rateLimit ? { rateLimit } : {}),
       }),

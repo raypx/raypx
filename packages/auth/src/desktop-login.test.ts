@@ -94,12 +94,10 @@ async function fixture() {
     webOrigin: web,
     nonce: "n".repeat(43),
   };
-  async function begin(accountId?: string, nonce = start.nonce, reauthorizeHost?: true) {
+  async function begin(nonce = start.nonce) {
     const response = await app(desktopLoginPaths.start, {
       ...start,
       nonce,
-      accountId,
-      reauthorizeHost,
     });
     expect(response.status).toBe(200);
     const { authorizationUrl } = (await response.json()) as { authorizationUrl: string };
@@ -149,12 +147,11 @@ async function fixture() {
 
 it("uses the standard OAuth code and token endpoints, then creates an independent Desktop session once", async () => {
   const { auth, user, source, app, browser, begin, decide, authorize, token } = await fixture();
-  const { oauthQuery, nonce } = await begin(user.id);
+  const { oauthQuery, nonce } = await begin();
   expect(await (await app(desktopLoginPaths.inspect, { oauthQuery }, browser)).json()).toEqual({
     device: "Test computer",
     accountId: user.id,
     email: user.email,
-    matchesProfile: true,
   });
   const callback = await authorize(oauthQuery);
   expect(callback.origin + callback.pathname).toBe(redirectUri);
@@ -193,24 +190,17 @@ it("uses the standard OAuth code and token endpoints, then creates an independen
   });
 });
 
-it("rejects a different profile account, invalid PKCE and a revoked source session", async () => {
-  const { ctx, source, user, app, browser, start, begin, decide, authorize, token } =
-    await fixture();
+it("rejects a changed browser account, invalid PKCE and a revoked source session", async () => {
+  const { ctx, source, app, start, begin, decide, authorize, token } = await fixture();
   expect(
     (await app(desktopLoginPaths.start, { ...start, webOrigin: "https://other.test" })).status,
   ).toBe(400);
-  const wrong = await begin("different-account");
-  expect(
-    await (await app(desktopLoginPaths.inspect, { oauthQuery: wrong.oauthQuery }, browser)).json(),
-  ).toMatchObject({ matchesProfile: false });
-  expect((await decide(wrong.oauthQuery)).status).toBe(403);
-  expect((await decide(wrong.oauthQuery, false)).status).toBe(200);
-  const attempt = await begin(user.id, "x".repeat(43));
+  const attempt = await begin("x".repeat(43));
   expect((await decide(attempt.oauthQuery, true, "different-account")).status).toBe(403);
   expect((await decide(attempt.oauthQuery.replace(state, "z".repeat(43)))).status).toBe(400);
   const pkce = await authorize(attempt.oauthQuery);
   expect((await token(pkce.searchParams.get("code")!, "b".repeat(43))).status).toBe(400);
-  const { oauthQuery, nonce } = await begin(user.id, "y".repeat(43));
+  const { oauthQuery, nonce } = await begin("y".repeat(43));
   const callback = await authorize(oauthQuery);
   const response = await token(callback.searchParams.get("code")!);
   expect(response.status).toBe(200);
@@ -220,40 +210,4 @@ it("rejects a different profile account, invalid PKCE and a revoked source sessi
   };
   await ctx.internalAdapter.deleteSession(source.token);
   expect((await app(desktopLoginPaths.exchange, { accessToken, idToken, nonce })).status).toBe(400);
-});
-
-it("requires a fresh session for Host approval and preserves its authentication time", async () => {
-  const { app, browser, user, begin, decide, ctx, sign, token, auth } = await fixture();
-  const { oauthQuery, nonce } = await begin(user.id, undefined, true);
-  expect(
-    await (await app(desktopLoginPaths.inspect, { oauthQuery }, browser)).json(),
-  ).toMatchObject({ matchesProfile: true, reauthenticationRequired: true });
-  expect((await decide(oauthQuery)).status).toBe(403);
-  const fresh = await ctx.internalAdapter.createSession(user.id);
-  const headers = { origin: web, cookie: await sign(fresh.token) };
-  expect(
-    await (await app(desktopLoginPaths.inspect, { oauthQuery }, headers)).json(),
-  ).toMatchObject({ matchesProfile: true, reauthenticationRequired: false });
-  const accepted = await app(
-    desktopLoginPaths.decide,
-    { oauthQuery, approve: true, accountId: user.id },
-    headers,
-  );
-  expect(accepted.status).toBe(200);
-  const { redirectUri: callback } = (await accepted.json()) as { redirectUri: string };
-  const issued = await token(new URL(callback).searchParams.get("code")!);
-  expect(issued.status).toBe(200);
-  const { access_token: accessToken, id_token: idToken } = (await issued.json()) as {
-    access_token: string;
-    id_token: string;
-  };
-  const exchange = await app(desktopLoginPaths.exchange, { accessToken, idToken, nonce });
-  expect(exchange.status).toBe(200);
-  const cookie = exchange.headers
-    .getSetCookie()
-    .map((value) => value.split(";")[0])
-    .join("; ");
-  expect((await readAuthSession(auth, new Headers({ cookie })))?.session.createdAt).toEqual(
-    fresh.createdAt,
-  );
 });

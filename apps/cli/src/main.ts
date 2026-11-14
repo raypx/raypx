@@ -6,28 +6,16 @@ import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "./diagn
 import { createCliLogging } from "./logging.js";
 
 const args = process.argv.slice(2);
-if (args[0] === "--herdr-internal") {
-  const { herdrInternal } = await import("./runtime/process/herdr-internal.js");
-  await herdrInternal(args.slice(1));
-} else {
+{
   const logging = await createCliLogging();
   const startedAt = performance.now();
   const options: { dataDir?: string; profile?: string; recordDiagnostic: RecordDiagnostic } = {
     recordDiagnostic: logging.record,
   };
-  let mode: "command" | "stdio" | "version" | "tui" = "command";
+  const mode = "command" as const;
   let code: string | undefined;
   try {
     const invocation = parseCliArgs(args);
-    mode = invocation.version
-      ? "version"
-      : (invocation.positionals[0] === "stdio" ||
-            (invocation.positionals[0] === "daemon" && invocation.positionals[1] === "proxy")) &&
-          !invocation.help
-        ? "stdio"
-        : invocation.positionals[0] === "tui" && !invocation.help
-          ? "tui"
-          : "command";
     await runCommand(invocation, options);
   } catch (error) {
     code = diagnosticCode(error);

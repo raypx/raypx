@@ -109,7 +109,7 @@ function guard(value: unknown, values: readonly string[]) {
   }
   if (contains(value)) throw new OpenApiServerError("OPERATION_FAILED");
 }
-export async function openApiFingerprint(server: StoredOpenApiServer) {
+async function openApiFingerprint(server: StoredOpenApiServer) {
   const bytes = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(

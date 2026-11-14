@@ -231,3 +231,24 @@ it("routes split-role Computer frames through the existing broker without granti
     }),
   );
 });
+
+it("refuses connector admission when its configured broker is unavailable", async () => {
+  let available = false;
+  const f = fixture({
+    nodeId: "owner",
+    ready: () => available,
+    start: async () => {},
+    invoke: async () => {
+      throw new Error("Unexpected broker call");
+    },
+    close: async () => {},
+  });
+  expect(f.registry.ready()).toBe(false);
+  await expect(f.pair()).rejects.toThrow("DEVICE_OFFLINE");
+  expect(f.repository.authenticate).not.toHaveBeenCalled();
+  available = true;
+  expect(f.registry.ready()).toBe(true);
+  await f.pair();
+  await f.registry.shutdown();
+  expect(f.registry.ready()).toBe(false);
+});

@@ -11,9 +11,9 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
     rateLimit: [],
   };
   const origin = "https://api.example.test";
-  const revokeHostAuthorizations = vi.fn(async () => {});
+  const revokeDeviceConnectors = vi.fn(async () => {});
   const auth = createAuth({
-    revokeHostAuthorizations,
+    revokeDeviceConnectors,
     database: memoryAdapter(data),
     mailer: { sendVerification: async () => {}, sendPasswordReset: async () => {} },
     config: {
@@ -85,15 +85,15 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
     .spyOn((await auth.$context).internalAdapter, "deleteSession")
     .mockRejectedValueOnce(new Error("synthetic deletion failure"));
   expect((await call("revoke-session", { token: target.token }, cookie, origin)).status).toBe(500);
-  expect(revokeHostAuthorizations).not.toHaveBeenCalled();
+  expect(revokeDeviceConnectors).not.toHaveBeenCalled();
   failingDelete.mockRestore();
   expect((await call("revoke-session", { token: 1 }, cookie, origin)).status).toBe(400);
   expect((await call("revoke-session", { token: "missing" }, cookie, origin)).status).toBe(200);
-  expect(revokeHostAuthorizations).not.toHaveBeenCalled();
+  expect(revokeDeviceConnectors).not.toHaveBeenCalled();
   expect((await call("revoke-session", { token: target.token }, cookie, origin)).status).toBe(200);
-  expect(revokeHostAuthorizations).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id, target.id);
-  revokeHostAuthorizations.mockClear();
+  expect(revokeDeviceConnectors).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id, target.id);
+  revokeDeviceConnectors.mockClear();
   expect((await call("revoke-other-sessions", {}, cookie, origin)).status).toBe(200);
-  expect(revokeHostAuthorizations).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id, undefined);
+  expect(revokeDeviceConnectors).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id, undefined);
   expect((await call("list-sessions")).status).toBe(401);
 });

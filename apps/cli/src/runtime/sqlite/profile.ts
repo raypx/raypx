@@ -7,7 +7,7 @@ import { protectProfile } from "./permissions.js";
 /** Only the profile owner opens and migrates the shared writer. */
 function openProfileDatabase(directory: string) {
   protectProfile(directory);
-  const path = join(directory, "profile.sqlite");
+  const path = join(directory, "desktop-session.sqlite");
   const client = new Database(path, { create: true, strict: true });
   try {
     if (process.platform !== "win32") protectProfile(directory);

@@ -48,9 +48,8 @@
     "title": "对象存储",
     "loading": "正在加载对象存储设置",
     "notConfigured": "尚未配置",
-    "enabled": "已启用上传",
-    "disabled": "已暂停上传",
-    "allowUploads": "允许上传附件",
+    "enabled": "配置已启用",
+    "disabled": "配置已停用",
     "endpoint": "S3 端点",
     "bucket": "存储桶",
     "region": "区域",
@@ -63,6 +62,7 @@
     "unavailable": "暂时无法读取或保存对象存储设置，请重试。",
     "forbidden": "仅已验证邮箱的管理员可以管理对象存储。",
     "conflict": "对象存储设置已变更，请重新加载配置后再保存。",
-    "reload": "重新加载对象存储设置"
+    "reload": "重新加载对象存储设置",
+    "enabledSetting": "启用存储配置"
   }
 }

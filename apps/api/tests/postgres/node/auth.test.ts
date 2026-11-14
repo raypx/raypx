@@ -1,22 +1,12 @@
+import { createApiClient } from "@raypx/client/api";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
-import { schema, user, session } from "@raypx/database/schema";
+import { schema, user } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
-import {
-  desktopLoginPaths,
-  desktopLoginAuthorizationSchema,
-  desktopOAuthClientId,
-  desktopOAuthTokensSchema,
-  oauthTokenPath,
-  desktopLoginRedirectSchema,
-} from "@raypx/contracts/api";
-import { createApiClient } from "@raypx/client/api";
 import { createApiApp } from "../../helpers/app.js";
 import type { AuthMailInput } from "@raypx/auth/server";
-import { ControlService } from "@raypx/control";
-import { createControlRepository } from "@raypx/control/postgres";
 import { createAccessPolicy } from "../../../src/access.js";
 import { createConfigRepository } from "../../../src/config/repository.js";
 import { createConfigService } from "../../../src/config/service.js";
@@ -28,10 +18,7 @@ const connection = connectDatabase(databaseURL);
 const emails: AuthMailInput[] = [];
 const codes: { email: string; code: string; locale?: string }[] = [];
 const email = `foundation-${crypto.randomUUID()}@example.com`;
-const control = new ControlService(createControlRepository(connection.db));
 const auth = createAuth({
-  revokeHostAuthorizations: (userId, sessionId) =>
-    control.credentials.revokeHostAuthorizations(userId, sessionId),
   database: drizzleAdapter(connection.db, { provider: "pg", schema }),
   config: {
     baseURL: "http://localhost:3002",
@@ -56,7 +43,6 @@ const app = createApiApp({
     repository: createConfigRepository(connection.db),
     access: createAccessPolicy(),
   }),
-  control,
   authHandler: (request) => auth.handler(request),
   readSession: (headers) => readAuthSession(auth, headers),
   allowedOrigins: ["http://localhost:3000"],
@@ -174,164 +160,6 @@ it("registers, verifies, signs in, resets password and revokes the session", asy
   );
   expect(signOut.status).toBe(200);
   expect(await readAuthSession(auth, new Headers({ cookie: replacementCookie }))).toBeNull();
-}, 30000);
-
-it("reauthenticates stale host bootstrap in place and scopes successful session revocations", async () => {
-  const address = `host-${crypto.randomUUID()}@example.test`,
-    password = "host-password-123456";
-  const cookieOf = (response: Response) =>
-    response.headers
-      .getSetCookie()
-      .map((value) => value.split(";")[0])
-      .join("; ");
-  const client = (cookie: string) =>
-    createApiClient({
-      baseUrl: "http://localhost:3002",
-      headers: { cookie, origin: "http://localhost:3000" },
-      fetch: async (input, init) => app.fetch(new Request(input, init)),
-    });
-  try {
-    expect(
-      (await request("sign-up/email", { email: address, name: "Host User", password })).status,
-    ).toBe(200);
-    await connection.db.update(user).set({ emailVerified: true }).where(eq(user.email, address));
-    const stale = await request("sign-in/email", { email: address, password });
-    const staleCookie = cookieOf(stale);
-    const staleSession = (await readAuthSession(auth, new Headers({ cookie: staleCookie })))!;
-    await connection.db
-      .update(session)
-      .set({ createdAt: new Date(Date.now() - 3600_000) })
-      .where(eq(session.id, staleSession.session.id));
-    const first = await client(staleCookie).devices.register({
-      installationId: crypto.randomUUID(),
-      name: "First Mac",
-      platform: "darwin",
-      appVersion: "0.1.0",
-      reconnect: false,
-    });
-    await expect(client(staleCookie).hosts.authorize(first)).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
-    });
-    const redirectUri = "http://127.0.0.1:41337/desktop-login/callback";
-    const verifier = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
-    const challenge = new Bun.CryptoHasher("sha256").update(verifier).digest("base64url");
-    const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
-    const start = await request(
-      desktopLoginPaths.start,
-      {
-        redirectUri,
-        challenge,
-        nonce,
-        webOrigin: "http://localhost:3000",
-        state: "s".repeat(43),
-        device: "First Mac",
-        accountId: staleSession.user.id,
-      },
-      undefined,
-      "",
-    );
-    expect(start.status).toBe(200);
-    const { authorizationUrl } = desktopLoginAuthorizationSchema.parse(await start.json());
-    const authorized = await app.fetch(
-      new Request(authorizationUrl, { headers: { cookie: staleCookie } }),
-    );
-    expect(authorized.status).toBe(302);
-    const handoff = await app.fetch(new Request(authorized.headers.get("location")!));
-    expect(handoff.status).toBe(302);
-    const oauthQuery = new URL(handoff.headers.get("location")!).searchParams.get("oauth");
-    const approved = await request(
-      desktopLoginPaths.decide,
-      {
-        oauthQuery,
-        accountId: staleSession.user.id,
-        approve: true,
-      },
-      staleCookie,
-    );
-    expect(approved.status).toBe(200);
-    const callback = new URL(desktopLoginRedirectSchema.parse(await approved.json()).redirectUri);
-    const tokenRequest = () =>
-      app.fetch(
-        new Request(new URL(oauthTokenPath, "http://localhost:3002").href, {
-          method: "POST",
-          body: new URLSearchParams({
-            grant_type: "authorization_code",
-            client_id: desktopOAuthClientId,
-            code: callback.searchParams.get("code")!,
-            redirect_uri: redirectUri,
-            code_verifier: verifier,
-          }),
-        }),
-      );
-    const token = await tokenRequest();
-    expect(token.status).toBe(200);
-    const { access_token: accessToken, id_token: idToken } = desktopOAuthTokensSchema.parse(
-      await token.json(),
-    );
-    const exchange = () =>
-      request(desktopLoginPaths.exchange, { accessToken, idToken, nonce }, undefined, "");
-    const responses = await Promise.all([exchange(), exchange()]);
-    expect(responses.map(({ status }) => status).sort((a, b) => a - b)).toEqual([200, 400]);
-    expect((await tokenRequest()).status).toBe(400);
-    const metadata = await app.fetch(
-      new Request("http://localhost:3002/.well-known/openid-configuration"),
-    );
-    expect(metadata.status).toBe(200);
-    const desktopCookie = cookieOf(responses.find((response) => response.ok)!);
-    const desktopSession = await readAuthSession(auth, new Headers({ cookie: desktopCookie }));
-    expect(desktopSession?.user.id).toBe(staleSession.user.id);
-    expect(desktopSession?.session.id).not.toBe(staleSession.session.id);
-    await expect(client(desktopCookie).hosts.authorize(first)).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
-    });
-    // The same logged-in account signs in again without logout or device detachment.
-    const fresh = await request("sign-in/email", { email: address, password }, staleCookie);
-    expect(fresh.status).toBe(200);
-    const firstCookie = cookieOf(fresh);
-    const freshSession = (await readAuthSession(auth, new Headers({ cookie: firstCookie })))!;
-    expect(freshSession.session.id).not.toBe(staleSession.session.id);
-    const firstKey = await client(firstCookie).hosts.authorize(first);
-    const secondSignIn = await request("sign-in/email", { email: address, password });
-    const secondCookie = cookieOf(secondSignIn);
-    const secondClient = client(secondCookie);
-    const second = await secondClient.devices.register({
-      installationId: crypto.randomUUID(),
-      name: "Second Mac",
-      platform: "darwin",
-      appVersion: "0.1.0",
-      reconnect: false,
-    });
-    const secondKey = await secondClient.hosts.authorize(second);
-    const [target] = await connection.db
-      .select()
-      .from(session)
-      .where(eq(session.id, freshSession.session.id));
-    expect((await request("revoke-session", { token: target!.token }, secondCookie)).status).toBe(
-      200,
-    );
-    await expect(
-      secondClient.hosts.grant({ credential: firstKey.credential }),
-    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
-    await expect(
-      secondClient.hosts.grant({ credential: secondKey.credential }),
-    ).resolves.toHaveProperty("accountId", secondKey.accountId);
-    expect((await request("revoke-other-sessions", {}, secondCookie)).status).toBe(200);
-    await expect(
-      secondClient.hosts.grant({ credential: secondKey.credential }),
-    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
-    await expect(secondClient.hosts.authorize(second)).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
-    });
-    const restored = cookieOf(
-      await request("sign-in/email", { email: address, password }, secondCookie),
-    );
-    await expect(client(restored).hosts.authorize(second)).resolves.toHaveProperty(
-      "accountId",
-      secondKey.accountId,
-    );
-  } finally {
-    await connection.db.delete(user).where(eq(user.email, address));
-  }
 }, 30000);
 
 it("signs in existing accounts with a single-use email code and enforces TOTP on password login", async () => {

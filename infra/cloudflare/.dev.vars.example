@@ -1,4 +1,0 @@
-# Dedicated development resources reachable from Cloudflare; never operator data.
-DATABASE_URL=postgresql://relay:replace-me@postgres.example.com:5432/raypx_dev?sslmode=verify-full
-REDIS_URL=rediss://relay:replace-me@redis.example.com:6380
-ALLOWED_ORIGINS=https://app.example.com

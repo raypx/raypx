@@ -1,10 +1,9 @@
 # Architecture
 
-Status: target architecture on the `next` branch, delivered in
-[roadmap phases](../roadmap.md). Phase 1 is the signed-in Web/Desktop client home;
-the earlier device runtime remains in the repository. Guides under
-[development](../development/getting-started.md) still describe that retained code.
-The earlier architecture and decision records remain in the history of `canary`.
+Status: the server-owned platform and outbound device connector are implemented.
+The replaced device-owned execution stack is removed by
+[ADR 0067](0067-retire-device-runtime.md). Desktop retains a private session
+bridge; see [clients](clients.md) and [Desktop development](../development/desktop.md).
 
 Phase 1 provides Space/member and Agent/Conversation schemas, scoped repositories,
 session-authorized oRPC, member messages, ordered conversation logs, snapshots and
@@ -24,20 +23,12 @@ claims, fenced decisions and conservative provenance gates keep failures and
 untrusted actions addressed to the member; all clients show automatic decisions
 and reasons. See [approvals](approvals.md#automatic-review).
 
-The shared `/agents` workspace is the signed-in home in Web and Desktop. Project
-and session pages, Waiting, New session and the guest task editor/handoff are
-removed from those clients, along with dependent Automations screens. The retained
-Memory views still manage earlier device/account records, not Agent/Space memory.
-The CLI harness, SQLite profiles, enrollment, native host/channel and remote read
-projections remain until their owning phases replace them. A separate outbound-only CLI connector now supplies member-owned device Computers
-with local Space directory consent; retained local daemon/session consumers stay
-independent. See [device setup and limits](../development/device-connector.md). See [Spaces](spaces.md#implemented-foundation-slice),
-[Events](events.md#implemented-conversation-slice) and
-[Execution](execution.md#implemented-durable-backend).
-
-The topology and workspace roles below describe the target. Current backend roles
-include `api`, `worker`, `relay` and default `all`; retained `both` also remains.
-PostgreSQL coordinates durable Runs; split retained device roles require Redis.
+The shared `/agents` workspace is the signed-in home in Web and Desktop.
+The outbound-only CLI connector supplies member-owned device Computers with
+native-confirmed Space directory consent. Agent execution and history remain in
+PostgreSQL. See [device setup and limits](../development/device-connector.md).
+Backend roles are `api`, `worker`, `relay` and default `all`. Redis carries device
+frames across processes; combined deployments can operate without it.
 
 Raypx is the durable home for persistent Agents. An Agent has an identity, one
 continuing conversation, memory, routines and a computer. It keeps working while
@@ -84,7 +75,6 @@ flowchart LR
   API --> Hosted[Hosted sandbox provider]
   Connector[Device connector / CLI daemon] -->|Outbound WebSocket| Relay
   API --> Models[Model endpoints]
-  API --> Storage[(Object storage)]
 ```
 
 | Process            | Owns                                                                        |
@@ -98,7 +88,7 @@ flowchart LR
 
 One backend artifact runs every role. `SERVER_ROLE` selects `api`, `worker`,
 `relay` or the default `all` in one process. Split roles share PostgreSQL and
-notify each other through it. Redis is optional. Pi runs inside the `api` and
+notify each other through it. Redis is required for split device routing and optional for caches. Pi runs inside the `api` and
 `worker` roles and reaches a computer only through the Computer port.
 
 ## Workspaces
@@ -121,7 +111,7 @@ stays outside runtime dependency graphs. See
 | `packages/providers` | Ports and adapters: computer, memory search, connections, web access.                        |
 | `packages/database`  | Drizzle schema and migrations. Feature server entries own Space-scoped repositories.         |
 | Feature packages     | `agents`, `runs`, `spaces`, `memory`, `routines`, `pages`: model, server and client entries. |
-| Shared packages      | `auth`, `account`, `ui`, `blocks`, `i18n`, `email`, `storage`, `logger`.                     |
+| Shared packages      | `auth`, `account`, `ui`, `blocks`, `i18n`, `email`, `logger`.                                |
 
 Rules that carry over unchanged: explicit package exports, an acyclic workspace
 graph, no application imported by another workspace, vendor SDKs only inside

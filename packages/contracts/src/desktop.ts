@@ -1,27 +1,7 @@
 import { desktopLoginAuthorizationSchema, desktopLoginStartSchema } from "./desktop-login.js";
 import { z } from "zod";
 import { localEventSchema } from "./local.js";
-import { localResults } from "./client.js";
 import { conversationClientFrameSchema, conversationServerFrameSchema } from "./conversation.js";
-
-export const desktopExecutionSchema = z.strictObject({
-  id: z.uuid(),
-  kind: z.enum(["terminal", "tool"]),
-  status: z.enum(["running", "finished"]),
-  cwd: z.string(),
-});
-/** Queries are implicitly scoped to the authenticated native owner and origin. */
-export const desktopExecutionRequests = {
-  execution_list: z.strictObject({}),
-  execution_result: z.strictObject({ id: z.uuid() }),
-  terminal_restore: z.strictObject({ id: z.uuid() }),
-};
-export const desktopExecutionResults = {
-  execution_list: z.array(desktopExecutionSchema),
-  execution_result: localResults["tools.run"],
-  terminal_restore: z.object({ accepted: z.literal(true) }),
-};
-export type DesktopExecution = z.infer<typeof desktopExecutionSchema>;
 
 /** Native confirmation use cases; no renderer-controlled origin, directory or credential. */
 export const desktopDeviceRequests = {
@@ -110,7 +90,6 @@ const desktopLoginAttempt = z.strictObject({ id: z.uuid() });
 export const desktopLoginRequests = {
   browser_login_start: desktopLoginAttempt.extend({
     webOrigin: desktopLoginStartSchema.shape.webOrigin,
-    reauthorizeHost: desktopLoginStartSchema.shape.reauthorizeHost,
   }),
   browser_login_wait: desktopLoginAttempt,
   browser_login_cancel: desktopLoginAttempt,

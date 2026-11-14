@@ -16,8 +16,10 @@ if (
     "The real connector test requires an explicitly selected disposable loopback test database",
   );
 const repositoryRoot = resolve(import.meta.dirname, "../../../../..");
-const cli = resolve(repositoryRoot, "apps/cli/src/main.ts");
-const fixture = resolve(repositoryRoot, "apps/api/tests/helpers/control-server.ts");
+const invocation = process.env.RAYPX_DEVICE_TEST_CLI
+  ? [resolve(process.env.RAYPX_DEVICE_TEST_CLI)]
+  : [process.execPath, "--no-env-file", resolve(repositoryRoot, "apps/cli/src/main.ts")];
+const fixture = resolve(repositoryRoot, "apps/api/tests/helpers/workspace-server.ts");
 const origin = "http://127.0.0.1:4173";
 let directory: string;
 let dataDirectory: string;
@@ -39,16 +41,7 @@ async function boundedText(stream: ReadableStream<Uint8Array>, maxBytes: number)
 }
 async function device(action: string, input?: unknown) {
   const child = Bun.spawn(
-    [
-      process.execPath,
-      "--no-env-file",
-      cli,
-      "device",
-      action,
-      "--json",
-      "--data-dir",
-      dataDirectory,
-    ],
+    [...invocation, "device", action, "--json", "--data-dir", dataDirectory],
     {
       cwd: repositoryRoot,
       env: { ...process.env, RAYPX_HOME: join(directory, "home") },

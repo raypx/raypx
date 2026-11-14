@@ -48,14 +48,6 @@
     }
   },
   {
-    "name": "CLI AI table opaque",
-    "source": "[ai]\nprovider=\"test\"\nmodel=\"test\"",
-    "expected": {
-      "apiUrl": "https://raypx.com",
-      "webUrl": "https://raypx.com"
-    }
-  },
-  {
     "name": "credentials",
     "source": "base_url=\"https://user:private-password@api.test\"",
     "invalid": true
@@ -117,7 +109,7 @@
   },
   {
     "name": "Unicode domain normalization",
-    "source": "base_url=\"https://例子.测试\"",
+    "source": "base_url=\"https://\u4f8b\u5b50.\u6d4b\u8bd5\"",
     "expected": {
       "apiUrl": "https://xn--fsqu00a.xn--0zwm56d",
       "webUrl": "https://xn--fsqu00a.xn--0zwm56d"

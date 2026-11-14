@@ -5,15 +5,15 @@ covers the services, their roles and what the operator maintains.
 
 ## Services
 
-| Service            | Required               | Notes                                                  |
-| ------------------ | ---------------------- | ------------------------------------------------------ |
-| PostgreSQL         | Yes                    | The one authority.                                     |
-| Backend            | Yes                    | One artifact; `SERVER_ROLE` selects its roles.         |
-| Web                | Yes                    | Bun server rendering.                                  |
-| Sandbox supervisor | For `docker` computers | Holds the Docker socket on the private network.        |
-| Object storage     | Optional               | Attachments, page assets and home snapshots.           |
-| Redis              | Optional               | Event fanout and shared caches for larger deployments. |
-| Mail               | Optional               | Verification, sign-in codes and inbound routine email. |
+| Service            | Required                 | Notes                                                                     |
+| ------------------ | ------------------------ | ------------------------------------------------------------------------- |
+| PostgreSQL         | Yes                      | The one authority.                                                        |
+| Backend            | Yes                      | One artifact; `SERVER_ROLE` selects its roles.                            |
+| Web                | Yes                      | Bun server rendering.                                                     |
+| Sandbox supervisor | For `docker` computers   | Holds the Docker socket on the private network.                           |
+| Object storage     | Optional                 | Attachments, page assets and home snapshots.                              |
+| Redis              | For split device routing | Private connector frames; optional shared caches in combined deployments. |
+| Mail               | Optional                 | Verification, sign-in codes and inbound routine email.                    |
 
 A deployment with no model connection, no sandbox provider and no mail still
 starts. Each missing capability is an explicit state in the product.
@@ -21,12 +21,9 @@ starts. Each missing capability is an explicit state in the product.
 ## Roles
 
 - `SERVER_ROLE=all` is the default: `api`, `worker` and `relay` in one process.
-  Existing explicit `SERVER_ROLE=both` deployments keep that combined behavior,
-  including recovery; existing environment files continue to work.
 - Split roles use the same artifact. Durable Run API/worker coordination needs no
   broker: leases, attempts, checkpoints, steering and backup jobs are PostgreSQL
-  records, and content-free `LISTEN/NOTIFY` hints wake recovery. The retained
-  device Relay transport still uses optional Redis when API and Relay are split.
+  records, and content-free `LISTEN/NOTIFY` hints wake recovery. Device connector routing requires Redis when connection owners and requesters are separate processes.
   See [ADR 0066](0066-server-owned-agent-platform.md).
 - Run any number of `api` and `worker` processes. A Run executes once because of
   its lease. See [execution](execution.md#ownership).
@@ -48,7 +45,7 @@ starts. Each missing capability is an explicit state in the product.
 ## Deploys
 
 - The unreleased `next` database is disposable. Its migration payload now contains
-  one generated baseline, `20261114053131_baseline`, rather than the earlier chain.
+  one generated baseline, `20261114073022_baseline`, rather than the earlier chain.
   Use a fresh, isolated database for this baseline; an existing disposable `next`
   database must be recreated explicitly by its operator. This is not an upgrade
   procedure and imports no earlier schema, ledger or data. Never reset or migrate
@@ -63,7 +60,7 @@ starts. Each missing capability is an explicit state in the product.
 - Startup and explicit `bun run db:migrate` still serialize through one transaction
   advisory lock and commit the public ledger with schema changes. Database-free
   tests verify the single generated baseline and current table/column coverage;
-  `TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/api test:postgres`
+  `TEST_DATABASE_URL=<disposable-test-url> bun run --cwd apps/api test:postgres`
   verifies clean application, concurrent startup, retries and rollback separately.
   Local PostgreSQL 17 acceptance covers the baseline and startup checks.
 - Apply migrations, then replace processes. The previous release keeps running for

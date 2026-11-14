@@ -8,25 +8,11 @@ import type { EventsSocketFactory } from "./events.js";
 const origin = "https://api.example.test";
 const profile = { id: "owner", name: "Owner", email: "owner@example.test" };
 const signal = () => new AbortController().signal;
-const info = {
-  installationId: crypto.randomUUID(),
-  name: "Desktop",
-  enabled: true,
-  connected: false,
-  pendingRevoke: null,
-  binding: null,
-  error: null,
-};
 const host = () => ({
   request: vi.fn(
-    async (
-      _method: LocalMethod,
-      _params: unknown,
-      _client: string,
-      scope: AbortSignal,
-    ): Promise<unknown> => {
-      scope.throwIfAborted();
-      return info;
+    async (_method: LocalMethod, _params: unknown, _client?: string, scope?: AbortSignal) => {
+      scope?.throwIfAborted();
+      return { version: "test", protocolVersion: 1 as const, owner: "daemon" as const };
     },
   ),
 });
@@ -53,7 +39,7 @@ function eventsFixture(
   });
   const api = new DesktopApi(cookies, fetch, connect);
   const owner = host();
-  const control = new DesktopControl(api, owner, undefined);
+  const control = new DesktopControl(api, owner);
   return { control, api, owner, sockets, connect };
 }
 
@@ -181,97 +167,6 @@ it("cannot open an events socket after logout wins an in-flight account verifica
   }
 });
 
-it("verifies the account with its own session and preserves same-account daemon work on page recovery", async () => {
-  const owner = host();
-  const api = new DesktopApi(new SessionCookies(origin), async () =>
-    Response.json({ json: profile }),
-  );
-  const control = new DesktopControl(api, owner, undefined);
-  await control.select("owner", "first", signal());
-  await control.select("owner", "replacement", signal());
-  expect(owner.request.mock.calls.map(([method, params]) => [method, params])).toEqual([
-    ["host.session", { accountId: "owner", apiUrl: origin }],
-    ["host.session", { accountId: "owner", apiUrl: origin }],
-  ]);
-  await expect(control.select("other", "page", signal())).rejects.toThrow("AUTH_REQUIRED");
-  expect(owner.request.mock.calls.at(-1)![1]).toEqual({ accountId: null, apiUrl: origin });
-});
-
-it("revokes a credential issued during disconnect before it can bind the host", async () => {
-  const owner = host();
-  let authorization!: (response: Response) => void;
-  const fetch = vi.fn(async (request: Request): Promise<Response> => {
-    if (request.url.endsWith("/hosts/authorize"))
-      return new Promise((resolve) => {
-        authorization = resolve;
-      });
-    if (request.url.endsWith("/hosts/revoke")) return Response.json({ json: { revoked: true } });
-    return Response.json({ json: profile });
-  });
-  const api = new DesktopApi(new SessionCookies(origin), fetch);
-  const control = new DesktopControl(api, owner, undefined);
-  const page = new AbortController();
-  const deviceId = crypto.randomUUID(),
-    expiresAt = new Date(Date.now() + 60_000).toISOString();
-  const pending = control.request(
-    "control_attach",
-    {
-      accountId: "owner",
-      apiUrl: origin,
-      grant: { deviceId, epoch: 1, token: "renderer-grant", expiresAt },
-    },
-    "page",
-    page.signal,
-  );
-  const rejected = pending.catch((error: unknown) => error);
-  await vi.waitFor(() => expect(authorization).toBeTypeOf("function"));
-  page.abort();
-  await control.select(null, "logout", signal());
-  const credential = "a".repeat(64);
-  authorization(
-    Response.json({ json: { accountId: "owner", deviceId, epoch: 1, expiresAt, credential } }),
-  );
-  expect(await rejected).toMatchObject({ name: "AbortError" });
-  expect(owner.request.mock.calls.some(([method]) => method === "host.authorize")).toBe(false);
-  const revoke = fetch.mock.calls.find(([request]) => request.url.endsWith("/hosts/revoke"))![0];
-  expect(JSON.parse(await revoke.text())).toEqual({ json: { credential } });
-});
-
-it("reports a session authorization failure until the daemon confirms an authorized binding", async () => {
-  const owner = host();
-  const api = new DesktopApi(new SessionCookies(origin), async (request) =>
-    request.url.endsWith("/hosts/authorize")
-      ? Response.json({}, { status: 401 })
-      : Response.json({ json: profile }),
-  );
-  const control = new DesktopControl(api, owner, undefined);
-  await control.select("owner", "page", signal());
-  await expect(
-    control.request(
-      "control_attach",
-      {
-        accountId: "owner",
-        apiUrl: origin,
-        grant: {
-          deviceId: crypto.randomUUID(),
-          epoch: 1,
-          token: "renderer-grant",
-          expiresAt: new Date(Date.now() + 60_000).toISOString(),
-        },
-      },
-      "page",
-      signal(),
-    ),
-  ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
-  expect(
-    await control.request("control_info", { accountId: "owner" }, "page", signal()),
-  ).toMatchObject({ error: "AUTH_REQUIRED" });
-  owner.request.mockResolvedValueOnce({ ...info, authorized: true });
-  expect(
-    await control.request("control_info", { accountId: "owner" }, "page", signal()),
-  ).toMatchObject({ authorized: true, error: null });
-});
-
 it("aborts stale verification when a later logout replaces its account selection", async () => {
   let complete!: (response: Response) => void;
   const owner = host();
@@ -282,16 +177,14 @@ it("aborts stale verification when a later logout replaces its account selection
         complete = resolve;
       }),
   );
-  const control = new DesktopControl(api, owner, undefined);
+  const control = new DesktopControl(api, owner);
   const pending = control.select("owner", "page", signal());
   const rejected = pending.catch((error: unknown) => error);
   await control.select(null, "logout", signal());
   expect(await rejected).toMatchObject({ code: "CANCELLED" });
   complete(Response.json({ json: profile }));
   await Promise.resolve();
-  expect(owner.request.mock.calls.map(([method, params]) => [method, params])).toEqual([
-    ["host.session", { accountId: null, apiUrl: origin }],
-  ]);
+  expect(owner.request).not.toHaveBeenCalled();
 });
 
 it("cancels previous HTTP work before an auth mutation so a late sign-in cannot overwrite logout", async () => {
@@ -305,7 +198,7 @@ it("cancels previous HTTP work before an auth mutation so a late sign-in cannot 
       });
     return Promise.resolve(Response.json({ success: true }));
   });
-  const control = new DesktopControl(api, owner, undefined);
+  const control = new DesktopControl(api, owner);
   const pending = control.request(
     "api_fetch",
     { path: "/api/auth/sign-in/email", method: "POST", headers: {}, body: "{}" },
@@ -333,85 +226,6 @@ it("cancels previous HTTP work before an auth mutation so a late sign-in cannot 
   );
   await Promise.resolve();
   expect(jar.header(new URL(origin))).toBe("");
-});
-
-it("overwrites native-owned origin and connector directories and rejects native-only repair", async () => {
-  const owner = host();
-  owner.request
-    .mockResolvedValueOnce({ registered: false, code: "public-code" })
-    .mockResolvedValueOnce([]);
-  const control = new DesktopControl(new DesktopApi(new SessionCookies(origin)), owner, {
-    codex: "/native/codex",
-  });
-  await control.localRequest(
-    { method: "instance.begin", params: { origin: "https://evil.test" } },
-    "page",
-    signal(),
-  );
-  expect(owner.request.mock.calls[0]![1]).toMatchObject({ origin });
-  await control.localRequest(
-    { method: "connectors.status", params: { configDirs: { codex: "/renderer/path" } } },
-    "page",
-    signal(),
-  );
-  expect(owner.request.mock.calls[1]![1]).toEqual({ configDirs: { codex: "/native/codex" } });
-  await expect(
-    control.localRequest(
-      { method: "connectors.install", params: { provider: "codex", recoverModified: true } },
-      "page",
-      signal(),
-    ),
-  ).rejects.toThrow("Native connector recovery required");
-});
-
-it("keeps the daemon's host binding when a cookie session is replaced by signing in again", async () => {
-  const owner = host();
-  const api = new DesktopApi(new SessionCookies(origin), async (request) =>
-    request.url.includes("/api/auth/")
-      ? Response.json({ success: true })
-      : Response.json({ json: profile }),
-  );
-  const control = new DesktopControl(api, owner, undefined);
-  await control.select("owner", "page", signal());
-  owner.request.mockClear();
-  for (const path of ["/api/auth/sign-in/email", "/api/auth/sign-up/email"])
-    await control.request(
-      "api_fetch",
-      { path, method: "POST", headers: {}, body: "{}" },
-      "page",
-      signal(),
-    );
-  // Nothing told the daemon to drop its account: an expired cookie is not a logout.
-  expect(owner.request).not.toHaveBeenCalled();
-  // The page still has to prove the resulting account before it may act for it.
-  await expect(
-    control.request("control_info", { accountId: "owner" }, "page", signal()),
-  ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
-  await control.select("owner", "page", signal());
-  expect(owner.request.mock.calls.map(([method, params]) => [method, params])).toEqual([
-    ["host.session", { accountId: "owner", apiUrl: origin }],
-  ]);
-});
-
-it("revokes host access on an explicit sign-out request", async () => {
-  const owner = host();
-  const api = new DesktopApi(new SessionCookies(origin), async (request) =>
-    request.url.includes("/api/auth/")
-      ? Response.json({ success: true })
-      : Response.json({ json: profile }),
-  );
-  const control = new DesktopControl(api, owner, undefined);
-  await control.select("owner", "page", signal());
-  owner.request.mockClear();
-  await control.request(
-    "api_fetch",
-    { path: "/api/auth/sign-out", method: "POST", headers: {}, body: "{}" },
-    "page",
-    signal(),
-  );
-  expect(owner.request.mock.calls.map(([method, params]) => [method, params])).toEqual([
-    ["host.session", { accountId: null, apiUrl: origin }],
-  ]);
 });
 
 it("keeps device grant polling native-only and verifies cookies without retained enrollment or selection", async () => {

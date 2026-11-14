@@ -88,7 +88,7 @@ connector journaling nor a terminal receipt promises exactly-once host effects.
 
 The separate `device` command namespace opens one outbound authenticated WebSocket
 to `/device/connect`. It publishes no inbound listener, local method router or
-provider credential. The retained Desktop session channel remains independent.
+provider credential. The private Desktop session channel remains independent.
 Native possession endpoints refuse browser Origin headers. Session RPCs use the
 existing trusted-Origin, quota and fresh membership gates. Native HTTP requests
 are stream-bounded to 16 KiB and rate limited by trusted client address and
@@ -106,7 +106,7 @@ or renew a newer connection.
 The private connector directory is under the explicitly selected CLI data/profile
 directory. It uses the existing restricted file permissions and owner locks; its
 credentials, local grant inode identities, finite confirmation tokens, bounded
-operation journal and outbox stay separate from retained profile SQLite. Account
+operation journal and outbox stay separate from Desktop session SQLite. Account
 and canonical server-origin binding cannot be transferred. Storage exhaustion
 fails closed. Local status never returns credentials or confirmation tokens.
 Logout/password security revocation invalidates server access; local file grants

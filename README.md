@@ -19,9 +19,9 @@ technical decisions and separate acceptance gates.
 The Agent runtime and credentials stay outside the computer. A private sandbox
 supervisor alone holds the Docker socket. Without a configured provider,
 computer-dependent actions report unavailable; the rest of the workspace starts.
-The retained CLI/daemon, SQLite profiles and native enrollment are separate from
-server conversations, pending their replacement phase. They are not an offline
-mode for the Agent platform, and no old profile data is imported.
+The outbound connector supplies member-owned devices with native-confirmed Space
+directory grants. The CLI also retains Desktop's private encrypted session bridge;
+Agent execution and history remain in PostgreSQL. No old profile data is imported.
 
 ## Start locally
 
@@ -38,8 +38,8 @@ bun dev
 ```
 
 Web runs on 3000 and the backend on 3002. The default `SERVER_ROLE=all` runs API,
-recovery worker and retained Relay together. Durable Run coordination uses
-PostgreSQL; Redis is optional unless splitting the retained device transport.
+recovery worker and device connector transport together. Durable Run coordination uses
+PostgreSQL; Redis is optional unless splitting the device connector transport.
 Configure a deployment model catalog or add a model connection in account settings.
 An empty catalog is an explicit unavailable state.
 
@@ -65,7 +65,7 @@ for development or tests.
 | Build                             | `bun run build`                        |
 
 Turbo schedules manifest-owned tasks. `raypx-dev` is the engineering CLI;
-`raypx` is the retained device executable. `verify --full` adds repository audits,
+`raypx` is the device connector executable. `verify --full` adds repository audits,
 builds and current-platform artifact probes. PostgreSQL, owned-backend browser
 journeys, real Docker, live models and packaged native acceptance remain explicit
 gates. Source or browser success establishes no unrun platform result.

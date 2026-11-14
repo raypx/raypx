@@ -43,11 +43,7 @@ export async function createCliLogging() {
   });
   const record: RecordDiagnostic = (event) => {
     const log = createLogger({ ...event });
-    if (
-      event.operation === "scheduler.failed" ||
-      ("outcome" in event && event.outcome === "failed") ||
-      (event.operation === "job.completed" && event.status === "failed")
-    ) {
+    if (event.outcome === "failed") {
       log.setLevel("error");
       log.set({ error: { code: "code" in event ? event.code : "LOCAL_ERROR" } });
     }

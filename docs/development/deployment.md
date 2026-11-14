@@ -2,9 +2,9 @@
 
 The default topology is Web + one Bun backend + PostgreSQL. `apps/api` builds a
 single Nitro artifact; `SERVER_ROLE=all` is the default and hosts API, durable Run
-recovery and `/relay` together. New Runs start directly in the committing process;
+recovery and `/device/connect` together. New Runs start directly in the committing process;
 workers recover lost starts, expired leases and handed-over attempts through
-PostgreSQL only. Redis is optional for caches and the retained device Relay
+PostgreSQL only. Redis is optional for caches and required for split device connector
 transport. See the [execution guide](../architecture/execution.md).
 
 ## Project boundaries and configuration
@@ -53,7 +53,7 @@ Any number of API and worker processes can execute Runs using fenced leases.
 Committed reply events reach every API process through PostgreSQL fanout; transient
 prefixes remain local to the executor. A client connected to another process
 receives the committed segment when that model turn finishes.
-`JOBS_ENABLED` enables Nitro maintenance and retained account cloud scheduling.
+`JOBS_ENABLED` enables Nitro maintenance and cleanup.
 Space routines and recovery scans run explicitly in worker-enabled roles. Empty optional values disable integrations.
 A configured Redis outage fails readiness and closes cluster peers; it never
 falls back to local routing or queues uncertain execution for retry.
@@ -90,7 +90,7 @@ public database/application ports. Set APP_HOST, DNS, TLS and the exact project
 TRAEFIK_NETWORK. Attach only this project's containers and Traefik. Trust exact
 proxy /32 or /128 addresses in AUTH_TRUSTED_PROXIES; never trust a shared subnet.
 Traefik sends the configured /api/, /rpc/, /routines/, /events, /health, /ready
-and /relay routes to the backend; other paths
+and /device/connect routes to the backend; other paths
 go to Web. It strips Cookie and Authorization only on the relay route.
 
 Validate without printing resolved secrets:
@@ -230,7 +230,7 @@ Engine VM (29.5.2, API 1.54). IPv6 enforcement was unavailable because the VM
 disables it. Other Engine/platform combinations remain unverified. Source or
 Compose-property tests do not establish real deployment/firewall acceptance.
 
-Existing explicit `SERVER_ROLE=both` settings continue to run the combined backend
+Existing explicit `SERVER_ROLE=all` settings continue to run the combined backend
 with recovery enabled. New environment files use `all`.
 
 ## Optional split roles
@@ -244,7 +244,7 @@ selectors and Computer provider settings as API so pinned resources remain
 available. All roles use the same isolated foundation PostgreSQL and port 3002
 inside their own container; only API/Relay join ingress.
 
-Durable Runs need no Redis. The retained device transport still needs a private
+Durable Runs need no Redis. The outbound device connector transport still needs a private
 `REDIS_URL` when API and Relay are separate processes; without that optional
 integration, its remote dispatch is explicitly unavailable. Relay itself accepts
 only database, optional broker and allowed origins, and performs no migrations.
@@ -267,7 +267,6 @@ sh deploy/update.sh /absolute/path/to/protected.env --split
 ```
 
 Railway uses the combined backend. Cloudflare uses this backend image with the
-relay role. See [Railway](railway.md) and [Cloudflare](../../infra/cloudflare/README.md).
 When changing an existing split deployment to combined mode, stop the old Relay
 using its existing configuration before replacing backend/routing. Keep its old
 image and protected configuration for rollback; do not delete its database or
@@ -302,7 +301,7 @@ through a protected Compose override with the same project and volumes.
 
 ## Verification
 
-Check HTTPS and origin certificate, /health, database/relay-aware /ready, redirects,
+Check HTTPS and origin certificate, /health, database/device/connect-aware /ready, redirects,
 SSR assets, real login, secure cookies and authenticated WebSocket dispatch/revoke.
 Unconfigured mail or unrun native/browser acceptance is unavailable, not passed.
 

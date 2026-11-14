@@ -70,7 +70,7 @@ Code outside `src/components/` stays private.
   Use the surrounding theme and language providers. Applications place the
   controls and own preference persistence. Both language controls show catalog
   loading feedback and retry the selected language through the shared preference hook.
-- `markdown`: `ReplyMarkdown` renders untrusted replies for Agents and Tasks in both
+- `markdown`: `ReplyMarkdown` renders untrusted replies for Agents in both
   applications. Callers supply translated copy labels. Raw HTML, executable URLs
   and remote images stay inert; fenced code has a copy/manual-selection control.
 - `styles.css`: registers Blocks as a Tailwind source; applications import it.

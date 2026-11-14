@@ -22,7 +22,6 @@ import { PermissionBoundary } from "../auth/components/permission-boundary.js";
 import { SessionBoundary, SignInGate } from "../auth/components/session-boundary.js";
 import { AccountSessions } from "../auth/components/account-sessions.js";
 import { ProfileSettings } from "../auth/components/profile-settings.js";
-import { InstanceRegistration } from "../auth/components/instance-registration.js";
 import { analytics } from "../analytics/client.js";
 import { AccountSettingsContent, AccountSettingsPanel } from "./account-settings.js";
 import type { SettingsSection } from "./navigation.js";
@@ -101,11 +100,6 @@ export default function AccountSettingsDialog({
               />
             </>
           )}
-        </PrivateSettings>
-      </AccountSettingsContent>
-      <AccountSettingsContent value="instances">
-        <PrivateSettings>
-          {(id) => <InstanceRegistration key={id} accountId={id} />}
         </PrivateSettings>
       </AccountSettingsContent>
       <AccountSettingsContent value="password" className="min-w-0">

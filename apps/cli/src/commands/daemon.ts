@@ -1,9 +1,7 @@
 import { defineCommand, type CommandDef } from "citty";
 import { globalArgs, type CliArgs } from "./args.js";
 import { LocalError } from "../runtime/errors.js";
-import { profilePath } from "../runtime/state/index.js";
 import { connectDaemon, stopDaemon, type ProfileOptions } from "../runtime/daemon/endpoint.js";
-import { localParams } from "@raypx/contracts/local";
 
 const command = (definition: CommandDef) => defineCommand(definition);
 function group(
@@ -34,39 +32,28 @@ export function createDaemonCommands(invocation: CliArgs, options: ProfileOption
   return group(
     "daemon",
     {
-      start: "Start the independent execution host",
+      start: "Start the independent Desktop session transport",
       run: "Run the host in the foreground",
       status: "Read host status",
-      stop: "Stop the host and cancel managed work",
-      restart: "Stop the previous host, cancel managed work and start this version",
-      proxy: "Private Desktop client transport",
+      stop: "Stop the host and close Desktop sessions",
+      restart: "Stop the previous host, close Desktop sessions and start this version",
       desktop: "Private finite Desktop bootstrap",
-      install: "Install the macOS user service",
-      uninstall: "Remove the macOS user service",
     },
     async (action, inputs) => {
       if (inputs.length)
         throw new LocalError("INVALID_INPUT", "Daemon commands do not accept operands");
       if (action === "desktop") {
-        if (invocation.yes)
-          throw new LocalError("INVALID_INPUT", "Desktop bootstrap does not accept --yes");
         await (await import("../transport/desktop.js")).bootstrapDesktop(options);
         return;
       }
-      if (action === "run" || action === "proxy") {
-        if (invocation.json || invocation.yes)
-          throw new LocalError("INVALID_INPUT", "Daemon transports do not accept --json or --yes");
-        if (action === "run")
-          await (await import("../runtime/daemon/server.js")).runDaemon(options);
-        else await (await import("../transport/daemon-stdio.js")).serveDaemonStdio(options);
+      if (action === "run") {
+        if (invocation.json)
+          throw new LocalError("INVALID_INPUT", "Daemon transports do not accept --json");
+        await (await import("../runtime/daemon/server.js")).runDaemon(options);
         return;
       }
       let result: unknown;
-      if (action === "install" || action === "uninstall")
-        result = await (
-          await import("../runtime/daemon/service.js")
-        ).configureService(options, action);
-      else {
+      {
         try {
           if (action === "stop") result = await stopDaemon(options);
           else {
@@ -91,80 +78,6 @@ export function createDaemonCommands(invocation: CliArgs, options: ProfileOption
         }
       }
       console.log(JSON.stringify(result, null, invocation.json ? undefined : 2));
-    },
-  );
-}
-export function createConnectorCommands(invocation: CliArgs, options: ProfileOptions) {
-  return group(
-    "connectors",
-    {
-      status: "Read installed terminal hooks",
-      install: "Install a Claude or Codex hook",
-      repair: "Back up a modified owned hook binary and replace it with this CLI",
-      uninstall: "Remove only the owned Agent hook",
-      hook: "Private fail-open Agent hook",
-    },
-    async (action, inputs) => {
-      const provider = inputs[0];
-      if (action === "hook") {
-        try {
-          if (inputs.length !== 1 || (provider !== "claude" && provider !== "codex")) return;
-          let raw = "";
-          const decoder = new TextDecoder();
-          for await (const chunk of process.stdin) {
-            raw += decoder.decode(chunk, { stream: true });
-            if (Buffer.byteLength(raw) > 256 * 1024) return;
-          }
-          const { forwardTerminalHook } = await import("../runtime/terminal/hook.js");
-          const result = await forwardTerminalHook(profilePath(options), provider, JSON.parse(raw));
-          if (result) {
-            await new Promise<void>((resolve, reject) =>
-              process.stdout.write(JSON.stringify(result.output) + "\n", (error) =>
-                error ? reject(error) : resolve(),
-              ),
-            );
-            await result.delivered();
-          }
-        } catch {
-          /* Every hook failure returns the Agent's native permission flow. */
-        }
-        return;
-      }
-      const { connectorAction, connectorStatus } = await import("../runtime/daemon/connectors.js");
-      if (action === "status") {
-        if (inputs.length)
-          throw new LocalError("INVALID_INPUT", "Connector status does not accept operands");
-        console.log(
-          JSON.stringify(
-            await connectorStatus(profilePath(options)),
-            null,
-            invocation.json ? undefined : 2,
-          ),
-        );
-        return;
-      }
-      if (
-        (inputs.length !== 1 && !(action === "repair" && inputs.length === 2)) ||
-        (provider !== "claude" && provider !== "codex")
-      )
-        throw new LocalError("INVALID_PROVIDER", "Select claude or codex");
-      const requested =
-        action === "repair" && inputs[1]
-          ? localParams["connectors.status"].parse(JSON.parse(inputs[1])).configDirs
-          : undefined;
-      console.log(
-        JSON.stringify(
-          await connectorAction(
-            profilePath(options),
-            provider,
-            action === "uninstall" ? "uninstall" : "install",
-            requested,
-            action === "repair",
-          ),
-          null,
-          invocation.json ? undefined : 2,
-        ),
-      );
     },
   );
 }

@@ -7,7 +7,7 @@ import { mcpServerSchema } from "@raypx/core/mcp-servers";
 import { openApiServerSchema } from "@raypx/core/openapi-servers";
 import type { MobileResourcesController } from "../src/resources/controllers.js";
 
-export const date = "2026-11-14T00:00:00.000Z";
+const date = "2026-11-14T00:00:00.000Z";
 export const spaceId = spaceIdSchema.parse("space-one");
 export const agentId = agentIdSchema.parse("agent-one");
 export const page = pageSchema.parse({
@@ -42,7 +42,7 @@ export const server = mcpServerSchema.parse({
   createdAt: date,
   updatedAt: date,
 });
-export const api = openApiServerSchema.parse({
+const api = openApiServerSchema.parse({
   id: "b3fa7b61-6718-4814-8048-e1c8439f721b",
   spaceId,
   name: "Documents API",

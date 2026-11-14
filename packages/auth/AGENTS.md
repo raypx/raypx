@@ -106,4 +106,4 @@ and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects o
 JSON nested strings, one format per namespace/language. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.
 
-- Web sign-in supports passkeys, Resend email codes and TOTP with backup codes. Keep profile-bound Host reauthorization on the Desktop OAuth flow and require a fresh browser session.
+- Web sign-in supports passkeys, Resend email codes and TOTP with backup codes. Desktop OAuth requires explicit displayed-account consent, PKCE/state/issuer validation and current-account verification. Security changes revoke connectors.

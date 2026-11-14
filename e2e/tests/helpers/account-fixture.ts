@@ -69,6 +69,5 @@ export async function signedInAccount(page: Page) {
     authResponse(route, { json: { id: user.id, name: user.name, email: user.email } }),
   );
   await page.route("**/rpc/spaces/list", (route) => authResponse(route, { json: [] }));
-  await page.route("**/rpc/devices/list", (route) => authResponse(route, { json: [] }));
   return user;
 }

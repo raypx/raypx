@@ -87,7 +87,7 @@ export type PageLayout = "document" | "workbench" | "tool";
 
 /** Metadata an application declares on each route rendered inside the shell. */
 export interface ShellPage<Title extends string = string> {
-  /** Breadcrumb title as a full message key, such as `common.tasks`. */
+  /** Breadcrumb title as a full message key, such as `agents.title`. */
   title: Title;
   /** Title for signed-out visitors, when the page serves them as something else. */
   guestTitle?: Title;

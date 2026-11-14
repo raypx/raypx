@@ -70,7 +70,6 @@ export function AccountSettingsPanel({
   const skills = useTranslations("skills");
   const models = useTranslations("agents");
   const c = useTranslations("common");
-  const i = useTranslations("instances");
   const s = useTranslations("settings");
   const a = useTranslations("analytics");
   const [query, setQuery] = useState("");
@@ -92,7 +91,6 @@ export function AccountSettingsPanel({
       { value: "tools", label: models("mcp.title"), icon: SettingsIcon },
       { value: "password", label: t("password"), icon: LockIcon },
       { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
-      { value: "instances", label: i("instances"), icon: MonitorIcon },
       { value: "preferences", label: s("device"), icon: SettingsIcon },
       { value: "diagnostics", label: a("title"), icon: ShieldCheckIcon },
     ] as const

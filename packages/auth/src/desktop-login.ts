@@ -116,7 +116,7 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
     if (ctx.headers?.get("origin") !== webOrigin)
       throw new APIError("FORBIDDEN", { message: "Untrusted origin" });
   };
-  const pendingSchema = desktopLoginStartSchema.extend({ startedAt: z.number().int() });
+  const pendingSchema = desktopLoginStartSchema;
   async function pending(ctx: AuthContext, query: string) {
     if (
       !desktopOAuthQuerySchema.safeParse(query).success ||
@@ -154,11 +154,10 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
             !origins.includes(web.origin)
           )
             throw invalid();
-          if (body.reauthorizeHost && !body.accountId) throw invalid();
           await ensureClient(ctx);
           await ctx.context.internalAdapter.createVerificationValue({
             identifier: pendingKey(body.nonce),
-            value: JSON.stringify({ ...body, startedAt: Date.now() }),
+            value: JSON.stringify(body),
             expiresAt: new Date(Date.now() + 5 * 60_000),
           });
           const authorization = new URL(oauthAuthorizePath, issuer);
@@ -166,7 +165,7 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
             client_id: desktopOAuthClientId,
             response_type: "code",
             scope: "openid",
-            prompt: body.reauthorizeHost ? "login consent" : "consent",
+            prompt: "consent",
             redirect_uri: body.redirectUri,
             state: body.state,
             nonce: body.nonce,
@@ -194,16 +193,12 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
         async (ctx) => {
           const attempt = await pending(ctx, ctx.body.oauthQuery);
           requireWeb(ctx, attempt.webOrigin);
-          const { user, session } = await browserSession(ctx);
+          const { user } = await browserSession(ctx);
           return ctx.json(
             {
               device: attempt.device,
               accountId: user.id,
               email: user.email,
-              matchesProfile: attempt.accountId === undefined || attempt.accountId === user.id,
-              ...(attempt.reauthorizeHost
-                ? { reauthenticationRequired: session.createdAt.getTime() < attempt.startedAt }
-                : {}),
             },
             { headers: noStore },
           );
@@ -216,16 +211,7 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
           const attempt = await pending(ctx, ctx.body.oauthQuery);
           requireWeb(ctx, attempt.webOrigin);
           const { user, session } = await browserSession(ctx);
-          if (
-            ctx.body.approve &&
-            attempt.reauthorizeHost &&
-            session.createdAt.getTime() < attempt.startedAt
-          )
-            throw new APIError("FORBIDDEN", { message: "Fresh authentication required" });
-          if (
-            user.id !== ctx.body.accountId ||
-            (ctx.body.approve && attempt.accountId !== undefined && attempt.accountId !== user.id)
-          )
+          if (user.id !== ctx.body.accountId)
             throw new APIError("FORBIDDEN", {
               message: "Account does not match the Desktop authorization",
             });

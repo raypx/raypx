@@ -6,7 +6,6 @@ import {
   oauthAuthorizePath,
   oauthTokenPath,
 } from "@raypx/contracts/api";
-import type { LocalMethod } from "@raypx/contracts/local";
 import { DesktopApi } from "./api.js";
 import { DesktopControl } from "./control.js";
 import { parseSessionCookie, SessionCookies } from "./cookies.js";
@@ -19,19 +18,6 @@ const id = () => crypto.randomUUID();
 function fixture() {
   const jar = new SessionCookies(origin);
   const page = new AbortController();
-  const binding = {
-    accountId: "owner",
-    origin,
-    instanceId: id(),
-    publicKey: "k".repeat(32),
-    name: "Test",
-    platform: "darwin",
-    appVersion: "1",
-    status: "registered",
-    version: 1,
-    revision: 1,
-    issuedAt: new Date().toISOString(),
-  };
   let login: ReturnType<typeof desktopLoginStartSchema.parse> | undefined;
   function checkOAuthRequest(input: URLSearchParams) {
     expect(input.get("grant_type")).toBe("authorization_code");
@@ -75,12 +61,13 @@ function fixture() {
     );
   });
   const host = {
-    request: vi.fn(async (method: LocalMethod) => {
-      expect(method).toBe("instance.status");
-      return { state: "registered", binding };
+    request: async () => ({
+      version: "test",
+      protocolVersion: 1 as const,
+      owner: "daemon" as const,
     }),
   };
-  const control = new DesktopControl(new DesktopApi(jar, upstream), host, undefined);
+  const control = new DesktopControl(new DesktopApi(jar, upstream), host);
   const call = (method: string, attemptId: string, client = "page") =>
     control.request(
       method,
@@ -98,15 +85,14 @@ function fixture() {
     url.searchParams.set("iss", origin);
     return url;
   }
-  return { control, call, callback, upstream, jar, page, host, binding, getLogin: () => login };
+  return { control, call, callback, upstream, jar, page, host, getLogin: () => login };
 }
 
 it("uses a temporary listener and installs the exchange cookie only after a verified callback", async () => {
-  const { control, call, callback, upstream, jar, getLogin } = fixture();
+  const { control, call, callback, upstream, jar } = fixture();
   const attempt = id();
   try {
     expect(await call("browser_login_start", attempt)).toEqual({ authorizationUrl });
-    expect(getLogin()?.accountId).toBe("owner");
     await expect(call("browser_login_wait", attempt, "another-page")).rejects.toMatchObject({
       code: "DESKTOP_LOGIN_EXPIRED",
     });
@@ -130,25 +116,18 @@ it("uses a temporary listener and installs the exchange cookie only after a veri
   }
 });
 
-it("does not commit a cookie when the profile changes or the renderer cancels", async () => {
-  const { control, call, callback, upstream, jar, binding } = fixture();
+it("does not commit a cookie when the renderer cancels", async () => {
+  const { control, call, callback, upstream, jar } = fixture();
   try {
-    const first = id();
-    await call("browser_login_start", first);
-    const completion = call("browser_login_wait", first);
-    void completion.catch(() => {});
-    binding.accountId = "different-account";
-    await fetch(callback());
-    await expect(completion).rejects.toMatchObject({ code: "DESKTOP_LOGIN_ACCOUNT_MISMATCH" });
-    expect(jar.header(new URL(origin))).toBe("");
-    const second = id();
-    await call("browser_login_start", second);
-    const stopped = call("browser_login_wait", second);
+    const attempt = id();
+    await call("browser_login_start", attempt);
+    const stopped = call("browser_login_wait", attempt);
     void stopped.catch(() => {});
-    await call("browser_login_cancel", second);
+    await call("browser_login_cancel", attempt);
     await expect(stopped).rejects.toMatchObject({ code: "DESKTOP_LOGIN_CANCELLED" });
-    await expect(fetch(callback())).rejects.toThrow(/unable to connect/i);
-    expect(upstream).toHaveBeenCalledTimes(4);
+    await expect(fetch(callback())).rejects.toThrow(/connect|refused/i);
+    expect(jar.header(new URL(origin))).toBe("");
+    expect(upstream).toHaveBeenCalledOnce();
   } finally {
     control.close();
   }

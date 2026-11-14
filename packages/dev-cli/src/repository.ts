@@ -11,7 +11,7 @@ export const discover = (root: string) => discoverWorkspaces(root, { metadataKey
 
 /** Tasks whose graph compiles applications and therefore reads development configuration. */
 const buildsApplications =
-  /^(?:dev|build(?::.*)?|e2e(?::.*)?|native:(?:build|prepare|smoke(?::interactive)?|agents)|mygo:smoke)$/;
+  /^(?:dev|build(?::.*)?|e2e(?::.*)?|native:(?:build|prepare|smoke(?::interactive)?)|mygo:smoke)$/;
 
 interface Invocation {
   owner: string | undefined;

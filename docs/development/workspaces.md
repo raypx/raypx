@@ -156,12 +156,9 @@ flowchart TD
   API --> PG[(PostgreSQL)]
 ```
 
-The retained `@raypx/tasks` entries and CLI private harness serve device consumers
-until replacement; they do not own new Runs. Device provider protocols, SQLite,
-project grants and process lifetime remain at their existing boundaries. Keep
-those security checks while removing their obsolete UI/entries with final consumers.
-The [AI guide](ai.md#retained-device-cli) distinguishes local model configuration
-from backend model connections.
+Agent execution is server-owned. The CLI supplies only connector and Desktop
+session transport capabilities; clients consume current contracts and feature
+models. See [model access](ai.md).
 
 ## Scheduled jobs
 

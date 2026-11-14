@@ -40,8 +40,7 @@ afterEach(() => {
 
 it("admits a signed-in server workspace without retained device enrollment", async () => {
   const fixture = desktopFixture();
-  fixture.setLocal("instance.status", () => ({ state: "unregistered" }));
-  fixture.setLocal("instance.refresh", () => ({ state: "unregistered" }));
+
   const root = createRootRoute({
     component: () => (
       <DesktopSignOutProvider>

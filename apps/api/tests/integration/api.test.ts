@@ -1,10 +1,8 @@
-import { memoryControlRepository } from "@raypx/control/testing";
 import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
 import { createApiClient } from "@raypx/client/api";
 import { createAuthRoutes } from "../../src/routers/auth.js";
 import { createApiApp, testAppOptions } from "../helpers/app.js";
-import { ControlService } from "@raypx/control";
 import type { AuthSession } from "@raypx/core/auth";
 
 const session: AuthSession = {
@@ -250,26 +248,6 @@ describe("HTTP foundation", () => {
     expect(body).not.toContain("ECONNREFUSED");
   });
 
-  it("answers slow procedures with a timeout", async () => {
-    const control = new ControlService(memoryControlRepository());
-    vi.spyOn(control.credentials, "listDevices").mockImplementation(() => new Promise(() => {}));
-    const slow = createApiApp({
-      authHandler: async () => Response.json({}),
-      readSession: async () => session,
-      allowedOrigins: [],
-      rpcTimeoutMs: 50,
-      control,
-    });
-    const api = createApiClient({
-      baseUrl: "https://api.example.com",
-      fetch: async (input, init) => slow.fetch(new Request(input, init)),
-    });
-    expect(await api.devices.list({}).catch((value: unknown) => value)).toMatchObject({
-      code: "SERVICE_UNAVAILABLE",
-      data: { error: { code: "REQUEST_TIMEOUT" } },
-    });
-  });
-
   it.each([
     '{"__proto__":{"admin":true}}',
     '{"metadata":[{"__proto__":{"admin":true}}]}',
@@ -292,30 +270,5 @@ describe("HTTP foundation", () => {
     '{"constructor.prototype":{"admin":true},"metadata":[{"prototype":true}]}',
   ])("accepts harmless RPC property names: %s", async (json) => {
     expect(await client("signed-in").account.get(JSON.parse(json))).toMatchObject({ id: "u1" });
-  });
-
-  it("rejects rate-limited grant procedures per account before running them", async () => {
-    const keys: string[] = [];
-    const limited = createApiApp({
-      authHandler: async () => Response.json({}),
-      readSession: async () => session,
-      allowedOrigins: [],
-      // A rejecting limiter must stop the call before the control service runs.
-      control: {} as ControlService,
-      rateLimit: async (key) => {
-        keys.push(key);
-        return false;
-      },
-    });
-    const api = createApiClient({
-      baseUrl: "https://api.example.com",
-      fetch: async (input, init) => limited.fetch(new Request(input, init)),
-    });
-    const error = await api.relay.ticket({}).catch((value: unknown) => value);
-    expect(error).toMatchObject({
-      code: "TOO_MANY_REQUESTS",
-      data: { error: { code: "RATE_LIMITED" } },
-    });
-    expect(keys).toEqual(["rpc:u1:relay.ticket"]);
   });
 });

@@ -26,8 +26,8 @@ The generator and HTTP handler select procedures by the same oRPC metadata.
 `apps/api/src/routers/openapi.ts` adds the Hono health paths to the generated document.
 
 ```sh
-curl -fsS "$RAYPX_API_URL/api/openapi.json"
-curl -fsS "$RAYPX_API_URL/api/v1/configuration"
+curl -fsS "$API_ORIGIN/api/openapi.json"
+curl -fsS "$API_ORIGIN/api/v1/configuration"
 ```
 
 Public configuration requires no session. Account access accepts guests and
@@ -41,11 +41,7 @@ schemas only. Resource responses under `/api/v1/*` use `Cache-Control: no-store`
 `HEAD` returns the status and headers of `GET` without a body. An unsupported
 method on a known resource returns `405` with an `Allow` header.
 
-The versioned adapter covers account/configuration and retained device-task,
-approval, observed-request, cloud-job and account-memory reads. It is not the
-complete server Agent API. Current clients use `/rpc` for Space/Agent management,
-history, Runs, approvals/effects, routines, Space memory, Pages and resources, plus
-the acknowledged `/events` stream. Page documents use independent read-only
-`/page-content/*` routes. Better Auth, Relay WebSockets, enrollment, credential
-issuance, writes and local IPC retain their existing interfaces. Relay-only
-instances continue to serve their own health probes.
+The versioned adapter exposes only the explicit current read-only account,
+configuration and Space/resource procedures selected by the API router. Writes,
+credential exchange and private connector transports remain on their owning
+boundaries.

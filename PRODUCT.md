@@ -147,17 +147,17 @@ Hosted computers remain future work. Managed app connectors and web search/fetch
 are not implemented Agent capabilities. Screen can expand into a large dialog;
 the same viewer and control state continue without opening another stream.
 
-Project/session editors, Waiting, guest task handoff and device Automations pages
-are removed from Web/Desktop. The CLI/daemon, account/device context APIs, local
-schedules, native enrollment and remote projections remain only for retained
-consumers until their replacement phase. They do not own new Agent state or
-import device history into Spaces.
+The CLI provides only the outbound Space connector and private Desktop session
+transport. Local Agent execution, schedules, account/device memory, enrollment,
+remote task projections and terminal hooks are removed. Desktop startup and browser
+sign-in retain the private session daemon because the connector has no cookie,
+HTTP or event-stream bridge. Earlier device data is never imported.
 
 Conversations require a reachable server and valid account session. Drafts and
 uncertain-send receipts stay device-local and scoped by origin, account, Space
 and conversation. Restoration never sends; delivery retry preserves its key,
-and failed-Run retry restores editing for an explicit new Send. Preferences and
-retained CLI profiles survive logout without transferring account/origin identity.
+and failed-Run retry restores editing for an explicit new Send. Preferences remain local; connector credentials and consent retain their exact
+account/origin binding. Old profiles are never opened.
 
 ## Brand Commitments
 
@@ -179,7 +179,7 @@ stay unverified. There are no customer endorsements or pricing claims to reuse.
 - Keep PostgreSQL authoritative and credentials outside clients and computers.
 - Preserve idempotent delivery and checkpoint recovery without replaying unknown effects.
 - Show failures, unavailable states and permission boundaries accurately.
-- Keep retained device data separate until its owning replacement phase.
+- Keep device I/O separate from server execution and never import earlier profiles.
 
 ## Accessibility & Inclusion
 

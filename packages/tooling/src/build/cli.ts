@@ -3,14 +3,13 @@ import { lstat, readdir, readFile, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 export interface CliPayload {
-  format: 1;
+  format: 2;
   commit: string;
   platform: string;
   arch: string;
   version: string;
   builtAt: number;
   bunVersion: string;
-  herdrVersion: string;
   files: Record<string, string>;
 }
 
@@ -56,17 +55,13 @@ export async function verifyCliPayload(
     await readFile(join(directory, "runtime.json"), "utf8"),
   ) as CliPayload;
   if (
-    manifest.format !== 1 ||
+    manifest.format !== 2 ||
     !/^[a-f0-9]{40}$/.test(manifest.commit) ||
     !Number.isSafeInteger(manifest.builtAt) ||
     manifest.builtAt <= 0 ||
-    ![
-      manifest.version,
-      manifest.bunVersion,
-      manifest.herdrVersion,
-      manifest.platform,
-      manifest.arch,
-    ].every((value) => typeof value === "string" && value.length > 0) ||
+    ![manifest.version, manifest.bunVersion, manifest.platform, manifest.arch].every(
+      (value) => typeof value === "string" && value.length > 0,
+    ) ||
     !manifest.files ||
     typeof manifest.files !== "object" ||
     Array.isArray(manifest.files)
@@ -76,7 +71,7 @@ export async function verifyCliPayload(
     if (manifest[key as keyof CliPayload] !== value) throw new Error(`CLI payload ${key} mismatch`);
   const files = await payloadFiles(directory);
   const executable = manifest.platform === "win32" ? "raypx.exe" : "raypx";
-  for (const name of [executable, "herdr/runtime.json", "LICENSE", "README.txt"])
+  for (const name of [executable, "LICENSE", "README.txt"])
     if (!manifest.files[name]) throw new Error(`CLI payload missing ${name}`);
   const missing = Object.keys(manifest.files).filter((name) => !Object.hasOwn(files, name));
   const unexpected = Object.keys(files).filter((name) => !Object.hasOwn(manifest.files, name));

@@ -38,8 +38,8 @@ page at `/`; account details use the footer menu in Web and `/account` on Deskto
 Guests sign in before opening
 conversations; there is no guest task editor or draft handoff. Preserve validated
 return destinations for account and administration flows. Conversations need a
-reachable server. The earlier CLI/native runtime remains during the transition,
-but the renderer does not restore a local project as its home. Web layouts serve
+reachable server. The CLI supplies device I/O and private Desktop sessions; the renderer never
+restores local execution history. Web layouts serve
 phone browsers. Mobile provides native Space Agents/groups, membership and
 invitations, routines, memory, resource catalogs, activity, approvals and computer
 lifecycle. Full Page/resource management uses Web. Native Mobile omits Screen;
@@ -79,7 +79,9 @@ lastActivityAt and uses dense truncated single-line rows with an overflow menu.
 Never invent conversation titles or activity. The account avatar, name and actual
 role stay at the bottom, with Invite members below for owners. Account/security,
 device preferences and permission-filtered administration remain reachable.
-Search contains current destinations and actions only. Desktop keeps its native
+Memory belongs to the selected Agent or Space. Removed task, enrollment and
+local-history workflows never appear in navigation or Search. Search contains
+current destinations and actions only. Desktop keeps its native
 window-control insets clear and device settings available at /login#settings.
 
 At /agents with no conversation selected, leave the canvas open. Vertically

@@ -113,9 +113,6 @@
     "perf": {
       "cache": false
     },
-    "perf:tasks": {
-      "cache": false
-    },
     "perf:check": {
       "cache": false
     },
@@ -131,31 +128,7 @@
     "deploy": {
       "cache": false
     },
-    "eval:agents": {
-      "cache": false
-    },
     "smoke": {
-      "cache": false
-    },
-    "smoke:tui": {
-      "cache": false
-    },
-    "smoke:terminal": {
-      "cache": false
-    },
-    "smoke:terminal-stream": {
-      "cache": false
-    },
-    "smoke:herdr-terminal": {
-      "cache": false
-    },
-    "smoke:daemon-agents": {
-      "cache": false
-    },
-    "smoke:pi": {
-      "cache": false
-    },
-    "prepare:herdr": {
       "cache": false
     },
     "db:generate": {

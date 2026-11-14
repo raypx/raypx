@@ -5,7 +5,6 @@ import type { AccountContext } from "../../middleware/rpc.js";
 import { ORPCError } from "@orpc/server";
 export function createApprovalsHandlers({
   os,
-  callControl,
   withRpcPermission,
   options,
   requireTrustedOrigin,
@@ -97,11 +96,6 @@ export function createApprovalsHandlers({
             input.runId,
           ),
         ),
-      ),
-    list: os.approvals.list
-      .use(withRpcPermission())
-      .handler(({ context }) =>
-        callControl(context, (control, auth) => control.tasks.listApprovals(auth.user.id)),
       ),
   };
 }

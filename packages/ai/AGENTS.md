@@ -1,33 +1,12 @@
-# @raypx/ai
+# Model transport
 
-## Purpose
+The root exports the backend model client, provider factories, stream/context/tool
+types and stable errors. API owns model resolution and secrets; Agents consumes
+stream types. This package executes no tools and owns no filesystem configuration.
+There is no CLI model command or /config export.
 
-Pi AI model transport for the bundled Bun CLI and backend Conversation replies.
-
-## Interface
-
-The root exports createAiClient, provider factories, Pi context/tool types,
-createAssistantMessageEventStream and stable AiError codes. Consumers are CLI's
-explicit ai command group, the injected `@raypx/providers/pi` adapter and API's deployment model adapter. `@raypx/agents/server` consumes its stream types and stable errors. The client supplies model resolution and configuration-only auth checks; the root also exports SDK-backed request context preparation. `/config` exposes pure settings parsing and merging. Agent execution,
-tool approval and durable context remain outside this transport package.
-Tool parameters use plain JSON Schema. Consumers own schema construction; CLI
-converts its existing Zod definitions with z.toJSONSchema.
-Default providers are Anthropic, OpenAI, Google and OpenRouter; callers may supply
-their own Pi providers or createCompatibleProvider for a selected endpoint.
-
-## Constraints
-
-Resolve credentials only for requests. Listing models/providers is offline and
-must not read secrets. Credentials, raw provider failures and diagnostics never
-enter output or logs. Keep provider SDK imports lazy; do not import Pi's all-provider
-or compat entrypoints into the standalone binary. Do not execute returned tools.
-AiError optionally carries only a parsed absolute Retry-After timestamp for the
-backend retry scheduler; response headers and raw bodies remain private.
-Use one request attempt, SSE, a bounded deadline and caller cancellation. Closing
-or abandoning a stream aborts its request. Keep settings/filesystem ownership in CLI.
-Custom HTTP endpoints are loopback-only; HTTPS endpoints must not contain credentials.
-Custom endpoints have unknown prices; zero SDK cost fields are not billing estimates.
-
-## Verification
-
-Run bun run --cwd packages/ai check and test.
+Resolve secrets only per request. Keep SDK imports lazy and raw failures, headers,
+credentials and bodies private. Use bounded deadlines, cancellation and one
+attempt; abandoning a stream aborts its request. Retry-After exposes only a parsed
+absolute timestamp. Custom endpoints reject embedded credentials; local HTTP is
+loopback-only. Run check/test. Live model acceptance stays opt-in.

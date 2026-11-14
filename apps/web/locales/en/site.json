@@ -48,9 +48,8 @@
     "title": "Object storage",
     "loading": "Loading object storage settings",
     "notConfigured": "Not configured",
-    "enabled": "Uploads enabled",
-    "disabled": "Uploads paused",
-    "allowUploads": "Allow attachment uploads",
+    "enabled": "Configuration enabled",
+    "disabled": "Configuration disabled",
     "endpoint": "S3 endpoint",
     "bucket": "Bucket",
     "region": "Region",
@@ -63,6 +62,7 @@
     "unavailable": "Object storage settings are unavailable. Try again.",
     "forbidden": "Only a verified administrator can manage object storage.",
     "conflict": "The storage settings changed. Load the latest configuration before saving.",
-    "reload": "Reload storage settings"
+    "reload": "Reload storage settings",
+    "enabledSetting": "Enable storage configuration"
   }
 }

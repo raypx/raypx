@@ -158,10 +158,10 @@ describe("affected verification", () => {
       expect(browserModes(verificationPlan(model, [file]))).toEqual(["none", "smoke"]);
     for (const file of [
       "packages/auth/src/hooks.ts",
-      "packages/tasks/src/client/approval-body.tsx",
-      "packages/control/src/application/commands.ts",
+      "packages/agents/src/client/approval-card.tsx",
+      "packages/computers/src/device-registry.ts",
       "apps/api/src/routers/rpc/approvals.ts",
-      "apps/api/src/routers/relay/socket.ts",
+      "apps/api/src/routers/device-connector.ts",
       "apps/api/src/runtime/relay.ts",
     ])
       expect(browserModes(verificationPlan(model, [file]))).toEqual(["smoke", "smoke"]);
@@ -282,13 +282,13 @@ describe("affected verification", () => {
     ["packages/desktop/internal/desktop/process_linux.go", []],
     ["packages/desktop/go.mod", ["macos-latest", "windows-latest"]],
     ["packages/contracts/src/local.ts", ["macos-latest", "windows-latest"]],
-    ["packages/contracts/src/terminal.ts", ["macos-latest", "windows-latest"]],
+    ["packages/contracts/src/device-connector.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/main.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/daemon/endpoint.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/host.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/index.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/src/runtime/process/windows.ts", ["windows-latest"]],
-    ["packages/cli/scripts/prepare-herdr.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/scripts/generate-sqlite.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/instance.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/provider-proxy.ts", ["macos-latest", "windows-latest"]],
     ["packages/cli/tests/helpers/temporary.ts", ["macos-latest", "windows-latest"]],
@@ -308,13 +308,13 @@ describe("affected verification", () => {
     expect(plan.nativeRunners).toEqual(runners);
     expect(plan.tasks).toContain("desktop#mygo:test");
   });
-  it("keeps CLI business logic independent of native platform runners", () => {
+  it("checks connector runtime changes on native platforms", () => {
     const plan = verificationPlan(platformProject(), [
-      "packages/cli/src/runtime/agents/providers.ts",
+      "packages/cli/src/runtime/device-connector/engine.ts",
     ]);
-    expect(plan.workspaces).toEqual(["cli"]);
-    expect(plan.native).toBe(false);
-    expect(plan.nativeRunners).toEqual([]);
+    expect(plan.workspaces).toEqual(["cli", "desktop"]);
+    expect(plan.native).toBe(true);
+    expect(plan.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
     expect(plan.artifacts).toEqual([]);
   });
   it("validates CLI distribution preparation on native platforms without expanding unrelated tooling", () => {
@@ -650,8 +650,8 @@ it("selects container acceptance for image definitions, deployment adapters and 
     "apps/desktop/src/routes/settings.tsx",
     "packages/api/src/server.ts",
     "packages/tokens/src/index.ts",
-    "apps/api/src/routers/relay/socket.ts",
-    "infra/cloudflare/src/index.ts",
+    "apps/api/src/routers/device-connector.ts",
+    "infra/railway/src/index.ts",
     "infra/railway/stack.test.ts",
     "packages/tooling/src/build/cli.ts",
     "packages/dev-cli/src/validation/deployment.test.ts",

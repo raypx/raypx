@@ -43,16 +43,16 @@ it("admits renderer and native RPCs with a native capability and rejects other p
   const fetch = vi.fn(async (_request: Request) => Response.json({}));
   const api = new DesktopApi(new SessionCookies(origin), fetch);
   for (const path of ["/rpc/hosts/grant", "/rpc/admin/overview", "/rpc/account/undeclared"]) {
-    await expect(api.request(request(path), "native", signal(), true)).rejects.toMatchObject({
+    await expect(api.request(request(path), "native", signal())).rejects.toMatchObject({
       code: "INVALID_API_REQUEST",
     });
   }
-  for (const path of ["/rpc/account/get", "/rpc/hosts/authorize"]) {
-    await api.request(request(path), "native", signal(), true);
+  for (const path of ["/rpc/account/get", "/rpc/spaces/list"]) {
+    await api.request(request(path), "native", signal());
   }
   expect(fetch.mock.calls.map(([input]) => new URL(input.url).pathname)).toEqual([
     "/rpc/account/get",
-    "/rpc/hosts/authorize",
+    "/rpc/spaces/list",
   ]);
 });
 

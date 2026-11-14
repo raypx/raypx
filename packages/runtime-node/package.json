@@ -4,9 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./process": "./src/process.ts",
-    "./http": "./src/http.ts",
-    "./files": "./src/files.ts"
+    "./process": "./src/process.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -14,15 +12,12 @@
     "test:unit": "bun --bun vitest run"
   },
   "dependencies": {
-    "cross-spawn": "catalog:",
-    "undici": "catalog:",
-    "ws": "catalog:"
+    "cross-spawn": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/cross-spawn": "catalog:dev",
     "@types/node": "catalog:dev",
-    "@types/ws": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:dev"

@@ -18,8 +18,8 @@ through the root manifest's `infra/*` pattern.
 
 Gateway uses the pinned Caddy image and [Caddyfile](../../infra/railway/Caddyfile).
 Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`, `/routines/*`, the two configured discovery
-paths, `/events`, `/health`, `/ready` and `/relay` to API, and other paths to Web. Caddy proxies WebSocket
-upgrades and strips Cookie and Authorization headers on `/relay`. API and Web have
+paths, `/events`, `/health`, `/ready` and `/device/connect` to API, and other paths to Web. Caddy proxies WebSocket
+upgrades and strips Cookie and preserves the connector Authorization header on `/device/connect`. API and Web have
 no public domains, and database connections use private
 references. Access logging is
 disabled and the error log removes request details.
@@ -64,7 +64,7 @@ The checked-in gateway does not yet match `/page-content/*`; before exposing Pag
 previews/shares through it, add that explicit API route in the operator's gateway
 configuration. Direct API document serving and browser fixtures do not establish
 production gateway acceptance. The default combined role includes recovery;
-Redis remains optional for new Runs and required for split retained device routing.
+Redis remains optional for new Runs and required for split device routing.
 
 ## Apply and deploy
 
@@ -147,7 +147,7 @@ a Gateway path error.
 | Caddy configuration fails at startup                      | Runtime `API_UPSTREAM` and `WEB_UPSTREAM`; build-time validation uses placeholders and does not verify Railway variables |
 | Healthcheck `/ready` fails                                | Gateway port and logs, then API private DNS, port `3002` and readiness; Gateway forwards `/ready` to API                 |
 | Gateway is healthy but pages return 502                   | Web private DNS, port `3000`, and Web readiness; Gateway readiness only checks the API route                             |
-| Pages work but remote connections fail                    | API runtime role, `API_UPSTREAM`, and the authenticated `/relay` WebSocket flow                                          |
+| Pages work but remote connections fail                    | API runtime role, `API_UPSTREAM`, and the authenticated `/device/connect` WebSocket flow                                 |
 
 After deployment, check the public HTTPS origin, `/ready`, SSR assets, login and
 Relay connectivity separately. A green Gateway healthcheck does not prove Web or

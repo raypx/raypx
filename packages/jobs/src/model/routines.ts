@@ -1,5 +1,5 @@
-import { nextJobRuns } from "@raypx/core/jobs";
 import {
+  nextRoutineRuns,
   routineInputSchema,
   type Routine,
   type RoutineInput,
@@ -117,7 +117,7 @@ export function routineFormInput(form: RoutineFormState, agentId: string): Routi
 
 export function routineOccurrences(cron: string, timezone: string, now: Date): string[] {
   try {
-    return nextJobRuns({ cron, timezone }, now, 3);
+    return nextRoutineRuns({ cron, timezone }, now, 3);
   } catch {
     return [];
   }

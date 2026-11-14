@@ -50,8 +50,6 @@ export function DesktopAuthorization({ oauth }: { oauth?: string }) {
   });
   const returnTo = `${desktopAuthorizationPath}?${new URLSearchParams({ oauth: oauth ?? "" })}`;
   const account = preview.data;
-  const reauthenticate = account?.status === "ready" && account.reauthenticationRequired;
-  const loginSearch = { returnTo, ...(reauthenticate ? { reauthenticate: true as const } : {}) };
 
   async function submit(action: "approve" | "deny" | "switch") {
     if (sending.current || account?.status !== "ready") return;
@@ -125,30 +123,14 @@ export function DesktopAuthorization({ oauth }: { oauth?: string }) {
               <dd className="break-all">{account.email}</dd>
             </div>
           </dl>
-          {!account.matchesProfile && (
-            <p role="alert" className="text-sm">
-              {t("mismatch")}
-            </p>
-          )}
           {error && (
             <p role="alert" className="text-sm">
               {t("failed")}
             </p>
           )}
-          {reauthenticate && (
-            <Link
-              className={buttonVariants({ className: "min-h-11" })}
-              to="/login"
-              search={loginSearch}
-            >
-              {t("verifyIdentity")}
-            </Link>
-          )}
-          {account.matchesProfile && !reauthenticate && (
-            <Button className="min-h-11" disabled={busy} onClick={() => void submit("approve")}>
-              {t("authorize")}
-            </Button>
-          )}
+          <Button className="min-h-11" disabled={busy} onClick={() => void submit("approve")}>
+            {t("authorize")}
+          </Button>
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"

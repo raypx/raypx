@@ -106,9 +106,8 @@ it("uses the public schema with Better Auth Admin fields", () => {
       "session",
       "account",
       "verification",
-      "controlDevice",
-      "controlTask",
-      "controlRequest",
+      "deviceComputers",
+      "deviceDirectoryGrants",
     ]),
   );
   const config = getTableConfig(user);

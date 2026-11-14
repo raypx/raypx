@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { agentIdSchema } from "./agents.js";
 import { spaceIdSchema } from "./spaces.js";
-import { nextJobRuns } from "./jobs/schedule.js";
+import { nextRoutineRuns } from "./routine-schedule.js";
 
 export const routineIdSchema = z.string().uuid();
 const schedule = z
@@ -15,7 +15,7 @@ const schedule = z
   })
   .superRefine((value, context) => {
     try {
-      nextJobRuns(value, new Date("2026-01-01T00:00:00Z"), 1);
+      nextRoutineRuns(value, new Date("2026-01-01T00:00:00Z"), 1);
     } catch {
       context.addIssue({
         code: "custom",
@@ -138,5 +138,7 @@ export class RoutineError extends Error {
 }
 export function nextRoutineDue(triggers: RoutineTriggers, after: Date): Date | null {
   if (!triggers.schedule) return null;
-  return new Date(nextJobRuns(triggers.schedule, after, 1)[0]!);
+  return new Date(nextRoutineRuns(triggers.schedule, after, 1)[0]!);
 }
+
+export { nextRoutineRuns } from "./routine-schedule.js";

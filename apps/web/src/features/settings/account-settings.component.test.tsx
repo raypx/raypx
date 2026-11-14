@@ -50,7 +50,6 @@ async function openPanel(url = "/agents#settings/account") {
             <AccountSettingsContent value="sessions">
               <PrivateSessions />
             </AccountSettingsContent>
-            <AccountSettingsContent value="instances">Instance controls</AccountSettingsContent>
           </AccountSettingsPanel>
         )}
       </>
@@ -175,7 +174,6 @@ it.each([
   ["语言", "Device preferences"],
   ["  ＴＨＥＭＥ  ", "Device preferences"],
   ["display NAME", "Account"],
-  ["注册码", "Registered instances"],
 ])("finds settings for %s without opening a category until selected", async (query, category) => {
   const { mounted } = await openPanel();
   const search = screen.getByRole<HTMLInputElement>("searchbox", { name: "Search settings" });

@@ -184,7 +184,7 @@ export async function experimentCliSize(root: string, supplied: string[]) {
       "",
       `Bun ${Bun.version}; payload commit ${identity.commit}.`,
       "",
-      "Each variant compiles the same source and retains the complete Herdr payload and embedded Bun runtime.",
+      "Each variant compiles the same source and retains the embedded Bun runtime.",
       "Sizes below describe the CLI executable. Gzip uses level 9; installers may use different compression.",
       "Timings are warm process launches (25 interleaved samples after 4 warmups), not Agent throughput.",
       "",

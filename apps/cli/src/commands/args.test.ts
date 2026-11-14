@@ -3,11 +3,10 @@ import { parseCliArgs } from "./args.js";
 
 describe("CLI global arguments", () => {
   it("keeps ordinary command arguments and defaults all flags to false", () => {
-    expect(parseCliArgs(["jobs", "list"])).toEqual({
-      positionals: ["jobs", "list"],
+    expect(parseCliArgs(["device", "status"])).toEqual({
+      positionals: ["device", "status"],
       options: {},
       json: false,
-      yes: false,
       help: false,
       version: false,
     });
@@ -18,19 +17,17 @@ describe("CLI global arguments", () => {
       parseCliArgs([
         "--profile",
         "work",
-        "files",
+        "device",
         "--json",
-        "authorize",
+        "native",
         "/tmp/工作 目录",
         "--data-dir",
         "/tmp/Raypx 数据",
-        "--yes",
       ]),
     ).toEqual({
-      positionals: ["files", "authorize", "/tmp/工作 目录"],
+      positionals: ["device", "native", "/tmp/工作 目录"],
       options: { profile: "work", dataDir: "/tmp/Raypx 数据" },
       json: true,
-      yes: true,
       help: false,
       version: false,
     });
@@ -38,9 +35,9 @@ describe("CLI global arguments", () => {
 
   it("accepts equals syntax for string options without splitting their values", () => {
     expect(
-      parseCliArgs(["--profile=work", "jobs", "list", "--data-dir=/tmp/资料 = archive"]),
+      parseCliArgs(["--profile=work", "device", "status", "--data-dir=/tmp/资料 = archive"]),
     ).toMatchObject({
-      positionals: ["jobs", "list"],
+      positionals: ["device", "status"],
       options: { profile: "work", dataDir: "/tmp/资料 = archive" },
     });
   });
@@ -51,8 +48,8 @@ describe("CLI global arguments", () => {
     ["--version", "version"],
     ["-v", "version"],
   ] as const)("recognizes %s as a boolean global option", (flag, field) => {
-    const parsed = parseCliArgs(["jobs", flag, "list"]);
-    expect(parsed.positionals).toEqual(["jobs", "list"]);
+    const parsed = parseCliArgs(["device", flag, "status"]);
+    expect(parsed.positionals).toEqual(["device", "status"]);
     expect(parsed[field]).toBe(true);
   });
 
@@ -62,11 +59,10 @@ describe("CLI global arguments", () => {
       args: ["--help", "--version", "--profile=private", "--json", "--yes"],
       text: "line one\nline two\t结束",
     });
-    expect(parseCliArgs(["jobs", "create", payload, "--json"])).toEqual({
-      positionals: ["jobs", "create", payload],
+    expect(parseCliArgs(["device", "native", payload, "--json"])).toEqual({
+      positionals: ["device", "native", payload],
       options: {},
       json: true,
-      yes: false,
       help: false,
       version: false,
     });
@@ -74,20 +70,19 @@ describe("CLI global arguments", () => {
 
   it("treats every argument after the first delimiter as positional data", () => {
     const tail = ["--help", "--version", "--json", "--yes", "--profile", "", "--", "-h"];
-    expect(parseCliArgs(["tools", "run", "--profile=work", "--", ...tail])).toEqual({
-      positionals: ["tools", "run", ...tail],
+    expect(parseCliArgs(["device", "native", "--profile=work", "--", ...tail])).toEqual({
+      positionals: ["device", "native", ...tail],
       options: { profile: "work" },
       json: false,
-      yes: false,
       help: false,
       version: false,
     });
   });
 
-  it.each(["--unknown", "--JSON", "--data_dir", "-p", "-x"])(
+  it.each(["--yes", "--unknown", "--JSON", "--data_dir", "-p", "-x"])(
     "rejects unknown option %s",
     (flag) => {
-      expect(() => parseCliArgs(["jobs", "list", flag])).toThrow(Error);
+      expect(() => parseCliArgs(["device", "status", flag])).toThrow(Error);
     },
   );
 

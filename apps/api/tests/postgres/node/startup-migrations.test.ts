@@ -195,7 +195,7 @@ it("provisions a runtime login with data access and without ownership, DDL or mi
     expect((await worker([], settings))[0]).toBe(0);
     expect((await worker([], settings))[0]).toBe(0);
     await app.db.execute(sql`select id from public."user" limit 1`);
-    await app.db.execute(sql`select id from public.control_event limit 1`);
+    await app.db.execute(sql`select sequence from public.device_connector_events limit 1`);
     const verificationId = crypto.randomUUID();
     await app.db.execute(sql`insert into public.verification (id, identifier, value, expires_at)
       values (${verificationId}, 'role-fixture', 'value', now())`);

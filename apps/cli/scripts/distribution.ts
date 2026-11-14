@@ -28,10 +28,7 @@ if (action === "verify") {
   await writeFile(join(signingEvidence, "before.json"), JSON.stringify(before, null, 2));
   const files = await readdir(directory, { recursive: true });
   for (const file of files) {
-    if (
-      process.platform === "darwin" &&
-      (file === "raypx" || file === "herdr/herdr" || file.endsWith(".dylib"))
-    ) {
+    if (process.platform === "darwin" && file === "raypx") {
       if (process.env.APPLE_SIGNING_IDENTITY)
         await run([
           "/usr/bin/codesign",
@@ -66,11 +63,7 @@ if (action === "verify") {
     }
   }
   for (const file of files) {
-    if (
-      process.platform === "darwin" &&
-      process.env.APPLE_SIGNING_IDENTITY &&
-      (file === "raypx" || file === "herdr/herdr" || file.endsWith(".dylib"))
-    )
+    if (process.platform === "darwin" && process.env.APPLE_SIGNING_IDENTITY && file === "raypx")
       await run(["/usr/bin/codesign", "--verify", "--strict", join(directory, file)]);
     if (
       process.platform === "win32" &&
@@ -84,13 +77,6 @@ if (action === "verify") {
         join(directory, file),
       ]);
   }
-  // The Herdr inventory is inside the CLI inventory; update in this order.
-  const manifest = await Bun.file(join(directory, "herdr/runtime.json")).json();
-  for (const file of Object.keys(manifest.files))
-    manifest.files[file] = createHash("sha256")
-      .update(await readFile(join(directory, "herdr", file)))
-      .digest("hex");
-  await writeFile(join(directory, "herdr/runtime.json"), JSON.stringify(manifest));
   await sealCliPayload(directory);
   const after = await verifyCliPayload(directory, { builtAt: before.builtAt });
   await writeFile(

@@ -99,7 +99,7 @@ stage can be retried after a crash; external removal must be idempotent. The las
 private Space means the caller's last active, solely occupied owned Space; deletion
 cannot remove that final private home. Computer destruction retains committed
 homes according to the existing provider port. No current Space domain record owns
-an object-storage key; retained account/device attachments are separate. Supervisor
+an object-storage key. Supervisor
 snapshot purge is outside this slice.
 
 ## What members share

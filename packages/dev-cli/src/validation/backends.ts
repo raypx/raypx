@@ -13,7 +13,6 @@ export function backendEnvironment(
     ...source,
     TEST_DATABASE_URL: databaseURL,
     DATABASE_URL: databaseURL,
-    RAYPX_LIVE_AGENTS: "0",
   };
   // Keep validation switches separate from Vite/React's reserved NODE_ENV.
   delete env.NODE_ENV;
@@ -196,7 +195,7 @@ export async function validateBackends(root: string, args: string[]) {
       }
       const env = backendEnvironment(process.env, url, redisURL);
       const cli = join(root, "packages/dev-cli/src/cli.ts");
-      for (const task of ["test:postgres", "test:redis", "test:cluster"]) {
+      for (const task of ["test:postgres", "test:redis"]) {
         const label = task.replaceAll(":", "-");
         const report = `backend-${evidence.id}-${label}.json`;
         await evidence.command(
@@ -222,11 +221,11 @@ export async function validateBackends(root: string, args: string[]) {
         const apiPort = await freePort(),
           apiUrl = `http://127.0.0.1:${apiPort}`;
         const api = evidence.start(
-          "control-api",
+          "workspace-api",
           [
             process.execPath,
             "--no-env-file",
-            join(root, "apps/api/tests/helpers/control-server.ts"),
+            join(root, "apps/api/tests/helpers/workspace-server.ts"),
           ],
           { ...env, RAYPX_VALIDATION: "1", CONTROL_E2E_PORT: String(apiPort) },
         );

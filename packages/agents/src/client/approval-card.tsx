@@ -14,10 +14,8 @@ import {
 } from "../model.js";
 import { useTranslations } from "./i18n.js";
 
-export { toolLabelKeys } from "../model/tool-label.js";
-
 /** A timer updates presentation only; the server decides when a request resolves. */
-export function useApprovalRemaining(card: ApprovalCardView, onExpired: () => void) {
+function useApprovalRemaining(card: ApprovalCardView, onExpired: () => void) {
   const [now, setNow] = useState(Date.now);
   const callback = useRef(onExpired);
   useEffect(() => {

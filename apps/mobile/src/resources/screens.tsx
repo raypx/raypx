@@ -15,7 +15,7 @@ import type { MobilePagesController, MobileResourcesController } from "./control
 const StyledSafeAreaView = withUniwind(SafeAreaView);
 
 /** Reads refresh on foreground; no cached server data is persisted locally. */
-export function useResourceController<T>(controller: {
+function useResourceController<T>(controller: {
   subscribe(this: void, listener: () => void): () => void;
   getSnapshot(this: void): T;
   load(): Promise<void>;

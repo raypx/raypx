@@ -80,13 +80,7 @@ export function ResourcesRoute() {
   );
 }
 
-export function ResourceUnavailable({
-  loading,
-  onBack,
-}: {
-  loading: boolean;
-  onBack(this: void): void;
-}) {
+function ResourceUnavailable({ loading, onBack }: { loading: boolean; onBack(this: void): void }) {
   const { t } = useCopy();
   return (
     <Screen>

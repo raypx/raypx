@@ -2,7 +2,7 @@
 
 Raypx runs Web and a server-owned Agent backend as separate Bun services.
 PostgreSQL is the authority for Spaces, conversations, Runs and capabilities.
-The optional supervisor provides computers. Desktop's retained CLI/daemon and its
+The optional supervisor provides computers. Desktop's private CLI/daemon and its
 SQLite profiles are a different runtime; they are not required for Web Agent work.
 
 ## Prerequisites
@@ -48,21 +48,21 @@ shell values win. Values are literal: `${VAR}` is not expanded. Tests supply an
 explicit environment. `bun run raypx-dev env -- <command>` loads this same
 configuration for an operator command without printing it.
 
-| Input                                                          | Local use                                                                                                                     |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                 | New isolated PostgreSQL database.                                                                                             |
-| `AUTH_URL`, `ALLOWED_ORIGINS`                                  | API origin and exact allowed Web/native origins; example ports are 3002 and 3000.                                             |
-| `AUTH_SECRET`, `APP_KEY`                                       | Independent secrets; replace development examples before deployment. API and workers share the encryption key.                |
-| `VITE_API_URL`, `VITE_WEB_URL`                                 | Public Web build inputs; rebuild when changing them. Installed Desktop uses runtime TOML.                                     |
-| `SERVER_ROLE`                                                  | Defaults to `all`: API, worker and retained Relay.                                                                            |
-| `AGENT_MODELS`, `AGENT_MODEL_CREDENTIALS`                      | Optional deployment model directory and protected credential map; empty defaults disable deployment offers.                   |
-| `COMPUTER_PROVIDER`                                            | `none` by default; `docker` requires the private supervisor URL and dedicated token.                                          |
-| `APPROVAL_DEFAULT_MODE`, `APPROVAL_REQUEST_TTL_MS`             | Defaults: `ask` and 600000 ms. Auto review is explicitly unavailable.                                                         |
-| `RUN_RECOVERY_INTERVAL_MS`, `RUN_LEASE_MS`, `RUN_HEARTBEAT_MS` | Defaults: 5000, 15000 and 5000 ms.                                                                                            |
-| `RUN_ATTEMPT_TIMEOUT_MS`, `RUN_BACKUP_MARGIN_MS`               | Defaults: 300000 and 30000 ms.                                                                                                |
-| `JOBS_ENABLED`                                                 | Enables Nitro maintenance and retained account scheduling; false in the development example. Space routines use worker scans. |
-| `ROUTINE_EMAIL_RELAY_TOKEN`, `ROUTINE_EMAIL_DOMAIN`            | Paired configuration for server routine email ingress; Raypx does not run SMTP.                                               |
-| `REDIS_URL`                                                    | Optional cache/broker; required for split retained API/Relay device transport.                                                |
+| Input                                                          | Local use                                                                                                      |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                 | New isolated PostgreSQL database.                                                                              |
+| `AUTH_URL`, `ALLOWED_ORIGINS`                                  | API origin and exact allowed Web/native origins; example ports are 3002 and 3000.                              |
+| `AUTH_SECRET`, `APP_KEY`                                       | Independent secrets; replace development examples before deployment. API and workers share the encryption key. |
+| `VITE_API_URL`, `VITE_WEB_URL`                                 | Public Web build inputs; rebuild when changing them. Installed Desktop uses runtime TOML.                      |
+| `SERVER_ROLE`                                                  | Defaults to `all`: API, worker and device connector.                                                           |
+| `AGENT_MODELS`, `AGENT_MODEL_CREDENTIALS`                      | Optional deployment model directory and protected credential map; empty defaults disable deployment offers.    |
+| `COMPUTER_PROVIDER`                                            | `none` by default; `docker` requires the private supervisor URL and dedicated token.                           |
+| `APPROVAL_DEFAULT_MODE`, `APPROVAL_REQUEST_TTL_MS`             | Defaults: `ask` and 600000 ms. Auto review is explicitly unavailable.                                          |
+| `RUN_RECOVERY_INTERVAL_MS`, `RUN_LEASE_MS`, `RUN_HEARTBEAT_MS` | Defaults: 5000, 15000 and 5000 ms.                                                                             |
+| `RUN_ATTEMPT_TIMEOUT_MS`, `RUN_BACKUP_MARGIN_MS`               | Defaults: 300000 and 30000 ms.                                                                                 |
+| `JOBS_ENABLED`                                                 | Enables Nitro maintenance and cleanup; false in the development example. Space routines use worker scans.      |
+| `ROUTINE_EMAIL_RELAY_TOKEN`, `ROUTINE_EMAIL_DOMAIN`            | Paired configuration for server routine email ingress; Raypx does not run SMTP.                                |
+| `REDIS_URL`                                                    | Optional cache/broker; required for split device connector routing.                                            |
 
 Configure mail through [administrator settings](configuration.md#resend-email).
 Unconfigured mail actions return `MAIL_NOT_CONFIGURED`; use a real configured mail
@@ -102,14 +102,14 @@ bun apps/web/.output/server/index.mjs
 
 Use a common origin or `AUTH_DOMAIN` for the parent of sibling Web/API hosts so
 SSR receives the session cookie. `/events` is the authenticated Agent/Space stream;
-`/relay` is retained device transport. Proxies must route both correctly, along with
+`/device/connect` is outbound device connector transport. Proxies must route both correctly, along with
 `/rpc`, `/api`, `/routines/` and `/page-content/` where those features are used.
 
 `SERVER_ROLE=api` serves requests and starts committed Runs directly;
 `SERVER_ROLE=worker` scans recovery, routines and claimed Space deletion without
-exposing account RPC; `relay` serves retained device connections. `all` combines
-them. The retained `both` value also combines all three. API/worker coordination
-uses PostgreSQL only. To split retained device routing, start a private cache with
+exposing account RPC; `relay` serves device connector connections. `all` combines
+them. API/worker coordination
+uses PostgreSQL only. To split device routing, start a private cache with
 `docker compose up -d valkey` and use `REDIS_URL=redis://localhost:6380` on both sides.
 Do not start extra API processes to obtain crash recovery without running a worker.
 
@@ -137,7 +137,7 @@ web_url = "http://localhost:3000"
 ```
 
 Fully quit and restart after editing. Named connection profiles and local CLI
-profiles are distinct; endpoint changes never transfer an enrolled identity.
+profiles are distinct; endpoint changes never transfer sessions or connector credentials.
 [Desktop configuration](desktop.md#connection-configuration) explains origin/session
 isolation. The renderer shares Agent state with Web and keeps cookies private in
 the daemon. Page previews hand off to Web. `bun run package:desktop` is an explicit
@@ -183,8 +183,8 @@ Neither command should be used to remove another process's active resources.
 
 ## Retained device runtime
 
-The [CLI guide](../../apps/cli/README.md), [terminal host](terminal-host.md) and
-[local SQLite](local-sqlite.md) describe still-present device consumers until their
+The [CLI guide](../../apps/cli/README.md), [terminal host](device-connector.md) and
+[local SQLite](desktop.md) describe still-present device consumers until their
 replacement phase. Enrollment, local grants and profile history never authorize a
 Space. Registering a device is not part of the server Agent setup above.
 

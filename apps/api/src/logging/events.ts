@@ -47,7 +47,6 @@ interface ApiEventFields {
       verifications: string;
       oauthTokens: string;
       rateLimits: string;
-      contextReceipts: string;
     };
   };
   /** A configured Relay broker did not attach at startup; it keeps reconnecting. */

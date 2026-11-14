@@ -1,8 +1,8 @@
 name: Check the prepared native payload
-description: Run process, CLI, terminal and MyGo acceptance against one immutable CLI
+description: Run process, connector, Desktop session and MyGo acceptance against one immutable CLI
 inputs:
   distribution:
-    description: Repeat Windows terminal acceptance for distribution
+    description: Require native distribution evidence
     default: "false"
 runs:
   using: composite
@@ -20,29 +20,9 @@ runs:
         bun run --cwd packages/runtime-node test
         bun run --cwd packages/dev-cli test ./src/validation/build-size.test.ts
         bun run --cwd apps/cli test tests/integration/distribution/archive.test.ts
-    - name: Enable Windows Firewall for isolated provider acceptance
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
     - name: Installed CLI package
       shell: bash
       run: bun run --cwd apps/cli smoke
-    - name: Herdr terminal integration
-      env:
-        RAYPX_HERDR_COMPILED: "1"
-        RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution == 'true' && '3' || '1' }}
-      shell: bash
-      run: |
-        bun - <<'TS'
-        const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
-        for (let attempt = 0; attempt < runs; attempt++) {
-          const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
-            stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
-          });
-          const code = await child.exited;
-          if (code !== 0) process.exit(code);
-        }
-        TS
     - name: Desktop MyGo checks
       if: ${{ !cancelled() && steps.payload.outcome == 'success' }}
       env:

@@ -6,6 +6,8 @@ Status: Accepted for the `next` branch. This is the first decision record on thi
 branch. It replaces the earlier device-owned ownership and runtime decisions, which
 remain in the history of `canary`.
 
+Retirement implementation: [ADR 0067](0067-retire-device-runtime.md).
+
 ## Context
 
 The earlier product gave each device the authority over its own work. The server

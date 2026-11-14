@@ -3,7 +3,7 @@ import {
   validateRemoteEndpoint,
   resolveRemoteEndpoint,
 } from "../core/http-egress.js";
-export { isPublicAddress, isLoopbackAddress } from "../core/http-egress.js";
+export { isPublicAddress } from "../core/http-egress.js";
 export type { ResolvedEndpoint, RemoteResolver as McpResolver } from "../core/http-egress.js";
 import type { RemoteResolver } from "../core/http-egress.js";
 export class McpTransportError extends Error {

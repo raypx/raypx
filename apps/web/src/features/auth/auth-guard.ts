@@ -14,8 +14,7 @@ export async function authPageGuard({
   if (pathname !== "/login" && pathname !== "/signup") return { completeSignIn: false };
   const search = new URLSearchParams(location.searchStr);
   // The callback owns refresh failures and callback completion, including explicit retries.
-  if (search.has("oauth") || search.has("error") || search.get("reauthenticate") === "true")
-    return { completeSignIn: false };
+  if (search.has("oauth") || search.has("error")) return { completeSignIn: false };
   const account = await context.queryClient.fetchQuery(accountQuery());
   if (account.status !== "signed-in") return { completeSignIn: false };
   const returnTo = search.has("returnTo") ? safeReturnTo(search.get("returnTo")) : "/agents";

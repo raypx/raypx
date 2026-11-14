@@ -93,6 +93,14 @@ export function checkDeployment(root: string): string[] {
       ])
     )
       findings.push("deploy/compose.yaml: API ingress routes differ from the deployment contract");
+    if (/header_up\s+-Authorization/i.test(caddySource))
+      findings.push("infra/railway/Caddyfile: connector ingress must preserve Authorization");
+    if (
+      services.api?.labels?.some((line) =>
+        /relay-headers.*customrequestheaders\.Authorization=/i.test(line),
+      )
+    )
+      findings.push("deploy/compose.yaml: connector ingress must preserve Authorization");
     const relayPaths =
       caddySource
         .match(/@relay path ([^\n]+)/)?.[1]

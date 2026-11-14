@@ -43,7 +43,7 @@ interface DelegationHooks {
   ): Promise<void>;
 }
 
-export const DELEGATION_LIMITS = { depth: 3, concurrent: 4, total: 16 } as const;
+const DELEGATION_LIMITS = { depth: 3, concurrent: 4, total: 16 } as const;
 const terminalStates = ["succeeded", "failed", "cancelled"] as const;
 function selection(scope: SpaceScope, run: ExecutionRun) {
   return and(

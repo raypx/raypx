@@ -2,8 +2,6 @@ import {
   desktopChannelSchema,
   desktopServerFrameSchema,
   type DesktopClientFrame,
-  desktopExecutionRequests,
-  desktopExecutionResults,
   desktopLoginRequests,
   desktopLoginResults,
   desktopEventsRequests,
@@ -31,7 +29,6 @@ const nativeMethods = new Set<DesktopMethod>([
   "openExternal",
   "getRuntime",
   "hideWindow",
-  "pickDirectory",
   "restartEngine",
   "getAnalyticsPreferences",
   "saveAnalyticsPreferences",
@@ -280,36 +277,11 @@ export async function createMyGoBridge(dispatch: (event: unknown) => void): Prom
         }
         if (nativeMethods.has(key))
           return runtime.call("Desktop.Request", DESKTOP_METHODS[key], input);
-        if (
-          key === "localRequest" &&
-          input &&
-          typeof input === "object" &&
-          "method" in input &&
-          input.method === "connectors.install" &&
-          "params" in input &&
-          input.params &&
-          typeof input.params === "object" &&
-          "recoverModified" in input.params &&
-          input.params.recoverModified === true
-        ) {
-          const provider = "provider" in input.params ? input.params.provider : undefined;
-          return runtime.call("Desktop.Request", "repair_connector", { provider });
-        }
         const method = DESKTOP_METHODS[key];
         if (Object.hasOwn(desktopEventsRequests, method)) {
           const action = method as keyof typeof desktopEventsRequests;
           return desktopEventsResults[action].parse(
             await requestDaemon(action, desktopEventsRequests[action].parse(input), 30_000),
-          );
-        }
-        if (Object.hasOwn(desktopExecutionRequests, method)) {
-          const query = method as keyof typeof desktopExecutionRequests;
-          return desktopExecutionResults[query].parse(
-            await requestDaemon(
-              query,
-              desktopExecutionRequests[query].parse(input),
-              options?.maxRequestTime,
-            ),
           );
         }
         if (Object.hasOwn(desktopLoginRequests, method)) {

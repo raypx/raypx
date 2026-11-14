@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -66,8 +65,6 @@ func Run(bundled fs.FS) error {
 	var quitting atomic.Bool
 	var confirmingQuit atomic.Bool
 	var shutdown sync.Once
-	var pendingMu sync.Mutex
-	pendingScope := "local"
 	finishQuit := func(relaunch bool) {
 		shutdown.Do(func() {
 			quitting.Store(true)
@@ -91,11 +88,6 @@ func Run(bundled fs.FS) error {
 		}
 		go func() {
 			defer confirmingQuit.Store(false)
-			if desktop := owned.Load(); desktop != nil && interactive() {
-				if !confirmQuit(desktop.Client.Native, mygo.Dialog.Message, nativeLanguage(desktop)) {
-					return
-				}
-			}
 			quit()
 		}()
 	}
@@ -188,18 +180,7 @@ func Run(bundled fs.FS) error {
 				}
 				go desktop.Visible(true)
 			}
-			pending := func() {
-				show()
-				pendingMu.Lock()
-				scope := pendingScope
-				pendingMu.Unlock()
-				go func() {
-					ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-					defer cancel()
-					desktop.OpenApprovals(ctx, scope)
-				}()
-			}
-			menu := mygo.NewMenu([]*mygo.MenuItem{{Label: "Show Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { show() }}, {Label: "Review requests / 处理请求", Click: func(*mygo.MenuItem, *mygo.Window) { pending() }}, {Label: "Hide window", Click: func(*mygo.MenuItem, *mygo.Window) { window.Hide(); go desktop.Visible(false) }}, mygo.Separator(), {Label: "Check for updates / 检查更新", Disabled: !mygo.Updater.Enabled(), Click: func(*mygo.MenuItem, *mygo.Window) { go checkUpdates(window, desktop, finishQuit) }}, {Label: "Quit Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { requestQuit() }}})
+			menu := mygo.NewMenu([]*mygo.MenuItem{{Label: "Show Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { show() }}, {Label: "Hide window", Click: func(*mygo.MenuItem, *mygo.Window) { window.Hide(); go desktop.Visible(false) }}, mygo.Separator(), {Label: "Check for updates / 检查更新", Disabled: !mygo.Updater.Enabled(), Click: func(*mygo.MenuItem, *mygo.Window) { go checkUpdates(window, desktop, finishQuit) }}, {Label: "Quit Raypx", Click: func(*mygo.MenuItem, *mygo.Window) { requestQuit() }}})
 			icon, _ := fs.ReadFile(bundled, "resources/tray.png")
 			tray, err := mygo.NewTray(mygo.TrayOptions{ID: "main", Icon: icon, IconIsTemplate: true, ToolTip: "Raypx", Menu: menu})
 			if err == nil {
@@ -239,34 +220,6 @@ func Run(bundled fs.FS) error {
 				}
 			})
 			mygo.App.OnActivate(func(bool) { show() })
-			mygo.App.OnNotificationClick(func(string) { pending() })
-			var notifications map[string]string
-			if data, err := fs.ReadFile(bundled, "generated/notifications.json"); err == nil {
-				_ = json.Unmarshal(data, &notifications)
-			}
-			notificationSlot := make(chan struct{}, 1)
-			desktop.Notify = func(scope string) {
-				if !interactive() || quitting.Load() {
-					return
-				}
-				pendingMu.Lock()
-				pendingScope = scope
-				pendingMu.Unlock()
-				select {
-				case notificationSlot <- struct{}{}:
-				default:
-					return
-				}
-				// The first macOS notification waits for permission. Never block
-				// CLI event delivery or approval lease responses on that answer.
-				go func() {
-					defer func() { <-notificationSlot }()
-					language := nativeLanguage(desktop)
-					notification := mygo.NewNotification(mygo.NotificationOptions{Title: "Raypx", Body: notifications[language]})
-					notification.OnClick(pending)
-					_ = notification.Show()
-				}()
-			}
 			// Publish only after UI and observer setup: shutdown may read them.
 			owned.Store(desktop)
 			if quitting.Load() {
@@ -281,8 +234,6 @@ func Run(bundled fs.FS) error {
 				case "hide":
 					window.Hide()
 					go desktop.Visible(false)
-				case "pending":
-					pending()
 				case "quit":
 					quit()
 				}

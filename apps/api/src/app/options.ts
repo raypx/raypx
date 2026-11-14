@@ -1,19 +1,14 @@
 import type { AuditService } from "../admin/audit.js";
 import type { AdministrationQueries } from "../admin/types.js";
-import type { InstanceService } from "@raypx/instances/server";
 import type {
   ConfigService,
   ResendSettingsService,
   StorageSettingsService,
 } from "../config/types.js";
-import type { ControlService, ResolveTaskContext } from "@raypx/control";
-import type { SessionAttachments } from "../storage/types.js";
 import type { AuthSession } from "@raypx/core/auth";
 import type { AccessPolicy } from "../access.js";
 import type { ApiLogging } from "../logging.js";
 import type { RateLimiter } from "../rate-limit/types.js";
-import type { CloudJobsService } from "@raypx/jobs/server";
-import type { ContextLibraryService } from "@raypx/memory/server";
 import type { SpaceAccess, SpaceManagement } from "@raypx/spaces/server";
 import type { ConversationsRepository, AgentsRepository } from "@raypx/agents/server";
 import type { ConversationModels } from "../conversations/models.js";
@@ -28,7 +23,9 @@ export interface ApiAppOptions {
   routines: import("@raypx/jobs/routines").RoutinesService;
   spaceMemory: import("@raypx/memory/space-server").SpaceMemoryService;
   routineEmailRelayToken?: string;
-  modelConnections: import("../conversations/connections.js").ModelConnectionsService;
+  modelConnections: ReturnType<
+    typeof import("../conversations/connections.js").createModelConnections
+  >;
   protectedInputs: import("@raypx/agents/server").ProtectedInputsService;
   agentApprovals: import("@raypx/agents/server").ApprovalsService;
   computers: import("@raypx/computers/server").ComputersService;
@@ -38,7 +35,6 @@ export interface ApiAppOptions {
   agents: AgentsRepository;
   conversations: ConversationsRepository;
   conversationModels: Pick<ConversationModels, "list">;
-  instances: InstanceService;
   audit?: AuditService;
   administration: AdministrationQueries;
   access?: AccessPolicy;
@@ -46,12 +42,6 @@ export interface ApiAppOptions {
   storageSettings: StorageSettingsService;
   resendSettings: ResendSettingsService;
   jobsEnabled?: boolean;
-  control: ControlService;
-  cloudJobs: CloudJobsService;
-  memory: ContextLibraryService;
-  attachments: SessionAttachments;
-  resolveContext: ResolveTaskContext;
-  onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;
   allowedOrigins: string[];

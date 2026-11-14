@@ -97,7 +97,7 @@ export function GroupsScreen({
   );
 }
 
-export function GroupEditor({
+function GroupEditor({
   controller,
   agents,
 }: {

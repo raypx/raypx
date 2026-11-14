@@ -9,7 +9,7 @@ import {
   DEVICE_CONNECTOR_VERSION,
 } from "@raypx/contracts/device-connector";
 import { cliLaunch } from "../process/installation.js";
-import { serverOrigin } from "../daemon/remote/origin.js";
+import { serverOrigin } from "../origin.js";
 import { acquireLock } from "../state/index.js";
 import { LocalError } from "../errors.js";
 import { captureDeviceDirectory } from "./files.js";

@@ -18,7 +18,7 @@ function v4Parts(address: string): number[] | null {
   if (isIP(address) !== 4) return null;
   return address.split(".").map(Number);
 }
-export function isLoopbackAddress(address: string): boolean {
+function isLoopbackAddress(address: string): boolean {
   const host = normalizedHost(address);
   return host === "127.0.0.1" || host === "::1";
 }

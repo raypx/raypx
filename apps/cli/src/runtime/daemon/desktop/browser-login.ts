@@ -7,17 +7,13 @@ import {
   oauthAuthorizePath,
   desktopLoginTokenSchema,
 } from "@raypx/contracts/api";
-import { localResults } from "@raypx/contracts/local-client";
 import { LocalError } from "../../errors.js";
 import { abortable } from "../cancellation.js";
 import type { DesktopApi } from "./api.js";
-import type { DesktopHost } from "./control.js";
 
 const token = () => randomBytes(32).toString("base64url");
 const expired = () => new LocalError("DESKTOP_LOGIN_EXPIRED", "Desktop login expired");
 const unavailable = () => new LocalError("DESKTOP_LOGIN_UNAVAILABLE", "Desktop login unavailable");
-const mismatch = () =>
-  new LocalError("DESKTOP_LOGIN_ACCOUNT_MISMATCH", "Desktop profile account mismatch");
 const cancelled = () => new LocalError("DESKTOP_LOGIN_CANCELLED", "Desktop login cancelled");
 const pageHeaders = {
   "Content-Type": "text/html; charset=utf-8",
@@ -38,28 +34,11 @@ export class BrowserLogin {
   private current: Attempt | undefined;
   constructor(
     private readonly api: DesktopApi,
-    private readonly host: DesktopHost,
     private readonly commit: () => void,
   ) {}
 
-  private async profile(client: string, signal: AbortSignal) {
-    const status = localResults["instance.status"].parse(
-      await this.host.request("instance.status", {}, client, signal),
-    );
-    signal.throwIfAborted();
-    if (status.state === "unregistered") return undefined;
-    const binding = status.binding;
-    if (status.state === "unavailable") throw unavailable();
-    if (!binding || binding.origin !== this.api.cookies.origin.origin) throw mismatch();
-    return binding.accountId;
-  }
-
-  async start(
-    input: { id: string; webOrigin: string; reauthorizeHost?: true | undefined },
-    client: string,
-    parent: AbortSignal,
-  ) {
-    const { id, webOrigin, reauthorizeHost } = input;
+  async start(input: { id: string; webOrigin: string }, client: string, parent: AbortSignal) {
+    const { id, webOrigin } = input;
     if (this.current) throw new LocalError("DESKTOP_LOGIN_BUSY", "Desktop login already pending");
     const controller = new AbortController();
     const signal = AbortSignal.any([controller.signal, parent]);
@@ -83,8 +62,6 @@ export class BrowserLogin {
     };
     signal.addEventListener("abort", abort, { once: true });
     try {
-      const accountId = await this.profile(client, signal);
-      if (reauthorizeHost && !accountId) throw mismatch();
       const state = token(),
         nonce = token(),
         verifier = token();
@@ -122,13 +99,7 @@ export class BrowserLogin {
             await this.api.browserLoginExchange(
               { code: code.data, verifier, redirectUri, nonce },
               signal,
-              async (signedInAccount) => {
-                const bound = await this.profile(client, signal);
-                if (
-                  (accountId !== undefined && accountId !== signedInAccount) ||
-                  (bound !== undefined && bound !== signedInAccount)
-                )
-                  throw mismatch();
+              async () => {
                 signal.throwIfAborted();
               },
               this.commit,
@@ -152,9 +123,7 @@ export class BrowserLogin {
           nonce,
           challenge,
           webOrigin,
-          reauthorizeHost,
           device: hostname().trim().slice(0, 120) || "Raypx Desktop",
-          accountId,
         },
         signal,
       );

@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"runtime"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -49,31 +47,28 @@ type Options struct {
 	DeviceNative    DeviceNative
 }
 type Desktop struct {
-	closeOnce            sync.Once
-	admission            sync.Mutex
-	closing              bool
-	requests             sync.WaitGroup
-	lifetime             context.Context
-	cancel               context.CancelFunc
-	Config               Config
-	Client               NativeClient
-	Preferences          *Preferences
-	UI                   UI
-	Tray                 atomic.Bool
-	cli                  CLIConfig
-	deviceNative         DeviceNative
-	deviceConfirm        sync.Mutex
-	devicePoll           sync.Mutex
-	devicePollNext       time.Time
-	instance             *sql.Conn
-	database             *sql.DB
-	lease                sync.Mutex
-	visible              bool
-	stopped              atomic.Bool
-	Notify               func(scope string)
-	RecoverSession       func() bool
-	notificationRevision float64
-	notificationBinding  string
+	closeOnce      sync.Once
+	admission      sync.Mutex
+	closing        bool
+	requests       sync.WaitGroup
+	lifetime       context.Context
+	cancel         context.CancelFunc
+	Config         Config
+	Client         NativeClient
+	Preferences    *Preferences
+	UI             UI
+	Tray           atomic.Bool
+	cli            CLIConfig
+	deviceNative   DeviceNative
+	deviceConfirm  sync.Mutex
+	devicePoll     sync.Mutex
+	devicePollNext time.Time
+	instance       *sql.Conn
+	database       *sql.DB
+	lease          sync.Mutex
+	visible        bool
+	stopped        atomic.Bool
+	RecoverSession func() bool
 }
 
 func New(config Config, directory string, options Options) (*Desktop, error) {
@@ -117,9 +112,9 @@ func (d *Desktop) Preload() string {
 	prefs, _ := json.Marshal(d.Preferences.Snapshot())
 	encodedConfig, _ := json.Marshal(string(config))
 	encodedPrefs, _ := json.Marshal(string(prefs))
-	return "(()=>{function freeze(v){if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Object.freeze(v)}}const c=JSON.parse(" + string(encodedConfig) + "),p=JSON.parse(" + string(encodedPrefs) + ");freeze(c);freeze(p);Object.defineProperties(window,{__raypxConnection:{value:c},__raypxDevicePreferences:{value:p},__raypxTerminalHooks:{value:" + strconv.FormatBool(runtime.GOOS == "darwin" || runtime.GOOS == "windows") + "},__raypxDesktopHost:{value:'mygo'}})})();"
+	return "(()=>{function freeze(v){if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Object.freeze(v)}}const c=JSON.parse(" + string(encodedConfig) + "),p=JSON.parse(" + string(encodedPrefs) + ");freeze(c);freeze(p);Object.defineProperties(window,{__raypxConnection:{value:c},__raypxDevicePreferences:{value:p},__raypxDesktopHost:{value:'mygo'}})})();"
 }
 
 func (d *Desktop) Runtime() JSON {
-	return JSON{"appVersion": d.cli.Version, "platform": platformName(), "trayEnabled": d.Tray.Load(), "engine": d.Client.Status(), "features": d.Client.Features(), "compiledFeatures": compiledFeatures()}
+	return JSON{"appVersion": d.cli.Version, "platform": platformName(), "trayEnabled": d.Tray.Load(), "engine": d.Client.Status(), "compiledFeatures": compiledFeatures()}
 }

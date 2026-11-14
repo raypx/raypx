@@ -22,9 +22,6 @@ Raypx's components wrap Base UI and use the shared control sizes and theme.
 - Use searchable controls where the feature needs them. The current Agent model
   picker uses UI Select, groups member/deployment offers and preserves the opaque
   returned model ID; it is not this Combobox.
-- The retained device-task picker still exercises connection-aware Combobox
-  identity/search in its component tests. Its former Desktop project/session UI
-  is removed; do not describe it as an available Agent workflow.
 
 ## Examples and verification
 
@@ -34,10 +31,9 @@ is a manual example. [Keyboard Selection](http://localhost:6006/?path=/story/pri
 runs its interaction checks when opened. Use the theme toolbar to preview both
 light and dark. [Story source](../../../apps/storybook/src/stories/combobox.stories.tsx)
 
-| Surface                                                                                                                                                                           | Behavior covered                                                                                                                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Storybook](../../../apps/storybook/src/stories/combobox.stories.tsx)                                                                                                             | Keyboard opening, labelled groups, disabled items, filtered choices, the active option relationship, Enter selection, and Escape from empty results with focus and selection preserved. |
-| [UI component tests](../../../packages/ui/src/combobox.component.test.tsx) and [model picker component tests](../../../packages/tasks/src/client/model-picker.component.test.tsx) | Controlled selection and focus, connection-aware identity, unavailable selections, and stale catalog handling.                                                                          |
+| Surface                                                               | Behavior covered                                                                                                                                                                        |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Storybook](../../../apps/storybook/src/stories/combobox.stories.tsx) | Keyboard opening, labelled groups, disabled items, filtered choices, the active option relationship, Enter selection, and Escape from empty results with focus and selection preserved. |
 
 The server-owned client replacement removes the project/task browser cases. The retained
 component tests above cover the device-runtime picker; native WebView and IPC

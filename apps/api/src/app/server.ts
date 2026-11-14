@@ -5,10 +5,7 @@ import { getBackendRuntime } from "../runtime/backend.js";
 export default {
   async fetch(request: Request & { ip?: string }): Promise<Response> {
     const upgrade = request.headers.get("upgrade")?.toLowerCase() === "websocket";
-    if (
-      upgrade &&
-      !["/relay", "/events", "/device/connect"].includes(new URL(request.url).pathname)
-    ) {
+    if (upgrade && !["/events", "/device/connect"].includes(new URL(request.url).pathname)) {
       const response = new Response(null, { status: 404 });
       setWebSocketHooks(request, { upgrade: () => response });
       return response;

@@ -8,7 +8,6 @@ import jobs from "@raypx/jobs/messages/en";
 import memory from "@raypx/memory/messages/en";
 import analytics from "@raypx/analytics/messages/en";
 import blocks from "@raypx/blocks/messages/en";
-import instances from "@raypx/instances/messages/en";
 import desktopAuthorization from "./desktopAuthorization.json" with { type: "json" };
 import dash from "./dash.json" with { type: "json" };
 import users from "./users.json" with { type: "json" };
@@ -27,7 +26,6 @@ export default {
   ...jobs,
   ...analytics,
   ...blocks,
-  ...instances,
   desktopAuthorization,
   dash,
   users,

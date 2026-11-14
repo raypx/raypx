@@ -48,13 +48,11 @@ it("partitions the full CLI payload without dropping or double-counting runtime 
   file(root, `${cli}/dist/runtime.json`, "{}");
   file(root, `${cli}/dist/raypx.exe`, Buffer.alloc(5));
   file(root, `${cli}/dist/LICENSE`, Buffer.alloc(2));
-  file(root, `${cli}/dist/herdr/herdr.exe`, Buffer.alloc(3));
   const [artifact] = collectBuildSizes(root, { packages: ["command"] }).artifacts;
-  expect(artifact).toMatchObject({ bytes: 12, files: 4 });
+  expect(artifact).toMatchObject({ bytes: 9, files: 3 });
   expect(artifact!.components).toEqual(
     expect.arrayContaining([
       { name: "CLI / embedded Bun", bytes: 5, files: 1 },
-      { name: "Herdr", bytes: 3, files: 1 },
       { name: "Metadata / licenses", bytes: 4, files: 2 },
     ]),
   );

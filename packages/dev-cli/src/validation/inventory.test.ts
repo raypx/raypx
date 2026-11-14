@@ -11,8 +11,8 @@ const original = {
 it("compares case multiplicity while allowing file moves, explicit ownership moves and new coverage", () => {
   const moved = {
     ...original,
-    workspace: "@raypx/tasks",
-    file: "packages/tasks/tests/view.test.ts",
+    workspace: "@raypx/feature",
+    file: "packages/feature/tests/view.test.ts",
   };
   const added = { ...moved, name: "handles a late response" };
   expect(
@@ -30,7 +30,7 @@ it("compares case multiplicity while allowing file moves, explicit ownership mov
 it("rejects malformed baselines and misspelled ownership mappings instead of silently skipping identities", () => {
   expect(() => baselineCases({ cases: [{ workspace: "web" }] })).toThrow("identity");
   expect(() => ownerMap({ [original.file]: 1 })).toThrow("identity");
-  expect(() => compareCases([original], [], { "wrong/path": "@raypx/tasks" })).toThrow(
+  expect(() => compareCases([original], [], { "wrong/path": "@raypx/feature" })).toThrow(
     "baseline file",
   );
   expect(baselineCases({ cases: [original] })).toEqual([original]);

@@ -33,7 +33,7 @@ type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Connection = Database | Tx;
 const token = () =>
   crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
-export async function deviceDigest(value: string): Promise<string> {
+async function deviceDigest(value: string): Promise<string> {
   return Buffer.from(
     await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
   ).toString("hex");

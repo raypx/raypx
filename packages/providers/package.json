@@ -4,11 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./core": "./src/core/index.ts",
-    "./claude": "./src/claude/index.ts",
-    "./codex": "./src/codex/index.ts",
-    "./pi": "./src/pi/index.ts",
-    "./pi/context": "./src/pi/context.ts",
     "./computer": "./src/computer/index.ts",
     "./computer/docker": "./src/computer/docker.ts",
     "./testing/computer": "./tests/helpers/computer.ts",
@@ -21,9 +16,7 @@
     "test:unit": "bun --bun vitest run"
   },
   "dependencies": {
-    "@earendil-works/pi-agent-core": "catalog:",
     "@modelcontextprotocol/client": "catalog:",
-    "@raypx/ai": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "zod": "catalog:"

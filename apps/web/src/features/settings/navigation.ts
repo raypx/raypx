@@ -9,7 +9,6 @@ const settingsSections = [
   "diagnostics",
   "password",
   "sessions",
-  "instances",
 ] as const;
 export type SettingsSection = (typeof settingsSections)[number];
 

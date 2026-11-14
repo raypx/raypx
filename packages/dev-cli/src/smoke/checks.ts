@@ -1,8 +1,5 @@
 /** Shared acceptance behavior for relocated outputs and real deployment images. */
-export async function checkApi(
-  base: string,
-  options: { origin?: string; gateway?: boolean; relay?: boolean } = {},
-) {
+export async function checkApi(base: string, options: { origin?: string; gateway?: boolean } = {}) {
   for (const path of [
     "/rpc/__missing",
     "/api/__missing",
@@ -31,11 +28,11 @@ export async function checkApi(
       if ((await fetch(`${base}${path}`, { headers: upgrade })).status !== 404)
         throw new Error(`API ${path} must reject WebSocket upgrades`);
     }
-    const rejected = await fetch(`${base}/relay`, {
+    const rejected = await fetch(`${base}/device/connect`, {
       headers: { ...upgrade, origin: "https://disallowed.example.invalid" },
     });
-    if (rejected.status !== (options.relay ? 403 : 404))
-      throw new Error("Relay must enforce role and Origin before upgrading");
+    if (rejected.status !== 403)
+      throw new Error("Connector must enforce role and native-only Origin before upgrading");
   }
   const signup = await fetch(`${base}/api/auth/sign-up/email`, {
     method: "POST",
@@ -49,31 +46,8 @@ export async function checkApi(
   const unavailable = (await signup.json()) as { code?: string };
   if (signup.status !== 503 || unavailable.code !== "MAIL_NOT_CONFIGURED")
     throw new Error("Unavailable mail must reject signup before account creation");
-  if (!options.gateway && !options.relay) {
-    if ((await fetch(`${base}/relay`)).status !== 404)
-      throw new Error("The API artifact must not host Relay sockets");
-    return;
-  }
-  await new Promise<void>((resolve, reject) => {
-    const url = new URL("/relay", base);
-    url.protocol = "ws:";
-    const socket = new WebSocket(url);
-    const timer = setTimeout(() => {
-      socket.close();
-      reject(new Error("Relay WebSocket handshake timed out"));
-    }, 5000);
-    // An unauthenticated frame exercises the independent Relay through the gateway.
-    socket.addEventListener("open", () => socket.send(JSON.stringify({ type: "ping" })));
-    socket.addEventListener("error", () => {
-      clearTimeout(timer);
-      reject(new Error("Relay WebSocket upgrade failed"));
-    });
-    socket.addEventListener("close", (event) => {
-      clearTimeout(timer);
-      if (event.code === 4001) resolve();
-      else reject(new Error(`Relay rejected authentication with ${event.code}`));
-    });
-  });
+  if ((await fetch(`${base}/device/connect`)).status !== 426)
+    throw new Error("Connector transport must follow the selected role");
 }
 
 export async function checkWeb(base: string) {

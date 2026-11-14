@@ -4,8 +4,8 @@ import { planTests } from "./test-command.js";
 const root = "/repo";
 const members = [
   {
-    name: "@raypx/tasks",
-    path: "packages/tasks",
+    name: "@raypx/feature",
+    path: "packages/feature",
     scripts: { test: "runner", "test:unit": "runner", "test:component": "runner" },
   },
   {
@@ -22,7 +22,7 @@ const members = [
 ];
 it("preserves default aggregation and scopes packages by name, path, short name or current directory", () => {
   expect(planTests(root, root, members, [])).toMatchObject({ task: "test", args: [] });
-  for (const name of ["tasks", "@raypx/tasks", "packages/tasks"])
+  for (const name of ["feature", "@raypx/feature", "packages/feature"])
     expect(
       planTests(root, root, members, [
         "unit",
@@ -34,11 +34,11 @@ it("preserves default aggregation and scopes packages by name, path, short name 
         "a b",
       ]),
     ).toMatchObject({
-      task: "@raypx/tasks#test:unit",
+      task: "@raypx/feature#test:unit",
       args: ["--no-cache", "--", "--testNamePattern", "a b"],
     });
-  expect(planTests(root, "/repo/packages/tasks/tests", members, [])).toMatchObject({
-    task: "@raypx/tasks#test",
+  expect(planTests(root, "/repo/packages/feature/tests", members, [])).toMatchObject({
+    task: "@raypx/feature#test",
   });
   expect(planTests(root, root, members, ["--", "--package", "literal"])).toMatchObject({
     task: "test",
@@ -58,7 +58,7 @@ it("routes E2E and repository workflows without silently turning them into a pac
     kind: "inventory",
     args: ["--layers"],
   });
-  expect(() => planTests(root, root, members, ["inventory", "--package", "tasks"])).toThrow(
+  expect(() => planTests(root, root, members, ["inventory", "--package", "feature"])).toThrow(
     "does not own",
   );
   expect(() => planTests(root, root, members, ["e2e", "--package", "api"])).toThrow("no e2e");
@@ -66,19 +66,17 @@ it("routes E2E and repository workflows without silently turning them into a pac
 
 it("fails on unsupported suites, empty layers, unknown or ambiguous packages before running anything", () => {
   expect(() => planTests(root, root, members, ["typo"])).toThrow("Unknown test suite");
-  expect(() => planTests(root, root, members, ["postgres:cloudflare"])).toThrow(
-    "Unknown test suite",
-  );
-  expect(() => planTests(root, root, members, ["integration", "-p", "tasks"])).toThrow("has no");
+  expect(() => planTests(root, root, members, ["postgres:fixture"])).toThrow("Unknown test suite");
+  expect(() => planTests(root, root, members, ["integration", "-p", "feature"])).toThrow("has no");
   expect(() => planTests(root, root, members, ["--package", "missing"])).toThrow(
     "Unknown workspace",
   );
   expect(() => planTests(root, root, members, ["--package"])).toThrow("requires");
   const ambiguous = [
     ...members,
-    { name: "other-tasks", path: "apps/tasks", scripts: { test: "runner" } },
+    { name: "other-feature", path: "apps/feature", scripts: { test: "runner" } },
   ];
-  expect(() => planTests(root, root, ambiguous, ["--package", "tasks"])).toThrow("Ambiguous");
+  expect(() => planTests(root, root, ambiguous, ["--package", "feature"])).toThrow("Ambiguous");
   expect(planTests(root, root, members, ["list"])).toMatchObject({ kind: "list" });
 });
 
@@ -102,7 +100,7 @@ it("dispatches the owned sandbox workflow with strict gate options and package o
     kind: "sandbox",
     args: [],
   });
-  expect(() => planTests(root, root, owned, ["sandbox", "--package", "tasks"])).toThrow(
+  expect(() => planTests(root, root, owned, ["sandbox", "--package", "feature"])).toThrow(
     "does not own",
   );
 });

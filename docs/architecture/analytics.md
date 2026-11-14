@@ -30,7 +30,7 @@ Explicit events are `app_opened`, `page_viewed`, `sign_in_succeeded`,
 reports a failed remote read (query family, safe code, API request ID) at most once per
 minute per family, so failures can be matched to the API logs.
 Retired task/scope/approval mutation diagnostics are removed with their clients.
-Page observations include Agents and the retained Memory library.
+Page observations include Agents and current Space resources.
 Page identifiers and enum properties are projected through an allowlist, both
 before capture and after SDK enrichment. SDK URL/referrer/person enrichment is
 removed. Local tasks contribute only consented operation counters; task IDs,

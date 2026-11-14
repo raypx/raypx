@@ -7,7 +7,7 @@ import {
   type HomeArchive,
   type ProviderComputer,
 } from "@raypx/providers/computer";
-export const storedSchema = providerComputerSchema.extend({
+const storedSchema = providerComputerSchema.extend({
   container: z.string().nullable(),
   volume: z.string().nullable(),
 });

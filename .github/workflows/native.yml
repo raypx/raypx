@@ -100,10 +100,6 @@ jobs:
       - name: Archive standalone CLI
         shell: bash
         run: bun apps/cli/scripts/distribution.ts archive
-      - name: Enable Windows Firewall for isolated provider acceptance
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
       - name: Accept the final CLI archive
         shell: bash
         run: bun apps/cli/scripts/archive-smoke.ts

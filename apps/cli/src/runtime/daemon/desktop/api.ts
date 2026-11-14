@@ -27,13 +27,11 @@ const authPaths = new Set([
   "/api/auth/revoke-session",
   "/api/auth/revoke-other-sessions",
 ]);
-const rendererPaths = new Set<string>(),
-  privatePaths = new Set<string>();
+const rendererPaths = new Set<string>();
 for (const [group, methods] of Object.entries(apiExposure))
   for (const [method, exposure] of Object.entries(methods)) {
     const path = `/rpc/${group}/${method}`;
     if (exposure === "renderer") rendererPaths.add(path);
-    if (exposure === "native") privatePaths.add(path);
   }
 const permittedHeaders = new Set(["accept", "accept-language", "content-type"]);
 const invalidRequest = () => new LocalError("INVALID_API_REQUEST", "API request is not permitted");
@@ -109,19 +107,14 @@ export class DesktopApi {
     this.requests.get(`${client}:${id}`)?.abort();
     return true;
   }
-  async request(
-    raw: unknown,
-    client: string,
-    parent: AbortSignal,
-    privileged = false,
-  ): Promise<DesktopApiResponse> {
+  async request(raw: unknown, client: string, parent: AbortSignal): Promise<DesktopApiResponse> {
     const parsed = desktopApiRequestSchema.safeParse(raw);
     if (!parsed.success) throw invalidRequest();
     const input = parsed.data;
     if (!input.path.startsWith("/") || input.path.startsWith("//") || /[\s#\\]/.test(input.path))
       throw invalidRequest();
     const url = new URL(input.path, this.cookies.origin);
-    const rpc = rendererPaths.has(url.pathname) || (privileged && privatePaths.has(url.pathname));
+    const rpc = rendererPaths.has(url.pathname);
     if (
       url.origin !== this.cookies.origin.origin ||
       url.username ||
@@ -295,7 +288,6 @@ export class DesktopApi {
       },
       "daemon",
       signal,
-      true,
     );
     if (response.status === 401) throw new LocalError("AUTH_REQUIRED", "AUTH_REQUIRED");
     const envelopeSchema = z.object({

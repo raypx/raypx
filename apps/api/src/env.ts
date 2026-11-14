@@ -35,7 +35,7 @@ const server = {
     .optional(),
   COMPUTERS_PER_MEMBER: computerLimit("10"),
   COMPUTERS_PER_SPACE: computerLimit("1"),
-  SERVER_ROLE: z.enum(["api", "both", "all"]).default("all"),
+  SERVER_ROLE: z.enum(["api", "all"]).default("all"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   AGENT_MODELS: z.string().default("[]"),
   AGENT_MODEL_CREDENTIALS: z.string().default("{}"),
@@ -79,7 +79,7 @@ const server = {
   DATABASE_URL: z.url().default("postgres://postgres:postgres@localhost:5433/raypx_foundation"),
   AUTH_URL: z.url().default("http://localhost:3002"),
   AUTH_SECRET: z.string().min(32).default("raypx-development-only-secret-32-characters"),
-  /** Encrypts stored provider credentials and seeds instance signing; never the auth secret. */
+  /** Encrypts stored provider credentials; never the auth secret. */
   APP_KEY: z.string().min(32).default("raypx-development-only-app-key-32-characters"),
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
@@ -172,7 +172,7 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
       throw new Error("Production AUTH_SECRET must be explicitly configured");
     if (env.APP_KEY.startsWith("raypx-development"))
       throw new Error("Production APP_KEY must be explicitly configured");
-    // Rotating sessions must never invalidate stored credentials or enrolled instances.
+    // Rotating sessions must never invalidate stored credentials.
     if (env.APP_KEY === env.AUTH_SECRET)
       throw new Error("Production APP_KEY must differ from AUTH_SECRET");
     if (new URL(env.AUTH_URL).protocol !== "https:")
@@ -200,7 +200,7 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
 export type ApiEnvironment = ReturnType<typeof getApiEnvironment>;
 
 export function getServerRole(runtimeEnv: Record<string, string | undefined> = process.env) {
-  return z.enum(["api", "worker", "relay", "both", "all"]).parse(runtimeEnv.SERVER_ROLE || "all");
+  return z.enum(["api", "worker", "relay", "all"]).parse(runtimeEnv.SERVER_ROLE || "all");
 }
 
 function validateRunTiming(environment: { RUN_HEARTBEAT_MS: number; RUN_LEASE_MS: number }) {

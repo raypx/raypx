@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { adminAudit, mailConfiguration, user } from "@raypx/database/schema";
 import { createApiClient } from "@raypx/client/api";
-import { controlAuth } from "@raypx/control/testing";
+import { testSession } from "../../helpers/session.js";
 import { createMailer } from "@raypx/email/server";
 import { eq } from "drizzle-orm";
 import { createApiApp } from "../../helpers/app.js";
@@ -29,7 +29,7 @@ afterAll(() => connection.close());
 it("applies Resend settings live and keeps keys out of reads and durable audit entries", async () => {
   const administration = createAdministrationRepository(db);
   const audit = new AuditService(administration);
-  const fixture = controlAuth(`resend-${crypto.randomUUID()}`);
+  const fixture = testSession(`resend-${crypto.randomUUID()}`);
   await db.insert(user).values(fixture.user);
   let role = "member";
   const deliver = vi.fn(async () => {});

@@ -1,7 +1,6 @@
 import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { sealCliPayload, verifyCliPayload } from "@raypx/tooling/build/cli";
-import { prepareHerdr } from "../src/runtime/process/herdr-release.js";
 import manifest from "../package.json";
 import repository from "../../../package.json";
 
@@ -36,27 +35,18 @@ const result = await Bun.build({
   define: { __RAYPX_CLI_BUILT_AT__: String(builtAt) },
 });
 if (!result.success) throw new AggregateError(result.logs, "CLI compilation failed");
-const herdr = join(
-  root,
-  ".cache/herdr",
-  manifest.herdr.version,
-  `${process.platform}-${process.arch}`,
-);
-await prepareHerdr(herdr);
-await cp(herdr, join(output, "herdr"), { recursive: true });
 await cp(join(root, "LICENSE"), join(output, "LICENSE"));
 await writeFile(
   join(output, "README.txt"),
-  "Raypx CLI\nRun ./raypx (Windows: .\\raypx.exe). Add this whole directory to PATH.\nKeep herdr/ and runtime.json beside the executable. Node and Bun are not required.\nProject package managers and external provider CLIs come from your environment.\nRun raypx --help and raypx login to enroll this device for one account and server origin.\nThe signed local identity permits offline work; logout preserves local profiles and history.\nTo replace the installation, quit Desktop, run raypx daemon stop and wait for running processes to exit.\nExtract the complete new directory; retain your local profile and configuration.\n",
+  "Raypx CLI\nRun ./raypx (Windows: .\\raypx.exe). The executable embeds Bun.\nPair with raypx device pair and confirm each Space directory grant on this machine.\nDesktop uses the same bundled CLI for private session transport.\nKeep runtime.json, LICENSE and README.txt beside the executable.\nStop this installation's connector and Desktop session daemon before replacing it.\n",
 );
 await sealCliPayload(output, {
-  format: 1,
+  format: 2,
   commit,
   platform: process.platform,
   arch: process.arch,
   version: manifest.version,
   builtAt,
   bunVersion: Bun.version,
-  herdrVersion: manifest.herdr.version,
 });
 await verifyCliPayload(output, { commit, builtAt });

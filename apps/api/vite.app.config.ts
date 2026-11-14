@@ -41,13 +41,9 @@ export default defineConfig({
         "maintenance:cleanup": {
           handler: fileURLToPath(new URL("./src/jobs/runtime/cleanup.ts", import.meta.url)),
         },
-        "schedules:tick": {
-          handler: fileURLToPath(new URL("./src/jobs/runtime/tick.ts", import.meta.url)),
-        },
       },
       scheduledTasks: {
         "*/15 * * * *": ["maintenance:cleanup"],
-        "* * * * *": ["schedules:tick"],
       },
       plugins: ["./src/runtime/plugin.ts"],
       routes: {

@@ -65,16 +65,3 @@ export function privateTestFile(owner: Pick<Member, "path" | "testExports">, fil
     (!owner.testExports && path.startsWith("tests/"))
   );
 }
-
-function taskLifecycleInputs(apiPath: string) {
-  return [`${apiPath}/tests/fixtures/task-lifecycle-relay.ts`, `${apiPath}/tests/helpers/relay.ts`];
-}
-
-/** The CLI lifecycle suite launches the API fixture as a subprocess. */
-export function relatedTaskLifecycle(graph: WorkspaceGraph, files: readonly string[]) {
-  const api = graph.members.find((candidate) => candidate.name === "api");
-  const cli = graph.members.find((candidate) => candidate.name === "cli" && candidate.scripts.test);
-  if (!api || !cli) return;
-  if (taskLifecycleInputs(api.path).some((file) => files.includes(file)))
-    return { workspace: cli.name, file: "tests/integration/runtime/daemon/task-lifecycle.test.ts" };
-}

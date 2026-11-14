@@ -17,7 +17,7 @@ export interface ApprovalReviewModels {
   available(): boolean | Promise<boolean>;
   resolve(scope: SpaceScope): Promise<ApprovalReviewModel | undefined>;
 }
-export const REVIEW_TIMEOUT_MS = 5_000;
+const REVIEW_TIMEOUT_MS = 5_000;
 export const REVIEW_MAX_OUTPUT_TOKENS = 256;
 export const REVIEW_RUN_BUDGET = 8;
 const REVIEW_MAX_INPUT = 24_000;

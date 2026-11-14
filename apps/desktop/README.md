@@ -10,10 +10,10 @@ versions and sharing, with authenticated previews handed off to Web. Account set
 compose model connections, Skills and Tools. Packaged routes use hash history;
 Settings preserves the route and drafts beneath its overlay.
 
-The bundled CLI/daemon still owns encrypted native sessions and transport, plus
-retained device execution, enrollment, scheduling and terminal capabilities. Those
-are separate from backend Agent Runs until their replacement phase. The old
-project/session, Files, Terminal and Automations screens are removed.
+The bundled CLI owns the outbound device connector and the independent encrypted
+Desktop session bridge. Agent execution and history are server-owned. No local
+task harness, enrollment, terminal helper or account/device scheduler remains.
+See [Desktop development](../../docs/development/desktop.md).
 
 - `main.go`: embedded frontend/manifests and entry point.
 - `internal/app`: MyGo lifecycle, trusted IPC, windows, tray and native dialogs.
@@ -41,7 +41,7 @@ bun run verify --full
 ```
 
 `mygo:smoke` is a headless artifact check and opens no window. `package:desktop`
-stages matching renderer, CLI and Herdr inputs, then packages under
+stages matching renderer, CLI inputs, then packages under
 `build/<os>-<arch>`. `dev:desktop` starts MyGo with the Vite renderer server.
 Cross-platform packages require matching CLI artifacts and are currently rejected.
 `test:unit` and `test:component` use isolated platform fixtures without native tools,
@@ -50,8 +50,7 @@ tests; default `test` runs all three Vitest projects. Go policies and host use c
 accept a NativeClient port, while finite subprocess/IPC and compiled CLI acceptance stay
 in the native gates. See the testing guide for the selected macOS/Windows matrix.
 Go policy checks do not require staged renderer files. `mygo:check`/`mygo:test` also
-compile the `native_smoke` build and run its protocol tests. Go tests generate notification
-copy and use temporary profiles. `RAYPX_MYGO_CLI` optionally selects an absolute
+compile the `native_smoke` build and run its protocol tests. Go tests use temporary session directories. `RAYPX_MYGO_CLI` optionally selects an absolute
 compiled CLI for the daemon integration test; only its isolated daemon is stopped.
 
 `mygo:check:docker` runs the existing Go checks in
@@ -70,20 +69,15 @@ vet/compilation for production and `native_smoke`, without running tests or a GU
 `native:smoke:interactive` also checks native focus/resize/close; use isolated CI.
 Normal production builds exclude the private endpoint and renderer test hook.
 
-Register the local instance once to one account and API origin. Its signed
-identity allows local work offline and after online logout. Remote access needs
-separate Host opt-in and online authorization. On macOS/Windows, GUI Quit leaves
-the daemon and its tasks running; explicit daemon shutdown stops its owned work.
+The connector pairs to one account/origin and uses native-confirmed Space
+directory grants. GUI Quit releases the window channel and leaves the independent
+connector running. Server Runs remain reachable from the shared workspace.
 
-Native uses the current data paths and device preferences.
-The daemon encrypts persistent Cookies in its existing profile SQLite database.
-MyGo Secrets supplies a key scoped to the canonical native/profile directories
-through finite private bootstrap. The renderer calls the daemon directly over an
-independently authenticated loopback WebSocket; Go holds only native capabilities.
-Missing keys preserve stored rows and permit sign-in in daemon memory. A failed
-write disables session transport until daemon restart. Previous Go session stores
-and keys are never read, imported or deleted. CLI identity and Host credentials
-stay in its profile; preferences and the lifetime native instance lock stay local.
+The daemon encrypts persistent cookies in desktop-session.sqlite. Native secret
+storage supplies a directory-scoped key through private bootstrap. Missing keys
+preserve stored rows and permit memory-only sign-in. The renderer uses a separate
+authenticated bounded loopback channel. Old business profiles and sessions are
+never imported. Preferences and the lifetime native instance lock stay local.
 MyGo signed updates use distinct
 keys and manifests. Local unsigned or
 ad-hoc packages do not establish distribution signing, notarization or GUI results.
@@ -93,4 +87,4 @@ Desktop-only browser acceptance lives in `e2e/`; run it through
 Web/Desktop journeys remain in the root `e2e/` workspace. Browser preview tests
 do not replace packaged native acceptance.
 
-See the [single-compile distribution and Strobe acceptance guide](../../docs/development/mygo-bun-migration-plan.md) for prepared payloads and remaining platform gates.
+See the [prepared distribution guide](../../docs/development/desktop.md) for prepared payloads and remaining platform gates.

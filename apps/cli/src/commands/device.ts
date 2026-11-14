@@ -33,7 +33,7 @@ export function createDeviceCommands(invocation: CliArgs, options: ConnectorProf
         const actions = await import("../runtime/device-connector/actions.js");
         const { ConnectorStorage } = await import("../runtime/device-connector/storage.js");
         if (action === "native") {
-          if (args._.length || invocation.yes || !invocation.json)
+          if (args._.length || !invocation.json)
             throw new LocalError(
               "INVALID_INPUT",
               "Native confirmation requires bounded stdin JSON",
@@ -58,11 +58,8 @@ export function createDeviceCommands(invocation: CliArgs, options: ConnectorProf
           return;
         }
         if (action === "run") {
-          if (args._.length || invocation.json || invocation.yes)
-            throw new LocalError(
-              "INVALID_INPUT",
-              "Device run does not accept operands, --json or --yes",
-            );
+          if (args._.length || invocation.json)
+            throw new LocalError("INVALID_INPUT", "Device run does not accept operands or --json");
           await (
             await import("../runtime/device-connector/connection.js")
           ).runDeviceConnector(options);
@@ -71,7 +68,7 @@ export function createDeviceCommands(invocation: CliArgs, options: ConnectorProf
         const storage = new ConnectorStorage(options);
         let result: unknown;
         if (action === "pair" || action === "grant") {
-          if (invocation.json || invocation.yes || !process.stdin.isTTY || !process.stderr.isTTY)
+          if (invocation.json || !process.stdin.isTTY || !process.stderr.isTTY)
             throw new LocalError(
               "INTERACTIVE_REQUIRED",
               "Pairing and every directory grant require confirmation on this device",

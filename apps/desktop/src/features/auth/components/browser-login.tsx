@@ -8,15 +8,7 @@ import { analytics } from "../../analytics/client.js";
 import { authClient, webUrl } from "../client.js";
 
 type Attempt = { id: string; bridge?: DesktopBridge };
-type State =
-  | "idle"
-  | "opening"
-  | "waiting"
-  | "failed"
-  | "expired"
-  | "mismatch"
-  | "refresh"
-  | "refreshFailed";
+type State = "idle" | "opening" | "waiting" | "failed" | "expired" | "refresh" | "refreshFailed";
 
 function cancel(attempt: Attempt | null) {
   if (attempt?.bridge)
@@ -24,10 +16,8 @@ function cancel(attempt: Attempt | null) {
 }
 
 export function BrowserAuthorization({
-  reauthorizeHost,
   onAuthorized,
 }: {
-  reauthorizeHost?: true;
   onAuthorized: () => void | Promise<void>;
 }) {
   const t = useTranslations("desktopLogin");
@@ -75,7 +65,7 @@ export function BrowserAuthorization({
       attempt.bridge = bridge;
       const input = { id: attempt.id };
       const { authorizationUrl } = await bridge.request.browserLoginStart(
-        { ...input, webOrigin: webUrl, ...(reauthorizeHost ? { reauthorizeHost } : {}) },
+        { ...input, webOrigin: webUrl },
         { maxRequestTime: 35_000 },
       );
       if (current.current !== attempt) return;
@@ -85,7 +75,7 @@ export function BrowserAuthorization({
       setState("waiting");
       await bridge.request.browserLoginWait(input, { maxRequestTime: 310_000 });
       if (current.current !== attempt) return;
-      if (!reauthorizeHost) analytics.capture("sign_in_succeeded");
+      analytics.capture("sign_in_succeeded");
       await resume(attempt);
     } catch (error) {
       if (current.current !== attempt) return;
@@ -99,9 +89,6 @@ export function BrowserAuthorization({
         case "DESKTOP_LOGIN_EXPIRED":
           setState("expired");
           break;
-        case "DESKTOP_LOGIN_ACCOUNT_MISMATCH":
-          setState("mismatch");
-          break;
         default:
           setState("failed");
       }
@@ -109,8 +96,7 @@ export function BrowserAuthorization({
   }
 
   const waiting = state === "opening" || state === "waiting";
-  const message =
-    state === "failed" || state === "expired" || state === "mismatch" || state === "refreshFailed";
+  const message = state === "failed" || state === "expired" || state === "refreshFailed";
   let label = t("openBrowser");
   if (state === "refreshFailed") label = c("retry");
   if (waiting || state === "refresh") label = c("working");

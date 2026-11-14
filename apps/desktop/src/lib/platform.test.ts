@@ -15,14 +15,9 @@ it("keeps requests and events isolated across platform instances", async () => {
   stop();
   first.emit({ version: 1, event: "engine.status", data: { status: "ready" } });
   expect(changed).toHaveBeenCalledOnce();
-  await expect(
-    first.platform.localRequest("files.list", {
-      rootId: first.device.id,
-      path: "",
-      offset: 0,
-      limit: 100,
-    }),
-  ).rejects.toThrow("Unexpected local request");
+  await expect(first.platform.localRequest("runtime.info", {})).rejects.toThrow(
+    "Unexpected local request",
+  );
 });
 
 it("shares a connection attempt and permits recovery after a failed subscription", async () => {
@@ -33,7 +28,6 @@ it("shares a connection attempt and permits recovery after a failed subscription
     .mockResolvedValue(fixture.bridge);
   const platform = createDesktopPlatform({
     available: () => true,
-    terminalHooks: () => false,
     connect,
   });
   const first = platform.getBridge(),
@@ -48,7 +42,6 @@ it("keeps browser preview independent of native preferences and transport", asyn
   const connect = vi.fn();
   const platform = createDesktopPlatform({
     available: () => false,
-    terminalHooks: () => false,
     connect,
   });
   await expect(platform.saveDesktopPreferences({ theme: "dark", locale: "zh" })).resolves.toBe(

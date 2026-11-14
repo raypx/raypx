@@ -1,8 +1,8 @@
 {
-  "replaceOwner": "停止旧宿主并更新",
-  "upgradeWarning": "旧版本宿主仍在运行。替换它会取消其中正在执行的会话。",
-  "upgradeTitle": "更新执行宿主",
-  "unavailable": "本地工具暂不可用",
-  "retry": "重启本地工具",
-  "hint": "重启本地工具以重新连接。你的工作区仍保存在这台电脑上。"
+  "replaceOwner": "停止旧服务并更新",
+  "upgradeWarning": "旧版本会话服务仍在运行。替换它会关闭桌面端连接。",
+  "upgradeTitle": "更新桌面端连接",
+  "unavailable": "桌面端连接暂不可用",
+  "retry": "重新连接桌面端",
+  "hint": "重新连接服务器上的工作区。"
 }

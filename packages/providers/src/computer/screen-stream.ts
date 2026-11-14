@@ -1,7 +1,7 @@
 import { MAX_COMPUTER_SCREEN_FPS, type ComputerScreenFrame } from "@raypx/core/computers";
 import { ComputerError } from "./port.js";
 
-export async function screenPause(signal?: AbortSignal) {
+async function screenPause(signal?: AbortSignal) {
   if (signal?.aborted) return;
   await new Promise<void>((resolve) => {
     const finish = () => {

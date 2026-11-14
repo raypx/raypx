@@ -1,7 +1,6 @@
 import type { DesktopBridge, DesktopRuntime } from "../../bridge.js";
 import type { LocalEvent, LocalParams } from "@raypx/contracts/local";
 import type { LocalClientMethod, LocalResult } from "@raypx/contracts/local-client";
-import type { SyncDevice } from "@raypx/contracts/tasks";
 import { createDesktopPlatform } from "../../src/lib/platform.js";
 
 export function deferred<T>() {
@@ -25,18 +24,6 @@ export function desktopFixture() {
     platform: "test",
     trayEnabled: false,
     engine: { status: "ready" },
-  };
-  const device: SyncDevice = {
-    id: "00000000-0000-4000-8000-000000000001",
-    name: "Test computer",
-    platform: "test",
-    appVersion: "test",
-    epoch: 1,
-    revoked: false,
-    lastSeenAt: null,
-    online: true,
-    projects: [],
-    capabilities: [],
   };
   function setLocal<M extends LocalClientMethod>(
     method: M,
@@ -63,19 +50,14 @@ export function desktopFixture() {
     }),
   };
   setNative("getRuntime", async () => runtime);
-  setNative("pickDirectory", async () => null);
   setNative("localRequest", async ({ method, params }) => {
     calls.push({ method, input: params });
     const handler = local.get(method);
     if (!handler) throw new Error(`Unexpected local request: ${method}`);
     return handler(params);
   });
-  setLocal("agents.local.device", () => device);
-  setLocal("instance.status", () => ({ state: "registered" }));
-  setLocal("instance.refresh", () => ({ state: "registered" }));
   const platform = createDesktopPlatform({
     available: () => true,
-    terminalHooks: () => false,
     connect: async (emit) => {
       dispatch = emit;
       return bridge;
@@ -84,7 +66,6 @@ export function desktopFixture() {
   return {
     platform,
     runtime,
-    device,
     bridge,
     calls,
     setLocal,

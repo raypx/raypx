@@ -27,7 +27,7 @@ test(
 );
 
 test(
-  "Web account settings present profile, sessions and instance registration with scoped actions",
+  "Web account settings present profile and sessions with scoped actions",
   { tag: "@web" },
   async ({ page }) => {
     await webShellFixture(page);
@@ -60,31 +60,6 @@ test(
       revoked.push(route.request().postDataJSON() as Record<string, unknown>);
       return authResponse(route, { status: true });
     });
-    const identity = {
-      instanceId: "655c58f4-4c7a-4a93-81d3-6205c6192c01",
-      publicKey: "browser-fixture-public-key-value-00000000",
-      name: "Development Mac",
-      platform: "darwin",
-      appVersion: "0.1.0",
-    };
-    await page.route("**/rpc/instances/list", (route) =>
-      authResponse(route, {
-        json: [
-          {
-            ...identity,
-            version: 1,
-            origin: "https://raypx.example",
-            accountId: user.id,
-            revision: 1,
-            status: "registered",
-            issuedAt: "2026-11-09T09:00:00.000Z",
-          },
-        ],
-      }),
-    );
-    await page.route("**/rpc/instances/inspect", (route) =>
-      authResponse(route, { json: identity }),
-    );
     await page.goto(`${web}/settings#settings/account`);
     const settings = page.getByRole("dialog", { name: "Settings", exact: true });
     await expect(settings.getByRole("textbox", { name: "Display name", exact: true })).toHaveValue(
@@ -116,20 +91,6 @@ test(
       sessions.getByRole("heading", { name: "Chrome · Windows", exact: true }),
     ).toHaveCount(0);
     expect(revoked).toEqual([{ token: "fixture-private-other-session" }]);
-    await settings.getByRole("tab", { name: "Registered instances", exact: true }).click();
-    await expect(
-      settings.getByRole("heading", { name: "Development Mac", exact: true }),
-    ).toBeVisible();
-    await settings.getByRole("textbox", { name: "Instance code", exact: true }).fill("ABCDEFGH23");
-    await settings.getByRole("button", { name: "Review instance", exact: true }).click();
-    await expect(
-      settings.getByRole("button", { name: "Approve registration", exact: true }),
-    ).toBeVisible();
-    await capture(page, {
-      path: test.info().outputPath("instance-registration.png"),
-      fullPage: true,
-      animations: "disabled",
-    });
   },
 );
 

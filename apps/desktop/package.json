@@ -23,7 +23,6 @@
     "native:csp": "bun scripts/host/csp.ts",
     "native:smoke": "bun run scripts/host/task.ts native:smoke",
     "native:smoke:interactive": "bun run scripts/host/task.ts native:smoke:interactive",
-    "native:agents": "bun run scripts/host/task.ts native:agents",
     "build:renderer": "bun run scripts/host/task.ts build:renderer",
     "native:prepare": "bun scripts/host/mygo.ts prepare",
     "mygo:build": "bun scripts/host/mygo.ts build",
@@ -33,10 +32,7 @@
     "mygo:smoke": "bun scripts/host/mygo.ts smoke",
     "mygo:dev": "bun scripts/host/mygo.ts dev",
     "native:generate": "bun scripts/host/generate.ts",
-    "e2e": "raypx-dev e2e",
-    "perf": "bun perf/run.ts",
-    "perf:check": "tsc --noEmit --project perf/tsconfig.json",
-    "build:perf": "bun --bun vp build --config perf/browser/vite.app.config.ts"
+    "e2e": "raypx-dev e2e"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -49,7 +45,6 @@
     "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/icons": "workspace:*",
-    "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
     "@raypx/pages": "workspace:*",
@@ -63,12 +58,10 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@hona/strobe": "catalog:dev",
     "@playwright/test": "catalog:dev",
     "@raypx/dev-cli": "workspace:*",
     "@raypx/devtools": "workspace:*",
     "@raypx/e2e": "workspace:*",
-    "@raypx/tasks": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",

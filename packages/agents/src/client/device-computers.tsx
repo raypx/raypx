@@ -19,7 +19,7 @@ import { RefreshIcon } from "@raypx/icons/refresh";
 import type { DeviceComputersController } from "../model/device-computers.js";
 import { useTranslations } from "./i18n.js";
 
-export function useDeviceComputers(controller: DeviceComputersController) {
+function useDeviceComputers(controller: DeviceComputersController) {
   const state = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,

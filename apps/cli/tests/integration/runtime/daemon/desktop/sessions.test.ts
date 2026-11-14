@@ -5,11 +5,7 @@ import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { ProfileStorage } from "../../../../../src/runtime/sqlite/index.js";
-import {
-  desktopSessions,
-  hostAuthorizations,
-  instanceCredentials,
-} from "../../../../../src/runtime/sqlite/schema/credentials.js";
+import { desktopSessions } from "../../../../../src/runtime/sqlite/schema/desktop.js";
 import {
   encryptedSessionStore,
   sessionRecordStore,
@@ -142,24 +138,12 @@ it.each(["unchanged", "login", "logout"] as const)(
   },
 );
 
-it("resets sessions for all origins transactionally while preserving independent host and instance credentials", () => {
+it("resets sessions for all origins transactionally and rolls back a failed reset", () => {
   const f = fixture(),
     db = f.storage.database;
   f.records.write(Buffer.alloc(28, 1));
   const other = sessionRecordStore(db, "https://second.example.test");
   other.write(Buffer.alloc(28, 2));
-  db.insert(hostAuthorizations)
-    .values({
-      apiUrl: f.origin,
-      accountId: "account",
-      deviceId: crypto.randomUUID(),
-      epoch: 1,
-      authorization: "host-credential",
-    })
-    .run();
-  db.insert(instanceCredentials)
-    .values({ instanceId: crypto.randomUUID(), privateKey: Buffer.from("instance-credential") })
-    .run();
   db.run(
     sql`CREATE TRIGGER reject_reset BEFORE DELETE ON desktop_sessions WHEN OLD.origin = 'https://second.example.test' BEGIN SELECT RAISE(ABORT, 'synthetic deletion failure'); END`,
   );
@@ -169,6 +153,4 @@ it("resets sessions for all origins transactionally while preserving independent
   db.run(sql`DROP TRIGGER reject_reset`);
   f.records.clear();
   expect(f.records.hasRows()).toBe(false);
-  expect(db.select().from(hostAuthorizations).all()).toHaveLength(1);
-  expect(db.select().from(instanceCredentials).all()).toHaveLength(1);
 });

@@ -82,7 +82,7 @@ describe("daemon Desktop adapter", () => {
   it("sends business calls to the WebSocket and native preferences to MyGo", async () => {
     const native = runtime();
     const bridge = await createMyGoBridge(() => {});
-    const result = bridge.request.localRequest({ method: "roots.list", params: {} });
+    const result = bridge.request.localRequest({ method: "runtime.info", params: {} });
     await vi.waitFor(() =>
       expect(nextSocket().frames.at(-1)).toMatchObject({
         type: "request",
@@ -114,7 +114,7 @@ describe("daemon Desktop adapter", () => {
         type: "event",
         streamId,
         sequence: 1,
-        event: { version: 1, event: "agent.changed", data: {} },
+        event: { version: 1, event: "engine.status", data: {} },
       }),
     ).toThrow("listener");
     expect(socket.frames.at(-1)).toEqual({ type: "ack", streamId, sequence: 1 });
@@ -122,7 +122,7 @@ describe("daemon Desktop adapter", () => {
       type: "event",
       streamId: crypto.randomUUID(),
       sequence: 2,
-      event: { version: 1, event: "agent.changed", data: {} },
+      event: { version: 1, event: "engine.status", data: {} },
     });
     expect(socket.readyState).toBe(3);
     await expect(bridge.request.savePreferences({ theme: "dark", locale: "en" })).resolves.toBe(
@@ -134,14 +134,14 @@ describe("daemon Desktop adapter", () => {
     runtime();
     const bridge = await createMyGoBridge(() => {});
     const operation = bridge.request.localRequest(
-      { method: "roots.list", params: {} },
+      { method: "runtime.info", params: {} },
       { maxRequestTime: 100 },
     );
     const failed = operation.catch((error: unknown) => error);
     await vi.advanceTimersByTimeAsync(100);
     expect(await failed).toEqual(new Error("Desktop request timed out"));
     expect(nextSocket().frames.at(-1)).toMatchObject({ type: "cancel" });
-    const pending = bridge.request.localRequest({ method: "roots.list", params: {} });
+    const pending = bridge.request.localRequest({ method: "runtime.info", params: {} });
     const ended = pending.catch((error: unknown) => error);
     await Promise.resolve();
     window.dispatchEvent(new Event("pagehide"));
@@ -152,9 +152,9 @@ describe("daemon Desktop adapter", () => {
     runtime(true);
     const bridge = await createMyGoBridge(() => {});
     expect((await bridge.request.getRuntime({})).engine.code).toBe("HOST_VERSION_MISMATCH");
-    await expect(bridge.request.localRequest({ method: "roots.list", params: {} })).rejects.toThrow(
-      "HOST_VERSION_MISMATCH",
-    );
+    await expect(
+      bridge.request.localRequest({ method: "runtime.info", params: {} }),
+    ).rejects.toThrow("HOST_VERSION_MISMATCH");
     await expect(bridge.request.hideWindow({})).resolves.toBe(true);
   });
   it("waits for authentication, reconnects after loss and closes the previous page", async () => {
@@ -181,17 +181,7 @@ describe("daemon Desktop adapter", () => {
     expect(Socket.instances).toHaveLength(2);
     expect(nextSocket().frames[0]).toMatchObject({ type: "authenticate", protocol: 1 });
   });
-  it("routes modified connector recovery through the bundled native CLI", async () => {
-    const call = runtime();
-    const bridge = await createMyGoBridge(() => {});
-    await bridge.request.localRequest({
-      method: "connectors.install",
-      params: { provider: "codex", recoverModified: true, configDirs: { codex: "/attacker" } },
-    });
-    expect(call).toHaveBeenLastCalledWith("Desktop.Request", "repair_connector", {
-      provider: "codex",
-    });
-  });
+
   it("routes device pairing and directory confirmation only through native capabilities", async () => {
     const call = runtime();
     const bridge = await createMyGoBridge(() => {});
@@ -240,7 +230,7 @@ describe("daemon Desktop adapter", () => {
           rejectBootstrap = reject;
         }),
     );
-    const waiting = bridge.request.localRequest({ method: "roots.list", params: {} });
+    const waiting = bridge.request.localRequest({ method: "runtime.info", params: {} });
     const cancelled = waiting.catch((error: unknown) => error);
     await vi.waitFor(() => expect(rejectBootstrap).toBeTypeOf("function"));
     await expect(bridge.request.restartEngine({})).resolves.toBe(true);
@@ -256,7 +246,7 @@ describe("daemon Desktop adapter", () => {
     const bridge = await createMyGoBridge(() => {});
     nextSocket().close();
     stalled = true;
-    const waiting = bridge.request.localRequest({ method: "roots.list", params: {} });
+    const waiting = bridge.request.localRequest({ method: "runtime.info", params: {} });
     const cancelled = waiting.catch((error: unknown) => error);
     await vi.waitFor(() => expect(Socket.instances).toHaveLength(2));
     const old = nextSocket();
@@ -315,7 +305,7 @@ it("keeps a healthy renderer channel usable when rebootstrap fails", async () =>
   expect(await bridge.request.restartEngine({})).toBe(false);
   expect(nextSocket()).toBe(previous);
   expect(previous.readyState).toBe(Socket.OPEN);
-  const waiting = bridge.request.localRequest({ method: "roots.list", params: {} });
+  const waiting = bridge.request.localRequest({ method: "runtime.info", params: {} });
   await vi.waitFor(() => expect(previous.frames.at(-1)).toMatchObject({ type: "request" }));
   previous.deliver({ type: "response", id: previous.frames.at(-1)!.id, result: [] });
   await expect(waiting).resolves.toEqual([]);

@@ -1,9 +1,0 @@
-{
-  "extends": "@raypx/tsconfig/node-bundler.json",
-  "compilerOptions": {
-    "types": ["bun", "node", "vite/client"],
-    "jsx": "react-jsx",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"]
-  },
-  "include": ["./**/*.ts", "./**/*.tsx"]
-}

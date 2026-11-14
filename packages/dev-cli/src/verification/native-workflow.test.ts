@@ -94,7 +94,7 @@ it("compiles once in prepare and transports an immutable artifact by exact ID", 
   expect(native.verify?.if).toContain("needs.prepare.result == 'success'");
   expect(native.verify?.if).not.toContain("skipped");
   expect(prepare.filter((step) => step.run?.includes("bun run build:cli"))).toHaveLength(1);
-  expect(steps.some((step) => /build:cli|prepare:herdr/.test(step.run ?? ""))).toBe(false);
+  expect(steps.some((step) => /build:cli/.test(step.run ?? ""))).toBe(false);
   expect(native.prepare?.outputs?.["cli-artifact-id"]).toContain(
     "steps.cli-payload.outputs.artifact-id",
   );
@@ -116,15 +116,10 @@ it("compiles once in prepare and transports an immutable artifact by exact ID", 
 it("verifies the shared payload before running native acceptance", () => {
   const payload = named("Verify prepared CLI", checks);
   const runners = named("Cross-platform process and task runners", checks);
-  const herdr = named("Herdr terminal integration", checks);
   const go = named("Desktop MyGo checks", checks);
-  for (const step of [herdr, go, runners, named("Installed CLI package", checks)])
+  for (const step of [go, runners, named("Installed CLI package", checks)])
     expect(checks.indexOf(step)).toBeGreaterThan(checks.indexOf(payload));
   expect(runners.run).toContain("bun run --cwd packages/runtime-node test");
-  expect(herdr.env?.RAYPX_HERDR_COMPILED).toBe("1");
-  expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe(
-    "${{ inputs.distribution == 'true' && '3' || '1' }}",
-  );
   expect(go.if).toContain("!cancelled()");
   expect(go.if).toContain("steps.payload.outcome == 'success'");
   expect(payload.id).toBe("payload");

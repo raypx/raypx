@@ -5,8 +5,7 @@ const bun = process.execPath;
 const cwd = resolve(import.meta.dirname, "../..");
 let commands: string[][];
 
-const nativeGate =
-  task && ["native:smoke", "native:smoke:interactive", "native:agents"].includes(task);
+const nativeGate = task && ["native:smoke", "native:smoke:interactive"].includes(task);
 if (
   task !== "check" &&
   task !== "native:build" &&
@@ -16,7 +15,7 @@ if (
   !nativeGate
 )
   throw new Error(
-    "Usage: scripts/host/task.ts <check|build|build:renderer|dev|native:build|native:smoke|native:smoke:interactive|native:agents>",
+    "Usage: scripts/host/task.ts <check|build|build:renderer|dev|native:build|native:smoke|native:smoke:interactive>",
   );
 
 if (
@@ -35,7 +34,6 @@ if (task === "native:build") {
   commands = [
     [bun, "run", "typecheck"],
     [bun, "run", "typecheck:node", ...args],
-    [bun, "run", "perf:check"],
   ];
 } else if (task === "build") {
   commands = [
@@ -50,7 +48,7 @@ if (task === "native:build") {
     [bun, "run", "native:csp", "artifacts/browser/client"],
   ];
 } else if (nativeGate) {
-  const scenario = task === "native:agents" ? "agents-run.ts" : "run.ts";
+  const scenario = "run.ts";
   const mode = task === "native:smoke:interactive" ? ["--interactive"] : [];
   commands = [[bun, "run", `tests/native/smoke/${scenario}`, ...mode, ...args]];
 } else {

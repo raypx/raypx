@@ -6,8 +6,7 @@
   "sideEffects": false,
   "exports": {
     "./api": "./src/api.ts",
-    "./relay": "./src/relay.ts",
-    "./tasks": "./src/tasks.ts"
+    "./events": "./src/events.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -18,18 +17,12 @@
   "dependencies": {
     "@orpc/client": "catalog:",
     "@orpc/contract": "catalog:",
-    "@raypx/contracts": "workspace:*",
-    "@raypx/core": "workspace:*"
+    "@raypx/contracts": "workspace:*"
   },
   "devDependencies": {
     "@raypx/testing": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev",
     "vitest": "catalog:dev"
-  },
-  "raypx": {
-    "entryConsumers": {
-      "./tasks": "Retained for API/CLI device-runtime acceptance after phase 1 renderer removal; remove with the replaced device task projection/relay stack in a later roadmap phase."
-    }
   }
 }

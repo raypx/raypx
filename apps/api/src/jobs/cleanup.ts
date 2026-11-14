@@ -1,15 +1,8 @@
 import type { Database } from "@raypx/database/connection";
-import {
-  oauthAccessToken,
-  rateLimit,
-  session,
-  sessionAttachment,
-  verification,
-} from "@raypx/database/schema";
+import { oauthAccessToken, rateLimit, session, verification } from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
 import type { ConfigReader } from "../config/types.js";
-import { contextCommandPrune } from "@raypx/control/postgres";
 
 export function createCleanupJob({
   db,
@@ -32,8 +25,7 @@ export interface CleanupResult {
   sessions: number;
   verifications: number;
   rateLimits: number;
-  contextCommands: number;
-  attachments: number;
+
   oauthTokens: number;
 }
 
@@ -50,8 +42,7 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
       sessions: 0,
       verifications: 0,
       rateLimits: 0,
-      contextCommands: 0,
-      attachments: 0,
+
       oauthTokens: 0,
     };
     if (!lock?.acquired) return result;
@@ -83,12 +74,6 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
         order: rateLimit.lastRequest,
         expired: sql`${rateLimit.lastRequest} < extract(epoch from transaction_timestamp()) * 1000 - 3600000`,
       },
-      {
-        key: "attachments",
-        table: sessionAttachment,
-        order: sessionAttachment.expiresAt,
-        expired: sql`${sessionAttachment.expiresAt} <= transaction_timestamp()`,
-      },
     ] as const;
     for (const { key, table, order, expired } of policies) {
       const [row] = await tx.execute<{ count: number }>(sql`
@@ -104,10 +89,6 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
       `);
       result[key] = row!.count;
     }
-    const [commands] = await tx.execute<{ count: number }>(
-      contextCommandPrune(sql`transaction_timestamp()`),
-    );
-    result.contextCommands = commands!.count;
     return result;
   });
 }
@@ -129,8 +110,7 @@ export async function runCleanupJob(
           sessions: 0,
           verifications: 0,
           rateLimits: 0,
-          contextCommands: 0,
-          attachments: 0,
+
           oauthTokens: 0,
         };
     event.emit({
@@ -142,7 +122,6 @@ export async function runCleanupJob(
         verifications: String(result.verifications),
         oauthTokens: String(result.oauthTokens),
         rateLimits: String(result.rateLimits),
-        contextReceipts: String(result.contextCommands),
       },
     });
     return result;

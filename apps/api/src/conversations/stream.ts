@@ -1,4 +1,4 @@
-import { AcknowledgedStream } from "@raypx/client/relay";
+import { AcknowledgedStream } from "@raypx/client/events";
 import {
   conversationClientFrameSchema,
   MAX_CONVERSATION_FRAME_BYTES,

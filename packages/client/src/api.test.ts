@@ -20,15 +20,13 @@ it("reads headers again after a credential change and always uses POST", async (
   expect(seen[0]?.url).toBe("https://api.example.com/rpc/account/get");
 });
 
-it("recognizes old plain 404 responses without hiding authentication/server failures", async () => {
+it("recognizes plain 404 responses without hiding authentication/server failures", async () => {
   for (const status of [404, 401, 503]) {
     const api = createApiClient({
       baseUrl: "https://api.example.test",
       fetch: async () => Response.json({ error: { code: "NOT_FOUND" } }, { status }),
     });
-    const error = await api.hosts
-      .authorize({ deviceId: crypto.randomUUID(), epoch: 1 })
-      .catch((failure: unknown) => failure);
+    const error = await api.account.get({}).catch((failure: unknown) => failure);
     expect(error).toBeInstanceOf(Error);
     expect(isMissingProcedure(error)).toBe(status === 404);
   }
@@ -47,9 +45,7 @@ it("recognizes old plain 404 responses without hiding authentication/server fail
         { status: 404 },
       ),
   });
-  const error = await api.hosts
-    .authorize({ deviceId: crypto.randomUUID(), epoch: 1 })
-    .catch((failure: unknown) => failure);
+  const error = await api.account.get({}).catch((failure: unknown) => failure);
   expect(error).toMatchObject({ code: "NOT_FOUND" });
   expect(isMissingProcedure(error)).toBe(false);
 });

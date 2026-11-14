@@ -175,12 +175,12 @@ export interface ToolCompletion {
   exitStatus: number | null;
   page?: ToolPage | null;
 }
-export interface DelegationInput {
+interface DelegationInput {
   toolCallId: string;
   task: string;
   agentId?: string;
 }
-export interface AgentMessageInput {
+interface AgentMessageInput {
   toolCallId: string;
   agentId: string;
   text: string;

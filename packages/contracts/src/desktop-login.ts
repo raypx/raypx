@@ -27,8 +27,6 @@ export const desktopLoginStartSchema = z.strictObject({
   challenge: desktopLoginTokenSchema,
   device: z.string().trim().min(1).max(120),
   webOrigin: z.string().url().max(2048),
-  accountId: accountId.optional(),
-  reauthorizeHost: z.literal(true).optional(),
 });
 export const desktopOAuthQuerySchema = z.string().min(1).max(3072);
 export const desktopLoginRequestSchema = z.strictObject({ oauthQuery: desktopOAuthQuerySchema });
@@ -40,8 +38,6 @@ export const desktopLoginPreviewSchema = z.strictObject({
   device: desktopLoginStartSchema.shape.device,
   accountId,
   email: z.email(),
-  matchesProfile: z.boolean(),
-  reauthenticationRequired: z.boolean().optional(),
 });
 export const desktopLoginRedirectSchema = z.strictObject({
   redirectUri: z

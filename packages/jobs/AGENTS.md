@@ -1,69 +1,14 @@
-# @raypx/jobs
+# Space routines
 
-Web and Desktop expose Space routines alongside Agent conversations. Earlier
-project/session automation pages are removed; retained job procedures and helpers
-remain separate until their replacement phase.
+/routines owns current Space routine services and injected repository/dispatcher/
+secret ports. /routines/postgres owns fenced PostgreSQL persistence. /model and
+/client own the editor and Web/Desktop panel. Core owns pure schedules and schemas.
+No account/device Cron, Relay executor or cloud-job API remains.
 
-## Purpose
-
-Space routines, worker scans and injected Web/Desktop editors, plus retained
-account cloud/device job services and helpers.
-
-## Interface
-
-- `/client` owns DOM views and injected ports; apps own routing and authentication.
-  Its controlled `AutomationFilters` is shared by cloud views and Desktop local
-  schedules. Apply target/ownership constraints before name/status filters.
-- `/model` owns the injected Space routine port, form state, pure occurrence
-  previews and history mapping. `RoutinesPanel` consumes only this port and Core;
-  API remains responsible for membership, ownership and secret creation. One-time
-  secrets live only in the open editor and are cleared when it closes.
-- `@raypx/core/jobs` owns platform-neutral local/cloud schemas, inferred types,
-  errors and pure calendar calculations.
-- `/server` owns injected cloud scheduling use cases and repository ports for Bun
-  hosts. Persistence, identity, relay and clocks remain caller-owned.
-- `/server/postgres` implements the account-owned PostgreSQL repository. API supplies
-  its connection; migrations stay with Database. Injected `/server` never imports
-  this concrete adapter.
-
-## Boundaries
-
-`/client` and `/server` import Core and never each other. No
-entry imports contracts or concrete SDKs. Keep client ports independent of SDK-derived types.
-Private view state remounts and in-flight requests abort on account/client changes.
-Cloud forms retain edits on CAS errors and require explicit device epoch reselection.
-Retained local schedules remain in CLI device profiles across account changes;
-the current Desktop renderer does not expose their former automation page.
-
-## Verification
-
-Run package checks/tests and both application consumers. SQL persistence, actual
-relay round trips and Bun/Nitro scheduled events have separate integration gates.
-
-## Catalog ownership
-
-Own `automations (local and cloud)` and `routines` in `locales/<language>/`, with handwritten language entries
-and pure `/messages/en` and `/messages/zh` exports. Use JSON nested strings for every language and namespace. Bind private translation
-hooks through type-only catalog imports; applications supply the shared provider.
-
-## Space routines
-
-`/routines` owns injected Space-scoped routine use cases, ingress verification and
-an explicit worker scan. `/routines/postgres` atomically records occurrences,
-deliveries, trigger messages, queued Runs, backup jobs and identifier-only routine
-events before direct dispatch. This is independent of the retained device/cloud
-job APIs. Construction performs no I/O; API/worker composition supplies the clock,
-secret envelope store and dispatcher. Repository signatures bind delivery ID and
-event kind as well as the body. Repository secrets are encrypted; webhook keys
-are digest-only. Every automatic occurrence resolves current owner membership.
-Removed owners' definitions remain paused for reassignment; editor metadata reads
-use the caller's Space admission, while ingress and execution require the current
-owner's active membership. Removal clears ingress credentials; reassignment issues
-new keys when needed and never resumes a routine implicitly.
-The worker locks due routines with SKIP LOCKED and the conversation counter before
-coalescing, so a pending catch-up cannot race its first start. `test:postgres`
-selects isolated PostgreSQL acceptance; ordinary test runs exclude that directory.
-
-Routine list/get projections include optional ingress metadata built from the
-injected public API origin and configured email domain. Missing deployment or
-trigger configuration has stable reasons; reads never open ingress secrets.
+Construction performs no I/O. Current owner membership is checked for automatic
+execution. Removed owners pause routines and clear ingress credentials; reassignment
+never resumes implicitly. Lock due slots and the conversation counter before
+coalescing; use durable occurrence/delivery identity and database time. Ingress
+signatures bind delivery ID, event kind and bounded body. Secrets stay encrypted;
+webhook keys are digest-only and never exposed by metadata reads. Run check/test
+and serial test:postgres against an explicit disposable database.

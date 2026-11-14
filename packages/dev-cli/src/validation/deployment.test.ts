@@ -128,3 +128,25 @@ it("requires all by default and a worker in the optional split topology", () => 
     ]),
   );
 });
+
+it("rejects ingress that strips the connector bearer credential", () => {
+  const root = fixture();
+  replace(
+    root,
+    "infra/railway/Caddyfile",
+    "header_up -Cookie",
+    "header_up -Cookie\n      header_up -Authorization",
+  );
+  replace(
+    root,
+    "deploy/compose.yaml",
+    "-relay-headers.headers.customrequestheaders.Cookie=",
+    "-relay-headers.headers.customrequestheaders.Authorization=",
+  );
+  expect(checkDeployment(root)).toEqual(
+    expect.arrayContaining([
+      "infra/railway/Caddyfile: connector ingress must preserve Authorization",
+      "deploy/compose.yaml: connector ingress must preserve Authorization",
+    ]),
+  );
+});

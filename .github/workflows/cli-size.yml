@@ -28,9 +28,6 @@ jobs:
         id: measurements
         shell: bash
         run: bun run raypx-dev cli:experiment apps/cli/dist --upx "$RAYPX_EXPERIMENT_UPX"
-      - name: Enable isolated provider acceptance
-        shell: pwsh
-        run: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
       - name: Accept smaller bytecode payload
         env:
           RAYPX_CLI_PAYLOAD: ${{ steps.measurements.outputs.depth0-payload }}
@@ -38,7 +35,6 @@ jobs:
         run: |
           test -n "$RAYPX_CLI_PAYLOAD"
           bun run --cwd apps/cli smoke
-          RAYPX_HERDR_COMPILED=1 bun run --cwd apps/cli smoke:herdr-terminal
       - name: Report measurements
         if: always()
         shell: bash

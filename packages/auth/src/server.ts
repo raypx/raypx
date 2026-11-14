@@ -66,7 +66,7 @@ export interface CreateAuthOptions {
   /** Display name for authentication mail; resolve to a fallback rather than throwing. */
   siteName?: () => Promise<string>;
   /** A successful security revocation invalidates all hosts, or only the session's hosts. */
-  revokeHostAuthorizations?: (userId: string, sessionId?: string) => Promise<void>;
+  revokeDeviceConnectors?: (userId: string, sessionId?: string) => Promise<void>;
 }
 export function recipientLocale(request?: Request): { locale?: Locale } {
   const locale = matchLocale(
@@ -81,7 +81,7 @@ export function createAuth({
   secondaryStorage,
   registrationAllowed,
   siteName,
-  revokeHostAuthorizations,
+  revokeDeviceConnectors,
 }: CreateAuthOptions) {
   const mailSite = async () => (siteName ? { siteName: await siteName() } : {});
   const origins = normalizeTrustedOrigins([config.baseURL, ...config.trustedOrigins]);
@@ -323,7 +323,7 @@ export function createAuth({
             });
         }
         if (
-          revokeHostAuthorizations &&
+          revokeDeviceConnectors &&
           ["/revoke-session", "/revoke-sessions", "/revoke-other-sessions"].includes(ctx.path)
         ) {
           const session = await getAuthoritativeSessionFromCtx(ctx);
@@ -351,14 +351,14 @@ export function createAuth({
         ).hostRevocation;
         const result = ctx.context.returned;
         if (
-          revokeHostAuthorizations &&
+          revokeDeviceConnectors &&
           revocation &&
           result &&
           typeof result === "object" &&
           "status" in result &&
           result.status === true
         )
-          await revokeHostAuthorizations(revocation.userId, revocation.sessionId);
+          await revokeDeviceConnectors(revocation.userId, revocation.sessionId);
       }),
     },
     emailAndPassword: {

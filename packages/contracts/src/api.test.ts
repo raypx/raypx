@@ -25,18 +25,9 @@ describe("foundation contract", () => {
       "agents",
       "conversations",
       "admin",
-      "attachments",
-      "instances",
-      "memory",
-      "jobs",
-      "hosts",
-      "observed",
       "configuration",
-      "devices",
-      "tasks",
       "protectedInputs",
       "approvals",
-      "relay",
       "account",
     ]);
     expect(Object.keys(apiContract.computers)).toEqual([
@@ -74,8 +65,6 @@ describe("foundation contract", () => {
       "getSelection",
       "select",
     ]);
-    expect(Object.keys(apiContract.hosts)).toEqual(["authorize", "grant", "revoke"]);
-    expect(Object.keys(apiContract.observed)).toEqual(["list", "get"]);
   });
 
   it("uses Better Auth's name and strips private fields", () => {
@@ -96,7 +85,6 @@ describe("foundation contract", () => {
     expect(declared).toEqual(procedures);
     expect(apiExposure).toMatchObject({
       account: { get: "renderer" },
-      hosts: { authorize: "native", grant: "host" },
       admin: { overview: "web" },
     });
   });

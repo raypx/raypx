@@ -174,6 +174,18 @@ it("resumes a claimed Space deletion across worker restarts and an interrupted o
   const home = await access.create(accountId, { name: "Delete this Space" });
   owned.push(home.space.id);
   const scope = await access.resolve(accountId, home.space.id);
+  // A global worker may also claim jobs left by other independently owned fixtures.
+  const unrelated = await access.create(accountId, { name: "Other deletion fixture" });
+  owned.push(unrelated.space.id);
+  await db
+    .update(spaces)
+    .set({ deletionClaimedAt: new Date() })
+    .where(eq(spaces.id, unrelated.space.id));
+  await db.insert(spaceDeletionJobs).values({
+    spaceId: unrelated.space.id,
+    requestedByAccountId: accountId,
+    stage: "computers_released",
+  });
   const { conversation } = await createAgentsRepository(db).create(scope, {
     name: "Deletion Agent",
     instructions: "Fixture",
@@ -224,7 +236,8 @@ it("resumes a claimed Space deletion across worker restarts and an interrupted o
   await expect(access.resolve(accountId, scope.spaceId)).rejects.toThrow("Space record not found");
   const onError = vi.fn();
   let removed = false;
-  const removeObjects = vi.fn(async () => {
+  const removeObjects = vi.fn(async (spaceId: string) => {
+    if (spaceId !== scope.spaceId) return;
     if (!removed) {
       removed = true;
       throw new Error("Interrupted after object deletion");
@@ -264,7 +277,7 @@ it("resumes a claimed Space deletion across worker restarts and an interrupted o
   await restarted.close();
   const finalWorker = createSpaceDeletionWorker(db, provider, options);
   await finalWorker.scan();
-  expect(removeObjects).toHaveBeenCalledTimes(2);
+  expect(removeObjects.mock.calls.filter(([spaceId]) => spaceId === scope.spaceId)).toHaveLength(2);
   expect(
     (
       await db.select().from(spaceDeletionJobs).where(eq(spaceDeletionJobs.spaceId, scope.spaceId))

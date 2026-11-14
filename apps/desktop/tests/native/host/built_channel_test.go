@@ -19,8 +19,6 @@ func TestBuiltCLIUsesSeparateRendererChannel(t *testing.T) {
 	}
 	data := t.TempDir()
 	t.Setenv("RAYPX_HOME", t.TempDir())
-	t.Setenv("CLAUDE_CONFIG_DIR", t.TempDir())
-	t.Setenv("CODEX_HOME", t.TempDir())
 	args := []string{"--profile", "native-channel", "--data-dir", data}
 	defer func() { _ = host.Command(binary, append([]string{"daemon", "stop"}, args...)...).Run() }()
 	config, _ := host.ParseConfig(nil)
@@ -64,23 +62,14 @@ func TestBuiltCLIUsesSeparateRendererChannel(t *testing.T) {
 			}
 		}
 	}
-	value, err := request("instance.status", host.JSON{})
-	if err != nil || value.(map[string]any)["state"] != "unregistered" {
-		t.Fatal("fresh renderer cannot enroll")
+	value, err := request("runtime.info", host.JSON{})
+	if err != nil || value.(map[string]any)["owner"] != "daemon" {
+		t.Fatal("fresh Desktop session channel did not start")
 	}
-	if _, err := request("roots.register", host.JSON{"path": t.TempDir()}); err == nil || !strings.Contains(err.Error(), "METHOD_NOT_PERMITTED") {
-		t.Fatal("renderer acquired native authority")
-	}
-	if _, err := request("roots.list", host.JSON{}); err == nil || err.Error() != "INSTANCE_ENROLLMENT_REQUIRED" {
-		t.Fatal("unenrolled work admitted")
-	}
-	enrollBuiltCLI(t, binary, data, "native-channel", args)
-	connection.SetDeadline(time.Now().Add(10 * time.Second))
-	if value, err := request("instance.status", host.JSON{}); err != nil || value.(map[string]any)["state"] != "registered" {
-		t.Fatal("compiled channel did not observe enrollment")
-	}
-	if _, err := request("roots.list", host.JSON{}); err != nil {
-		t.Fatal("registered offline profile rejected local reads")
+	for _, method := range []string{"roots.register", "tools.run", "agents.local.execute", "instance.begin"} {
+		if _, err := request(method, host.JSON{}); err == nil {
+			t.Fatal("renderer acquired retired execution authority")
+		}
 	}
 	raw, _ := json.Marshal(descriptor)
 	if strings.Contains(string(raw), "nativeCapability") {

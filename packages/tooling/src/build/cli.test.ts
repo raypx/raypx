@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
+import { mkdtemp, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { it, expect } from "vitest";
@@ -6,18 +6,16 @@ import { sealCliPayload, verifyCliPayload } from "./cli.js";
 it("seals signed bytes without changing identity and rejects altered, extra or linked resources", async () => {
   const root = await mkdtemp(join(tmpdir(), "raypx-payload-"));
   try {
-    await mkdir(join(root, "herdr"));
-    for (const name of ["raypx", "herdr/herdr", "herdr/runtime.json", "LICENSE", "README.txt"])
+    for (const name of ["raypx", "LICENSE", "README.txt"])
       await writeFile(join(root, name), "unsigned");
     const identity = {
-      format: 1 as const,
+      format: 2 as const,
       commit: "a".repeat(40),
       platform: "darwin",
       arch: "arm64",
       version: "1.0.0",
       builtAt: 1234,
       bunVersion: "1.4.4",
-      herdrVersion: "0.9.5",
     };
     await sealCliPayload(root, identity);
     expect(await verifyCliPayload(root, identity)).toMatchObject(identity);

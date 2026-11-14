@@ -59,14 +59,12 @@ function measure(root: string, workspace: string, path: string, kind: ArtifactSi
   const absolute = resolve(root, path);
   const { files, symlinks } = scan(absolute);
   const components: ArtifactSize["components"] = [];
-  if (existsSync(join(absolute, "runtime.json")) && existsSync(join(absolute, "herdr"))) {
+  if (existsSync(join(absolute, "runtime.json"))) {
     const groups = new Map<string, FileSize[]>();
     for (const file of files) {
       const name = /^(?:raypx|raypx\.exe)$/.test(file.path)
         ? "CLI / embedded Bun"
-        : file.path.startsWith("herdr/")
-          ? "Herdr"
-          : "Metadata / licenses";
+        : "Metadata / licenses";
       const group = groups.get(name) ?? [];
       group.push(file);
       groups.set(name, group);

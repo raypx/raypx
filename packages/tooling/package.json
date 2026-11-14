@@ -8,16 +8,13 @@
     "./build/deployment": "./src/build/deployment.ts",
     "./build/analytics": "./src/build/analytics.ts",
     "./build/start-env": "./src/build/start-env.ts",
-    "./browser-server": "./src/browser-server.ts",
     "./build/cli": "./src/build/cli.ts",
-    "./performance": "./src/performance/run.ts",
     "./build/release": "./src/build/release.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
     "test": "bun --bun vitest run",
-    "test:unit": "bun --bun vitest run --exclude \"**/tests/integration/**\"",
-    "test:integration": "bun --bun vitest run tests/integration"
+    "test:unit": "bun --bun vitest run --exclude \"**/tests/integration/**\""
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

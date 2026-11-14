@@ -107,20 +107,13 @@ export async function runMyGoSmoke(
     stderr: "inherit",
   });
   const scenario = Bun.spawn(
-    [
-      process.execPath,
-      "run",
-      resolve(import.meta.dirname, phase === "agents" ? "agents.ts" : "scenario.ts"),
-    ],
+    [process.execPath, "run", resolve(import.meta.dirname, "scenario.ts")],
     { cwd, env: environment, stdin: "ignore", stdout: "inherit", stderr: "inherit" },
   );
-  const deadline = setTimeout(
-    () => {
-      native.kill();
-      scenario.kill();
-    },
-    phase === "agents" ? 1_800_000 : 300_000,
-  );
+  const deadline = setTimeout(() => {
+    native.kill();
+    scenario.kill();
+  }, 300_000);
   try {
     const first = await Promise.race([
       scenario.exited.then((code) => ({ source: "scenario", code })),

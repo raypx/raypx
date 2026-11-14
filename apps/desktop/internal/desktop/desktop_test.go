@@ -10,7 +10,6 @@ import (
 type testNative struct{ starts, closes, requests int }
 
 func (*testNative) Status() JSON          { return JSON{"status": "ready"} }
-func (*testNative) Features() JSON        { return JSON{"localTerminalApprovals": false} }
 func (c *testNative) Start() bool         { c.starts++; return true }
 func (c *testNative) Refresh() bool       { return c.Start() }
 func (c *testNative) ResetSessions() bool { return true }

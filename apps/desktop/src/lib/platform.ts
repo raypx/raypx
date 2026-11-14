@@ -5,7 +5,6 @@ import type { DevicePreferences } from "../../preferences.js";
 
 export function createDesktopPlatform(options: {
   available(): boolean;
-  terminalHooks(): boolean;
   connect(dispatch: (event: unknown) => void): Promise<DesktopBridge>;
 }) {
   const listeners = new Set<(event: LocalEvent) => void>();
@@ -28,7 +27,6 @@ export function createDesktopPlatform(options: {
   }
   return {
     isDesktop: () => options.available(),
-    hasTerminalHooks: () => options.terminalHooks(),
     getBridge,
     onLocalEvent: (listener: (event: LocalEvent) => void) => {
       listeners.add(listener);
@@ -45,9 +43,6 @@ export function createDesktopPlatform(options: {
           engine: { status: "error" },
         };
       return (await getBridge()).request.getRuntime({});
-    },
-    pickDirectory: async () => {
-      return (await getBridge()).request.pickDirectory({});
     },
     pairDeviceConnector: async (code: string) => {
       return (await getBridge()).request.pairDeviceConnector({ code });

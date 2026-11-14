@@ -34,8 +34,7 @@ Waiting and Automations have been removed from this renderer. Do not restore the
   Auth adapters own navigation, callback URLs and session refresh. Default sign-in
   opens Agents; explicit allowlisted destinations survive every supported method.
   Logout clears private caches, returns to `/`, and preserves device preferences.
-- Account/security settings open with `#settings/account`, `password`, `sessions`
-  and `instances`; device categories include `preferences` and `diagnostics`.
+- Account/security settings open with `#settings/account`, `password` and `sessions`; device categories include `preferences` and `diagnostics`.
   The overlay preserves its background route and search, pushes on open and replaces
   on category changes. Close returns to the background entry. Direct links clear
   only the hash. Unknown categories open nothing. Identity changes discard drafts.
@@ -77,8 +76,7 @@ can be started and stopped. Conversation activity and addressed approvals render
 
 - Use only public package entries. Web imports no API, auth-server, database or
   mail implementation and duplicates no API behavior in server functions.
-- Remote commands/reads use API contracts; PostgreSQL owns Agent state. The earlier
-  device runtime remains elsewhere and is separate from this conversation client.
+- Remote commands/reads use API contracts; PostgreSQL owns Agent state. The CLI provides only the outbound connector and private Desktop sessions.
 - SSR forwards Better Auth cookies only. Without them, skip private account RPCs.
   `VITE_API_URL` is fixed at build time; SSR needs a shared origin or API AUTH_DOMAIN.
 - Never read `window`/`document` during render. Read URLs through the router.

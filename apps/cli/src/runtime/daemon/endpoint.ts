@@ -135,7 +135,10 @@ export async function connectDaemon(options: ProfileOptions, start = true) {
           break;
         }
         if (Date.now() >= deadline)
-          throw new LocalError("HOST_STOPPING", "Wait for the execution owner to finish stopping");
+          throw new LocalError(
+            "HOST_STOPPING",
+            "Wait for the Desktop session service to finish stopping",
+          );
         await sleep(50);
       }
       const child = spawnProcess(

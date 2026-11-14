@@ -22,10 +22,7 @@
     "@raypx/client": "workspace:*"
   },
   "devDependencies": {
-    "@raypx/contracts": "workspace:*",
-    "@raypx/core": "workspace:*",
     "@raypx/dev-cli": "workspace:*",
-    "@raypx/tooling": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev"
   }

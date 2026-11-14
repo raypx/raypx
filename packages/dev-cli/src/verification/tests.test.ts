@@ -100,35 +100,7 @@ describe("local related test selection", () => {
       },
     ]);
   });
-  it("selects the CLI task lifecycle suite for its API subprocess inputs", () => {
-    const { root, plan, write } = project();
-    const scripts = { check: "bun check.ts", test: "bun --bun vitest run" };
-    const api = member(root, "api", { extra: { name: "api", scripts } });
-    const cli = member(root, "cli", { extra: { name: "cli", scripts } });
-    const lifecycle = "tests/integration/runtime/daemon/task-lifecycle.test.ts";
-    const other = "src/other.test.ts";
-    write(`${cli}/${lifecycle}`);
-    write(`${cli}/${other}`);
-    for (const file of ["tests/fixtures/task-lifecycle-relay.ts", "tests/helpers/relay.ts"]) {
-      const changed = `${api}/${file}`;
-      write(changed);
-      const canonical = plan([changed]);
-      expect(canonical.workspaces).toEqual(["api", "cli"]);
-      expect(canonical.tasks).toContain("cli#test");
-      expect(canonical.tasks).not.toContain("cli#check");
-      expect(canonical.native).toBe(false);
-      expect(localTests(root, canonical).find((test) => test.workspace === "cli")).toMatchObject({
-        mode: "related",
-        files: [lifecycle],
-      });
-      expect(
-        localTests(root, plan([changed, `${cli}/${other}`])).find(
-          (test) => test.workspace === "cli",
-        )?.files,
-      ).toEqual([other, lifecycle]);
-    }
-    expect(plan([`${api}/tests/helpers/unrelated.ts`]).tasks).not.toContain("cli#test");
-  });
+
   it("keeps filesystem and subprocess assertions that do not import their subject", () => {
     const { root, plan, write } = project();
     write("packages/feature/src/contract.test.ts", 'import { readFileSync } from "node:fs";');

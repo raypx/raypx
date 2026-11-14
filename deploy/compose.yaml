@@ -122,11 +122,10 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
       - "traefik.http.services.${COMPOSE_PROJECT_NAME:?}-api.loadbalancer.server.port=3002"
 
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.rule=Host(`${APP_HOST:?}`) && Path(`/relay`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.rule=Host(`${APP_HOST:?}`) && Path(`/device/connect`)"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.priority=110"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.middlewares=${COMPOSE_PROJECT_NAME:?}-relay-headers"
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-relay-headers.headers.customrequestheaders.Cookie="
-      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:?}-relay-headers.headers.customrequestheaders.Authorization="
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-relay.service=${COMPOSE_PROJECT_NAME:?}-api"

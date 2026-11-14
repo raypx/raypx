@@ -109,8 +109,7 @@ labeled as such in the model history.
 
 ## Phase 4 backend decisions
 
-Space routines live in `@raypx/jobs/routines`, independently of the retained
-account/device job procedures. `routines.*` resolves membership for every call;
+Space routines live in `@raypx/jobs/routines`. `routines.*` resolves membership for every call;
 create, update, pause, resume and key rotation make the editor the owner. Runs
 already accepted retain their actor. A manual test can run a paused routine and
 uses a required idempotency key. Pausing affects future automatic occurrences.
@@ -157,8 +156,8 @@ the new owner. No key, inbound body or saved prompt enters routine events or log
 The public trigger message contains the saved prompt; the bounded inbound body
 is private Run context, JSON framed and labelled untrusted.
 
-Space memory lives in `@raypx/memory/space-server`; `spaceMemory.*` leaves the
-retained `memory.*` account/device procedures unchanged. Memory revisions are
+Space memory lives in `@raypx/memory/space-server`; `spaceMemory.*` exposes
+Space-scoped services. Memory revisions are
 immutable full snapshots; removal writes a revision with no current text.
 Restore copies an exact historical revision into a new revision, retaining its
 untrusted provenance. Future recall excludes removals. A previously started Run
@@ -181,11 +180,6 @@ references, separately from immutable formatted context in checkpoint JSON.
 Recovery never recalls newer revisions. Logical removal preserves the revision
 and pin. Physical source deletion clears its pin relations while preserving the
 accepted context bytes.
-
-The old account context documents, local memory library, device Cron and cloud
-job projections remain solely for retained consumers. Retire those procedures,
-clients, profile tables and cloud projection tables with their final consumers;
-there is no import, compatibility alias or second Space authority.
 
 ## Phase 5 backend decisions
 

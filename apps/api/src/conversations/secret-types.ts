@@ -1,4 +1,4 @@
-export interface WrappedDataKey {
+interface WrappedDataKey {
   keyId: string;
   wrappedDataKey: string;
 }

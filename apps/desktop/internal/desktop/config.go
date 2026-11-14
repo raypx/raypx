@@ -73,7 +73,6 @@ type Config struct {
 	APIURL       string `json:"apiUrl"`
 	WebURL       string `json:"webUrl"`
 	Scope        string `json:"-"`
-	Directories  JSON   `json:"-"`
 	LocalProfile string `json:"-"`
 }
 
@@ -89,7 +88,7 @@ func ParseConfig(source []byte) (Config, error) {
 		return fail()
 	}
 	for key := range root {
-		if !strings.Contains("|base_url|web_url|profile|profiles|local_profile|ai|connectors|", "|"+key+"|") {
+		if !strings.Contains("|base_url|web_url|profile|profiles|local_profile|", "|"+key+"|") {
 			return fail()
 		}
 	}
@@ -113,11 +112,6 @@ func ParseConfig(source []byte) (Config, error) {
 	api, web, err := endpoints(root)
 	if err != nil {
 		return fail()
-	}
-	if ai, ok := root["ai"]; ok {
-		if _, yes := ai.(map[string]any); !yes {
-			return fail()
-		}
 	}
 	profiles := map[string][2]string{}
 	if raw, ok := root["profiles"]; ok {
@@ -164,28 +158,6 @@ func ParseConfig(source []byte) (Config, error) {
 	if web == "" {
 		web = api
 	}
-	dirs := JSON{}
-	if raw, ok := root["connectors"]; ok {
-		table, yes := raw.(map[string]any)
-		if !yes {
-			return fail()
-		}
-		for key, value := range table {
-			name := map[string]string{"claude_config_dir": "claude", "codex_home": "codex"}[key]
-			path, yes := value.(string)
-			if name == "" || !yes || !filepath.IsAbs(path) {
-				return fail()
-			}
-			dirs[name] = path
-		}
-	}
-	for provider, name := range map[string]string{"claude": "CLAUDE_CONFIG_DIR", "codex": "CODEX_HOME"} {
-		if _, ok := dirs[provider]; !ok {
-			if path := os.Getenv(name); filepath.IsAbs(path) {
-				dirs[provider] = path
-			}
-		}
-	}
 	localProfile := "default"
 	if raw, ok := root["local_profile"]; ok {
 		value, valid := raw.(string)
@@ -194,7 +166,7 @@ func ParseConfig(source []byte) (Config, error) {
 		}
 		localProfile = value
 	}
-	return Config{APIURL: api, WebURL: web, Scope: Digest(api)[:32], Directories: dirs, LocalProfile: localProfile}, nil
+	return Config{APIURL: api, WebURL: web, Scope: Digest(api)[:32], LocalProfile: localProfile}, nil
 }
 func LoadConfig() (Config, error) {
 	directory := os.Getenv("RAYPX_HOME")

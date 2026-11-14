@@ -3,21 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "env": [
-        "SOURCE_DATE_EPOCH",
-        "BUN_*",
-        "RAYPX_HERDR_*",
-        "RAYPX_CLI_PAYLOAD",
-        "RAYPX_CLI_CACHE_REVISION"
-      ]
-    },
-    "test": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!**/*.md",
-        "$TURBO_ROOT$/apps/api/tests/fixtures/task-lifecycle-relay.ts",
-        "$TURBO_ROOT$/apps/api/tests/helpers/relay.ts"
-      ]
+      "env": ["SOURCE_DATE_EPOCH", "BUN_*", "RAYPX_CLI_PAYLOAD", "RAYPX_CLI_CACHE_REVISION"]
     }
   }
 }

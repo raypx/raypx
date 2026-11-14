@@ -1,7 +1,7 @@
 # Raypx Railway application services
 
 This configuration owns the named raypx-app partial for API, Web and Gateway.
-Gateway sends `/relay` to the combined API backend.
+Gateway sends `/device/connect` to the combined API backend.
 Postgres, Redis and their volumes remain outside application ownership. Runtime
 variables and secrets stay on Railway and are not managed by this file.
 The application services track raypx/raypx on canary and deploy matching pushes.

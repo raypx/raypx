@@ -3,12 +3,9 @@ import { chmodSync, lstatSync, mkdirSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { LocalError } from "../errors.js";
 
-const files = ["profile.sqlite", "profile.sqlite.migration-lock.sqlite"].flatMap((file) => [
-  file,
-  `${file}-wal`,
-  `${file}-shm`,
-  `${file}-journal`,
-]);
+const files = ["desktop-session.sqlite", "desktop-session.sqlite.migration-lock.sqlite"].flatMap(
+  (file) => [file, `${file}-wal`, `${file}-shm`, `${file}-journal`],
+);
 
 // A protected inheritable directory ACL also protects SQLite files created after startup.
 const windowsPermissions = String.raw`
@@ -16,7 +13,7 @@ $ErrorActionPreference = 'Stop'
 $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
 $system = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-18')
 $directory = $env:RAYPX_PRIVATE_PROFILE
-$paths = @($directory) + @('profile.sqlite','profile.sqlite-wal','profile.sqlite-shm','profile.sqlite-journal','profile.sqlite.migration-lock.sqlite','profile.sqlite.migration-lock.sqlite-wal','profile.sqlite.migration-lock.sqlite-shm','profile.sqlite.migration-lock.sqlite-journal') | ForEach-Object { if ($_ -eq $directory) { $_ } else { [System.IO.Path]::Combine($directory, $_) } }
+$paths = @($directory) + @('desktop-session.sqlite','desktop-session.sqlite-wal','desktop-session.sqlite-shm','desktop-session.sqlite-journal','desktop-session.sqlite.migration-lock.sqlite','desktop-session.sqlite.migration-lock.sqlite-wal','desktop-session.sqlite.migration-lock.sqlite-shm','desktop-session.sqlite.migration-lock.sqlite-journal') | ForEach-Object { if ($_ -eq $directory) { $_ } else { [System.IO.Path]::Combine($directory, $_) } }
 foreach ($path in $paths) {
   $isDirectory = $path -eq $directory
   try {

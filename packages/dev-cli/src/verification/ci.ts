@@ -129,8 +129,7 @@ export async function ciGate(root: string, args: string[]) {
     const { runSandboxValidation } = await import("../validation/sandbox.js");
     await runSandboxValidation(root, []);
   } else if (gate === "backend") {
-    for (const task of ["test:postgres", "test:redis", "test:cluster"])
-      await runTasks(root, `api#${task}`);
+    for (const task of ["test:postgres", "test:redis"]) await runTasks(root, `api#${task}`);
   } else if (gate === "browser") {
     const { reportBuildSizes } = await import("../validation/build-size.js");
     const { web, desktop } = plan.browser;

@@ -17,4 +17,4 @@ export const apiIngress = {
   ],
 } as const;
 
-export const relayIngress = { paths: ["/relay"] } as const;
+export const relayIngress = { paths: ["/device/connect"] } as const;

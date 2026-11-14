@@ -178,6 +178,7 @@ export function createDeviceConnectorRegistry(
   return {
     repository,
     owner,
+    ready: () => !closing && (!cluster || cluster.ready()),
     async start() {
       if (!cluster) return;
       await cluster.start(
@@ -185,11 +186,15 @@ export function createDeviceConnectorRegistry(
           local(deviceId, frame);
         },
         () => {
-          for (const client of peers.values()) client.peer.close(4000, "Broker unavailable");
+          for (const client of peers.values()) {
+            client.ready = false;
+            client.peer.close(4000, "Broker unavailable");
+          }
         },
       );
     },
     async open(peerId: string, credential: string, peer: DeviceConnectorPeer) {
+      if (cluster && !cluster.ready()) throw new DeviceComputerError("DEVICE_OFFLINE");
       if (closing || peers.size >= 256) throw new DeviceComputerError("LIMIT_EXCEEDED");
       const identity = await repository.authenticate(credential);
       peers.set(peerId, {

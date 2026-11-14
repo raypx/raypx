@@ -1,9 +1,9 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { LocalDatabase } from "../../sqlite/index.js";
-import { desktopSessions } from "../../sqlite/schema/credentials.js";
+import { desktopSessions } from "../../sqlite/schema/desktop.js";
 import { LocalError } from "../../errors.js";
-import { serverOrigin } from "../remote/origin.js";
+import { serverOrigin } from "../../origin.js";
 import { sessionLimit, type SessionStore } from "./cookies.js";
 
 export function sessionRecordStore(database: LocalDatabase, apiUrl: string) {

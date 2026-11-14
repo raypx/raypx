@@ -39,20 +39,14 @@ The [roadmap](docs/roadmap.md) separates delivered behavior from later work.
 - Shared feature layers: Core owns schemas and pure rules, Contracts composes wire
   definitions, `/model` owns state and injected ports, `/client` adapts to React,
   `/server` owns use cases and repository ports. API composes adapters and secrets.
-- Desktop: the MyGo Go host around a React SPA and system WebView. It still launches
-  the bundled Bun CLI by absolute path. Native enrollment, session transport and
-  account/origin isolation remain until their replacement phases; no CLI source
-  enters the renderer.
-- Retained device runtime: CLI/daemon execution, scheduling, local SQLite profiles,
-  file grants, terminal handling and remote read projections still exist. They are
-  separate from new Agent history. Existing enrollment permits offline device
-  workflows; it provides no offline mode for server Conversations.
-- Current backend roles: `api|relay|both`, with direct calls in `both` and a private
-  Redis broker for split roles. The target adds `worker` and default `all`, with
-  PostgreSQL coordination. Phase 1 does not implement that topology or recovery.
-- Computer boundary: future Agent tools use one Computer port; the Agent runtime and
-  credentials stay outside computers. Only the supervisor holds the Docker socket.
-  A granted device retains the user's OS permissions and is not a sandbox.
+- Desktop: the native host launches the absolute bundled CLI for encrypted cookie
+  sessions, bounded server events and the outbound connector. Native confirms each
+  Space directory grant. No local Agent harness or old profile import remains.
+- Backend roles: api, worker, relay and default all. PostgreSQL owns durable Runs;
+  split device routing uses a private Redis broker. Combined deployments can omit it.
+- Computer boundary: Agent tools use the Computer port; credentials stay outside
+  computers. Only the supervisor holds the Engine socket. Device execution retains
+  OS permissions and is not sandbox isolation.
 - Transition rule: replace earlier code in its owning phase. Add no compatibility
   layer or automatic profile import, and never create a second Agent authority.
   Keep applicable toolchain, UI, i18n and verification rules in AGENTS.md.

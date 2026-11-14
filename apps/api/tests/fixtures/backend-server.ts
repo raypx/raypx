@@ -1,7 +1,7 @@
 import { serve } from "bun";
 import { getWebSocketHooks } from "crossws";
 import bunWebSocket from "crossws/adapters/bun";
-import { MAX_RELAY_BYTES } from "@raypx/contracts/tasks";
+const MAX_FRAME_BYTES = 1_500_000;
 
 /** Loopback listener for integration tests using the same Hono routes as production. */
 export function serveBackend(
@@ -24,8 +24,8 @@ export function serveBackend(
     },
     websocket: {
       ...ws.websocket,
-      maxPayloadLength: MAX_RELAY_BYTES,
-      backpressureLimit: MAX_RELAY_BYTES,
+      maxPayloadLength: MAX_FRAME_BYTES,
+      backpressureLimit: MAX_FRAME_BYTES,
       closeOnBackpressureLimit: true,
     },
   });

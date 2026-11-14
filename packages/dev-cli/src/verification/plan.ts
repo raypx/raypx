@@ -6,7 +6,6 @@ import {
   workspaceGraph,
   taskRef,
   type WorkspaceGraph,
-  relatedTaskLifecycle,
 } from "../workspace-graph.js";
 import type { Manifest } from "../repo/workspaces.js";
 import type { BrowserSurface } from "../browser-tests.js";
@@ -94,11 +93,11 @@ const webPasswordInputs =
 const sharedSmokeInputs = [
   /^packages\/auth\/(?:src|locales)\//,
   /^packages\/account\/src\/(?:access|server|index)\.ts$/,
-  /^packages\/tasks\/src\/(?:client\/(?:approval[-.]|conversation(?:\/|\.tsx$)|(?:remote-query|use-task-conversation)\.ts$|workspace\.tsx$)|model\/port\.ts$)/,
-  /^packages\/client\/src\/(?:tasks|relay)\.ts$/,
-  /^packages\/contracts\/src\/tasks\.ts$/,
-  /^packages\/control\/src\/(?:relay\/|application\/commands\.ts$)/,
-  /^apps\/api\/src\/(?:routers\/(?:rpc\/(?:approvals|relay)|relay\/socket)|runtime\/relay)\.ts$/,
+  /^packages\/agents\/src\/client\/(?:approval-card|device-computers)\.tsx$/,
+  /^packages\/computers\/src\/device-registry\.ts$/,
+  /^packages\/client\/src\/(?:api|events)\.ts$/,
+  /^packages\/contracts\/src\/(?:api|device-connector)\.ts$/,
+  /^apps\/api\/src\/(?:routers\/(?:rpc\/(?:approvals|device-computers)|device-connector)|runtime\/relay)\.ts$/,
 ];
 
 function browserChanges(model: WorkspaceGraph, files: string[], full: boolean): BrowserPlan {
@@ -231,12 +230,12 @@ function nativeChanges(model: WorkspaceGraph, files: string[], full: boolean, ma
         relative,
       );
     if (member.name === "cli")
-      return /^(?:package\.json$|scripts\/(?:prepare-herdr|build|distribution|archive|archive-smoke)\.ts$|src\/main\.ts$|src\/runtime\/(?:(?:host|index)\.ts$|(?:terminal|daemon|process)\/)|tests\/integration\/distribution\/archive\.test\.ts$|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal|instance|provider-proxy|temporary|remote-)|fixtures\/(?:terminal|process)\/|smoke\/(?:artifact|daemon-agents|herdr-terminal|windows-payload|terminal-)))/.test(
+      return /^(?:package\.json$|scripts\/|src\/|tests\/(?:integration|smoke|helpers)\/)/.test(
         relative,
       );
     return (
       member.name === "@raypx/contracts" &&
-      /^src\/(?:local(?:-client)?|terminal)(?:\/|\.)/.test(relative)
+      /^src\/(?:local(?:-client)?|desktop|device-connector)(?:\/|\.)/.test(relative)
     );
   });
   const selected = new Set<string>();
@@ -322,14 +321,9 @@ export function verificationPlan(
   if (allSources) for (const member of model.members) changed.add(member.name);
   const affected = affectedWorkspaces(model.members, changed);
   for (const name of isolated) affected.add(name);
-  const lifecycle = relatedTaskLifecycle(model, files);
   const nativeMembers = model.members.filter((member) => member.native && native.native);
   const workspaces = [
-    ...new Set([
-      ...affected,
-      ...nativeMembers.map((member) => member.name),
-      ...(lifecycle ? [lifecycle.workspace] : []),
-    ]),
+    ...new Set([...affected, ...nativeMembers.map((member) => member.name)]),
   ].sort();
   const artifacts = full
     ? (["api", "web", "cli"] as const).filter(
@@ -349,8 +343,6 @@ export function verificationPlan(
         .filter((name) => member.scripts[name])
         .map((name) => taskRef(member.name, name)),
     );
-  if (lifecycle && !affected.has(lifecycle.workspace))
-    tasks.push(taskRef(lifecycle.workspace, "test"));
   return {
     ...(options.baseline ? { baseline: options.baseline } : {}),
     full,

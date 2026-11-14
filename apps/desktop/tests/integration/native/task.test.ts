@@ -30,7 +30,6 @@ function fixture() {
           "raypx-dev",
           "typecheck",
           "typecheck:node",
-          "perf:check",
           "native:csp",
           "vp",
           "mygo:dev",
@@ -48,7 +47,7 @@ appendFileSync("events.jsonl", JSON.stringify({ name, args, forwarded, ...(proce
 if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
   );
   mkdirSync(join(root, "tests/native/smoke"), { recursive: true });
-  for (const file of ["run", "agents-run"])
+  for (const file of ["run"])
     writeFileSync(
       join(root, `tests/native/smoke/${file}.ts`),
       `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.js");`,
@@ -92,11 +91,7 @@ describe("Desktop task entry", () => {
   it("checks renderer and scripts under Turbo without a native compiler", () => {
     const result = fixture()("check");
     expect(result.status).toBe(0);
-    expect(result.events.map(({ name }) => name)).toEqual([
-      "typecheck",
-      "typecheck:node",
-      "perf:check",
-    ]);
+    expect(result.events.map(({ name }) => name)).toEqual(["typecheck", "typecheck:node"]);
   });
 
   it("uses the MyGo development leaf and preserves its arguments", () => {
@@ -139,7 +134,6 @@ describe("Desktop task entry", () => {
   it.each([
     ["native:smoke", "smoke-run", []],
     ["native:smoke:interactive", "smoke-run", ["--interactive"]],
-    ["native:agents", "smoke-agents-run", []],
   ] as const)("runs the MyGo %s gate under Turbo", (task, name, args) => {
     const result = fixture()(task, {});
     expect(result.status).toBe(0);

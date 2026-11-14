@@ -1,5 +1,4 @@
 import { verifyCliPayload } from "@raypx/tooling/build/cli";
-import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { MYGO_VERSION } from "./packager.js";
@@ -36,22 +35,7 @@ export async function checkRelease(binary: string) {
     if (JSON.stringify(prepared) !== JSON.stringify(packaged))
       throw new Error("Desktop modified the shared signed CLI payload");
   }
-  const herdr = join(resources, "bin/herdr");
-  const manifest = await Bun.file(join(herdr, "runtime.json")).json();
-  const cli = await Bun.file(resolve(import.meta.dirname, "../../../cli/package.json")).json();
-  const executable = process.platform === "win32" ? "herdr.exe" : "herdr";
-  if (manifest.version !== cli.herdr.version || !manifest.files?.[executable])
-    throw new Error("Release Herdr manifest is missing or stale");
-  for (const [name, expected] of Object.entries(manifest.files)) {
-    if (!name.split("/").every((part) => /^[\w. -]+$/.test(part) && part !== "." && part !== ".."))
-      throw new Error("Invalid release Herdr resource path");
-    const actual = createHash("sha256")
-      .update(new Uint8Array(await Bun.file(join(herdr, name)).arrayBuffer()))
-      .digest("hex");
-    if (actual !== expected)
-      throw new Error("Signed Herdr bytes differ from the packaged runtime manifest");
-  }
-  return { binary, framework: "mygo", smokeControls: false, herdrChecksumsVerified: true };
+  return { binary, framework: "mygo", smokeControls: false, cliChecksumsVerified: true };
 }
 
 if (import.meta.main) {

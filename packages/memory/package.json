@@ -4,10 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./server": "./src/server.ts",
     "./client": "./src/client.ts",
     "./client/styles.css": "./src/client/styles.css",
-    "./server/postgres": "./src/server/postgres.ts",
     "./messages/en": "./locales/en/index.ts",
     "./messages/zh": "./locales/zh/index.ts",
     "./space-server": "./src/space-server.ts",

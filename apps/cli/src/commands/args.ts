@@ -5,7 +5,6 @@ export const globalArgs = {
   "data-dir": { type: "string", description: "Local state directory" },
   profile: { type: "string", description: "Local profile name" },
   json: { type: "boolean", description: "Print a finite JSON result" },
-  yes: { type: "boolean", description: "Confirm file deletion" },
   help: { type: "boolean", alias: "h", description: "Show command help" },
   version: { type: "boolean", alias: "v", description: "Show the executable version" },
 } as const satisfies ArgsDef;
@@ -39,7 +38,6 @@ export function parseCliArgs(rawArgs: string[]) {
     positionals,
     options,
     json: values.json === true,
-    yes: values.yes === true,
     help: values.help === true,
     version: values.version === true,
   };

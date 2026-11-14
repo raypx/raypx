@@ -9,11 +9,11 @@ the signed-in home in Web and Desktop, with device-local drafts and deterministi
 browser fixtures. Acceptance results remain separate gates; client closeout is
 not a claim of packaged-platform or live-provider acceptance.
 
-Project/session pages, Waiting, New session and the guest task editor/handoff have
-been removed from Web and the Desktop renderer. Dependent Automations screens are
-also removed. Earlier standalone Memory remains device/account-owned, separate
-from the Agent/Space memory planned in phase 4. The CLI/daemon, native host, device
-stores and remote projections remain until a phase replaces them.
+The earlier device-owned runtime is retired. CLI model execution, scheduling,
+SQLite business profiles, enrollment, Host authorization, task projections and
+terminal hooks are removed. The CLI now supplies the outbound connector and a
+narrow private Desktop session daemon. No data is migrated. See
+[retirement decision](architecture/0067-retire-device-runtime.md).
 
 ## Phase overview
 
@@ -65,8 +65,8 @@ Acceptance:
 Client replacement: `/agents` now leads signed-in navigation and sign-in defaults.
 Web and Desktop no longer expose project/session or pending-approval pages, the
 guest editor or draft handoff. Desktop also removes project Files, Terminal,
-onboarding and old execution settings from its renderer. Device-owned backend,
-CLI and Go code is retained for later removal; phase 1 does not migrate its data.
+onboarding and old execution settings from its renderer. The device-owned execution backend and projections are removed; native Go
+still supplies Desktop OS capabilities and session bootstrap.
 Account/security, administration/configuration, sign-in/sign-up, public Web pages
 and device preferences remain reachable.
 
@@ -156,8 +156,7 @@ Space memory. See [capabilities](architecture/capabilities.md).
 Backend slice: Space routines and versioned Agent/shared memory use PostgreSQL,
 normal direct Run dispatch, worker-only scans, durable deduplication/coalescing,
 independent ingress credentials, untrusted-input approval and checkpoint-pinned
-recall. Existing account/device Memory and jobs remain for retained consumers;
-no data is imported. Client delivery and PostgreSQL/loopback acceptance are
+recall. Account/device memory and old job services are removed; no data is imported. Client delivery and PostgreSQL/loopback acceptance are
 separate gates; an unrun database or listener is not claimed as passed.
 
 Acceptance:
@@ -260,8 +259,8 @@ PostgreSQL and packaged platform acceptance remain independent gates.
 Implemented device slice: a separate outbound-only CLI connector, native-confirmed
 Space directory grants, per-member conversation selection, fenced Computer port
 operations, exact command approval, durable connector receipts and audit.
-PostgreSQL remains the authority; the retained local daemon/profile and Desktop
-session transport remain for their existing consumers. macOS arm64 real-daemon
+PostgreSQL remains the authority. The separate Desktop session daemon retains
+only cookies, selected-origin HTTP and server events. macOS arm64 real-daemon
 acceptance is separate from unverified Windows/Linux and packaged native gates.
 See [device setup and conservative decisions](development/device-connector.md).
 Home transfer and Screen are unavailable on device Computers. The full mobile
@@ -283,9 +282,14 @@ Acceptance:
   disconnect.
 - Packaged Desktop and Mobile acceptance are recorded per platform.
 
-Replaces the default execution path with server-owned Runs through the Computer
-port. Retained instance enrollment, daemon-owned Desktop session channel and
-terminal host still serve their independent consumers; no earlier data is imported.
+Retirement delivered: server-owned Runs through the Computer port replace the
+local task harness, schedules, memory, enrollment, Host grants and remote
+projections. The old Relay endpoint, terminal helper and optional edge adapter
+are removed. Redis remains for split connector routing and optional cache services.
+Desktop session transport, OS keys/dialogs/preferences and bundled CLI bootstrap
+remain because the connector does not implement them. Device Screen, home transfer,
+hosted computers and native platform acceptance retain their explicit gaps.
+No earlier data is imported.
 
 ## Not planned
 

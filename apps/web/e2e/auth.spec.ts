@@ -102,7 +102,6 @@ test(
               accountId: account.id,
               email: account.email,
               device: "Test computer",
-              matchesProfile: true,
             }
           : { code: "UNAUTHORIZED" },
         signedIn ? 200 : 401,

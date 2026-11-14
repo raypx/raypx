@@ -44,7 +44,7 @@ Mobile uses the phone Web client for Screen. See [clients](architecture/clients.
 - [Desktop configuration and native release](development/desktop.md)
 - [Mobile workflows and device acceptance](development/mobile.md)
 - [AI adapters and backend model configuration](development/ai.md)
-- [Space memory and retained task context](development/task-context.md)
+- [Agent and Space memory](development/task-context.md)
 - [Server routines and maintenance](development/server-jobs.md)
 - [Development diagnostics](development/devtools.md)
 - [UI components](development/ui.md)
@@ -55,7 +55,7 @@ Mobile uses the phone Web client for Screen. See [clients](architecture/clients.
 - [HTTP API and OpenAPI](development/openapi.md)
 - [Administrator configuration](development/configuration.md)
 - [Caching](development/caching.md)
-- [Object storage for retained session attachments](development/object-storage.md)
+- [Object storage configuration](development/object-storage.md)
 - [Internationalization](architecture/internationalization.md)
 - [Chinese i18n migration record and current boundaries](development/i18n-intl-vendoring.md)
 - [Icons](development/icons.md)
@@ -68,19 +68,13 @@ Mobile uses the phone Web client for Screen. See [clients](architecture/clients.
 - [Compose environments](development/deployment.md)
 - [Railway](development/railway.md)
 - [Infrastructure workspaces](../infra/README.md)
-- [Optional retained Relay ingress](../infra/cloudflare/README.md)
 
-## Retained device runtime
+## Native device support
 
-These guides cover still-present CLI/daemon, profile, native and remote-projection
-consumers until their replacement phase. They are not the server Agent workflow
-or a second authority for Spaces; no device-history import is provided.
+The [CLI](../apps/cli/README.md) supplies the outbound connector and Desktop's
+private session bridge. [Desktop](development/desktop.md) documents the remaining
+native dependency and separate platform acceptance. The old execution runtime is
+removed; see [the retirement decision](architecture/0067-retire-device-runtime.md).
 
-- [Standalone device CLI](../apps/cli/README.md)
-- [Terminal host and external-provider hooks](development/terminal-host.md)
-- [Local SQLite profiles](development/local-sqlite.md)
-- [Retained harness quality and performance gates](development/agent-quality.md)
-- [Prepared CLI payloads and distribution acceptance](development/mygo-bun-migration-plan.md)
-
-Source, PostgreSQL, listener/browser, live Engine, live-model and packaged native
-results are independent. Unverified platforms stay unverified.
+Source, PostgreSQL, browser, live Engine, live-model and packaged native results
+are independent. Unverified platforms stay unverified.

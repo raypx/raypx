@@ -79,7 +79,7 @@ func TestMain(m *testing.M) {
 		if mode == "wrong-version" {
 			version = "other"
 		}
-		json.NewEncoder(os.Stdout).Encode(host.JSON{"version": version, "protocolVersion": 1, "nativeCapability": strings.Repeat("n", 72), "nativeAddress": address, "features": host.JSON{"localTerminalApprovals": true}})
+		json.NewEncoder(os.Stdout).Encode(host.JSON{"version": version, "protocolVersion": 1, "nativeCapability": strings.Repeat("n", 72), "nativeAddress": address})
 		os.Exit(0)
 	}
 	os.Exit(m.Run())
@@ -121,7 +121,7 @@ func nativeFixture(t *testing.T, unix bool) (*host.DaemonClient, <-chan host.JSO
 				w.WriteHeader(403)
 				return
 			}
-			json.NewEncoder(w).Encode(host.JSON{"error": host.JSON{"code": "INSTANCE_REQUIRED"}})
+			json.NewEncoder(w).Encode(host.JSON{"error": host.JSON{"code": "AUTHENTICATION_REQUIRED"}})
 			return
 		}
 		value := any(true)
@@ -519,7 +519,7 @@ func TestNativeOperationFailureKeepsTheChannel(t *testing.T) {
 	defer cancel()
 	_, err := client.Native(ctx, host.JSON{"action": "pick", "path": "/project"})
 	var operation *host.NativeError
-	if !errors.As(err, &operation) || operation.Code != "INSTANCE_REQUIRED" {
+	if !errors.As(err, &operation) || operation.Code != "AUTHENTICATION_REQUIRED" {
 		t.Fatalf("expected the daemon's operation code, got %v", err)
 	}
 	// A rejected directory is the renderer's problem to show, not a lost host.

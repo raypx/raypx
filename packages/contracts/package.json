@@ -7,8 +7,6 @@
   "exports": {
     "./api": "./src/api.ts",
     "./local": "./src/local.ts",
-    "./tasks": "./src/tasks.ts",
-    "./terminal": "./src/terminal.ts",
     "./local-client": "./src/client.ts",
     "./desktop": "./src/desktop.ts",
     "./device-connector": "./src/device-connector.ts"
@@ -23,7 +21,6 @@
     "@orpc/contract": "catalog:",
     "@orpc/openapi": "catalog:",
     "@raypx/core": "workspace:*",
-    "@raypx/instances": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

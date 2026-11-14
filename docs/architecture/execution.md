@@ -10,7 +10,7 @@ The backend implements message-triggered Runs with `queued`, `running`, `waiting
 increasing fences, execution attempts, canonical checkpoints, steering messages
 and keyed backup jobs. `@raypx/agents/server` owns the runner and injected ports;
 `/server/postgres` owns their transactional persistence. API and worker roles use
-that same runner. Nothing imports the retained private CLI harness.
+that same runner. The CLI owns no Agent execution.
 
 A send transaction locks the conversation counter, commits the member message,
 creates its Run and backup job, and publishes a content-free notice. After commit
@@ -83,7 +83,7 @@ construction. Fanout hints wake scans; the interval repairs missed notifications
 
 The backup queue is a Space-owned PostgreSQL table keyed by Run, claimed in due
 order with `FOR UPDATE SKIP LOCKED` and a bounded job lease. It is separate from
-`@raypx/jobs`, whose retained account/device schedules do not provide a general
+`@raypx/jobs`, which does not provide a general
 keyed delayed retry queue. It is never normal dispatch. Terminal completion
 removes the job. A transient model error releases the attempt and moves the job
 to the provider's retry time, otherwise exponential backoff of 1–60 seconds, with

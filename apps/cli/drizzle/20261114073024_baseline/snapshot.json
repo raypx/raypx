@@ -1,0 +1,62 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "57eb02d5-869d-4c23-9455-5568ef72435c",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "ddl": [
+    {
+      "name": "desktop_sessions",
+      "entityType": "tables"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "origin",
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "version",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "encrypted",
+      "type": "blob",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "desktop_sessions_pk",
+      "columns": ["origin"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "desktop_session_version",
+      "value": "\"version\" > 0",
+      "entityType": "checks"
+    },
+    {
+      "table": "desktop_sessions",
+      "name": "desktop_session_size",
+      "value": "length(\"encrypted\") BETWEEN 28 AND 262172",
+      "entityType": "checks"
+    }
+  ],
+  "renames": []
+}
