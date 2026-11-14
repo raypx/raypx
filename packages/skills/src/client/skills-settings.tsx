@@ -1,3 +1,6 @@
+import { BookOpenIcon } from "@raypx/icons/book-open";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { LoadingState } from "@raypx/ui/loading-state";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import type { SkillAvailability, Skill } from "@raypx/core/skills";
 import type { SpaceId } from "@raypx/core/spaces";
@@ -134,11 +137,7 @@ export function SkillsSettingsEditor({
             </Button>
           </div>
         </div>
-        {view.loading && (
-          <p role="status" className="text-sm text-muted-foreground">
-            {t("loading")}
-          </p>
-        )}
+        {view.loading && <LoadingState label={t("loading")} />}
         {view.error && !editor && !importing && (
           <p role="alert" className="text-sm text-destructive-text">
             {t(`errors.${view.error}`)}
@@ -150,7 +149,11 @@ export function SkillsSettingsEditor({
           </Button>
         )}
         {!view.loading && !view.error && view.skills.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t("empty")}</p>
+          <EmptyState
+            title={t("empty")}
+            icon={<BookOpenIcon aria-hidden="true" />}
+            className="py-10"
+          />
         )}
         <ul className="flex min-w-0 flex-col divide-y divide-border">
           {view.skills.map((skill) => {

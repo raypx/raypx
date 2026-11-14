@@ -4,6 +4,7 @@ import {
   openConversationCapability,
 } from "../helpers/conversation-header.js";
 import { selectOption } from "../helpers/select.js";
+import { capture } from "../helpers/capture.js";
 import { createOwnedSpace } from "../helpers/owned-space.js";
 
 const apiUrl = process.env.CONTROL_E2E_API_URL;
@@ -46,6 +47,14 @@ async function expectGeometry(page: Page, surface: Locator) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
+  if (viewport.width === 1440) {
+    const heading = await surface.getByRole("heading").first().textContent();
+    await capture(page, {
+      path: test
+        .info()
+        .outputPath(`routines-memory-${heading?.replace(/[^a-zA-Z0-9-]/gu, "-")}.png`),
+    });
+  }
 }
 
 /** The same owned-backend journey runs against both compiled renderers. */
@@ -95,6 +104,7 @@ export function registerTests() {
     await openConversationCapability(page, "Routines");
     const routines = page.getByRole("dialog", { name: "Routines", exact: true });
     await settle(routines);
+    await capture(page, { path: info.outputPath("routines-empty.png") });
     await routines.getByRole("button", { name: "New routine", exact: true }).click();
     const routineForm = page.getByRole("dialog", { name: "New routine", exact: true });
     await settle(routineForm);
@@ -123,6 +133,7 @@ export function registerTests() {
     const routine = routines.getByRole("article", { name: routineName, exact: true });
     await expect(routine).toBeVisible();
     await expect(routine).toContainText("UTC");
+    await capture(page, { path: info.outputPath("routines-list.png") });
     const tested = page.waitForResponse(
       (response) =>
         new URL(response.url()).pathname.endsWith("/rpc/routines/test") &&
@@ -156,6 +167,7 @@ export function registerTests() {
     const memoryTrigger = await openConversationCapability(page, "Memory");
     const memory = page.getByRole("dialog", { name: "Memory", exact: true });
     await settle(memory);
+    await capture(page, { path: info.outputPath("memory-empty.png") });
     await memory.getByRole("button", { name: "New document", exact: true }).click();
     const documentForm = page.getByRole("dialog", { name: "New document", exact: true });
     await settle(documentForm);
@@ -176,6 +188,7 @@ export function registerTests() {
     await expect(
       memory.getByRole("heading", { name: "Shared in this Space", exact: true }),
     ).toBeVisible();
+    await capture(page, { path: info.outputPath("memory-list.png") });
     await memory.getByRole("button", { name: `Edit ${title}`, exact: true }).click();
     const editForm = page.getByRole("dialog", { name: "Edit document", exact: true });
     await settle(editForm);
@@ -210,6 +223,7 @@ export function registerTests() {
     );
     await revisions.getByRole("button", { name: "Close", exact: true }).click();
     await expect(revisions).toBeHidden();
+    await capture(page, { path: info.outputPath("memory-list.png") });
     await memory.getByRole("button", { name: `Edit ${title}`, exact: true }).click();
     await expect(
       editForm.getByRole("textbox", { name: "Markdown source", exact: true }),

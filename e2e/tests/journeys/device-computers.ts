@@ -2,7 +2,7 @@ import { expect as baseExpect, test, type Locator, type Page } from "@playwright
 import { mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { ownedApi } from "../helpers/owned-api.js";
-import { selectOption } from "../helpers/select.js";
+import { selectSettingsSection } from "../helpers/select.js";
 import { expectSurfaceAtRest, expectSurfaceControls } from "../helpers/geometry.js";
 import { capture } from "../helpers/capture.js";
 
@@ -18,12 +18,7 @@ async function openDevices(page: Page) {
   await page.getByRole("menuitem", { name: "Space settings", exact: true }).click({ timeout });
   const settings = page.getByRole("dialog", { name: "Space settings", exact: true });
   await expect(settings).toBeVisible();
-  await selectOption(
-    page,
-    settings.getByRole("combobox", { name: "Section", exact: true }),
-    "devices",
-    { timeout },
-  );
+  await selectSettingsSection(page, settings, "devices");
   const devices = settings.getByRole("region", { name: "Devices", exact: true });
   await expect(devices).toBeVisible();
   return { settings, devices };

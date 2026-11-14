@@ -13,6 +13,9 @@ import { ChevronRightIcon } from "@raypx/icons/chevron-right";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { FileTextIcon } from "@raypx/icons/file-text";
 import { RefreshIcon } from "@raypx/icons/refresh";
+import { FolderIcon } from "@raypx/icons/folder";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import {
   computerFileDestination,
   computerFileRows,
@@ -28,6 +31,13 @@ import { useTranslations } from "./i18n.js";
 function FileState({ value }: { value: DirectoryView | FilePreviewView }) {
   const t = useTranslations("agents");
   if (value.status === "available") return null;
+  if (value.status === "loading")
+    return (
+      <div role="status" aria-label={t("loading")} className="flex flex-col gap-2 py-2">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-3/4" />
+      </div>
+    );
   if (value.status === "waiting")
     return (
       <p role="status" className="text-xs text-muted-foreground">
@@ -137,6 +147,19 @@ export function ComputerFiles({
     move(computerFileDestination(view, row.path, event.key));
   }
   const preview = view.preview;
+  function downloadPreview() {
+    if (preview?.status !== "available" || preview.truncated || !view.selectedPath) return;
+    const bytes = Uint8Array.from(atob(preview.bytes), (character) => character.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = view.selectedPath.split("/").at(-1) ?? "file";
+    link.rel = "noopener";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
   return (
     <section
       aria-label={t("files.title")}
@@ -185,7 +208,7 @@ export function ComputerFiles({
                   role="treeitem"
                   variant="ghost"
                   size="sm"
-                  className="w-full min-w-0 max-w-full justify-start px-1 text-left"
+                  className="w-full min-w-0 max-w-full justify-start px-2 text-left aria-selected:bg-muted"
                   tabIndex={focusPath === row.path || (!focusExists && row.path === ".") ? 0 : -1}
                   aria-label={row.path === "." ? t("files.workspace") : row.path}
                   aria-level={row.depth}
@@ -211,6 +234,9 @@ export function ComputerFiles({
                   )}
                   {row.kind === "directory" && !expanded && (
                     <ChevronRightIcon data-icon="inline-start" aria-hidden="true" />
+                  )}
+                  {row.kind === "directory" && (
+                    <FolderIcon data-icon="inline-start" aria-hidden="true" />
                   )}
                   {row.kind !== "directory" && (
                     <FileTextIcon data-icon="inline-start" aria-hidden="true" />
@@ -239,7 +265,11 @@ export function ComputerFiles({
             );
           })}
           {root.entries.length === 0 && (
-            <p className="py-2 text-xs text-muted-foreground">{t("files.empty")}</p>
+            <EmptyState
+              title={t("files.empty")}
+              icon={<FolderIcon aria-hidden="true" />}
+              className="py-8"
+            />
           )}
         </div>
       )}
@@ -248,13 +278,73 @@ export function ComputerFiles({
           aria-label={t("files.preview")}
           className="flex w-full min-w-0 max-w-full flex-col gap-2 border-t pt-3"
         >
-          <h4 className="min-w-0 text-xs font-medium wrap-anywhere">{view.selectedPath}</h4>
+          <nav aria-label={t("files.breadcrumbs")} className="min-w-0">
+            <ol className="flex min-w-0 flex-wrap items-center gap-1 text-xs">
+              <li>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => {
+                    void controller.expand(".");
+                    move(".");
+                  }}
+                >
+                  {t("files.workspace")}
+                </Button>
+              </li>
+              {view.selectedPath
+                .split("/")
+                .filter((part) => part && part !== ".")
+                .map((part, index, parts) => {
+                  const path = parts.slice(0, index + 1).join("/");
+                  const last = index === parts.length - 1;
+                  return (
+                    <li key={path} className="flex min-w-0 items-center gap-1">
+                      <ChevronRightIcon
+                        aria-hidden="true"
+                        className="size-3 shrink-0 text-muted-foreground"
+                      />
+                      {last ? (
+                        <span aria-current="page" className="min-w-0 break-all font-medium">
+                          {part}
+                        </span>
+                      ) : (
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          className="min-w-0 max-w-full"
+                          title={path}
+                          onClick={() => {
+                            void controller.expand(path);
+                            move(path);
+                          }}
+                        >
+                          <span className="truncate">{part}</span>
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
+            </ol>
+          </nav>
           <FileState value={preview} />
           {preview.status === "available" && (
             <>
-              <p className="text-xs text-muted-foreground tabular-nums">
-                {t("files.size", { size: preview.size })}
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {t("files.size", { size: preview.size })}
+                </p>
+                <span title={preview.truncated ? t("files.downloadUnavailable") : undefined}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={preview.truncated}
+                    onClick={downloadPreview}
+                  >
+                    {t("files.download")}
+                  </Button>
+                </span>
+              </div>
               {preview.contentType === "binary" && <p className="text-sm">{t("files.binary")}</p>}
               {preview.contentType === "text" && (
                 <pre className="box-border max-h-80 w-full min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-md bg-muted p-3 font-mono text-xs whitespace-pre-wrap wrap-normal">

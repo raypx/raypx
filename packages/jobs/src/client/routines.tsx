@@ -1,3 +1,6 @@
+import { ClockIcon } from "@raypx/icons/clock";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { LoadingState } from "@raypx/ui/loading-state";
 import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
 import { useLocale } from "@raypx/i18n/browser";
 import type { Routine, RoutineHistory } from "@raypx/core/routines";
@@ -171,10 +174,7 @@ export function RoutinesPanel(props: RoutinesPanelProps) {
   }
 
   return (
-    <section
-      aria-label={t("title")}
-      className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4"
-    >
+    <section aria-label={t("title")} className="flex min-h-0 min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {props.showTitle !== false && <h2 className="text-lg font-medium">{t("title")}</h2>}
         <div className="flex items-center gap-2">
@@ -202,11 +202,9 @@ export function RoutinesPanel(props: RoutinesPanelProps) {
           </Button>
         </p>
       ) : null}
-      {loading && !routines.length ? (
-        <p className="text-sm text-muted-foreground">{t("loading")}</p>
-      ) : null}
+      {loading && !routines.length ? <LoadingState label={t("loading")} /> : null}
       {!loading && !error && !routines.length ? (
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        <EmptyState title={t("empty")} icon={<ClockIcon aria-hidden="true" />} className="py-10" />
       ) : null}
       <div className="divide-y">
         {routines.map((routine) => (
@@ -219,7 +217,10 @@ export function RoutinesPanel(props: RoutinesPanelProps) {
               <h3 className="min-w-0 font-medium wrap-anywhere">{routine.name}</h3>
               <Badge variant="secondary">{routine.enabled ? t("enabled") : t("paused")}</Badge>
             </div>
-            <p className="line-clamp-2 text-sm text-muted-foreground wrap-anywhere">
+            <p
+              title={routine.prompt}
+              className="line-clamp-2 text-sm text-muted-foreground wrap-anywhere"
+            >
               {routine.prompt}
             </p>
             <div className="flex flex-wrap gap-1">

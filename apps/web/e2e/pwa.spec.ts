@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { test, web } from "@raypx/e2e/testing";
+import { test, web, capture } from "@raypx/e2e/testing";
 
 test("Web quick settings opens the available install prompt and reflects installation", async ({
   page,
@@ -80,6 +80,7 @@ test("Web exposes an installable manifest and retries the same page URL after go
   expect(offline?.fromServiceWorker()).toBe(true);
   await expect(page.getByRole("heading", { name: "Unable to connect", exact: true })).toBeVisible();
   expect(await page.evaluate(() => caches.keys())).toEqual([]);
+  await capture(page, { path: test.info().outputPath("offline-retry.png"), fullPage: true });
 
   await context.setOffline(false);
   const retry = page.waitForResponse(

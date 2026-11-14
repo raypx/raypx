@@ -40,3 +40,8 @@ headless checks. Preserve accessible controls, neutral tokens and bilingual copy
 Shared composer attachments use bounded upload chunks within the existing native
 HTTP request envelope. Device-aware Files and notifications use additive renderer
 contracts. Browser journeys remain separate from packaged native acceptance.
+
+Settings has one category navigation for device preferences, approvals, models, skills,
+tools and diagnostics. Category hashes preserve the background route; visited ordinary
+panels stay mounted until close. Wide category rows and narrow Select choices use the
+shared Blocks pattern. Account identity remains available at /account.

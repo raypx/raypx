@@ -50,7 +50,7 @@ it.each(["en", "zh"] as const)(
       return input!;
     });
     expect(field.type).toBe("password");
-    expect(view.container.textContent).toContain("webhook");
+    expect(view.container.textContent).toContain({ en, zh }[language].agents.origins.webhook);
     const value = crypto.randomUUID();
     fireEvent.change(field, { target: { value } });
     fireEvent.submit(field.closest("form")!);

@@ -10,7 +10,11 @@ import { AppState, Text, View } from "react-native";
 import { Input } from "heroui-native/input";
 import { Label } from "heroui-native/label";
 import { TextField } from "heroui-native/text-field";
-import { ProtectedInputsController, type ProtectedInputsPort } from "@raypx/agents/model";
+import {
+  ProtectedInputsController,
+  toolDisplayLabel,
+  type ProtectedInputsPort,
+} from "@raypx/agents/model";
 import type { ProtectedInputRequest } from "@raypx/core/protected-input";
 import type { SpaceId } from "@raypx/core/spaces";
 import { Action } from "../ui.js";
@@ -25,9 +29,12 @@ function ProtectedInputForm({
   controller: ProtectedInputsController;
   busy: boolean;
 }) {
-  const { t } = useCopy();
+  const { t, locale } = useCopy();
   const [invalidBasic, setInvalidBasic] = useState(false);
   const destination = request.input.destination;
+  const provenanceKind = (["routine", "webhook", "email", "repository", "agent"] as const).find(
+    (kind) => kind === request.provenanceKind,
+  );
   function destinationText() {
     switch (destination.kind) {
       case "environment":
@@ -68,18 +75,20 @@ function ProtectedInputForm({
     };
   }, []);
   return (
-    <View className="gap-3 rounded-lg border border-border p-4">
+    <View className="gap-3 rounded-xl border border-border bg-card p-4">
       <TextField>
         <Label>{t("agents.protectedInput.title", { name: request.input.name })}</Label>
         <Text className="text-sm text-foreground">{request.input.purpose}</Text>
         <Text className="text-xs text-muted-foreground">
-          {request.toolName} · {request.target}
+          {toolDisplayLabel(request.toolName, (key) => t(`agents.${key}`))} · {request.target}
         </Text>
         <Text className="text-xs text-muted-foreground">{destinationLabel}</Text>
         {request.untrustedInput && (
           <Text className="text-sm text-foreground">
             {t("agents.protectedInput.untrusted", {
-              source: request.provenanceKind ?? t("agents.protectedInput.external"),
+              source: provenanceKind
+                ? t(`agents.origins.${provenanceKind}`)
+                : t("agents.protectedInput.external"),
             })}
           </Text>
         )}
@@ -124,7 +133,7 @@ function ProtectedInputForm({
       <Text className="text-xs text-muted-foreground">{t("agents.protectedInput.privacy")}</Text>
       <Text className="text-xs text-muted-foreground">
         {t("agents.protectedInput.expires", {
-          time: new Date(request.expiresAt).toLocaleTimeString(),
+          time: new Date(request.expiresAt).toLocaleTimeString(locale),
         })}
       </Text>
       {request.state === "pending" && (
@@ -203,9 +212,12 @@ export function ProtectedInputs({
         />
       ))}
       {state.error && (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
-          {t("agents.protectedInput.error")}
-        </Text>
+        <View className="gap-2 rounded-xl border border-border bg-card p-4">
+          <Text accessibilityRole="alert" className="text-sm text-foreground">
+            {t("agents.protectedInput.error")}
+          </Text>
+          <Action label={t("agents.refresh")} secondary onPress={() => void controller.refresh()} />
+        </View>
       )}
     </View>
   );

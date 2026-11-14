@@ -9,6 +9,10 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { IconButton } from "@raypx/ui/icon-button";
 import { BellIcon } from "@raypx/icons/bell";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
+import { useLocale } from "@raypx/i18n/browser";
+import { relativeActivityTime } from "../model/activity.js";
 import { NotificationsController, type MemberNotificationsPort } from "../model/notifications.js";
 import type { MemberNotification } from "@raypx/core/notifications";
 import { useTranslations } from "./i18n.js";
@@ -20,6 +24,7 @@ export function NotificationsBell({
   onOpen: (item: MemberNotification) => void;
 }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const unreadId = useId();
   const controller = useMemo(() => new NotificationsController(port), [port]);
@@ -42,6 +47,12 @@ export function NotificationsBell({
     };
   }, [controller]);
   const unread = view.items.filter((item) => item.unread).length;
+  const groups = new Map<string, MemberNotification[]>();
+  for (const item of view.items) {
+    const items = groups.get(item.spaceId) ?? [];
+    if (!groups.has(item.spaceId)) groups.set(item.spaceId, items);
+    items.push(item);
+  }
   return (
     <Popover
       open={open}
@@ -68,7 +79,7 @@ export function NotificationsBell({
           {t("notifications.unread", { count: String(unread) })}
         </span>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80">
+      <PopoverContent align="start" className="w-88 max-w-[calc(100vw-2rem)] gap-3 p-3">
         <div className="flex items-center justify-between gap-2">
           <PopoverTitle>{t("notifications.title")}</PopoverTitle>
           <Button
@@ -81,41 +92,68 @@ export function NotificationsBell({
           </Button>
         </div>
         {view.error && (
-          <p role="alert" className="text-xs text-destructive">
+          <p role="alert" className="text-xs text-destructive-text">
             {t("notifications.error")}
           </p>
         )}
         {!view.items.length && !view.loading && !view.error && (
-          <p className="py-4 text-center text-xs text-muted-foreground">
-            {t("notifications.empty")}
-          </p>
+          <EmptyState
+            icon={<BellIcon aria-hidden="true" />}
+            title={t("notifications.empty")}
+            className="py-8"
+          />
         )}
-        <ul className="flex max-h-96 flex-col gap-1 overflow-y-auto">
-          {view.items.map((item) => (
-            <li key={JSON.stringify([item.spaceId, item.kind, item.sourceId])}>
-              <Button
-                variant="ghost"
-                className="h-auto w-full justify-start py-2 text-left"
-                onClick={() => {
-                  void controller.read(item).then((read) => {
-                    if (read) {
-                      setOpen(false);
-                      onOpen(item);
-                    }
-                  });
-                }}
+        {view.loading && !view.items.length && (
+          <div role="status" aria-label={t("loading")} className="flex flex-col gap-3 py-2">
+            {[0, 1, 2].map((row) => (
+              <Skeleton key={row} className="h-14 w-full" />
+            ))}
+          </div>
+        )}
+        <div className="flex max-h-[min(28rem,65dvh)] flex-col gap-3 overflow-y-auto overscroll-contain">
+          {Array.from(groups, ([spaceId, items]) => (
+            <section key={spaceId} aria-label={items[0]?.spaceName} className="min-w-0">
+              <h3
+                className="truncate px-2 py-1 text-xs font-medium text-muted-foreground"
+                title={items[0]?.spaceName}
               >
-                <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="truncate">{t(`notifications.${item.kind}`)}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {item.spaceName} · {new Date(item.createdAt).toLocaleString()}
-                  </span>
-                </span>
-                {item.unread && <Badge variant="secondary">{t("notifications.new")}</Badge>}
-              </Button>
-            </li>
+                {items[0]?.spaceName}
+              </h3>
+              <ul className="flex flex-col gap-1">
+                {items.map((item) => (
+                  <li key={JSON.stringify([item.kind, item.sourceId])}>
+                    <Button
+                      variant="ghost"
+                      className="h-auto w-full min-w-0 justify-start gap-3 rounded-lg px-2 py-3 text-left whitespace-normal"
+                      onClick={() => {
+                        void controller.read(item).then((read) => {
+                          if (read) {
+                            setOpen(false);
+                            onOpen(item);
+                          }
+                        });
+                      }}
+                    >
+                      <span className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className={item.unread ? "font-medium" : "text-muted-foreground"}>
+                          {t(`notifications.${item.kind}`)}
+                        </span>
+                        <time
+                          dateTime={item.createdAt}
+                          title={new Date(item.createdAt).toLocaleString(locale)}
+                          className="text-xs tabular-nums text-muted-foreground"
+                        >
+                          {relativeActivityTime(item.createdAt, locale, Date.now())}
+                        </time>
+                      </span>
+                      {item.unread && <Badge variant="secondary">{t("notifications.new")}</Badge>}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
         {view.truncated && (
           <p className="text-xs text-muted-foreground">{t("notifications.truncated")}</p>
         )}

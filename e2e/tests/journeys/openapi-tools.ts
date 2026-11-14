@@ -46,10 +46,7 @@ export function registerTests() {
       });
       const agentsUrl = `${baseURL}/agents?spaceId=${spaceId}&agentId=${agent.id}`;
       await page.setViewportSize({ width: 1440, height: 860 });
-      await page.goto(
-        `${agentsUrl}#${info.project.name === "desktop" ? "settings" : "settings/tools"}`,
-        { timeout },
-      );
+      await page.goto(`${agentsUrl}#settings/tools`, { timeout });
       const management = page.locator("[data-openapi-management]");
       await expect(management).toBeVisible();
       await selectOption(

@@ -233,3 +233,10 @@ ComputerController retains value-free admission reasons for the failed generatio
 through racing events/refreshes. DOM and Mobile render the shared en/zh catalog;
 successful lifecycle state clears the reason. Screen runtime reasons use the same
 catalog on Web/Desktop; Mobile has no Screen surface.
+
+Settings categories use Blocks navigation; notifications group actual sources by
+Space with relative time and explicit unread state. Attachment thumbnails use only
+authenticated bounded downloads. Files keeps breadcrumbs and tree keyboard controls;
+only untruncated reads can be downloaded. Remote display labels omit opaque server
+identities while exact policy identities stay unchanged. Historical audit fallbacks
+never display internal member or resource IDs.

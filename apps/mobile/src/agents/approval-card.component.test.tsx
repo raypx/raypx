@@ -144,7 +144,7 @@ it.each(["en", "zh"] as const)(
       ["agent_page_read", labels.readPage],
       ["agent_skill_load", labels.loadSkill],
       ["agent_skill_save", labels.saveSkill],
-      [mcpToolNameSchema.parse("mcp_server__read_page"), "MCP server / read page"],
+      [mcpToolNameSchema.parse("mcp_server__read_page"), "MCP / read page"],
     ] as const;
     for (const [toolName, label] of cases) {
       const view = await renderNative(

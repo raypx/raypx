@@ -82,9 +82,9 @@ provider means an unavailable state without lifecycle controls. Computer tools
 still require backend admission and approval/effect policy.
 The Computer context card and narrow sheet keep the per-conversation device picker.
 The composer chip reflects that selection and opens its controls; it never starts
-the team sandbox while a device selection is active or still loading. Files is
-explicitly labelled Team sandbox because its read port is Space-scoped and cannot
-browse a selected device directory. Devices management stays in Space settings.
+the team sandbox while a device selection is active or still loading. Files follows the selected team sandbox or owned granted device directory through
+the existing read port. Its heading identifies the selection, and offline, ownership
+and grant failures remain explicit. Devices management stays in Space settings.
 
 Screen is a separate computer section. Its optional port mounts only while the
 computer panel is open. Pixel state is disposable and never enters draft storage.
@@ -186,3 +186,28 @@ or their denial state with the bounded review reason, distinctly from member
 answers, including after reload. They retain the independent Run Stop action.
 Mobile's native account mode picker uses the shared revisioned model; Space mode
 exception management retains its Web handoff.
+
+## Page review and settings
+
+Web and Desktop use one scope heading and category navigation. Shared
+`SettingsNavigation` supplies quiet rows on wide screens and a labelled Select on
+narrow screens. Desktop category hashes include preferences, approvals, models,
+skills, tools and diagnostics; visits preserve ordinary drafts until close. Space
+settings uses the same pattern with fresh role-filtered choices. Feature panels own
+their inner rows; the shell or sheet supplies outer gutters.
+
+Notifications group source kinds by Space and show unread state and relative times;
+the exact date stays on the Web time element. Attachment history renders authenticated
+bounded thumbnails, file type/size and withheld reasons. File previews keep keyboard
+tree behavior and breadcrumbs. Download uses the existing read bytes only when
+`truncated` is false; the client never presents partial bytes as a complete file.
+No usage meters, notification summaries or historical names are synthesized when
+those projections are absent.
+
+`RAYPX_PAGE_REVIEW_PHASE=before|after` with opt-in screenshots records safe review
+points at 1440, 1024, 768 and 390 pixels in both themes under `.artifacts/pages/`.
+The page-review journey covers settings, editors, directories and global states;
+feature journeys supply real approvals, devices, protected input and attachments.
+Captures restore viewport, theme and reading positions. Pairing codes, issued links
+and supplied protected values remain excluded. These are renderer fixtures; native
+Mobile layout and packaged Desktop acceptance require their own environments.

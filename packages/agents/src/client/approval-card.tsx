@@ -3,6 +3,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { cn } from "@raypx/ui/lib/utils";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import {
   toolOperationLabel,
   openApiOperationKind,
@@ -120,7 +121,11 @@ export function ApprovalCard({
       tabIndex={-1}
       className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <h3 id={id} className="min-w-0 font-medium wrap-anywhere">
+      <h3 id={id} className="flex min-w-0 items-start gap-2 font-medium wrap-anywhere">
+        <ShieldCheckIcon
+          aria-hidden="true"
+          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+        />
         {toolOperationLabel(card, t)}
       </h3>
       {operationKind && (
@@ -164,7 +169,7 @@ export function ApprovalCard({
       {!addressed && (
         <p className="text-xs text-muted-foreground wrap-anywhere">
           {t("approval.waitingFor", {
-            member: memberName?.(card.memberAccountId) ?? card.memberAccountId,
+            member: memberName?.(card.memberAccountId) ?? t("member"),
           })}
         </p>
       )}

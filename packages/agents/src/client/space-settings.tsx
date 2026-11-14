@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/browser";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import {
   spaceMutationErrorCodeSchema,
@@ -31,6 +32,7 @@ import { type SpaceManagementController, filteredSpaceAudit } from "../model/spa
 import { useTranslations } from "./i18n.js";
 import type { DeviceComputersController } from "../model/device-computers.js";
 import { DevicesSettings } from "./device-computers.js";
+import { SettingsNavigation } from "@raypx/blocks/settings";
 
 const sections = ["general", "members", "invitations", "approvals", "devices", "audit"] as const;
 type Section = (typeof sections)[number];
@@ -70,8 +72,8 @@ const auditActions = {
   "device.command": "deviceCommand",
 } as const;
 
-function displayDate(value: string) {
-  return new Date(value).toLocaleString();
+function displayDate(value: string, locale: string) {
+  return new Date(value).toLocaleString(locale);
 }
 function initials(name: string) {
   return name
@@ -118,92 +120,83 @@ export function SpaceSettingsPanel({
         entry === "devices"),
   );
   const activeSection = visibleSections.includes(section) ? section : "general";
-  const id = useId();
   useEffect(() => {
     if (state.exited) onExit(state.exited);
   }, [state.exited, onExit]);
   useEffect(() => () => controller.clearIssuedInvitation(), [controller]);
   return (
-    <div className="flex min-w-0 flex-col gap-4" data-space-settings={controller.spaceId}>
-      <Field>
-        <FieldLabel htmlFor={`${id}-section`}>{t("spaceSettings.section")}</FieldLabel>
-        <Select
-          value={activeSection}
-          items={visibleSections.map((value) => ({
-            value,
-            label: t(`spaceSettings.sections.${value}`),
-          }))}
-          onValueChange={(value) => {
-            if (!value) return;
-            setSection(value);
-            if (value === "audit") void controller.loadAudit();
-          }}
-        >
-          <SelectTrigger id={`${id}-section`} className="w-full min-w-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {visibleSections.map((value) => (
-                <SelectItem key={value} value={value} data-value={value}>
-                  {t(`spaceSettings.sections.${value}`)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </Field>
-      {state.error && (
-        <div className="flex min-w-0 flex-col items-start gap-2">
-          <p role="alert" className="text-sm wrap-anywhere text-destructive-text">
-            {t(`spaceSettings.errors.${state.error}`)}
+    <div
+      className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[9rem_minmax(0,1fr)]"
+      data-space-settings={controller.spaceId}
+    >
+      <SettingsNavigation
+        label={t("spaceSettings.section")}
+        value={activeSection}
+        items={visibleSections.map((value) => ({
+          value,
+          label: t(`spaceSettings.sections.${value}`),
+        }))}
+        onValueChange={(value) => {
+          const next = visibleSections.find((entry) => entry === value);
+          if (!next) return;
+          setSection(next);
+          if (next === "audit") void controller.loadAudit();
+        }}
+      />
+      <div className="flex min-w-0 flex-col gap-4">
+        <h3 className="text-lg font-medium">{t(`spaceSettings.sections.${activeSection}`)}</h3>
+        {state.error && (
+          <div className="flex min-w-0 flex-col items-start gap-2">
+            <p role="alert" className="text-sm wrap-anywhere text-destructive-text">
+              {t(`spaceSettings.errors.${state.error}`)}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={state.loading || !!state.busy}
+              onClick={() => void controller.load(owner)}
+            >
+              {t("refresh")}
+            </Button>
+          </div>
+        )}
+        {state.loading && <LoadingState label={t("loading")} />}
+        {state.deleting && (
+          <p role="status" className="text-sm">
+            {t("spaceSettings.deleting")}
           </p>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={state.loading || !!state.busy}
-            onClick={() => void controller.load(owner)}
-          >
-            {t("refresh")}
-          </Button>
-        </div>
-      )}
-      {state.loading && <LoadingState label={t("loading")} />}
-      {state.deleting && (
-        <p role="status" className="text-sm">
-          {t("spaceSettings.deleting")}
-        </p>
-      )}
-      {!state.loading && activeSection === "general" && (
-        <GeneralSettings
-          key={state.space?.name}
-          controller={controller}
-          state={state}
-          owner={owner}
-        />
-      )}
-      {!state.loading && activeSection === "members" && (
-        <MembersSettings
-          controller={controller}
-          state={state}
-          owner={owner}
-          onOpenRoutine={onOpenRoutine}
-        />
-      )}
-      {!state.loading && owner && activeSection === "invitations" && (
-        <InvitationSettings
-          controller={controller}
-          state={state}
-          invitationOrigin={invitationOrigin}
-        />
-      )}
-      {!state.loading && activeSection === "approvals" && (
-        <OverrideSettings controller={controller} state={state} owner={owner} />
-      )}
-      {activeSection === "devices" && devices && <DevicesSettings controller={devices} />}
-      {!state.loading && owner && activeSection === "audit" && (
-        <AuditSettings controller={controller} state={state} />
-      )}
+        )}
+        {!state.loading && activeSection === "general" && (
+          <GeneralSettings
+            key={state.space?.name}
+            controller={controller}
+            state={state}
+            owner={owner}
+          />
+        )}
+        {!state.loading && activeSection === "members" && (
+          <MembersSettings
+            controller={controller}
+            state={state}
+            owner={owner}
+            onOpenRoutine={onOpenRoutine}
+          />
+        )}
+        {!state.loading && owner && activeSection === "invitations" && (
+          <InvitationSettings
+            controller={controller}
+            state={state}
+            invitationOrigin={invitationOrigin}
+          />
+        )}
+        {!state.loading && activeSection === "approvals" && (
+          <OverrideSettings controller={controller} state={state} owner={owner} />
+        )}
+        {activeSection === "devices" && devices && <DevicesSettings controller={devices} />}
+        {!state.loading && owner && activeSection === "audit" && (
+          <AuditSettings controller={controller} state={state} />
+        )}
+      </div>
     </div>
   );
 }
@@ -381,6 +374,7 @@ function MembersSettings({
   onOpenRoutine: (id: string) => void;
 }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const confirmation = useConfirmation();
   async function changeRole(member: SpaceDirectoryMember) {
     const role = member.role === "owner" ? "member" : "owner";
@@ -432,7 +426,7 @@ function MembersSettings({
                 <p className="text-xs wrap-anywhere text-muted-foreground">{member.email}</p>
               )}
               <p className="text-xs tabular-nums text-muted-foreground">
-                {t("spaceSettings.joined", { date: displayDate(member.createdAt) })}
+                {t("spaceSettings.joined", { date: displayDate(member.createdAt, locale) })}
               </p>
             </div>
             {owner && (
@@ -498,6 +492,7 @@ function InvitationSettings({
   invitationOrigin?: string | undefined;
 }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const confirmation = useConfirmation();
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -578,10 +573,10 @@ function InvitationSettings({
                 {t("spaceSettings.invitedBy", { name: invitation.inviterName })}
               </p>
               <p className="text-xs tabular-nums text-muted-foreground">
-                {t("spaceSettings.created", { date: displayDate(invitation.createdAt) })}
+                {t("spaceSettings.created", { date: displayDate(invitation.createdAt, locale) })}
               </p>
               <p className="text-xs tabular-nums text-muted-foreground">
-                {t("spaceSettings.expires", { date: displayDate(invitation.expiresAt) })}
+                {t("spaceSettings.expires", { date: displayDate(invitation.expiresAt, locale) })}
               </p>
             </div>
             <Button
@@ -621,7 +616,7 @@ function InvitationSettings({
               </Field>
               <p className="text-xs tabular-nums text-muted-foreground">
                 {t("spaceSettings.expires", {
-                  date: displayDate(state.issuedInvitation.expiresAt),
+                  date: displayDate(state.issuedInvitation.expiresAt, locale),
                 })}
               </p>
               <Button onClick={() => void copy()}>
@@ -770,10 +765,11 @@ function AuditSettings({
   state: State;
 }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const id = useId();
   const filters = ["all", "pending", "succeeded", "refused", "failed"] as const;
   function memberName(accountId: string) {
-    return state.members.find((member) => member.accountId === accountId)?.name || accountId;
+    return state.members.find((member) => member.accountId === accountId)?.name || t("member");
   }
   function actionName(action: string) {
     const key = auditActions[action as keyof typeof auditActions];
@@ -789,8 +785,11 @@ function AuditSettings({
   }
   function target(entry: SpaceAuditEntry) {
     if (!entry.targetId) return t("spaceSettings.noTarget");
-    if (entry.targetId === controller.spaceId) return state.space?.name ?? entry.targetId;
-    return memberName(entry.targetId);
+    if (entry.targetId === controller.spaceId) return state.space?.name ?? t("space");
+    return (
+      state.members.find((member) => member.accountId === entry.targetId)?.name ||
+      t("spaceSettings.resource")
+    );
   }
   return (
     <section className="flex min-w-0 flex-col gap-4" aria-label={t("spaceSettings.sections.audit")}>
@@ -851,7 +850,7 @@ function AuditSettings({
                   dateTime={entry.createdAt}
                   className="text-xs tabular-nums text-muted-foreground"
                 >
-                  {displayDate(entry.createdAt)}
+                  {displayDate(entry.createdAt, locale)}
                 </time>
                 {entry.code && (
                   <p className="text-xs wrap-anywhere text-muted-foreground">

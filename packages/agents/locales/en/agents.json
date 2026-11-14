@@ -280,7 +280,10 @@
     "deviceWaiting": "Waiting for device. Reconnect it, then refresh.",
     "deviceNotOwned": "Only the member who owns this directory grant can browse it.",
     "deviceUnavailable": "This device directory grant is unavailable.",
-    "deviceTitle": "Device files"
+    "deviceTitle": "Device files",
+    "breadcrumbs": "File path",
+    "download": "Download file",
+    "downloadUnavailable": "This preview is incomplete. Full-file download is unavailable."
   },
   "routines": "Routines",
   "spaceMemory": "Memory",
@@ -436,7 +439,8 @@
     "joinSignIn": "Sign in",
     "joinSignInHint": "Sign in in the new tab, then return to this invitation.",
     "followsDefault": "Uses your account approval default",
-    "exitSessionEnded": "Your session ended. Sign in again."
+    "exitSessionEnded": "Your session ended. Sign in again.",
+    "resource": "Space resource"
   },
   "groups": {
     "title": "Groups",
@@ -681,7 +685,9 @@
     "unavailable": "Selected device unavailable",
     "nextRun": "Applies to your next Run in this conversation. Active Runs keep their computer.",
     "approvalDevice": "Device: {name}",
-    "grantInstructions": "On the selected machine, confirm in Desktop or run this command and choose a directory:"
+    "grantInstructions": "On the selected machine, confirm in Desktop or run this command and choose a directory:",
+    "platform": "Device",
+    "offlineWaiting": "This device is offline. Work waits for it to reconnect."
   },
   "protectedInput": {
     "title": "Protected input: {name}",
@@ -759,7 +765,9 @@
     "DEVICE_GRANT_REQUIRED": "File withheld: a directory grant from its owner is required.",
     "DELIVERY_UNCONFIRMED": "File withheld: delivery could not be confirmed.",
     "ATTACHMENT_INVALID": "Unsupported file type",
-    "ATTACHMENT_LIMIT": "Up to 4 files, 1 MiB each"
+    "ATTACHMENT_LIMIT": "Up to 4 files, 1 MiB each",
+    "document": "Document",
+    "image": "Image"
   },
   "notifications": {
     "title": "Notifications",

@@ -43,7 +43,7 @@ it("uses a native masked input, clears backgrounded values and never renders a s
   );
   const input = findByLabel(view.root, "Protected input: Access token");
   expect(input.props.secureTextEntry).toBe(true);
-  expect(textContent(view.root)).toContain("webhook");
+  expect(textContent(view.root)).toContain("Webhook");
   await changeText(input, crypto.randomUUID());
   await act(async () => emitAppState("background"));
   await press(findByLabel(view.root, "Supply once"));

@@ -1,3 +1,5 @@
+import { EmptyState } from "@raypx/ui/empty-state";
+import { GlobalIcon } from "@raypx/icons/global";
 import {
   useCallback,
   useEffect,
@@ -153,7 +155,11 @@ export function OpenApiServersEditor({ controller }: { controller: OpenApiServer
         </Button>
       )}
       {!view.loading && view.spaceId && !view.servers.length && (
-        <p className="text-sm text-muted-foreground">{t("openapi.empty")}</p>
+        <EmptyState
+          title={t("openapi.empty")}
+          icon={<GlobalIcon aria-hidden="true" />}
+          className="py-10"
+        />
       )}
       <ul className="flex min-w-0 flex-col divide-y divide-border">
         {view.servers.map((server) => {

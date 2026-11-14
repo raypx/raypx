@@ -1,6 +1,6 @@
 import { messageKey } from "./ports.js";
-import { useState, useSyncExternalStore } from "react";
-import { Text, View } from "react-native";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { Image, Text, View } from "react-native";
 import type { AttachmentsController, MessageAttachmentsPort } from "@raypx/agents/model";
 import type { MessageAttachment } from "@raypx/core/conversation";
 import type { ConversationId } from "@raypx/core/agents";
@@ -179,12 +179,28 @@ export function AttachmentDownloads({
     <View className="gap-1">
       {attachments?.map((attachment) => (
         <View key={attachment.id} className="gap-1">
+          <AttachmentThumbnail
+            attachment={attachment}
+            port={port}
+            spaceId={spaceId}
+            conversationId={conversationId}
+          />
           <Action
             label={t("agents.attachments.download", { name: attachment.name })}
             secondary
             disabled={!port}
             onPress={() => void download(attachment)}
           />
+          <Text className="text-xs text-muted-foreground">
+            {attachment.mediaType === "application/pdf"
+              ? "PDF"
+              : t(
+                  attachment.mediaType.startsWith("image/")
+                    ? "agents.attachments.image"
+                    : "agents.attachments.document",
+                )}{" "}
+            · {Math.ceil(attachment.size / 1024)} KiB
+          </Text>
           {attachment.deliveries
             ?.filter((delivery) => delivery.state === "withheld")
             .map((delivery) => (
@@ -201,4 +217,40 @@ export function AttachmentDownloads({
       )}
     </View>
   );
+}
+
+function AttachmentThumbnail({
+  attachment,
+  port,
+  spaceId,
+  conversationId,
+}: {
+  attachment: MessageAttachment;
+  port: MessageAttachmentsPort | undefined;
+  spaceId: SpaceId;
+  conversationId: ConversationId;
+}) {
+  const [uri, setUri] = useState<string | null>(null);
+  useEffect(() => {
+    if (!port || !attachment.mediaType.startsWith("image/")) return;
+    let current = true;
+    void port
+      .download({ spaceId, conversationId, id: attachment.id })
+      .then((result) => {
+        if (current) setUri(`data:${attachment.mediaType};base64,${result.bytes}`);
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [port, spaceId, conversationId, attachment.id, attachment.mediaType]);
+  return uri ? (
+    <Image
+      source={{ uri }}
+      accessibilityLabel={attachment.name}
+      className="size-20 rounded-xl"
+      resizeMode="cover"
+      onError={() => setUri(null)}
+    />
+  ) : null;
 }

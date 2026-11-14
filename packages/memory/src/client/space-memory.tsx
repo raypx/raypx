@@ -1,3 +1,6 @@
+import { BookOpenIcon } from "@raypx/icons/book-open";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { LoadingState } from "@raypx/ui/loading-state";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { AgentId } from "@raypx/core/agents";
 import type { SpaceId } from "@raypx/core/spaces";
@@ -214,7 +217,7 @@ function MemoryPanel({ spaceId, agentId, client, showTitle = true }: Props) {
   const feedback = (
     <div aria-live="polite" aria-atomic="true" className="text-sm">
       <p>{status}</p>
-      {error && <p className="text-destructive">{t(error)}</p>}
+      {error && <p className="text-destructive-text">{t(error)}</p>}
     </div>
   );
   return (
@@ -236,20 +239,20 @@ function MemoryPanel({ spaceId, agentId, client, showTitle = true }: Props) {
         {t("includeRemoved")}
       </label>
       {!editor && !history && feedback}
-      {loading && (
-        <p role="status" className="text-sm text-muted-foreground">
-          {t("loading")}
-        </p>
-      )}
+      {loading && <LoadingState label={t("loading")} />}
       {(["agent", "space"] as const).map((scope) => (
         <section key={scope} className="min-w-0">
           <h3 className="mb-2 text-sm font-medium">{t(scope)}</h3>
           {groups[scope].length === 0 && !loading && (
-            <p className="text-sm text-muted-foreground">{t("empty")}</p>
+            <EmptyState
+              title={t("empty")}
+              icon={<BookOpenIcon aria-hidden="true" />}
+              className="py-6"
+            />
           )}
-          <ul className="divide-y rounded-lg border">
+          <ul className="min-w-0 divide-y divide-border">
             {groups[scope].map((document) => (
-              <li key={document.id} className="min-w-0 space-y-2 p-3">
+              <li key={document.id} className="flex min-w-0 flex-col gap-2 py-4">
                 <div className="flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="wrap-anywhere font-medium">{document.title}</p>
@@ -406,12 +409,6 @@ function Provenance({ document }: { document: SpaceMemoryDocument }) {
     <div className="space-y-1 text-xs text-muted-foreground">
       <p>{t(document.provenance.kind === "member" ? "member" : "agentSaved")}</p>
       {document.provenance.untrustedInput && <p>{t("untrusted")}</p>}
-      {document.provenance.accountId && (
-        <p className="wrap-anywhere">{t("memberId", { id: document.provenance.accountId })}</p>
-      )}
-      {document.provenance.runId && (
-        <p className="wrap-anywhere">{t("runId", { id: document.provenance.runId })}</p>
-      )}
       {document.attribution.speaker && (
         <p className="wrap-anywhere">{t("speaker", { speaker: document.attribution.speaker })}</p>
       )}

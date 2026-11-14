@@ -97,3 +97,7 @@ hooks through type-only catalog imports; applications supply the shared provider
 
 ShellSidebarActions places product actions beside the sidebar brand/search in
 both Web and Desktop headers; feature packages own their content.
+
+`settings` also exports `SettingsNavigation`: caller-owned scope/category items,
+quiet wide navigation rows and a labelled narrow Select. The host owns role filtering,
+selection, URL state, panel lifetime and all data reads.

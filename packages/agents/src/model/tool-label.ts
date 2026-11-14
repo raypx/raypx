@@ -35,7 +35,7 @@ export function toolDisplayLabel(
   const bounded = name.slice(0, 512);
   const remote = /^(mcp|openapi)_([a-zA-Z0-9_-]+?)__([a-zA-Z0-9_-]+)$/.exec(bounded);
   if (remote)
-    return `${remote[1] === "openapi" ? "API" : "MCP"} ${remote[2]!.slice(0, 32)} / ${remote[3]!.replaceAll("_", " ").slice(0, 80)}`;
+    return `${remote[1] === "openapi" ? "API" : "MCP"} / ${remote[3]!.replaceAll("_", " ").slice(0, 80)}`;
   return (
     bounded
       .replace(/[^a-zA-Z0-9_.: -]/g, " ")

@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/browser";
 import { useEffect, useId, useSyncExternalStore } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -11,13 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@raypx/ui/components/ui/select";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@raypx/ui/components/ui/empty";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { DevicesIcon } from "@raypx/icons/devices";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { IconButton } from "@raypx/ui/icon-button";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import type { DeviceComputersController } from "../model/device-computers.js";
 import { useTranslations } from "./i18n.js";
+
+const platformLabels: Record<string, string> = {
+  darwin: "macOS",
+  win32: "Windows",
+  linux: "Linux",
+};
 
 function useDeviceComputers(controller: DeviceComputersController) {
   const state = useSyncExternalStore(
@@ -37,6 +45,7 @@ function useDeviceComputers(controller: DeviceComputersController) {
 
 export function DevicesSettings({ controller }: { controller: DeviceComputersController }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const id = useId();
   const state = useDeviceComputers(controller);
   const confirmation = useConfirmation();
@@ -82,7 +91,9 @@ export function DevicesSettings({ controller }: { controller: DeviceComputersCon
             dateTime={state.pairing.expiresAt}
             className="text-xs tabular-nums text-muted-foreground"
           >
-            {t("devices.expires", { time: new Date(state.pairing.expiresAt).toLocaleTimeString() })}
+            {t("devices.expires", {
+              time: new Date(state.pairing.expiresAt).toLocaleTimeString(locale),
+            })}
           </time>
         </Field>
       )}
@@ -102,12 +113,11 @@ export function DevicesSettings({ controller }: { controller: DeviceComputersCon
       )}
       {state.loading && <LoadingState label={t("loading")} />}
       {!state.loading && state.devices.length === 0 && (
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>{t("devices.empty")}</EmptyTitle>
-            <EmptyDescription>{t("devices.pairingInstructions")}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          title={t("devices.empty")}
+          icon={<DevicesIcon aria-hidden="true" />}
+          className="py-8"
+        />
       )}
       <ul className="min-w-0 divide-y divide-border">
         {state.devices.map((device) => (
@@ -115,7 +125,9 @@ export function DevicesSettings({ controller }: { controller: DeviceComputersCon
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="min-w-0 font-medium wrap-anywhere">{device.name}</span>
               <Badge variant="secondary">{t(`devices.${device.connectionState}`)}</Badge>
-              <span className="text-xs text-muted-foreground">{device.platform}</span>
+              <span className="text-xs text-muted-foreground">
+                {platformLabels[device.platform] ?? t("devices.platform")}
+              </span>
             </div>
             {device.connectionState !== "revoked" && (
               <div className="flex flex-wrap gap-2">
@@ -123,6 +135,7 @@ export function DevicesSettings({ controller }: { controller: DeviceComputersCon
                   size="sm"
                   variant="outline"
                   disabled={!device.connected || state.busy}
+                  title={!device.connected ? t("devices.offlineWaiting") : undefined}
                   onClick={() => void controller.requestGrant(device.id)}
                 >
                   {t("devices.grantDirectory")}
@@ -264,6 +277,13 @@ export function DeviceComputerSelector({ controller }: { controller: DeviceCompu
           {t("devices.warning")}
         </p>
       )}
+      {state.selection &&
+        !choices.find((choice) => choice.value === value)?.device.connected &&
+        !unavailable && (
+          <p role="status" className="text-xs text-muted-foreground">
+            {t("devices.offlineWaiting")}
+          </p>
+        )}
       {state.error && (
         <p role="alert" className="text-sm text-destructive-text">
           {t("devices.error")}

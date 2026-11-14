@@ -59,8 +59,8 @@ labelled as an example. The workbench never uses the logo palette.
 The homepage shows a centered hero, a labelled static conversation example, a
 three-step Space/Agent/conversation overview, links to available screens and a
 clearly marked later-capabilities section. Its authentication side region uses
-the same phase 1 facts. Do not depict tool approvals or computer execution as
-available in phase 1. Decorative hero trails and frame light may animate on the
+the same implemented product facts. Do not depict tool approvals or computer execution as
+available in an example unless their status is explicitly labelled. Decorative hero trails and frame light may animate on the
 existing timeline, pause offscreen/in hidden tabs and become static with reduced
 motion. Conversation examples do not autoplay. Authentication and legal pages
 render without entrances or loops. Label sample content and never invent usage,
@@ -203,3 +203,28 @@ Audit log. A single console link leaves the personal workspace navigation unclut
 Use actual account aggregates and dependency observations, with explicit UTC dates
 and independent unavailable states. Audit rows distinguish applied, rejected, failed,
 in-progress and unconfirmed outcomes; change details never contain secrets.
+
+## Page and capability consistency
+
+Settings uses a scope heading followed by one selected category. Wide layouts show
+quiet labelled category rows; narrow layouts use a labelled Select with the same
+choices. Keep ordinary drafts mounted while switching categories and discard private
+fields when their editor closes. Desktop uses the same category structure as Web;
+Space settings owns its member/owner-filtered second level. Panels use one outer
+padding region, flat divided lists and 24px section spacing. Do not nest a second
+padded page inside a capability sheet.
+
+Notifications group the actual sources by Space. Unread rows retain an explicit
+label and stronger type; relative times retain their exact timestamp. Empty lists
+use a neutral icon and one line, with the refresh or create action in the header.
+Attachments use a bounded image thumbnail or file icon, filename, type and size.
+Withheld reasons stay beside their file. Thumbnail bytes come only from the
+session-authorized attachment port and remain disposable client state.
+
+Approval and protected-input cards share a rounded neutral surface, compact header,
+bounded target, privacy/destination details and one primary action. Automatic review
+results have a distinct text label in Activity. Device offline/revoked selections
+remain explicit. Files keeps keyboard tree navigation, breadcrumbs, bounded preview
+and a download action only for complete reads; an incomplete preview explains why
+full download is unavailable. Member-facing labels use available names and translated
+historical fallbacks, with internal identity retained only for selection and policy.

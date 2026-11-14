@@ -1,10 +1,12 @@
+import { useLocale } from "@raypx/i18n/browser";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentId } from "@raypx/core/agents";
 import type { PageId, PageVersion } from "@raypx/core/pages";
 import type { SpaceEvent, SpaceId } from "@raypx/core/spaces";
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { Button } from "@raypx/ui/components/ui/button";
-import { Empty, EmptyHeader, EmptyTitle } from "@raypx/ui/components/ui/empty";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { FileTextIcon } from "@raypx/icons/file-text";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TooltipProvider } from "@raypx/ui/components/ui/tooltip";
 import { useConfirmation } from "@raypx/ui/confirmation";
@@ -55,6 +57,7 @@ function PagesSession({
   subscribe,
 }: PagesWorkspaceProps) {
   const t = useTranslations("pages");
+  const locale = useLocale();
   const [rows, setRows] = useState<PageVersion[]>([]);
   const [selected, setSelected] = useState<PageId | null>(initialPageId ?? null);
   const [editor, setEditor] = useState<PageEditorState | null>(null);
@@ -308,19 +311,14 @@ function PagesSession({
           </div>
         )}
         {!loading && !failed && rows.length === 0 && (
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>{t("empty")}</EmptyTitle>
-            </EmptyHeader>
-          </Empty>
+          <EmptyState title={t("empty")} icon={<FileTextIcon aria-hidden="true" />} />
         )}
         <ul className="flex min-w-0 flex-col divide-y">
           {rows.map((page) => {
             const maintainer =
               agents.find((agent) => agent.id === page.agentId)?.name ??
-              page.agentId ??
-              t("noAgent");
-            const author = accountNames?.[page.author.accountId] ?? page.author.accountId;
+              (page.agentId ? t("unknownAgent") : t("noAgent"));
+            const author = accountNames?.[page.author.accountId] ?? t("member");
             return (
               <li key={page.id}>
                 <Button
@@ -328,7 +326,9 @@ function PagesSession({
                   className="h-auto w-full min-w-0 flex-col items-start gap-2 py-4 text-left"
                   onClick={() => void select(page.id)}
                 >
-                  <span className="truncate font-medium">{page.title}</span>
+                  <span className="w-full truncate font-medium" title={page.title}>
+                    {page.title}
+                  </span>
                   <span className="flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span>{page.kind === "document" ? t("document") : t("html")}</span>
                     <span className="max-w-full truncate">
@@ -337,7 +337,7 @@ function PagesSession({
                     <span>
                       {t("updated")}:{" "}
                       <time dateTime={page.updatedAt}>
-                        {new Date(page.updatedAt).toLocaleString()}
+                        {new Date(page.updatedAt).toLocaleString(locale)}
                       </time>
                     </span>
                     <span className="max-w-full truncate">

@@ -122,3 +122,7 @@ Protected input renders the shared independent addressed request form, including
 
 The shared Agents client owns attachments, device-aware Files and the sidebar
 notification bell; Web contributes renderer acceptance journeys without backend imports.
+
+Space settings shares the wide category rows/narrow Select pattern with Desktop.
+Safe renderer review points are registered through page-review; the screenshot matrix
+never captures issued links, pairing codes or supplied protected input.

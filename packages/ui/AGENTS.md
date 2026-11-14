@@ -55,6 +55,9 @@ packages own page layout, forms, navigation and product behavior.
 - `styles/app.css`: imports the Tailwind entry once and supplies layered app base
   defaults. Layout and control utilities live in their owning components.
 - Other explicit subpaths expose reusable visual patterns and the original logo.
+- `empty-state` accepts `headingLevel` (1, 2 or 3; default 2). Standalone recovery
+  pages use level 1 with the shared page typography; embedded empty regions keep
+  the appropriate section level.
 - `logo-mark.webp` exposes the unchanged brand asset for browser and build-tool use.
 - `lib/utils` exposes `cn`, including semantic control-spacing merges. Other `lib`
   helpers and colocated tests are private; do not expose the directory with a wildcard.

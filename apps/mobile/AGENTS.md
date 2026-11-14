@@ -160,3 +160,9 @@ Native attachments use document/photo pickers and cache-only download sharing.
 The shared upload controller chunks bytes within the existing transport budget;
 restoration never uploads. Device Files and the notification route share injected
 backend ports. Picker/sharing component mocks do not establish device acceptance.
+
+Ordinary native pages align content below navigation with a shared 800px content
+limit; only authentication uses the centered 420px form. Notifications group sources
+by Space with relative times. Attachment thumbnails remain disposable native state.
+Files shares complete bounded reads through a cache-only file, deleting it afterwards;
+truncated previews explain why full download is unavailable.

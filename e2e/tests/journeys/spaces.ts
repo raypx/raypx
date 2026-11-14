@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { selectOption } from "../helpers/select.js";
+import { selectOption, selectSettingsSection } from "../helpers/select.js";
 
 const actionTimeout = 5_000;
 const apiUrl = process.env.CONTROL_E2E_API_URL;
@@ -79,12 +79,7 @@ async function openSettings(page: Page) {
 }
 
 async function section(page: Page, settings: Locator, name: string) {
-  await selectOption(
-    page,
-    settings.getByRole("combobox", { name: "Section", exact: true }),
-    name.toLowerCase(),
-    { timeout: actionTimeout },
-  );
+  await selectSettingsSection(page, settings, name.toLowerCase());
 }
 
 /** One real-backend journey is consumed by both compiled renderer projects. */
@@ -292,10 +287,20 @@ export function registerTests() {
       );
       await expect(memberSettings.getByRole("button", { name: /^Remove / })).toHaveCount(0);
       const memberSections = memberSettings.getByRole("combobox", { name: "Section", exact: true });
-      await memberSections.click({ timeout: actionTimeout });
-      await expect(member.getByRole("option", { name: "Invitations", exact: true })).toHaveCount(0);
-      await expect(member.getByRole("option", { name: "Audit", exact: true })).toHaveCount(0);
-      await member.keyboard.press("Escape");
+      if (await memberSections.isVisible()) {
+        await memberSections.click({ timeout: actionTimeout });
+        await expect(member.getByRole("option", { name: "Invitations", exact: true })).toHaveCount(
+          0,
+        );
+        await expect(member.getByRole("option", { name: "Audit", exact: true })).toHaveCount(0);
+        await member.keyboard.press("Escape");
+      } else {
+        const navigation = memberSettings.getByRole("navigation", { name: "Section", exact: true });
+        await expect(
+          navigation.getByRole("button", { name: "Invitations", exact: true }),
+        ).toHaveCount(0);
+        await expect(navigation.getByRole("button", { name: "Audit", exact: true })).toHaveCount(0);
+      }
       await member.keyboard.press("Escape");
       await expect(memberSettings).toBeHidden();
       await expect(member.locator("[data-conversation-header] h1")).toHaveText(agentName);

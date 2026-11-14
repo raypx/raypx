@@ -15,19 +15,22 @@ export function EmptyState({
   action,
   icon,
   className,
+  headingLevel = 2,
 }: {
   title: string;
   description?: string | undefined;
   action?: ReactNode;
   icon?: ReactNode;
   className?: string;
+  headingLevel?: 1 | 2 | 3;
 }) {
+  const Heading = `h${headingLevel}` as const;
   return (
     <Empty className={cn("py-12", className)}>
       <EmptyHeader>
         {icon ? <EmptyMedia variant="icon">{icon}</EmptyMedia> : null}
-        <EmptyTitle>
-          <h2>{title}</h2>
+        <EmptyTitle className={headingLevel === 1 ? "text-2xl font-semibold" : undefined}>
+          <Heading>{title}</Heading>
         </EmptyTitle>
         {description ? <EmptyDescription>{description}</EmptyDescription> : null}
       </EmptyHeader>

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
-import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { ClientOnly, HeadContent, Scripts, createRootRoute, Link } from "@tanstack/react-router";
 import { DesktopShell, ShellSkeleton } from "../components/shell.js";
 import { ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences.js";
@@ -11,6 +11,10 @@ import { getBridge, isDesktop } from "../lib/desktop.js";
 import { AppAnalytics } from "../features/analytics/provider.js";
 import { externalLinkTarget } from "../lib/external-links.js";
 import appCss from "../styles.css?url";
+import { useTranslations } from "../i18n.js";
+import { Button } from "@raypx/ui/components/ui/button";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { FileTextIcon } from "@raypx/icons/file-text";
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import("@raypx/devtools").then((module) => ({ default: module.DevtoolsBridge })))
@@ -28,7 +32,24 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   component: RootComponent,
+  notFoundComponent: NotFoundPage,
 });
+
+function NotFoundPage() {
+  const t = useTranslations("common");
+  return (
+    <EmptyState
+      headingLevel={1}
+      title={t("pageNotFound")}
+      icon={<FileTextIcon aria-hidden="true" />}
+      action={
+        <Button nativeButton={false} render={<Link to="/agents" />}>
+          {t("backToWorkspace")}
+        </Button>
+      }
+    />
+  );
+}
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (

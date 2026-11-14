@@ -28,15 +28,15 @@ it.each(["en", "zh"] as const)("resolves every built-in through the %s catalog",
   }
 });
 
-it("shows both parts of an exact remote name without consulting translations", () => {
+it("shows the remote operation without exposing its server identity", () => {
   const translate = vi.fn();
   expect(toolDisplayLabel("mcp_0123456789abcdef0123456789abcdef__read_page", translate)).toBe(
-    "MCP 0123456789abcdef0123456789abcdef / read page",
+    "MCP / read page",
   );
   expect(translate).not.toHaveBeenCalled();
   const long = toolDisplayLabel(`mcp_${"server".repeat(40)}__${"tool".repeat(40)}`);
   expect(long.length).toBeLessThanOrEqual(128);
-  expect(long).toContain("MCP server");
+  expect(long).toContain("MCP / ");
   expect(long).toContain(" / tool");
 });
 
@@ -61,7 +61,7 @@ it.each(
 
 it("uses bounded server-produced operation labels and explicit HTTP classifications", () => {
   const toolName = "openapi_0123456789abcdef0123456789abcdef__createItem";
-  expect(toolDisplayLabel(toolName)).toBe("API 0123456789abcdef0123456789abcdef / createItem");
+  expect(toolDisplayLabel(toolName)).toBe("API / createItem");
   expect(toolOperationLabel({ toolName, argumentSummary: "POST Create inventory item" })).toBe(
     "Create inventory item",
   );

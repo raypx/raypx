@@ -209,3 +209,16 @@ output echoes are scrubbed best effort. File content, generic MCP arguments and
 graphical input remain unavailable. Source, database,
 renderer browser and real-Engine acceptance are separate from packaged Desktop and
 native Mobile device acceptance. See [boundaries](docs/architecture/protected-input.md).
+
+## Client presentation
+
+Settings uses consistent scope/category navigation in the shared workbench and
+Desktop renderer, with a native page structure on Mobile. Notifications group the
+available sources by Space with read/unread state and relative times. Attachments
+show file type/size, image thumbnails and delivery reasons without changing the
+four-file, 1 MiB-per-file limits. Files offers breadcrumbs, bounded previews and
+complete-read downloads; truncated reads explicitly disable full-file download.
+Computer admission reasons remain the backend's value-free projection; no client
+quota meter or editable limit is implied. Missing historical names use translated
+fallbacks instead of internal IDs. Native bundle export and component tests remain
+separate from native screenshot, keyboard and accessibility acceptance.

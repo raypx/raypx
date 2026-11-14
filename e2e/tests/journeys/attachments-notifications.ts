@@ -286,11 +286,11 @@ export function registerTests() {
       ).toBe(true);
       await page.goto(`${baseURL}/agents?spaceId=${space.id}`);
       await page.getByRole("button", { name: "Notifications", exact: true }).click();
-      const source = page
-        .getByRole("button")
-        .filter({ hasText: "Run finished" })
-        .filter({ hasText: space.name });
+      const group = page.getByRole("region", { name: space.name, exact: true });
+      await expect(group.getByRole("heading", { name: space.name, exact: true })).toBeVisible();
+      const source = group.getByRole("button", { name: /Run finished/ });
       await expect(source).toBeVisible();
+      await expect(source).toContainText("Unread");
       await screenshots(page, info.project.name, "notifications");
       await source.click();
       await expect(page).toHaveURL(new RegExp(`agentId=${agent.id}`));

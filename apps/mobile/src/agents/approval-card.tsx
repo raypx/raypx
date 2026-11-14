@@ -76,7 +76,7 @@ export function ApprovalCard({
     );
   }
   return (
-    <View className="gap-3 rounded-lg border border-border p-4">
+    <View className="gap-3 rounded-xl border border-border bg-card p-4">
       {agentName && (
         <Text className="text-sm text-muted-foreground">
           {t("agents.approval.requestedBy", { name: agentName })}

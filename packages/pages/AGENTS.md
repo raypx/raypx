@@ -32,3 +32,6 @@ its original comparison version on live updates; loading latest is explicit and
 keeps the draft. Shared URLs exist only inside an open sharing dialog; closing
 invalidates pending creation and clears them. Component suites are happy-dom;
 PostgreSQL and browser sandbox checks remain separate acceptance gates.
+
+Member-facing author and maintainer labels use supplied names or translated fallbacks;
+opaque account/Agent identifiers remain selectors and never replace missing names.

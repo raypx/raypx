@@ -1,4 +1,4 @@
-import { Image, Text } from "react-native";
+import { Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { apiOrigin, authClient } from "../../src/auth.js";
@@ -17,12 +17,7 @@ export default function AccountScreen() {
   return (
     <Screen>
       <Action label={t("agents.back")} secondary onPress={() => router.replace("/")} />
-      <Image
-        source={require("@raypx/ui/logo-mark.webp")}
-        accessibilityLabel="Raypx"
-        className="size-12"
-      />
-      <Text accessibilityRole="header" className="text-[28px] font-semibold text-foreground">
+      <Text accessibilityRole="header" className="text-2xl font-semibold text-foreground">
         {t("common.account")}
       </Text>
       <Text className="text-base leading-6 text-foreground">{data?.user.name}</Text>

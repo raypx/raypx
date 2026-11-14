@@ -40,12 +40,13 @@ function AuthLayout({ children }: { children: ReactNode }) {
         <div className="ml-auto flex min-w-0 items-center gap-1 [--app-region:no-drag]">
           <Link
             to={returnTo}
+            title={t("backToWorkspace")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
               "min-w-0 max-w-36 shrink",
             )}
           >
-            <ArrowLeftIcon data-icon="inline-start" />
+            <ArrowLeftIcon data-icon="inline-start" aria-hidden="true" />
             <span className="truncate">{t("backToWorkspace")}</span>
           </Link>
           <ThemeToggle />

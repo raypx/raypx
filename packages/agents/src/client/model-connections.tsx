@@ -1,3 +1,4 @@
+import { SettingsIcon } from "@raypx/icons/settings";
 import {
   useCallback,
   useEffect,
@@ -128,7 +129,11 @@ export function ModelConnectionsEditor({
         </Button>
       )}
       {!view.loading && !view.error && view.connections.length === 0 && (
-        <EmptyState title={t("connections.empty")} />
+        <EmptyState
+          title={t("connections.empty")}
+          icon={<SettingsIcon aria-hidden="true" />}
+          className="py-10"
+        />
       )}
       <ul className="flex min-w-0 flex-col divide-y divide-border">
         {view.connections.map((connection) => {

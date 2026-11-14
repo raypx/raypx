@@ -80,5 +80,6 @@
   "refreshStatus": "Refresh status",
   "chooseProject": "Choose a project",
   "clearSearch": "Clear search",
-  "backToWorkspace": "Back to workspace"
+  "backToWorkspace": "Back to workspace",
+  "pageNotFound": "Page not found"
 }

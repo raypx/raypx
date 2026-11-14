@@ -1,3 +1,5 @@
+import { EmptyState } from "@raypx/ui/empty-state";
+import { GlobalIcon } from "@raypx/icons/global";
 import {
   useCallback,
   useEffect,
@@ -111,7 +113,11 @@ export function McpServersEditor({ controller }: { controller: McpServersControl
         </Button>
       )}
       {!view.loading && !view.servers.length && (
-        <p className="text-sm text-muted-foreground">{t("mcp.empty")}</p>
+        <EmptyState
+          title={t("mcp.empty")}
+          icon={<GlobalIcon aria-hidden="true" />}
+          className="py-10"
+        />
       )}
       <ul className="flex min-w-0 flex-col divide-y divide-border">
         {view.servers.map((server) => {

@@ -66,7 +66,7 @@
   "computer": "电脑",
   "project": "项目",
   "chooseAuthorizedProject": "选择已授权项目",
-  "agent": "Agent",
+  "agent": "智能体",
   "plan": "计划",
   "result": "结果",
   "all": "全部",
@@ -80,5 +80,6 @@
   "refreshStatus": "刷新状态",
   "chooseProject": "选择项目",
   "clearSearch": "清除搜索",
-  "backToWorkspace": "返回工作台"
+  "backToWorkspace": "返回工作台",
+  "pageNotFound": "找不到此页面"
 }

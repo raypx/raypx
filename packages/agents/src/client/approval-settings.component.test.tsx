@@ -64,7 +64,7 @@ it.each(["en", "zh"] as const)(
       decision: "block",
     };
     const { controller, updateSettings } = await mount(language, [rule]);
-    const label = "MCP server / read page";
+    const label = "MCP / read page";
     expect(screen.getByText(label)).toBeVisible();
     expect(
       screen.queryByRole("textbox", { name: strings.approvalSettings.tool }),

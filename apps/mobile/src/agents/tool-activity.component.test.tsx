@@ -148,7 +148,7 @@ it.each(["en", "zh"] as const)(
       labels.readPage,
       labels.loadSkill,
       labels.saveSkill,
-      "MCP server / read page",
+      "MCP / read page",
     ])
       expect(content).toContain(label);
     await view.unmount();

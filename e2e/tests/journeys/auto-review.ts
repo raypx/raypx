@@ -55,7 +55,7 @@ export function registerTests() {
       const agentsUrl = `${baseURL}/agents?spaceId=${spaceId}&agentId=${agent.id}`;
       await page.setViewportSize(viewports[0]!);
       await page.goto(
-        `${agentsUrl}#${info.project.name === "desktop" ? "settings" : "settings/account"}`,
+        `${agentsUrl}#${info.project.name === "desktop" ? "settings/approvals" : "settings/account"}`,
         { timeout },
       );
       const auto = page.getByRole("radio", { name: "Auto", exact: true });

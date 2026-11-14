@@ -75,8 +75,8 @@ export default function LoginScreen() {
   if (challenge) {
     const label = t(challenge === "backup" ? "auth.methods.backupCode" : "auth.methods.code");
     return (
-      <Screen>
-        <Text accessibilityRole="header" className="text-[28px] font-semibold text-foreground">
+      <Screen centered>
+        <Text accessibilityRole="header" className="text-2xl font-semibold text-foreground">
           {t("auth.methods.twoFactor")}
         </Text>
         <TextField isDisabled={verifying} className="gap-2">
@@ -130,13 +130,13 @@ export default function LoginScreen() {
     );
   }
   return (
-    <Screen>
+    <Screen centered>
       <Image
         source={require("@raypx/ui/logo-mark.webp")}
         accessibilityLabel="Raypx"
         className="size-12"
       />
-      <Text accessibilityRole="header" className="text-[28px] font-semibold text-foreground">
+      <Text accessibilityRole="header" className="text-2xl font-semibold text-foreground">
         {t("auth.login")}
       </Text>
       {expired ? (

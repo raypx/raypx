@@ -9,7 +9,13 @@ import { withUniwind } from "uniwind";
 // Third-party components need an explicit className-to-style adapter.
 const StyledSafeAreaView = withUniwind(SafeAreaView);
 
-export function Screen({ children }: { children: ReactNode }) {
+export function Screen({
+  children,
+  centered = false,
+}: {
+  children: ReactNode;
+  centered?: boolean;
+}) {
   return (
     <StyledSafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
@@ -17,10 +23,18 @@ export function Screen({ children }: { children: ReactNode }) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
-          contentContainerClassName="grow justify-center p-6"
+          contentContainerClassName={centered ? "grow justify-center p-6" : "grow p-4"}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="w-full max-w-[420px] self-center gap-5">{children}</View>
+          <View
+            className={
+              centered
+                ? "w-full max-w-[420px] self-center gap-5"
+                : "w-full max-w-[800px] self-center gap-6"
+            }
+          >
+            {children}
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </StyledSafeAreaView>

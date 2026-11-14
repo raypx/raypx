@@ -1,9 +1,17 @@
-import { useId, useState, useSyncExternalStore, type ClipboardEvent, type DragEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useState,
+  useSyncExternalStore,
+  type ClipboardEvent,
+  type DragEvent,
+} from "react";
 import { useTranslations } from "./i18n.js";
 import { InputGroupAddon } from "@raypx/ui/components/ui/input-group";
 import { Button } from "@raypx/ui/components/ui/button";
 import { IconButton } from "@raypx/ui/icon-button";
 import { CloseIcon } from "@raypx/icons/close";
+import { FileTextIcon } from "@raypx/icons/file-text";
 import type { MessageAttachment } from "@raypx/core/conversation";
 import type { AttachmentsController, MessageAttachmentsPort } from "../model/attachments.js";
 import type { ConversationSelection } from "../model/port.js";
@@ -141,7 +149,15 @@ export function AttachmentDrafts({
             key={item.key}
             className="flex min-w-0 max-w-full items-center gap-1 rounded-lg border bg-muted/50 px-2 py-1 text-xs"
           >
-            <span className="max-w-48 truncate">{item.name}</span>
+            <FileTextIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+            <span className="max-w-48 truncate" title={item.name}>
+              {item.name}
+            </span>
+            {item.attachment && (
+              <span className="text-muted-foreground tabular-nums">
+                {Math.ceil(item.attachment.size / 1024)} KiB
+              </span>
+            )}
             <span role="status">
               {item.state === "uploading" ? t("attachments.uploading") : null}
             </span>
@@ -158,7 +174,7 @@ export function AttachmentDrafts({
         ))}
       </ul>
       {files.error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="text-xs text-destructive-text">
           {files.error}
         </p>
       )}
@@ -201,18 +217,12 @@ export function MessageAttachments({
       <ul aria-label={t("attachments.title")} className="flex flex-wrap justify-end gap-2">
         {attachments.map((attachment) => (
           <li key={attachment.id} className="flex min-w-0 max-w-full flex-col gap-1">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!port}
-              aria-label={t("attachments.download", { name: attachment.name })}
-              onClick={() => void download(attachment)}
-            >
-              <span className="max-w-48 truncate">{attachment.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {Math.ceil(attachment.size / 1024)} KiB
-              </span>
-            </Button>
+            <AttachmentFile
+              attachment={attachment}
+              port={port}
+              selection={selection}
+              onDownload={() => void download(attachment)}
+            />
             {attachment.deliveries
               ?.filter((delivery) => delivery.state === "withheld")
               .map((delivery) => (
@@ -224,10 +234,81 @@ export function MessageAttachments({
         ))}
       </ul>
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="text-xs text-destructive-text">
           {t("attachments.downloadError")}
         </p>
       )}
     </div>
+  );
+}
+
+/** Only the authenticated, bounded attachment port supplies thumbnail bytes. */
+function AttachmentFile({
+  attachment,
+  port,
+  selection,
+  onDownload,
+}: {
+  attachment: MessageAttachment;
+  port: MessageAttachmentsPort | undefined;
+  selection: ConversationSelection;
+  onDownload: () => void;
+}) {
+  const t = useTranslations("agents");
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const image = attachment.mediaType.startsWith("image/");
+  const { spaceId, conversationId } = selection;
+  useEffect(() => {
+    if (!image || !port) return;
+    let current = true;
+    let url: string | undefined;
+    void port
+      .download({ spaceId, conversationId, id: attachment.id })
+      .then((result) => {
+        if (!current) return;
+        const bytes = Uint8Array.from(atob(result.bytes), (character) => character.charCodeAt(0));
+        url = URL.createObjectURL(new Blob([bytes], { type: attachment.mediaType }));
+        setThumbnail(url);
+      })
+      .catch(() => {
+        if (current) setFailed(true);
+      });
+    return () => {
+      current = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [image, port, spaceId, conversationId, attachment.id, attachment.mediaType]);
+  let type = t("attachments.document");
+  if (image) type = t("attachments.image");
+  if (attachment.mediaType === "application/pdf") type = "PDF";
+  return (
+    <Button
+      variant="outline"
+      disabled={!port}
+      aria-label={t("attachments.download", { name: attachment.name })}
+      title={attachment.name}
+      onClick={onDownload}
+      className="h-auto min-w-0 max-w-full justify-start gap-3 rounded-xl p-2 text-left"
+    >
+      {thumbnail && !failed ? (
+        <img
+          src={thumbnail}
+          alt=""
+          className="size-14 shrink-0 rounded-lg object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <FileTextIcon aria-hidden="true" className="size-5" />
+        </span>
+      )}
+      <span className="flex min-w-0 flex-col gap-1 pr-2">
+        <span className="max-w-48 truncate">{attachment.name}</span>
+        <span className="text-xs font-normal text-muted-foreground">
+          {type} · <span className="tabular-nums">{Math.ceil(attachment.size / 1024)} KiB</span>
+        </span>
+      </span>
+    </Button>
   );
 }

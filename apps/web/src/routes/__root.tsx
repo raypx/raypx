@@ -1,10 +1,12 @@
-import { BrowserLanguageProvider } from "../i18n.js";
+import { BrowserLanguageProvider, useTranslations } from "../i18n.js";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import {
   ClientOnly,
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  Link,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider, ThemeScript, themeMeta } from "@raypx/ui/themes";
@@ -13,6 +15,9 @@ import { resolveLocalePreference } from "@raypx/i18n/preferences";
 import { loadPreferences } from "../preferences.js";
 import { AppAnalytics } from "../features/analytics/provider.js";
 import appCss from "../styles.css?url";
+import { Button } from "@raypx/ui/components/ui/button";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { FileTextIcon } from "@raypx/icons/file-text";
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import("@raypx/devtools").then((module) => ({ default: module.DevtoolsBridge })))
@@ -37,10 +42,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   shellComponent: RootDocument,
+  notFoundComponent: NotFoundPage,
+  errorComponent: RouteErrorPage,
 });
 
+function NotFoundPage() {
+  const t = useTranslations("common");
+  return (
+    <main className="flex min-h-dvh items-center justify-center p-4">
+      <EmptyState
+        headingLevel={1}
+        title={t("pageNotFound")}
+        icon={<FileTextIcon aria-hidden="true" />}
+        action={
+          <Button nativeButton={false} render={<Link to="/agents" />}>
+            {t("backToWorkspace")}
+          </Button>
+        }
+      />
+    </main>
+  );
+}
+
+function RouteErrorPage({ reset }: ErrorComponentProps) {
+  const t = useTranslations("common");
+  return (
+    <main className="flex min-h-dvh items-center justify-center p-4">
+      <EmptyState
+        headingLevel={1}
+        title={t("error")}
+        icon={<FileTextIcon aria-hidden="true" />}
+        action={<Button onClick={reset}>{t("retry")}</Button>}
+      />
+    </main>
+  );
+}
+
 function RootDocument({ children }: { children: ReactNode }) {
-  const preferences = Route.useLoaderData();
+  const preferences =
+    Route.useLoaderData() ??
+    ({ locale: "system", systemLocales: ["en"], theme: "system" } as const);
   useEffect(() => {
     if (import.meta.env.PROD && "serviceWorker" in navigator) {
       void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => {});

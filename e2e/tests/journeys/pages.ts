@@ -1,4 +1,5 @@
 import { expect as baseExpect, test, type Locator } from "@playwright/test";
+import { capture } from "../helpers/capture.js";
 import { expectSurfaceAtRest, expectSurfaceControls } from "../helpers/geometry.js";
 
 const timeout = 5_000;
@@ -55,6 +56,7 @@ export function registerTests() {
       ).toHaveCount(1);
       await expect(page.getByRole("button", { name: "New group", exact: true })).toHaveCount(1);
       const create = page.getByRole("button", { name: "New page", exact: true });
+      await capture(page, { path: info.outputPath("pages-empty.png") });
       await create.click({ timeout });
       const form = page.getByRole("dialog", { name: "New page", exact: true });
       await expectSurfaceAtRest(page, form);
@@ -66,6 +68,7 @@ export function registerTests() {
         await page.setViewportSize(viewport);
         await expectSurfaceControls(page, form);
       }
+      await capture(page, { path: info.outputPath("page-create.png") });
       await form.getByRole("button", { name: "Create", exact: true }).click({ timeout });
       await expect(form).toBeHidden();
       await expect(page.getByText("Version 1", { exact: true })).toBeVisible();
@@ -98,17 +101,20 @@ export function registerTests() {
         await expect(preview).toBeHidden();
         await expect(fullScreen).toBeFocused();
       }
+      await capture(page, { path: info.outputPath("page-viewer.png") });
       await page.getByRole("button", { name: "Edit source", exact: true }).click({ timeout });
       await enter(
         page.getByRole("textbox", { name: "Source", exact: true }),
         "# Shared fixture\n\nThe second version.",
       );
+      await capture(page, { path: info.outputPath("page-editor.png") });
       await page.getByRole("button", { name: "Save version", exact: true }).click({ timeout });
       await expect(page.getByText("Version 2", { exact: true })).toBeVisible();
       if (!embedded) await expect(page.locator("iframe")).toHaveCount(0);
       await page.getByRole("button", { name: "Version history", exact: true }).click({ timeout });
       const history = page.getByRole("dialog", { name: "Version history", exact: true });
       await expectSurfaceAtRest(page, history);
+      await capture(page, { path: info.outputPath("page-versions.png") });
       const first = history
         .getByRole("listitem")
         .filter({ has: page.getByText("Version 1 · Created", { exact: true }) });

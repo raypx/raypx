@@ -3,6 +3,9 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
 import { cn } from "@raypx/ui/lib/utils";
+import { ShieldCheckIcon } from "@raypx/icons/shield-check";
+import { toolDisplayLabel } from "../model/tool-label.js";
+import { useLocale } from "@raypx/i18n/browser";
 import { ProtectedInputsController, type ProtectedInputsPort } from "../model/protected-input.js";
 import type { ProtectedInputRequest } from "@raypx/core/protected-input";
 import type { SpaceId } from "@raypx/core/spaces";
@@ -18,8 +21,12 @@ function ProtectedInputForm({
   busy: boolean;
 }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const id = useId();
   const destination = request.input.destination;
+  const provenanceKind = (["routine", "webhook", "email", "repository", "agent"] as const).find(
+    (kind) => kind === request.provenanceKind,
+  );
   function destinationText() {
     switch (destination.kind) {
       case "environment":
@@ -79,19 +86,22 @@ function ProtectedInputForm({
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor={id}>
+            <ShieldCheckIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
             {t("protectedInput.title", { name: request.input.name })}
           </FieldLabel>
           <p className="text-xs text-muted-foreground wrap-anywhere" id={`${id}-purpose`}>
             {request.input.purpose}
           </p>
           <p className="break-all text-xs text-muted-foreground">
-            {request.toolName} · {request.target}
+            {toolDisplayLabel(request.toolName, t)} · {request.target}
           </p>
           <p className="text-xs text-muted-foreground">{destinationLabel}</p>
           {request.untrustedInput && (
             <p role="note" className="text-sm">
               {t("protectedInput.untrusted", {
-                source: request.provenanceKind ?? t("protectedInput.external"),
+                source: provenanceKind
+                  ? t(`origins.${provenanceKind}`)
+                  : t("protectedInput.external"),
               })}
             </p>
           )}
@@ -129,7 +139,7 @@ function ProtectedInputForm({
           </p>
           <p className="text-xs tabular-nums text-muted-foreground">
             {t("protectedInput.expires", {
-              time: new Date(request.expiresAt).toLocaleTimeString(),
+              time: new Date(request.expiresAt).toLocaleTimeString(locale),
             })}
           </p>
         </Field>
@@ -212,9 +222,20 @@ export function ProtectedInputs({
           />
         ))}
       {state.error && (
-        <p role="alert" className="text-sm">
-          {t("protectedInput.error")}
-        </p>
+        <div
+          role="alert"
+          className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3"
+        >
+          <p className="min-w-0 flex-1 text-sm">{t("protectedInput.error")}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={state.busy !== null}
+            onClick={() => void controller.refresh()}
+          >
+            {t("refresh")}
+          </Button>
+        </div>
       )}
     </div>
   );

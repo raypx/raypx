@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/browser";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { PageVersion, PageShareLink } from "@raypx/core/pages";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -22,6 +23,7 @@ export function PageSharing({
   finalFocus: RefObject<HTMLButtonElement | null>;
 }) {
   const t = useTranslations("pages");
+  const locale = useLocale();
   const [links, setLinks] = useState<PageShareLink[]>([]);
   const [scope, setScope] = useState("latest");
   const [shown, setShown] = useState<{ url: string; version: number | null } | null>(null);
@@ -175,7 +177,9 @@ export function PageSharing({
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {t("created")}:{" "}
-                  <time dateTime={link.createdAt}>{new Date(link.createdAt).toLocaleString()}</time>
+                  <time dateTime={link.createdAt}>
+                    {new Date(link.createdAt).toLocaleString(locale)}
+                  </time>
                 </p>
               </div>
               {link.revokedAt ? (

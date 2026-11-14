@@ -1,4 +1,5 @@
 import { NotificationsBell } from "./notifications.js";
+import { LoadingState } from "@raypx/ui/loading-state";
 import { ProtectedInputs } from "./protected-input.js";
 import {
   saveAgentCapabilities,
@@ -47,7 +48,7 @@ import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { RoutinesPanel } from "@raypx/jobs/client";
 import { WorkspaceHome } from "./home.js";
-import { Empty, EmptyHeader, EmptyTitle, EmptyMedia } from "@raypx/ui/components/ui/empty";
+import { Empty, EmptyHeader, EmptyMedia } from "@raypx/ui/components/ui/empty";
 import { Alert, AlertDescription, AlertAction } from "@raypx/ui/components/ui/alert";
 import {
   DropdownMenu,
@@ -1432,11 +1433,7 @@ function AgentsWorkspaceContents({
           </AlertAction>
         </Alert>
       )}
-      {loading && page.agents.length === 0 && (
-        <Empty role="status">
-          <EmptyTitle>{t("loading")}</EmptyTitle>
-        </Empty>
-      )}
+      {loading && page.agents.length === 0 && <LoadingState label={t("loading")} />}
       {client.protectedInputs && page.spaceId && (renderWorkspace || !selected) && (
         <ProtectedInputs
           key={page.spaceId}
@@ -1606,7 +1603,7 @@ function AgentsWorkspaceContents({
           title={t("spaceSettings.title")}
           closeLabel={t("close")}
           finalFocus={() => spaceTrigger.current ?? false}
-          className="w-full sm:max-w-2xl"
+          className="data-[side=right]:w-full data-[side=right]:sm:max-w-2xl"
         >
           {spaceSettingsOpen && (
             <SpaceSettingsPanel

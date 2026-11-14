@@ -1,5 +1,6 @@
 import { expect as baseExpect, test, type Locator, type Page } from "@playwright/test";
 import { createApiClient } from "@raypx/client/api";
+import { capture } from "../helpers/capture.js";
 import { selectOption } from "../helpers/select.js";
 import { expectSurfaceAtRest, expectSurfaceControls } from "../helpers/geometry.js";
 
@@ -68,15 +69,15 @@ export function registerTests() {
     const agentName = `Research Agent ${suffix}`;
     const serverName = `Fixture tools ${suffix}`;
     const agentsUrl = `${baseURL}/agents?spaceId=${spaceId}`;
-    const desktop = info.project.name === "desktop";
     let skillId: string | undefined;
     let serverId: string | undefined;
     try {
       // An isolated Space exception avoids changing the shared fixture member's default.
       await api.spaces.setApprovalOverride({ spaceId, mode: "ask" });
       await page.setViewportSize(viewports[0]!);
-      await page.goto(`${agentsUrl}#${desktop ? "settings" : "settings/skills"}`, { timeout });
+      await page.goto(`${agentsUrl}#settings/skills`, { timeout });
       const addSkill = page.getByRole("button", { name: "New skill", exact: true });
+      await capture(page, { path: info.outputPath("skills-list.png") });
       await addSkill.click({ timeout });
       const skillForm = page.getByRole("dialog", { name: "New skill", exact: true });
       await expectSurfaceAtRest(page, skillForm);
@@ -98,6 +99,7 @@ export function registerTests() {
         "Compare the available sources.",
       );
       await inspectForm(page, skillForm);
+      await capture(page, { path: info.outputPath("skill-editor.png") });
       await skillForm.getByRole("button", { name: "Create skill", exact: true }).click({ timeout });
       await expect(skillForm).toBeHidden();
       skillId = (await api.skills.list({ spaceId, availableOnly: false })).find(
@@ -140,7 +142,7 @@ export function registerTests() {
         (await api.skills.agentSkills({ spaceId, agentId: agent.id })).map(({ id }) => id),
       ).toContain(skillId);
 
-      await page.goto(`${agentsUrl}#${desktop ? "settings" : "settings/tools"}`, { timeout });
+      await page.goto(`${agentsUrl}#settings/tools`, { timeout });
       const addServer = page.getByRole("button", { name: "Add server", exact: true });
       await addServer.click({ timeout });
       const serverForm = page.getByRole("dialog", { name: "Add server", exact: true });
@@ -184,7 +186,7 @@ export function registerTests() {
       const editor = page.getByRole("textbox", { name: "Message", exact: true });
       await typeText(editor, `Fixture MCP call ${suffix}`);
       await page.getByRole("button", { name: "Send", exact: true }).click({ timeout });
-      const dynamicLabel = `MCP ${serverId!.replaceAll("-", "").slice(0, 32)} / fixture echo`;
+      const dynamicLabel = "MCP / fixture echo";
       const approval = page
         .locator("[data-approval-card]")
         .filter({ has: page.getByRole("heading", { name: dynamicLabel, exact: true }) });

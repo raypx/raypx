@@ -90,8 +90,9 @@ it.each(["en", "zh"] as const)("shows another member's request read-only in %s",
   fixture(pendingCard({ memberAccountId: "another-member" }), language);
   expect(screen.getByRole("heading", { name: strings.tools.writeFile })).toBeInTheDocument();
   expect(
-    screen.getByText(language === "en" ? "Waiting for another-member" : "等待another-member审批"),
+    screen.getByText(language === "en" ? "Waiting for Member" : "等待成员审批"),
   ).toBeInTheDocument();
+  expect(screen.queryByText(/another-member/)).not.toBeInTheDocument();
   expect(screen.getByText(/notes\/report.txt/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: strings.approval.approve })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: strings.approval.deny })).not.toBeInTheDocument();
@@ -329,7 +330,7 @@ it.each([
 
 it.each(["en", "zh"] as const)("renders remote tool names as text in %s", (language) => {
   fixture(pendingCard({ toolName: mcpToolNameSchema.parse("mcp_server__read_page") }), language);
-  expect(screen.getByRole("heading", { name: "MCP server / read page" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "MCP / read page" })).toBeVisible();
 });
 
 it.each(["en", "zh"] as const)(

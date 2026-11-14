@@ -1,19 +1,22 @@
 import { useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 
+const sections = ["preferences", "approvals", "models", "skills", "tools", "diagnostics"] as const;
+type Section = (typeof sections)[number];
+
 /** The settings fragment keeps the background page, search and mounted editors intact. */
 export function useSettingsNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const router = useRouter();
+  const section = sections.find((value) => location.hash === `settings/${value}`) ?? "preferences";
   const opened =
-    location.hash === "settings" ||
-    location.hash === "settings/models" ||
-    location.hash === "settings/tools";
+    location.hash === "settings" || sections.some((value) => location.hash === `settings/${value}`);
   return {
     opened,
-    open: (section?: "models" | "tools") =>
+    section,
+    open: (requestedSection?: Section) =>
       navigate({
-        hash: section ? `settings/${section}` : "settings",
+        hash: requestedSection ? `settings/${requestedSection}` : "settings",
         search: true,
         replace: opened,
         state: (previous) =>

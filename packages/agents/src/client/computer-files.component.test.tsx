@@ -62,6 +62,10 @@ it.each(["en", "zh"] as const)(
     await within(preview).findByText("<script>private text</script>");
     expect(preview.querySelector("script")).toBeNull();
     expect(within(preview).getByText(messages.previewTruncated)).toBeInTheDocument();
+    expect(within(preview).getByRole("button", { name: messages.download })).toBeDisabled();
+    expect(
+      within(preview).getByRole("navigation", { name: messages.breadcrumbs }),
+    ).toHaveTextContent("notes.txt");
     expect(preview.querySelector("pre")).toHaveClass(
       "whitespace-pre-wrap",
       "wrap-normal",
@@ -114,6 +118,7 @@ it("constrains long file names and lets unbroken preview lines scroll inside the
   expect(pre).not.toHaveClass("overflow-x-clip");
   expect(pre).not.toHaveClass("wrap-anywhere");
   expect(pre.textContent).toBe(line);
+  expect(within(preview).getByRole("button", { name: "Download file" })).toBeEnabled();
 });
 
 it("supports arrows, Home and End with one roving keyboard stop", async () => {

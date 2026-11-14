@@ -90,3 +90,35 @@ it("renders filenames and withheld reasons as inert text in English and Chinese"
   );
   await waitFor(() => expect(screen.getByText("文件未提供：需要目录所有者的授权。")).toBeVisible());
 });
+
+it("loads an authenticated image thumbnail and releases its URL when leaving history", async () => {
+  const create = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:review-thumbnail");
+  const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  const attachment = {
+    id: crypto.randomUUID(),
+    name: "drawing.png",
+    mediaType: "image/png" as const,
+    size: 20,
+    sha256: "0".repeat(64),
+    createdAt: new Date().toISOString(),
+  };
+  const download = vi.fn(async () => ({ attachment, bytes: "aW1hZ2U=" }));
+  const view = render(
+    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <MessageAttachments
+        attachments={[attachment]}
+        selection={selection}
+        port={{ download, upload: vi.fn(), remove: vi.fn() }}
+      />
+    </BrowserLanguageProvider>,
+  );
+  await waitFor(() =>
+    expect(document.querySelector("img")).toHaveAttribute("src", "blob:review-thumbnail"),
+  );
+  expect(download).toHaveBeenCalledWith({ ...selection, id: attachment.id });
+  expect(screen.getByRole("button", { name: "Download drawing.png" })).toBeEnabled();
+  view.unmount();
+  expect(revoke).toHaveBeenCalledWith("blob:review-thumbnail");
+  create.mockRestore();
+  revoke.mockRestore();
+});

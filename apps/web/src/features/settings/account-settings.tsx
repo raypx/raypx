@@ -151,6 +151,7 @@ export function AccountSettingsPanel({
   const currentSection = sections.find((item) => item.value === section)!;
   const SectionIcon = currentSection.icon;
   const deviceSection = section === "preferences" || section === "diagnostics";
+  const ownsHeading = ["models", "skills", "tools", "sessions", "diagnostics"].includes(section);
   return (
     <Dialog
       open
@@ -284,24 +285,34 @@ export function AccountSettingsPanel({
             ref={scrollRef}
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
           >
-            <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-5 py-5 pr-14 md:px-8 md:py-6 md:pr-14">
-              <div className="flex min-w-0 items-center gap-3">
-                <SectionIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
-                <h1 className="text-lg leading-snug font-semibold tracking-tight">
-                  {currentSection.label}
-                </h1>
+            {ownsHeading && section !== "tools" && (
+              <div className="flex justify-end px-5 pt-4 pr-14 md:px-8 md:pr-14">
+                <Badge variant="outline">{deviceSection ? c("device") : s("accountScope")}</Badge>
               </div>
-              {section !== "tools" && (
-                <Badge variant="outline">
-                  {deviceSection ? (
-                    <MonitorIcon aria-hidden="true" data-icon="inline-start" />
-                  ) : (
-                    <UserCircleIcon aria-hidden="true" data-icon="inline-start" />
-                  )}
-                  {deviceSection ? c("device") : s("accountScope")}
-                </Badge>
-              )}
-            </header>
+            )}
+            {!ownsHeading && (
+              <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-5 py-5 pr-14 md:px-8 md:py-6 md:pr-14">
+                <div className="flex min-w-0 items-center gap-3">
+                  <SectionIcon
+                    aria-hidden="true"
+                    className="size-5 shrink-0 text-muted-foreground"
+                  />
+                  <h1 className="text-lg leading-snug font-semibold tracking-tight">
+                    {currentSection.label}
+                  </h1>
+                </div>
+                {section !== "tools" && (
+                  <Badge variant="outline">
+                    {deviceSection ? (
+                      <MonitorIcon aria-hidden="true" data-icon="inline-start" />
+                    ) : (
+                      <UserCircleIcon aria-hidden="true" data-icon="inline-start" />
+                    )}
+                    {deviceSection ? c("device") : s("accountScope")}
+                  </Badge>
+                )}
+              </header>
+            )}
             <div className="p-5 md:px-8 md:py-7">
               <VisitedSections value={visited}>
                 {children}

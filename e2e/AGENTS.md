@@ -137,3 +137,10 @@ Protected-input journeys cover every destination, including both device channels
 attachments-notifications journeys exercise real owned-backend uploads, image
 parts, download/reload, device Files/withholding and notification sources on both
 renderers. RAYPX_E2E_SCREENSHOTS writes light/dark evidence to .artifacts/attach/.
+
+Page review is opt-in with `RAYPX_PAGE_REVIEW_PHASE=before|after` and `--visual`.
+The capture helper records all four review widths and both themes, restoring the
+original reading positions afterwards. `page-review` covers safe settings/editor and
+directory states. JSONL evidence under `.artifacts/pages/` supplies the before/after
+index; native device screenshots remain separate. `playwright.review.config.ts`
+reviews already-running owned compiled servers without starting or rebuilding them.

@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/browser";
 import { useEffect, useSyncExternalStore } from "react";
 import type { SpaceId } from "@raypx/core/spaces";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -13,6 +14,7 @@ export function JoinSpaceView({
   onJoined: (spaceId: SpaceId) => void;
 }) {
   const t = useTranslations("agents");
+  const locale = useLocale();
   const state = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,
@@ -63,7 +65,7 @@ export function JoinSpaceView({
         </>
       )}
       <p className="text-xs tabular-nums text-muted-foreground">
-        {t("spaceSettings.expires", { date: new Date(preview.expiresAt).toLocaleString() })}
+        {t("spaceSettings.expires", { date: new Date(preview.expiresAt).toLocaleString(locale) })}
       </p>
       {state.error && (
         <p role="alert" className="text-sm text-destructive-text">

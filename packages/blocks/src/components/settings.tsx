@@ -25,6 +25,62 @@ export interface SettingsPageProps {
   children: ReactNode;
 }
 
+/** Shared second-level navigation; the host owns the scope and selected category. */
+export function SettingsNavigation({
+  label,
+  value,
+  items,
+  onValueChange,
+}: {
+  label: string;
+  value: string;
+  items: readonly { value: string; label: string }[];
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <nav aria-label={label} className="min-w-0">
+      <div className="md:hidden">
+        <Select
+          value={value}
+          items={items}
+          onValueChange={(next) => {
+            if (next) onValueChange(next);
+          }}
+        >
+          <SelectTrigger aria-label={label} className="w-full min-w-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {items.map((item) => (
+                <SelectItem key={item.value} value={item.value} data-value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+      <ul className="hidden min-w-0 flex-col gap-1 md:flex">
+        {items.map((item) => (
+          <li key={item.value}>
+            <Button
+              variant="ghost"
+              data-value={item.value}
+              className="min-h-9 w-full min-w-0 justify-start px-3 text-left aria-[current=page]:bg-muted aria-[current=page]:font-medium"
+              aria-current={item.value === value ? "page" : undefined}
+              title={item.label}
+              onClick={() => onValueChange(item.value)}
+            >
+              <span className="truncate">{item.label}</span>
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 export function SettingsPage({ title, description, footnote, children }: SettingsPageProps) {
   return (
     <section className="@container/settings flex min-w-0 flex-col text-foreground">

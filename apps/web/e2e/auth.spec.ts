@@ -1,4 +1,4 @@
-import { test, web, authResponse } from "@raypx/e2e/testing";
+import { test, web, authResponse, capture } from "@raypx/e2e/testing";
 import { expect } from "@playwright/test";
 
 test(
@@ -123,6 +123,11 @@ test(
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByText("Test computer")).toBeVisible();
     await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+    // The fixture consent contains display names only; authorization URLs stay outside captures.
+    await capture(page, {
+      path: test.info().outputPath("desktop-authorization.png"),
+      fullPage: true,
+    });
     await page.getByRole("button", { name: "Authorize Desktop" }).click();
     await expect(page).toHaveURL(callback);
     await expect(page.getByText("Return to Raypx Desktop")).toBeVisible();

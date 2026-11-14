@@ -280,7 +280,10 @@
     "deviceWaiting": "等待设备上线。连接后请刷新。",
     "deviceNotOwned": "只有此目录授权的所有者可以浏览文件。",
     "deviceUnavailable": "此设备目录授权不可用。",
-    "deviceTitle": "设备文件"
+    "deviceTitle": "设备文件",
+    "breadcrumbs": "文件路径",
+    "download": "下载文件",
+    "downloadUnavailable": "预览内容不完整，无法下载完整文件。"
   },
   "routines": "例行任务",
   "spaceMemory": "记忆",
@@ -436,7 +439,8 @@
     "joinSignIn": "登录",
     "joinSignInHint": "在新标签页中登录，然后返回此邀请。",
     "followsDefault": "使用你的账户默认审批模式",
-    "exitSessionEnded": "你的登录会话已结束，请重新登录。"
+    "exitSessionEnded": "你的登录会话已结束，请重新登录。",
+    "resource": "空间资源"
   },
   "groups": {
     "title": "群组",
@@ -681,7 +685,9 @@
     "unavailable": "所选设备不可用",
     "nextRun": "适用于你在此对话中发起的下一次运行。已有运行保持原计算机。",
     "approvalDevice": "设备：{name}",
-    "grantInstructions": "请在所选机器的桌面端确认，或运行此命令并选择目录："
+    "grantInstructions": "请在所选机器的桌面端确认，或运行此命令并选择目录：",
+    "platform": "设备",
+    "offlineWaiting": "此设备已离线，工作将等待它重新连接。"
   },
   "protectedInput": {
     "title": "受保护输入：{name}",
@@ -759,7 +765,9 @@
     "DEVICE_GRANT_REQUIRED": "文件未提供：需要目录所有者的授权。",
     "DELIVERY_UNCONFIRMED": "文件未提供：无法确认传输结果。",
     "ATTACHMENT_INVALID": "不支持此文件类型",
-    "ATTACHMENT_LIMIT": "最多 4 个文件，每个 1 MiB"
+    "ATTACHMENT_LIMIT": "最多 4 个文件，每个 1 MiB",
+    "document": "文档",
+    "image": "图片"
   },
   "notifications": {
     "title": "通知",

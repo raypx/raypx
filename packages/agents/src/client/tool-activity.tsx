@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from "react";
 import type { ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import {
   Collapsible,
   CollapsibleTrigger,
@@ -70,7 +71,7 @@ function ToolActivityRow({
       data-message-row={`tool:${call.runId}:${call.toolCallId}`}
       data-tool-call={call.toolCallId}
       data-tool-outcome={call.outcome ?? "running"}
-      className="flex min-w-0 flex-col gap-1 border-l pl-3 text-xs"
+      className="relative flex min-w-0 flex-col gap-2 border-l border-border py-1 pl-4 text-xs before:absolute before:top-2.5 before:-left-1 before:size-2 before:rounded-full before:border before:border-border before:bg-background"
     >
       {canOpenPage ? (
         <Button
@@ -112,7 +113,9 @@ function ToolActivityRow({
           data-auto-review={automatic}
           className="flex min-w-0 flex-col gap-1 text-muted-foreground"
         >
-          <span>{t(`approval.automatic.${automatic}`)}</span>
+          <Badge variant="secondary" className="self-start whitespace-normal">
+            {t(`approval.automatic.${automatic}`)}
+          </Badge>
           <span className="whitespace-pre-wrap wrap-anywhere">{answer?.review?.reason}</span>
         </div>
       )}

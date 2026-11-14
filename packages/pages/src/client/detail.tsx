@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/browser";
 import { useId, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { AgentId } from "@raypx/core/agents";
 import type { PageId, PageVersion } from "@raypx/core/pages";
@@ -53,6 +54,7 @@ export function PageDetail({
   onAskAgent: ((agentId: AgentId, page: { id: PageId; title: string }) => void) | undefined;
 }) {
   const t = useTranslations("pages");
+  const locale = useLocale();
   const id = useId();
   const [editing, setEditing] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -409,9 +411,9 @@ export function PageDetail({
                       {t("version", { version: version.version })} · {t(`reason.${version.reason}`)}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {accountNames?.[version.author.accountId] ?? version.author.accountId} ·{" "}
+                      {accountNames?.[version.author.accountId] ?? t("member")} ·{" "}
                       <time dateTime={version.updatedAt}>
-                        {new Date(version.updatedAt).toLocaleString()}
+                        {new Date(version.updatedAt).toLocaleString(locale)}
                       </time>
                     </p>
                   </div>

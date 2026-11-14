@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "heroui-native/button";
 import { ScrollView, Text, View } from "react-native";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@raypx/agents/model";
 import { useCopy } from "../locale.js";
 import { Action } from "../ui.js";
+import { messageKey } from "./ports.js";
 
 function FileState({ value }: { value: DirectoryView | FilePreviewView }) {
   const { t } = useCopy();
@@ -84,6 +85,30 @@ export function ComputerFiles({
   }, [controller, status, device]);
   useEffect(() => () => controller.clear(), [controller]);
   const root = state.directories["."];
+  async function download() {
+    const preview = state.preview;
+    if (!state.selectedPath || preview?.status !== "available" || preview.truncated) return;
+    try {
+      const [{ File, Paths }, sharing] = await Promise.all([
+        import("expo-file-system"),
+        import("expo-sharing"),
+      ]);
+      const name = state.selectedPath.split("/").at(-1) ?? "file";
+      const file = new File(Paths.cache, `${messageKey()}-${name}`);
+      try {
+        file.create();
+        await file.write(
+          Uint8Array.from(atob(preview.bytes), (character) => character.charCodeAt(0)),
+        );
+        await sharing.shareAsync(file.uri);
+      } finally {
+        if (file.exists) file.delete();
+      }
+    } catch {
+      setDownloadError(true);
+    }
+  }
+  const [downloadError, setDownloadError] = useState(false);
   return (
     <ScrollView
       accessibilityLabel={t("agents.files.title")}
@@ -148,7 +173,7 @@ export function ComputerFiles({
           className="gap-2 rounded-xl bg-muted p-3"
         >
           <Text accessibilityRole="header" className="text-sm font-medium text-foreground">
-            {state.selectedPath}
+            {t("agents.files.workspace")} / {state.selectedPath}
           </Text>
           <FileState value={state.preview} />
           {state.preview.status === "available" && (
@@ -157,7 +182,7 @@ export function ComputerFiles({
                 {t("agents.files.size", { size: state.preview.size })}
               </Text>
               {state.preview.contentType === "text" && (
-                <ScrollView horizontal>
+                <ScrollView horizontal className="max-h-80">
                   <Text selectable className="font-mono text-sm leading-6 text-foreground">
                     {computerPreviewText(state.preview.bytes)}
                   </Text>
@@ -169,6 +194,25 @@ export function ComputerFiles({
               {state.preview.truncated && (
                 <Text className="text-xs text-muted-foreground">
                   {t("agents.files.previewTruncated")}
+                </Text>
+              )}
+              <Action
+                label={t("agents.files.download")}
+                secondary
+                disabled={state.preview.truncated}
+                onPress={() => {
+                  setDownloadError(false);
+                  void download();
+                }}
+              />
+              {state.preview.truncated && (
+                <Text className="text-xs text-muted-foreground">
+                  {t("agents.files.downloadUnavailable")}
+                </Text>
+              )}
+              {downloadError && (
+                <Text accessibilityRole="alert" className="text-sm text-foreground">
+                  {t("agents.attachments.downloadError")}
                 </Text>
               )}
             </>
