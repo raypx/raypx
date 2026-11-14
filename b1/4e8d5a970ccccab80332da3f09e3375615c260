@@ -1,0 +1,289 @@
+packages/agents/locales/en/agents.json
+  s_f9cc0d01f49051::t_cc7e791c834248 149-151,403-406,420-422,521-529
+packages/agents/src/client/space-settings.component.test.tsx
+  s_974307ea7cc3ae::t_6c73d6289b382c 190-192,194,197-200,497-530
+  s_974307ea7cc3ae::t_6d62f5cee88c4c 7,128,133-139,145,161,187
+packages/agents/src/model/activity.ts
+  s_974307ea7cc3ae::t_077f44c5326dee 1-2,5-22,24-25
+  s_974307ea7cc3ae::t_b65393c7074224 23
+  s_974307ea7cc3ae::t_ffaba7527901d5 3-4
+packages/agents/src/model/space-management.ts
+  s_974307ea7cc3ae::t_f7c20dd427ed3d 85,150,195,253,261,404,407-408,414,417-418,463
+  s_974307ea7cc3ae::t_c180d19026a7ed 2-6,169-171,186-188,257-258,405-406,415-416
+apps/mobile/src/agents/tool-activity.tsx
+  s_974307ea7cc3ae::t_c180d19026a7ed 4-8,17-25,37-44,67-75,107-114
+e2e/tests/journeys/conversation-history.ts
+  s_974307ea7cc3ae::t_41cfa5050f1eb2 1-3,6-10,12-18,33-35,37,55-84,88-92,100-101,108-113,118-120,127-128,132-142,146,152-153,155-157,163,172-173,177,184-186,191-204,212-213,226-233,247-248,291-297
+  s_788ed15399a46e::t_df59e05087b06d 4-5,11,124,190,249-254,258-267,279-281,288-290
+  s_788ed15399a46e::t_afe7da261904d0 114-117
+  s_974307ea7cc3ae::t_40ade890882b29 158,179
+  s_974307ea7cc3ae::t_b5e3b41c05d981 20-32,38-54,85-87,93-99,102-107,121-123,125-126,129-131,143-145,148-149,151,164-171,174-176,180-183,187-189,205-211,214-225,234-246
+  s_974307ea7cc3ae::t_18b585dd00e749 160-162
+  s_788ed15399a46e::t_8b6591bc4542ae 255-257,268-272,274-278,282-287
+  s_974307ea7cc3ae::t_878df610a88305 19,36,147,150,154,159,178
+  s_788ed15399a46e::t_9ff1b4adeccc0e 273
+packages/agents/src/client/workspace.tsx
+  s_974307ea7cc3ae::t_36b13e3969cb20 148
+  s_974307ea7cc3ae::t_077f44c5326dee 76-77,147,149-151,156-157,933,964,1009,1028-1031
+  s_974307ea7cc3ae::t_f7c20dd427ed3d 89,116,189,341,344,375-380,401,1068,1185
+  s_974307ea7cc3ae::t_c180d19026a7ed 152-155,209-214,241-246,359-362,453-474,508-510
+  s_974307ea7cc3ae::t_ac53c362cfa27b 450,475-477,1069
+  s_974307ea7cc3ae::t_76190d0dd03e26 449,451-452
+apps/web/e2e/agents.spec.ts
+  s_974307ea7cc3ae::t_3e3719b2830587 2-6,9,53-54,94,265-267,357
+  s_974307ea7cc3ae::t_c314fec654617a 16-28
+  s_974307ea7cc3ae::t_3139cbcf3fa183 137,144,195,199-200,210-211,314-315
+  s_788ed15399a46e::t_12ff483ee2d944 115
+  s_974307ea7cc3ae::t_62e56e5a46518b 119-128,145-147,149-154,159,161-163,181-183,185-187,192-194,201,216,221-222,229,234,238,275,283-285,296-298,305,321,330,337-339,363-365,367,371,374,376-378,382-384,386-388,390-392
+  s_788ed15399a46e::t_d72e6bdbacf476 188
+  s_974307ea7cc3ae::t_93d5e872ab074d 1,11-15,29-30,55,102
+  s_974307ea7cc3ae::t_ae4043465a864a 131-136,138-143,196-198,202-204
+  s_788ed15399a46e::t_6af0087e55a0da 10
+packages/jobs/src/client/routines.tsx
+  s_974307ea7cc3ae::t_03e24772611571 30-32,373-376,388-389,568,580,583,591,653-662,665-668
+  s_974307ea7cc3ae::t_b65393c7074224 377-387,663-664
+  s_974307ea7cc3ae::t_1dd85156e99d3e 669-671
+packages/agents/src/client/workspace.component.test.tsx
+  s_788ed15399a46e::t_15a20c83ef9505 762
+  s_974307ea7cc3ae::t_c180d19026a7ed 2162-2288
+  s_788ed15399a46e::t_5b30b1a2171771 2161
+packages/pages/src/client/workspace.tsx
+  s_974307ea7cc3ae::t_077f44c5326dee 235
+packages/jobs/src/client/routines.component.test.tsx
+  s_974307ea7cc3ae::t_0057c4b8bcb374 225-229,235-237,242-249,253-256
+  s_974307ea7cc3ae::t_322cb66599db66 34,67,257,264
+  s_974307ea7cc3ae::t_b65393c7074224 230-234,238-241,250-252,258-263,265-290
+packages/jobs/locales/zh/routines.json
+  s_974307ea7cc3ae::t_03e24772611571 77-81
+packages/agents/src/model/port.ts
+  s_974307ea7cc3ae::t_4d0a6f1c626164 17-19,23-26,28,36,72-80,83-86,101
+  s_974307ea7cc3ae::t_641d22a3664c31 27
+apps/mobile/src/agents/provider.component.test.tsx
+  s_788ed15399a46e::t_4885927c26586f 31,41
+  s_788ed15399a46e::t_56eee55c4a0b71 1-30,32,34-36,38-40,42-49
+  s_788ed15399a46e::t_a3d2d6febdda93 33,37
+apps/mobile/src/agents/ports.test.ts
+  s_974307ea7cc3ae::t_7104195c043ae8 22,28-31,35-36,42-43,194,201,210-221
+  s_974307ea7cc3ae::t_b717f7dff4cbd6 222
+e2e/tests/journeys/groups.ts
+  s_788ed15399a46e::t_61cbe6c9e197c7 2,61-63
+apps/mobile/src/agents/conversation.component.test.tsx
+  s_974307ea7cc3ae::t_e24c0f1d5dce1c 1,34-39,130,151,469,552-553,570-572,629-634,662
+  s_974307ea7cc3ae::t_7104195c043ae8 5-8,453-462,533-535,539-548,558-566,573-628,635-661,663-681
+  s_974307ea7cc3ae::t_18b585dd00e749 129,136,531-532,536-538,549-551,554-557,567-569
+  s_974307ea7cc3ae::t_0fec0207e94c48 4
+packages/agents/src/model/tool-activity.ts
+  s_974307ea7cc3ae::t_f43770a2e1c3a6 29,48
+packages/agents/src/client/conversation.tsx
+  s_974307ea7cc3ae::t_c180d19026a7ed 361-366,369-375,403-404,527-532,558-560,568-573,707-719,721-732,745-750,896,995-1004,1122-1127
+  s_974307ea7cc3ae::t_7673637877cd98 720,733
+  s_974307ea7cc3ae::t_1916920f5e4ed8 33,38,105,132,207,232,252,291,336,525,535,549,551-552,557,574-579,581-582,585,736,814,841,891
+  s_788ed15399a46e::t_d72e6bdbacf476 294,460-465,1058
+  s_788ed15399a46e::t_a1a4411877d0cc 487
+  s_974307ea7cc3ae::t_c116724b39d91b 543,561-567,580
+  s_788ed15399a46e::t_564e1ac6c1fce8 485-486,488-489
+  s_974307ea7cc3ae::t_6a9261717b5f83 405,553-556,1120
+  s_974307ea7cc3ae::t_ac53c362cfa27b 110,194,217,400
+  s_788ed15399a46e::t_496dbcc861dd48 484,589
+  s_788ed15399a46e::t_e5e8932fef2bd9 82,238,401-402,459
+apps/desktop/src/routes/agents.tsx
+  s_974307ea7cc3ae::t_c180d19026a7ed 51-53
+packages/jobs/src/model/routines.test.ts
+  s_974307ea7cc3ae::t_0057c4b8bcb374 2
+  s_974307ea7cc3ae::t_04510dabdc5859 125-127,129-133,135,138-140,143,169
+  s_974307ea7cc3ae::t_b65393c7074224 136-137,141-142,145-168
+  s_974307ea7cc3ae::t_9a0f2725171351 128,134,144
+packages/agents/src/model/approvals.ts
+  s_974307ea7cc3ae::t_6d238f0aefa994 218-221,223-225,227
+  s_974307ea7cc3ae::t_24835be0c99c77 175,216-217,228-230
+  s_974307ea7cc3ae::t_009be72a728e52 3-13,141-162
+  s_974307ea7cc3ae::t_7b7453eb4c740a 1-2,163-174,222,226
+packages/agents/src/model.ts
+  s_974307ea7cc3ae::t_ffaba7527901d5 16-19,50
+  s_974307ea7cc3ae::t_077f44c5326dee 132-133
+  s_f9cc0d01f49051::t_cc7e791c834248 134-135
+  s_974307ea7cc3ae::t_5423fc4d31adcb 136-137
+packages/agents/src/model/space-live.ts
+  s_974307ea7cc3ae::t_f7c20dd427ed3d 10,36,63,78,81,89
+  s_974307ea7cc3ae::t_5423fc4d31adcb 23,90,212,216
+  s_974307ea7cc3ae::t_c180d19026a7ed 4-9,84-88,138-139
+  s_974307ea7cc3ae::t_a44520a3ec0ff4 91
+apps/mobile/src/agents/provider.tsx
+  s_788ed15399a46e::t_de58e68ed7cc3e 5,55-70,96,117
+  s_974307ea7cc3ae::t_b0a71ce239b961 10-11,52,73,95,97-99,115-116,118
+apps/mobile/src/agents/workspace.test.ts
+  s_974307ea7cc3ae::t_1855a07a233101 284
+  s_974307ea7cc3ae::t_cb43d5f457bdd5 274-283,285-287
+apps/mobile/src/agents/directory.tsx
+  s_974307ea7cc3ae::t_36b13e3969cb20 58
+  s_974307ea7cc3ae::t_077f44c5326dee 1,16-17,57,59-60,99,170,195-205
+  s_974307ea7cc3ae::t_9401f8e9eabaef 206-208
+packages/agents/src/client/space-workspace.component.test.tsx
+  s_974307ea7cc3ae::t_6c73d6289b382c 193-204,219-229,237,260,309,313,320,332,370-374,467-468,515,533-559,566-567
+  s_974307ea7cc3ae::t_a9396a5f796733 560-565
+  s_974307ea7cc3ae::t_6e4e410e244cb3 126,134,192
+apps/mobile/src/agents/directory.component.test.tsx
+  s_974307ea7cc3ae::t_077f44c5326dee 76
+  s_974307ea7cc3ae::t_322cb66599db66 10-13,209-212
+  s_974307ea7cc3ae::t_b65393c7074224 213-240
+  s_974307ea7cc3ae::t_f1cfd70923f3b3 98
+apps/api/tests/helpers/control-server.ts
+  s_974307ea7cc3ae::t_7545237371434b 45-46,49,259-263,269-306
+packages/agents/src/client/browser-ports.ts
+  s_974307ea7cc3ae::t_f7c20dd427ed3d 23
+packages/agents/src/model/activity.test.ts
+  s_974307ea7cc3ae::t_b65393c7074224 14-17
+  s_974307ea7cc3ae::t_03e24772611571 1-12,18-32
+  s_974307ea7cc3ae::t_36b13e3969cb20 13
+apps/desktop/src/routes/pages.tsx
+  s_974307ea7cc3ae::t_c180d19026a7ed 49-51
+apps/mobile/src/agents/conversation.tsx
+  s_974307ea7cc3ae::t_6a9261717b5f83 10-11,80-87,125,136,327
+  s_788ed15399a46e::t_c0867932e03987 111
+  s_974307ea7cc3ae::t_c180d19026a7ed 1,74-79,88-110,142-149,153-157,171-203,287-320,329-341,411-421
+  s_788ed15399a46e::t_496dbcc861dd48 128
+apps/mobile/src/agents/ports.ts
+  s_974307ea7cc3ae::t_c180d19026a7ed 88-91
+  s_974307ea7cc3ae::t_b0a71ce239b961 101,139
+  s_974307ea7cc3ae::t_1916920f5e4ed8 72,140
+packages/agents/src/model/participant-display.test.ts
+  s_974307ea7cc3ae::t_5423fc4d31adcb 1-12,16-17
+  s_974307ea7cc3ae::t_c180d19026a7ed 13-15
+packages/agents/src/model/history.test.ts
+  s_788ed15399a46e::t_92e5742a170b1b 273-293,296-309,637
+  s_788ed15399a46e::t_8b6591bc4542ae 386-409,457-475,635
+  s_974307ea7cc3ae::t_4eadda3bc0a150 1-8,10-11,18-20,22-28,30-37,39-54,56-67,69-74,76-83,85-93,95-102,105-118,122-125,152-157,159-160,162-168,170-178,181-201,203-209,211-236,240-248,250-267,269-272,310-320,323-337,339-341,590,619,630,634,639-640,642-645,647-653
+  s_788ed15399a46e::t_23288fec099573 501-524,633
+  s_788ed15399a46e::t_249f82b663bfc2 355-364,367-368,374-376
+  s_974307ea7cc3ae::t_482a2e2330c07d 75,94,554-587,602,616
+  s_788ed15399a46e::t_c0867932e03987 342-349
+  s_788ed15399a46e::t_e9f43d7936c8c4 350-354,365-366,369-373,377-382,618
+  s_974307ea7cc3ae::t_b31229ac48bd34 12-17
+  s_788ed15399a46e::t_06a38019896bf5 383-385,410-422
+  s_788ed15399a46e::t_c0713e1b5d6abc 126-151
+  s_974307ea7cc3ae::t_70fe4c21fb5717 423-442,444-450,453-456,476-486,488-494,497-500,525-540,543-544,546-550,552-553,588,626
+  s_788ed15399a46e::t_f87c272465b12e 9,21,29,38,55,68,84,103-104,119-121,158,161,169,179-180,202,210,237-239,249,268,294-295,321-322,338,443,451-452,487,495-496,541-542,545,551,589,591-601,603-615,617,620-625,627-629,631-632,636,638,641,646
+packages/agents/src/model/controller.ts
+  s_788ed15399a46e::t_8b6591bc4542ae 260,273,411
+  s_974307ea7cc3ae::t_24835be0c99c77 280,335
+  s_788ed15399a46e::t_496dbcc861dd48 314-319,732
+  s_974307ea7cc3ae::t_b30427e62da33d 271
+  s_974307ea7cc3ae::t_dc5a00d3d0eb54 323-324,326-329,331-333,336-337,340-345,348
+  s_974307ea7cc3ae::t_c09351c8bde8ff 556
+  s_788ed15399a46e::t_92e5742a170b1b 821-826
+  s_974307ea7cc3ae::t_f43770a2e1c3a6 730-731
+  s_974307ea7cc3ae::t_ec49f231468551 88-89,225-226,305-306,353-361,394-402,624,630-632,634
+  s_974307ea7cc3ae::t_ffaba7527901d5 4-5,24,29-42,44-45,87,90-92,107-112,114-115,228,237-240,242-257,259,261-270,272,274-279,281-288,291-297,307-313,320-322,334,338-339,349-352,362-367,369-378,381-393,403-408,410,412-420,422-438,441-448,526,535,569-571,573-574,664-672,778,805-807,809-811,813-814,816-820,827-833,836-847
+  s_788ed15399a46e::t_a1a4411877d0cc 230-235
+  s_974307ea7cc3ae::t_d7564dff260e29 46,467,469-472,474-480
+  s_788ed15399a46e::t_d0b8a71e7b071a 113,138-151,241,258,289-290,325,330,346-347,368,379-380,409,421,439-440,473,572,633,808,812,815,834-835
+packages/jobs/locales/en/routines.json
+  s_974307ea7cc3ae::t_03e24772611571 77-81
+apps/mobile/src/agents/workspace.ts
+  s_974307ea7cc3ae::t_1855a07a233101 64,84,175
+  s_974307ea7cc3ae::t_bff6d74ed56257 65-82
+  s_974307ea7cc3ae::t_5acbb2051ca899 38-42
+apps/web/src/routes/(app)/pages.tsx
+  s_974307ea7cc3ae::t_c180d19026a7ed 44-46
+e2e/tests/journeys/routines-memory.ts
+  s_788ed15399a46e::t_faa85d898501d2 7,70-72
+apps/api/tests/helpers/browser-history.ts
+  s_974307ea7cc3ae::t_7545237371434b 1-69
+packages/agents/src/model/participant-display.ts
+  s_f9cc0d01f49051::t_cc7e791c834248 1-19
+packages/agents/src/model/space-management.test.ts
+  s_974307ea7cc3ae::t_c180d19026a7ed 607-629
+  s_974307ea7cc3ae::t_5423fc4d31adcb 606
+packages/agents/src/client/group-conversation.component.test.tsx
+  s_788ed15399a46e::t_8e5530f7f4f6cf 357-383
+apps/web/tests/helpers/router-auth.tsx
+  s_788ed15399a46e::t_d72e6bdbacf476 89
+e2e/tests/journeys/spaces.ts
+  s_974307ea7cc3ae::t_b5e3b41c05d981 73-75,117-122,124-129,134-136,138-140,150-152,166-168,186-189,214-216,228-233,237-239,248-250,261-263,277-279,303-305,310-312
+  s_974307ea7cc3ae::t_0318ea27c54443 4,72,86,107,112,143,148,198,204,210,256,276,295,323,327
+  s_974307ea7cc3ae::t_5224268e0ba1c8 241-247,320,325-326,328-331
+  s_974307ea7cc3ae::t_3e3719b2830587 50
+  s_57b7d258d0e04d::t_620d99709f3a6f 240
+packages/agents/src/client/activity-time.component.test.tsx
+  s_974307ea7cc3ae::t_36b13e3969cb20 1-13
+  s_974307ea7cc3ae::t_1664ec998b7eac 37
+  s_974307ea7cc3ae::t_b65393c7074224 14-36,38-41
+apps/desktop/e2e/conversation-history.spec.ts
+  s_974307ea7cc3ae::t_41cfa5050f1eb2 1-3
+apps/web/src/routes/(app)/agents.tsx
+  s_974307ea7cc3ae::t_c180d19026a7ed 42-44
+apps/mobile/src/agents/approval-card.tsx
+  s_974307ea7cc3ae::t_6a9261717b5f83 18
+  s_974307ea7cc3ae::t_c180d19026a7ed 28-34,102-104,152-154
+packages/jobs/src/model/routines.ts
+  s_974307ea7cc3ae::t_03e24772611571 219-228,230-236
+  s_974307ea7cc3ae::t_9a0f2725171351 229
+e2e/tests/helpers/owned-space.ts
+  s_788ed15399a46e::t_e9f331a9ead8ce 1-10,12-13
+  s_788ed15399a46e::t_65e610112228d1 11
+packages/agents/src/model/conversation.ts
+  s_974307ea7cc3ae::t_d7564dff260e29 32,94,156,393-396,507-510,512
+  s_974307ea7cc3ae::t_f43770a2e1c3a6 268,288,517,540-542,544-549,555,561,564
+  s_788ed15399a46e::t_0990d1b567079e 289-291,323-326,348-353,358-381,616,620
+  s_974307ea7cc3ae::t_4d0a6f1c626164 11-12,15,29-31,43-48,267,318-320,327-331,333,336-347,354-355,357,382-392,397-401,405-408,505,567-568,614,617-619,621-624,626-628
+  s_974307ea7cc3ae::t_24835be0c99c77 409-433,465
+  s_974307ea7cc3ae::t_c09351c8bde8ff 402,404
+  s_974307ea7cc3ae::t_dc5a00d3d0eb54 36,294
+  s_788ed15399a46e::t_c0867932e03987 356
+  s_788ed15399a46e::t_db0effb1b2fe9d 403,434-438,451-452,463-464,471,486-487,494-495,513-514,523-527,543,566,569,615,625,629-633
+packages/agents/src/client/space-settings.tsx
+  s_974307ea7cc3ae::t_f7c20dd427ed3d 102,184-185,640,644,733-734,741-742
+  s_974307ea7cc3ae::t_c180d19026a7ed 257-266,680-687,689-732,735-740
+packages/agents/locales/zh/agents.json
+  s_f9cc0d01f49051::t_cc7e791c834248 149-151,403-406,420-422,521-529
+apps/desktop/src/router-agents.component.test.tsx
+  s_788ed15399a46e::t_9da17f16d2a40f 33-38
+packages/agents/src/client/activity-time.tsx
+  s_974307ea7cc3ae::t_077f44c5326dee 1-15,21-26
+  s_974307ea7cc3ae::t_b65393c7074224 16-20
+packages/agents/src/model/space-live.test.ts
+  s_974307ea7cc3ae::t_c180d19026a7ed 541-551
+  s_974307ea7cc3ae::t_5423fc4d31adcb 243,520-540,552-554
+apps/web/e2e/conversation-history.spec.ts
+  s_974307ea7cc3ae::t_41cfa5050f1eb2 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b14e8d5a970ccccab80332da3f09e3375615c260",
+  "prompts": {},
+  "sessions": {
+    "s_57b7d258d0e04d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d76d-aac4-7840-b783-2efee5d99638",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_788ed15399a46e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d780-cab7-7da0-a5ef-5b135e5b3ddc",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_974307ea7cc3ae": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d76b-a702-7951-bfcd-d261a4d05a81",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
