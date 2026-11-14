@@ -65,7 +65,7 @@ Auth uses one bordered 16px panel, a single column on narrow screens and numbere
 phase-1 product facts alongside it above 1024px. Shared Auth owns fields, errors,
 submission state and completion/recovery states. App layouts own gutters. Language
 switching preserves credentials and return destinations. A Space's team computer
-can be started and stopped; Agent tools, approvals and durable Run recovery remain unavailable.
+can be started and stopped. Conversation activity and addressed approvals render backend state.
 
 ## Boundaries and persistence
 
@@ -103,3 +103,11 @@ live in `e2e/` and use `@raypx/e2e/testing`; they verify compiled SSR, not nativ
 Desktop. Run `bun run --cwd apps/web check`, `test`, and repository `bun run verify`.
 `bun run --cwd apps/web e2e -- agents.spec.ts` needs its owned backend fixture;
 browser, PostgreSQL and packaged platform acceptance are separate gates.
+
+Pages mounts `@raypx/pages/client` at `/pages` in the shared Space/sidebar workspace.
+Web passes `canEmbedAuthenticatedDocuments={true}`. Document frames use the API's
+`/page-content/member` route with an opaque sandbox;
+source drafts and one-time share links stay in component memory. Page invalidations
+arrive through the shared Space stream. Asking about a Page only restores a composer
+reference. Account settings compose Skills and remote Tools; Agent forms enable the
+member's available resources. Remote credentials remain write-only.

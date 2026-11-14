@@ -77,6 +77,8 @@ const errorKeys = {
 } as const;
 
 interface AgentConversationProps {
+  onOpenPage?: ((id: string) => void) | undefined;
+  composerReference?: { id: string; text: string } | undefined;
   group?: GroupConversationView | undefined;
   agentDirectory?: readonly Agent[] | undefined;
   onManageParticipants?: (() => void) | undefined;
@@ -101,6 +103,8 @@ interface AgentConversationProps {
 }
 
 export function AgentConversation({
+  onOpenPage,
+  composerReference,
   group,
   agentDirectory,
   onManageParticipants,
@@ -122,6 +126,7 @@ export function AgentConversation({
   spaceSettings,
 }: AgentConversationProps) {
   const t = useTranslations("agents");
+  const referenceText = composerReference?.text;
   const [controllers, setControllers] = useState<{
     conversation: ConversationController;
     computer: ComputerController;
@@ -145,7 +150,13 @@ export function AgentConversation({
       });
       setControllers({ conversation: next, computer });
       void computer.refresh();
-      void next.start();
+      void next.start().then(() => {
+        if (!cancelled && next && referenceText) {
+          const draft = next.getSnapshot().draft;
+          if (!draft.includes(referenceText))
+            next.setDraft(draft ? `${draft}\n\n${referenceText}` : referenceText);
+        }
+      });
     });
     return () => {
       cancelled = true;
@@ -153,6 +164,7 @@ export function AgentConversation({
       computer?.dispose();
     };
   }, [
+    referenceText,
     item.agent.spaceId,
     item.conversation.id,
     origin,
@@ -172,6 +184,7 @@ export function AgentConversation({
   return (
     <ConversationContents
       item={item}
+      onOpenPage={onOpenPage}
       group={group}
       agentDirectory={agentDirectory}
       onManageParticipants={onManageParticipants}
@@ -193,6 +206,7 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  onOpenPage,
   group,
   agentDirectory,
   onManageParticipants,
@@ -211,6 +225,7 @@ function ConversationContents({
   onActivity,
   onComputerOpen,
 }: {
+  onOpenPage: ((id: string) => void) | undefined;
   item: AgentConversationView;
   group: GroupConversationView | undefined;
   agentDirectory: readonly Agent[] | undefined;
@@ -655,6 +670,7 @@ function ConversationContents({
                 if (row.kind === "activity")
                   return (
                     <ToolActivity
+                      onOpenPage={onOpenPage}
                       key={row.id}
                       runId={row.runId}
                       activity={row.activity}

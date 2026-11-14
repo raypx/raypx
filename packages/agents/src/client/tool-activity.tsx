@@ -38,8 +38,10 @@ function ToolActivityRow({
   selection,
   answer,
   memberName,
+  onOpenPage,
 }: {
   call: ToolCallActivity;
+  onOpenPage?: ((id: string) => void) | undefined;
   answer?: ApprovalCardView | undefined;
   memberName?: ((id: string) => string) | undefined;
   approvalPort?: ApprovalPort | undefined;
@@ -48,6 +50,12 @@ function ToolActivityRow({
   const t = useTranslations("agents");
   const toolName = toolDisplayLabel(call.toolName, t);
   const refusal = interactionCode(call);
+  const pageTool =
+    call.toolName === "agent_page_create" ||
+    call.toolName === "agent_page_update" ||
+    call.toolName === "agent_page_read";
+  // Activity has no Page ID; target is display text and must not become a resource selector.
+  const canOpenPage = pageTool && onOpenPage;
   return (
     <li
       data-message-row={`tool:${call.runId}:${call.toolCallId}`}
@@ -55,7 +63,18 @@ function ToolActivityRow({
       data-tool-outcome={call.outcome ?? "running"}
       className="flex min-w-0 flex-col gap-1 border-l pl-3 text-xs"
     >
-      <span className="min-w-0 font-medium wrap-anywhere">{toolName}</span>
+      {canOpenPage ? (
+        <Button
+          variant="link"
+          size="sm"
+          className="h-auto justify-start self-start p-0 text-xs"
+          onClick={() => onOpenPage?.("")}
+        >
+          {toolName}
+        </Button>
+      ) : (
+        <span className="min-w-0 font-medium wrap-anywhere">{toolName}</span>
+      )}
       <span className="min-w-0 font-mono text-muted-foreground wrap-anywhere">
         {call.target.slice(0, 1_024)}
       </span>
@@ -99,7 +118,9 @@ export function ToolActivity({
   memberName,
   approvalPort,
   selection,
+  onOpenPage,
 }: {
+  onOpenPage?: ((id: string) => void) | undefined;
   activity: readonly ToolCallActivity[];
   runId: string;
   pendingCount?: number;
@@ -140,6 +161,7 @@ export function ToolActivity({
                   (entry) => entry.runId === call.runId && entry.toolCallId === call.toolCallId,
                 )}
                 memberName={memberName}
+                onOpenPage={onOpenPage}
               />
             ))}
           </ul>

@@ -67,6 +67,7 @@ export function AccountSettingsPanel({
   children: ReactNode;
 }) {
   const t = useTranslations("auth");
+  const skills = useTranslations("skills");
   const models = useTranslations("agents");
   const c = useTranslations("common");
   const i = useTranslations("instances");
@@ -78,10 +79,17 @@ export function AccountSettingsPanel({
   const [visited, setVisited] = useState<ReadonlySet<string>>(() => new Set([section]));
   if (!visited.has(section)) setVisited(new Set([...visited, section]));
   const scrollRef = useRef<HTMLDivElement>(null);
+  function sectionKeywords(value: SettingsSection, label: string) {
+    if (value === "models") return models("connections.searchKeywords");
+    if (value === "skills" || value === "tools") return label;
+    return s(`searchKeywords.${value}`);
+  }
   const sections = (
     [
       { value: "account", label: c("account"), icon: UserCircleIcon },
       { value: "models", label: models("connections.title"), icon: SettingsIcon },
+      { value: "skills", label: skills("title"), icon: SettingsIcon },
+      { value: "tools", label: models("mcp.title"), icon: SettingsIcon },
       { value: "password", label: t("password"), icon: LockIcon },
       { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
       { value: "instances", label: i("instances"), icon: MonitorIcon },
@@ -90,10 +98,7 @@ export function AccountSettingsPanel({
     ] as const
   ).map((item) => ({
     ...item,
-    keywords:
-      item.value === "models"
-        ? models("connections.searchKeywords")
-        : s(`searchKeywords.${item.value}`),
+    keywords: sectionKeywords(item.value, item.label),
   }));
   const searchTerms = query.normalize("NFKC").trim().toLowerCase().split(/\s+/).filter(Boolean);
   const searching = searchTerms.length > 0;
@@ -169,11 +174,6 @@ export function AccountSettingsPanel({
             event.preventDefault();
             searchRef.current?.focus();
             searchRef.current?.select();
-          }
-          if (event.key === "Escape" && query && !event.nativeEvent.isComposing) {
-            event.preventDefault();
-            event.stopPropagation();
-            clearSearch();
           }
         }}
       >
@@ -272,7 +272,7 @@ export function AccountSettingsPanel({
                   <SelectContent>
                     <SelectGroup>
                       {sections.map(({ value, label }) => (
-                        <SelectItem key={value} value={value}>
+                        <SelectItem key={value} value={value} data-value={value}>
                           {label}
                         </SelectItem>
                       ))}

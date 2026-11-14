@@ -45,6 +45,7 @@ describe("application shell pages", () => {
     ).toEqual({
       "/join": { title: "agents.spaceSettings.joinTitle", layout: "document" },
       "/agents": { title: "agents.title", layout: "tool" },
+      "/pages": { title: "pages.title", layout: "tool" },
       "/admin/": { title: "dash.nav.overview", layout: "workbench" },
       "/admin/audit": { title: "dash.nav.audit", layout: "workbench" },
       "/admin/users": { title: "common.users", layout: "workbench" },

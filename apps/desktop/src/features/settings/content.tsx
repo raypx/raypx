@@ -1,13 +1,14 @@
 import { useTranslations } from "../../i18n.js";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
-import { ApprovalSettings, ModelConnections } from "@raypx/agents/client";
+import { ApprovalSettings, ModelConnections, McpServers } from "@raypx/agents/client";
 
 import { getBridge, isDesktop } from "../../lib/desktop.js";
 import { useState } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { authClient } from "../auth/client.js";
+import { AccountSkills } from "./capabilities.js";
 import { agentsClient } from "../agents/client.js";
 
 export default function SettingsContent() {
@@ -22,13 +23,27 @@ export default function SettingsContent() {
         <LanguageSettings />
       </section>
       <SessionRecovery />
-      {accountId && <ApprovalSettings key={accountId} port={agentsClient.approvals} />}
+      {accountId && (
+        <ApprovalSettings
+          key={accountId}
+          port={agentsClient.approvals}
+          mcpServers={agentsClient.mcpServers}
+        />
+      )}
       {accountId && (
         <ModelConnections
           key={`models:${accountId}`}
           port={agentsClient.modelConnections}
           spaces={agentsClient.spaces}
           focus={models}
+        />
+      )}
+      {accountId && <AccountSkills key={`skills:${accountId}`} accountId={accountId} />}
+      {accountId && (
+        <McpServers
+          key={`tools:${accountId}`}
+          port={agentsClient.mcpServers}
+          spaces={agentsClient.spaces}
         />
       )}
       <div className="border-b border-border">

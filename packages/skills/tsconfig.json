@@ -1,9 +1,5 @@
 {
-  "extends": "@raypx/tsconfig/base.json",
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
-  "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "types": ["bun"]
-  }
+  "extends": "@raypx/tsconfig/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", "locales"],
+  "compilerOptions": { "types": ["bun"] }
 }

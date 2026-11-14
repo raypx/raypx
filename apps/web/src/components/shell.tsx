@@ -25,6 +25,7 @@ import { useCommandShortcut } from "@raypx/blocks/command-palette";
 import { WebCommandMenu } from "./command-menu.js";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
+import { FileTextIcon } from "@raypx/icons/file-text";
 import { AgentIcon } from "@raypx/icons/agent";
 import {
   AppShell,
@@ -87,6 +88,7 @@ export function WebShell() {
   });
   const navigation: ShellNavItem<WebPath>[] = [
     { to: "/agents", label: t("agents.title"), icon: <AgentIcon /> },
+    { to: "/pages", label: t("pages.title"), icon: <FileTextIcon /> },
   ];
   const secondaryNavigation: ShellNavItem<WebPath>[] = [
     { to: "/admin", label: t("dash.nav.console"), icon: <AdjustmentsIcon /> },

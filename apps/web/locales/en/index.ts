@@ -1,6 +1,8 @@
 import i18n from "@raypx/i18n/messages/en";
 import auth from "@raypx/auth/messages/en";
 import account from "@raypx/account/messages/en";
+import pages from "@raypx/pages/messages/en";
+import skills from "@raypx/skills/messages/en";
 import agents from "@raypx/agents/messages/en";
 import jobs from "@raypx/jobs/messages/en";
 import memory from "@raypx/memory/messages/en";
@@ -19,6 +21,8 @@ export default {
   ...auth,
   ...account,
   ...agents,
+  ...pages,
+  ...skills,
   ...memory,
   ...jobs,
   ...analytics,

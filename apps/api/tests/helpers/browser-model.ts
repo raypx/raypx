@@ -31,6 +31,7 @@ export function browserModelFixture() {
         };
       }
       const lastMessage = [...input.history].reverse().find((entry) => entry.role === "user");
+      const requestsMcp = lastMessage?.text.startsWith("Fixture MCP call ") ?? false;
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
       const groupCoordinator = input.instructions.includes("Fixture group coordinator.");
       const groupResponder = input.instructions.includes("Fixture group responder.");
@@ -50,6 +51,13 @@ export function browserModelFixture() {
         stream.push({ type: "done", reason: "toolUse", message: request });
         stream.end(request);
         return stream;
+      }
+      if (requestsMcp && !results.some((entry) => entry.toolName.startsWith("mcp_"))) {
+        const remoteTool = input.tools?.find((candidate) =>
+          candidate.name.endsWith("__fixture_echo"),
+        );
+        if (remoteTool)
+          return toolCall(remoteTool.name, "browser-mcp-echo", { text: "Fixture MCP result" });
       }
       // These instruction markers are private to the owned browser fixture. The
       // actual backend still decides which explicit mentions start which Runs.
@@ -121,7 +129,7 @@ export function browserModelFixture() {
       });
       // Background-triggered replies complete independently of the interactive
       // streaming gate, so parallel browser journeys cannot release each other.
-      if (completeImmediately || groupCoordinator || child) queueMicrotask(complete);
+      if (completeImmediately || groupCoordinator || child || requestsMcp) queueMicrotask(complete);
       return stream;
     },
   });

@@ -4,3 +4,5 @@ export { ModelConnections } from "./client/model-connections.js";
 export { browserConversationSocket as createBrowserConversationSocket } from "./client/browser-ports.js";
 export { SpaceSettingsPanel } from "./client/space-settings.js";
 export { JoinSpaceView } from "./client/join-space.js";
+
+export { McpServers } from "./client/mcp-servers.js";

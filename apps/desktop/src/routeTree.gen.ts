@@ -14,6 +14,7 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as PagesRouteImport } from './routes/pages'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
@@ -42,6 +43,11 @@ const AgentsRoute = AgentsRouteImport.update({
 const JoinRoute = JoinRouteImport.update({
   id: '/join',
   path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesRoute = PagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
   '/join': typeof JoinRoute
+  '/pages': typeof PagesRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
   '/join': typeof JoinRoute
+  '/pages': typeof PagesRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/agents': typeof AgentsRoute
   '/join': typeof JoinRoute
+  '/pages': typeof PagesRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/agents'
     | '/join'
+    | '/pages'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/agents'
     | '/join'
+    | '/pages'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/agents'
     | '/join'
+    | '/pages'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -148,6 +160,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AgentsRoute: typeof AgentsRoute
   JoinRoute: typeof JoinRoute
+  PagesRoute: typeof PagesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: '/join'
       fullPath: '/join'
       preLoaderRoute: typeof JoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages': {
+      id: '/pages'
+      path: '/pages'
+      fullPath: '/pages'
+      preLoaderRoute: typeof PagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -251,6 +271,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AgentsRoute: AgentsRoute,
   JoinRoute: JoinRoute,
+  PagesRoute: PagesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

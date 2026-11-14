@@ -4,7 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import { CommandPalette, type CommandGroup } from "@raypx/blocks/command-palette";
 import { SettingsIcon } from "@raypx/icons/settings";
 
-type DesktopPage = "/agents" | "/account";
+type DesktopPage = "/agents" | "/pages" | "/account";
 
 export function DesktopCommandMenu({
   open,

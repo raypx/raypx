@@ -127,4 +127,9 @@ remote tool catalogs are frozen in checkpoints; recovery revalidates current acc
 without replacing accepted metadata. Body loads remain bounded untrusted reference text.
 `toolDisplayLabel` in `/model` shares built-in catalog keys and bounded remote tool
 labels with DOM and Mobile. Approval projections preserve open exact tool names;
-settings list remote rules with removal while adding only built-in tool rules.
+settings list exact rules with removal and discover remote rule choices by testing a member-owned server.
+`McpServers` owns remote HTTP server forms and transient test outcomes; credential headers
+stay outside observable drafts and are consumed on every submission. Optional `skills` and
+`mcpServers` workspace ports provide per-member, per-Agent enablement; Native consumers
+need not implement them. Tool activity uses an optional Page opener; projections without
+a Page ID open only the Pages list; display targets are never parsed as Page IDs.

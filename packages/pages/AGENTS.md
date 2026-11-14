@@ -11,3 +11,16 @@ preserve the restrictive sandbox CSP, no-store and no-cookie response contract.
 
 Run `bun run --cwd packages/pages check`, `test`, and `test:postgres` separately;
 PostgreSQL requires a disposable `*_test` database.
+
+`/model` owns Page editing, expected-version conflict/draft transitions and
+one-time link memory. `/client` renders the Space Pages directory and sandboxed
+backend document frames; it never injects Page HTML. Web and Desktop inject the
+session RPC port, Space events, account labels and conversation navigation.
+The mount must supply `canEmbedAuthenticatedDocuments`: Web passes true and
+Desktop passes false in both browser and packaged builds. Desktop offers a Web
+handoff; source editing and safe Markdown source preview remain available.
+`/messages/en` and `/messages/zh` own the `pages` catalog. Dirty source retains
+its original comparison version on live updates; loading latest is explicit and
+keeps the draft. Shared URLs exist only inside an open sharing dialog; closing
+invalidates pending creation and clears them. Component suites are happy-dom;
+PostgreSQL and browser sandbox checks remain separate acceptance gates.

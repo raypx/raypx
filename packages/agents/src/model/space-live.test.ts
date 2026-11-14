@@ -19,6 +19,7 @@ function fixture() {
   const list = vi.fn(async (): Promise<SpaceMembership[]> => [membership]);
   const onMemberships = vi.fn();
   const onEvent = vi.fn<(event: SpaceEvent) => void | Promise<void>>();
+  const onPageEvent = vi.fn<(event: SpaceEvent) => void | Promise<void>>();
   const onExit = vi.fn();
   const socket: ConversationSocketPort = {
     connect(callbacks) {
@@ -38,10 +39,22 @@ function fixture() {
     list,
     onMemberships,
     onEvent,
+    onPageEvent,
     onExit,
   });
   controllers.push(controller);
-  return { controller, connections, frames, close, list, onMemberships, onEvent, onExit, socket };
+  return {
+    controller,
+    connections,
+    frames,
+    close,
+    list,
+    onMemberships,
+    onEvent,
+    onPageEvent,
+    onExit,
+    socket,
+  };
 }
 function frame(id: number, kind: "space.renamed", name: string): ConversationServerFrame;
 function frame(
@@ -472,4 +485,35 @@ it("does not let an older discovery response undo an applied rename", async () =
   finish([membership]);
   await reading;
   expect(h.onMemberships).toHaveBeenCalledTimes(before);
+});
+
+it("applies Page invalidations before ACK and retains the cursor on reconnect", async () => {
+  const h = fixture();
+  let apply!: () => void;
+  h.onPageEvent.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        apply = resolve;
+      }),
+  );
+  h.controller.start();
+  h.connections[0]!.onFrame({ type: "ready", version: 1 });
+  await settle();
+  const event: SpaceEvent = {
+    id: 3,
+    spaceId,
+    kind: "page.updated",
+    createdAt,
+    payload: { pageId: "page", version: 2 },
+  };
+  h.connections[0]!.onFrame({ type: "space.event", spaceId, event });
+  await settle();
+  expect(h.onPageEvent).toHaveBeenCalledWith(event);
+  expect(h.frames).not.toContainEqual({ version: 1, type: "space.ack", spaceId, sequence: 3 });
+  apply();
+  await settle();
+  expect(h.frames.at(-1)).toEqual({ version: 1, type: "space.ack", spaceId, sequence: 3 });
+  h.connections[0]!.onFrame({ type: "space.event", spaceId, event });
+  await settle();
+  expect(h.onPageEvent).toHaveBeenCalledTimes(1);
 });

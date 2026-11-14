@@ -1,9 +1,16 @@
+import {
+  discoveredMcpTools,
+  type McpServersPort,
+  type DiscoveredMcpTool,
+} from "../model/mcp-servers.js";
+import type { McpServer } from "@raypx/core/mcp-servers";
 import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import {
   computerToolNameSchema,
+  toolNameSchema,
   type ApprovalRule,
   type ApprovalSettingsState,
-  type ComputerToolName,
+  type ToolName,
 } from "@raypx/core/approvals";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -84,7 +91,13 @@ function SettingsChanges({
   );
 }
 
-export function ApprovalSettings({ port }: { port: ApprovalSettingsPort }) {
+export function ApprovalSettings({
+  port,
+  mcpServers,
+}: {
+  port: ApprovalSettingsPort;
+  mcpServers?: Pick<McpServersPort, "list" | "test"> | undefined;
+}) {
   const t = useTranslations("agents");
   const [controller, setController] = useState<ApprovalSettingsController | null>(null);
   useEffect(() => {
@@ -102,13 +115,19 @@ export function ApprovalSettings({ port }: { port: ApprovalSettingsPort }) {
     };
   }, [port]);
   return controller ? (
-    <ApprovalSettingsEditor controller={controller} />
+    <ApprovalSettingsEditor controller={controller} mcpServers={mcpServers} />
   ) : (
     <LoadingState label={t("loading")} />
   );
 }
 
-export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSettingsController }) {
+export function ApprovalSettingsEditor({
+  controller,
+  mcpServers,
+}: {
+  controller: ApprovalSettingsController;
+  mcpServers?: Pick<McpServersPort, "list" | "test"> | undefined;
+}) {
   const t = useTranslations("agents");
   const state = useSyncExternalStore(
     controller.subscribe,
@@ -117,15 +136,69 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
   );
   const confirmation = useConfirmation();
   const id = useId();
-  const [tool, setTool] = useState<ComputerToolName>("computer_write_file");
+  const [tool, setTool] = useState<ToolName>("computer_write_file");
   const [executable, setExecutable] = useState("");
   const [decision, setDecision] = useState<ApprovalRule["decision"]>("allow");
+  const [discovered, setDiscovered] = useState<DiscoveredMcpTool[]>([]);
+  const [servers, setServers] = useState<McpServer[]>([]);
+  const [serverId, setServerId] = useState("");
+  const [discovering, setDiscovering] = useState(false);
+  const [testCode, setTestCode] = useState<
+    Awaited<ReturnType<McpServersPort["test"]>>["code"] | null
+  >(null);
+  useEffect(() => {
+    let active = true;
+    if (mcpServers)
+      void mcpServers
+        .list({})
+        .then((items) => {
+          if (active) {
+            setServers(items);
+            setServerId(items[0]?.id ?? "");
+          }
+        })
+        .catch(() => {
+          if (active) setTestCode("REQUEST_FAILED");
+        });
+    return () => {
+      active = false;
+    };
+  }, [mcpServers]);
+  async function discover() {
+    const server = servers.find((entry) => entry.id === serverId);
+    if (!mcpServers || !server || discovering) return;
+    setDiscovering(true);
+    try {
+      const result = await mcpServers.test({ id: server.id });
+      setTestCode(result.code);
+      setDiscovered((previous) => [
+        ...previous.filter(
+          (entry) => !entry.name.startsWith(`mcp_${server.id.replaceAll("-", "")}__`),
+        ),
+        ...discoveredMcpTools(server, result),
+      ]);
+    } catch {
+      setTestCode("REQUEST_FAILED");
+    } finally {
+      setDiscovering(false);
+    }
+  }
   const draft = state.draft;
-  const toolOptions = computerToolNameSchema.options.map((value) => ({
-    value,
-    label: toolDisplayLabel(value, t),
-  }));
+  const toolOptions: { value: ToolName; label: string }[] = [
+    ...computerToolNameSchema.options.map((value) => ({
+      value,
+      label: toolDisplayLabel(value, t),
+    })),
+    ...discovered.map((entry) => ({
+      value: entry.name,
+      label: `${entry.serverName} / ${entry.remoteName}`,
+    })),
+  ];
   function addRule() {
+    if (!computerToolNameSchema.safeParse(tool).success) {
+      controller.addDiscoveredRule(tool, decision, discovered);
+      return;
+    }
     const added = controller.addRule({
       toolName: tool,
       executable: tool === "computer_run_command" ? executable.trim() : null,
@@ -262,17 +335,60 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
               )}
             </section>
           ))}
+          {mcpServers && (
+            <fieldset disabled={state.busy || discovering} className="flex min-w-0 flex-col gap-2">
+              <legend className="mb-2 text-sm font-medium">{t("mcp.discover")}</legend>
+              <Field>
+                <FieldLabel htmlFor={`${id}-server`}>{t("capabilities.servers")}</FieldLabel>
+                <Select
+                  value={serverId}
+                  items={servers.map((server) => ({ value: server.id, label: server.name }))}
+                  onValueChange={(value) => {
+                    if (value) setServerId(value);
+                  }}
+                >
+                  <SelectTrigger id={`${id}-server`} className="w-full min-w-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {servers.map((server) => (
+                        <SelectItem key={server.id} value={server.id} data-value={server.id}>
+                          {server.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Button
+                variant="outline"
+                className="self-start"
+                disabled={!serverId || discovering}
+                onClick={() => void discover()}
+              >
+                {t("mcp.test")}
+              </Button>
+              <p className="text-xs text-muted-foreground">{t("mcp.discoverHint")}</p>
+              {testCode && (
+                <p role="status" className="text-sm">
+                  {t(`mcp.outcomes.${testCode}`)}
+                </p>
+              )}
+            </fieldset>
+          )}
           <fieldset disabled={state.busy} className="min-w-0">
             <legend className="mb-3 text-sm font-medium">{t("approvalSettings.addRule")}</legend>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor={`${id}-tool`}>{t("approvalSettings.tool")}</FieldLabel>
-                <Select
+                <Select<ToolName>
                   disabled={state.busy}
                   items={toolOptions}
                   value={tool}
                   onValueChange={(value) => {
-                    if (value) setTool(value);
+                    const parsed = toolNameSchema.safeParse(value);
+                    if (parsed.success) setTool(parsed.data);
                   }}
                 >
                   <SelectTrigger id={`${id}-tool`} className="w-full min-w-0">
@@ -281,7 +397,7 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
                   <SelectContent>
                     <SelectGroup>
                       {toolOptions.map((item) => (
-                        <SelectItem key={item.value} value={item.value}>
+                        <SelectItem key={item.value} value={item.value} data-value={item.value}>
                           {item.label}
                         </SelectItem>
                       ))}
@@ -321,8 +437,12 @@ export function ApprovalSettingsEditor({ controller }: { controller: ApprovalSet
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="allow">{t("approvalSettings.allow")}</SelectItem>
-                      <SelectItem value="block">{t("approvalSettings.block")}</SelectItem>
+                      <SelectItem value="allow" data-value="allow">
+                        {t("approvalSettings.allow")}
+                      </SelectItem>
+                      <SelectItem value="block" data-value="block">
+                        {t("approvalSettings.block")}
+                      </SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { AccountDetails } from "@raypx/account/client";
-import { ApprovalSettings, ModelConnections } from "@raypx/agents/client";
+import { ApprovalSettings, ModelConnections, McpServers } from "@raypx/agents/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
 
@@ -21,6 +21,7 @@ import { InstanceRegistration } from "../auth/components/instance-registration.j
 import { analytics } from "../analytics/client.js";
 import { AccountSettingsContent, AccountSettingsPanel } from "./account-settings.js";
 import type { SettingsSection } from "./navigation.js";
+import { AccountSkills } from "./capabilities.js";
 import { agentsClient } from "../agents/client.js";
 
 function PrivateSettings({ children }: { children: (accountId: string) => ReactNode }) {
@@ -76,6 +77,16 @@ export default function AccountSettingsDialog({
               port={agentsClient.modelConnections}
               spaces={agentsClient.spaces}
             />
+          )}
+        </PrivateSettings>
+      </AccountSettingsContent>
+      <AccountSettingsContent value="skills">
+        <PrivateSettings>{(id) => <AccountSkills key={id} accountId={id} />}</PrivateSettings>
+      </AccountSettingsContent>
+      <AccountSettingsContent value="tools">
+        <PrivateSettings>
+          {(id) => (
+            <McpServers key={id} port={agentsClient.mcpServers} spaces={agentsClient.spaces} />
           )}
         </PrivateSettings>
       </AccountSettingsContent>
@@ -246,7 +257,7 @@ function AccountProfile({
           </p>
         )}
       </AccountDetails>
-      <ApprovalSettings port={agentsClient.approvals} />
+      <ApprovalSettings port={agentsClient.approvals} mcpServers={agentsClient.mcpServers} />
     </div>
   );
 }

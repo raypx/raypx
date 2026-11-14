@@ -24,6 +24,7 @@ export class SpaceLiveController {
       list(): Promise<SpaceMembership[]>;
       onMemberships(spaces: SpaceMembership[]): void;
       onEvent(event: SpaceEvent): void | Promise<void>;
+      onPageEvent?(event: SpaceEvent): void | Promise<void>;
       onExit(reason: "removed" | "unavailable"): void;
     },
   ) {}
@@ -123,6 +124,14 @@ export class SpaceLiveController {
                   return;
                 }
                 await this.options.onEvent(event);
+                if (!this.current(generation)) return;
+              }
+              if (
+                event.kind === "page.created" ||
+                event.kind === "page.updated" ||
+                event.kind === "page.deleted"
+              ) {
+                await this.options.onPageEvent?.(event);
                 if (!this.current(generation)) return;
               }
               this.cursors.set(event.spaceId, event.id);

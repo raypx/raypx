@@ -1,3 +1,4 @@
+import type { DiscoveredMcpTool } from "./mcp-servers.js";
 import {
   approvalRuleSchema,
   approvalSettingsStateSchema,
@@ -137,6 +138,18 @@ export class ApprovalSettingsController {
     }
     this.edit({ ...this.view.draft, rules: [...rules, { ...rule }] });
     return true;
+  }
+  addDiscoveredRule(
+    name: string,
+    decision: ApprovalRule["decision"],
+    tools: readonly DiscoveredMcpTool[],
+  ): boolean {
+    const tool = tools.find((entry) => entry.name === name);
+    if (!tool) {
+      this.update({ error: "invalidRule" });
+      return false;
+    }
+    return this.addRule({ toolName: tool.name, executable: null, decision });
   }
   removeRule(rule: ApprovalRule) {
     if (this.disposed || this.view.busy || !this.view.draft) return;

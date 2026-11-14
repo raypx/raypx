@@ -33,6 +33,8 @@
     "@raypx/instances": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
+    "@raypx/pages": "workspace:*",
+    "@raypx/skills": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",

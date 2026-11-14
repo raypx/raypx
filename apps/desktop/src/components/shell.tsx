@@ -16,6 +16,7 @@ import {
   type StaticDataRouteOption,
 } from "@tanstack/react-router";
 import { SettingsIcon } from "@raypx/icons/settings";
+import { FileTextIcon } from "@raypx/icons/file-text";
 import { AgentIcon } from "@raypx/icons/agent";
 import { UserCircleIcon } from "@raypx/icons/user-circle";
 import { AppShell, type ShellAction, type ShellLinkProps } from "@raypx/blocks/shell";
@@ -31,7 +32,7 @@ import { WindowDragRegion } from "./window-drag-region.js";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useSettingsNavigation } from "../features/settings/navigation.js";
 
-type DesktopPath = "/agents" | "/account";
+type DesktopPath = "/agents" | "/pages" | "/account";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<DesktopPath>) {
   return (
@@ -75,6 +76,7 @@ export function DesktopShell() {
   const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
   const pages = [
     { to: "/agents", label: t("agents.title"), icon: <AgentIcon /> },
+    { to: "/pages", label: t("pages.title"), icon: <FileTextIcon /> },
     { to: "/account", label: c("account"), icon: <UserCircleIcon /> },
   ] as const;
   const actions: ShellAction[] = [

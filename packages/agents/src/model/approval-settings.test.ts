@@ -237,3 +237,17 @@ it("can reapply a draft restored to the original baseline after a conflict", asy
   await expect(controller.reapply(async () => true)).resolves.toBe(true);
   expect(updateSettings).toHaveBeenLastCalledWith({ mode: "ask", rules: [], expectedRevision: 1 });
 });
+
+it("creates MCP rules only from tested exact tools", async () => {
+  const { controller } = fixture();
+  await controller.load();
+  const name = mcpToolNameSchema.parse("mcp_server__read_page");
+  const tools = [{ name, serverName: "Research", remoteName: "read_page" }];
+  expect(controller.addDiscoveredRule("mcp_server__guessed", "allow", tools)).toBe(false);
+  expect(controller.addDiscoveredRule(name, "allow", tools)).toBe(true);
+  expect(controller.getSnapshot().draft?.rules).toContainEqual({
+    toolName: name,
+    executable: null,
+    decision: "allow",
+  });
+});

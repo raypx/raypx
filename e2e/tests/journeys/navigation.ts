@@ -64,6 +64,7 @@ export function registerTests() {
     await expect(sidebar.getByRole("button", { name: "New group", exact: true })).toBeVisible();
     await expectSurfaceControls(page, sidebar);
     await expect(navigation.getByRole("group", { name: "Workspace", exact: true })).toHaveCount(0);
+    await expect(navigation.getByRole("link", { name: "Pages", exact: true })).toBeVisible();
     await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
     await expect(
       navigation.getByRole("link", { name: "Memory and templates", exact: true }),
@@ -89,6 +90,7 @@ export function registerTests() {
       await expect(dialog).toBeHidden();
       await expect(opener).toBeFocused();
     }
+    await expect(navigation.getByRole("link", { name: "Pages", exact: true })).toBeVisible();
     await expect(navigation.getByRole("link", { name: "Agents", exact: true })).toBeVisible();
     await page.reload();
     await expect(expand).toHaveAttribute("aria-expanded", "false");

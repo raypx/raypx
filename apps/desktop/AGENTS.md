@@ -176,3 +176,16 @@ instances language entries with private desktopLogin, engine and localWorkspace
 catalogs. Infer app message types from English. Shared views read the same messages
 context. Keep private copy only for current renderer behavior; native notification
 asset generation consumes Tasks' public messages independently.
+
+Pages mounts `@raypx/pages/client` at `/pages` in the shared Space/sidebar workspace.
+Pages disables authenticated document frames through its explicit mount capability;
+source drafts and one-time share links stay in component memory. Page invalidations
+arrive through the shared Space stream. Asking about a Page only restores a composer
+reference. Account settings compose Skills and remote Tools; Agent forms enable the
+member's available resources. Remote credentials remain write-only.
+
+Desktop passes `canEmbedAuthenticatedDocuments={false}` in every environment,
+including browser acceptance. Pages keeps editing, versions, restore and sharing
+available and offers Web preview at the configured Web origin. The handoff opens
+the system browser through the native bridge, or a separate tab in browser builds.
+It never copies cookies or recreates backend HTML in the renderer.

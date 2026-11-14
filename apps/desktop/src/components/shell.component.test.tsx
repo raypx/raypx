@@ -64,6 +64,7 @@ it.each([
   {
     locale: "en",
     agents: "Agents",
+    pages: "Pages",
     account: "Account",
     search: "Search",
     settings: "Settings",
@@ -72,6 +73,7 @@ it.each([
   {
     locale: "zh",
     agents: "智能体",
+    pages: "页面",
     account: "账号",
     search: "搜索",
     settings: "设置",
@@ -79,12 +81,12 @@ it.each([
   },
 ] as const)(
   "opens Agents with current navigation and a single page heading in $locale",
-  async ({ locale, agents, account, search, settings, removed }) => {
+  async ({ locale, agents, pages, account, search, settings, removed }) => {
     const router = await page(locale);
     expect(router.state.location.pathname).toBe("/agents");
     const nav = within(screen.getByRole("navigation", { name: "Raypx" }));
     expect(nav.getByRole("link", { name: agents }).getAttribute("href")).toBe("/agents");
-    expect(nav.getByRole("link", { name: account }).getAttribute("href")).toBe("/account");
+    expect(nav.getByRole("link", { name: pages }).getAttribute("href")).toBe("/pages");
     expect(nav.queryByRole("group", { name: /Workspace|工作区/ })).toBeNull();
     expect(nav.queryByRole("link", { name: removed })).toBeNull();
     expect(screen.getAllByRole("heading")).toHaveLength(1);

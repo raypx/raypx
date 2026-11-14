@@ -26,6 +26,7 @@ describe("Desktop shell pages", () => {
       "/account": { title: "common.account", layout: "document" },
       "/join": { title: "agents.spaceSettings.joinTitle", layout: "document" },
       "/agents": { title: "agents.title", layout: "tool" },
+      "/pages": { title: "pages.title", layout: "tool" },
     });
   });
 });

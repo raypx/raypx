@@ -1,6 +1,6 @@
 import { resumablePath } from "@raypx/core/auth";
 
-const paths = new Set(["/agents", "/account"]);
+const paths = new Set(["/agents", "/pages", "/account"]);
 
 export function desktopReturnTo(input: unknown): string {
   const destination = resumablePath(input, paths);

@@ -18,10 +18,10 @@
   },
   "dependencies": {
     "@playwright/test": "catalog:dev",
-    "@raypx/account": "workspace:*"
+    "@raypx/account": "workspace:*",
+    "@raypx/client": "workspace:*"
   },
   "devDependencies": {
-    "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/dev-cli": "workspace:*",

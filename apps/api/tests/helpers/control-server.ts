@@ -26,6 +26,17 @@ import {
   createSpaceFanout,
   createSpaceManagement,
 } from "@raypx/spaces/server/postgres";
+import { createPagesService } from "@raypx/pages/server";
+import { createPagesRepository } from "@raypx/pages/server/postgres";
+import { createSkillsService } from "@raypx/skills/server";
+import { createSkillsRepository } from "@raypx/skills/server/postgres";
+import { createMcpTransport } from "@raypx/providers/mcp";
+import { createMcpServers } from "../../src/conversations/mcp-servers.js";
+import { createMcpServersRepository } from "../../src/conversations/mcp-postgres.js";
+import { withPageTools } from "../../src/conversations/page-tools.js";
+import { withSkillTools } from "../../src/conversations/skill-tools.js";
+import { withMcpTools } from "../../src/conversations/mcp-tools.js";
+import { fixtureMcpResponse } from "./browser-mcp.js";
 import { createRoutinesService } from "@raypx/jobs/routines";
 import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
 import { createSpaceMemoryService } from "@raypx/memory/space-server";
@@ -108,20 +119,46 @@ const modelConnections = createModelConnections(
 const conversationModels = modelConnections.models(model.models);
 const agentApprovals = createApprovalsService(createApprovalsRepository(connection.db));
 const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(connection.db));
+const pages = createPagesService(createPagesRepository(connection.db));
+const skills = createSkillsService(createSkillsRepository(connection.db));
+const mcpServers = createMcpServers(
+  createMcpServersRepository(connection.db),
+  applicationSecretKeyProvider("browser-fixture-mcp-encryption-key"),
+  createMcpTransport(),
+);
+const protectedValues = () => [
+  ...modelConnections.protectedValues(),
+  ...mcpServers.protectedValues(),
+];
 const runner = new ConversationRunner(
   createConversationsRepository(connection.db),
   conversationModels,
   undefined,
   undefined,
   {
-    tools: withMemoryTools(
-      createComputerTools(computers, computerProvider, []),
-      spaceMemory,
-      () => [],
+    tools: withMcpTools(
+      withSkillTools(
+        withPageTools(
+          withMemoryTools(
+            createComputerTools(computers, computerProvider, []),
+            spaceMemory,
+            protectedValues,
+          ),
+          pages,
+          protectedValues,
+        ),
+        skills,
+        protectedValues,
+      ),
+      mcpServers,
+      protectedValues,
     ),
     approvals: agentApprovals,
   },
-  { recallMemory: (scope, run) => spaceMemory.recall(scope, run.agentId) },
+  {
+    recallMemory: (scope, run) => spaceMemory.recall(scope, run.agentId),
+    loadSkills: (scope, run) => skills.runCatalog(scope, run.agentId),
+  },
 );
 const spaceManagement = createSpaceManagement(connection.db, {
   beforeMemberRemoved: cancelSpaceRuns,
@@ -183,6 +220,9 @@ const app = createApiApp({
   agentApprovals,
   routines,
   spaceMemory,
+  pages,
+  skills,
+  mcpServers,
   spaces,
   spaceManagement,
   agents: createAgentsRepository(connection.db),
@@ -212,6 +252,7 @@ const server = serve<SocketData>({
   port,
   async fetch(request, listener) {
     const path = new URL(request.url).pathname;
+    if (path === "/fixture/mcp") return fixtureMcpResponse(request);
     if (path === "/events" || path === "/fixture/conversation/complete") {
       const origin = request.headers.get("origin");
       if (origin && !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))

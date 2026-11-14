@@ -12,3 +12,11 @@ validation rather than compatibility fallback.
 
 Unit suites use injected repository ports. `test:postgres` needs an isolated
 `*_test` database; each case removes its own Spaces and accounts.
+
+`/model` owns skill forms, import reports and injected account CRUD/import ports.
+`/client` renders account Skills settings in Web and Desktop; application adapters
+supply the active Space and membership list. Availability controls appear only
+with multiple Spaces. Imports send bounded Markdown/ZIP bytes for backend parsing;
+never execute package content. Agent-created skills are labelled Space-local.
+English and Chinese copy live in `/messages/en` and `/messages/zh`.
+`test:unit` and `test:component` select pure and happy-dom suites separately.

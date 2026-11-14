@@ -226,7 +226,7 @@ it("supports keyboard results and waits for IME composition before opening a cat
 });
 
 it.each(["input", "result"])(
-  "clears search from %s on the first Escape and closes on the next",
+  "closes settings from %s on one Escape while search has text",
   async (target) => {
     const { router } = await openPanel();
     const search = screen.getByRole<HTMLInputElement>("searchbox", { name: "Search settings" });
@@ -236,11 +236,8 @@ it.each(["input", "result"])(
       key: "Escape",
       code: "Escape",
     });
-    expect(search.value).toBe("");
-    expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(router.state.location.hash).toBe("settings/account");
-    fireEvent.keyDown(search, { key: "Escape", code: "Escape" });
-    await waitFor(() => expect(router.state.location.pathname).toBe("/agents"));
+    await waitFor(() => expect(router.state.location.hash).toBe(""));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   },
 );
 

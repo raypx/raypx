@@ -105,3 +105,22 @@ export {
   type SpaceMemberRemoval,
   type SpaceAuditPage,
 } from "./model/space-management.js";
+
+export {
+  McpServersController,
+  McpHeaderSecret,
+  createMcpServerDraft,
+  discoveredMcpTools,
+  type McpServersPort,
+  type McpTestResult,
+  type DiscoveredMcpTool,
+  type McpServerDraft,
+} from "./model/mcp-servers.js";
+export {
+  loadAgentCapabilities,
+  saveAgentCapabilities,
+  type AgentSkillsPort,
+  type AgentMcpPort,
+  type AgentCapabilitiesPort,
+  type AgentCapabilitySelection,
+} from "./model/agent-capabilities.js";

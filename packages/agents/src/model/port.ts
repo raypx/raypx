@@ -21,6 +21,7 @@ import type { ApprovalRequest, ApprovalSettingsState, Effect } from "@raypx/core
 import type { RoutinesPort } from "@raypx/jobs/model";
 import type { SpaceMemoryClientPort } from "@raypx/memory/model";
 import type { ComputerFilesPort } from "./computer-files.js";
+import type { AgentSkillsPort, AgentMcpPort } from "./agent-capabilities.js";
 import type { SpaceManagementPort } from "./space-management.js";
 
 export interface ApprovalPort {
@@ -122,6 +123,8 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  skills?: AgentSkillsPort;
+  mcpServers?: AgentMcpPort;
   groups?: GroupsPort;
   spaceManagement?: SpaceManagementPort;
   accountApprovalSettings?: {

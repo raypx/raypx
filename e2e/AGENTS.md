@@ -82,3 +82,11 @@ The owned backend fixture is opt-in; ordinary browser response fixtures do not p
 real backend, PostgreSQL, provider or native WebView behavior. Keep the fixture API
 origin explicit in client builds. Desktop browser output allows only its validated
 loopback API origin; static serving preserves its HTML/CSP.
+
+Pages and Skills/Tools journeys use isolated Spaces in the owned backend fixture.
+Pages checks immutable versions, public cookie-free sandboxing and revocation in a
+fresh browser context; traces/screenshots are disabled for one-time link display.
+Desktop always asserts the Web handoff and absence of frames, including fullscreen
+and historical preview, while still saving, restoring and sharing Page versions.
+The fixture MCP endpoint is non-executing JSON-RPC and the deterministic model calls
+only its discovered tool, through the real approval pipeline.

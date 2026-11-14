@@ -170,6 +170,7 @@ function fixture({
     selected = false,
     frame?: "document" | "window",
     onNavigate?: (selection: { spaceId: string; agentId?: string }) => void,
+    composerReference?: { id: string; text: string },
   ) {
     const workspace = (
       <AgentsWorkspace
@@ -180,6 +181,7 @@ function fixture({
         drafts={drafts}
         {...(selected ? { agentId: agent.id } : {})}
         {...(onNavigate ? { onNavigate } : {})}
+        {...(composerReference ? { composerReference } : {})}
       />
     );
     return render(
@@ -1992,3 +1994,162 @@ it.each(["en", "zh"] as const)(
     expect(f.create).not.toHaveBeenCalled();
   },
 );
+
+it("appends a Page reference once to the restored draft without sending", async () => {
+  const test = fixture();
+  const first = test.mount(true);
+  const editor = await screen.findByRole("textbox", { name: "Message" });
+  fireEvent.change(editor, { target: { value: "My unsent question" } });
+  first.unmount();
+  const reference = { id: "page-one", text: "Page: Project notes (page-one)" };
+  const second = test.mount(true, undefined, undefined, reference);
+  await waitFor(() =>
+    expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue(
+      "My unsent question\n\nPage: Project notes (page-one)",
+    ),
+  );
+  expect(test.send).not.toHaveBeenCalled();
+  second.unmount();
+  test.mount(true, undefined, undefined, reference);
+  await waitFor(() =>
+    expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue(
+      "My unsent question\n\nPage: Project notes (page-one)",
+    ),
+  );
+  expect(test.send).not.toHaveBeenCalled();
+});
+
+it("keeps intended capabilities after partial creation failure and retries the same Agent", async () => {
+  const { skillSchema } = await import("@raypx/core/skills");
+  const { mcpServerSchema } = await import("@raypx/core/mcp-servers");
+  const test = fixture();
+  const createdAgent = agentSchema.parse({
+    ...agent,
+    id: "created-agent",
+    name: "Capability Agent",
+  });
+  const createdConversation = conversationSchema.parse({
+    ...conversation,
+    id: "created-conversation",
+    agentId: createdAgent.id,
+  });
+  const skill = skillSchema.parse({
+    id: "notes",
+    name: "Notes skill",
+    description: "Notes",
+    body: "# Notes",
+    ownership: "account",
+    spaceId: null,
+    agentId: null,
+    availability: { mode: "all" },
+    createdAt: time,
+    updatedAt: time,
+  });
+  const server = mcpServerSchema.parse({
+    id: "00000000-0000-4000-8000-000000000001",
+    name: "Research server",
+    url: "https://example.com/mcp",
+    transport: "http",
+    availability: { mode: "all" },
+    hasCredentials: false,
+    createdAt: time,
+    updatedAt: time,
+  });
+  const setSkills = vi.fn(async () => [skill]);
+  const enabledSkills = vi.fn(async () => []);
+  const setServers = vi
+    .fn<NonNullable<AgentsWorkspacePort["mcpServers"]>["setEnabled"]>()
+    .mockRejectedValueOnce(new Error("REQUEST_FAILED"))
+    .mockResolvedValueOnce([server.id]);
+  const enabledServers = vi.fn(async () => []);
+  test.client.skills = {
+    list: async () => [skill],
+    agentSkills: enabledSkills,
+    setAgentSkills: setSkills,
+  };
+  test.client.mcpServers = {
+    list: async () => [server],
+    enabled: enabledServers,
+    setEnabled: setServers,
+  };
+  test.create.mockResolvedValue({ agent: createdAgent, conversation: createdConversation });
+  test.update.mockImplementation(async ({ agent: input }) => ({
+    agent: { ...createdAgent, ...input },
+    conversation: createdConversation,
+  }));
+  test.readSnapshot.mockResolvedValue({
+    conversation: createdConversation,
+    messages: [],
+    runs: [],
+    segments: [],
+    cursor: 0,
+  });
+  test.mount();
+  fireEvent.click(await screen.findByRole("button", { name: "New Agent" }));
+  const dialog = await screen.findByRole("dialog", { name: "New Agent" });
+  const skillCheckbox = await within(dialog).findByRole("checkbox", { name: "Notes skill" });
+  const serverCheckbox = within(dialog).getByRole("checkbox", { name: "Research server" });
+  fireEvent.change(within(dialog).getByLabelText("Name"), {
+    target: { value: "Capability Agent" },
+  });
+  fireEvent.click(skillCheckbox);
+  fireEvent.click(serverCheckbox);
+  fireEvent.click(within(dialog).getByRole("button", { name: "Create Agent" }));
+  await waitFor(() =>
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(en.agents.saveError),
+  );
+  expect(skillCheckbox).toBeChecked();
+  expect(serverCheckbox).toBeChecked();
+  expect(enabledSkills).not.toHaveBeenCalled();
+  expect(enabledServers).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(test.create).toHaveBeenCalledTimes(1);
+  expect(test.update).toHaveBeenCalledExactlyOnceWith({
+    spaceId: agent.spaceId,
+    id: createdAgent.id,
+    agent: expect.objectContaining({ name: "Capability Agent" }),
+  });
+  expect(setSkills).toHaveBeenCalledTimes(2);
+  expect(setSkills).toHaveBeenNthCalledWith(2, {
+    spaceId: agent.spaceId,
+    agentId: createdAgent.id,
+    ids: [skill.id],
+  });
+  expect(setServers).toHaveBeenCalledTimes(2);
+  expect(setServers).toHaveBeenNthCalledWith(2, {
+    spaceId: agent.spaceId,
+    agentId: createdAgent.id,
+    serverIds: [server.id],
+  });
+});
+
+it("keeps a newer Agent form open when a dismissed creation finishes", async () => {
+  const user = userEvent.setup();
+  const test = fixture();
+  let complete!: (value: AgentConversationView) => void;
+  test.create.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        complete = resolve;
+      }),
+  );
+  test.mount();
+  fireEvent.click(await screen.findByRole("button", { name: "New Agent" }));
+  const first = await screen.findByRole("dialog", { name: "New Agent" });
+  fireEvent.change(within(first).getByLabelText("Name"), { target: { value: "First Agent" } });
+  fireEvent.click(within(first).getByRole("button", { name: "Create Agent" }));
+  await waitFor(() => expect(test.create).toHaveBeenCalledTimes(1));
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: "New Agent" }));
+  const second = await screen.findByRole("dialog", { name: "New Agent" });
+  fireEvent.change(within(second).getByLabelText("Name"), {
+    target: { value: "Keep this new draft" },
+  });
+  await act(async () => complete({ agent: { ...agent, name: "First Agent" }, conversation }));
+  expect(screen.getByRole("dialog", { name: "New Agent" })).toBeVisible();
+  expect(within(second).getByLabelText("Name")).toHaveValue("Keep this new draft");
+  expect(within(second).getByRole("button", { name: "Create Agent" })).toBeEnabled();
+  expect(test.update).not.toHaveBeenCalled();
+});

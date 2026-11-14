@@ -1,4 +1,8 @@
 import {
+  saveAgentCapabilities,
+  type AgentCapabilitySelection,
+} from "../model/agent-capabilities.js";
+import {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -6,6 +10,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type ReactNode,
 } from "react";
 import { ShellToolbar, ShellSidebarHeader, ShellPrimaryAction } from "@raypx/blocks/shell";
 import { Avatar, AvatarFallback } from "@raypx/ui/components/ui/avatar";
@@ -30,7 +35,8 @@ import { SpaceSettingsPanel } from "./space-settings.js";
 import { CapabilitySheet } from "./capability-sheet.js";
 import { PausedRoutinePanel } from "./space-routine.js";
 import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
-import type { AgentInput, Conversation, GroupConversationInput } from "@raypx/core/agents";
+import type { Agent, AgentInput, Conversation, GroupConversationInput } from "@raypx/core/agents";
+import type { SpaceEvent } from "@raypx/core/spaces";
 import type { ToolActivity } from "@raypx/core/conversation";
 import { mergeToolActivity, toolActivityKey } from "../model/tool-activity.js";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -70,6 +76,16 @@ import { useTranslations } from "./i18n.js";
 
 export interface AgentsWorkspaceProps {
   client: AgentsWorkspacePort;
+  renderWorkspace?:
+    | ((context: {
+        spaceId: string;
+        agents: readonly Agent[];
+        accountNames: Record<string, string>;
+        subscribe: (listener: (event: SpaceEvent) => void) => () => void;
+      }) => ReactNode)
+    | undefined;
+  onOpenPage?: ((id: string) => void) | undefined;
+  composerReference?: { id: string; text: string } | undefined;
   spaceManagement?: SpaceManagementPort | undefined;
   accountApprovalSettings?: Pick<ApprovalSettingsPort, "settings"> | undefined;
   invitationOrigin?: string | undefined;
@@ -94,6 +110,9 @@ export function AgentsWorkspace(props: AgentsWorkspaceProps) {
 
 function AgentsWorkspaceContents({
   client,
+  renderWorkspace,
+  onOpenPage,
+  composerReference,
   spaceManagement = client.spaceManagement,
   accountApprovalSettings = client.accountApprovalSettings,
   invitationOrigin,
@@ -110,6 +129,16 @@ function AgentsWorkspaceContents({
   drafts,
 }: AgentsWorkspaceProps) {
   const t = useTranslations("agents");
+  const [pageListeners] = useState(() => new Set<(event: SpaceEvent) => void>());
+  const subscribePages = useCallback(
+    (listener: (event: SpaceEvent) => void) => {
+      pageListeners.add(listener);
+      return () => {
+        pageListeners.delete(listener);
+      };
+    },
+    [pageListeners],
+  );
   const [page, setPage] = useState(createAgentsPageState);
   const current = useRef(page);
   const mounted = useRef(true);
@@ -147,6 +176,7 @@ function AgentsWorkspaceContents({
   const spaceTrigger = useRef<HTMLButtonElement>(null);
   const [newSpace, setNewSpace] = useState(false);
   const [form, setForm] = useState<"new" | AgentConversationView | null>(null);
+  const agentFormRevision = useRef(0);
   const [newGroup, setNewGroup] = useState(false);
   const groupFormRevision = useRef(0);
   const newGroupTrigger = useRef<HTMLButtonElement>(null);
@@ -304,6 +334,7 @@ function AgentsWorkspaceContents({
       lastSpaceExit.current = { spaceId: selectedSpace, revision };
       setSpaceSettingsOpen(false);
       setRoutineTarget(null);
+      ++agentFormRevision.current;
       setForm(null);
       ++participantsRequest.current;
       setParticipantsOpen(false);
@@ -361,6 +392,9 @@ function AgentsWorkspaceContents({
           }),
         }));
       },
+      onPageEvent(event) {
+        for (const listener of pageListeners) listener(event);
+      },
       onExit: (reason) => exitSpace(reason, selectedSpace),
     });
     live.start();
@@ -373,7 +407,7 @@ function AgentsWorkspaceContents({
       window.removeEventListener("focus", reconcile);
       live.dispose();
     };
-  }, [management, page.spaceId, accountId, eventSocket, client, exitSpace]);
+  }, [management, page.spaceId, accountId, eventSocket, client, exitSpace, pageListeners]);
 
   const activityRefresh = useRef(0);
   async function refreshSpaceActivity() {
@@ -452,6 +486,7 @@ function AgentsWorkspaceContents({
   function chooseSpace(value: string) {
     ++navigationRevision.current;
     setSpaceNotice(null);
+    ++agentFormRevision.current;
     setForm(null);
     setSpaceSettingsOpen(false);
     setRoutineTarget(null);
@@ -589,9 +624,10 @@ function AgentsWorkspaceContents({
     setSpaceNotice(null);
     onNavigate?.({ spaceId: created.space.id });
   }
-  async function saveAgent(input: AgentInput) {
+  async function saveAgent(input: AgentInput, capabilities?: AgentCapabilitySelection) {
     const selectedSpace = page.spaceId;
     if (!selectedSpace || !form) return;
+    const formRevision = agentFormRevision.current;
     let saved: AgentConversationView;
     if (form === "new")
       saved = await client.agents.create({ spaceId: selectedSpace, agent: input });
@@ -615,9 +651,18 @@ function AgentsWorkspaceContents({
           }
         : {}),
       agents: [...state.agents.filter((item) => item.agent.id !== saved.agent.id), saved],
-      agentId: saved.agent.id,
-      groupId: null,
+      ...(agentFormRevision.current === formRevision
+        ? { agentId: saved.agent.id, groupId: null }
+        : {}),
     }));
+    if (capabilities) {
+      // Retain the created identity if enablement fails, so retry cannot create another Agent.
+      if (agentFormRevision.current === formRevision) setForm(saved);
+      await saveAgentCapabilities(client, saved.agent.spaceId, saved.agent.id, capabilities);
+      if (!mounted.current || current.current.spaceId !== selectedSpace) return;
+    }
+    if (agentFormRevision.current !== formRevision) return;
+    ++agentFormRevision.current;
     setForm(null);
     onNavigate?.({ spaceId: selectedSpace, agentId: saved.agent.id });
   }
@@ -655,7 +700,7 @@ function AgentsWorkspaceContents({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-clip">
-      {!selected && (
+      {!renderWorkspace && !selected && (
         <ShellToolbar>
           <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
         </ShellToolbar>
@@ -689,7 +734,7 @@ function AgentsWorkspaceContents({
                 <>
                   <DropdownMenuRadioGroup value={page.spaceId ?? ""} onValueChange={chooseSpace}>
                     {page.spaces.map(({ space }) => (
-                      <DropdownMenuRadioItem key={space.id} value={space.id}>
+                      <DropdownMenuRadioItem key={space.id} value={space.id} data-value={space.id}>
                         {space.name}
                       </DropdownMenuRadioItem>
                     ))}
@@ -718,7 +763,10 @@ function AgentsWorkspaceContents({
           <div className="flex min-w-0 flex-col gap-1">
             <Button
               disabled={!page.spaceId || loading}
-              onClick={() => setForm("new")}
+              onClick={() => {
+                ++agentFormRevision.current;
+                setForm("new");
+              }}
               className="w-full min-w-0 sidebar-icon:px-0"
               aria-label={t("newAgent")}
               title={t("newAgent")}
@@ -779,7 +827,7 @@ function AgentsWorkspaceContents({
           <Button onClick={() => setNewSpace(true)}>{t("newSpace")}</Button>
         </Empty>
       )}
-      {!loading && !failed && page.spaceId && page.agents.length === 0 && (
+      {!renderWorkspace && !loading && !failed && page.spaceId && page.agents.length === 0 && (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -789,7 +837,19 @@ function AgentsWorkspaceContents({
           </EmptyHeader>
         </Empty>
       )}
-      {page.agents.length > 0 && (
+      {renderWorkspace &&
+        page.spaceId &&
+        !loading &&
+        !failed &&
+        renderWorkspace({
+          spaceId: page.spaceId,
+          agents: page.agents.map((entry) => entry.agent),
+          accountNames: Object.fromEntries(
+            (managementState?.members ?? []).map((member) => [member.accountId, member.name]),
+          ),
+          subscribe: subscribePages,
+        })}
+      {!renderWorkspace && page.agents.length > 0 && (
         <div className="flex min-h-0 min-w-0 flex-1 gap-6 overflow-clip">
           <aside
             aria-label={t("title")}
@@ -848,7 +908,12 @@ function AgentsWorkspaceContents({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={() => setForm(item)}>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            ++agentFormRevision.current;
+                            setForm(item);
+                          }}
+                        >
                           <EditIcon aria-hidden="true" />
                           {t("editAgent")}
                         </DropdownMenuItem>
@@ -910,6 +975,8 @@ function AgentsWorkspaceContents({
               <AgentConversation
                 key={JSON.stringify([accountId, origin, selected.conversation.id])}
                 item={selected}
+                onOpenPage={onOpenPage}
+                composerReference={composerReference}
                 group={selectedGroup}
                 agentDirectory={page.agents.map((entry) => entry.agent)}
                 onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
@@ -971,11 +1038,18 @@ function AgentsWorkspaceContents({
         <AgentForm
           initial={form === "new" ? null : form.agent}
           models={page.models}
+          capabilities={client}
+          spaceId={page.spaceId ?? undefined}
+          agentId={form === "new" ? undefined : form.agent.id}
           onSave={saveAgent}
-          onClose={() => setForm(null)}
+          onClose={() => {
+            ++agentFormRevision.current;
+            setForm(null);
+          }}
           onOpenModels={
             onOpenModels
               ? () => {
+                  ++agentFormRevision.current;
                   setForm(null);
                   onOpenModels();
                 }

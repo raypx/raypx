@@ -467,5 +467,53 @@
       "failed": "Failed",
       "cancelled": "Cancelled"
     }
+  },
+  "capabilities": {
+    "skills": "Skills",
+    "servers": "Tool servers",
+    "noSkills": "No skills available in this Space.",
+    "noServers": "No servers available in this Space.",
+    "createdByAgent": "Created by an Agent",
+    "loadError": "Could not load Agent capabilities."
+  },
+  "mcp": {
+    "title": "Tools",
+    "add": "Add server",
+    "edit": "Edit {name}",
+    "delete": "Delete server",
+    "deleteTitle": "Delete {name}?",
+    "deleteDescription": "Agents will lose access to tools from this server.",
+    "approvalHint": "Server tools ask for approval unless marked read-only and allowed.",
+    "empty": "No remote tool servers.",
+    "test": "Test",
+    "tools": "Discovered tools",
+    "availability": "Availability",
+    "allSpaces": "All Spaces",
+    "selectedSpaces": "Selected Spaces",
+    "noSpaces": "No Spaces",
+    "url": "Server URL",
+    "headers": "Credential headers (optional)",
+    "headersHint": "One Name: value per line. Values are write-only; leave blank to keep existing headers.",
+    "notTested": "Not tested in this session",
+    "discover": "Discover server tools",
+    "discoverHint": "Test a server to choose an exact tool.",
+    "errors": {
+      "load": "Could not load servers.",
+      "save": "Could not save the server.",
+      "delete": "Could not delete the server.",
+      "headers": "Enter valid header names and values.",
+      "url": "Enter an HTTP or HTTPS URL.",
+      "MCP_STDIO_UNSUPPORTED": "Local command servers are not supported. Use a remote HTTP server."
+    },
+    "outcomes": {
+      "SUCCEEDED": "Connected",
+      "AUTHENTICATION_FAILED": "Credentials were rejected.",
+      "RATE_LIMITED": "The server is busy. Try again later.",
+      "TIMED_OUT": "The server took too long to respond.",
+      "REQUEST_FAILED": "Could not connect to the server.",
+      "INVALID_ENDPOINT": "This URL is not an available MCP endpoint.",
+      "MCP_STDIO_UNSUPPORTED": "Local command servers are not supported.",
+      "TOOL_LIMIT": "The server offers too many tools."
+    }
   }
 }

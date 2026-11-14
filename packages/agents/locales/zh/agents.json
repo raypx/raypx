@@ -467,5 +467,53 @@
       "failed": "未完成",
       "cancelled": "已取消"
     }
+  },
+  "capabilities": {
+    "skills": "技能",
+    "servers": "工具服务器",
+    "noSkills": "此空间没有可用技能。",
+    "noServers": "此空间没有可用服务器。",
+    "createdByAgent": "由 Agent 创建",
+    "loadError": "无法加载 Agent 能力。"
+  },
+  "mcp": {
+    "title": "工具",
+    "add": "添加服务器",
+    "edit": "编辑 {name}",
+    "delete": "删除服务器",
+    "deleteTitle": "删除 {name}？",
+    "deleteDescription": "Agent 将无法使用此服务器的工具。",
+    "approvalHint": "服务器工具需要批准，除非已标记为只读且加入允许列表。",
+    "empty": "尚无远程工具服务器。",
+    "test": "测试",
+    "tools": "已发现的工具",
+    "availability": "可用范围",
+    "allSpaces": "所有空间",
+    "selectedSpaces": "指定空间",
+    "noSpaces": "无空间",
+    "url": "服务器 URL",
+    "headers": "凭据请求头（可选）",
+    "headersHint": "每行填写 Name: value。值仅可写入；留空保留现有请求头。",
+    "notTested": "本次尚未测试",
+    "discover": "发现服务器工具",
+    "discoverHint": "测试服务器以选择确切的工具。",
+    "errors": {
+      "load": "无法加载服务器。",
+      "save": "无法保存服务器。",
+      "delete": "无法删除服务器。",
+      "headers": "请填写有效的请求头名称和值。",
+      "url": "请输入 HTTP 或 HTTPS URL。",
+      "MCP_STDIO_UNSUPPORTED": "不支持本地命令服务器，请使用远程 HTTP 服务器。"
+    },
+    "outcomes": {
+      "SUCCEEDED": "已连接",
+      "AUTHENTICATION_FAILED": "凭据被拒绝。",
+      "RATE_LIMITED": "服务器繁忙，请稍后重试。",
+      "TIMED_OUT": "服务器响应超时。",
+      "REQUEST_FAILED": "无法连接到服务器。",
+      "INVALID_ENDPOINT": "此 URL 不是可用的 MCP 端点。",
+      "MCP_STDIO_UNSUPPORTED": "不支持本地命令服务器。",
+      "TOOL_LIMIT": "服务器提供的工具过多。"
+    }
   }
 }

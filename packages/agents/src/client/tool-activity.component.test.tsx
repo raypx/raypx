@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { runIdSchema, type ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import { ComputerActivity, ToolActivity } from "./tool-activity.js";
@@ -175,3 +175,23 @@ it.each(["en", "zh"] as const)("names Agent interaction tools plainly in %s", (l
   expect(screen.queryByText("agent_delegate")).toBeNull();
   expect(screen.queryByText("agent_wait")).toBeNull();
 });
+
+it.each(["page-one", "Space page", "unknown-page-target"])(
+  "opens the Pages list without guessing a Page ID from target %s",
+  async (target) => {
+    const open = vi.fn();
+    render(
+      <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+        <ToolActivity
+          activity={[{ ...call, toolName: "agent_page_update", target }]}
+          runId={call.runId}
+          onOpenPage={open}
+        />
+      </BrowserLanguageProvider>,
+    );
+    fireEvent.click(screen.getByRole("button"));
+    const page = await screen.findByRole("button", { name: en.agents.tools.updatePage });
+    fireEvent.click(page);
+    expect(open).toHaveBeenCalledWith("");
+  },
+);

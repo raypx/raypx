@@ -186,3 +186,51 @@ it.each(["en", "zh"] as const)(
     );
   },
 );
+
+it("offers exact remote tools only after a server test and creates an Allow rule", async () => {
+  const user = (await import("@testing-library/user-event")).default.setup();
+  const { mcpServerSchema } = await import("@raypx/core/mcp-servers");
+  const server = mcpServerSchema.parse({
+    id: "00000000-0000-4000-8000-000000000001",
+    name: "Research",
+    url: "https://example.com/mcp",
+    transport: "http",
+    availability: { mode: "all" },
+    hasCredentials: false,
+    createdAt: "2026-11-14T00:00:00Z",
+    updatedAt: "2026-11-14T00:00:00Z",
+  });
+  const controller = new ApprovalSettingsController({
+    settings: async () => ({ mode: "ask", rules: [], revision: 0, availableModes }),
+    updateSettings: async ({ expectedRevision, ...saved }) => ({
+      ...saved,
+      revision: expectedRevision + 1,
+      availableModes,
+    }),
+  });
+  await controller.load();
+  const test = vi.fn(async () => ({ code: "SUCCEEDED" as const, toolNames: ["read_page"] }));
+  render(
+    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <ApprovalSettingsEditor
+        controller={controller}
+        mcpServers={{ list: async () => [server], test }}
+      />
+    </BrowserLanguageProvider>,
+  );
+  await waitFor(() => expect(screen.getByRole("button", { name: "Test" })).toBeEnabled());
+  await user.click(screen.getByRole("button", { name: "Test" }));
+  await waitFor(() => expect(test).toHaveBeenCalledWith({ id: server.id }));
+  await user.click(screen.getByRole("combobox", { name: "Tool" }));
+  const option = await screen.findByRole("option", { name: "Research / read_page" });
+  expect(option).toHaveAttribute("data-value", "mcp_00000000000040008000000000000001__read_page");
+  await user.click(option);
+  await user.click(screen.getByRole("button", { name: "Add rule" }));
+  expect(controller.getSnapshot().draft?.rules).toEqual([
+    {
+      toolName: "mcp_00000000000040008000000000000001__read_page",
+      executable: null,
+      decision: "allow",
+    },
+  ]);
+});
