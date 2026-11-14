@@ -1,0 +1,273 @@
+apps/desktop/src/routes/agents.tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 12,31,34,44,54
+apps/desktop/src/routes/pages.tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 14,33,35,44,52
+apps/mobile/app/(app)/conversation/[agentId].tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 41
+packages/pages/locales/en/pages.json
+  s_5ec689b1b3c767::t_f73e50de8a12d7 37
+apps/mobile/src/agents/conversation.component.test.tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 202
+apps/mobile/src/agents/conversation.tsx
+  s_5ec689b1b3c767::t_f73e50de8a12d7 147,194
+  s_5ec689b1b3c767::t_dee8da1aae4b95 45,53,148,195
+packages/pages/locales/zh/pages.json
+  s_5ec689b1b3c767::t_f73e50de8a12d7 37
+apps/mobile/src/agents/tool-activity.component.test.tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 47,49,72-73,99,101,105-109,111,133-134,162,164-165,168,174,181-184,187
+  s_5ec689b1b3c767::t_881ed07fa83b6d 2-4,48,100,110,157-161,163,166-167,169-173,175-180,185-186,188-192
+apps/mobile/src/agents/tool-activity.tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 22,25,36,101,107,147
+  s_5ec689b1b3c767::t_f73e50de8a12d7 2,21,24,31-32,34-35,37-41,48-60,62-64,100,106,146
+  s_5ec689b1b3c767::t_630977c445636b 33,61,65
+apps/desktop/src/features/auth/sign-out.tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 2,15-16,31,47-53,58,60-61,71-72,74,76-78
+packages/agents/src/client/tool-activity.tsx
+  s_5ec689b1b3c767::t_f73e50de8a12d7 57,71
+apps/desktop/src/router-agents.component.test.tsx
+  s_5ec689b1b3c767::t_dee8da1aae4b95 30-32
+apps/api/AGENTS.md
+  s_f9cc0d01f49051::t_b0a76485c7884b 403-404,410-413
+apps/api/src/conversations/page-tools.test.ts
+  s_f9cc0d01f49051::t_b8d191b0af14a4 43-58,63,120-123
+apps/api/src/pages/http.test.ts
+  s_f9cc0d01f49051::t_29457313b402c2 1,46,48-50,68,73,130,135-169
+apps/api/src/pages/http.ts
+  s_f9cc0d01f49051::t_512805d76479aa 3,44-48,55-56,58,88,109
+apps/api/tests/cluster/relay.test.ts
+  s_f9cc0d01f49051::t_ceb22620d67c04 25
+apps/api/tests/helpers/browser-model.ts
+  s_5ec689b1b3c767::t_68d6847f3b3d04 35-36,57-62,140-141
+apps/api/tests/helpers/control-server.ts
+  s_5ec689b1b3c767::t_61d567cc2dd911 72,258-268
+apps/api/tests/integration/conversation-history-rpc.test.ts
+  s_f9cc0d01f49051::t_64a2cae64f1f43 14,99,107,165-190,319-332
+apps/api/tests/postgres/node/admin.test.ts
+  s_f9cc0d01f49051::t_6eea8c5cdc6c15 17-18
+apps/api/tests/postgres/node/approvals.test.ts
+  s_f9cc0d01f49051::t_f904c656bf9cfd 35-36
+apps/api/tests/postgres/node/auth.test.ts
+  s_f9cc0d01f49051::t_10e32646bd96b6 25-26
+apps/api/tests/postgres/node/backend-gap-access.test.ts
+  s_f9cc0d01f49051::t_7dd67836b755a6 12-13
+apps/api/tests/postgres/node/cleanup.test.ts
+  s_f9cc0d01f49051::t_7a6c865d009b85 8-9
+apps/api/tests/postgres/node/computers.test.ts
+  s_f9cc0d01f49051::t_b70fd24e0fd2ce 12-13
+apps/api/tests/postgres/node/config.test.ts
+  s_f9cc0d01f49051::t_efb8fc09295a07 9-10
+apps/api/tests/postgres/node/context-commands.test.ts
+  s_f9cc0d01f49051::t_f5babf7e84dd8b 9-10
+apps/api/tests/postgres/node/control.test.ts
+  s_f9cc0d01f49051::t_03c8589e58ff57 16-17
+apps/api/tests/postgres/node/conversation.test.ts
+  s_f9cc0d01f49051::t_17266b5f657537 16-17
+apps/api/tests/postgres/node/instances.test.ts
+  s_f9cc0d01f49051::t_aa78d65add4962 20-21
+apps/api/tests/postgres/node/jobs.test.ts
+  s_f9cc0d01f49051::t_7008f0687a942c 9-10
+apps/api/tests/postgres/node/mcp.test.ts
+  s_f9cc0d01f49051::t_58b78b3d5928f8 22-23
+apps/api/tests/postgres/node/memory.test.ts
+  s_f9cc0d01f49051::t_4d511a0f291a98 10-11
+apps/api/tests/postgres/node/model-connections.test.ts
+  s_f9cc0d01f49051::t_16470e27c81a12 38-39
+apps/api/tests/postgres/node/rate-limit.test.ts
+  s_f9cc0d01f49051::t_d8f884f9834c34 10-11
+apps/api/tests/postgres/node/replies.test.ts
+  s_f9cc0d01f49051::t_deec8a4e505c99 24-25
+apps/api/tests/postgres/node/resend.test.ts
+  s_f9cc0d01f49051::t_09e4855eed26ca 19-20
+apps/api/tests/postgres/node/routines-memory.test.ts
+  s_f9cc0d01f49051::t_25f9d56e9aea58 36-37
+apps/api/tests/postgres/node/session-attachments.test.ts
+  s_f9cc0d01f49051::t_ebd699842967fc 33-34
+apps/api/tests/postgres/node/space-deletion.test.ts
+  s_f9cc0d01f49051::t_d656c88c73ac7a 28-29
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_f9cc0d01f49051::t_b36093a13f6895 12-13,39-40,50-54
+apps/api/tests/postgres/node/worker.test.ts
+  s_f9cc0d01f49051::t_c5638ec4ac3bd0 16-17
+apps/desktop/AGENTS.md
+  s_5ec689b1b3c767::t_a9e9c56ebcaa36 69-71
+apps/desktop/src/features/auth/sign-out.component.test.tsx
+  s_5ec689b1b3c767::t_9155a30921a927 6,16,25-30,46-47,54-58,189-213
+apps/desktop/src/router-page-preview.component.test.tsx
+  s_5ec689b1b3c767::t_fc559491b408ae 1-3
+apps/mobile/AGENTS.md
+  s_5ec689b1b3c767::t_b6627501db6ccd 83-85
+docs/architecture/capabilities.md
+  s_5ec689b1b3c767::t_bdbda40e3e784f 216-232
+docs/architecture/computers.md
+  s_f9cc0d01f49051::t_e3b74fe75f56d2 213-219,225-257
+docs/architecture/domain.md
+  s_f9cc0d01f49051::t_a39893d9f1e5b0 81-83,150-155
+docs/architecture/events.md
+  s_f9cc0d01f49051::t_082d217af6c956 214-221
+docs/architecture/operations.md
+  s_f9cc0d01f49051::t_39fcfe9363cf7c 50-68,101-139
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_845742dd6776ef 108-112
+docs/development/dev-cli.md
+  s_f9cc0d01f49051::t_49ad21dcaf0df3 37-41,46-49
+docs/development/testing.md
+  s_5ec689b1b3c767::t_589d2d7251e9bf 256-259,261-265,279-283
+docs/development/validation-artifacts.md
+  s_f9cc0d01f49051::t_bec99c2fccc49b 118-119,133-138,188-191,196-204,224-230
+docs/roadmap.md
+  s_f9cc0d01f49051::t_7d7b9a8c35f354 43-47,116-125,183-188
+e2e/AGENTS.md
+  s_5ec689b1b3c767::t_e247c5587f472d 89-90,93-94
+e2e/tests/helpers/account-fixture.ts
+  s_5ec689b1b3c767::t_3e23a498380c43 35-36
+e2e/tests/journeys/pages.ts
+  s_5ec689b1b3c767::t_97f6f274350601 36,43,194-250
+infra/sandbox/.env.example
+  s_f9cc0d01f49051::t_16f01ee481d772 14-15
+infra/sandbox/AGENTS.md
+  s_f9cc0d01f49051::t_4765ffd03696cb 18,21-23
+infra/sandbox/egress.sh
+  s_f9cc0d01f49051::t_26335e9cc30b39 6,12-13,27-33,44-61,76-81,103,169-177
+infra/sandbox/src/config.test.ts
+  s_f9cc0d01f49051::t_d35a467c91c7c7 34-52
+infra/sandbox/src/config.ts
+  s_f9cc0d01f49051::t_d54f4b564771f9 15,59-74,87
+infra/sandbox/src/egress.test.ts
+  s_f9cc0d01f49051::t_8599e88f99546d 26-28,41-53,82-97
+infra/sandbox/src/supervisor.test.ts
+  s_f9cc0d01f49051::t_cb81caf8fb4e61 42,59-65
+infra/sandbox/src/supervisor.ts
+  s_f9cc0d01f49051::t_c6865b59fb30b9 106-107
+packages/agents/AGENTS.md
+  s_5ec689b1b3c767::t_fc472090d444ab 90-93,140-141
+packages/agents/src/client/tool-activity.component.test.tsx
+  s_5ec689b1b3c767::t_ee89556e8c3550 5,199-224
+packages/agents/src/conversations.ts
+  s_f9cc0d01f49051::t_f0343dd1b302e3 20,168
+packages/agents/src/model/tool-activity.test.ts
+  s_5ec689b1b3c767::t_e492dc0f752ed6 5,186-203
+packages/agents/src/model/tool-activity.ts
+  s_5ec689b1b3c767::t_62a08da9232baa 47
+packages/agents/src/runner.ts
+  s_f9cc0d01f49051::t_bc689a149a55f8 838
+packages/agents/src/server/approvals.ts
+  s_f9cc0d01f49051::t_ac81fda8bc9067 701-706,730
+packages/agents/src/server/tool-events.test.ts
+  s_f9cc0d01f49051::t_b59aeb9a597ac1 1-36
+packages/agents/src/server/tool-events.ts
+  s_f9cc0d01f49051::t_3e47ff68e4f0db 37,69-74,132-133
+packages/agents/src/tool-lifecycle.test.ts
+  s_f9cc0d01f49051::t_9a8fdad93a574b 45-67
+packages/agents/src/tool-lifecycle.ts
+  s_f9cc0d01f49051::t_3ead1c2cdf57f1 1,8,12,18-19,35-42,56
+packages/agents/tests/postgres/agent-messages.test.ts
+  s_f9cc0d01f49051::t_60191078a1cab2 37-38
+packages/agents/tests/postgres/agents.test.ts
+  s_f9cc0d01f49051::t_de0fe26472a53f 10-11
+packages/agents/tests/postgres/approvals.test.ts
+  s_f9cc0d01f49051::t_cef0d826b597cd 12-13,37-38,175-308
+packages/agents/tests/postgres/conversation-events.test.ts
+  s_f9cc0d01f49051::t_d4da8de51df907 22-23
+packages/agents/tests/postgres/conversation-history.test.ts
+  s_f9cc0d01f49051::t_a88b9b7a0719a4 24-25
+packages/agents/tests/postgres/departed-actors.test.ts
+  s_f9cc0d01f49051::t_bfd5662b34ca08 23-24
+packages/agents/tests/postgres/durable-runs.test.ts
+  s_f9cc0d01f49051::t_9aecbd1d7d8fc4 54-55
+packages/agents/tests/postgres/groups-isolation.test.ts
+  s_f9cc0d01f49051::t_dd9da3428b1660 29-30
+packages/agents/tests/postgres/groups.test.ts
+  s_f9cc0d01f49051::t_9bac566e839d32 14-15
+packages/agents/tests/postgres/memory-pins.test.ts
+  s_f9cc0d01f49051::t_412ecbe98d078f 23-24
+packages/agents/tests/postgres/run-origin-activity.test.ts
+  s_f9cc0d01f49051::t_8c04f5e4c46e96 15-16
+packages/computers/tests/postgres/computers.test.ts
+  s_f9cc0d01f49051::t_28bbda5e8e9119 18-19
+packages/core/AGENTS.md
+  s_f9cc0d01f49051::t_9157a479704f0b 37-38
+packages/core/src/conversation.test.ts
+  s_f9cc0d01f49051::t_f518f084c3ad10 7,136-182
+packages/core/src/conversation.ts
+  s_f9cc0d01f49051::t_b2f99d4e8029fe 12,146-151,168,186
+packages/database/AGENTS.md
+  s_f9cc0d01f49051::t_ae04aaab3a01ec 29-31,87-91,201-205
+packages/database/drizzle-foundation/20261114004139_baseline/migration.sql
+  s_f9cc0d01f49051::t_5686782fabe0f2 1-31,56-588,643-806,854-983,996-1104,1119-1187,1191-1249,1255-1272,1278-1291,1293-1299,1301-1306,1316-1379,1387-1403,1408,1410-1425,1428-1441,1444-1446
+packages/database/drizzle-foundation/20261114004139_baseline/snapshot.json
+  s_f9cc0d01f49051::t_f42a3cf4fcdba5 2,5,7,15,18-23,34,37-42,53,56-61,72,75-80,91,94-99,110,113-118,129,132-137,148,151-156,167,170-175,182,186,189-194,197,201,205,208-213,216,220,224,227-232,235,239,243,246-251,254,258,262,265-270,273,277,279,281,284-289,296,298,300,303-308,315,317,319,322-327,334,336,338,341-346,353,355,357,360-365,372,374,376,379-384,391,393,395,398-403,410,412,414,417-422,425,429,431,433,436-441,444,448,450,452,455-460,463,467,469,471,474-479,482,486,488,490,493-498,501,505,507,509,512-517,520,524,526,528,531-536,539,543,545,547,550-555,558,562,564,566,569-574,577,581,583,585,588-593,596,600,602,604,607-612,615,619,621,623,626-631,634,638,640,642,645-650,653,657,659,661,664-669,672,676,678,680,683-688,691,695,699,702-707,710,714,718,721-726,729,733,737,740-745,748,752,756,759-764,767,771,775,778-783,786,790,794,797-802,805,809,813,816-821,824,828,832,835-841,844,848,852,855-860,863,867,871,874-879,882,886,890,893-898,901,905,909,912-917,920,924,928,931-938,941,945,949,952-957,960,964,968,971-977,980,984,988,991-996,999,1003,1007,1010-1015,1018,1022,1026,1029-1036,1039,1043,1047,1050-1056,1059,1063,1067,1070-1076,1079,1083,1087,1090-1095,1098,1102,1106,1109-1114,1117,1121,1125,1128-1133,1136,1140,1144,1147-1153,1156,1160,1164,1167-1173,1176,1180,1184,1187-1192,1195-1211,1213-1215,1218,1222,1225-1230,1233-1249,1251-1253,1256,1260,1263-1269,1272-1280,1282-1293,1296,1300,1303-1308,1311-1319,1321-1484,1486-26314,26317-26321,26324-26328,26331-26335,26338-26342,26345-26349,26352-26356,26359-26363,26366-26370,26373-26377,26380-26384,26387-26391
+packages/database/src/baseline.test.ts
+  s_f9cc0d01f49051::t_72bc427e414651 1-42
+packages/database/src/schema.test.ts
+  s_f9cc0d01f49051::t_dba6cc9c6c746a 27-28,73-101
+packages/database/src/schema.ts
+  s_f9cc0d01f49051::t_581251c1fddf10 16,920-930,946-947,952-959,1164-1167,1172-1175,1994-1997,2317
+packages/dev-cli/AGENTS.md
+  s_f9cc0d01f49051::t_24817d240bd6f7 33-42
+packages/dev-cli/src/test-command.ts
+  s_f9cc0d01f49051::t_57507892284771 138-139
+packages/dev-cli/src/turbo.test.ts
+  s_f9cc0d01f49051::t_cc9940b200d61e 1-80
+packages/dev-cli/src/turbo.ts
+  s_f9cc0d01f49051::t_7eba1cf66848f1 1-5,57-112,120-121
+packages/dev-cli/src/validation/backend-environment.test.ts
+  s_f9cc0d01f49051::t_090e8add22b392 2-21
+packages/dev-cli/src/validation/backends.ts
+  s_f9cc0d01f49051::t_c84575ffad00de 4,48,52-87,94-123,128-155,216,244
+packages/dev-cli/src/validation/sandbox-plan.ts
+  s_f9cc0d01f49051::t_c971fdff227a48 3,13-14,24-39,41-58,69-70
+packages/dev-cli/src/validation/sandbox-probes.ts
+  s_f9cc0d01f49051::t_70a23d5e33c831 16,68-73,75-88,90-176,178-308
+packages/dev-cli/src/validation/sandbox.test.ts
+  s_f9cc0d01f49051::t_8f9d4a1952b94c 5-9,12,36,89-99,113-126,168,175-188,224-227,334-381,389-413,442-617
+packages/dev-cli/src/validation/sandbox.ts
+  s_f9cc0d01f49051::t_5c841bd52ff676 13-15,19,224,328-337,350-358,361,365-441,443,485-486
+packages/jobs/tests/postgres/routines.test.ts
+  s_f9cc0d01f49051::t_cd9bfa46146422 26-27
+packages/memory/tests/postgres/space-memory.test.ts
+  s_f9cc0d01f49051::t_265653afd43ec9 23-24
+packages/pages/AGENTS.md
+  s_5ec689b1b3c767::t_f431dbd8809b4e 11-17,26
+packages/pages/src/client/workspace.component.test.tsx
+  s_5ec689b1b3c767::t_b18695ecfff085 344-358
+packages/pages/src/server/document-style.ts
+  s_f9cc0d01f49051::t_ae4608ce605728 1-60
+packages/pages/src/server/postgres.ts
+  s_f9cc0d01f49051::t_1f907f12749047 8,268
+packages/pages/src/server/render.test.ts
+  s_5ec689b1b3c767::t_6fe68c9021c6f3 1,33-50,67-81
+packages/pages/src/server/render.ts
+  s_5ec689b1b3c767::t_33b999a3da47eb 6,54-62,67,69-72,85-88,91
+packages/pages/tests/postgres/pages.test.ts
+  s_f9cc0d01f49051::t_95fbc971b5e8fc 11,26-27,113-118,160-161,165
+packages/skills/tests/postgres/skills.test.ts
+  s_f9cc0d01f49051::t_cf8141de200664 26-27
+packages/spaces/tests/postgres/management.test.ts
+  s_f9cc0d01f49051::t_49025897fdad0f 25-26
+packages/spaces/tests/postgres/spaces.test.ts
+  s_f9cc0d01f49051::t_005f4f43284dbc 8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "adb596b5645dae07c351166e012b2333041f50c2",
+  "prompts": {},
+  "sessions": {
+    "s_5ec689b1b3c767": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d7a3-7689-73b2-b7ab-af71ab8f8758",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
