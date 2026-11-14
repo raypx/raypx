@@ -1,0 +1,329 @@
+packages/agents/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 3-11
+apps/api/tests/helpers/replies.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 60-72
+packages/agents/src/model/conversation.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 33,372,494,582
+packages/dev-cli/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 33-34
+apps/api/src/app/options.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 32
+packages/agents/src/runner.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 578-588,620-622,831
+AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 24,26-27
+infra/sandbox/Computer.Dockerfile
+  s_f9cc0d01f49051::t_655d6f1859fa61 6,18-29
+infra/sandbox/package.json
+  s_f9cc0d01f49051::t_655d6f1859fa61 14
+packages/computers/src/server/screens-postgres.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-504
+packages/agents/src/client/computer-screen.component.test.tsx
+  s_f9cc0d01f49051::t_655d6f1859fa61 3-107,180
+  s_e56f1648ad962d::t_7d5b1b1fea6141 1-2,108-129,133-135,137-142,144-145,149-166,171-179
+  s_e56f1648ad962d::t_30447badab2496 130-132,146-148,167-169
+  s_e56f1648ad962d::t_06b9c65e495f1b 136,143,170
+packages/computers/src/screens.ts
+  s_e56f1648ad962d::t_7508ba01c25359 272,286,305-316,318-324,341
+  s_e56f1648ad962d::t_89a723419fe314 273-285,354-356
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-271,287-298,300-304,325-339,342-353,357-378
+  s_e56f1648ad962d::t_1165121be64513 299,317,340
+apps/api/src/conversations/screen-stream.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-228
+packages/agents/src/model/tool-label.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 9-11
+apps/cli/src/runtime/daemon/desktop/events.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 44-79
+apps/desktop/e2e/computer-screen.spec.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-2
+packages/agents/src/client/workspace.tsx
+  s_f9cc0d01f49051::t_655d6f1859fa61 76,80-113,258
+packages/agents/src/server/approvals.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 231,255,615
+packages/contracts/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 34-38
+packages/providers/src/computer/screen-stream.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-38
+infra/sandbox/src/config.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 7-11
+apps/api/src/routers/rpc/computer-screen.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-159
+infra/sandbox/tests/fake-engine.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 12,113,117-118,155-172
+infra/sandbox/.env.example
+  s_f9cc0d01f49051::t_655d6f1859fa61 8-9
+infra/sandbox/src/home.py
+  s_f9cc0d01f49051::t_655d6f1859fa61 126-128
+packages/computers/tests/postgres/computers.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 159-218
+apps/api/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 20-26
+packages/contracts/src/conversation.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 139-184
+  s_e56f1648ad962d::t_17d3cb92cbb1f1 138
+  s_e56f1648ad962d::t_8ba572aea821ac 185
+packages/computers/tests/postgres/screens.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-455
+infra/sandbox/tests/screen_test.py
+  s_e56f1648ad962d::t_78c18401c30acc 1-111
+apps/api/src/runtime/shared.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 152,189,224
+packages/agents/src/conversations.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 197
+infra/sandbox/src/http.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 3,25,39-40,55-104,197
+packages/agents/src/server/computer-queue.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 53
+infra/sandbox/src/image.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 15-17
+apps/api/tests/helpers/app.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 16
+packages/computers/src/server.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 74-93
+e2e/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 105-108
+  s_e56f1648ad962d::t_0c29d412f54711 104,109-112
+DESIGN.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 144,147-152
+  s_e56f1648ad962d::t_0c29d412f54711 43-46,153-155
+packages/agents/src/server/conversation-views.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 60
+apps/mobile/AGENTS.md
+  s_e56f1648ad962d::t_d33cedd2e9b2fe 30-32
+  s_e56f1648ad962d::t_840ec8aaf17746 116
+  s_e56f1648ad962d::t_9f27eeb054480f 117-118
+packages/providers/src/computer/fake-screen.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-51
+docs/roadmap.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 241-249
+packages/providers/src/computer/port.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 8-10,29,116-117,144-154
+packages/providers/src/computer/docker.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 18-26,36,46,55,65,91-96,108,130-131,254-314
+apps/api/src/runtime/server.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 83
+packages/computers/src/server.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 16-26,115-117
+packages/contracts/src/conversation.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 3,119-123,125-127,151-158,176-177
+packages/core/src/conversation.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 111,259
+packages/agents/src/model.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 64-67
+  s_f9cc0d01f49051::t_33f6ab5426bd01 63
+packages/agents/src/model/controller.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 583
+docs/README.md
+  s_e56f1648ad962d::t_fd8d8417cb1138 17-18
+packages/agents/src/client/computer.tsx
+  s_f9cc0d01f49051::t_655d6f1859fa61 20,180-182
+packages/agents/src/model/computer.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 4,6,19,37,45-61,177
+docs/development/mobile.md
+  s_e56f1648ad962d::t_d33cedd2e9b2fe 10-15
+packages/database/src/schema.ts
+  s_e56f1648ad962d::t_17d3cb92cbb1f1 1066,1145,1192
+  s_f9cc0d01f49051::t_655d6f1859fa61 295-355,538,2487-2488
+apps/desktop/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 32-33
+  s_e56f1648ad962d::t_0c29d412f54711 34-35
+apps/web/AGENTS.md
+  s_e56f1648ad962d::t_0c29d412f54711 23-24
+  s_f9cc0d01f49051::t_655d6f1859fa61 21-22
+infra/sandbox/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 11-16
+packages/core/src/approvals.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 11-13
+docs/development/sandbox.md
+  s_e56f1648ad962d::t_ede833e337907b 135-136
+  s_f9cc0d01f49051::t_655d6f1859fa61 39-49,62,125-134,137-141
+  s_e56f1648ad962d::t_e6c38828a59413 142
+docs/architecture/approvals.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 76-79,85-91
+  s_f9cc0d01f49051::t_9047f31f6753a5 92
+infra/sandbox/src/config.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 10,83
+apps/api/src/runtime/agents.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-6,67-73,76,119-122,179-182,205
+infra/sandbox/src/supervisor.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 15-22,32-33,156-174,194,228,266-267,278,396,419-469
+packages/providers/tests/helpers/computer.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 49-85,90-101
+  s_e56f1648ad962d::t_78c18401c30acc 7,86-89
+packages/agents/tests/postgres/approvals.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 2,13,23-29,121-298
+  s_f9cc0d01f49051::t_78996c85deb82b 299-300
+apps/api/src/routers/rpc/spaces.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 9,11-12,71
+infra/sandbox/src/screen.html
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-27
+infra/sandbox/src/engine.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 104-107
+infra/sandbox/src/screen.py
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-38,40-52,58,60,92,94-111,114-115,117-123,127,132-208
+  s_e56f1648ad962d::t_f9c4506065abf3 39,53-57,59,61-91,93,112-113,116,124-126,128-131
+packages/agents/src/model/approvals.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 59-61
+packages/agents/src/model/computer-screen.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-175,177-202,205,215-360
+  s_e56f1648ad962d::t_984c774dfe0f5b 176,203-204,206-214
+packages/agents/src/model/port.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 33,52,103-110
+packages/agents/src/server.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 59
+docs/architecture/operations.md
+  s_e56f1648ad962d::t_d33cedd2e9b2fe 51
+  s_f9cc0d01f49051::t_655d6f1859fa61 104-112
+  s_e56f1648ad962d::t_076e53ce88963f 113
+packages/agents/locales/zh/agents.json
+  s_f9cc0d01f49051::t_655d6f1859fa61 106-109,597-637,641
+  s_e56f1648ad962d::t_147e58c87187b3 596,638-640
+packages/contracts/src/spaces.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 36,115
+docs/architecture/clients.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 55-64,71
+  s_e56f1648ad962d::t_840ec8aaf17746 51-52,68-70
+  s_e56f1648ad962d::t_0c29d412f54711 4-6,65-67,132-133
+packages/agents/src/model/conversation.test.ts
+  s_e56f1648ad962d::t_f0de68667bad8e 768-770,772,778-780,782
+  s_f9cc0d01f49051::t_655d6f1859fa61 739-767,773-777,783-807
+  s_e56f1648ad962d::t_808b9d803ff506 771,781
+packages/agents/src/client/browser-ports.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-5,18-23,27
+apps/api/src/routers/rpc/computer-screen.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-107
+packages/providers/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 38-43
+packages/core/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 21-23
+docs/development/testing.md
+  s_e56f1648ad962d::t_fd8d8417cb1138 191-193
+  s_f9cc0d01f49051::t_655d6f1859fa61 185-190
+apps/api/tests/helpers/control-server.ts
+  s_e56f1648ad962d::t_17d3cb92cbb1f1 169-180
+  s_f9cc0d01f49051::t_655d6f1859fa61 64-69,109-115,118,157,159,204-207,231,263
+packages/agents/src/client/conversation.tsx
+  s_e56f1648ad962d::t_f8c85beebcc3fc 1062-1064
+  s_f9cc0d01f49051::t_655d6f1859fa61 147,501-502,879
+packages/agents/src/model/computer-screen.test.ts
+  s_e56f1648ad962d::t_984c774dfe0f5b 246-310
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-245
+packages/agents/src/client/workspace.component.test.tsx
+  s_e56f1648ad962d::t_34811b96cf975e 2371
+  s_e56f1648ad962d::t_f8c85beebcc3fc 2333,2370,2372
+packages/agents/locales/en/agents.json
+  s_f9cc0d01f49051::t_655d6f1859fa61 106-109,597-637,641
+  s_e56f1648ad962d::t_147e58c87187b3 596,638-640
+apps/api/src/conversations/tools.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 59-187
+packages/database/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 70-79
+infra/sandbox/src/screen.test.ts
+  s_e56f1648ad962d::t_78c18401c30acc 1-11,13-17
+  s_e56f1648ad962d::t_75fac6db673b82 12
+packages/agents/src/client/computer-screen.tsx
+  s_e56f1648ad962d::t_f8c85beebcc3fc 11-19,25,138-142,191-210,281-282,316-319,391-392,401,403-415,420-466,471-472,476-477,489,502
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-10,20-24,26-137,143-190,211-280,283-315,320-390,393-400,402,467-470,473-475,478-488,490-501,503-518
+  s_e56f1648ad962d::t_30447badab2496 416-419
+packages/core/src/computers.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 88-182
+packages/computers/src/server/postgres.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 14-15,114-117,125
+apps/api/src/conversations/stream.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 5,18,29-32,51,73,94,141-142,155-195,307-313,318-350
+  s_f9cc0d01f49051::t_fd22ad03c2c5ba 351-352
+packages/agents/src/computer-tools.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 45-47,95-249
+  s_f9cc0d01f49051::t_565422c6ac5750 250
+packages/computers/src/screens.test.ts
+  s_e56f1648ad962d::t_abf90999b97a83 311-313,316
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-249,340-355
+  s_e56f1648ad962d::t_f4d1854fb2e59a 250-251,253-262,264-267,269-272,274-287,289-293,295-301,303-306,308-310,317-326,328-331,333-336,338-339
+  s_e56f1648ad962d::t_255b4bf99f13fd 252,263,268,273,288,294,302,307,314-315,327,332,337
+docs/architecture/internationalization.md
+  s_e56f1648ad962d::t_9f27eeb054480f 21,27,34-36,38
+  s_e56f1648ad962d::t_d33cedd2e9b2fe 25-26,37
+packages/computers/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 11-13,19-38
+  s_f9cc0d01f49051::t_f8f8d893f793d7 39
+apps/web/e2e/computer-screen.spec.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-2
+packages/core/src/computers.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 2-9,30-122
+packages/dev-cli/src/validation/sandbox.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 195-196,309-311,319-333
+apps/cli/AGENTS.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 34-36
+apps/api/src/conversations/socket.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 3,31-34
+packages/contracts/src/computer-screen.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-24
+packages/dev-cli/src/validation/sandbox.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 117-118,158,164-171,213-249,251-253,267,495-503
+docs/development/ui.md
+  s_e56f1648ad962d::t_d33cedd2e9b2fe 61-67
+  s_f9cc0d01f49051::t_655d6f1859fa61 53-60
+packages/agents/src/computer-tools.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 2,7-12,62-67,77-82,112-113,122-123,148-159,166,231,242-246,331,335-348,382-384,395-400,407-423,453-473,566-569,572,624-685
+apps/cli/src/runtime/daemon/desktop/events.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 4,24,105,107-108,113-114
+packages/agents/tests/support/screen-fixture.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-112
+packages/providers/src/computer/memory.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 15-17,28-31,85,92,113-116,121-122,141-142,149-150,306-307,315-350,352
+docs/architecture/computers.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 23-24,36-38,260-317
+apps/api/tests/helpers/agent-tools.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 9,26-32,305-308
+  s_f9cc0d01f49051::t_ce13a1e20e7deb 309
+packages/agents/src/server/conversations.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 176,265,567-581,1188
+e2e/tests/journeys/computer-screen.ts
+  s_e56f1648ad962d::t_30447badab2496 160-162
+  s_f9cc0d01f49051::t_655d6f1859fa61 1-134,167-204
+  s_e56f1648ad962d::t_34811b96cf975e 135-159,163-166
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_655d6f1859fa61 24-34
+packages/contracts/src/api.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 41-48
+PRODUCT.md
+  s_e56f1648ad962d::t_0c29d412f54711 10,85,128-129
+  s_f9cc0d01f49051::t_655d6f1859fa61 124-126
+  s_e56f1648ad962d::t_840ec8aaf17746 70
+infra/sandbox/src/supervisor.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 30-50
+docs/architecture/spaces.md
+  s_e56f1648ad962d::t_fd8d8417cb1138 34-37
+packages/agents/tests/postgres/durable-runs.test.ts
+  s_f9cc0d01f49051::t_655d6f1859fa61 197-246
+bun.lock
+  s_f9cc0d01f49051::t_07d64835b2b368 350
+packages/database/drizzle-foundation/20261114031842_baseline/migration.sql
+  s_e56f1648ad962d::t_1e4c98350c7275 88,102,145-170,351,518,1263-1265,1394-1397
+packages/database/drizzle-foundation/20261114031842_baseline/snapshot.json
+  s_e56f1648ad962d::t_29aa69545ff4ba 5,219-256,2258-2320,5105-5204,8387-8398,10164-10358,12988-13000,19863-19946,23601-23676,26097-26119,27292,27327,27344-27364,27432
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5bfe59ca0c035d53abd50618b4ff9af774b634f0",
+  "prompts": {},
+  "sessions": {
+    "s_e56f1648ad962d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d7ce-18b5-7a62-a71e-ff0381efd365",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
