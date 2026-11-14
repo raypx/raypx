@@ -197,3 +197,27 @@ it("requires email deployment configuration and has a pure constructor", async (
   });
   await expect(service.create(scope, input)).rejects.toMatchObject({ code: "INVALID_INPUT" });
 });
+
+it("distinguishes missing triggers from unavailable email deployment configuration on reads", async () => {
+  const f = await fixture();
+  const withoutEmail = createRoutinesService(f.repository as unknown as RoutinesRepository, {
+    dispatch() {},
+    secrets: { seal: f.seal, open: f.open },
+    publicApiOrigin: "https://api.example.test/",
+  });
+  expect((await withoutEmail.get(scope, f.routine.id)).ingress?.email).toEqual({
+    address: null,
+    unavailableReason: "EMAIL_NOT_CONFIGURED",
+  });
+  f.repository.get.mockResolvedValueOnce({ ...f.routine, triggers: { webhook: true } });
+  const result = await withoutEmail.get(scope, f.routine.id);
+  expect(result.ingress).toEqual({
+    webhook: {
+      url: `https://api.example.test/routines/${f.routine.id}/webhook`,
+      unavailableReason: null,
+    },
+    repository: { url: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" },
+    email: { address: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" },
+  });
+  expect(f.open).not.toHaveBeenCalled();
+});

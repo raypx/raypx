@@ -22,6 +22,25 @@ unique index keeps one running or waiting top-level Run per Space/Agent. Child
 Runs may perform model work concurrently; a separate fenced gate serializes
 their computer operations with the parent's operations.
 
+The first committed `run.state` event (the queued state) includes optional
+`trigger`, `routineId`, `provenanceKind` and `untrustedInput` fields, so live views
+can identify the origin without reading a snapshot. `provenanceKind` is null for
+member messages and scheduled/manual routines, and otherwise identifies webhook,
+email or repository input. Repository input keeps the existing `routine` trigger;
+the public trigger union does not change. Agent messages use `agent` and are
+untrusted. Delegated Runs inherit their parent's routine and inbound provenance,
+and retain the existing parent-Run attribution. These event fields contain no
+delivery body, saved prompt or credential. Snapshot Runs also expose the optional
+`untrustedInput` boolean; inbound provenance remains the existing safe selector.
+
+Agent list/detail projections and group projections add nullable
+`lastActivityAt`, taken from the event with the greatest conversation sequence.
+Unused conversations return null. The covering
+`conversation_events_activity_idx` makes each selected conversation's newest
+event lookup bounded independently of its history. Lists keep their existing
+creation order; consumers can use the activity timestamp without interpreting
+Agent configuration `updatedAt` as conversation activity.
+
 The first claim pins the Agent's opaque model ID and instructions. Model access
 pins a connection fingerprint over the deployment provider, exact model and
 credential selector, or the member connection identity, kind, endpoint, protocol
@@ -298,3 +317,15 @@ body loads still require current enablement. Page and learned-skill writes use
 attempt fences and durable mutation receipts in addition to effect outcomes.
 Stopping aborts remote transport through the same Run signal; completed effect
 outcomes are reused on resume while unknown outcomes retain the existing guard.
+
+List ordering remains unchanged when `lastActivityAt` is added. It selects the
+highest retained conversation event sequence, not the maximum wall-clock time;
+unused conversations and conversations whose entire event log was explicitly
+pruned report null. Ordinary message history reads do not prune that log.
+
+Backend Agent create/get/update/list responses always include `lastActivityAt` on
+both the Agent and its direct Conversation. Group projections and Conversation
+snapshot/history metadata include the same field. It is an ISO timestamp from the
+newest retained event, or null without a retained event; editing Agent or group
+metadata does not reset it. Transport schemas retain the additive optional field
+for existing consumers, while PostgreSQL projections always populate it.

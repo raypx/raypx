@@ -42,6 +42,8 @@ when issued. Space stream subscribe/ACK/unsubscribe and `space.event` frames ext
 approval schemas. Pending/answer/effects select a Space; settings use the session
 account. Settings return their revision and mode availability; updates require
 expectedRevision and return current settings on an explicit stale-edit conflict.
+`approvals.effectiveMode` selects a Space and returns only the caller's effective
+mode, override/account source and mode availability; it never returns rules.
 Auto is accepted only to return explicit unavailability. Card events carry
 bounded summaries and targets, never exact arguments or file/command content.
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
@@ -175,3 +177,7 @@ skill reads select a fresh Space; account skill/server availability and per-memb
 Agent selections never expose another member's resources. Only share creation
 returns a token; server credential headers are input-only. Public document serving
 is an independent HTTP route and never an API credential.
+
+`conversations.history` adds bounded initial/older windows with a scoped message
+boundary, separate from the event resume cursor. Existing snapshots keep their
+full-history behavior and add optional bounded participants and resolved approvals.

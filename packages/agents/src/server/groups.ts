@@ -18,6 +18,7 @@ import { SpaceNotFound } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { ConversationsRepository } from "../conversations.js";
 import { conversationView } from "../views.js";
+import { lastConversationActivity } from "./activity.js";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Selection = Pick<SpaceScope, "spaceId">;
@@ -51,14 +52,20 @@ export function createGroupsRepository(db: Pick<Database, "transaction">, hooks:
     scope: Selection,
     id: ConversationId,
   ): Promise<Conversation> {
-    const [row] = await tx.select().from(conversations).where(selected(scope, id));
+    const [row] = await tx
+      .select({ conversation: conversations, lastActivityAt: lastConversationActivity() })
+      .from(conversations)
+      .where(selected(scope, id));
     if (!row) throw new SpaceNotFound();
     const members = await tx
       .select({ id: participants.agentId })
       .from(participants)
       .where(participantSelection(scope, id))
       .orderBy(asc(participants.createdAt), asc(participants.agentId));
-    return { ...conversationView(row), agentIds: members.map((m) => m.id as AgentId) };
+    return {
+      ...conversationView(row.conversation, row.lastActivityAt),
+      agentIds: members.map((m) => m.id as AgentId),
+    };
   }
   async function requireAgent(tx: Transaction, scope: Selection, id: AgentId) {
     const [row] = await tx

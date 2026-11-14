@@ -59,12 +59,14 @@ export const spaceMembers = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     role: text("role", { enum: ["owner", "member"] }).notNull(),
     removedAt: date("removed_at"),
+    removalReason: text("removal_reason", { enum: ["removed", "left"] }),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.accountId] }),
     index("space_members_account_idx").on(table.accountId, table.spaceId),
     check("space_members_role_check", sql`${table.role} in ('owner', 'member')`),
+    check("space_members_removal_reason_check", sql`${table.removalReason} in ('removed', 'left')`),
   ],
 );
 
@@ -415,6 +417,24 @@ export const conversationMessages = pgTable(
     ),
   ],
 );
+/** Historical display names grant no membership and survive account removal. */
+export const conversationMemberNames = pgTable(
+  "conversation_member_names",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    accountId: text("account_id").notNull(),
+    displayName: text("display_name").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.conversationId, t.accountId] }),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+    check("conversation_member_names_bounds", sql`length(${t.displayName}) <= 200`),
+  ],
+);
 export const conversationMessageMentions = pgTable(
   "conversation_message_mentions",
   {
@@ -529,6 +549,12 @@ export const conversationRuns = pgTable(
       table.conversationId,
       table.state,
       table.messageSequence,
+    ),
+    index("conversation_runs_history_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.messageSequence,
+      table.id,
     ),
     index("conversation_runs_recovery_idx")
       .on(table.nextAttemptAt, table.leaseExpiresAt)
@@ -990,6 +1016,9 @@ export const approvalRequests = pgTable(
       table.runId,
       table.toolCallId,
     ),
+    index("approval_requests_resolved_idx")
+      .on(table.spaceId, table.conversationId, table.resolvedAt.desc(), table.id.desc())
+      .where(sql`${table.state} <> 'pending'`),
     index("approval_requests_pending_idx")
       .on(table.spaceId, table.memberAccountId, table.createdAt)
       .where(sql`${table.state} = 'pending'`),
@@ -1115,6 +1144,12 @@ export const conversationEvents = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.conversationId, table.sequence] }),
+    index("conversation_events_activity_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.sequence.desc(),
+      table.createdAt,
+    ),
     foreignKey({
       columns: [table.spaceId, table.conversationId],
       foreignColumns: [conversations.spaceId, conversations.id],

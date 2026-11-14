@@ -135,7 +135,7 @@ async function emit(
 ) {
   const [event] = await tx.insert(spaceEvents).values({ spaceId, kind, payload }).returning();
   await tx.execute(
-    sql`select pg_notify('raypx_space_events', ${JSON.stringify({ spaceId, sequence: event!.id, kind, ...(typeof payload.accountId === "string" ? { accountId: payload.accountId } : {}) })})`,
+    sql`select pg_notify('raypx_space_events', ${JSON.stringify({ spaceId, sequence: event!.id, kind, ...(typeof payload.accountId === "string" ? { accountId: payload.accountId } : {}), ...(payload.reason === "removed" || payload.reason === "left" ? { reason: payload.reason } : {}) })})`,
   );
 }
 function refusal(error: unknown) {
@@ -324,9 +324,12 @@ export function createSpaceManagement(db: Database, hooks: SpaceManagementHooks)
         );
       await tx
         .update(spaceMembers)
-        .set({ removedAt: clock() })
+        .set({ removedAt: clock(), removalReason: leaving ? "left" : "removed" })
         .where(and(eq(spaceMembers.spaceId, scope.spaceId), eq(spaceMembers.accountId, accountId)));
-      await emit(tx, scope.spaceId, "space.member.removed", { accountId });
+      await emit(tx, scope.spaceId, "space.member.removed", {
+        accountId,
+        reason: leaving ? "left" : "removed",
+      });
       return { accountId, pausedRoutines: paused };
     });
     await hooks.afterMemberRemoved?.(scope, accountId);
@@ -699,7 +702,7 @@ export function createSpaceManagement(db: Database, hooks: SpaceManagementHooks)
             .values({ spaceId: space.id, accountId, role: "member", createdAt: clock() })
             .onConflictDoUpdate({
               target: [spaceMembers.spaceId, spaceMembers.accountId],
-              set: { role: "member", removedAt: null, createdAt: clock() },
+              set: { role: "member", removedAt: null, removalReason: null, createdAt: clock() },
             })
             .returning();
           await tx

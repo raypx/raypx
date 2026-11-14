@@ -19,6 +19,7 @@ adapters, execution hosts and product views. Schemas are the single source of in
 - `/computers` owns vendor-neutral Computer state, generations, revisions, bounded
   member file previews and Space projections.
 - `/approvals` owns account modes, revisioned settings and mode availability,
+  member-safe effective mode/source projections,
   exact-tool rules, Space approval requests and bounded effect records.
   Auto reports the stable REVIEW_MODEL_NOT_CONFIGURED reason.
 - `/spaces` owns Space IDs, names, membership roles and pure membership matching,

@@ -60,3 +60,7 @@ new keys when needed and never resumes a routine implicitly.
 The worker locks due routines with SKIP LOCKED and the conversation counter before
 coalescing, so a pending catch-up cannot race its first start. `test:postgres`
 selects isolated PostgreSQL acceptance; ordinary test runs exclude that directory.
+
+Routine list/get projections include optional ingress metadata built from the
+injected public API origin and configured email domain. Missing deployment or
+trigger configuration has stable reasons; reads never open ingress secrets.

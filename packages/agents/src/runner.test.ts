@@ -575,6 +575,9 @@ async function toolFixture(db: ReturnType<typeof store>, mode: "ask" | "never" =
   const requests = new Map<string, ApprovalRequest>();
   const effects = new Map<string, Effect>();
   const repository: ApprovalsRepository = {
+    async getEffectiveMode() {
+      return { mode, source: "account_default" };
+    },
     async getSettings() {
       return { mode, rules: [], revision: 0 };
     },

@@ -90,7 +90,10 @@ export class ConversationStream {
           (notice.kind === "space.member.removed" && notice.accountId === peer.accountId)
         ) {
           // Abort ACK waiters synchronously; no further event can escape while checking admission.
-          this.fail(peer, 4003, "Subscription unavailable");
+          let reason = "SPACE_MEMBER_REMOVED";
+          if (notice.kind === "space.deleted") reason = "SPACE_DELETING";
+          else if (notice.reason === "left") reason = "SPACE_MEMBER_LEFT";
+          this.fail(peer, 4003, reason);
           continue;
         }
         const subscription = peer.spaceSubscriptions.get(notice.spaceId);
@@ -206,17 +209,29 @@ export class ConversationStream {
       auth.user.id !== peer.accountId ||
       auth.session.expiresAt.getTime() <= Date.now()
     ) {
-      this.fail(peer, 4001, "Authentication required");
+      this.fail(peer, 4001, "SESSION_ENDED");
       return undefined;
     }
     const scope = await this.options.spaces.resolve(auth.user.id, subscription.spaceId);
     if (subscription.controller.signal.aborted) return undefined;
     return scope;
   }
-  private rejected(peer: Connection, subscription: AuthorizedSubscription, error: unknown) {
+  private async rejected(peer: Connection, subscription: AuthorizedSubscription, error: unknown) {
     if (subscription.controller.signal.aborted) return;
-    if (error instanceof SpaceNotFound) this.fail(peer, 4003, "Subscription unavailable");
-    else if (error instanceof InvalidConversationCursor) this.fail(peer, 4000, "Invalid cursor");
+    if (error instanceof SpaceNotFound) {
+      let reason = error.subscriptionEndReason;
+      if (!reason) {
+        // Membership/deletion may have changed between admission and the scoped
+        // read. Recover its durable cause rather than reporting that race generically.
+        try {
+          await this.options.spaces.resolve(peer.accountId, subscription.spaceId);
+        } catch (current) {
+          if (current instanceof SpaceNotFound) reason = current.subscriptionEndReason;
+        }
+      }
+      if (!subscription.controller.signal.aborted)
+        this.fail(peer, 4003, reason ?? "Subscription unavailable");
+    } else if (error instanceof InvalidConversationCursor) this.fail(peer, 4000, "Invalid cursor");
     else this.fail(peer, 1013, "Stream unavailable");
   }
   private async check(peer: Connection) {
@@ -227,14 +242,14 @@ export class ConversationStream {
         try {
           if (await this.authorize(peer, subscription)) this.wake(peer, subscription);
         } catch (error) {
-          this.rejected(peer, subscription, error);
+          await this.rejected(peer, subscription, error);
         }
       }
       for (const subscription of peer.spaceSubscriptions.values()) {
         try {
           if (await this.authorize(peer, subscription)) this.wakeSpace(peer, subscription);
         } catch (error) {
-          this.rejected(peer, subscription, error);
+          await this.rejected(peer, subscription, error);
         }
       }
     } finally {

@@ -173,6 +173,8 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
     );
   return {
     ...env,
+    // AUTH_URL's development fallback is for authentication, not a published ingress address.
+    publicApiOrigin: normalizeTrustedOrigins([runtimeEnv.AUTH_URL ?? ""])[0] ?? null,
     allowedOrigins: normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(",")),
     ipAddressHeaders: list(env.AUTH_IP_HEADERS).map((v) => v.toLowerCase()),
     trustedProxies: list(env.AUTH_TRUSTED_PROXIES),

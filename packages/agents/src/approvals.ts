@@ -10,6 +10,7 @@ import {
   type RevisionedApprovalSettings,
   type ToolName,
   type Effect,
+  type EffectiveApprovalMode,
 } from "@raypx/core/approvals";
 import type { RunId } from "@raypx/core/conversation";
 import { StaleRunFenceError, type ExecutionRun } from "./conversations.js";
@@ -75,6 +76,10 @@ export interface ApprovalAnswer {
   allowTool?: boolean;
 }
 export interface ApprovalsRepository {
+  getEffectiveMode(
+    scope: SpaceScope,
+    defaultMode: ApprovalMode,
+  ): Promise<Pick<EffectiveApprovalMode, "mode" | "source">>;
   getSettings(accountId: string, defaultMode: ApprovalMode): Promise<RevisionedApprovalSettings>;
   getRunSettings(
     scope: SpaceScope,
@@ -130,6 +135,7 @@ export interface ApprovalsRepository {
   ): Promise<void>;
 }
 export interface ApprovalsService {
+  getEffectiveMode(scope: SpaceScope): Promise<EffectiveApprovalMode>;
   getSettings(accountId: string): Promise<ApprovalSettingsState>;
   updateSettings(accountId: string, input: ApprovalSettingsInput): Promise<ApprovalSettingsState>;
   listPending(scope: SpaceScope): Promise<ApprovalRequest[]>;
@@ -261,6 +267,14 @@ export function createApprovalsService(
       throw new EffectInProgressError(Date.parse(pending.createdAt) + EFFECT_INTENT_TIMEOUT_MS);
   }
   return {
+    async getEffectiveMode(scope) {
+      const value = await repository.getEffectiveMode(scope, defaultMode);
+      return {
+        spaceId: scope.spaceId,
+        ...value,
+        availableModes: settingsState({ mode: value.mode, rules: [], revision: 0 }).availableModes,
+      };
+    },
     getSettings: settings,
     async updateSettings(accountId, input) {
       if (input.mode === "auto") throw new ApprovalOperationError("MODE_UNAVAILABLE");

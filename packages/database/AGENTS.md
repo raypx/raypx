@@ -34,7 +34,8 @@ without replacing device records. Space-owned primary keys start with `space_id`
 Conversation references to Agents include it. A unique Space/Agent pair permits
 one direct Conversation. Features own scoped queries, API owns session admission.
 Space membership removal retains a `removed_at` tombstone so Computer creators and
-paused routine owners keep their composite keys. Only active rows authorize work.
+paused routine owners keep their composite keys. `removal_reason` distinguishes
+removal from voluntary leave for stream admission. Only active rows authorize work.
 `space_invitations` stores hashes, terminal states and same-Space retained inviter/
 consumer references. `space_settings_overrides` stores a deliberate Space approval
 mode exception. `space_audit` appends durable intent/outcome rows with historical
@@ -193,3 +194,8 @@ text; tombstones retain fenced mutation targets. Remote server secrets are encry
 children of account-owned metadata. Agent skill/server selections bind current
 member identity and Space through composite keys. Every new relationship cascades
 with its owning record; soft membership removal explicitly clears selections.
+
+`conversation_member_names` retains only bounded member display names under a
+same-Space conversation FK; account deletion does not erase historical attribution.
+Message-sequence history and resolved-approval indexes support bounded conversation
+windows independently of event replay retention.

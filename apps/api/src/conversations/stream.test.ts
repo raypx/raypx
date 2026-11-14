@@ -117,7 +117,7 @@ it("rechecks removal and session expiry while waiting for ACKs and rejects forge
   const g = await fixture();
   g.subscribe();
   g.signOut();
-  await expect.poll(() => g.close.mock.calls).toEqual([[4001, "Authentication required"]]);
+  await expect.poll(() => g.close.mock.calls).toEqual([[4001, "SESSION_ENDED"]]);
   const h = await fixture();
   h.append();
   h.subscribe();
@@ -218,6 +218,6 @@ it("actively closes a conversation-only peer on membership removal without a pol
   );
   await expect.poll(() => f.events.mock.calls.length).toBe(1);
   f.removeMemberActively();
-  expect(close).toHaveBeenCalledExactlyOnceWith(4003, "Subscription unavailable");
+  expect(close).toHaveBeenCalledExactlyOnceWith(4003, "SPACE_MEMBER_REMOVED");
   expect(frames).toEqual([{ type: "ready", version: 1 }]);
 });

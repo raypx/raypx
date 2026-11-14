@@ -72,6 +72,9 @@ pauses owned routines, removes their ingress secrets and connection selections,
 and returns the paused routines' IDs and shared names for reassignment. Historical
 Runs/messages remain. Rejoining restores active membership as `member` with a new
 join time; it does not resume routines or restore connection selections.
+The tombstone records whether departure was `removed` or `left`. The existing
+`space.member.removed` payload adds optional `reason` with those values. This
+distinction survives a lost notification and is cleared when the member rejoins.
 
 `spaces.createInvitation/invitations/cancelInvitation/cancelInvitations` are owner
 operations. A link contains 32 random bytes encoded as lowercase hex, returned once;
@@ -133,6 +136,9 @@ uses the Space override when present, otherwise its actor's account default; exa
 Allow/Block rules remain that actor's private rules. Changing an override affects
 the next policy resolution, including a running Run. Model defaults stay per
 account in this slice.
+Members read their own effective mode and its source through
+`approvals.effectiveMode({ spaceId })`; this does not grant owner settings access
+or expose another member's defaults or rules.
 
 ## Deployment administration
 
@@ -166,6 +172,11 @@ selectors and confer no access; audit rows cascade only with their Space.
 `space.renamed` records. PostgreSQL notifications actively close removed members'
 open streams, including conversation-only subscriptions, without waiting for a
 delivery or poll. Existing conversation event payloads retain their fields.
+WebSocket numeric close codes stay 4003 for lost Space access and 4001 for session
+loss. Their stable close reasons are `SPACE_MEMBER_REMOVED`, `SPACE_MEMBER_LEFT`,
+`SPACE_DELETING` and `SESSION_ENDED`. The first three are also recovered from
+fresh admission during repair polls. A selector with no membership history keeps
+the generic refusal, so it cannot reveal whether an unrelated Space exists.
 
 Group participation is a retained same-Space relation. Removing an Agent from a
 group cancels its Runs there, including descendants, while preserving message

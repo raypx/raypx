@@ -72,6 +72,7 @@ export interface SpaceNotice {
   sequence: number;
   kind: string;
   accountId?: string;
+  reason?: "removed" | "left";
 }
 export interface SpaceFanout {
   subscribe(listener: (notice: SpaceNotice) => void): Promise<() => Promise<void>>;

@@ -73,7 +73,9 @@ it("serializes lazy creation across connections and emits states transactionally
   const events = await connection.db
     .select()
     .from(conversationEvents)
-    .where(eq(conversationEvents.spaceId, scope.spaceId));
+    .where(eq(conversationEvents.spaceId, scope.spaceId))
+    // Without an order the planner may return rows through any index.
+    .orderBy(conversationEvents.sequence);
   expect(events.map((e) => [e.kind, (e.data as { state: string }).state])).toEqual([
     ["computer.state", "starting"],
     ["computer.state", "running"],

@@ -1,7 +1,7 @@
 import { agentSchema, conversationSchema, type Agent, type Conversation } from "@raypx/core/agents";
 import type { agents, conversations } from "@raypx/database/schema";
 
-export function agentView(row: typeof agents.$inferSelect): Agent {
+export function agentView(row: typeof agents.$inferSelect, lastActivityAt: Date | null): Agent {
   return agentSchema.parse({
     id: row.id,
     spaceId: row.spaceId,
@@ -12,9 +12,13 @@ export function agentView(row: typeof agents.$inferSelect): Agent {
     allowCrossSpaceMessages: row.allowCrossSpaceMessages,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    lastActivityAt: lastActivityAt?.toISOString() ?? null,
   });
 }
-export function conversationView(row: typeof conversations.$inferSelect): Conversation {
+export function conversationView(
+  row: typeof conversations.$inferSelect,
+  lastActivityAt: Date | null,
+): Conversation {
   return conversationSchema.parse({
     id: row.id,
     spaceId: row.spaceId,
@@ -24,5 +28,6 @@ export function conversationView(row: typeof conversations.$inferSelect): Conver
       ? { name: row.name, defaultResponderAgentId: row.defaultResponderAgentId }
       : {}),
     createdAt: row.createdAt.toISOString(),
+    lastActivityAt: lastActivityAt?.toISOString() ?? null,
   });
 }

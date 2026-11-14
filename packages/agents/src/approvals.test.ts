@@ -146,6 +146,10 @@ function fixture() {
     return updated;
   };
   const repository: ApprovalsRepository = {
+    async getEffectiveMode(currentScope, defaultMode) {
+      const current = await repository.getSettings(currentScope.member.accountId, defaultMode);
+      return { mode: current.mode, source: "account_default" };
+    },
     async getSettings(_accountId, defaultMode) {
       settings ??= { mode: defaultMode, rules: [], revision: 0 };
       return structuredClone(settings);

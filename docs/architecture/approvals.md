@@ -88,6 +88,13 @@ modes have a null reason. Updating requires `expectedRevision`. A stale edit
 returns `CONFLICT` with `APPROVAL_SETTINGS_CONFLICT` and the current settings in
 error data, without changing them. Remembering a new Allow rule from a card also
 advances the revision, so it cannot be overwritten by an older settings form.
+`approvals.effectiveMode({ spaceId })` is readable by every current member. It
+returns `{ spaceId, mode, source, availableModes }` for Runs the caller starts in
+that Space. `source` is `space_override` or `account_default`; an account without
+saved settings uses `APPROVAL_DEFAULT_MODE`. The same mode availability and reason
+codes apply as on account settings. This projection contains no rules, account
+default beneath an override, or other member's settings. Space override writes
+and `spaces.settings` remain owner-only.
 `approvals.pending`
 lists at most 100 pending requests addressed to the caller in a selected Space.
 `approvals.answer` accepts that Space, a request ID, `approved` or `denied`, and

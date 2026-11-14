@@ -15,6 +15,9 @@ import {
   liveReplySchema,
   memberMessageInputSchema,
   messageSchema,
+  conversationMemberSchema,
+  resolvedApprovalSummarySchema,
+  conversationHistoryCursorSchema,
 } from "@raypx/core/conversation";
 import { spaceEventSchema, spaceIdSchema } from "@raypx/core/spaces";
 import { exposeApiTo } from "./exposure.js";
@@ -44,7 +47,19 @@ export const conversationSnapshotSchema = z.strictObject({
   segments: z.array(replySegmentSchema),
   toolActivity: z.array(toolActivitySchema).max(100).optional(),
   toolActivityTruncated: z.boolean().optional(),
+  participants: z.array(conversationMemberSchema).max(100).optional(),
+  participantsTruncated: z.boolean().optional(),
+  resolvedApprovals: z.array(resolvedApprovalSummarySchema).max(100).optional(),
+  resolvedApprovalsTruncated: z.boolean().optional(),
   cursor,
+});
+const conversationHistorySchema = conversationSnapshotSchema.extend({
+  messages: z.array(messageSchema).max(100),
+  runs: z.array(runSchema).max(500),
+  segments: z.array(replySegmentSchema).max(500),
+  olderCursor: conversationHistoryCursorSchema.nullable(),
+  runsTruncated: z.boolean(),
+  segmentsTruncated: z.boolean(),
 });
 const session = oc.meta(exposeApiTo("renderer"), rpcAccess("session"));
 export const conversationsContract = {
@@ -86,6 +101,14 @@ export const conversationsContract = {
     )
     .output(conversationEventsSchema),
   snapshot: session.input(selection).output(conversationSnapshotSchema),
+  history: session
+    .input(
+      selection.extend({
+        limit: z.number().int().min(1).max(100).default(50),
+        before: conversationHistoryCursorSchema.optional(),
+      }),
+    )
+    .output(conversationHistorySchema),
 };
 const streamSelection = selection.extend({ version: z.literal(1) });
 export const conversationClientFrameSchema = z.discriminatedUnion("type", [

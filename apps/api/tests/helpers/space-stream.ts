@@ -44,14 +44,19 @@ export function spaceStreamFixture() {
       if (publish) notify({ spaceId: base.spaceId, sequence: entry.id, kind: entry.kind });
       return entry;
     },
-    removeMemberActively() {
+    removeMemberActively(reason: "removed" | "left" = "removed") {
       base.removeMember();
       notify({
         spaceId: base.spaceId,
         sequence: log.length + 1,
         kind: "space.member.removed",
         accountId: "member",
+        reason,
       });
+    },
+    deleteSpaceActively() {
+      base.removeMember();
+      notify({ spaceId: base.spaceId, sequence: 0, kind: "space.deleted" });
     },
   };
 }

@@ -100,6 +100,10 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
     return request;
   }
   const approvalRepository: ApprovalsRepository = {
+    async getEffectiveMode(scope, defaultMode) {
+      const current = await approvalRepository.getSettings(scope.member.accountId, defaultMode);
+      return { mode: current.mode, source: "account_default" };
+    },
     async getSettings(accountId, defaultMode) {
       if (!accountSettings.has(accountId))
         accountSettings.set(accountId, { mode: defaultMode, rules: [], revision: 0 });

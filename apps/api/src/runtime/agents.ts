@@ -142,6 +142,7 @@ export async function composeAgents(
       ...(environment.ROUTINE_EMAIL_DOMAIN
         ? { emailDomain: environment.ROUTINE_EMAIL_DOMAIN }
         : {}),
+      ...(environment.publicApiOrigin ? { publicApiOrigin: environment.publicApiOrigin } : {}),
     },
   );
   const routineWorker = createRoutineWorker(routines, environment.RUN_RECOVERY_INTERVAL_MS, () =>

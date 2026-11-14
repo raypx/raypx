@@ -79,7 +79,7 @@ member enables previews.
 `@raypx/core/conversation` defines member messages and the immutable
 `message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created`
 `card.resolved`, `tool.started` and `tool.finished` event variants. Events reference the stored message or segment; cursor
-reads hydrate that message for transport. Run state events contain only the Run ID, state and a stable failure code. Snapshots include messages, Runs and completed reply segments.
+reads hydrate that message for transport. Run state events contain the Run ID, state and a stable failure code. The first queued event also carries optional trigger, routine ID, provenance kind and untrusted-input metadata, without inbound content. Snapshots include messages, Runs and completed reply segments.
 `@raypx/agents/server` owns scoped conversation persistence and the small fanout
 subscriber port. The PostgreSQL repository accepts a transactional publisher;
 its default calls `pg_notify` inside the write transaction, so rollbacks publish
@@ -239,15 +239,15 @@ bound, session admission and ACK deadline, with independent cursors.
 The server sends `{ type: "space.event", spaceId, event }`; `conversationId` is
 absent. The event contains `{ id, spaceId, kind, payload, createdAt }`:
 
-| Kind                        | Payload               |
-| --------------------------- | --------------------- |
-| `space.member.joined`       | `{ accountId }`       |
-| `space.member.removed`      | `{ accountId }`       |
-| `space.member.role_changed` | `{ accountId, role }` |
-| `space.renamed`             | `{ name }`            |
-| `page.created`              | `{ pageId, version }` |
-| `page.updated`              | `{ pageId, version }` |
-| `page.deleted`              | `{ pageId, version }` |
+| Kind                        | Payload                                        |
+| --------------------------- | ---------------------------------------------- |
+| `space.member.joined`       | `{ accountId }`                                |
+| `space.member.removed`      | `{ accountId, reason? }` (`removed` or `left`) |
+| `space.member.role_changed` | `{ accountId, role }`                          |
+| `space.renamed`             | `{ name }`                                     |
+| `page.created`              | `{ pageId, version }`                          |
+| `page.updated`              | `{ pageId, version }`                          |
+| `page.deleted`              | `{ pageId, version }`                          |
 
 `id` is an ordered replay/ACK cursor, not a gap-free conversation sequence. Space
 events have indefinite retention and can also be read through `spaces.events`.
@@ -258,7 +258,13 @@ The membership transaction publishes a content-free `raypx_space_events` hint.
 Removal actively aborts all affected open sockets, including conversation-only
 subscriptions and idle ACK waiters. A deletion claim likewise closes the Space's
 subscribers. Both use 4003; the internal deletion hint is not a public event kind.
-The repair poll remains a fallback when notifications are missed.
+The repair poll remains a fallback when notifications are missed. Close code 4003
+adds stable reason strings `SPACE_MEMBER_REMOVED`, `SPACE_MEMBER_LEFT` and
+`SPACE_DELETING`; session loss retains 4001 with `SESSION_ENDED`. The persisted
+membership removal reason distinguishes leave from removal after a missed hint.
+An unknown selector still uses the existing generic refusal, so the close reason
+does not reveal a Space to a caller who never belonged to it. No frame or event
+variant is added.
 
 ## Group conversations
 
@@ -302,3 +308,49 @@ token and commit with their Page mutation. They use the existing ordered cursor,
 ACK, fresh membership and content-free fanout path. Remote tool activity uses the
 existing tool lifecycle variants with exact namespaced names, never credentials
 or remote results. No Run-state, failure or trigger variant is added in phase 5.
+
+## Bounded history and historical attribution
+
+`conversations.snapshot` keeps its existing full-history input and behavior for
+current clients. It adds optional `resolvedApprovals` (the newest 100, returned
+in resolution-time/ID order) and `resolvedApprovalsTruncated`. Each summary has
+`requestId`, `runId`, `toolCallId`, `outcome`, nullable `answeredByAccountId` and
+`resolvedAt`; it contains no arguments or tool result. Optional `participants`
+contains at most 100 conversation members, ordered by account ID, with
+`accountId`, `displayName` and `isMember`, plus `participantsTruncated`.
+
+Every message acceptance, including routine and Agent messages, remembers only
+the originating member's bounded display name in `conversation_member_names`.
+Current members use their current account name; departed/deleted accounts use
+the last name captured during their participation. These historical identities
+have a composite conversation foreign key and no account foreign key. They
+survive account removal, grant no access and never contain email. There is no
+backfill for earlier data.
+
+New clients use `conversations.history({ spaceId, conversationId, limit?, before? })`.
+`limit` defaults to 50 and is bounded to 1–100. Omitting `before` returns the newest
+window, ordered by ascending immutable message sequence. `olderCursor` is null
+at the beginning; otherwise it contains `{ spaceId, conversationId, beforeSequence }`.
+Pass it unchanged as `before` to fetch messages strictly older than that boundary.
+The boundary binds its Space/Conversation and never uses offsets or wall clocks:
+concurrent appends cannot duplicate or skip messages across older pages. A
+conversation deletion invalidates its history. Messages are never pruned by event
+retention.
+
+Each window contains only Runs rooted at those messages, including delegated
+children, ordered by message sequence/Run ID (at most 500, `runsTruncated`). A
+steering message belongs to its own message window; the existing Run remains
+with the message that started it. Segments from included Runs are ordered by
+sequence (at most 500, `segmentsTruncated`). Their newest 100 tool activities and
+resolved approvals retain the existing order and corresponding truncation flags.
+The bounded participant directory covers the conversation. Bounds are independent:
+a very active message may truncate its associated activity without removing or
+repeating the message boundary. These truncation flags describe omitted metadata,
+not another message page.
+
+Reads hold the counter and persist departed-actor cancellation before reading
+state and `cursor` together. `cursor` keeps its existing event replay meaning;
+`olderCursor` is exclusively a history boundary. Applying an older window must
+not replace an already newer event-stream cursor. No ACK, retention or stream
+resume semantics change. The new procedure leaves existing snapshot clients
+unchanged while giving adopting clients a bounded initial and older-history read.

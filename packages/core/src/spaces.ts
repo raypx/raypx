@@ -144,7 +144,10 @@ export const spaceEventSchema = z.discriminatedUnion("kind", [
     id: z.number().int().positive(),
     spaceId: spaceIdSchema,
     kind: z.literal("space.member.removed"),
-    payload: z.strictObject({ accountId: z.string() }),
+    payload: z.strictObject({
+      accountId: z.string(),
+      reason: z.enum(["removed", "left"]).optional(),
+    }),
     createdAt: z.iso.datetime(),
   }),
   z.strictObject({
@@ -170,7 +173,12 @@ export function belongsToSpace(member: SpaceMember, accountId: string, spaceId: 
 }
 
 export class SpaceNotFound extends Error {
-  constructor() {
+  constructor(
+    readonly subscriptionEndReason?:
+      | "SPACE_MEMBER_REMOVED"
+      | "SPACE_MEMBER_LEFT"
+      | "SPACE_DELETING",
+  ) {
     super("Space record not found");
     this.name = "SpaceNotFound";
   }

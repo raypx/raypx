@@ -21,6 +21,12 @@ boundary and what enforces it.
 Members who share a team computer share one trust boundary. Raypx does not promise
 isolation between them there.
 
+The member-readable effective approval-mode projection selects only the current
+caller's account default or the Space override. It returns mode availability and
+safe reason codes without private rules or other members' defaults. Stream
+departure reasons are available only for the caller's retained membership;
+unrelated Space selectors keep the generic refusal.
+
 ## Accounts and sessions
 
 - Better Auth owns sign-in: password, passkey, email code, optional social

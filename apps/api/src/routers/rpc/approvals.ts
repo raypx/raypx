@@ -42,6 +42,15 @@ export function createApprovalsHandlers({
   const write = withRpcPermission();
   const quota = limitAccount({ window: 60, max: 30 });
   return {
+    effectiveMode: os.approvals.effectiveMode
+      .use(read)
+      .handler(({ context, input }) =>
+        perform(context, async () =>
+          options.agentApprovals.getEffectiveMode(
+            await options.spaces.resolve(context.auth.user.id, input.spaceId),
+          ),
+        ),
+      ),
     pending: os.approvals.pending
       .use(read)
       .handler(({ context, input }) =>

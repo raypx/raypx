@@ -3,6 +3,8 @@ import type { Database } from "@raypx/database/connection";
 import {
   agents,
   conversations,
+  conversationMemberNames,
+  user,
   conversationCounters as counters,
   conversationMessages as messages,
   conversationRuns as runs,
@@ -27,7 +29,7 @@ import {
   type RoutineDeliveryOutcome,
   type RoutineEvent,
 } from "@raypx/core/routines";
-import { normalizeTaskJson } from "@raypx/core/task-text";
+import { normalizeTaskJson, taskText } from "@raypx/core/task-text";
 import { spaceMemberSchema } from "@raypx/core/spaces";
 import { resolveSpaceScope, type SpaceScope } from "@raypx/spaces/server";
 import type { RoutineAdmission, RoutineFire, RoutineSecret, RoutinesRepository } from "./types.js";
@@ -312,6 +314,28 @@ export function createRoutinesRepository(
       const sequence = counter.sequence + 1;
       const text = routine.prompt;
       // The saved prompt is the public message. Inbound content remains private to Run history and never enters event/log metadata.
+      const [account] = await tx
+        .select({ name: user.name })
+        .from(user)
+        .where(eq(user.id, row.ownerAccountId));
+      if (!account) throw new RoutineError("NOT_FOUND");
+      const displayName = taskText(account.name, 200);
+      await tx
+        .insert(conversationMemberNames)
+        .values({
+          spaceId: row.spaceId,
+          conversationId,
+          accountId: row.ownerAccountId,
+          displayName,
+        })
+        .onConflictDoUpdate({
+          target: [
+            conversationMemberNames.spaceId,
+            conversationMemberNames.conversationId,
+            conversationMemberNames.accountId,
+          ],
+          set: { displayName },
+        });
       await tx.insert(messages).values({
         spaceId: row.spaceId,
         conversationId,
@@ -339,6 +363,7 @@ export function createRoutinesRepository(
         routineId: row.id,
         routineDueAt: input.dueAt,
         routineTimezone: routine.triggers.schedule?.timezone ?? "UTC",
+        untrustedInput: inbound,
         inboundProvenance:
           input.kind === "webhook" || input.kind === "email" || input.kind === "repository"
             ? { kind: input.kind, routineId: row.id, deliveryId: input.id }
@@ -368,7 +393,15 @@ export function createRoutinesRepository(
           sequence: sequence + 1,
           kind: "run.state",
           runId,
-          data: { state: "queued", failureCode: null },
+          data: {
+            state: "queued",
+            failureCode: null,
+            agentId: row.agentId,
+            trigger,
+            routineId: row.id,
+            provenanceKind: inbound ? input.kind : null,
+            untrustedInput: inbound,
+          },
           createdAt: input.now,
         },
       ]);

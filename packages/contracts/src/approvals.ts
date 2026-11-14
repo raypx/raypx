@@ -6,6 +6,7 @@ import {
   approvalSettingsStateSchema,
   approvalRequestSchema,
   effectSchema,
+  effectiveApprovalModeSchema,
 } from "@raypx/core/approvals";
 import { runIdSchema } from "@raypx/core/conversation";
 import { spaceIdSchema } from "@raypx/core/spaces";
@@ -26,6 +27,7 @@ export const agentApprovalsContract = {
     )
     .output(approvalRequestSchema),
   settings: session.input(z.strictObject({})).output(approvalSettingsStateSchema),
+  effectiveMode: session.input(selection).output(effectiveApprovalModeSchema),
   updateSettings: session
     .input(
       z.strictObject({

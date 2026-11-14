@@ -3,6 +3,7 @@ import {
   routineInputSchema,
   type RoutineInput,
   type RoutineDeliveryOutcome,
+  type Routine,
 } from "@raypx/core/routines";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type {
@@ -59,9 +60,39 @@ export function createRoutinesService(
     dispatch(scope: SpaceScope, conversationId: string): void;
     secrets: RoutineSecretStore;
     emailDomain?: string;
+    publicApiOrigin?: string;
   },
 ): RoutinesService {
   const now = options.now ?? (() => new Date());
+  const publicApiOrigin = options.publicApiOrigin ? new URL(options.publicApiOrigin).origin : null;
+  if (publicApiOrigin && !/^https?:\/\//.test(publicApiOrigin))
+    throw new Error("Invalid public API origin");
+  function httpIngress(enabled: boolean, path: string): NonNullable<Routine["ingress"]>["webhook"] {
+    if (!enabled) return { url: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" };
+    if (!publicApiOrigin)
+      return { url: null, unavailableReason: "PUBLIC_API_ORIGIN_NOT_CONFIGURED" };
+    return { url: new URL(path, publicApiOrigin).href, unavailableReason: null };
+  }
+  function emailIngress(routine: Routine): NonNullable<Routine["ingress"]>["email"] {
+    if (!routine.triggers.email)
+      return { address: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" };
+    if (!options.emailDomain || !routine.emailAddress)
+      return { address: null, unavailableReason: "EMAIL_NOT_CONFIGURED" };
+    return { address: routine.emailAddress, unavailableReason: null };
+  }
+  function readProjection(routine: Routine): Routine {
+    return {
+      ...routine,
+      ingress: {
+        webhook: httpIngress(Boolean(routine.triggers.webhook), `/routines/${routine.id}/webhook`),
+        repository: httpIngress(
+          Boolean(routine.triggers.repository),
+          `/routines/${routine.id}/repository`,
+        ),
+        email: emailIngress(routine),
+      },
+    };
+  }
   function requireEmail(input: RoutineInput) {
     if (input.triggers.email && !options.emailDomain) throw new RoutineError("INVALID_INPUT");
   }
@@ -104,8 +135,9 @@ export function createRoutinesService(
     return { routine, webhookKey, repositorySecret };
   }
   return {
-    list: (scope, agentId, count) => repository.list(scope, agentId, limit(count)),
-    get: (scope, id) => repository.get(scope, id),
+    list: async (scope, agentId, count) =>
+      (await repository.list(scope, agentId, limit(count))).map(readProjection),
+    get: async (scope, id) => readProjection(await repository.get(scope, id)),
     async create(scope, rawInput) {
       const input = definition(rawInput);
       requireEmail(input);

@@ -138,19 +138,19 @@ export function createSpaceAccess(db: Database): SpaceAccess {
     async resolve(accountId: string, requestedSpaceId: SpaceId): Promise<SpaceScope> {
       await ensurePrivateSpace(accountId);
       const [row] = await db
-        .select({ member: spaceMembers })
+        .select({ member: spaceMembers, deletionClaimedAt: spaces.deletionClaimedAt })
         .from(spaceMembers)
         .innerJoin(spaces, eq(spaces.id, spaceMembers.spaceId))
         .where(
-          and(
-            eq(spaceMembers.spaceId, requestedSpaceId),
-            eq(spaceMembers.accountId, accountId),
-            isNull(spaceMembers.removedAt),
-            isNull(spaces.deletionClaimedAt),
-          ),
+          and(eq(spaceMembers.spaceId, requestedSpaceId), eq(spaceMembers.accountId, accountId)),
         )
         .limit(1);
       if (!row) throw new SpaceNotFound();
+      if (row.deletionClaimedAt) throw new SpaceNotFound("SPACE_DELETING");
+      if (row.member.removedAt)
+        throw new SpaceNotFound(
+          row.member.removalReason === "left" ? "SPACE_MEMBER_LEFT" : "SPACE_MEMBER_REMOVED",
+        );
       const member = memberView(row.member);
       return resolveSpaceScope(member, accountId, requestedSpaceId);
     },

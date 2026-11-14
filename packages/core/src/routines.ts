@@ -62,11 +62,26 @@ export const routineInputSchema = z.strictObject({
   enabled: z.boolean().default(true),
   triggers: routineTriggersSchema,
 });
+const httpIngressSchema = z.strictObject({
+  url: z.url().nullable(),
+  unavailableReason: z
+    .enum(["TRIGGER_NOT_CONFIGURED", "PUBLIC_API_ORIGIN_NOT_CONFIGURED"])
+    .nullable(),
+});
+const routineIngressSchema = z.strictObject({
+  webhook: httpIngressSchema,
+  repository: httpIngressSchema,
+  email: z.strictObject({
+    address: z.email().nullable(),
+    unavailableReason: z.enum(["TRIGGER_NOT_CONFIGURED", "EMAIL_NOT_CONFIGURED"]).nullable(),
+  }),
+});
 export const routineSchema = routineInputSchema.extend({
   id: routineIdSchema,
   spaceId: spaceIdSchema,
   ownerAccountId: z.string().min(1),
   emailAddress: z.email().nullable(),
+  ingress: routineIngressSchema.optional(),
   nextDueAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

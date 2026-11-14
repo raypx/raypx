@@ -311,6 +311,33 @@ export function createApprovalsRepository(
     });
   }
   return {
+    async getEffectiveMode(scope, defaultMode) {
+      return db.transaction(async (tx) => {
+        await activeSpace(tx, scope.spaceId);
+        const [member] = await tx
+          .select({ accountId: spaceMembers.accountId })
+          .from(spaceMembers)
+          .where(
+            and(
+              eq(spaceMembers.spaceId, scope.spaceId),
+              eq(spaceMembers.accountId, scope.member.accountId),
+              isNull(spaceMembers.removedAt),
+            ),
+          )
+          .for("share");
+        if (!member) throw new SpaceNotFound();
+        const [override] = await tx
+          .select({ mode: spaceSettingsOverrides.approvalMode })
+          .from(spaceSettingsOverrides)
+          .where(eq(spaceSettingsOverrides.spaceId, scope.spaceId));
+        if (override) return { mode: override.mode, source: "space_override" as const };
+        const [account] = await tx
+          .select({ mode: settings.mode })
+          .from(settings)
+          .where(eq(settings.accountId, scope.member.accountId));
+        return { mode: account?.mode ?? defaultMode, source: "account_default" as const };
+      });
+    },
     async getSettings(accountId, defaultMode) {
       return db.transaction(async (tx) => {
         await tx.insert(settings).values({ accountId, mode: defaultMode }).onConflictDoNothing();

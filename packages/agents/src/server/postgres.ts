@@ -21,6 +21,7 @@ import {
 
 import type { AgentConversation, AgentsRepository } from "../server.js";
 import { agentView, conversationView } from "../views.js";
+import { lastConversationActivity } from "./activity.js";
 function values(input: AgentInput) {
   const parsed = agentInputSchema.parse(input);
   return {
@@ -42,7 +43,11 @@ type AgentDatabase = Pick<
 export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
   async function get(scope: SpaceScope, id: AgentId): Promise<AgentConversation> {
     const [row] = await db
-      .select({ agent: agents, conversation: conversations })
+      .select({
+        agent: agents,
+        conversation: conversations,
+        lastActivityAt: lastConversationActivity(),
+      })
       .from(agents)
       .innerJoin(
         conversations,
@@ -55,13 +60,20 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
       .where(and(eq(agents.spaceId, scope.spaceId), eq(agents.id, id), isNull(agents.deletedAt)))
       .limit(1);
     if (!row) throw new SpaceNotFound();
-    return { agent: agentView(row.agent), conversation: conversationView(row.conversation) };
+    return {
+      agent: agentView(row.agent, row.lastActivityAt),
+      conversation: conversationView(row.conversation, row.lastActivityAt),
+    };
   }
   return {
     get,
     async list(scope: SpaceScope, limit: number): Promise<AgentConversation[]> {
       const rows = await db
-        .select({ agent: agents, conversation: conversations })
+        .select({
+          agent: agents,
+          conversation: conversations,
+          lastActivityAt: lastConversationActivity(),
+        })
         .from(agents)
         .innerJoin(
           conversations,
@@ -75,8 +87,8 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
         .orderBy(asc(agents.createdAt), asc(agents.id))
         .limit(Math.max(1, Math.min(100, limit)));
       return rows.map((row) => ({
-        agent: agentView(row.agent),
-        conversation: conversationView(row.conversation),
+        agent: agentView(row.agent, row.lastActivityAt),
+        conversation: conversationView(row.conversation, row.lastActivityAt),
       }));
     },
     async create(scope: SpaceScope, input: AgentInput): Promise<AgentConversation> {
@@ -89,15 +101,16 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
             id: agentIdSchema.parse(crypto.randomUUID()),
           })
           .returning();
-        const agent = agentView(row!);
+        const agent = agentView(row!, null);
         const conversation = directConversation(
           agent,
           conversationIdSchema.parse(crypto.randomUUID()),
         );
-        await tx
+        const [savedConversation] = await tx
           .insert(conversations)
-          .values({ ...conversation, createdAt: new Date(conversation.createdAt) });
-        return { agent, conversation };
+          .values({ ...conversation, createdAt: new Date(conversation.createdAt) })
+          .returning();
+        return { agent, conversation: conversationView(savedConversation!, null) };
       });
     },
     async update(scope: SpaceScope, id: AgentId, input: AgentInput): Promise<AgentConversation> {
@@ -111,8 +124,8 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
           )
           .returning();
         if (!row) throw new SpaceNotFound();
-        const [conversation] = await tx
-          .select()
+        const [saved] = await tx
+          .select({ conversation: conversations, lastActivityAt: lastConversationActivity() })
           .from(conversations)
           .where(
             and(
@@ -122,8 +135,11 @@ export function createAgentsRepository(db: AgentDatabase): AgentsRepository {
             ),
           )
           .limit(1);
-        if (!conversation) throw new SpaceNotFound();
-        return { agent: agentView(row), conversation: conversationView(conversation) };
+        if (!saved) throw new SpaceNotFound();
+        return {
+          agent: agentView(row, saved.lastActivityAt),
+          conversation: conversationView(saved.conversation, saved.lastActivityAt),
+        };
       });
     },
     async delete(scope: SpaceScope, id: AgentId): Promise<{ deleted: true }> {

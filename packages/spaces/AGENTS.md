@@ -18,7 +18,8 @@ directory and mutations, audit pagination and ordered Space events. Its PostgreS
 constructor requires transactional Run/card cancellation from API; construction
 performs no I/O. Membership mutations serialize on the Space row and recheck roles.
 Removed memberships retain `removed_at` tombstones for same-Space resource keys;
-only rows with no removal time grant access. Removal pauses retained routines and
+only rows with no removal time grant access. `removal_reason` preserves removed/left
+for stable stream closure after lost hints. Removal pauses retained routines and
 removes their credentials and connection selections. Invitations retain only token
 hashes. Audit appends intent/outcome rows, committing success with the mutation;
 missing audit storage blocks writes. LISTEN hints invalidate streams; event replay

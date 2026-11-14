@@ -66,6 +66,14 @@ export const approvalSettingsStateSchema = revisionedApprovalSettingsSchema.exte
   availableModes: z.array(approvalModeAvailabilitySchema).length(3),
 });
 export type ApprovalSettingsState = z.infer<typeof approvalSettingsStateSchema>;
+/** Only the requesting member's effective mode; account rules stay private. */
+export const effectiveApprovalModeSchema = z.strictObject({
+  spaceId: spaceIdSchema,
+  mode: approvalModeSchema,
+  source: z.enum(["space_override", "account_default"]),
+  availableModes: z.array(approvalModeAvailabilitySchema).length(3),
+});
+export type EffectiveApprovalMode = z.infer<typeof effectiveApprovalModeSchema>;
 export const approvalRequestIdSchema = z.string().min(1).max(128).brand<"ApprovalRequestId">();
 export const approvalStateSchema = z.enum([
   "pending",

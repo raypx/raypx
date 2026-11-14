@@ -6,6 +6,20 @@ import {
   getWorkerEnvironment,
 } from "./env.js";
 afterEach(() => vi.unstubAllEnvs());
+it("publishes only an explicitly configured HTTP API origin for routine ingress", () => {
+  expect(getApiEnvironment({}).publicApiOrigin).toBeNull();
+  expect(getApiEnvironment({ AUTH_URL: "" }).publicApiOrigin).toBeNull();
+  expect(getApiEnvironment({ AUTH_URL: "https://api.example.test/" }).publicApiOrigin).toBe(
+    "https://api.example.test",
+  );
+  expect(
+    getApiEnvironment({ AUTH_URL: "https://api.example.test/auth?private=marker#fragment" })
+      .publicApiOrigin,
+  ).toBe("https://api.example.test");
+  expect(
+    getApiEnvironment({ AUTH_URL: "https://private:credential@api.example.test" }).publicApiOrigin,
+  ).toBeNull();
+});
 it("defaults to every role and allows PostgreSQL-only split API and worker roles", () => {
   expect(getApiEnvironment({}).SERVER_ROLE).toBe("all");
   expect(getServerRole({})).toBe("all");

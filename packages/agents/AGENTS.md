@@ -133,3 +133,16 @@ stay outside observable drafts and are consumed on every submission. Optional `s
 `mcpServers` workspace ports provide per-member, per-Agent enablement; Native consumers
 need not implement them. Tool activity uses an optional Page opener; projections without
 a Page ID open only the Pages list; display targets are never parsed as Page IDs.
+
+Queued Run events expose optional trigger/routine/provenance-kind/untrusted-input
+metadata without inbound bodies. Snapshot Runs expose the same untrusted boolean.
+Agent create/get/update/list and every Conversation projection always populate
+nullable `lastActivityAt` from the newest sequenced event through the covering
+activity index. No retained event means null; metadata edits preserve activity.
+The wire field stays optional for existing consumers; list order remains unchanged.
+
+`conversations.history` reads bounded message-sequence windows (1–100 messages),
+with scoped exclusive older cursors independent of event replay cursors. Associated
+Runs/segments cap at 500, tool/approval summaries and member directories at 100,
+with explicit truncation flags. Snapshots retain their full-history default and
+add bounded resolved-answer and email-free historical member projections.

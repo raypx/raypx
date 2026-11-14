@@ -33,6 +33,9 @@ export function createSpaceFanout(url: string): SpaceFanout {
             sequence: value.sequence,
             kind: value.kind,
             ...(typeof value.accountId === "string" ? { accountId: value.accountId } : {}),
+            ...(value.reason === "removed" || value.reason === "left"
+              ? { reason: value.reason }
+              : {}),
           });
         } catch {
           // Missed or invalid hints are repaired by the normal database poll.

@@ -155,6 +155,44 @@ it("fires a durable occurrence once across two workers and coalesces a later pen
   expect(JSON.stringify(recorded)).not.toContain("saved-private-prompt");
 });
 
+it.each([undefined, "https://ingress.example.test/"])(
+  "reads complete ingress addresses without keys from isolated persisted routines (%s)",
+  async (publicApiOrigin) => {
+    const f = await fixture();
+    const created = await service.create(f.scope, f.input);
+    const reader = createRoutinesService(createRoutinesRepository(first.db), {
+      now: () => now,
+      dispatch() {},
+      secrets,
+      emailDomain: "routines.example.test",
+      ...(publicApiOrigin ? { publicApiOrigin } : {}),
+    });
+    try {
+      const result = await reader.get(f.scope, created.routine.id);
+      const listed = await reader.list(f.scope, f.agentId, 10);
+      const expected = {
+        webhook: {
+          url: publicApiOrigin ? `${publicApiOrigin}routines/${result.id}/webhook` : null,
+          unavailableReason: publicApiOrigin ? null : "PUBLIC_API_ORIGIN_NOT_CONFIGURED",
+        },
+        repository: {
+          url: publicApiOrigin ? `${publicApiOrigin}routines/${result.id}/repository` : null,
+          unavailableReason: publicApiOrigin ? null : "PUBLIC_API_ORIGIN_NOT_CONFIGURED",
+        },
+        email: { address: created.routine.emailAddress, unavailableReason: null },
+      };
+      expect(result.ingress).toEqual(expected);
+      expect(listed).toEqual([result]);
+      expect(JSON.stringify(result)).not.toContain(created.webhookKey);
+      expect(JSON.stringify(result)).not.toContain(created.repositorySecret);
+      expect(result).not.toHaveProperty("webhookDigest");
+      expect(result).not.toHaveProperty("secret");
+    } finally {
+      await first.db.delete(spaces).where(eq(spaces.id, f.spaceId));
+    }
+  },
+);
+
 it("pauses automatic work, allows an idempotent manual test and transfers edited ownership", async () => {
   const f = await fixture();
   const created = await service.create(f.scope, f.input);

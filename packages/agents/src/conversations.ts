@@ -14,6 +14,9 @@ import type {
   ReplySegment,
   ToolActivity,
   ToolOutcome,
+  ConversationMember,
+  ResolvedApprovalSummary,
+  ConversationHistoryCursor,
 } from "@raypx/core/conversation";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { Message as ModelMessage, ToolCall } from "@raypx/ai";
@@ -33,6 +36,15 @@ export interface ConversationSnapshot {
   cursor: number;
   toolActivity?: ToolActivity[];
   toolActivityTruncated?: boolean;
+  participants?: ConversationMember[];
+  participantsTruncated?: boolean;
+  resolvedApprovals?: ResolvedApprovalSummary[];
+  resolvedApprovalsTruncated?: boolean;
+}
+export interface ConversationHistory extends ConversationSnapshot {
+  olderCursor: ConversationHistoryCursor | null;
+  runsTruncated: boolean;
+  segmentsTruncated: boolean;
 }
 export interface ConversationsRepository {
   createGroup?(scope: SpaceScope, input: GroupConversationInput): Promise<Conversation>;
@@ -57,6 +69,12 @@ export interface ConversationsRepository {
     limit: number,
   ): Promise<ConversationEvents>;
   snapshot(scope: SpaceScope, id: ConversationId): Promise<ConversationSnapshot>;
+  history?(
+    scope: SpaceScope,
+    id: ConversationId,
+    limit: number,
+    before?: ConversationHistoryCursor,
+  ): Promise<ConversationHistory>;
   /** Maintenance only. Removes a prefix atomically with its replay boundary; messages remain. */
   retainAfter(scope: SpaceScope, id: ConversationId, through: number): Promise<void>;
 }
@@ -81,7 +99,7 @@ export interface ExecutionRun extends Run {
   computerId: string | null;
   computerGeneration: number | null;
   allowSharedMemory?: boolean;
-  untrustedInput?: boolean;
+  untrustedInput?: Run["untrustedInput"];
   originMessageId?: string | null;
   agentChainDepth?: number;
   delegationDepth?: number;

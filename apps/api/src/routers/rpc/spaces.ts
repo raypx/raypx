@@ -199,6 +199,13 @@ export function createSpaceHandlers({
             options.conversations.events(scope, input.conversationId, input.after, input.limit),
           ),
         ),
+      history: os.conversations.history
+        .use(read)
+        .handler(({ context, input }) =>
+          scoped(context, input.spaceId, (scope) =>
+            options.conversations.history!(scope, input.conversationId, input.limit, input.before),
+          ),
+        ),
       snapshot: os.conversations.snapshot
         .use(read)
         .handler(({ context, input }) =>

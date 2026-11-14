@@ -112,7 +112,29 @@ it("Agent: cannot read, overwrite or delete a foreign row using a valid scope in
   owned.push(a.space.id, b.space.id);
   const saved = await client.agents.create({ spaceId: a.space.id, agent });
   const inB = await client.agents.create({ spaceId: b.space.id, agent });
-  expect(await client.agents.list({ spaceId: b.space.id, limit: 1 })).toEqual([inB]);
+  const listed = await client.agents.list({ spaceId: b.space.id, limit: 1 });
+  expect(listed).toHaveLength(1);
+  expect(listed[0]).toMatchObject({
+    agent: { ...agent, id: inB.agent.id, spaceId: b.space.id, lastActivityAt: null },
+    conversation: {
+      id: inB.conversation.id,
+      spaceId: b.space.id,
+      agentId: inB.agent.id,
+      kind: "direct",
+      lastActivityAt: null,
+    },
+  });
+  const before = await client.agents.get({ spaceId: a.space.id, id: saved.agent.id });
+  expect(before).toMatchObject({
+    agent: { ...agent, id: saved.agent.id, spaceId: a.space.id, lastActivityAt: null },
+    conversation: {
+      id: saved.conversation.id,
+      spaceId: a.space.id,
+      agentId: saved.agent.id,
+      kind: "direct",
+      lastActivityAt: null,
+    },
+  });
   for (const request of [
     () => client.agents.get({ spaceId: b.space.id, id: saved.agent.id }),
     () =>
@@ -124,7 +146,7 @@ it("Agent: cannot read, overwrite or delete a foreign row using a valid scope in
     () => client.agents.delete({ spaceId: b.space.id, id: saved.agent.id }),
   ])
     await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
-  expect(await client.agents.get({ spaceId: a.space.id, id: saved.agent.id })).toEqual(saved);
+  expect(await client.agents.get({ spaceId: a.space.id, id: saved.agent.id })).toEqual(before);
 });
 
 it("Conversation: stays inside its Agent's Space for all projections and mutations", async () => {
@@ -133,11 +155,15 @@ it("Conversation: stays inside its Agent's Space for all projections and mutatio
   const b = await client.spaces.create({ name: "Conversation B" });
   owned.push(a.space.id, b.space.id);
   const saved = await client.agents.create({ spaceId: a.space.id, agent });
-  expect(saved.conversation).toMatchObject({
+  const expectedConversation = {
+    id: saved.conversation.id,
     spaceId: a.space.id,
     agentId: saved.agent.id,
     kind: "direct",
-  });
+    createdAt: saved.conversation.createdAt,
+    lastActivityAt: null,
+  };
+  expect(saved.conversation).toEqual(expectedConversation);
   expect(await client.agents.list({ spaceId: b.space.id })).toEqual([]);
   for (const id of [saved.agent.id, agentIdSchema.parse(saved.conversation.id)]) {
     for (const request of [
@@ -155,14 +181,14 @@ it("Conversation: stays inside its Agent's Space for all projections and mutatio
         agent: { ...agent, name: "Changed" },
       })
     ).conversation,
-  ).toEqual(saved.conversation);
+  ).toEqual(expectedConversation);
   actor = stranger;
   await connection.db
     .insert(spaceMembers)
     .values({ spaceId: a.space.id, accountId: stranger, role: "member" });
   expect(
     (await client.agents.get({ spaceId: a.space.id, id: saved.agent.id })).conversation,
-  ).toEqual(saved.conversation);
+  ).toEqual(expectedConversation);
   await client.agents.update({ spaceId: a.space.id, id: saved.agent.id, agent });
   await connection.db
     .delete(spaceMembers)
@@ -199,7 +225,14 @@ it("Message/Event: commits idempotently, snapshots at a cursor and refuses all r
   });
   const snapshot = await client.conversations.snapshot(selection);
   expect(snapshot).toMatchObject({
-    conversation: saved.conversation,
+    conversation: {
+      id: saved.conversation.id,
+      spaceId: a.space.id,
+      agentId: saved.agent.id,
+      kind: "direct",
+      createdAt: saved.conversation.createdAt,
+      lastActivityAt: expect.any(String),
+    },
     messages: [sent],
     runs: [{ state: "queued", model: agent.model }],
     segments: [],

@@ -136,3 +136,11 @@ rows bind parent and child Runs in that Conversation and retain pending results.
 Deleting a Space or Conversation cascades these records. Removing a membership or
 account cancels execution while retaining historical actors and delegation keys.
 Agent deletion retains an identity tombstone for surviving group attribution.
+
+Conversation display-name history lives in `conversation_member_names`, keyed by
+Space/Conversation/account with a composite conversation FK. Account IDs here are
+historical attribution rather than account or membership FKs. Deleting a member
+or account does not erase a name used by surviving conversation history. The
+last captured participation name is used after departure; active members resolve
+their current name. No email is copied. Snapshot directories and approval answer
+summaries are independently capped at 100.

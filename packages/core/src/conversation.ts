@@ -39,6 +39,28 @@ export const messageSchema = z.strictObject({
   createdAt: z.iso.datetime(),
 });
 export type Message = z.infer<typeof messageSchema>;
+export const conversationMemberSchema = z.strictObject({
+  accountId: z.string().min(1).max(128),
+  displayName: z.string().max(200),
+  isMember: z.boolean(),
+});
+export type ConversationMember = z.infer<typeof conversationMemberSchema>;
+export const resolvedApprovalSummarySchema = z.strictObject({
+  requestId: z.string().min(1).max(128),
+  runId: runIdSchema,
+  toolCallId: z.string().min(1).max(128),
+  outcome: z.enum(["approved", "denied", "expired", "cancelled"]),
+  answeredByAccountId: z.string().min(1).max(128).nullable(),
+  resolvedAt: z.iso.datetime(),
+});
+export type ResolvedApprovalSummary = z.infer<typeof resolvedApprovalSummarySchema>;
+/** A history boundary, independent of the event replay/ACK cursor. */
+export const conversationHistoryCursorSchema = z.strictObject({
+  spaceId: spaceIdSchema,
+  conversationId: conversationIdSchema,
+  beforeSequence: eventSequenceSchema,
+});
+export type ConversationHistoryCursor = z.infer<typeof conversationHistoryCursorSchema>;
 export const runStateSchema = z.enum([
   "queued",
   "running",
@@ -81,6 +103,7 @@ export const runSchema = z
     routineId: z.string().min(1).max(128).nullable().optional(),
     routineDueAt: z.iso.datetime().nullable().optional(),
     routineTimezone: z.string().nullable().optional(),
+    untrustedInput: z.boolean().optional(),
     inboundProvenance: z
       .strictObject({
         kind: z.enum(["webhook", "email", "repository"]),
@@ -184,6 +207,10 @@ export const conversationEventSchema = z
       runId: runIdSchema,
       state: runStateSchema,
       failureCode: runFailureSchema.nullable(),
+      trigger: runSchema.shape.trigger.optional(),
+      routineId: z.string().min(1).max(128).nullable().optional(),
+      provenanceKind: z.enum(["webhook", "email", "repository"]).nullable().optional(),
+      untrustedInput: z.boolean().optional(),
     }),
     z.strictObject({
       ...eventFields,

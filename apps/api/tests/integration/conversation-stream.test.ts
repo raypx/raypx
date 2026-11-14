@@ -39,6 +39,7 @@ async function fixture(
     const socket = new WebSocket(url);
     const frames: ConversationServerFrame[] = [];
     const closed: number[] = [];
+    const closeReasons: string[] = [];
     socket.addEventListener("message", (event) => {
       const frame = conversationServerFrameSchema.parse(JSON.parse(String(event.data)));
       frames.push(frame);
@@ -53,7 +54,10 @@ async function fixture(
           }),
         );
     });
-    socket.addEventListener("close", (event) => closed.push(event.code));
+    socket.addEventListener("close", (event) => {
+      closed.push(event.code);
+      closeReasons.push(event.reason);
+    });
     cleanups.push(async () => {
       socket.close();
     });
@@ -66,6 +70,7 @@ async function fixture(
       socket,
       frames,
       closed,
+      closeReasons,
       sequences,
       ack(sequence: number) {
         socket.send(JSON.stringify({ ...base, type: "ack", sequence }));
@@ -138,8 +143,32 @@ it("actively closes an idle loopback /events subscription on removal before its 
   await expect.poll(() => state.events.mock.calls.length).toBe(1);
   state.removeMemberActively();
   await expect.poll(() => peer.closed, { timeout: 1_000 }).toContain(4003);
+  expect(peer.closeReasons).toEqual(["SPACE_MEMBER_REMOVED"]);
   expect(peer.sequences()).toEqual([]);
 });
+
+it.each([
+  { reason: "SPACE_MEMBER_REMOVED", code: 4003, change: "removed" },
+  { reason: "SPACE_MEMBER_LEFT", code: 4003, change: "left" },
+  { reason: "SPACE_DELETING", code: 4003, change: "deleting" },
+  { reason: "SESSION_ENDED", code: 4001, change: "session" },
+] as const)(
+  "closes loopback /events with $reason and its existing code",
+  async ({ reason, code, change }) => {
+    const state = spaceStreamFixture();
+    const f = await fixture(state);
+    const peer = await f.connect();
+    peer.socket.send(
+      JSON.stringify({ version: 1, type: "space.subscribe", spaceId: state.spaceId, after: 0 }),
+    );
+    await expect.poll(() => state.events.mock.calls.length).toBeGreaterThan(0);
+    if (change === "deleting") state.deleteSpaceActively();
+    else if (change === "session") state.signOut();
+    else state.removeMemberActively(change);
+    await expect.poll(() => peer.closed).toEqual([code]);
+    expect(peer.closeReasons).toEqual([reason]);
+  },
+);
 
 it("delivers ordered Space changes additively alongside conversation subscriptions", async () => {
   const state = spaceStreamFixture();

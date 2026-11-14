@@ -135,6 +135,18 @@ bytes is refused. Webhooks require `Authorization: Bearer <key>` and
 be created. The relay POSTs a normalized address, sender, message ID, text and
 optional subject. Raypx does not run SMTP.
 
+`routines.list` and `routines.get` add optional `ingress` metadata. Webhook and
+repository entries return complete `/routines/:id/webhook` and
+`/routines/:id/repository` URLs from the explicitly configured `AUTH_URL` origin;
+the authentication localhost fallback is never advertised as public ingress.
+An absent origin returns `url: null` with
+`PUBLIC_API_ORIGIN_NOT_CONFIGURED`. Email returns the stored complete inbound
+address when `ROUTINE_EMAIL_DOMAIN` is configured, or `address: null` with
+`EMAIL_NOT_CONFIGURED`. A missing trigger returns `TRIGGER_NOT_CONFIGURED`.
+Available entries have a null `unavailableReason`. These read projections never
+return ingress keys, signing secrets or the relay credential. No new deployment
+environment variable is required.
+
 Repository requests use `X-Delivery-Id`, `X-Event-Kind` and
 `X-Routine-Signature: sha256=<hex>`. Sign the UTF-8 bytes of
 `deliveryId + "\n" + eventKind + "\n" + rawJsonBody` with HMAC-SHA-256. This binds

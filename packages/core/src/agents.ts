@@ -22,6 +22,7 @@ export const agentSchema = agentInputSchema.extend({
   spaceId: spaceIdSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  lastActivityAt: z.iso.datetime().nullable().optional(),
 });
 export type Agent = z.infer<typeof agentSchema>;
 export const conversationSchema = z.strictObject({
@@ -33,6 +34,7 @@ export const conversationSchema = z.strictObject({
   agentIds: z.array(agentIdSchema).optional(),
   defaultResponderAgentId: agentIdSchema.nullable().optional(),
   createdAt: z.iso.datetime(),
+  lastActivityAt: z.iso.datetime().nullable().optional(),
 });
 export type Conversation = z.infer<typeof conversationSchema>;
 
