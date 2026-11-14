@@ -19,10 +19,12 @@ import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
 import {
   normalizeTrustedOrigins,
+  usableEmail,
   type AuthSession,
   type AuthUser,
   type SocialProvider,
 } from "@raypx/core/auth";
+import { setSessionCookie } from "better-auth/cookies";
 import { desktopLogin, desktopOAuthHash } from "./desktop-login.js";
 import { authPolicy } from "./policy.js";
 
@@ -34,6 +36,7 @@ export interface AuthMailInput {
   siteName?: string;
 }
 export interface AuthMailer {
+  available?(): Promise<boolean>;
   sendVerification(input: AuthMailInput): Promise<void>;
   sendPasswordReset(input: AuthMailInput): Promise<void>;
   sendSignInCode?(input: Omit<AuthMailInput, "url"> & { code: string }): Promise<void>;
@@ -62,6 +65,7 @@ export interface CreateAuthOptions {
   /** Optional shared cache for sessions and rate limits; the database remains the record. */
   secondaryStorage?: AuthSecondaryStorage;
   /** Checked when any sign-in method is about to create a user. Rejects while it fails. */
+  registrationManaged?: boolean;
   registrationAllowed?: () => Promise<boolean>;
   /** Display name for authentication mail; resolve to a fallback rather than throwing. */
   siteName?: () => Promise<string>;
@@ -80,9 +84,11 @@ export function createAuth({
   config,
   secondaryStorage,
   registrationAllowed,
+  registrationManaged,
   siteName,
   revokeDeviceConnectors,
 }: CreateAuthOptions) {
+  const mailAvailable = () => mailer.available?.() ?? Promise.resolve(true);
   const mailSite = async () => (siteName ? { siteName: await siteName() } : {});
   const origins = normalizeTrustedOrigins([config.baseURL, ...config.trustedOrigins]);
   const name = (value: string) => {
@@ -120,6 +126,16 @@ export function createAuth({
   const auth = betterAuth({
     appName: "Raypx",
     database,
+    user: {
+      additionalFields: {
+        emailVerificationSkipped: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+          input: false,
+        },
+      },
+    },
     baseURL: config.baseURL,
     basePath: "/api/auth",
     secret: config.secret,
@@ -183,7 +199,7 @@ export function createAuth({
         idTokenExpiresIn: 60,
         storeTokens: { hash: desktopOAuthHash },
       }),
-      desktopLogin(issuer, origins, consent),
+      desktopLogin(issuer, origins, consent, mailAvailable),
       admin({ defaultRole: "member", ac: accountAccessControl, roles: accountRoles }),
       {
         id: "raypx-social-providers",
@@ -200,6 +216,41 @@ export function createAuth({
     ],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === "/sign-in/email" && (await mailAvailable())) {
+          const email = typeof ctx.body?.email === "string" ? ctx.body.email.toLowerCase() : "";
+          const account = email && (await ctx.context.internalAdapter.findUserByEmail(email));
+          if (account && !usableEmail(projectAuthUser(account.user))) {
+            // Check credentials first so verification state is not an account oracle.
+            const credential = (
+              await ctx.context.internalAdapter.findAccounts(account.user.id)
+            ).find((item) => item.providerId === "credential");
+            if (
+              credential?.password &&
+              typeof ctx.body?.password === "string" &&
+              (await ctx.context.password.verify({
+                hash: credential.password,
+                password: ctx.body.password,
+              }))
+            )
+              throw new APIError("FORBIDDEN", {
+                code: "EMAIL_NOT_VERIFIED",
+                message: "Verify your email before signing in",
+              });
+          }
+        }
+        if (
+          [
+            "/send-verification-email",
+            "/request-password-reset",
+            "/email-otp/send-verification-otp",
+          ].includes(ctx.path) &&
+          !(await mailAvailable())
+        )
+          throw new APIError("BAD_REQUEST", {
+            code: "MAIL_NOT_CONFIGURED",
+            message:
+              "Email delivery is unavailable; use an administrator reset link or a copied invitation link",
+          });
         if (
           ((ctx.request || ctx.headers) &&
             ctx.path.startsWith("/admin/") &&
@@ -249,7 +300,12 @@ export function createAuth({
           const user =
             session &&
             projectAuthUser(await ctx.context.internalAdapter.findUserById(session.user.id));
-          if (!user?.emailVerified || user.banned || session?.session.impersonatedBy)
+          if (
+            !user ||
+            (!usableEmail(user) && (await mailAvailable())) ||
+            user.banned ||
+            session?.session.impersonatedBy
+          )
             throw new APIError("UNAUTHORIZED", { message: "Authentication required" });
           if (ctx.path === "/unlink-account" || ctx.path === "/passkey/delete-passkey") {
             const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
@@ -277,7 +333,8 @@ export function createAuth({
           const profile = projectAuthUser(user);
           if (
             !session ||
-            !profile?.emailVerified ||
+            !profile ||
+            (!usableEmail(profile) && (await mailAvailable())) ||
             profile.banned ||
             profile.id !== session.session.userId ||
             ("impersonatedBy" in session.session && session.session.impersonatedBy)
@@ -344,6 +401,42 @@ export function createAuth({
         }
       }),
       after: createAuthMiddleware(async (ctx) => {
+        const returned = ctx.context.returned;
+        if (
+          ctx.path === "/get-session" &&
+          returned &&
+          typeof returned === "object" &&
+          "user" in returned
+        ) {
+          const profile = projectAuthUser(returned.user);
+          if (profile && !usableEmail(profile)) {
+            if (await mailAvailable()) return ctx.json(null);
+            return ctx.json({
+              ...returned,
+              user: { ...(returned.user as object), emailVerificationSkipped: true },
+            });
+          }
+        }
+        if (
+          ctx.path === "/sign-up/email" &&
+          returned &&
+          typeof returned === "object" &&
+          "user" in returned
+        ) {
+          const candidate = returned.user as { id?: string };
+          const actual =
+            candidate?.id && (await ctx.context.internalAdapter.findUserById(candidate.id));
+          if (actual && (usableEmail(projectAuthUser(actual)) || !(await mailAvailable()))) {
+            const session = await ctx.context.internalAdapter.createSession(
+              actual.id,
+              ctx.body?.rememberMe === false,
+            );
+            if (!session)
+              throw new APIError("INTERNAL_SERVER_ERROR", { message: "Session unavailable" });
+            await setSessionCookie(ctx, { session, user: actual });
+            return ctx.json({ ...returned, token: session.token });
+          }
+        }
         const revocation = (
           ctx.context as typeof ctx.context & {
             hostRevocation?: { userId: string; sessionId?: string };
@@ -363,10 +456,14 @@ export function createAuth({
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      requireEmailVerification: false,
+      autoSignIn: false,
       minPasswordLength: authPolicy.passwordMinLength,
       maxPasswordLength: authPolicy.passwordMaxLength,
       revokeSessionsOnPasswordReset: true,
+      onPasswordReset: async ({ user }) => {
+        await revokeDeviceConnectors?.(user.id);
+      },
       customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
         ...coreFields,
         role: "member",
@@ -387,14 +484,16 @@ export function createAuth({
     },
     emailVerification: {
       sendOnSignUp: true,
-      sendVerificationEmail: async ({ user, url }, request) =>
-        mailer.sendVerification({
+      sendVerificationEmail: async ({ user, url }, request) => {
+        if (user.emailVerified || !(await mailAvailable())) return;
+        await mailer.sendVerification({
           email: user.email,
           name: user.name,
           url,
           ...recipientLocale(request),
           ...(await mailSite()),
-        }),
+        });
+      },
     },
     databaseHooks: {
       user: {
@@ -405,7 +504,15 @@ export function createAuth({
                 code: "REGISTRATION_DISABLED",
                 message: "Registration is closed",
               });
-            return { data: { ...user, name: name(user.name) } };
+            return {
+              data: {
+                ...user,
+                name: name(user.name),
+                ...(!registrationManaged && mailer.available
+                  ? { emailVerificationSkipped: !(await mailAvailable()) }
+                  : {}),
+              },
+            };
           },
         },
         update: {
@@ -464,6 +571,7 @@ export function projectAuthUser(value: unknown): AuthUser | null {
     email: v.email,
     name: v.name,
     emailVerified: v.emailVerified,
+    ...(v.emailVerificationSkipped === true ? { emailVerificationSkipped: true } : {}),
     role: v.role,
     banned: v.banned,
     ...(typeof v.image === "string" || v.image === null ? { image: v.image } : {}),
@@ -473,6 +581,7 @@ export function projectAuthUser(value: unknown): AuthUser | null {
 export async function readAuthSession(
   auth: Pick<Auth, "api" | "$context">,
   headers: Headers,
+  mailAvailable?: () => Promise<boolean>,
 ): Promise<AuthSession | null> {
   const result = await auth.api.getSession({ headers, query: { disableCookieCache: true } });
   if (!result || ("impersonatedBy" in result.session && result.session.impersonatedBy)) return null;
@@ -480,8 +589,10 @@ export async function readAuthSession(
     await (await auth.$context).internalAdapter.findUserById(result.user.id),
   );
   if (!user || user.banned || user.id !== result.session.userId) return null;
+  const configured = mailAvailable ? await mailAvailable() : true;
+  if (!usableEmail(user) && configured) return null;
   return {
-    user,
+    user: configured ? user : { ...user, emailVerificationSkipped: true },
     session: {
       id: result.session.id,
       userId: result.session.userId,

@@ -41,5 +41,6 @@
   "requestId": "Request ID",
   "errorCode": "Error code",
   "before": "Before",
-  "after": "After"
+  "after": "After",
+  "passwordResetLink": "Issue password reset link"
 }

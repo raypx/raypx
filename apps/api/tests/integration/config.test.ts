@@ -99,6 +99,9 @@ describe("administrator configuration", () => {
     expect(await publicConfig.json()).toEqual({
       siteName: configurationDefaults.siteName,
       registrationEnabled: configurationDefaults.registrationEnabled,
+      bootstrap: false,
+      setupTokenRequired: false,
+      mailConfigured: true,
     });
     expect(f.repository.update).not.toHaveBeenCalled();
   });
@@ -278,6 +281,9 @@ describe("administrator configuration", () => {
     expect(await f.client().public({})).toEqual({
       siteName: "My workspace",
       registrationEnabled: false,
+      bootstrap: false,
+      setupTokenRequired: false,
+      mailConfigured: true,
     });
   });
 

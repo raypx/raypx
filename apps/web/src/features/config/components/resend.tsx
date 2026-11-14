@@ -1,3 +1,4 @@
+import { TestEmail } from "./test-email.js";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { resendUpdateSchema, type ResendSettingsSnapshot } from "@raypx/contracts/api";
@@ -109,6 +110,7 @@ function ResendForm({
     onSuccess: (snapshot) => {
       accept(snapshot);
       setNotice(true);
+      void cache.invalidateQueries({ queryKey: ["configuration", "public"] });
       save.reset();
     },
   });
@@ -150,7 +152,7 @@ function ResendForm({
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6">
-        <h2 className="font-medium">Resend</h2>
+        <h2 className="font-medium">{t("title")}</h2>
         <Badge variant={status === "enabled" ? "secondary" : "outline"}>{t(status)}</Badge>
       </div>
       <fieldset disabled={busy} className="min-w-0 px-4 pt-3 pb-5 sm:px-6">
@@ -247,6 +249,7 @@ function ResendForm({
           edited();
         }}
       />
+      <TestEmail disabled={busy || dirty || status !== "enabled"} />
       {(save.isError || reload.isError) && (
         <div className="flex flex-col items-start gap-2 border-t border-border px-4 py-4 sm:px-6">
           <Alert variant="destructive">

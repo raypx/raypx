@@ -28,6 +28,7 @@ export const user = pgTable(
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
     emailVerified: boolean("email_verified").notNull().default(false),
+    emailVerificationSkipped: boolean("email_verification_skipped").notNull().default(false),
     image: text("image"),
     role: text("role").notNull().default("member"),
     banned: boolean("banned").notNull().default(false),
@@ -38,6 +39,11 @@ export const user = pgTable(
   },
   (table) => [index("user_created_at_idx").on(table.createdAt)],
 );
+/** Deployment lifetime marker; deliberately independent of user deletion. */
+export const accountBootstrap = pgTable("account_bootstrap", {
+  id: text("id").primaryKey(),
+  completedAt: date("completed_at"),
+});
 export const spaces = pgTable("spaces", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -85,6 +91,8 @@ export const spaceInvitations = pgTable(
     status: text("status", { enum: ["open", "expired", "cancelled", "consumed"] })
       .notNull()
       .default("open"),
+    // One invitation admits at most one new account before explicit Space acceptance.
+    registrationAccountId: text("registration_account_id"),
     consumedByAccountId: text("consumed_by_account_id"),
     consumedAt: date("consumed_at"),
     createdAt: date("created_at").notNull().defaultNow(),
@@ -2704,6 +2712,7 @@ export const memberConversationViews = pgTable(
 );
 
 export const schema = {
+  accountBootstrap,
   conversationAttachments,
   conversationAttachmentDeliveries,
   deviceMemberFileReads,

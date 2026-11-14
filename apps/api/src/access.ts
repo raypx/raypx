@@ -1,4 +1,5 @@
 import { accessForAssignedRoles, accessForRole, type AccountAccess } from "@raypx/account/access";
+import { usableEmail } from "@raypx/core/auth";
 import type { AuthSession } from "@raypx/core/auth";
 
 export type AccessPolicy = (auth: AuthSession | null) => AccountAccess;
@@ -7,7 +8,8 @@ export type AccessPolicy = (auth: AuthSession | null) => AccountAccess;
 export function createAccessPolicy(): AccessPolicy {
   return (auth) => {
     if (
-      !auth?.user.emailVerified ||
+      !auth ||
+      !usableEmail(auth.user) ||
       auth.user.banned ||
       auth.session.userId !== auth.user.id ||
       !(auth.session.expiresAt.getTime() > Date.now())

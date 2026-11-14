@@ -46,3 +46,12 @@ it("rejects insecure origins, credentials and paths before sending credentials",
   ])
     expect(() => serverOrigin(url)).toThrow("EXPO_PUBLIC_API_URL must be an HTTPS origin");
 });
+
+it("admits an unverified no-mail account after mail configuration without treating it as verified", () => {
+  const user = { emailVerified: false, emailVerificationSkipped: true };
+  expect(sessionAccess({ ...state, data: { ...session, user } }, now)).toBe("signedIn");
+  expect(user.emailVerified).toBe(false);
+  expect(sessionAccess({ ...state, data: { ...session, user }, isRefetching: true }, now)).toBe(
+    "pending",
+  );
+});

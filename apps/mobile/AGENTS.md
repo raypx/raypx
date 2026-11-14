@@ -166,3 +166,5 @@ limit; only authentication uses the centered 420px form. Notifications group sou
 by Space with relative times. Attachment thumbnails remain disposable native state.
 Files shares complete bounded reads through a cache-only file, deleting it afterwards;
 truncated previews explain why full download is unavailable.
+
+Native signup and password recovery remain Web handoffs, including setup token/invitation states. Session admission accepts the server no-mail exemption without displaying the email as verified. Account offers a dismissible verification reminder when delivery exists; native device acceptance remains separate.

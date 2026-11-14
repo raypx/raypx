@@ -5,6 +5,8 @@ export type AuthErrorKey =
   | "passwordCompromised"
   | "registrationDisabled"
   | "mailUnavailable"
+  | "invalidSetupToken"
+  | "invalidInvitation"
   | "invalidCredentials"
   | "emailNotVerified"
   | "emailTaken"
@@ -28,7 +30,7 @@ export type AuthActionResult =
   | { status: "ignored" }
   | { status: "error"; error: AuthActionError };
 
-export type AuthActionSuccess = () => void | Promise<unknown>;
+export type AuthActionSuccess = (outcome?: { signedIn: boolean }) => void | Promise<unknown>;
 
 export interface AuthActionResponse {
   error?: { code?: string | undefined; status?: number | undefined } | null | undefined;
@@ -85,6 +87,8 @@ export interface PasswordChangeClient {
 function authErrorKey({ code, status }: NonNullable<AuthActionResponse["error"]>): AuthErrorKey {
   if (status === 429 || code === "TOO_MANY_REQUESTS") return "rateLimited";
   if (code === "REGISTRATION_DISABLED") return "registrationDisabled";
+  if (code === "INVALID_SETUP_TOKEN") return "invalidSetupToken";
+  if (code === "INVALID_INVITATION") return "invalidInvitation";
   if (code === "MAIL_NOT_CONFIGURED") return "mailUnavailable";
   if (code === "INVALID_EMAIL_OR_PASSWORD" || code === "INVALID_PASSWORD")
     return "invalidCredentials";
@@ -165,10 +169,21 @@ function useAuthRequest() {
               : { retryAfterSeconds: result.retryAfterSeconds }),
           });
         try {
-          await onSuccess?.();
+          const data = result.data;
+          const outcome = {
+            signedIn:
+              !!data &&
+              typeof data === "object" &&
+              "token" in data &&
+              typeof data.token === "string",
+          };
+          completion.current = onSuccess ? () => onSuccess(outcome) : null;
+          if (outcome.signedIn) await onSuccess?.(outcome);
+          else await onSuccess?.();
+          completion.current = null;
         } catch {
           // The authentication succeeded; a failed follow-up must not repeat it.
-          completion.current = onSuccess ?? null;
+          // Retain only the safe completion outcome, never the auth response.
           return fail({ kind: "completion" });
         }
         return { status: "success" };
@@ -228,7 +243,10 @@ export function useAuthActions({
         return result;
       }, onSuccess);
     },
-    signUp(input: Credentials & { name: string }, onSuccess?: AuthActionSuccess) {
+    signUp(
+      input: Credentials & { name: string; setupToken?: string; invitation?: string },
+      onSuccess?: AuthActionSuccess,
+    ) {
       return run(
         () =>
           client.signUp.email({
@@ -236,7 +254,14 @@ export function useAuthActions({
             email: input.email.trim(),
             password: input.password,
             callbackURL,
-            fetchOptions,
+            fetchOptions: {
+              ...fetchOptions,
+              headers: {
+                ...fetchOptions.headers,
+                ...(input.setupToken ? { "x-raypx-setup-token": input.setupToken } : {}),
+                ...(input.invitation ? { "x-raypx-invitation": input.invitation } : {}),
+              },
+            },
           }),
         onSuccess,
       );

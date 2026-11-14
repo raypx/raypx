@@ -440,7 +440,8 @@
     "joinSignInHint": "Sign in in the new tab, then return to this invitation.",
     "followsDefault": "Uses your account approval default",
     "exitSessionEnded": "Your session ended. Sign in again.",
-    "resource": "Space resource"
+    "resource": "Space resource",
+    "joinCreateAccount": "Create an account with this invitation"
   },
   "groups": {
     "title": "Groups",

@@ -31,6 +31,15 @@ function JoinPage() {
         <section className="flex min-w-0 flex-col items-start gap-4">
           <h1 className="text-2xl font-medium">{t("spaceSettings.joinTitle")}</h1>
           <p className="text-sm">{t("spaceSettings.joinSignInHint")}</p>
+          <Link
+            to="/signup"
+            hash={hash.replace(/^#/, "")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            {t("spaceSettings.joinCreateAccount")}
+          </Link>
           {/* Keep the invitation in this tab's fragment, outside returnTo and OAuth state. */}
           <Link to="/login" target="_blank" rel="noopener noreferrer" className={buttonVariants()}>
             {t("spaceSettings.joinSignIn")}

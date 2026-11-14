@@ -15,6 +15,8 @@ export function actionErrorKey(error: AuthActionError) {
   if (error.kind === "network") return "common.networkError";
   if (error.kind !== "auth") return "common.error";
   switch (error.key) {
+    case "invalidSetupToken":
+    case "invalidInvitation":
     case "registrationDisabled":
     case "mailUnavailable":
     case "invalidCredentials":

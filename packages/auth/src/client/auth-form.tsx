@@ -47,6 +47,10 @@ const socialProviders = {
 export interface AuthFormProps {
   mode: AuthMode;
   compact?: boolean;
+  setupTokenRequired?: boolean;
+  invitationRequired?: boolean;
+  invitationToken?: string;
+  registrationNotice?: ReactNode;
   headingLeading?: ReactNode;
   onTwoFactorRequired?: () => void;
   renderSignInAlternatives?: (busy: boolean) => ReactNode;
@@ -66,6 +70,10 @@ export interface AuthFormProps {
 export function AuthForm({
   mode,
   compact = false,
+  setupTokenRequired = false,
+  invitationRequired = false,
+  invitationToken = "",
+  registrationNotice,
   headingLeading,
   onTwoFactorRequired,
   renderSignInAlternatives,
@@ -91,6 +99,7 @@ export function AuthForm({
   });
   const { busy } = auth;
   const error = useAuthErrorMessage(auth.error, "signInCompletionFailed");
+  const [signupSession, setSignupSession] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const cooldown = useMailCooldown();
   const config = modes[mode];
@@ -109,10 +118,10 @@ export function AuthForm({
     setSucceeded(true);
     void completeSocialSignIn(onSignedIn);
   }, [mode, search, onSignedIn, completeSocialSignIn, socialLogin, completeOnMount]);
-  const signedIn = succeeded && (mode === "login" || completeOnMount);
-  const complete = succeeded && (config.completes === true || completeOnMount);
+  const signedIn = succeeded && (mode === "login" || completeOnMount || signupSession);
+  const complete = succeeded && (config.completes === true || completeOnMount || signupSession);
   const link = readAuthLink(mode, search, auth.error);
-  const messageKey = authSuccessMessage(config, link.verified, succeeded);
+  const messageKey = signupSession ? null : authSuccessMessage(config, link.verified, succeeded);
   const showForm = !link.verified && !link.invalidReset && !complete;
   const terminal = link.invalidReset || link.verified || complete;
   const title = authFormTitle(config, link, signedIn, complete);
@@ -129,11 +138,21 @@ export function AuthForm({
     if (!showForm || busy || (config.mail && cooldown.isActive())) return;
     const form = event.currentTarget;
     setSucceeded(false);
-    const result = await requestMode(auth, mode, new FormData(form), link.token, async () => {
-      if (config.completes) form.reset();
-      setSucceeded(true);
-      if (mode === "login") await onSignedIn();
-    });
+    const result = await requestMode(
+      auth,
+      mode,
+      new FormData(form),
+      link.token,
+      async (outcome) => {
+        if (config.completes || mode === "signup") form.reset();
+        setSucceeded(true);
+        if (mode === "signup" && outcome?.signedIn) setSignupSession(true);
+        if (mode === "login" || (mode === "signup" && outcome?.signedIn)) {
+          form.reset();
+          await onSignedIn();
+        }
+      },
+    );
     if (!config.mail) return;
     if (result.status === "success") cooldown.start();
     else if (
@@ -227,9 +246,41 @@ export function AuthForm({
               <Separator />
             </div>
           )}
+        {showForm && mode === "signup" && registrationNotice}
         {showForm && (
           <form onSubmit={submit} aria-busy={busy}>
             <FieldGroup className={compact ? "gap-4" : undefined}>
+              {mode === "signup" && setupTokenRequired && (
+                <Field data-disabled={busy}>
+                  <FieldLabel htmlFor="auth-setup-token">{t("setupToken")}</FieldLabel>
+                  <Input
+                    id="auth-setup-token"
+                    name="setupToken"
+                    type="password"
+                    autoComplete="off"
+                    required
+                    disabled={busy}
+                    controlSize="xl"
+                    maxLength={512}
+                  />
+                </Field>
+              )}
+              {mode === "signup" && (invitationRequired || invitationToken) && (
+                <Field data-disabled={busy}>
+                  <FieldLabel htmlFor="auth-invitation">{t("invitationLink")}</FieldLabel>
+                  <Input
+                    id="auth-invitation"
+                    name="invitation"
+                    type="password"
+                    autoComplete="off"
+                    defaultValue={invitationToken}
+                    required
+                    disabled={busy}
+                    controlSize="xl"
+                    maxLength={2048}
+                  />
+                </Field>
+              )}
               {config.name && (
                 <Field data-disabled={busy}>
                   <FieldLabel htmlFor="auth-name">{t("name")}</FieldLabel>

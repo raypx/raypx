@@ -1,3 +1,4 @@
+import { PasswordResetLink } from "./password-reset-link.js";
 import { useTranslations } from "../../../i18n.js";
 import { createContext, useContext, useMemo } from "react";
 import {
@@ -145,6 +146,7 @@ const columns = column.columns([
           >
             <ShieldCheckIcon aria-hidden="true" />
           </IconButton>
+          <PasswordResetLink userId={user.id} email={user.email} disabled={!canChange} />
           {user.id === accountId && (
             <HelpHint label={t("selfRole")} description={t("selfRoleHint")} />
           )}

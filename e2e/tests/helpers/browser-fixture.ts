@@ -21,7 +21,15 @@ export const test = base.extend<{
     async ({ page }, use) => {
       await accountAccessFixture(page, null);
       await page.route("**/rpc/configuration/public", (route) =>
-        authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
+        authResponse(route, {
+          json: {
+            siteName: "Raypx",
+            registrationEnabled: true,
+            bootstrap: false,
+            setupTokenRequired: false,
+            mailConfigured: true,
+          },
+        }),
       );
       await page.route("**/rpc/configuration/access", (route) =>
         authResponse(route, { json: { allowed: false } }),

@@ -58,6 +58,12 @@ const server = {
     .max(253)
     .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/)
     .optional(),
+  SETUP_TOKEN: z
+    .string()
+    .min(32)
+    .max(512)
+    .regex(/^[!-~]+$/)
+    .optional(),
   ADMIN_EMAILS: z
     .string()
     .default("")

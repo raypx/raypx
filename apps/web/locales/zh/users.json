@@ -41,6 +41,9 @@
       "read": "查看用户",
       "roles": {
         "update": "修改用户角色"
+      },
+      "password": {
+        "reset": "签发密码重置链接"
       }
     },
     "projects": {
@@ -72,5 +75,12 @@
   "empty": "没有匹配的用户。",
   "noUsers": "暂无用户。",
   "pagination": "用户分页",
-  "results": "第 {from, number}–{to, number} 位，共 {total, number} 位用户"
+  "results": "第 {from, number}–{to, number} 位，共 {total, number} 位用户",
+  "resetLink": "重置链接",
+  "resetLinkHint": "为 {email} 签发一次性链接。确认对方身份后私下分享。重新签发会使上一链接失效。",
+  "resetLinkOnce": "请立即复制，此链接仅显示一次。",
+  "resetLinkExpires": "过期时间：{time}。",
+  "issueResetLink": "签发一次性重置链接",
+  "resetLinkFailed": "签发失败。请确认权限和邮件配置状态后重试。",
+  "closeResetLink": "关闭重置链接"
 }

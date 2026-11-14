@@ -1,3 +1,5 @@
+import { MailUnavailable } from "./mail-state.js";
+import { publicConfigurationQuery } from "../../config/client.js";
 import { VerificationCode } from "./verification-code.js";
 import { useRef, useState } from "react";
 import { PasskeySignIn } from "./passkey-sign-in.js";
@@ -48,6 +50,9 @@ function AuthLink({ to, className, children }: AuthFormLinkProps) {
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const { completeSignIn } = useRouteContext({ from: "/(auth)" });
+  const configuration = useQuery(publicConfigurationQuery());
+  const t = useTranslations("auth");
+  const hash = useLocation({ select: (location) => location.hash });
   const g = useTranslations("guest");
   const router = useRouter();
   const navigate = useNavigate();
@@ -83,14 +88,38 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     if (session.error || !session.data) throw new Error("Session refresh failed");
     router.options.context.queryClient.clear();
     await navigate({
-      to: signedInDestination,
+      to:
+        mode === "signup" && session.data.user.role?.split(",").includes("admin")
+          ? "/admin/settings"
+          : signedInDestination,
+      ...(mode === "signup" && session.data.user.role?.split(",").includes("admin")
+        ? { hash: "setup" }
+        : {}),
     });
   }
+  if (
+    (mode === "forgot-password" || mode === "verify-email") &&
+    configuration.data?.mailConfigured === false &&
+    !new URLSearchParams(search).has("verified")
+  )
+    return <MailUnavailable reset={mode === "forgot-password"} />;
   if (mode === "login" && challenge)
     return <VerificationCode onSignedIn={onSignedIn} onCancel={() => setChallenge(false)} />;
   return (
     <SharedAuthForm
       key={mode}
+      setupTokenRequired={configuration.data?.setupTokenRequired ?? false}
+      invitationRequired={
+        configuration.data?.registrationEnabled === false && !configuration.data.bootstrap
+      }
+      invitationToken={/^[a-f0-9]{64}$/.test(hash) ? hash : ""}
+      registrationNotice={
+        configuration.data?.bootstrap ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            {t("firstAdministrator")}
+          </p>
+        ) : undefined
+      }
       mode={completeSignIn ? "login" : mode}
       completeOnMount={completeSignIn}
       backLabel={g("back")}
@@ -100,7 +129,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       search={search}
       callbackURLs={authCallbackURLs(returnTo)}
       socialLogin={{
-        providers: providers.data?.providers ?? [],
+        providers:
+          configuration.data?.bootstrap && configuration.data.setupTokenRequired
+            ? []
+            : (providers.data?.providers ?? []),
         callbackURL: `${webUrl}/login?oauth=success&returnTo=${oauthDestination}`,
         errorCallbackURL: `${webUrl}/login?returnTo=${oauthDestination}`,
       }}
@@ -108,7 +140,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       renderSignInAlternatives={(busy) => (
         <>
           <PasskeySignIn onSignedIn={onSignedIn} disabled={busy} />
-          {providers.data && (
+          {providers.data && configuration.data?.mailConfigured !== false && (
             <VerificationCode
               email
               onSignedIn={onSignedIn}

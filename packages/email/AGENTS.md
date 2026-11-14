@@ -28,3 +28,5 @@ Authentication mail covers verification, password reset and sign-in codes in en/
 bun run --cwd packages/email check
 bun run --cwd packages/email test
 ```
+
+sendTest accepts an injected transport, uses en/zh non-authentication copy and contains no verification/sign-in link. Acceptance does not prove inbox receipt. API owns recipient authorization, availability and limits.

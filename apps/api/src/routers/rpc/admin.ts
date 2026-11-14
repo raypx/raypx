@@ -3,10 +3,22 @@ import type { RpcSetup } from "./setup.js";
 import type { ReadReadiness } from "../../app/readiness.js";
 
 export function createAdministrationHandlers(
-  { os, options, withRpcPermission }: Pick<RpcSetup, "os" | "options" | "withRpcPermission">,
+  {
+    os,
+    options,
+    withRpcPermission,
+    requireTrustedOrigin,
+  }: Pick<RpcSetup, "os" | "options" | "withRpcPermission" | "requireTrustedOrigin">,
   readReadiness: ReadReadiness,
 ) {
   return {
+    issuePasswordReset: os.admin.issuePasswordReset
+      .use(withRpcPermission({ window: 60, max: 3 }))
+      .use(requireTrustedOrigin)
+      .handler(async ({ context, input }) => {
+        if (!options.passwordResetLinks) throw new ORPCError("SERVICE_UNAVAILABLE");
+        return options.passwordResetLinks(context.auth.user.id, input.userId);
+      }),
     overview: os.admin.overview
       .use(withRpcPermission({ window: 60, max: 60 }))
       .handler(async ({ input }) => {

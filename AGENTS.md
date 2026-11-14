@@ -238,3 +238,5 @@ Member attachments use Space-scoped PostgreSQL bytes and fenced Computer inbox
 delivery; no renderer or supplied file authorizes execution. Device Files use
 separate expiring connector member-read frames. Notifications derive from existing
 sources with per-member read/view receipts. See docs/architecture/member-input-and-notifications.md.
+
+Account bootstrap is a deployment-lifetime PostgreSQL claim, committed with the first account. Optional SETUP_TOKEN protects only that claim. No-mail accounts remain unverified but usable after mail is enabled; new mail-configured accounts must verify. Signups default open; invitation-only requires a valid bearer link. Deployment administration never grants Space access.

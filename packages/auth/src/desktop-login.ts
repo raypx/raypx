@@ -18,6 +18,15 @@ import {
   oauthAuthorizePath,
 } from "@raypx/contracts/api";
 import { z } from "zod";
+import { usableEmail } from "@raypx/core/auth";
+function emailUsable(user: unknown) {
+  return (
+    !!user &&
+    typeof user === "object" &&
+    "emailVerified" in user &&
+    usableEmail(user as { emailVerified: boolean; emailVerificationSkipped?: boolean })
+  );
+}
 
 const noStore = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
 // Link the consent decision to the provider's own code and token records.
@@ -69,12 +78,13 @@ function requireDaemon(headers: Headers | undefined) {
     throw new APIError("FORBIDDEN", { message: "Desktop login requires a native request" });
 }
 
-async function browserSession(ctx: AuthContext) {
+async function browserSession(ctx: AuthContext, mailAvailable: () => Promise<boolean>) {
   const current = await getAuthoritativeSessionFromCtx(ctx);
   const user = current && (await ctx.context.internalAdapter.findUserById(current.session.userId));
   if (
     !current ||
-    !user?.emailVerified ||
+    !user ||
+    (!emailUsable(user) && (await mailAvailable())) ||
     ("banned" in user && user.banned === true) ||
     current.session.impersonatedBy
   )
@@ -109,7 +119,12 @@ async function ensureClient(ctx: AuthContext) {
   }
 }
 
-export function desktopLogin(issuer: string, origins: readonly string[], consent: Consent) {
+export function desktopLogin(
+  issuer: string,
+  origins: readonly string[],
+  consent: Consent,
+  mailAvailable = async () => true,
+) {
   const pendingKey = (nonce: string) => `${issuer}:desktop-login:pending:${nonce}`;
   const approvedKey = (nonce: string) => `${issuer}:desktop-login:approved:${nonce}`;
   const requireWeb = (ctx: AuthContext, webOrigin: string) => {
@@ -193,7 +208,7 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
         async (ctx) => {
           const attempt = await pending(ctx, ctx.body.oauthQuery);
           requireWeb(ctx, attempt.webOrigin);
-          const { user } = await browserSession(ctx);
+          const { user } = await browserSession(ctx, mailAvailable);
           return ctx.json(
             {
               device: attempt.device,
@@ -210,7 +225,7 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
         async (ctx) => {
           const attempt = await pending(ctx, ctx.body.oauthQuery);
           requireWeb(ctx, attempt.webOrigin);
-          const { user, session } = await browserSession(ctx);
+          const { user, session } = await browserSession(ctx, mailAvailable);
           if (user.id !== ctx.body.accountId)
             throw new APIError("FORBIDDEN", {
               message: "Account does not match the Desktop authorization",
@@ -286,7 +301,8 @@ export function desktopLogin(issuer: string, origins: readonly string[], consent
             source.impersonatedBy ||
             source.expiresAt.getTime() <= Date.now() ||
             Math.floor(source.createdAt.getTime() / 1000) !== identity.data.auth_time ||
-            !user?.emailVerified ||
+            !user ||
+            (!emailUsable(user) && (await mailAvailable())) ||
             ("banned" in user && user.banned === true)
           )
             throw invalid();

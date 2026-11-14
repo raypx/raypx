@@ -1,3 +1,4 @@
+import { createSetupWarning } from "./setup-warning.js";
 import { createConversationFanout } from "@raypx/agents/server/postgres";
 import { createSpaceFanout } from "@raypx/spaces/server/postgres";
 import { ConversationStream } from "../conversations/stream.js";
@@ -66,6 +67,7 @@ export async function createApiRuntime(
     await runtime.close();
     throw error;
   }
+  const warnSetup = createSetupWarning(environment, runtime.registration);
   let closing: Promise<void> | undefined;
   return {
     ...runtime,
@@ -80,6 +82,7 @@ export async function createApiRuntime(
     allowedOrigins: environment.allowedOrigins,
     clientIp: createClientIpReader(environment.ipAddressHeaders, environment.trustedProxies),
     start: async () => {
+      await warnSetup();
       await runtime.deviceConnector.start().catch(() => {});
       if (combined) {
         await runtime.runner.startWorker(fanout);

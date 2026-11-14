@@ -6,13 +6,35 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { accessForRole } from "@raypx/account/access";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn(), setRole: vi.fn(), access: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  list: vi.fn(),
+  setRole: vi.fn(),
+  access: vi.fn(),
+  resetLink: vi.fn(),
+  mailConfigured: true,
+}));
 vi.mock("../../auth/client.js", () => ({
   apiUrl: "https://api.example.test",
+  webUrl: "https://web.example.test",
   authClient: { admin: { listUsers: mocks.list, setRole: mocks.setRole } },
 }));
 vi.mock("../../auth/access.js", () => ({
   accountAccessQuery: (id: string) => ({ queryKey: ["account-access", id], queryFn: mocks.access }),
+}));
+vi.mock("../../config/client.js", () => ({
+  publicConfigurationQuery: () => ({
+    queryKey: ["test-mail-policy"],
+    queryFn: async () => ({
+      siteName: "Raypx",
+      registrationEnabled: true,
+      bootstrap: false,
+      setupTokenRequired: false,
+      mailConfigured: mocks.mailConfigured,
+    }),
+  }),
+}));
+vi.mock("../../admin/client.js", () => ({
+  administrationClient: { issuePasswordReset: mocks.resetLink },
 }));
 import { Users } from "./users.js";
 
@@ -27,6 +49,11 @@ const actor = {
 const member = { ...actor, id: "member", name: "Lin", email: "lin@example.test", role: "member" };
 beforeEach(() => {
   vi.resetAllMocks();
+  mocks.mailConfigured = true;
+  mocks.resetLink.mockResolvedValue({
+    token: "fixture-once-token",
+    expiresAt: "2026-11-14T16:00:00.000Z",
+  });
   mocks.access.mockResolvedValue(accessForRole("admin", actor.id));
   mocks.list.mockResolvedValue({ data: { users: [actor, member], total: 21 }, error: null });
   mocks.setRole.mockResolvedValue({ data: { user: { ...member, role: "admin" } }, error: null });
@@ -322,4 +349,24 @@ it("combines verification with the applied search and removes filters independen
     expect(query).not.toHaveProperty("searchValue");
     expect(query).not.toHaveProperty("filterValue");
   });
+});
+
+it("shows an administrator recovery link once, clears it on close, and never requests it through a read", async () => {
+  mocks.mailConfigured = false;
+  page();
+  const row = (await screen.findByText(member.email)).closest("tr")!;
+  fireEvent.click(await within(row).findByRole("button", { name: "Reset link" }));
+  fireEvent.click(screen.getByRole("button", { name: "Issue one-time reset link" }));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Copy now; this link is shown only once.")).toHaveValue(
+      "https://web.example.test/reset-password?token=fixture-once-token",
+    ),
+  );
+  expect(mocks.resetLink).toHaveBeenCalledExactlyOnceWith({ userId: member.id });
+  fireEvent.click(screen.getByRole("button", { name: "Close reset link" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  fireEvent.click(within(row).getByRole("button", { name: "Reset link" }));
+  expect(screen.queryByLabelText("Copy now; this link is shown only once.")).toBeNull();
+  expect(screen.getByRole("button", { name: "Issue one-time reset link" })).toBeEnabled();
+  expect(mocks.resetLink).toHaveBeenCalledTimes(1);
 });

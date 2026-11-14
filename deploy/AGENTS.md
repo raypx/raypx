@@ -57,3 +57,5 @@ The rules below apply to the Compose host workflow.
 
 Verify Compose syntax with `config --quiet`, build both real images, and probe
 HTTPS, database readiness and login. Do not count missing mail delivery as passed.
+
+Forward optional SETUP_TOKEN to API only. It protects the first account claim, never Web build variables. Keep the Compose template and first-setup guides aligned; missing mail skips verification and signup stays open unless administrators select invitation-only.

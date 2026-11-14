@@ -20,6 +20,7 @@ export default {
   RUN_BACKUP_MARGIN_MS: "input",
   ROUTINE_EMAIL_RELAY_TOKEN: "input",
   ROUTINE_EMAIL_DOMAIN: "input",
+  SETUP_TOKEN: "input",
   ADMIN_EMAILS: "input",
   JOBS_ENABLED: "input",
   DATABASE_MIGRATE_ON_START: "input",

@@ -26,10 +26,16 @@ export const configurationUpdateSchema = z.strictObject({
   values: configurationValuesSchema,
   revision: z.number().int().nonnegative(),
 });
-export const publicConfigurationSchema = configurationValuesSchema.pick({
-  siteName: true,
-  registrationEnabled: true,
-});
+export const publicConfigurationSchema = configurationValuesSchema
+  .pick({
+    siteName: true,
+    registrationEnabled: true,
+  })
+  .extend({
+    bootstrap: z.boolean(),
+    setupTokenRequired: z.boolean(),
+    mailConfigured: z.boolean(),
+  });
 export const storageLocationSchema = z.strictObject({
   endpoint: z
     .url({ protocol: /^https?$/, normalize: true })
@@ -126,6 +132,10 @@ export const configurationContract = {
     .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
     .input(z.strictObject({}))
     .output(resendSnapshotSchema),
+  testMail: oc
+    .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
+    .input(z.strictObject({ locale: z.enum(["en", "zh"]).optional() }))
+    .output(z.strictObject({ sent: z.boolean() })),
   updateResend: oc
     .meta(exposeApiTo("web"), rpcAccess("configuration.update"), rpcAudit("configuration.update"))
     .input(resendUpdateSchema)

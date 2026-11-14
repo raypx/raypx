@@ -144,3 +144,5 @@ original reading positions afterwards. `page-review` covers safe settings/editor
 directory states. JSONL evidence under `.artifacts/pages/` supplies the before/after
 index; native device screenshots remain separate. `playwright.review.config.ts`
 reviews already-running owned compiled servers without starting or rebuilding them.
+
+bootstrap.spec.ts uses the exclusive bootstrap-server.ts fixture on an empty disposable loopback database, with fake mail transport and production auth/configuration composition. It is opt-in via BOOTSTRAP_E2E_API_URL; run separately from the seeded workspace fixture. Trace/video/screenshots stay off around credentials and one-time recovery links.

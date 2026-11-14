@@ -1,9 +1,10 @@
+import { usableEmail } from "@raypx/core/auth";
 type Session = {
-  user: { emailVerified: boolean };
+  user: { emailVerified: boolean; emailVerificationSkipped?: boolean };
   session: { expiresAt: Date | string };
 };
 
-/** Only a verified, freshly checked session can mount protected screens. */
+/** Only an admitted, freshly checked session can mount protected screens. */
 export function sessionAccess(
   state: { isPending: boolean; isRefetching: boolean; error: unknown; data: Session | null },
   now = Date.now(),
@@ -17,7 +18,11 @@ export function sessionAccess(
   )
     return "signedOut";
   if (state.error) return "unavailable";
-  if (!state.data?.user.emailVerified || !(new Date(state.data.session.expiresAt).getTime() > now))
+  if (
+    !state.data ||
+    !usableEmail(state.data.user) ||
+    !(new Date(state.data.session.expiresAt).getTime() > now)
+  )
     return "signedOut";
   return "signedIn";
 }

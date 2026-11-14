@@ -1,3 +1,4 @@
+import { VerificationPrompt } from "../features/auth/components/mail-state.js";
 import { useTranslations } from "../i18n.js";
 import { publicConfigurationQuery } from "../features/config/client.js";
 import {
@@ -128,10 +129,14 @@ export function WebShell() {
       >
         {accountId && pagePermission ? (
           <PermissionBoundary key={accountId} accountId={accountId} permission={pagePermission}>
+            <VerificationPrompt key={accountId} />
             <Outlet />
           </PermissionBoundary>
         ) : (
-          <Outlet />
+          <>
+            <VerificationPrompt key={accountId} />
+            <Outlet />
+          </>
         )}
       </AppShell>
       <QuickSettingsModal />

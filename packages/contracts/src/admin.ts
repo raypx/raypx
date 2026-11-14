@@ -1,9 +1,9 @@
 import { exposeApiTo } from "./exposure.js";
-import { rpcAccess } from "./policy.js";
+import { rpcAccess, rpcAudit } from "./policy.js";
 import { oc, type InferRouterContractOutputs } from "@orpc/contract";
 import { z } from "zod";
 
-const action = z.enum(["user.role.update", "configuration.update"]);
+const action = z.enum(["user.role.update", "configuration.update", "user.password.reset-link"]);
 const outcome = z.enum(["pending", "success", "rejected", "failed", "unknown"]);
 const values = z.strictObject({
   role: z.string().max(120).optional(),
@@ -42,6 +42,14 @@ export const auditFilterSchema = z
 export type AuditEntry = z.infer<typeof auditEntrySchema>;
 export type AuditFilter = z.infer<typeof auditFilterSchema>;
 export const administrationContract = {
+  issuePasswordReset: oc
+    .meta(
+      exposeApiTo("web"),
+      rpcAccess("users.password.reset"),
+      rpcAudit("user.password.reset-link"),
+    )
+    .input(z.strictObject({ userId: z.string().min(1).max(128) }))
+    .output(z.strictObject({ token: z.string(), expiresAt: z.iso.datetime() })),
   overview: oc
     .meta(exposeApiTo("web"), rpcAccess("admin.read"))
     .input(z.strictObject({ days: z.union([z.literal(7), z.literal(30)]).default(30) }))

@@ -41,6 +41,9 @@
       "read": "View users",
       "roles": {
         "update": "Change user roles"
+      },
+      "password": {
+        "reset": "Issue password reset links"
       }
     },
     "projects": {
@@ -72,5 +75,12 @@
   "empty": "No matching users.",
   "noUsers": "No users to display.",
   "pagination": "User pages",
-  "results": "{from, number}–{to, number} of {total, plural, one {# user} other {# users}}"
+  "results": "{from, number}–{to, number} of {total, plural, one {# user} other {# users}}",
+  "resetLink": "Reset link",
+  "resetLinkHint": "Issue a one-time link for {email}. Share it privately after checking the recipient’s identity. Issuing another link invalidates the previous one.",
+  "resetLinkOnce": "Copy now; this link is shown only once.",
+  "resetLinkExpires": "Expires at {time}.",
+  "issueResetLink": "Issue one-time reset link",
+  "resetLinkFailed": "Could not issue a link. Check access and whether mail is configured, then try again.",
+  "closeResetLink": "Close reset link"
 }

@@ -251,3 +251,127 @@ it("checks password hash prefixes only when setting a password and rejects known
     rangeLookup.mockRestore();
   }
 });
+
+it("admits no-mail accounts immediately without claiming email ownership, then verifies only later signups", async () => {
+  let configured = false;
+  const sent: string[] = [];
+  const auth = createAuth({
+    database: memoryAdapter({ user: [], account: [], session: [], verification: [] }),
+    config: {
+      baseURL: "http://localhost:3002",
+      secret: "no-mail-test-secret-at-least-32-characters",
+      trustedOrigins: [],
+      production: false,
+    },
+    mailer: {
+      available: async () => configured,
+      sendVerification: async (input) => {
+        sent.push(input.url);
+      },
+      sendPasswordReset: async () => {},
+    },
+  });
+  const post = (path: string, body: object) =>
+    auth.handler(
+      new Request(`http://localhost:3002/api/auth/${path}`, {
+        method: "POST",
+        headers: { origin: "http://localhost:3002", "content-type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    );
+  const signup = (email: string) =>
+    post("sign-up/email", {
+      email,
+      name: "No Mail",
+      password: "no-mail-password-123",
+    });
+  const initial = await signup("initial@example.test");
+  expect(initial.status).toBe(200);
+  expect(initial.headers.getSetCookie().join(";")).toContain("session_token");
+  expect(await initial.json()).toMatchObject({
+    user: { emailVerified: false, emailVerificationSkipped: true, role: "member" },
+  });
+  expect(sent).toHaveLength(0);
+  configured = true;
+  expect(
+    (
+      await post("sign-in/email", {
+        email: "initial@example.test",
+        password: "no-mail-password-123",
+      })
+    ).status,
+  ).toBe(200);
+  const later = await signup("later@example.test");
+  expect(later.headers.getSetCookie().join(";")).not.toContain("session_token");
+  expect(await later.json()).toMatchObject({
+    user: { emailVerified: false, emailVerificationSkipped: false, role: "member" },
+  });
+  expect(sent).toHaveLength(1);
+  expect(
+    (await post("sign-in/email", { email: "later@example.test", password: "no-mail-password-123" }))
+      .status,
+  ).toBe(403);
+  configured = false;
+  const admitted = await post("sign-in/email", {
+    email: "later@example.test",
+    password: "no-mail-password-123",
+  });
+  expect(admitted.status).toBe(200);
+  const cookie = admitted.headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ");
+  const session = await auth.handler(
+    new Request("http://localhost:3002/api/auth/get-session", { headers: { cookie } }),
+  );
+  expect(await session.json()).toMatchObject({
+    user: { emailVerified: false, emailVerificationSkipped: true },
+  });
+});
+
+it("retains production signup rate limits when mail verification is skipped", async () => {
+  const auth = createAuth({
+    database: memoryAdapter({
+      user: [],
+      account: [],
+      session: [],
+      verification: [],
+      rateLimit: [],
+    }),
+    config: {
+      baseURL: "https://api.example.test",
+      secret: "rate-limit-test-secret-at-least-32-characters",
+      trustedOrigins: ["https://web.example.test"],
+      production: true,
+      ipAddressHeaders: ["x-fixture-ip"],
+    },
+    mailer: {
+      available: async () => false,
+      sendVerification: async () => {
+        throw new Error("No mail should be sent");
+      },
+      sendPasswordReset: async () => {},
+    },
+  });
+  const statuses: number[] = [];
+  for (let index = 0; index < 8; index++) {
+    const result = await auth.handler(
+      new Request("https://api.example.test/api/auth/sign-up/email", {
+        method: "POST",
+        headers: {
+          origin: "https://web.example.test",
+          "content-type": "application/json",
+          "x-fixture-ip": "127.0.0.1",
+        },
+        body: JSON.stringify({
+          email: `rate-${index}@example.test`,
+          name: "Rate Fixture",
+          password: "rate-fixture-password-123",
+        }),
+      }),
+    );
+    statuses.push(result.status);
+  }
+  expect(statuses[0]).toBe(200);
+  expect(statuses).toContain(429);
+});

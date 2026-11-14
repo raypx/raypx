@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { TestEmail } from "./components/test-email.js";
 import { ConfigurationForm, ConfigurationSettings } from "./components/settings.js";
 import { configurationClient, type Configuration } from "./client.js";
 
@@ -21,7 +22,13 @@ vi.mock("../auth/client.js", () => ({
 }));
 vi.mock("./client.js", async (original) => ({
   ...(await original<typeof import("./client.js")>()),
-  configurationClient: { get: vi.fn(), update: vi.fn(), storage: vi.fn(), updateStorage: vi.fn() },
+  configurationClient: {
+    get: vi.fn(),
+    update: vi.fn(),
+    storage: vi.fn(),
+    updateStorage: vi.fn(),
+    testMail: vi.fn(),
+  },
 }));
 const config: Configuration = {
   values: { siteName: "Raypx", registrationEnabled: true, cleanupEnabled: true },
@@ -93,7 +100,7 @@ it("preserves edits after a conflict and keeps them when loading the latest revi
   fireEvent.click(screen.getByRole("button", { name: "Load latest and keep my edits" }));
   // The other administrator's untouched field arrives; this administrator's edit stays.
   await waitFor(() =>
-    expect(screen.getByRole("switch", { name: "Open registration" })).toHaveAttribute(
+    expect(screen.getByRole("switch", { name: "Open sign-ups" })).toHaveAttribute(
       "aria-checked",
       String(!config.values.registrationEnabled),
     ),
@@ -116,7 +123,7 @@ it("keeps failed saves editable and supports discarding changes", async () => {
 it("does not render settings controls for a non-administrator", async () => {
   vi.spyOn(configurationClient, "get").mockRejectedValue({ code: "FORBIDDEN" });
   page(<ConfigurationSettings />);
-  expect(await screen.findByRole("alert")).toHaveTextContent("Only a verified administrator");
+  expect(await screen.findByRole("alert")).toHaveTextContent("Only a deployment administrator");
   expect(screen.queryByLabelText("Site name")).toBeNull();
 });
 
@@ -166,4 +173,14 @@ it("keeps site edits while rotating write-only storage credentials", async () =>
   });
   fireEvent.click(screen.getByRole("tab", { name: "Site" }));
   expect(screen.getByLabelText("Site name")).toHaveValue("My draft");
+});
+
+it("tests only saved mail settings and shows a clear delivery result", async () => {
+  const send = vi.spyOn(configurationClient, "testMail").mockResolvedValue({ sent: true });
+  page(<TestEmail disabled={false} />);
+  fireEvent.click(screen.getByRole("button", { name: "Send test email" }));
+  expect(await screen.findByRole("status")).toHaveTextContent(
+    "The mail service accepted the test email. Check your inbox.",
+  );
+  expect(send).toHaveBeenCalledExactlyOnceWith({ locale: "en" });
 });

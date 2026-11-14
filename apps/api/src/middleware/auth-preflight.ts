@@ -11,7 +11,6 @@ import type { ApiRouterEnv } from "../routers/request.js";
 
 const emailSignupPath = "/sign-up/email";
 const mailPaths = [
-  emailSignupPath,
   "/send-verification-email",
   "/request-password-reset",
   "/email-otp/send-verification-otp",
@@ -31,7 +30,9 @@ function authError(c: Context<AuthRouteEnv>, code: AuthErrorCode, status: 403 | 
   return c.json({ code, message: messages[locale][code] }, status);
 }
 
-export function authPreflight(options: Pick<ApiAppOptions, "mailAvailable" | "config">) {
+export function authPreflight(
+  options: Pick<ApiAppOptions, "mailAvailable" | "config" | "registration">,
+) {
   return createMiddleware<AuthRouteEnv>(async (c, next) => {
     const mount = basePath(c).replace(/\/$/, "");
     const path = decodeURIComponent(c.req.path.slice(mount.length)).replace(/\/+$/, "");
@@ -42,7 +43,7 @@ export function authPreflight(options: Pick<ApiAppOptions, "mailAvailable" | "co
     ) {
       return authError(c, "MAIL_NOT_CONFIGURED", 503);
     }
-    if (c.req.method === "POST" && path === emailSignupPath) {
+    if (!options.registration && c.req.method === "POST" && path === emailSignupPath) {
       try {
         // Cheap early answer; the auth user-create hook re-checks with a fresh read.
         if (!(await options.config.readCached()).values.registrationEnabled)

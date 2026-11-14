@@ -126,3 +126,5 @@ notification bell; Web contributes renderer acceptance journeys without backend 
 Space settings shares the wide category rows/narrow Select pattern with Desktop.
 Safe renderer review points are registered through page-review; the screenshot matrix
 never captures issued links, pairing codes or supplied protected input.
+
+Fresh signup opens skippable Email setup for the initial administrator. Keep setup/invitation values in masked form fields/headers. No-mail signup establishes a session immediately; mail-required signup keeps verification. No-mail accounts retain access with a dismissible verification reminder. Email settings test saved delivery; Users holds one-time recovery links only in dialog memory.

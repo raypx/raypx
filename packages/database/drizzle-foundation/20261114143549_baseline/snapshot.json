@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "d5034c46-ed8e-447d-8ca1-bbe7f9449c6a",
+  "id": "eed49700-f615-49dc-ac4a-71de75fa6113",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -21,6 +21,25 @@
         "n|rel|public.account",
         "n|type|public.account",
         "n|rel|public.account_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "account_bootstrap"
+      ],
+      "writes": [
+        "s|tbl|public.account_bootstrap",
+        "n|tbl|public.account_bootstrap",
+        "e|tbl|public.account_bootstrap",
+        "n|rel|public.account_bootstrap",
+        "n|type|public.account_bootstrap",
+        "n|rel|public.account_bootstrap_pkey"
       ],
       "reads": [
         "n|sch|public"
@@ -7927,6 +7946,12 @@
     },
     {
       "schema": "public",
+      "name": "account_bootstrap",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "admin_audit",
       "isRlsEnabled": false,
       "entityType": "tables"
@@ -8630,6 +8655,32 @@
       "notNull": true,
       "dimensions": 0,
       "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "account_bootstrap",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "account_bootstrap",
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
       "generated": null,
       "identity": null,
       "entityType": "columns"
@@ -18060,6 +18111,19 @@
     {
       "schema": "public",
       "table": "space_invitations",
+      "name": "registration_account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "space_invitations",
       "name": "consumed_by_account_id",
       "type": "text",
       "typeSchema": null,
@@ -19036,6 +19100,19 @@
       "schema": "public",
       "table": "user",
       "name": "email_verified",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "user",
+      "name": "email_verification_skipped",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -26202,6 +26279,16 @@
       "schema": "public",
       "table": "account",
       "name": "account_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "account_bootstrap",
+      "name": "account_bootstrap_pkey",
       "columns": [
         "id"
       ],

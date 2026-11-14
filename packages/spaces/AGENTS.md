@@ -35,3 +35,5 @@ Page changes add independent Space events without changing conversation variants
 Soft removal clears account skill/MCP availability and per-member Agent selections
 before the membership tombstone is marked removed. Shared Page/skill text survives
 member departure; retained membership identity grants no access.
+
+Invitation-only deployment signup can bind a bearer invitation to one registration account. Preview/accept refuses other accounts after that binding; explicit acceptance still owns membership and its audit/events. Deployment roles confer no Space membership.

@@ -13,7 +13,11 @@ it("scopes injected repositories to each runtime and shares the service with HTT
   const resources: RuntimeResources = {
     logger,
     connect: () => {
-      const db = { transaction: vi.fn() } as unknown as Database;
+      const rows = { where: async () => [], limit: async () => [] };
+      const db = {
+        transaction: vi.fn(),
+        select: () => ({ from: () => rows }),
+      } as unknown as Database;
       connections.push(db);
       return { db, close };
     },
@@ -88,6 +92,9 @@ it("scopes injected repositories to each runtime and shares the service with HTT
     expect(await client.configuration.public({})).toEqual({
       siteName: "First runtime",
       registrationEnabled: true,
+      bootstrap: true,
+      setupTokenRequired: false,
+      mailConfigured: false,
     });
     expect(await first.jobs.cleanup()).toMatchObject({ status: "disabled" });
   } finally {

@@ -116,13 +116,14 @@ it("declares an access policy on every API procedure", () => {
   expect(undeclared).toEqual([]);
 });
 
-it("audits exactly the procedures that require the configuration update permission", () => {
+it("audits configuration mutations and administrator reset-link issuance", () => {
   const audited = Object.entries(apiContract).flatMap(([group, procedures]) =>
     Object.entries(procedures)
       .filter(([, procedure]) => getRpcAudit(procedure) !== undefined)
       .map(([name, procedure]) => [`${group}.${name}`, getRpcAudit(procedure)]),
   );
   expect(audited).toEqual([
+    ["admin.issuePasswordReset", "user.password.reset-link"],
     ["configuration.update", "configuration.update"],
     ["configuration.updateStorage", "configuration.update"],
     ["configuration.updateResend", "configuration.update"],
@@ -130,6 +131,6 @@ it("audits exactly the procedures that require the configuration update permissi
   for (const procedures of Object.values(apiContract))
     for (const procedure of Object.values(procedures))
       expect(getRpcAudit(procedure) !== undefined).toBe(
-        getRpcAccess(procedure) === "configuration.update",
+        ["configuration.update", "users.password.reset"].includes(getRpcAccess(procedure) ?? ""),
       );
 });

@@ -48,6 +48,15 @@ unrelated Space selectors keep the generic refusal.
 - Session tokens never enter markup, persistent browser storage, query caches or
   diagnostics.
 
+Email ownership is distinct from account admission. Without configured mail,
+accounts persist an unverified admission exemption and remain usable after mail
+is enabled; later new accounts must verify. The initial administrator claim and
+permanent bootstrap marker commit with the account in PostgreSQL. Setup tokens
+are API-only and compared by constant-time digest. Open signups permit email
+squatting; invitation-only is the operator's off switch. Admin reset links are
+15-minute bearer capabilities with atomic issuance/audit and one-time consumption.
+They convey account control, so verify recipients and trust the issuing administrator.
+
 ## Secrets
 
 - Model credentials, connector tokens and webhook keys live in an encrypted secret

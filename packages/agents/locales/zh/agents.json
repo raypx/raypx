@@ -440,7 +440,8 @@
     "joinSignInHint": "在新标签页中登录，然后返回此邀请。",
     "followsDefault": "使用你的账户默认审批模式",
     "exitSessionEnded": "你的登录会话已结束，请重新登录。",
-    "resource": "空间资源"
+    "resource": "空间资源",
+    "joinCreateAccount": "使用此邀请创建账号"
   },
   "groups": {
     "title": "群组",

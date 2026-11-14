@@ -117,7 +117,7 @@ it("sends the first password setup link to the signed-in account email", async (
   expect(screen.queryByLabelText("Current password")).toBeNull();
   expect(mocks.requestPasswordReset).not.toHaveBeenCalled();
   fireEvent.click(send);
-  expect(await screen.findByRole("alert")).toHaveTextContent("Email delivery is unavailable");
+  expect(await screen.findByRole("alert")).toHaveTextContent("Email delivery is not configured");
   expect(send).toBeEnabled();
 
   fireEvent.click(send);

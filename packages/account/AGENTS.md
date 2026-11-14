@@ -45,3 +45,5 @@ Own `access` in `locales/<language>/`, with handwritten language entries
 and pure `/messages/en` and `/messages/zh` exports. Support TS literal objects or
 JSON nested strings, one format per namespace/language. Bind private translation
 hooks through type-only catalog imports; applications supply the shared provider.
+
+Administrator permission projection includes users.password.reset for the API-owned audited no-mail recovery-link action. Email ownership does not define Space membership.

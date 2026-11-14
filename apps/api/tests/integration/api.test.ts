@@ -48,12 +48,7 @@ describe("HTTP foundation", () => {
         return Response.json({ delegated: true });
       },
     });
-    for (const path of [
-      "sign-up/email",
-      "send-verification-email",
-      "request-password-reset",
-      "sign-up/email/",
-    ]) {
+    for (const path of ["send-verification-email", "request-password-reset"]) {
       const response = await unavailable.request(`/api/auth/${path}`, {
         method: "POST",
         headers: { "content-type": "application/json" },

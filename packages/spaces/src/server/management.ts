@@ -449,7 +449,11 @@ export function createSpaceManagement(db: Database, hooks: SpaceManagementHooks)
             and(eq(spaceInvitations.spaceId, found.spaceId), eq(spaceInvitations.id, found.id)),
           )
           .for("update");
-        if (!invitation) throw new SpaceMutationError("INVITATION_NOT_FOUND");
+        if (
+          !invitation ||
+          (invitation.registrationAccountId && invitation.registrationAccountId !== accountId)
+        )
+          throw new SpaceMutationError("INVITATION_NOT_FOUND");
         const [existing] = await tx
           .select()
           .from(spaceMembers)

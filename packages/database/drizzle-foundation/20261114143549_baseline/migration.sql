@@ -14,6 +14,11 @@ CREATE TABLE "account" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "account_bootstrap" (
+	"id" text PRIMARY KEY,
+	"completed_at" timestamp with time zone
+);
+--> statement-breakpoint
 CREATE TABLE "admin_audit" (
 	"id" text PRIMARY KEY,
 	"request_id" text NOT NULL,
@@ -1131,6 +1136,7 @@ CREATE TABLE "space_invitations" (
 	"inviter_account_id" text NOT NULL,
 	"inviter_name" text NOT NULL,
 	"status" text DEFAULT 'open' NOT NULL,
+	"registration_account_id" text,
 	"consumed_by_account_id" text,
 	"consumed_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -1254,6 +1260,7 @@ CREATE TABLE "user" (
 	"name" text NOT NULL,
 	"email" text NOT NULL UNIQUE,
 	"email_verified" boolean DEFAULT false NOT NULL,
+	"email_verification_skipped" boolean DEFAULT false NOT NULL,
 	"image" text,
 	"role" text DEFAULT 'member' NOT NULL,
 	"banned" boolean DEFAULT false NOT NULL,

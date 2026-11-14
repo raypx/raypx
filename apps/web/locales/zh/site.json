@@ -8,7 +8,7 @@
   "siteName": "站点名称",
   "siteNameHint": "显示在 Web 导航中，最多 60 个字符。",
   "registration": "开放注册",
-  "registrationHint": "允许新用户创建账号。关闭后，已有账号仍可正常登录。",
+  "registrationHint": "开启：任何人均可注册。关闭：必须使用有效的邀请链接。已有账号仍可登录。",
   "cleanup": "后台清理",
   "cleanupHint": "每 15 分钟清理过期超过 24 小时的会话和验证记录，以及超过 1 小时的限流记录。",
   "jobsAvailable": "当前部署已启用调度，此设置将在下次执行时生效。",
@@ -19,13 +19,13 @@
   "unsaved": "有未保存的修改",
   "loading": "正在加载站点设置",
   "reload": "加载最新配置并保留我的修改",
-  "forbidden": "仅已验证邮箱的管理员可以管理站点。",
+  "forbidden": "仅部署管理员可管理此站点。",
   "unavailable": "暂时无法读取或保存站点设置，请检查 API 连接与数据库迁移后重试。",
   "conflict": "其他管理员已修改配置。请加载最新版本后再保存，当前编辑内容仍然保留。",
   "deployment": "部署配置",
   "deploymentHint": "数据库连接、部署加密密钥和初始管理员由部署人员配置。",
-  "closed": "注册已关闭",
-  "closedHint": "当前不接受新账号注册，已有账号仍可登录。",
+  "closed": "需要邀请",
+  "closedHint": "请使用空间所有者提供的邀请链接创建账号。",
   "mail": {
     "title": "邮件",
     "loading": "正在加载邮件设置",
@@ -40,9 +40,14 @@
     "keepKey": "留空则保留已保存的密钥。",
     "locale": "邮件默认语言",
     "unavailable": "暂时无法读取或保存邮件设置，请重试。",
-    "forbidden": "仅已验证邮箱的管理员可以管理邮件设置。",
+    "forbidden": "仅部署管理员可管理邮件设置。",
     "conflict": "其他管理员已修改邮件设置。请加载最新配置后再保存。",
-    "invalidInput": "请检查发件人地址和 Resend API Key。"
+    "invalidInput": "请检查发件人地址和 Resend API Key。",
+    "sendTest": "发送测试邮件",
+    "testHint": "使用已保存的设置，仅发送至当前账号邮箱。",
+    "testSending": "发送中…",
+    "testSent": "邮件服务已接受测试邮件，请检查收件箱。",
+    "testFailed": "测试邮件发送失败。请检查发件人、密钥及发送状态后重试。"
   },
   "storage": {
     "title": "对象存储",
@@ -64,5 +69,8 @@
     "conflict": "对象存储设置已变更，请重新加载配置后再保存。",
     "reload": "重新加载对象存储设置",
     "enabledSetting": "启用存储配置"
-  }
+  },
+  "setupTitle": "设置你的部署",
+  "setupHint": "你是部署管理员。请在下方配置邮件并发送测试邮件，也可稍后再设置。默认开放注册，配置邮件前不要求邮箱验证。",
+  "setupSkip": "暂时跳过"
 }

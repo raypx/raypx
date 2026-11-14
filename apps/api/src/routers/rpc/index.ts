@@ -54,6 +54,11 @@ export function createRpcRoutes(
   logger: ApiAppOptions["logger"],
 ) {
   const routes = new Hono<ApiRouterEnv>();
+  routes.use("/admin/issuePasswordReset", async (c, next) => {
+    c.header("cache-control", "no-store");
+    c.header("referrer-policy", "no-referrer");
+    await next();
+  });
   routes.use("/protectedInputs/*", async (c, next) => {
     c.header("cache-control", "no-store");
     await next();

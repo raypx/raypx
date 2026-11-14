@@ -12,6 +12,8 @@ import {
   OpenApiServers,
 } from "@raypx/agents/client";
 import { useAuthActions } from "@raypx/auth/hooks";
+import { MailUnavailable } from "../auth/components/mail-state.js";
+import { publicConfigurationQuery } from "../config/client.js";
 import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
 
 import { Button } from "@raypx/ui/components/ui/button";
@@ -148,6 +150,7 @@ function PasswordSettings({
 }) {
   const c = useTranslations("common");
   const t = useTranslations("auth");
+  const mail = useQuery(publicConfigurationQuery());
   const query = useQuery({
     queryKey: ["linked-accounts", apiUrl, accountId],
     queryFn: async ({ signal }) => {
@@ -196,6 +199,8 @@ function PasswordSettings({
           />
           <TwoFactorPanel />
         </>
+      ) : mail.data?.mailConfigured === false ? (
+        <MailUnavailable reset />
       ) : (
         <PasswordSetupEmail client={authClient} email={email} webUrl={webUrl} />
       )}

@@ -11,6 +11,7 @@ export interface SendSignInCodeInput extends Omit<SendLinkEmailInput, "url"> {
   code: string;
 }
 export interface Mailer {
+  sendTest?(input: { email: string; locale?: MailLocale }): Promise<void>;
   sendVerification(input: SendLinkEmailInput): Promise<void>;
   sendPasswordReset(input: SendLinkEmailInput): Promise<void>;
   sendSignInCode(input: SendSignInCodeInput): Promise<void>;

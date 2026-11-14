@@ -27,7 +27,7 @@ function SignupPage() {
   const search = Route.useSearch();
   const query = useQuery(publicConfigurationQuery());
   const t = useTranslations("site");
-  if (query.data?.registrationEnabled) return <AuthForm mode="signup" />;
+  if (query.data) return <AuthForm mode="signup" />;
   if (query.isPending) {
     return (
       <section className={statusClass}>

@@ -3,6 +3,8 @@ import { accountRoles, assignedRoles } from "@raypx/auth/access";
 import type { Database } from "@raypx/database/connection";
 import { schema, user } from "@raypx/database/schema";
 import { APIError } from "better-auth/api";
+import { usableEmail } from "@raypx/core/auth";
+import type { Registration } from "./registration.js";
 import { inArray } from "drizzle-orm";
 import type { AuditService } from "./audit.js";
 import { writeAuditSuccess } from "./repository.js";
@@ -11,12 +13,48 @@ import { writeAuditSuccess } from "./repository.js";
 export function createAuditedAuthAdapter(
   db: Database,
   audit: AuditService,
+  registration?: Registration,
+  inTransaction = false,
 ): ReturnType<typeof drizzleAdapter> {
   const factory = drizzleAdapter(db, { provider: "pg", schema });
   return (options) => {
     const adapter = factory(options);
     return {
       ...adapter,
+      ...(registration
+        ? {
+            async create<T extends Record<string, unknown>, R = T>(input: {
+              model: string;
+              data: Omit<T, "id">;
+              select?: string[] | undefined;
+              forceAllowId?: boolean | undefined;
+            }): Promise<R> {
+              if (input.model !== "user") return adapter.create<T, R>(input);
+              const execute = (tx: Parameters<Parameters<Database["transaction"]>[0]>[0]) =>
+                registration.create(tx, input.data, (data) =>
+                  drizzleAdapter(tx, { provider: "pg", schema })(options).create<
+                    Record<string, unknown>,
+                    R
+                  >({ ...input, data, forceAllowId: true }),
+                );
+              return inTransaction
+                ? execute(db as unknown as Parameters<typeof execute>[0])
+                : db.transaction(execute);
+            },
+            async transaction<T>(callback: (tx: typeof adapter) => Promise<T>): Promise<T> {
+              return db.transaction((tx) =>
+                callback(
+                  createAuditedAuthAdapter(
+                    tx as unknown as Database,
+                    audit,
+                    registration,
+                    true,
+                  )(options),
+                ),
+              );
+            },
+          }
+        : {}),
       async update<T>(input: Parameters<typeof adapter.update>[0]): Promise<T | null> {
         if (input.model !== "user" || !("role" in input.update)) return adapter.update<T>(input);
         const execute = async () => {
@@ -37,6 +75,7 @@ export function createAuditedAuthAdapter(
                   id: user.id,
                   role: user.role,
                   emailVerified: user.emailVerified,
+                  emailVerificationSkipped: user.emailVerificationSkipped,
                   banned: user.banned,
                 })
                 .from(user)
@@ -46,10 +85,12 @@ export function createAuditedAuthAdapter(
               if (scope.source === "http") {
                 const actor = accounts.find(({ id }) => id === actorId);
                 if (
-                  !actor?.emailVerified ||
-                  actor.banned ||
-                  actor.id === targetId ||
-                  !assignedRoles(actor.role).some(
+                  !actor ||
+                  (!usableEmail(actor) &&
+                    (!registration || (await registration.mailAvailable(tx)))) ||
+                  actor?.banned ||
+                  actor?.id === targetId ||
+                  !assignedRoles(actor?.role).some(
                     (role) => accountRoles[role].authorize({ user: ["set-role"] }).success,
                   )
                 )

@@ -44,3 +44,5 @@ Runtime composes bounded message upload/delivery, notification queries and
 device member files. RPC mutations retain session, trusted-Origin and quota
 checks. /message-attachments downloads require fresh Space admission and always
 force safe attachment disposition; never inline supplied documents.
+
+Registration owns a transaction-locked account_bootstrap marker and fresh mail/signup admission through the auth adapter. SETUP_TOKEN is optional, API-only, bounded and rate-limited. No-mail accounts retain an unverified admission exemption. Recovery-link issuance commits with its audit, expires after 15 minutes and is returned once; test mail sends only to the current administrator.

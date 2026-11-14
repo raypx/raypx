@@ -79,6 +79,18 @@ current Space; toggling that Space preserves other existing selections.
 Push notifications and OTA updates are not configured. iOS/Android device
 acceptance remains unverified.
 
+Fresh deployments let the first signup create the deployment administrator through
+a transaction-protected, permanent bootstrap claim. Optional API-only `SETUP_TOKEN`
+protects that claim. Setup points to Email settings, offers a test email and can be
+skipped. Signups are open by default, with an administrator invitation-only switch.
+Without mail, verification is skipped and accounts work immediately while remaining
+unverified. Enabling mail requires verification for new signups, while earlier
+accounts retain access and see a dismissible prompt. Web and native Mobile Account
+show that reminder; native signup and recovery continue through Web. Copied Space
+invitations and audited, single-use administrator reset links provide no-mail
+alternatives. Open unverified signup carries email-squatting and abuse risks.
+Deployment administration never supplies Space membership.
+
 ## Capabilities and Constraints
 
 | Area                  | Implemented behavior                                                                                                                                                                                                                                                                                                                                                                                                            |

@@ -7,6 +7,7 @@ export const applicationPermissions = [
   "audit.read",
   "users.read",
   "users.roles.update",
+  "users.password.reset",
   "projects.read",
   "tasks.read",
   "approvals.read",

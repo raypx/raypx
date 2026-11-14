@@ -79,6 +79,8 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
         "Accept-Language",
         "X-Request-Id",
         "X-Captcha-Response",
+        "X-Raypx-Setup-Token",
+        "X-Raypx-Invitation",
       ],
       exposeHeaders: ["X-Request-Id", "Retry-After", "X-Retry-After"],
       // Every JSON RPC call is preflighted; let browsers reuse the answer for ten minutes.

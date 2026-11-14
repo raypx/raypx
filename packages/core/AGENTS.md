@@ -28,3 +28,5 @@ owns source keys and bounded member-feed projections; neither grants authority.
 `/computers` owns additive lifecycle/screen availability reasons for resource
 admission and unsupported graphical runtimes. Frames remain transient untrusted
 content, never authorization; no provider credential enters public records.
+
+Auth exposes usableEmail for verified accounts or server-recorded no-mail admission exemptions; this is never Space authorization. users.password.reset grants audited no-mail recovery-link issuance only through API.

@@ -1,3 +1,4 @@
+import { EmailVerificationReminder } from "../../src/email-verification.js";
 import { Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthActions } from "@raypx/auth/hooks";
@@ -22,6 +23,14 @@ export default function AccountScreen() {
       </Text>
       <Text className="text-base leading-6 text-foreground">{data?.user.name}</Text>
       <Text className="text-base leading-6 text-muted-foreground">{data?.user.email}</Text>
+      {data && (
+        <EmailVerificationReminder
+          key={data.user.id}
+          api={workspace.api}
+          email={data.user.email}
+          verified={data.user.emailVerified}
+        />
+      )}
       {workspace.api?.approvals ? <AccountApprovalSettings port={workspace.api.approvals} /> : null}
       {actions.error ? (
         <Text accessibilityRole="alert" className="text-base leading-6 text-foreground">

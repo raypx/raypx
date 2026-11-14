@@ -73,16 +73,54 @@ not transfer between origins. New Agent execution stays in the backend. Retained
 CLI local tools still require their own enrolled profile and remain independent
 of online logout; that identity grants no Space permission.
 
+## Fresh deployment and email policy
+
+The first signup becomes deployment administrator in the same PostgreSQL transaction
+that closes the durable deployment bootstrap marker. Concurrent signups produce
+exactly one initial administrator. Deleting users never reopens bootstrap; there is
+no reset command. Optional `SETUP_TOKEN` (32–512 printable ASCII characters) protects
+that first signup only. An unprotected production deployment warns at startup and
+signup identifies the administrator creation. Follow [first setup](configuration.md#first-setup).
+
+Signups are open by default. **Open sign-ups** off means invitation-only, for every
+supported account-creation path. A Space owner's copied bearer link can register
+one account and then be explicitly accepted by that account; registration alone
+adds no Space membership. Invalid, revoked, expired and already bound invitations
+cannot admit another new account. Invitation tokens remain in fragments and masked
+request headers, outside return destinations and OAuth state.
+
+Mail configuration is evaluated freshly. With no mail (including paused delivery),
+verification is skipped and accounts are usable immediately, while remaining
+unverified in the database and user list. `email_verification_skipped` records their
+admission exemption. Once mail is configured, new signups must verify; prior no-mail
+accounts keep access and receive a dismissible verification reminder. Email ownership
+is separate from deployment role and Space authorization. Database/configuration
+failures fail closed. Normal production signup rate limits cover both paths.
+
+Without mail, verification/recovery/code screens explain the unavailable delivery
+and direct people to password sign-in, copied invitation links or an administrator
+reset link. Administrators can issue an audited 15-minute, one-time recovery link
+from Users, shown only in that dialog and never retrievable later. A new issuance
+invalidates older recovery links. Mail configured restores the emailed flows.
+Native Mobile keeps signup/recovery in Web and admits no-mail accounts normally;
+its Account screen provides the optional verification reminder.
+
+Open unverified signup permits email squatting and abuse. Do not treat an unverified
+email as identity proof, automatically link identities to it, or share recovery links
+without checking the recipient. A reset link lets its holder change that account's
+password, including access through its existing memberships. Trust administrators
+accordingly; role checks alone still grant no Space access.
+
 ## Roles and permissions
 
 Raypx extends the Better Auth 1.7 Admin plugin and its access controller. Roles are
 persisted in the foundation user table; no email allowlist overrides authorization.
 
-| Role     | Assignment                                                  | Web navigation                                        |
-| -------- | ----------------------------------------------------------- | ----------------------------------------------------- |
-| `guest`  | No valid verified account session                           | Public pages and device preferences                   |
-| `member` | Default persisted Better Auth role                          | Agents, Pages, Space controls and account settings    |
-| `admin`  | Assigned through Better Auth or explicit operator bootstrap | Member navigation plus the Web administration console |
+| Role     | Assignment                                                            | Web navigation                                        |
+| -------- | --------------------------------------------------------------------- | ----------------------------------------------------- |
+| `guest`  | No valid admitted account session                                     | Public pages and device preferences                   |
+| `member` | Default persisted Better Auth role                                    | Agents, Pages, Space controls and account settings    |
+| `admin`  | First signup, existing administration, or explicit operator bootstrap | Member navigation plus the Web administration console |
 
 Apply the current PostgreSQL migrations to the isolated platform database before
 deploying. Admin role/ban fields and session attribution live there; they never
@@ -110,12 +148,12 @@ Neither RPC input nor cached browser session data assigns a role.
 Web's `authClient` includes `adminClient` with the shared ACL. Administrators can
 use `admin.listUsers`, `admin.getUser` and `admin.setRole({ userId, role: "admin" })`.
 After a successful role change, invalidate `queryKey: ["account-access"]` to refresh
-visible menus. Administrators receive only user list/get/set-role operations.
-Impersonation, deletion, password changes and moderation operations are not granted.
+visible menus. The authentication plugin grants user list/get/set-role operations. The separate audited `admin.issuePasswordReset` RPC grants recovery-link issuance while mail is unavailable.
+Impersonation, deletion, direct password changes and moderation operations are not granted.
 Web provides the `/admin/users` management page; native auth methods remain unchanged.
 
 Registration and profile updates cannot assign roles. Mutations require a trusted
-Origin and a fresh verified, unbanned user's ACL. `readAuthSession` reloads the user
+Origin and a fresh admitted, unbanned user's ACL. `readAuthSession` reloads the user
 record even with Redis session storage. Admin endpoint pre-checks also read that
 record so a failed cache refresh cannot preserve administrator privileges.
 Authenticated `admin.hasPermission` checks use that same fresh record. Local

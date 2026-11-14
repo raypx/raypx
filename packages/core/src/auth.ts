@@ -6,6 +6,8 @@ export interface AuthUser {
   email: string;
   name: string;
   emailVerified: boolean;
+  /** Server-recorded exemption for accounts created without mail; never proves email ownership. */
+  emailVerificationSkipped?: boolean;
   /** Better Auth Admin plugin roles, not a browser-assigned authorization claim. */
   role?: string;
   banned?: boolean;
@@ -55,4 +57,11 @@ export function resumablePath(value: unknown, pages: ReadonlySet<string>): strin
   } catch {
     return "/";
   }
+}
+
+/** Email ownership and account admission are distinct. Space membership is checked separately. */
+export function usableEmail(
+  user: { emailVerified: boolean; emailVerificationSkipped?: boolean } | null | undefined,
+): boolean {
+  return user?.emailVerified === true || user?.emailVerificationSkipped === true;
 }

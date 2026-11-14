@@ -94,7 +94,18 @@ export function requestMode(
     case "login":
       return auth.signIn({ email, password }, onSuccess);
     case "signup":
-      return auth.signUp({ name: formText(data, "name"), email, password }, onSuccess);
+      return auth.signUp(
+        {
+          name: formText(data, "name"),
+          email,
+          password,
+          ...(formText(data, "setupToken") ? { setupToken: formText(data, "setupToken") } : {}),
+          ...(formText(data, "invitation")
+            ? { invitation: formText(data, "invitation").split("#").at(-1)! }
+            : {}),
+        },
+        onSuccess,
+      );
     case "forgot-password":
       return auth.requestPasswordReset({ email }, onSuccess);
     case "reset-password":

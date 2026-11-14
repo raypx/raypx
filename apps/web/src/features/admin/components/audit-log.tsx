@@ -42,6 +42,7 @@ const outcomeTones: Record<AuditEntry["outcome"], StatusTone> = {
   unknown: "warning",
 };
 function actionLabel(action: AuditEntry["action"]) {
+  if (action === "user.password.reset-link") return "passwordResetLink";
   if (action === "user.role.update") return "roleUpdate";
   return "configurationUpdate";
 }
@@ -243,6 +244,7 @@ export function AuditLog() {
                 { value: "", label: c("all") },
                 { value: "user.role.update", label: t("roleUpdate") },
                 { value: "configuration.update", label: t("configurationUpdate") },
+                { value: "user.password.reset-link", label: t("passwordResetLink") },
               ]}
             />
           </Field>

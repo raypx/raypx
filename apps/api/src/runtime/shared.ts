@@ -1,3 +1,6 @@
+import { createRegistration } from "../admin/registration.js";
+import { createPasswordResetLinks } from "../admin/password-reset.js";
+import type { Mailer } from "@raypx/email/server";
 import type { ConversationModels } from "../conversations/models.js";
 import { composeAgents } from "./agents.js";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
@@ -27,6 +30,7 @@ import { createLifecycle } from "./lifecycle.js";
 import { createStorageSettings } from "../storage/config.js";
 
 export interface RuntimeProviders {
+  createMailer?: (options: import("@raypx/email/server").CreateMailerOptions) => Mailer;
   createModels?: () => ConversationModels;
   createConversationFanout?: () => import("@raypx/agents/server").ConversationFanout;
   createSpaceFanout?: () => import("@raypx/spaces/server").SpaceFanout;
@@ -59,7 +63,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const { secondaryStorage, rateLimit, readiness } = createAdapters(environment, db, redis);
     const reads = createConfigReads(redis?.configNotifications);
     lifecycle.own(async () => reads.close());
-    const mailer = databaseMailer(db, environment.APP_KEY, reads);
+    const mailer = databaseMailer(db, environment.APP_KEY, reads, resources.createMailer);
     const access = createAccessPolicy();
     const administration = (
       resources.createAdministrationRepository ?? createAdministrationRepository
@@ -74,24 +78,29 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     async function revokeDeviceComputers(accountId: string) {
       await deviceComputersRepository.revokeAccount(accountId);
     }
+    const registration = createRegistration(db, {
+      ...(environment.SETUP_TOKEN ? { setupToken: environment.SETUP_TOKEN } : {}),
+      ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
+      mailAvailable: mailer.available,
+    });
     const auth = createAuth({
+      registrationManaged: true,
       revokeDeviceConnectors: async (userId) => {
         await revokeDeviceComputers(userId);
       },
-      registrationAllowed: async () => (await config.read()).values.registrationEnabled,
       siteName: () =>
         config.readCached().then(
           (snapshot) => snapshot.values.siteName,
           () => configurationDefaults.siteName,
         ),
-      database: createAuditedAuthAdapter(db, audit),
+      database: createAuditedAuthAdapter(db, audit, registration),
       mailer,
       ...(secondaryStorage ? { secondaryStorage } : {}),
       config: createAuthConfig(environment),
     });
     // Resolve from the same auth adapter for HTTP and direct server callers.
     // Keep sessions request-owned even when the process reuses the runtime.
-    const readSession = (headers: Headers) => readAuthSession(auth, headers);
+    const readSession = (headers: Headers) => readAuthSession(auth, headers, mailer.available);
     const spaces = createSpaceAccess(db);
     const {
       runner,
@@ -124,6 +133,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     lifecycle.own(() => spaceDeletionWorker.close());
     const conversations = runner.conversations;
     return {
+      registration,
       deviceComputers,
       deviceComputersRepository,
       deviceConnector,
@@ -196,10 +206,13 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         storageSettings: createStorageSettings(db, environment.APP_KEY, audit, reads),
         resendSettings: createResendSettings(db, environment.APP_KEY, audit, reads),
         jobsEnabled: environment.JOBS_ENABLED,
-        authHandler: (request) => auth.handler(request),
+        authHandler: (request) => registration.handle(request, () => auth.handler(request)),
         readSession,
         allowedOrigins: environment.allowedOrigins,
         mailAvailable: mailer.available,
+        registration,
+        testMail: mailer.sendTest,
+        passwordResetLinks: createPasswordResetLinks(db, audit, mailer.available),
         logger,
         readiness: {
           ...readiness,

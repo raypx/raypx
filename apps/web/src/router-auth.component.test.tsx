@@ -58,11 +58,12 @@ describe("authentication routes", () => {
     });
   });
 
-  it("replaces closed registration with a sign-in link", async () => {
+  it("requires an invitation when open sign-ups are disabled", async () => {
     mocks.registrationEnabled = false;
     await page("/signup");
-    expect(screen.getByRole("heading", { name: "Registration is closed" })).toBeTruthy();
-    expect(screen.queryByLabelText("Password")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Create your account" })).toBeTruthy();
+    expect(screen.getByLabelText("Invitation link")).toBeRequired();
+    expect(screen.getByLabelText("Password")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   });
   it("submits the canonical name and sends verification back to Web", async () => {

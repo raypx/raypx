@@ -354,3 +354,22 @@ it("offers another attempt after cancelled OAuth without rendering provider diag
   expect(screen.getByRole("alert").textContent).not.toContain("private-diagnostic");
   expect(screen.getByRole("button", { name: "Continue with Google" })).toBeTruthy();
 });
+
+it("completes an immediately admitted signup without asking for verification and retries only navigation", async () => {
+  const complete = vi.fn(async () => {}).mockRejectedValueOnce(new Error("navigation unavailable"));
+  const { client } = fixture("signup", "", complete);
+  client.signUp.email.mockResolvedValue({ error: null, data: { token: "fixture-session-token" } });
+  fireEvent.change(screen.getByLabelText("Your name"), { target: { value: "No Mail" } });
+  fireEvent.change(screen.getByLabelText("Email address"), {
+    target: { value: "nomail@example.test" },
+  });
+  const password = screen.getByLabelText<HTMLInputElement>("Password");
+  fireEvent.change(password, { target: { value: "fixture-password-123" } });
+  fireEvent.submit(password.closest("form")!);
+  await screen.findByText("You’re signed in, but the page could not load. Retry to continue.");
+  expect(password.value).toBe("");
+  expect(screen.queryByText(messages.en.auth.verifyIntro)).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  await waitFor(() => expect(complete).toHaveBeenCalledTimes(2));
+  expect(client.signUp.email).toHaveBeenCalledTimes(1);
+});

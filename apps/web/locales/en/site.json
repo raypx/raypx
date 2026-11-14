@@ -7,8 +7,8 @@
   "intro": "Manage this deployment. Changes apply to everyone using it.",
   "siteName": "Site name",
   "siteNameHint": "Shown in the Web navigation. Up to 60 characters.",
-  "registration": "Open registration",
-  "registrationHint": "Allow new accounts to sign up. Existing accounts can still sign in when this is off.",
+  "registration": "Open sign-ups",
+  "registrationHint": "On: anyone can sign up. Off: a valid invitation link is required. Existing accounts can still sign in.",
   "cleanup": "Background cleanup",
   "cleanupHint": "Every 15 minutes, remove sessions and verification records expired over 24 hours ago, and rate limits older than an hour.",
   "jobsAvailable": "Scheduling is enabled in this deployment. This setting applies to the next run.",
@@ -19,13 +19,13 @@
   "unsaved": "Unsaved changes",
   "loading": "Loading site settings",
   "reload": "Load latest and keep my edits",
-  "forbidden": "Only a verified administrator can manage this site.",
+  "forbidden": "Only a deployment administrator can manage this site.",
   "unavailable": "Site settings are unavailable. Check the API connection and database migrations, then try again.",
   "conflict": "Another administrator changed these settings. Load the latest version before saving; your edits are still here.",
   "deployment": "Deployment configuration",
   "deploymentHint": "Database connections, the deployment encryption secret and initial administrator setup are managed by the operator.",
-  "closed": "Registration is closed",
-  "closedHint": "New accounts are not being accepted. You can still sign in to an existing account.",
+  "closed": "Invitation required",
+  "closedHint": "Use an invitation link from a Space owner to create an account.",
   "mail": {
     "title": "Email",
     "loading": "Loading email settings",
@@ -40,9 +40,14 @@
     "keepKey": "Leave blank to keep the saved key.",
     "locale": "Default email language",
     "unavailable": "Email settings are unavailable. Try again.",
-    "forbidden": "Only a verified administrator can manage email settings.",
+    "forbidden": "Only a deployment administrator can manage email settings.",
     "conflict": "The email settings changed. Load the latest configuration before saving.",
-    "invalidInput": "Check the sender address and Resend API key."
+    "invalidInput": "Check the sender address and Resend API key.",
+    "sendTest": "Send test email",
+    "testHint": "Uses saved settings and sends only to your account email.",
+    "testSending": "Sending…",
+    "testSent": "The mail service accepted the test email. Check your inbox.",
+    "testFailed": "Could not send the test email. Check the sender, key and delivery status, then try again."
   },
   "storage": {
     "title": "Object storage",
@@ -64,5 +69,8 @@
     "conflict": "The storage settings changed. Load the latest configuration before saving.",
     "reload": "Reload storage settings",
     "enabledSetting": "Enable storage configuration"
-  }
+  },
+  "setupTitle": "Set up your deployment",
+  "setupHint": "You are the deployment administrator. Configure email below and send a test email. You can do this later; sign-ups are open and email verification is skipped until mail is configured.",
+  "setupSkip": "Skip for now"
 }

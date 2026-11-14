@@ -90,7 +90,7 @@ it("applies Resend settings live and keeps keys out of reads and durable audit e
       reason: { code: "CONFLICT" },
     });
     expect(publish.mock.calls).toEqual([[{ scope: "resend", revision: 1 }]]);
-    expect(await remote.available()).toBe(false);
+    expect(await remote.available()).toBe(true);
     clock += 5_000;
     expect(await Promise.all([remote.available(), remote.available()])).toEqual([true, true]);
     expect(remoteFactory).toHaveBeenCalledTimes(1);
@@ -118,7 +118,7 @@ it("applies Resend settings live and keeps keys out of reads and durable audit e
     const rotatedKey = "re_rotated_test_key";
     await client().updateResend({ values: newSender, apiKey: rotatedKey, revision: 2 });
     await remote.sendPasswordReset(message);
-    expect(remoteFactory).toHaveBeenCalledTimes(1);
+    expect(remoteFactory).toHaveBeenCalledTimes(2);
     remoteReads.committed("resend", 3);
     await remote.sendPasswordReset(message);
     expect(remoteFactory).toHaveBeenLastCalledWith({

@@ -49,11 +49,25 @@ a separate one-shot job with the owner URL, `DB_MIGRATE_RUNTIME_USER`, and
 `DATABASE_MIGRATE_ON_START=false`, and remove the shared-environment pre-deploy
 command once the new job gates API deployment.
 
-Mail and storage live in each environment's database. To seed them on upgrade,
-set `DB_MIGRATE_IMPORT_CONFIG=true` and supply the existing provider environment
-variables to the API service before the pre-deploy job runs. Remove the import
-flag and input variables after the upgrade. [Configuration center guide](configuration.md#resend-email)
-Unconfigured mail actions return `MAIL_NOT_CONFIGURED`.
+Mail and storage live in each environment's database. Configure them in the center
+after first signup. Optional operator seeding can use `DB_MIGRATE_IMPORT_CONFIG=true`
+with explicit provider inputs during the pre-deploy job; remove those inputs and
+the flag afterwards. Seeding is not required for account bootstrap. See the
+[configuration center guide](configuration.md#resend-email).
+
+Before exposing a fresh service, set optional API-only `SETUP_TOKEN` to a private
+random 32–512 printable ASCII value. Keep it in API runtime secrets, never Web or
+build variables. Open `/signup`, supply that token if configured, and create the
+first administrator. Without a token, production startup warns that the first
+visitor can claim administration. Setup opens Email settings and can be skipped.
+Save mail settings and send a test to the administrator's own address. Until mail
+is configured, accounts are usable without verification and remain marked
+unverified. Enabling mail requires verification for new signups, while prior
+no-mail accounts keep access. Signups stay open by default; turn **Open sign-ups**
+off for invitation-only. Without mail, share copied invitation links and use
+administrator-issued one-time reset links. See [first setup and risks](configuration.md#first-setup).
+Bootstrap stays closed after account deletion; no reset command exists.
+
 Both Dockerfiles declare `RAILWAY_GIT_COMMIT_SHA` as a build argument. Manual builds
 outside Git must supply it or `VITE_APP_RELEASE`; no unversioned production fallback
 is generated. Client assets record the resolved version for later SourceMap upload.

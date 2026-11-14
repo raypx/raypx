@@ -72,6 +72,14 @@ export function createMailer(
   }
   return {
     available,
+    async sendTest(input) {
+      const zh = (input.locale ?? options.defaultLocale) === "zh";
+      const subject = zh ? "Raypx 邮件配置测试" : "Raypx email configuration test";
+      const text = zh
+        ? "测试邮件已送达。此邮件没有登录或验证功能。"
+        : "Your test email was delivered. This message does not sign you in or verify an address.";
+      await deliver(input.email, { subject, text, html: `<p>${text}</p>` });
+    },
     sendSignInCode,
     sendVerification: (input) => send("verification", input),
     sendPasswordReset: (input) => send("reset", input),

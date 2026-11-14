@@ -104,32 +104,54 @@ export function createResendSettings(
   };
 }
 
-/** Keep the live client process-local and reload it after a change or a short TTL. */
+/** Read policy fresh on every request; reuse only the client for identical saved values. */
 export function databaseMailer(
   db: Database,
   secret: string,
   reads = createConfigReads(),
-  makeMailer = createMailer,
+  makeMailer: (options: import("@raypx/email/server").CreateMailerOptions) => Mailer = createMailer,
 ) {
   const cipher = configurationCipher(secret, purpose, id);
 
-  const { readCached } = reads.source("resend", async (): Promise<Mailer | null> => {
+  let active: { key: string; mailer: Promise<Mailer> } | undefined;
+  async function load(database: Pick<Database, "select"> = db): Promise<Mailer | null> {
     try {
-      const [row] = await db.select().from(mailConfiguration).where(eq(mailConfiguration.id, id));
-      if (!row?.enabled) return null;
-      const apiKey = await cipher.open(row.credentials, row.from);
-      return makeMailer({ apiKey, from: row.from, defaultLocale: row.defaultLocale });
+      const [row] = await database
+        .select()
+        .from(mailConfiguration)
+        .where(eq(mailConfiguration.id, id));
+      if (!row?.enabled) {
+        active = undefined;
+        return null;
+      }
+      // Configuration is always read fresh; only the client for those exact saved values is reused.
+      const key = JSON.stringify([row.revision, row.credentials, row.from, row.defaultLocale]);
+      if (active?.key !== key)
+        active = {
+          key,
+          mailer: (async () => {
+            const apiKey = await cipher.open(row.credentials, row.from);
+            return makeMailer({ apiKey, from: row.from, defaultLocale: row.defaultLocale });
+          })(),
+        };
+      return await active.mailer;
     } catch {
       throw new MailUnavailableError();
     }
-  });
+  }
+  const { read } = reads.source("resend", () => load());
   async function requireMailer() {
-    const mailer = await readCached();
+    const mailer = await read();
     if (!mailer) throw new MailUnavailableError();
     return mailer;
   }
   return {
-    available: async () => readCached().then(Boolean, () => false),
+    sendTest: async (input: { email: string; locale?: "en" | "zh" }) => {
+      const mailer = await requireMailer();
+      if (!mailer.sendTest) throw new MailUnavailableError();
+      await mailer.sendTest(input);
+    },
+    available: async (database?: Pick<Database, "select">) => load(database).then(Boolean),
     sendVerification: async (input) => (await requireMailer()).sendVerification(input),
     sendSignInCode: async (input) => (await requireMailer()).sendSignInCode(input),
     sendPasswordReset: async (input) => (await requireMailer()).sendPasswordReset(input),

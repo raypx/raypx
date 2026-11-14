@@ -151,3 +151,9 @@ stated in the [root instructions](../../AGENTS.md) and the
 
 A later decision adds a new record. An accepted record is not edited; a new record
 supersedes it with a short link.
+
+Account bootstrap and mail-dependent verification are described in
+[accounts](../development/accounts.md#fresh-deployment-and-email-policy).
+The durable bootstrap row outlives all accounts; email ownership never grants
+Space admission. No-mail signup stays open unless an administrator chooses
+invitation-only.

@@ -45,7 +45,14 @@ export function createConfigHandlers({
     public: os.configuration.public.use(withPublicRpcAccess).handler(({ context }) =>
       configurationCall(context, async (service) => {
         const { values } = await service.readCached();
-        return { siteName: values.siteName, registrationEnabled: values.registrationEnabled };
+        return {
+          siteName: values.siteName,
+          registrationEnabled: values.registrationEnabled,
+          ...(options.registration
+            ? await options.registration.status()
+            : { bootstrap: false, setupTokenRequired: false }),
+          mailConfigured: (await options.mailAvailable?.()) ?? false,
+        };
       }),
     ),
     access: os.configuration.access.use(withPublicRpcAccess).handler(async ({ context }) => ({
@@ -93,6 +100,21 @@ export function createConfigHandlers({
         return configurationFailure(error, context);
       }
     }),
+    testMail: os.configuration.testMail
+      .use(withRpcPermission({ window: 60, max: 3 }))
+      .use(requireTrustedOrigin)
+      .handler(async ({ context, input }) => {
+        try {
+          if (!options.testMail) return { sent: false };
+          await options.testMail({
+            email: context.auth.user.email,
+            ...(input.locale ? { locale: input.locale } : {}),
+          });
+          return { sent: true };
+        } catch {
+          return { sent: false };
+        }
+      }),
     updateResend: os.configuration.updateResend
       .use(withRpcPermission({ window: 60, max: 10 }))
       .use(requireTrustedOrigin)

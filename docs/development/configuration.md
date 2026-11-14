@@ -1,32 +1,61 @@
 # Configuration center
 
-Web exposes `/admin/settings` to verified administrators. It uses the existing API
+Web exposes `/admin/settings` to admitted deployment administrators. It uses the existing API
 and PostgreSQL foundation on Bun; there is no second admin
 server or configuration package.
 
 ## First setup
 
-1. Create the PostgreSQL database and configure `DATABASE_URL`, authentication,
-   and origins in the API environment.
-2. Provide the Resend settings below and run `bun run db:migrate --import-config`
-   against that database. The command creates the foundation tables and seeds
-   missing provider settings. The target database must already exist.
-3. Register the intended administrator accounts and verify their emails.
-4. Set explicit `DATABASE_URL` and `ADMIN_EMAILS=owner@example.com` (comma-separated
-   for multiple accounts), then run `bun run --cwd apps/api auth:bootstrap-admins`.
-   This is an operator command, never a startup action. Database roles remain
-   authoritative after it finishes; removing a role is not undone by the email list.
-5. Sign in to Web and open **Configuration center**. The administrator role is checked from the current
-   stored user on every admin request, including writes. There is no first-user takeover.
+1. Create a fresh isolated PostgreSQL database. Set `DATABASE_URL`, `AUTH_URL`,
+   exact `ALLOWED_ORIGINS`, and independent `AUTH_SECRET` and `APP_KEY` values.
+   Apply the single current baseline with `bun run --cwd apps/api db:migrate`
+   (or let the documented startup migration apply it). Never apply this baseline
+   to an earlier/operator database.
+2. Before public exposure, set optional API-only `SETUP_TOKEN` to a private random
+   value of 32–512 printable ASCII characters. For example, generate one locally
+   with `openssl rand -hex 32` and put it directly in the deployment secret store.
+   Never use a `VITE_*` variable, build argument, URL or log for this value.
+3. Open `/signup`. The first account becomes deployment administrator. If a token
+   is configured, enter it in the masked setup field. Without mail, this account
+   is immediately signed in and remains **unverified**. The setup screen opens
+   the Email tab and offers **Skip for now**.
+4. Configure the sender, write-only delivery key and language, save, then use
+   **Send test email**. It sends only to the current administrator's account email.
+   An accepted send is not proof of inbox delivery; check the inbox.
+5. Review **Site → Open sign-ups**. It is on by default. Turn it off for
+   invitation-only registration. Owners share existing copied Space invitation links.
 
-Upgrading an existing deployment: run the migration before deploying this API.
-Sign-up is fail-closed, so until `system_configuration` exists every registration
-returns `CONFIGURATION_UNAVAILABLE` (503) and the Web sign-up page shows
-unavailability. Existing sign-in keeps working.
+`SETUP_TOKEN` is checked with a constant-time digest comparison only while bootstrap
+is open. Five bootstrap email-signup attempts per client address per minute are
+counted atomically in PostgreSQL, including missing/wrong tokens; the ordinary
+production signup limit also applies. The edge must overwrite the configured
+client-IP header and trust only declared proxies. With no token, production API
+startup warns that the first visitor to sign up becomes administrator; signup
+shows the same fact. Claim the account before exposing an unprotected deployment.
 
-Database creation and connection credentials remain deployment configuration.
-Without the database, the page reports unavailability; it does not pretend a save
-succeeded or fall back to browser-only persistence.
+The `account_bootstrap` lifetime row and first user are committed in one locked
+PostgreSQL transaction. Every supported account-creation path uses that adapter.
+Once any account has been created, deleting all accounts does **not** reopen
+bootstrap. There is no bootstrap-reset command. Do not delete that marker.
+The existing explicit `auth:bootstrap-admins` operator command promotes existing,
+verified accounts only; it does not reopen setup or create accounts.
+
+Without mail, all email verification is skipped. New accounts persist
+`email_verified=false` and `email_verification_skipped=true`. After mail is enabled,
+new signups require verification; earlier no-mail accounts remain usable and see a
+dismissible verification reminder in Web and native Mobile Account. Mail policy is
+read freshly for each auth request and at account creation, including across API
+replicas without Redis. Delivery paused counts as unconfigured. A failed
+configuration/database read fails closed; it is not a no-mail policy choice.
+
+Open unverified signup permits email squatting, impersonation by display name and
+registration abuse. It does not prove ownership of an email address. Use invitation-only
+registration for private deployments, verify recipient identity before sharing bearer
+links or reset links, and configure mail before opening a public service.
+Deployment administrator status never grants Space membership or content access.
+
+Database/origin/encryption settings remain operator-owned. Storage and configuration
+failures show unavailable states; clients never invent a successful save.
 
 ## Settings and precedence
 
@@ -36,11 +65,11 @@ The **Email** tab manages Resend. Each tab has its own revision and saves
 independently. Provider changes record only the enabled state in the audit.
 See [S3 configuration](object-storage.md).
 
-| Setting            | Initial value | Effect                                                                  |
-| ------------------ | ------------- | ----------------------------------------------------------------------- |
-| Site name          | Raypx         | Web shell, sign-in pages and authentication mail; logo image retained   |
-| Open registration  | On            | API accepts new email/password accounts; off preserves existing sign-in |
-| Background cleanup | On            | Allows the next cleanup run, provided deployment `JOBS_ENABLED=true`    |
+| Setting            | Initial value | Effect                                                                |
+| ------------------ | ------------- | --------------------------------------------------------------------- |
+| Site name          | Raypx         | Web shell, sign-in pages and authentication mail; logo image retained |
+| Open sign-ups      | On            | Anyone may register; off requires a valid Space invitation link       |
+| Background cleanup | On            | Allows the next cleanup run, provided deployment `JOBS_ENABLED=true`  |
 
 `JOBS_ENABLED` remains false by default and gates Nitro maintenance/
 account jobs. It does not disable durable Run recovery or Space routine worker scans. The
@@ -53,29 +82,25 @@ The singleton stores explicit non-secret columns, a revision, the last editor's
 user ID and update timestamp. Defaults apply only when the migrated table has no
 row. Missing tables or failed queries return a safe unavailable error.
 
-The public projection, signup pre-check and mail site names use the
-[configuration reader](caching.md#runtime-configuration) with a five-second
-process-local TTL. A committed save clears local state and notifies other
-replicas over Redis. Admin reads, saves, cleanup runs and the Better Auth
-user-create hook always read the database. That hook is the
-authoritative registration gate for every sign-in method, so a closed policy
-cannot be bypassed by a stale cache or a future provider. Web refreshes the public
-projection on navigation/focus; saving also invalidates it immediately for that
-browser.
+Public site decoration uses the short-lived configuration reader. Registration
+admission reads the current sign-up policy inside the user-creation transaction;
+public responses include `bootstrap`, `setupTokenRequired` and `mailConfigured`.
+They never include the setup token or delivery credentials. Fresh mail availability
+is used for authentication and sending, without a cached five-second policy window.
 
 Every save includes its read revision. Concurrent first saves and later edits use
 database compare-and-swap, returning a conflict instead of silently overwriting.
 The page retains the draft until the administrator loads the latest version,
 which keeps the fields they edited and takes every other field from the new
-revision. Writes require a valid session, verified administrator role and an Origin
+revision. Writes require a valid session, admitted administrator role and an Origin
 in `ALLOWED_ORIGINS`, and are limited to 10 per administrator per minute. DTOs
 reject extra configuration keys.
 
-The public projection contains only site name and registration availability.
+The public projection contains only site name, registration policy and the three non-secret setup/mail booleans.
 Database URLs, encryption secrets, administrator email lists and stored provider
 credentials never enter API responses. The Site tab displays deployment
 availability for cleanup. To recover from a closed registration policy,
-an existing verified administrator can sign in and re-enable it.
+an existing admitted administrator can sign in and re-enable it.
 
 ## Resend email
 
@@ -85,27 +110,31 @@ request's language takes precedence when available. Save to enable registration
 verification and password-reset emails. Pausing delivery preserves the key.
 Leave the key field blank when updating the other settings. A replacement is
 encrypted with the deployment's `APP_KEY`; the key is never returned.
-Saves immediately clear the current process's Resend client. Redis notifies other
-API replicas to reload on their next mail request. A five-second process-local
-TTL covers missed notifications and deployments without Redis. Saving does not
-send a test email or verify the key with Resend.
+Authentication and test sends read saved delivery settings afresh. Saving alone
+never sends a message. **Send test email** is limited to three requests per
+administrator per minute, uses saved settings, and reports acceptance or a safe
+failure without exposing provider diagnostics. Its recipient cannot be supplied
+by the caller.
 
-For a new deployment without a verified administrator, or when upgrading from
-environment-based mail delivery, run the following from the repository with
-the target `DATABASE_URL`, `APP_KEY`,
-`RESEND_API_KEY` and `MAIL_FROM` supplied securely to the command's environment.
-`MAIL_DEFAULT_LOCALE` is optional and defaults to `en`.
+Verification mail, email sign-in codes and emailed password recovery show translated
+unavailable states while mail is absent or paused. Password sign-in and copied
+invitation links remain available. The administrator user list can issue a
+15-minute, single-use password reset link while mail is unavailable. It requires
+`users.password.reset`, fresh administrator authorization, a trusted Origin and a
+three-per-minute admission limit. Issuance and its durable success audit commit
+together; audit stores no token, password or URL. Issuing another link invalidates
+previous password-reset links for that account. The response is no-store and the
+UI holds the link only until its dialog closes. There is no link-read/list API.
+Share it privately after verifying the recipient. A reset revokes account sessions;
+this powerful recovery capability can allow account takeover and needs trusted admins.
+Without mail, recovery requires an administrator who can still sign in. Configure
+mail and keep another trusted administrator before losing the only administrator
+session or password; no unauthenticated recovery bypass is added.
 
-```sh
-bun run db:migrate --import-config
-```
-
-Schema migrations and the requested imports commit in one PostgreSQL transaction.
-The import initializes missing Resend and S3 rows and preserves existing settings.
-Use the configuration center for later changes. After seeding the row, remove the
-three import-only mail variables. Keep the same deployment secret
-across replicas. With delivery paused or unconfigured, mail actions return
-`MAIL_NOT_CONFIGURED`; existing verified users can still sign in.
+The existing optional `db:migrate --import-config` can seed missing delivery/storage
+settings from explicit operator environment inputs. It is not needed to bootstrap,
+and never replaces settings already saved in the center. Keep `APP_KEY` stable
+and shared across API replicas. No earlier product database is imported.
 
 ## Server-side injection (IoC)
 
@@ -119,19 +148,11 @@ adapter. No decorators, global service locator or extra container library is nee
 - `ConfigRepository` is the storage port. Its update must atomically compare
   the expected revision and return `null` on conflict, including competing first saves.
 
-Inject the smallest interface a consumer needs. For example, within the API app:
-
-```ts
-import type { ConfigReader } from "../config/types.js";
-
-export function createRegistrationPolicy(configuration: ConfigReader) {
-  return async () => (await configuration.read()).values.registrationEnabled;
-}
-
-// In the composition root, using the runtime already owned by this request/process:
-const registrationAllowed = createRegistrationPolicy(runtime.config);
-const allowed = await registrationAllowed();
-```
+Inject the smallest interface a consumer needs. Transactional account admission
+belongs to `admin/registration.ts`, which reads settings using the auth transaction.
+A cached boolean precheck cannot assign the initial administrator or authorize
+invitation-only registration. Runtime composition injects the fresh mail reader;
+Auth owns session establishment and safe client feedback.
 
 The cleanup job receives the site reader via `createCleanupJob`. API composition
 registers the site snapshot, S3 provider and Resend client with one
@@ -209,3 +230,11 @@ console. The default runtime couples configuration CAS and success history in on
 transaction; custom repository factories receive AuditService and must keep this
 contract. See [administration audit](accounts.md#durable-audit) for migration,
 uncertainty and permanent-retention behavior.
+
+The exclusive fresh-deployment browser fixture is `apps/api/tests/helpers/bootstrap-server.ts`.
+Start it with `RAYPX_VALIDATION=1`, an empty disposable loopback `TEST_DATABASE_URL`,
+`BOOTSTRAP_E2E_PORT=56539` and `BOOTSTRAP_E2E_WEB_URL=http://127.0.0.1:56540`.
+Build Web with `VITE_API_URL=http://127.0.0.1:56539`, then run
+`BOOTSTRAP_E2E_API_URL=http://127.0.0.1:56539 bun --cwd e2e --bun playwright test --config playwright.bootstrap.config.ts`.
+It uses fake mail transport and cannot establish real inbox delivery. Stop that
+owned fixture before database suites or the separately seeded backend fixture.
