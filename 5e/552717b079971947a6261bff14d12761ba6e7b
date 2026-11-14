@@ -1,0 +1,144 @@
+packages/computers/src/server.ts
+  s_19a26a2ee5742f::t_563e30d7c25cf3 104-105,108,114,121
+infra/sandbox/tests/screen_test.py
+  s_19a26a2ee5742f::t_4d26b7d8c01573 24-25,58-59,67-70,117-121
+  s_19a26a2ee5742f::t_048f47f5459f71 122-123
+packages/dev-cli/src/validation/sandbox.ts
+  s_19a26a2ee5742f::t_ed096b6c68fe97 278,526-529,533-535,537-546,886-890,906-908,989,996
+  s_19a26a2ee5742f::t_6bf9dd8dc03f54 536
+  s_19a26a2ee5742f::t_c9de70e044231f 530-532,635-643,891-905,990-992,994
+  s_19a26a2ee5742f::t_332f0814e5c466 29
+  s_19a26a2ee5742f::t_b38ccf6cfee8b1 502-512
+packages/dev-cli/src/validation/sandbox-network.ts
+  s_19a26a2ee5742f::t_332f0814e5c466 1-6,14-24,57-64,76-78,82,85-91,93-109,122-139,175-177,182-191,197-202,206-218,227-239,242,250-251,255-261,267,302-303,308-312
+  s_19a26a2ee5742f::t_2cf713ed246a90 273-276,290-292,296-297
+  s_19a26a2ee5742f::t_9feffcfa627b9d 7-13,25-56,65-75,79-81,83-84,110-121,140-174,178-181,192-196,203-205,219-226,240-241,243-249,252-254,262-266,268-272,277-289,293-295,298-301,304-307
+  s_19a26a2ee5742f::t_6bf9dd8dc03f54 92
+deploy/sandbox-host/supervisor.env.example
+  s_19a26a2ee5742f::t_6359d602352584 28-36
+packages/computers/AGENTS.md
+  s_19a26a2ee5742f::t_a9dd00a5a85ceb 53-55
+infra/sandbox/src/supervisor.ts
+  s_19a26a2ee5742f::t_563e30d7c25cf3 15,42,44-51,97,146,169,218-229
+  s_19a26a2ee5742f::t_821e636d434ec0 230,237-238,251-253,272,327-328,444-449,490-521,578,591-593,604-609,712
+infra/sandbox/src/egress.test.ts
+  s_19a26a2ee5742f::t_14ff40e065fe13 25-27,29
+  s_19a26a2ee5742f::t_4d26b7d8c01573 45-46
+  s_19a26a2ee5742f::t_42252b06d31681 30-31,47-51
+infra/sandbox/egress.sh
+  s_19a26a2ee5742f::t_51c86e625920e0 62,83-89
+packages/dev-cli/src/validation/sandbox.test.ts
+  s_19a26a2ee5742f::t_e3d8fd2c61f2e0 198-201,336-339
+  s_19a26a2ee5742f::t_14ff40e065fe13 194-195,309-310,312-314,322-325,331-334,340,342-343
+  s_19a26a2ee5742f::t_6d0a3cd1eb0db7 185-187,197,205,311,315,321,335,341
+  s_19a26a2ee5742f::t_da3c6105590557 461
+packages/agents/locales/en/agents.json
+  s_19a26a2ee5742f::t_5876f9af376470 786-788
+packages/agents/locales/zh/agents.json
+  s_19a26a2ee5742f::t_5876f9af376470 786-788
+packages/computers/src/server.test.ts
+  s_19a26a2ee5742f::t_a9dd00a5a85ceb 65-75,77-78
+  s_19a26a2ee5742f::t_e4a03bae880838 76,79-85
+infra/sandbox/src/network.ts
+  s_19a26a2ee5742f::t_1e90da8a7547bf 75,77
+  s_19a26a2ee5742f::t_2952751185d5d1 1-11,13-22,24-28,31-32,34-50,52-53,55-74,76,78-82,90-109
+  s_19a26a2ee5742f::t_4d26b7d8c01573 12,29-30
+  s_19a26a2ee5742f::t_b1dbdcb3da7bfe 23,33,51,54,83-89
+  s_19a26a2ee5742f::t_43dd8786829f7d 110-141
+packages/providers/AGENTS.md
+  s_19a26a2ee5742f::t_a9dd00a5a85ceb 42-43
+infra/sandbox/AGENTS.md
+  s_19a26a2ee5742f::t_aae5c9020dddbf 54-64
+packages/dev-cli/src/validation/sandbox-network-ipc.py
+  s_19a26a2ee5742f::t_c9de70e044231f 1-66
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_19a26a2ee5742f::t_05c3e2e1b83d63 8-16,19
+  s_19a26a2ee5742f::t_a4425e0d816461 17-18,369
+deploy/sandbox-host/raypx-sandbox-network.service
+  s_19a26a2ee5742f::t_6359d602352584 1-36
+packages/dev-cli/AGENTS.md
+  s_19a26a2ee5742f::t_f98b5238d7bc4c 40-42
+infra/sandbox/src/config.ts
+  s_19a26a2ee5742f::t_2952751185d5d1 33-45,60-61,92-97,104-108,116,184-186,199-201
+  s_19a26a2ee5742f::t_ea16967faa4eec 98-103,109-115,139-144,183,187-198
+  s_19a26a2ee5742f::t_b422fc3e2ebfd9 202-203
+infra/sandbox/src/screen.py
+  s_19a26a2ee5742f::t_51c86e625920e0 120-129
+packages/providers/src/computer/port.ts
+  s_19a26a2ee5742f::t_563e30d7c25cf3 47
+docs/development/sandbox-hosting.md
+  s_19a26a2ee5742f::t_7cace9f78649c4 193-210,220-226,231-260,432-434,437-444
+  s_19a26a2ee5742f::t_f98b5238d7bc4c 144,151,211-219,227-230,417-420
+infra/sandbox/src/network.test.ts
+  s_19a26a2ee5742f::t_9a10dc7694ad99 1-9
+  s_19a26a2ee5742f::t_8b91a85ec47278 10-13
+infra/sandbox/host-network.py
+  s_19a26a2ee5742f::t_6079f6c6f8af74 100
+  s_19a26a2ee5742f::t_376692c688e94e 123-125,245,298,301-303
+  s_19a26a2ee5742f::t_901486399b1d3c 133-148,151-159,255,280,325-332,393-395
+  s_19a26a2ee5742f::t_ed255a1d66cabb 187-200,306
+  s_19a26a2ee5742f::t_1e90da8a7547bf 24,434,474,476
+  s_19a26a2ee5742f::t_9feffcfa627b9d 149-150
+  s_19a26a2ee5742f::t_b15a32583d95d0 266,335
+  s_19a26a2ee5742f::t_6bf9dd8dc03f54 285,300,307,310-312,318
+  s_19a26a2ee5742f::t_51c86e625920e0 287-289
+  s_19a26a2ee5742f::t_756c4cf37be7bc 342-356,375,391
+  s_19a26a2ee5742f::t_4d26b7d8c01573 9,114,121,174-175,313-317,402-403,416-421,427-430,453-455,457
+  s_19a26a2ee5742f::t_9bfc0d89410198 358-359,369-372
+  s_19a26a2ee5742f::t_f89edfdb9d4842 357,360-368,373-374
+  s_19a26a2ee5742f::t_00b2598e89a0c8 1-8,10-23,25-99,101-113,115-120,122,126-132,160-173,176-186,201-244,246-254,256-265,267-279,281-284,286,290-297,299,304-305,308-309,319-324,333-334,336-341,376-390,392,396-401,404-415,422-426,431-433,435-452,456,458-473,475,477
+packages/core/src/computers.ts
+  s_19a26a2ee5742f::t_563e30d7c25cf3 52-53
+docs/development/validation-artifacts.md
+  s_19a26a2ee5742f::t_f98b5238d7bc4c 130-135
+infra/sandbox/src/config.test.ts
+  s_19a26a2ee5742f::t_ea16967faa4eec 7,21
+  s_19a26a2ee5742f::t_93b9c2806a6051 8-20
+infra/sandbox/tests/network_test.py
+  s_19a26a2ee5742f::t_f89edfdb9d4842 89-108
+  s_19a26a2ee5742f::t_9a10dc7694ad99 1-88,129-140
+  s_19a26a2ee5742f::t_756c4cf37be7bc 109-128
+infra/sandbox/src/main.ts
+  s_19a26a2ee5742f::t_563e30d7c25cf3 28-37
+  s_19a26a2ee5742f::t_c02f7a5e9b4895 38-42,52
+deploy/sandbox-host/raypx-sandbox.service
+  s_19a26a2ee5742f::t_6359d602352584 3-4
+infra/sandbox/tests/fake-engine.ts
+  s_19a26a2ee5742f::t_9a10dc7694ad99 167
+  s_19a26a2ee5742f::t_48c5954c59cfdd 168-174
+docs/architecture/computers.md
+  s_19a26a2ee5742f::t_f98b5238d7bc4c 116-126,250,270-275
+docs/development/sandbox.md
+  s_19a26a2ee5742f::t_f98b5238d7bc4c 124-127,140-141,144-147,152-155
+infra/sandbox/src/http.ts
+  s_19a26a2ee5742f::t_563e30d7c25cf3 212-213
+deploy/compose.yaml
+  s_19a26a2ee5742f::t_6359d602352584 170-178
+packages/dev-cli/src/validation/deployment.test.ts
+  s_19a26a2ee5742f::t_05c3e2e1b83d63 6-15
+  s_19a26a2ee5742f::t_c4f25cb571a8ca 16-20
+infra/sandbox/.env.example
+  s_19a26a2ee5742f::t_6359d602352584 15-23
+infra/sandbox/src/supervisor.test.ts
+  s_19a26a2ee5742f::t_9a10dc7694ad99 10,31-56
+  s_19a26a2ee5742f::t_2269b5b2f84192 57-75
+infra/sandbox/src/store.ts
+  s_19a26a2ee5742f::t_2952751185d5d1 20-22
+  s_19a26a2ee5742f::t_ba65dec582e48c 23-33,113-121,127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5e552717b079971947a6261bff14d12761ba6e7b",
+  "prompts": {},
+  "sessions": {
+    "s_19a26a2ee5742f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d920-b1e2-7bf0-91e0-44d22b24abd2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
