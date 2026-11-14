@@ -4,6 +4,7 @@ import { Spinner } from "heroui-native/spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 import type {
+  DeviceComputersController,
   SpaceJoinController,
   SpaceManagementController,
   SpaceMembership,
@@ -11,11 +12,13 @@ import type {
 import type { SpaceDirectoryMember } from "@raypx/core/spaces";
 import { Action } from "../ui.js";
 import { useCopy } from "../locale.js";
+import { DeviceSettings } from "../agents/device-computers.js";
 
 const SafeScreen = withUniwind(SafeAreaView);
 
 export function SpaceSettingsScreen({
   controller,
+  devices,
   membership,
   onBack,
   onLeave,
@@ -25,6 +28,7 @@ export function SpaceSettingsScreen({
   onRemove,
 }: {
   controller: SpaceManagementController;
+  devices?: DeviceComputersController | undefined;
   membership: SpaceMembership;
   onBack(this: void): void;
   onLeave(this: void): void;
@@ -94,6 +98,7 @@ export function SpaceSettingsScreen({
               </Text>
             </View>
           )}
+          {devices ? <DeviceSettings controller={devices} /> : null}
           <Text accessibilityRole="header" className="text-lg font-semibold text-foreground">
             {t("agents.spaceSettings.sections.members")}
           </Text>

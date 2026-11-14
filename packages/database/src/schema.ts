@@ -237,10 +237,10 @@ export const computers = pgTable(
       .notNull()
       .references(() => spaces.id, { onDelete: "cascade" }),
     id: text("id").notNull(),
-    scope: text("scope", { enum: ["team", "private"] }).notNull(),
+    scope: text("scope", { enum: ["team", "private", "device"] }).notNull(),
     agentId: text("agent_id"),
     createdByAccountId: text("created_by_account_id").notNull(),
-    provider: text("provider", { enum: ["memory", "sandbox"] }).notNull(),
+    provider: text("provider", { enum: ["memory", "sandbox", "device"] }).notNull(),
     state: text("state", {
       enum: ["stopped", "starting", "running", "stopping", "failed", "destroyed"],
     })
@@ -273,9 +273,9 @@ export const computers = pgTable(
     }).onDelete("cascade"),
     check(
       "computers_scope_check",
-      sql`(${t.scope} = 'team' and ${t.agentId} is null) or (${t.scope} = 'private' and ${t.agentId} is not null)`,
+      sql`(${t.scope} = 'team' and ${t.agentId} is null) or (${t.scope} = 'private' and ${t.agentId} is not null) or (${t.scope} = 'device' and ${t.agentId} is null)`,
     ),
-    check("computers_provider_check", sql`${t.provider} in ('memory', 'sandbox')`),
+    check("computers_provider_check", sql`${t.provider} in ('memory', 'sandbox', 'device')`),
     check(
       "computers_state_check",
       sql`${t.state} in ('stopped', 'starting', 'running', 'stopping', 'failed', 'destroyed')`,
@@ -1089,6 +1089,12 @@ export const approvalRequests = pgTable(
     toolName: text("tool_name").notNull(),
     arguments: jsonb("arguments").$type<Record<string, unknown>>().notNull(),
     argumentSummary: text("argument_summary").notNull(),
+    device: jsonb("device").$type<{
+      id: string;
+      name: string;
+      directory: string;
+      command?: string;
+    }>(),
     target: text("target").notNull(),
     state: text("state", { enum: ["pending", "approved", "denied", "expired", "cancelled"] })
       .notNull()
@@ -2489,7 +2495,205 @@ export const openApiServerAgents = pgTable(
   ],
 );
 
+/** Restricted connector identities are separate from retained control devices and enrollment. */
+export const deviceComputers = pgTable(
+  "device_computers",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    origin: text("origin").notNull(),
+    name: text("name").notNull(),
+    platform: text("platform").notNull(),
+    credentialHash: text("credential_hash").notNull(),
+    previousCredentialHash: text("previous_credential_hash"),
+    credentialRevision: bigint("credential_revision", { mode: "number" }).notNull().default(1),
+    connectionFence: bigint("connection_fence", { mode: "number" }).notNull().default(0),
+    connectionOwner: text("connection_owner"),
+    connectionExpiresAt: date("connection_expires_at"),
+    cursor: bigint("cursor", { mode: "number" }).notNull().default(0),
+    revokedAt: date("revoked_at"),
+    ...timestamps(),
+  },
+  (t) => [
+    unique("device_computers_owner_key").on(t.id, t.accountId),
+    index("device_computers_owner_idx").on(t.accountId),
+    check(
+      "device_computers_fence_check",
+      sql`${t.connectionFence} >= 0 and ${t.credentialRevision} > 0 and ${t.cursor} >= 0`,
+    ),
+  ],
+);
+export const deviceComputerPairings = pgTable(
+  "device_computer_pairings",
+  {
+    spaceId: text("space_id").notNull(),
+    id: text("id").notNull(),
+    accountId: text("account_id").notNull(),
+    codeHash: text("code_hash").notNull(),
+    claimTokenHash: text("claim_token_hash"),
+    deviceName: text("device_name"),
+    platform: text("platform"),
+    expiresAt: date("expires_at").notNull(),
+    consumedAt: date("consumed_at"),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.id] }),
+    uniqueIndex("device_computer_pairings_code_idx").on(t.codeHash),
+    foreignKey({
+      columns: [t.spaceId, t.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+  ],
+);
+export const deviceSpaceDevices = pgTable(
+  "device_space_devices",
+  {
+    spaceId: text("space_id").notNull(),
+    deviceId: text("device_id").notNull(),
+    accountId: text("account_id").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.deviceId] }),
+    unique("device_space_devices_owner_key").on(t.spaceId, t.deviceId, t.accountId),
+    foreignKey({
+      columns: [t.deviceId, t.accountId],
+      foreignColumns: [deviceComputers.id, deviceComputers.accountId],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+  ],
+);
+export const deviceDirectoryGrants = pgTable(
+  "device_directory_grants",
+  {
+    spaceId: text("space_id").notNull(),
+    id: text("id").notNull(),
+    deviceId: text("device_id").notNull(),
+    accountId: text("account_id").notNull(),
+    directory: text("directory").notNull(),
+    revision: bigint("revision", { mode: "number" }).notNull().default(1),
+    revokedAt: date("revoked_at"),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.id] }),
+    unique("device_directory_grants_owner_key").on(t.spaceId, t.id, t.deviceId, t.accountId),
+    foreignKey({
+      columns: [t.spaceId, t.id],
+      foreignColumns: [computers.spaceId, computers.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.deviceId, t.accountId],
+      foreignColumns: [
+        deviceSpaceDevices.spaceId,
+        deviceSpaceDevices.deviceId,
+        deviceSpaceDevices.accountId,
+      ],
+    }).onDelete("cascade"),
+    check("device_directory_grants_revision_check", sql`${t.revision} > 0`),
+  ],
+);
+export const deviceComputerSelections = pgTable(
+  "device_computer_selections",
+  {
+    spaceId: text("space_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    accountId: text("account_id").notNull(),
+    deviceId: text("device_id").notNull(),
+    grantId: text("grant_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.conversationId, t.accountId] }),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId],
+      foreignColumns: [conversations.spaceId, conversations.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.grantId, t.deviceId, t.accountId],
+      foreignColumns: [
+        deviceDirectoryGrants.spaceId,
+        deviceDirectoryGrants.id,
+        deviceDirectoryGrants.deviceId,
+        deviceDirectoryGrants.accountId,
+      ],
+    }).onDelete("cascade"),
+  ],
+);
+export const deviceConnectorOperations = pgTable(
+  "device_connector_operations",
+  {
+    spaceId: text("space_id").notNull(),
+    id: text("id").notNull(),
+    deviceId: text("device_id").notNull(),
+    grantId: text("grant_id").notNull(),
+    accountId: text("account_id").notNull(),
+    runId: text("run_id").notNull(),
+    conversationId: text("conversation_id").notNull(),
+    payloadHash: text("payload_hash").notNull(),
+    runFence: bigint("run_fence", { mode: "number" }).notNull(),
+    connectionFence: bigint("connection_fence", { mode: "number" }).notNull(),
+    outputBytes: integer("output_bytes").notNull().default(0),
+    terminal: boolean("terminal").notNull().default(false),
+    createdAt: date("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.id] }),
+    unique("device_connector_operations_device_key").on(t.deviceId, t.id),
+    foreignKey({
+      columns: [t.spaceId, t.grantId, t.deviceId, t.accountId],
+      foreignColumns: [
+        deviceDirectoryGrants.spaceId,
+        deviceDirectoryGrants.id,
+        deviceDirectoryGrants.deviceId,
+        deviceDirectoryGrants.accountId,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.conversationId, t.runId],
+      foreignColumns: [
+        conversationRuns.spaceId,
+        conversationRuns.conversationId,
+        conversationRuns.id,
+      ],
+    }).onDelete("cascade"),
+    check(
+      "device_connector_operations_bounds_check",
+      sql`${t.outputBytes} >= 0 and ${t.outputBytes} <= 1048576 and ${t.runFence} > 0 and ${t.connectionFence} > 0`,
+    ),
+  ],
+);
+export const deviceConnectorEvents = pgTable(
+  "device_connector_events",
+  {
+    spaceId: text("space_id").notNull(),
+    deviceId: text("device_id").notNull(),
+    operationId: text("operation_id").notNull(),
+    sequence: bigint("sequence", { mode: "number" }).notNull(),
+    event: jsonb("event").$type<unknown>().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.deviceId, t.sequence] }),
+    foreignKey({
+      columns: [t.spaceId, t.operationId],
+      foreignColumns: [deviceConnectorOperations.spaceId, deviceConnectorOperations.id],
+    }).onDelete("cascade"),
+  ],
+);
+
 export const schema = {
+  deviceComputers,
+  deviceComputerPairings,
+  deviceSpaceDevices,
+  deviceDirectoryGrants,
+  deviceComputerSelections,
+  deviceConnectorOperations,
+  deviceConnectorEvents,
   openApiServers,
   openApiServerSecrets,
   openApiServerAgents,

@@ -2,9 +2,14 @@ import { useSyncExternalStore } from "react";
 import { Alert, Modal, ScrollView, Text, View } from "react-native";
 import { Button } from "heroui-native/button";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { ComputerController, ComputerView } from "@raypx/agents/model";
+import type {
+  ComputerController,
+  DeviceComputersController,
+  ComputerView,
+} from "@raypx/agents/model";
 import { useCopy } from "../locale.js";
 import { Action } from "../ui.js";
+import { DeviceComputerSelector, useDeviceComputerView } from "./device-computers.js";
 
 const statusKeys = {
   loading: "agents.loading",
@@ -28,17 +33,30 @@ const errorKeys = {
 
 export function ComputerIndicator({
   state,
+  devices,
   open,
   onOpen,
 }: {
   state: ComputerView;
+  devices?: DeviceComputersController | undefined;
   open: boolean;
   onOpen: () => void;
 }) {
   const { t } = useCopy();
-  const status = t(
-    state.error === "load" ? "agents.computerUnavailable" : statusKeys[state.status],
-  );
+  const deviceState = useDeviceComputerView(devices);
+  let status = t(state.error === "load" ? "agents.computerUnavailable" : statusKeys[state.status]);
+  if (deviceState.selection) {
+    const selected = deviceState.devices.find(
+      (device) => device.id === deviceState.selection?.deviceId,
+    );
+    status =
+      selected?.connected &&
+      selected.grants.some(
+        (grant) => grant.id === deviceState.selection?.grantId && !grant.revokedAt,
+      )
+        ? selected.name
+        : t("agents.devices.unavailable");
+  }
   return (
     <Button
       accessibilityLabel={t("agents.computerIndicator", { state: status })}
@@ -55,15 +73,21 @@ export function ComputerIndicator({
 /** Native modal presentation avoids adding the optional Gorhom sheet dependency. */
 export function ComputerSheet({
   controller,
+  devices,
   open,
   onClose,
 }: {
   controller: ComputerController;
+  devices?: DeviceComputersController | undefined;
   open: boolean;
   onClose: () => void;
 }) {
   const { t } = useCopy();
   const insets = useSafeAreaInsets();
+  const deviceState = useDeviceComputerView(devices);
+  const selectedDevice = deviceState.devices.find(
+    (device) => device.id === deviceState.selection?.deviceId,
+  );
   const state = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,
@@ -75,8 +99,21 @@ export function ComputerSheet({
     state.error === "load" ||
     state.status === "starting" ||
     state.status === "stopping";
-  const canStart = state.status === "stopped" || state.status === "failed";
-  const canStop = state.status === "running" || state.status === "stopping";
+  const canStart =
+    !deviceState.selection && (state.status === "stopped" || state.status === "failed");
+  const canStop =
+    !deviceState.selection && (state.status === "running" || state.status === "stopping");
+  let displayStatus = t(
+    state.error === "load" ? "agents.computerUnavailable" : statusKeys[state.status],
+  );
+  if (deviceState.selection)
+    displayStatus =
+      selectedDevice?.connected &&
+      selectedDevice.grants.some(
+        (grant) => grant.id === deviceState.selection?.grantId && !grant.revokedAt,
+      )
+        ? selectedDevice.name
+        : t("agents.devices.unavailable");
   function stop() {
     void controller.stop(
       () =>
@@ -134,18 +171,19 @@ export function ComputerSheet({
               </Text>
               <Action label={t("agents.computerClose")} secondary onPress={onClose} />
             </View>
+            {devices ? <DeviceComputerSelector controller={devices} /> : null}
             <Text className="text-sm font-semibold text-muted-foreground">
               {t("agents.computerStatus")}
             </Text>
             <Text accessibilityLiveRegion="polite" className="text-base text-foreground">
-              {t(state.error === "load" ? "agents.computerUnavailable" : statusKeys[state.status])}
+              {displayStatus}
             </Text>
-            {state.failureCode ? (
+            {!deviceState.selection && state.failureCode ? (
               <Text className="text-sm leading-5 text-foreground">
                 {t(failureKeys[state.failureCode])}
               </Text>
             ) : null}
-            {state.error ? (
+            {!deviceState.selection && state.error ? (
               <>
                 <Text accessibilityRole="alert" className="text-sm leading-5 text-foreground">
                   {t(errorKeys[state.error])}

@@ -46,6 +46,7 @@ export default function GroupConversationRoute() {
         group={group}
         controller={controllers.conversation}
         computer={controllers.computer}
+        devices={controllers.devices}
         accountId={workspace.owner.accountId}
         origin={workspace.owner.origin}
         approvalPort={workspace.port.approvals}

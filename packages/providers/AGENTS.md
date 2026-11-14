@@ -54,3 +54,5 @@ model authority. Callers own secrets, approval/effects and untrusted provenance.
 operations without executing document code. Both remote adapters use the private
 `src/core` DNS/socket admission path. HTTP API calls pin the registered origin
 and base path, reject every redirect, bound responses and reject credential echoes.
+
+`./computer` also exports `createDeviceComputerProvider`, consumed by API's Run tool adapter. It delegates through an injected connector transport and never executes on the backend host. Device providers report `device-process`, unrestricted egress and no home transfer/snapshot or Screen capability. All host I/O remains in the outbound connector; backend approvals and effect receipts remain authoritative.

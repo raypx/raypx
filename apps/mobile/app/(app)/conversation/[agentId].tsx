@@ -39,6 +39,7 @@ export default function ConversationScreen() {
         item={item}
         controller={controllers.conversation}
         computer={controllers.computer}
+        devices={controllers.devices}
         accountId={workspace.owner.accountId}
         origin={workspace.owner.origin}
         initialRunId={target.success ? target.data : undefined}

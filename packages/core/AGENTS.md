@@ -106,3 +106,5 @@ trigger reference so windowed clients do not infer it from unrelated messages.
 `/openapi-servers` owns bounded Space-owned HTTP API metadata, selected operations,
 all/selected Agent availability and write-only bearer/header credential inputs.
 Exact `openapi_<server>__<operation>` names join tool rules without extending built-ins.
+
+`/computers` adds member-safe device computers, per-Space directory-grant metadata and device/grant selections. Device rows carry no credential or connection owner. Computer scope/provider add `device`; a device grant has no Agent owner. Device process descriptions state that directory grants are not sandbox isolation.

@@ -296,3 +296,19 @@ bun run test backends \
 Opt-in screenshots of the mode picker and automatic row at 1440×860 and 375×812
 are written to `.artifacts/auto/`. Real-provider quality, packaged Desktop and
 native Mobile device acceptance remain separate from deterministic browser tests.
+
+## Device connector acceptance
+
+Device protocol/contract, directory traversal/symlink, command checks, bounded
+output/cancellation, connection-fence and native queue tests run with source
+verification. The serial PostgreSQL inventory includes pairing expiry/replay,
+credential rotation loss, ownership across members/routines/delegated roots,
+same-Space/origin isolation, leases, exact event ACKs, revocation and audit.
+API's PostgreSQL mode also runs the actual CLI connector in a private temporary
+home against the owned test API and deterministic model: read/write a temporary
+file, approve a command, inspect effects and revoke/stop. It never uses a real
+profile or daemon. The owned `device-computers.spec.ts` journey uses a nonexecuting
+fake connector through the real backend in both renderers. Repeat it three times
+with `--workers=1`; ordinary browser fixtures skip owned journeys.
+[Device setup](device-connector.md) separates macOS real-daemon evidence from
+unverified Windows/Linux, packaged native dialogs and Mobile device acceptance.

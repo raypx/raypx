@@ -270,3 +270,17 @@ These limits, deployment-only selection, coarse persistent taint, confidence
 threshold and interrupted-claim fallback settle details left open by the original
 guide conservatively. Deterministic fixtures validate protocol and policy, not
 real-model judgment quality. Protected input remains deferred.
+
+## Device commands
+
+An admitted device call adds bounded `device: { id, name, directory, command? }`
+metadata to its addressed request/card, live event and outside-window pending
+summary. Exact validated arguments remain private request data. The complete
+executable/argv/cwd representation must fit 4,096 characters or dispatch is refused.
+
+For `computer_run_command` on a device, Block wins; trusted exact executable Allow
+can authorize, otherwise Ask, Auto and Never ask all require the member's answer.
+Untrusted changes still ask with Allow. Auto's reviewer never receives a device
+command request. Local directory confirmation and a connected channel never
+replace this backend approval/effect admission. A disconnect after dispatch remains
+unknown until a confirmed outcome is committed; it never becomes an automatic retry.

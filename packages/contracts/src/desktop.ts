@@ -23,6 +23,16 @@ export const desktopExecutionResults = {
 };
 export type DesktopExecution = z.infer<typeof desktopExecutionSchema>;
 
+/** Native confirmation use cases; no renderer-controlled origin, directory or credential. */
+export const desktopDeviceRequests = {
+  pair_device_connector: z.strictObject({ code: z.string().min(1).max(128) }),
+  grant_device_directory: z.strictObject({ spaceId: z.uuid(), deviceId: z.uuid() }),
+};
+export const desktopDeviceResults = {
+  pair_device_connector: z.boolean(),
+  grant_device_directory: z.boolean(),
+};
+
 /** Selected-origin HTTP transport. Cookie and administrative headers are never caller inputs. */
 export const desktopApiRequestSchema = z.strictObject({
   id: z.uuid().optional(),

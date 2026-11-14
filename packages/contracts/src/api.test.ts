@@ -12,6 +12,7 @@ import {
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
     expect(Object.keys(apiContract)).toEqual([
+      "deviceComputers",
       "pages",
       "skills",
       "mcpServers",
@@ -63,6 +64,15 @@ describe("foundation contract", () => {
       "delete",
     ]);
     expect(Object.keys(apiContract.account)).toEqual(["get", "access"]);
+    expect(Object.keys(apiContract.deviceComputers)).toEqual([
+      "list",
+      "createPairing",
+      "requestGrant",
+      "revokeGrant",
+      "revoke",
+      "getSelection",
+      "select",
+    ]);
     expect(Object.keys(apiContract.hosts)).toEqual(["authorize", "grant", "revoke"]);
     expect(Object.keys(apiContract.observed)).toEqual(["list", "get"]);
   });

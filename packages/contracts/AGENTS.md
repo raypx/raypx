@@ -65,6 +65,10 @@ This entry never describes the
 administrative daemon router. The daemon derives renderer local admission from
 `/local-client` and API admission from `apiExposure`; no second business allowlist.
 
+Native-only Desktop device pairing and grant DTOs accept only a pairing code or
+Space/device selection and return a boolean. Directory paths, server origins,
+one-use native confirmations and credentials never enter these renderer DTOs.
+
 `/api` also defines the browser sign-in HTTP messages. `/desktop` defines the
 renderer start/wait/cancel messages, which expose no callback or exchange secret.
 

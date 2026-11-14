@@ -17,9 +17,9 @@ export const computerSchema = z
   .strictObject({
     id: computerIdSchema,
     spaceId: spaceIdSchema,
-    scope: z.enum(["team", "private"]),
+    scope: z.enum(["team", "private", "device"]),
     agentId: agentIdSchema.nullable(),
-    provider: z.enum(["memory", "sandbox"]),
+    provider: z.enum(["memory", "sandbox", "device"]),
     state: computerStateSchema,
     generation: computerGenerationSchema,
     homeRevision: homeRevisionSchema.nullable(),
@@ -180,3 +180,29 @@ export type ComputerScreenControl = z.infer<typeof computerScreenControlSchema>;
 export type ComputerScreenState = z.infer<typeof computerScreenStateSchema>;
 export type ComputerScreenCloseReason = z.infer<typeof computerScreenCloseReasonSchema>;
 export type ComputerScreenEvent = z.infer<typeof computerScreenEventSchema>;
+
+/** A device belongs to one account; projections expose only that member's Space grants. */
+export const deviceComputerIdSchema = z.string().uuid();
+export const deviceDirectoryGrantSchema = z.strictObject({
+  id: z.string().uuid(),
+  spaceId: spaceIdSchema,
+  directory: z.string().min(1).max(4096),
+  revision: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  revokedAt: z.iso.datetime().nullable(),
+});
+export const deviceComputerSchema = z.strictObject({
+  id: deviceComputerIdSchema,
+  name: z.string().min(1).max(120),
+  platform: z.string().min(1).max(30),
+  connected: z.boolean(),
+  connectionState: z.enum(["connected", "offline", "revoked"]),
+  grants: z.array(deviceDirectoryGrantSchema).max(100),
+  createdAt: z.iso.datetime(),
+});
+export const deviceComputerSelectionSchema = z.strictObject({
+  deviceId: deviceComputerIdSchema,
+  grantId: z.string().uuid(),
+});
+export type DeviceComputer = z.infer<typeof deviceComputerSchema>;
+export type DeviceDirectoryGrant = z.infer<typeof deviceDirectoryGrantSchema>;
+export type DeviceComputerSelection = z.infer<typeof deviceComputerSelectionSchema>;

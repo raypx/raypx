@@ -300,7 +300,8 @@
       "members": "成员",
       "invitations": "邀请",
       "approvals": "审批",
-      "audit": "审计"
+      "audit": "审计",
+      "devices": "设备"
     },
     "roles": {
       "owner": "所有者",
@@ -377,7 +378,13 @@
       "overrideSet": "设置了空间审批覆盖模式",
       "overrideCleared": "清除了空间审批覆盖模式",
       "approvalAnswered": "回应了审批",
-      "other": "空间活动"
+      "other": "空间活动",
+      "devicePairingStarted": "已发起设备配对",
+      "devicePaired": "设备已配对",
+      "deviceDirectoryGranted": "设备目录已授权",
+      "deviceDirectoryRevoked": "设备目录授权已撤销",
+      "deviceRevoked": "设备已撤销",
+      "deviceCommand": "设备命令"
     },
     "errors": {
       "SPACE_OWNER_REQUIRED": "只有空间所有者可以执行此操作。",
@@ -642,5 +649,34 @@
     "reconnecting": "正在重新连接屏幕…",
     "expand": "放大屏幕",
     "expandedTitle": "电脑屏幕"
+  },
+  "devices": {
+    "title": "设备",
+    "warning": "在你的机器上运行，没有沙箱隔离。命令使用你的系统权限。",
+    "ownerOnly": "只有你发起的运行可以使用你的设备。目录授权需要在设备上确认。",
+    "pair": "配对设备",
+    "pairingCode": "配对码",
+    "pairingInstructions": "在设备上运行 raypx device pair，输入此配对码，并确认账号和空间。",
+    "expires": "{time} 到期",
+    "confirmOnDevice": "请在设备上确认目录，然后刷新。",
+    "error": "设备请求失败，请刷新后重试。",
+    "empty": "尚未配对设备",
+    "connected": "已连接",
+    "offline": "离线",
+    "revoked": "已撤销",
+    "grantDirectory": "授权目录",
+    "directories": "已授权目录",
+    "noDirectories": "尚未向此空间授权目录。",
+    "revoke": "撤销",
+    "revokeDirectory": "撤销 {directory}",
+    "revokeTitle": "撤销此设备？",
+    "revokeGrantTitle": "撤销此目录？",
+    "revokeDescription": "访问将终止，进行中的工作将取消。不确定的结果仍标记为未知。",
+    "computer": "运行用计算机",
+    "teamSandbox": "团队沙箱",
+    "unavailable": "所选设备不可用",
+    "nextRun": "适用于你在此对话中发起的下一次运行。已有运行保持原计算机。",
+    "approvalDevice": "设备：{name}",
+    "grantInstructions": "请在所选机器的桌面端确认，或运行此命令并选择目录："
   }
 }

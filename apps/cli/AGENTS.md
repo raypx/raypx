@@ -2,13 +2,35 @@
 
 ## Purpose
 
-The retained local execution host and Desktop session/transport runtime, pending
-the device connector replacement phase. New Spaces, conversations, durable Runs
-and Agent tools belong to the PostgreSQL backend. Never extend this profile as a
-second authority or import its history. The executable embeds Bun; enrolled local
-work remains independent of online logout.
+The outbound-only Space device-computer connector and the separate retained local
+execution host/Desktop session transport. New Spaces, conversations, durable Runs,
+approvals, effects and Agent tools belong to the PostgreSQL backend. Never extend
+the retained profile as a second authority or import its history. The executable
+embeds Bun; retained enrolled local work remains independent of online logout.
 
 ## Interface
+
+`raypx device pair|grant|grants|revoke-grant|revoke|start|run|status|stop` owns the
+new Space connector. Pairing and every directory grant require an interactive
+device confirmation; `--yes`/`--json` cannot bypass it. The private finite
+`device native --json` stdin bridge prepares expiring one-use confirmations for
+the OS host, confirms them and exposes no restricted credential. Native polling
+claims a bounded, expiring grant request only for its freshly verified account
+and configured origin. The connector opens only outbound `/device/connect`; it
+never composes the retained runtime, opens a listener or publishes a local router.
+
+`runtime/device-connector/` owns a separate restricted-permission directory below
+the selected profile, without changing retained SQLite. It stores the immutable
+account/origin binding, rotated credential, locally confirmed directory identities,
+bounded admission receipts and sequenced ACK journal. Server grants alone cannot
+create a local grant. Accepted unknown operations are never re-executed. A new
+connection or Run fence cancels older owned commands. Revocation/disconnect cancels
+in-flight commands; reconnect replays journaled events, never an unknown effect.
+POSIX file operations walk directory descriptors with no-follow checks, reject
+traversal and root replacement, and exclude the profile credential directory.
+The macOS arm64 implementation is verified; Linux is unverified, and Windows
+secure file operations explicitly remain unavailable. Device commands retain OS
+permissions and are not sandbox isolation. Home snapshots and Screen are unavailable.
 
 `raypx daemon start|run|status|stop|restart|install|uninstall` owns the macOS and Windows execution host
 (`install` is macOS-only); private `daemon proxy` supports diagnostic/performance probes over authenticated IPC:

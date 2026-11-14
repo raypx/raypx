@@ -1,0 +1,7 @@
+{
+  "serverOrigin": "服务端地址：",
+  "pairingCode": "配对码：",
+  "directory": "要授权的绝对目录：",
+  "confirmPair": "将此电脑以 {account} 的身份连接到 {origin} 的 {space}？命令使用你的系统权限运行，不受沙盒隔离。输入 yes 确认：",
+  "confirmGrant": "以 {account} 的身份将目录 {directory} 授权给 {origin} 的 {space}？命令使用你的系统权限运行，不受沙盒隔离。输入 yes 确认："
+}

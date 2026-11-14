@@ -108,9 +108,9 @@ export const homeArchiveSchema = z.strictObject({
 });
 export type HomeArchive = z.infer<typeof homeArchiveSchema>;
 export interface ComputerDescription {
-  execution: "virtual" | "isolated-process";
+  execution: "virtual" | "isolated-process" | "device-process";
   files: true;
-  home: true;
+  home: boolean;
   egress: "restricted" | "unrestricted";
   unenforced: string[];
   /** True only when this deployment prepared a graphical computer image. */

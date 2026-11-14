@@ -233,6 +233,7 @@ export function createConversationsRepository(
         toolName: request.toolName,
         argumentSummary: request.argumentSummary,
         target: request.target,
+        ...(request.device ? { device: request.device } : {}),
         memberAccountId: request.memberAccountId,
         expiresAt: request.expiresAt.toISOString(),
       });

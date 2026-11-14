@@ -227,6 +227,7 @@ export async function forwarded(
   signal: AbortSignal,
 ): Promise<RelayReply> {
   try {
+    if (operation.type === "device-computer") throw new JobError("SERVER_UNAVAILABLE");
     const userId = operation.type === "command" ? operation.viewer.userId : operation.userId;
     const deviceId =
       operation.type === "command" ? operation.command.deviceId : operation.run.action.deviceId;

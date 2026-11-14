@@ -34,6 +34,18 @@ control and pixels remain server-authorized and never enter native profile histo
 Its expanded dialog reuses the same controller/stream. Escape releases control
 first; once view-only, Escape closes the dialog and restores its opener.
 
+Device pairing and directory grants use native-only `pairDeviceConnector` and
+`grantDeviceDirectory` platform methods. Native fixes the API origin, picks the
+directory and confirms trusted CLI-resolved account/Space metadata. Only a public
+boolean returns to the renderer; connector credentials and one-use confirmations
+remain in finite bundled CLI calls. The separate outbound connector daemon does
+not reuse retained device task authority.
+The existing native heartbeat polls its bounded pending directory-request queue.
+Only the current daemon-verified account and configured origin may claim a request;
+the host rechecks that session before the picker, dialog and final grant. Logout,
+account changes and cancellation authorize no directory. Picker aliases whose
+canonical path differs are refused and need a direct canonical selection.
+
 The current renderer has no project/session editor, Waiting inbox, Automations,
 Files, Terminal or local onboarding screen. Their native/CLI implementations remain
 until later roadmap phases; do not reintroduce them as Agent execution. The
@@ -58,9 +70,10 @@ remove only the fragment for a direct link.
 `main.go` embeds prepared assets through `internal/app`; `internal/desktop` owns OS
 capabilities and finite bootstrap. The SPA builds into `dist/client`. The root
 prerender carries no translated text; device preferences initialize in ClientOnly.
-`DesktopRuntimeProvider` retains daemon readiness and instance refresh for the
-current transport. Engine and enrollment gates are still earlier native behavior;
-removing them belongs to the later connector transition, not renderer cleanup.
+`DesktopRuntimeProvider` retains daemon readiness for the current session
+transport. Server Agent routes require that transport and an account session;
+retained instance enrollment does not gate Agents or Devices. The separate local
+runtime still enforces enrollment for its existing execution consumers.
 
 ## Ownership
 

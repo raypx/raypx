@@ -90,6 +90,22 @@ export function ApprovalCard({
           {t(`agents.openapi.${operationKind}`)}
         </Text>
       )}
+      {card.device && (
+        <View className="gap-1">
+          <Text className="text-sm font-semibold text-foreground">
+            {t("agents.devices.approvalDevice", { name: card.device.name })}
+          </Text>
+          <Text className="text-xs text-muted-foreground">{t("agents.devices.warning")}</Text>
+          <Text selectable className="text-xs text-foreground">
+            {card.device.directory}
+          </Text>
+          {card.device.command && (
+            <Text selectable className="text-xs text-foreground">
+              {card.device.command}
+            </Text>
+          )}
+        </View>
+      )}
       <Text selectable className="text-sm text-foreground">
         {card.target}
       </Text>

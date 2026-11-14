@@ -1,0 +1,7 @@
+{
+  "serverOrigin": "Server origin: ",
+  "pairingCode": "Pairing code: ",
+  "directory": "Absolute directory to grant: ",
+  "confirmPair": "Connect this machine to {space} as {account} on {origin}? Commands run with your OS permissions, without sandbox isolation. Type yes: ",
+  "confirmGrant": "Grant {space} directory {directory} as {account} on {origin}? Commands run with your OS permissions, without sandbox isolation. Type yes: "
+}

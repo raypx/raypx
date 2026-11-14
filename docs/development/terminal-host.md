@@ -86,3 +86,12 @@ consume inference; they are not part of ordinary `verify`.
 See [testing](testing.md#desktop-and-retained-runtime-gates) and
 [Desktop release](desktop.md#build-and-release). A loopback/browser fixture does
 not establish packaged WebView, actual external hook or unrun-platform acceptance.
+
+## Separate Space connector
+
+`raypx device` now owns the outbound-only Computer connector, its local native/TTY
+consent and bounded operation journal. It never starts the retained execution
+owner, inbound listeners, local scheduler or private Agent harness. Its grants
+are Space/account/origin bound and do not import retained root grants. The
+retained `raypx daemon`, hooks, terminals, SQLite history and remote projections
+above still serve their independent consumers. See [device commands](device-connector.md).

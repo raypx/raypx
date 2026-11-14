@@ -40,6 +40,7 @@ Mobile uses the phone Web client for Screen. See [clients](architecture/clients.
 - [Validation automation, CI, caches and evidence](development/validation-artifacts.md)
 - [Dev CLI reference](development/dev-cli.md)
 - [Workspace boundaries](development/workspaces.md)
+- [Device computers, native grants and platform limits](development/device-connector.md)
 - [Desktop configuration and native release](development/desktop.md)
 - [Mobile workflows and device acceptance](development/mobile.md)
 - [AI adapters and backend model configuration](development/ai.md)

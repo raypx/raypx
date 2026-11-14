@@ -59,6 +59,7 @@ services:
       DATABASE_MIGRATE_ON_START: "false"
       DATABASE_URL: postgres://${POSTGRES_RUNTIME_USER:-raypx_runtime}:${POSTGRES_RUNTIME_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       AUTH_URL: https://${APP_HOST:?Set the application hostname}
+      DEVICE_CONNECTOR_ORIGIN: ${DEVICE_CONNECTOR_ORIGIN:-https://${APP_HOST:?}}
       AUTH_SECRET: ${AUTH_SECRET:?Set the authentication secret}
       APP_KEY: ${APP_KEY:?Set the application key}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
@@ -115,7 +116,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || PathPrefix(`/routines/`) || Path(`/.well-known/openid-configuration`) || Path(`/.well-known/oauth-authorization-server`) || Path(`/events`) || Path(`/health`) || Path(`/ready`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || PathPrefix(`/routines/`) || PathPrefix(`/device/`) || Path(`/.well-known/openid-configuration`) || Path(`/.well-known/oauth-authorization-server`) || Path(`/events`) || Path(`/health`) || Path(`/ready`))"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.priority=100"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"

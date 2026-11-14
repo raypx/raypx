@@ -66,6 +66,10 @@ func (d *Desktop) Request(ctx context.Context, method string, input JSON) (any, 
 			return nil, errors.New("Invalid directory selection")
 		}
 		return d.Client.Native(ctx, JSON{"action": "pick", "path": path})
+	case "pair_device_connector":
+		return d.pairDeviceConnector(ctx, input)
+	case "grant_device_directory":
+		return d.grantDeviceDirectory(ctx, input)
 	case "recover_session":
 		if d.RecoverSession == nil {
 			return nil, errors.New("Session recovery unavailable")

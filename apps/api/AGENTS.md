@@ -439,3 +439,11 @@ Successful Page write activity additionally carries optional nullable `page: { i
 version }` in events, snapshots and history; it comes only from server results.
 Ingress addresses on routine reads use explicitly configured AUTH_URL; auth's localhost
 fallback is never advertised as a public ingress origin.
+
+The owned browser fixture composes the real device repository, registry and tool
+adapter with a non-executing fake connector. Its session/Origin-protected
+`/fixture/device/pair` hook simulates native confirmation; `/status` exposes only
+connection state and a command count. Neither hook is imported by production.
+No fixture command executes on the API machine or returns connector credentials.
+
+`deviceComputers.*` uses fresh session/Space admission and ordinary trusted-Origin quotas. `/device/*` is a distinct native-only possession transport: browser Origins are refused, bodies and frames are bounded, pairing is expiring/one-use, credentials rotate on connection and never enter renderer replies. `withDeviceComputerTools` admits and pins a member's selected device before inference; it revalidates Run/root-member authority per operation. Untrusted initial provenance or recalled untrusted memory cannot receive a device. Tool results after trusted admission retain the pin while normal approval taint still applies; another member's steering revokes admission. Initially offline devices use the existing bounded retry path; disconnected changes keep unknown effects. Worker/Relay split routing uses a dedicated lazy instance of the existing broker. Authentication security revocation invalidates this account's connectors as well as retained Host authorization. Windows/Linux device execution and packaged native acceptance are separate gates.

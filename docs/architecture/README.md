@@ -29,8 +29,9 @@ and session pages, Waiting, New session and the guest task editor/handoff are
 removed from those clients, along with dependent Automations screens. The retained
 Memory views still manage earlier device/account records, not Agent/Space memory.
 The CLI harness, SQLite profiles, enrollment, native host/channel and remote read
-projections remain until their owning phases replace them. The daemon is not yet
-a device connector. See [Spaces](spaces.md#implemented-foundation-slice),
+projections remain until their owning phases replace them. A separate outbound-only CLI connector now supplies member-owned device Computers
+with local Space directory consent; retained local daemon/session consumers stay
+independent. See [device setup and limits](../development/device-connector.md). See [Spaces](spaces.md#implemented-foundation-slice),
 [Events](events.md#implemented-conversation-slice) and
 [Execution](execution.md#implemented-durable-backend).
 

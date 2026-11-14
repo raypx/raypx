@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { setStringAsync } from "expo-clipboard";
 import { Alert, AppState, Text } from "react-native";
-import { parseAgentSelection, SpaceManagementController } from "@raypx/agents/model";
+import {
+  parseAgentSelection,
+  DeviceComputersController,
+  SpaceManagementController,
+} from "@raypx/agents/model";
 import { useWorkspace, useWorkspaceView } from "../../src/agents/provider.js";
 import { SpaceSettingsScreen } from "../../src/spaces/screens.js";
 import { useCopy } from "../../src/locale.js";
@@ -15,6 +19,7 @@ export default function SpaceSettingsRoute() {
   const router = useRouter();
   const { t } = useCopy();
   const [controller, setController] = useState<SpaceManagementController | null>(null);
+  const [devices, setDevices] = useState<DeviceComputersController | null>(null);
   const membership = view.page.spaces.find((entry) => entry.space.id === spaceId);
   const admittedSpaceId = membership?.space.id;
   const owner = membership?.member.role === "owner";
@@ -47,18 +52,35 @@ export default function SpaceSettingsRoute() {
     };
   }, [workspace, admittedSpaceId, owner, router]);
   useEffect(() => {
+    let cancelled = false;
+    let next: DeviceComputersController | undefined;
+    queueMicrotask(() => {
+      if (cancelled || !admittedSpaceId || !workspace.port.deviceComputers) return;
+      next = new DeviceComputersController(admittedSpaceId, workspace.port.deviceComputers);
+      setDevices(next);
+    });
+    return () => {
+      cancelled = true;
+      next?.dispose();
+    };
+  }, [workspace, admittedSpaceId]);
+  useEffect(() => {
     if (controller?.spaceId === membership?.space.id) void controller?.load(owner);
   }, [controller, membership?.space.id, owner, view.page.spaces]);
   useEffect(() => {
     const listener = AppState.addEventListener("change", (state) => {
-      if (state === "active") void controller?.load(owner);
+      if (state === "active") {
+        void controller?.load(owner);
+        void devices?.refresh();
+      }
     });
     return () => listener.remove();
-  }, [controller, owner]);
+  }, [controller, owner, devices]);
   if (controller && controller.spaceId === spaceId && membership)
     return (
       <SpaceSettingsScreen
         controller={controller}
+        devices={devices?.spaceId === spaceId ? devices : undefined}
         membership={membership}
         onBack={() => router.replace("/")}
         onCopy={async (link) => {

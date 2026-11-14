@@ -44,6 +44,8 @@ export const DESKTOP_METHODS = {
   getRuntime: "get_runtime",
   hideWindow: "hide_window",
   pickDirectory: "pick_directory",
+  pairDeviceConnector: "pair_device_connector",
+  grantDeviceDirectory: "grant_device_directory",
   localRequest: "local_request",
   restartEngine: "restart_engine",
   getAnalyticsPreferences: "get_analytics_preferences",
@@ -93,6 +95,8 @@ type DesktopRequests = {
   getRuntime: { params: Record<string, never>; response: DesktopRuntime };
   hideWindow: { params: Record<string, never>; response: boolean };
   pickDirectory: { params: Record<string, never>; response: RootGrant | null };
+  pairDeviceConnector: { params: { code: string }; response: boolean };
+  grantDeviceDirectory: { params: { spaceId: string; deviceId: string }; response: boolean };
   localRequest: { params: { method: LocalMethod; params: unknown }; response: unknown };
   restartEngine: { params: { replaceOwner?: boolean }; response: boolean };
   getAnalyticsPreferences: { params: Record<string, never>; response: AnalyticsConsent };

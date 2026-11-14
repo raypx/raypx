@@ -175,3 +175,12 @@ export function createComputersService(
     },
   };
 }
+
+export * from "./devices.js";
+export {
+  createDeviceConnectorRegistry,
+  createDeviceComputersService,
+  type DeviceConnectorRegistry,
+  type DeviceConnectorPeer,
+  type DeviceConnectorBroker,
+} from "./device-registry.js";

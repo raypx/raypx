@@ -18,6 +18,7 @@ import {
 import type { SpaceScope } from "@raypx/spaces/server";
 import {
   StaleRunFenceError,
+  RunResourceUnavailableError,
   AgentInteractionError,
   type ConversationFanout,
   type ConversationRunRepository,
@@ -139,6 +140,8 @@ function failure(error: unknown): RunFailure {
   return codes[error.code] ?? "MODEL_FAILED";
 }
 function retryDelay(error: unknown, attemptNumber: number): number | undefined {
+  if (error instanceof RunResourceUnavailableError && error.retryAt !== undefined)
+    return Math.max(0, error.retryAt - Date.now());
   if (!(error instanceof AiError)) return undefined;
   if (!["AI_RATE_LIMITED", "AI_TIMEOUT", "AI_REQUEST_FAILED"].includes(error.code))
     return undefined;
@@ -743,6 +746,14 @@ export class ConversationRunner {
     let checkpoint: RunCheckpoint = structuredClone(input.checkpoint);
     try {
       await this.toolRuntime?.approvals.assertContinuable(scope, run);
+      if (!checkpoint.memory && this.options.recallMemory) {
+        checkpoint.memory = await this.options.recallMemory(scope, run);
+        storing = true;
+        await this.repository.saveCheckpoint(scope, run, checkpoint);
+        storing = false;
+      }
+      run.untrustedInput ||=
+        checkpoint.untrustedInput || checkpoint.memory?.untrustedInput || false;
       if (checkpoint.toolCatalog !== undefined)
         this.toolRuntime?.tools.restore?.(run, checkpoint.toolCatalog);
       await this.toolRuntime?.tools.initialize?.(scope, run, controller.signal);
@@ -755,12 +766,6 @@ export class ConversationRunner {
       storing = true;
       run.startedAt = await this.repository.executionStarted(scope, run);
       storing = false;
-      if (!checkpoint.memory && this.options.recallMemory) {
-        checkpoint.memory = await this.options.recallMemory(scope, run);
-        storing = true;
-        await this.repository.saveCheckpoint(scope, run, checkpoint);
-        storing = false;
-      }
       if (!checkpoint.skills && this.options.loadSkills) {
         checkpoint.skills = await this.options.loadSkills(scope, run);
         storing = true;
@@ -842,6 +847,14 @@ export class ConversationRunner {
       for (;;) {
         if (controller.signal.aborted) throw new AttemptInterrupted();
         await this.toolRuntime?.approvals.assertContinuable(scope, run);
+        if (!checkpoint.memory && this.options.recallMemory) {
+          checkpoint.memory = await this.options.recallMemory(scope, run);
+          storing = true;
+          await this.repository.saveCheckpoint(scope, run, checkpoint);
+          storing = false;
+        }
+        run.untrustedInput ||=
+          checkpoint.untrustedInput || checkpoint.memory?.untrustedInput || false;
         // A recovered turn executes only unfinished calls. Recorded effect outcomes
         // are reused by executeEffect when a crash preceded the tool checkpoint.
         while (checkpoint.pendingCalls.length) {

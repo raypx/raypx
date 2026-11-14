@@ -1,3 +1,4 @@
+import { deviceConnectorServerFrameSchema } from "@raypx/contracts/device-connector";
 import { z } from "zod";
 import { cloudJobRunSchema } from "@raypx/core/jobs";
 import { taskStatusSchema } from "@raypx/core/tasks";
@@ -18,6 +19,11 @@ const deviceResultSchema = z.discriminatedUnion("ok", [
   z.object({ ok: z.literal(false), code: z.string().max(80) }),
 ]);
 export const relayOperationSchema = z.discriminatedUnion("type", [
+  z.strictObject({
+    type: z.literal("device-computer"),
+    deviceId: z.string().uuid(),
+    frame: deviceConnectorServerFrameSchema,
+  }),
   z.object({
     type: z.literal("command"),
     connectionId: z.string(),
@@ -38,6 +44,7 @@ export const relayOperationSchema = z.discriminatedUnion("type", [
   }),
 ]);
 export const relayReplySchema = z.discriminatedUnion("type", [
+  z.strictObject({ type: z.literal("device-computer") }),
   z.object({ type: z.literal("command"), result: deviceResultSchema }),
   z.object({ type: z.literal("task"), taskId: z.uuid(), status: taskStatusSchema }),
   z.object({

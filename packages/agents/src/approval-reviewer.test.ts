@@ -27,6 +27,24 @@ function model(output: string) {
 }
 afterEach(() => vi.useRealTimers());
 
+it("never submits device command execution to even an always-approve reviewer", async () => {
+  const reviewer = model('{"verdict":"approve","reason":"Okay","confidence":1}');
+  const command: ApprovalCall = {
+    ...call,
+    name: "computer_run_command",
+    executable: "echo",
+    device: {
+      id: "018e2c42-08e0-4000-8000-000000000001",
+      name: "My machine",
+      directory: "/granted",
+    },
+  };
+  expect(
+    await reviewApproval(reviewer, run, command, started, new AbortController().signal),
+  ).toMatchObject({ verdict: "ask" });
+  expect(reviewer.complete).not.toHaveBeenCalled();
+});
+
 it.each(["approve", "ask", "deny"] as const)("accepts a confident %s verdict", async (verdict) => {
   const reviewer = model(
     JSON.stringify({ verdict, reason: "The action fits the request.", confidence: 0.99 }),

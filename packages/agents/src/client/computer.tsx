@@ -19,6 +19,8 @@ import { ComputerActivity } from "./tool-activity.js";
 import { ComputerFiles } from "./computer-files.js";
 import { ComputerScreen } from "./computer-screen.js";
 import { useTranslations } from "./i18n.js";
+import type { DeviceComputersController } from "../model/device-computers.js";
+import { DeviceComputerSelector } from "./device-computers.js";
 
 const statusKeys = {
   loading: "loading",
@@ -46,15 +48,21 @@ export function ComputerIndicator({
   onOpen,
   panelId,
   ref,
+  deviceName,
+  deviceConnected,
 }: {
   state: ComputerView;
   open: boolean;
   onOpen: () => void;
   panelId?: string;
   ref?: Ref<HTMLButtonElement>;
+  deviceName?: string | undefined;
+  deviceConnected?: boolean | undefined;
 }) {
   const t = useTranslations("agents");
-  const status = state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status]);
+  let status = state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status]);
+  if (deviceName)
+    status = `${deviceName} · ${t(deviceConnected ? "devices.connected" : "devices.offline")}`;
   const label = t("computerIndicator", { state: status });
   return (
     <Button
@@ -82,6 +90,8 @@ export function ComputerPanel({
   activity = [],
   approvalPort,
   selection,
+  devices,
+  deviceSelected = false,
 }: {
   controller: ComputerController;
   onClose: () => void;
@@ -89,6 +99,8 @@ export function ComputerPanel({
   activity?: readonly ToolActivity[];
   approvalPort?: ApprovalPort | undefined;
   selection?: ConversationSelection | undefined;
+  devices?: DeviceComputersController | null | undefined;
+  deviceSelected?: boolean | undefined;
 }) {
   const t = useTranslations("agents");
   const state = useSyncExternalStore(
@@ -137,50 +149,53 @@ export function ComputerPanel({
           </IconButton>
         </header>
       )}
-      <section aria-label={t("computerStatus")} className="flex min-w-0 flex-col gap-3">
-        <h3 className="text-xs font-medium text-muted-foreground">{t("computerStatus")}</h3>
-        <p role="status" aria-live="polite" aria-atomic="true" className="text-sm wrap-anywhere">
-          {state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status])}
-          {state.failureCode && (
-            <span className="mt-2 block">{t(failureKeys[state.failureCode])}</span>
+      {devices && <DeviceComputerSelector controller={devices} />}
+      {!deviceSelected && (
+        <section aria-label={t("computerStatus")} className="flex min-w-0 flex-col gap-3">
+          <h3 className="text-xs font-medium text-muted-foreground">{t("computerStatus")}</h3>
+          <p role="status" aria-live="polite" aria-atomic="true" className="text-sm wrap-anywhere">
+            {state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status])}
+            {state.failureCode && (
+              <span className="mt-2 block">{t(failureKeys[state.failureCode])}</span>
+            )}
+          </p>
+          {state.error && (
+            <Alert>
+              <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
+              <AlertAction>
+                <IconButton
+                  size="icon-sm"
+                  label={t("refresh")}
+                  disabled={state.refreshing || state.pending !== null}
+                  onClick={() => void controller.refresh()}
+                >
+                  <RefreshIcon aria-hidden="true" />
+                </IconButton>
+              </AlertAction>
+            </Alert>
           )}
-        </p>
-        {state.error && (
-          <Alert>
-            <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
-            <AlertAction>
-              <IconButton
-                size="icon-sm"
-                label={t("refresh")}
-                disabled={state.refreshing || state.pending !== null}
-                onClick={() => void controller.refresh()}
-              >
-                <RefreshIcon aria-hidden="true" />
-              </IconButton>
-            </AlertAction>
-          </Alert>
-        )}
-        {canStart && (
-          <Button
-            className="self-start"
-            disabled={disabled}
-            onClick={() => void controller.start()}
-          >
-            <PlayIcon data-icon="inline-start" aria-hidden="true" />
-            {state.status === "failed" ? t("computerRetry") : t("computerStart")}
-          </Button>
-        )}
-        {(state.status === "running" || state.status === "stopping") && (
-          <Button variant="outline" className="self-start" disabled={disabled} onClick={stop}>
-            <StopIcon data-icon="inline-start" aria-hidden="true" />
-            {t("computerStop")}
-          </Button>
-        )}
-      </section>
-      {controller.screen && state.status !== "not-configured" && (
+          {canStart && (
+            <Button
+              className="self-start"
+              disabled={disabled}
+              onClick={() => void controller.start()}
+            >
+              <PlayIcon data-icon="inline-start" aria-hidden="true" />
+              {state.status === "failed" ? t("computerRetry") : t("computerStart")}
+            </Button>
+          )}
+          {(state.status === "running" || state.status === "stopping") && (
+            <Button variant="outline" className="self-start" disabled={disabled} onClick={stop}>
+              <StopIcon data-icon="inline-start" aria-hidden="true" />
+              {t("computerStop")}
+            </Button>
+          )}
+        </section>
+      )}
+      {!deviceSelected && controller.screen && state.status !== "not-configured" && (
         <ComputerScreen controller={controller.screen} status={state.status} />
       )}
-      {controller.files && (
+      {!deviceSelected && controller.files && (
         <ComputerFiles
           controller={controller.files}
           status={state.status}

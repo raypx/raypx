@@ -12,6 +12,7 @@ import {
   type Effect,
   type EffectiveApprovalMode,
   type ApprovalReview,
+  type ApprovalDevice,
 } from "@raypx/core/approvals";
 import type { RunId } from "@raypx/core/conversation";
 import { StaleRunFenceError, type ExecutionRun } from "./conversations.js";
@@ -70,6 +71,7 @@ export interface ApprovalCall {
   argumentSummary: string;
   target: string;
   executable?: string;
+  device?: ApprovalDevice;
   changes: boolean;
   readOnlyAnnotated?: boolean;
   readOnlyHttp?: boolean;
@@ -201,6 +203,11 @@ export function approvalDisposition(
 ): "approved" | "blocked" | "ask" {
   const rules = settings.rules.filter((rule) => matchingRule(rule, call));
   if (rules.some((rule) => rule.decision === "block")) return "blocked";
+  // OS commands are never implicitly authorized by an account's broad mode.
+  if (call.device && call.name === "computer_run_command") {
+    if (untrustedInput || call.argumentsUntrusted) return "ask";
+    return rules.some((rule) => rule.decision === "allow") ? "approved" : "ask";
+  }
   if (call.name.startsWith("openapi_") && call.readOnlyHttp) return "approved";
   // Remote annotations are untrusted metadata. Only an exact Allow promotes
   // that annotated call to a read; all remote calls still record effects.
@@ -282,6 +289,7 @@ export function createApprovalsService(
   const requestTtlMs = options.requestTtlMs ?? 600_000;
   const pollIntervalMs = options.pollIntervalMs ?? 100;
   const now = options.now ?? (() => new Date());
+  const memberDeviceDecisions = new WeakMap<ApprovalCall, string>();
   if (![requestTtlMs, pollIntervalMs].every((value) => Number.isSafeInteger(value) && value > 0))
     throw new RangeError("Invalid approval timing");
   async function reviewAvailable() {
@@ -458,6 +466,17 @@ export function createApprovalsService(
       )
         return "blocked";
       if (current.state === "pending") throw new Error("INVALID_APPROVAL_STATE");
+      if (
+        call.device &&
+        current.state === "approved" &&
+        current.answeredByAccountId === run.memberAccountId
+      ) {
+        identity ??= await effectIdentity(run, call);
+        memberDeviceDecisions.set(
+          call,
+          JSON.stringify([run.spaceId, run.id, run.fence, identity.key]),
+        );
+      }
       return current.state;
     },
     executeEffect: async function executeEffect(
@@ -469,14 +488,12 @@ export function createApprovalsService(
       gate,
     ): Promise<string> {
       if (signal.aborted) return computerToolResult("cancelled", "The action was cancelled.");
-      if (
-        approvalDisposition(
-          await runSettings(scope, run),
-          call,
-          run.untrustedInput || Boolean(run.inboundProvenance),
-        ) === "blocked"
-      )
-        return computerToolResult("refused", "BLOCKED");
+      const disposition = approvalDisposition(
+        await runSettings(scope, run),
+        call,
+        run.untrustedInput || Boolean(run.inboundProvenance),
+      );
+      if (disposition === "blocked") return computerToolResult("refused", "BLOCKED");
       const { key, argumentHash } = await effectIdentity(run, call);
       if (gate) {
         const known = (await repository.listEffects(scope, run.id, now(), run)).find(
@@ -487,6 +504,23 @@ export function createApprovalsService(
           throw new EffectInProgressError(Date.parse(known.createdAt) + EFFECT_INTENT_TIMEOUT_MS);
         if (known) return known.result ?? computerToolResult("failed", "TOOL_FAILED");
         return gate(() => executeEffect(scope, run, call, operation, signal, undefined));
+      }
+      if (
+        call.device &&
+        call.name === "computer_run_command" &&
+        disposition !== "approved" &&
+        memberDeviceDecisions.get(call) !== JSON.stringify([run.spaceId, run.id, run.fence, key])
+      ) {
+        const known = (await repository.listEffects(scope, run.id, now(), run)).find(
+          (effect) => effect.key === key,
+        );
+        if (known?.state === "unknown") throw new EffectUnknownError();
+        if (known?.state === "intent")
+          throw new EffectInProgressError(Date.parse(known.createdAt) + EFFECT_INTENT_TIMEOUT_MS);
+        if (known) return known.result ?? computerToolResult("failed", "TOOL_FAILED");
+        // An Allow can disappear while queued for the Computer driver. Refuse
+        // outside any effect intent rather than waiting for a card under its gate.
+        return computerToolResult("refused", "APPROVAL_REQUIRED");
       }
       const intent: Effect = {
         spaceId: run.spaceId,

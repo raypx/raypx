@@ -10,7 +10,8 @@
     "./tasks": "./src/tasks.ts",
     "./terminal": "./src/terminal.ts",
     "./local-client": "./src/client.ts",
-    "./desktop": "./src/desktop.ts"
+    "./desktop": "./src/desktop.ts",
+    "./device-connector": "./src/device-connector.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

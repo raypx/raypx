@@ -315,3 +315,28 @@ Web and Desktop share the Screen capability surface. Mobile does not yet provide
 screen viewing or takeover; its computer lifecycle and approval UI remain
 available. Browser and source tests establish their own layers; packaged desktop,
 mobile-device and real-Engine results remain independent acceptance gates.
+
+## Implemented device Computers
+
+Member-owned device computers now use the separate `raypx device` connector. The
+member selects a locally confirmed Space directory per conversation for subsequent
+Runs. One grant has a same-Space `computers` row with `scope/provider=device`; it
+does not consume a team-sandbox quota or expose sandbox lifecycle controls.
+`device_computers`, `device_computer_pairings`, `device_space_devices`,
+`device_directory_grants`, `device_computer_selections`, `device_connector_operations`
+and `device_connector_events` hold registration, consent, selection and receipts.
+Composite keys bind grant/member/device/Space and operation/Run/conversation.
+
+The Computer adapter runs no backend-host I/O. Its injected registry routes locally
+or over the existing private broker. Every admission revalidates the live Run lease
+and fence, current membership, device/grant revisions, parent root requester and
+steering provenance. Another member or another routine owner receives no authority.
+Native pairing and every directory grant use one-use local confirmations. The
+connector checks no-follow paths and root inode identity as well as server scopes.
+Revoked selections stay unavailable; a Run never silently switches computers.
+
+Device commands always need an addressed approval or the documented exact Allow,
+including in Never ask. Auto never approves them. The connector journal and server
+effect records preserve uncertainty after disconnect; unknown effects never replay.
+Device homes and Screen are unsupported, and command OS permissions are not
+sandbox isolation. See [setup, protocol bounds, decisions and platform limits](../development/device-connector.md).

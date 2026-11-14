@@ -3,6 +3,7 @@ import {
   applyGroups,
   applySpaces,
   ComputerController,
+  DeviceComputersController,
   ConversationController,
   SpaceLiveController,
   createAgentsPageState,
@@ -45,6 +46,7 @@ export class MobileWorkspace {
         id: string;
         conversation: ConversationController;
         computer: ComputerController;
+        devices: DeviceComputersController | undefined;
       }
     | undefined;
 
@@ -92,6 +94,7 @@ export class MobileWorkspace {
     this.applyActivity();
     this.selected?.conversation.dispose();
     this.selected?.computer.dispose();
+    this.selected?.devices?.dispose();
     this.selected = undefined;
   }
   private syncLive() {
@@ -217,10 +220,16 @@ export class MobileWorkspace {
       computer,
       ...(this.port.approvals ? { approvals: this.port.approvals } : {}),
     });
-    this.selected = { id, conversation, computer };
+    const devices = this.port.deviceComputers
+      ? new DeviceComputersController(item.spaceId, this.port.deviceComputers, item.id)
+      : undefined;
+    this.selected = { id, conversation, computer, devices };
     if (!this.active || !this.focused) conversation.suspend();
     void conversation.start();
-    if (this.active && this.focused) void computer.refresh();
+    if (this.active && this.focused) {
+      void computer.refresh();
+      void devices?.refresh();
+    }
     return this.selected;
   }
   setActive(active: boolean) {
@@ -229,7 +238,10 @@ export class MobileWorkspace {
     this.syncLive();
     if (!active) this.selected?.conversation.suspend();
     else {
-      if (this.focused) this.selected?.conversation.resume();
+      if (this.focused) {
+        this.selected?.conversation.resume();
+        void this.selected?.devices?.refresh();
+      }
       void this.refresh();
     }
   }
@@ -241,7 +253,10 @@ export class MobileWorkspace {
   }
   enterConversation() {
     this.focused = true;
-    if (this.active) this.selected?.conversation.resume();
+    if (this.active) {
+      this.selected?.conversation.resume();
+      void this.selected?.devices?.refresh();
+    }
   }
   dispose() {
     this.disposed = true;

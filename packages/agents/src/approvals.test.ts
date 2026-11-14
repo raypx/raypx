@@ -77,6 +77,30 @@ const command: ApprovalCall = {
   changes: true,
 };
 
+it.each(["ask", "auto", "never"] as const)(
+  "requires explicit device command authority in %s",
+  (mode) => {
+    const deviceCommand = {
+      ...command,
+      device: {
+        id: "018e2c42-08e0-4000-8000-000000000001",
+        name: "My machine",
+        directory: "/granted",
+        command: "echo hello",
+      },
+    };
+    const allow = { toolName: command.name, executable: "echo", decision: "allow" } as const;
+    const block = { ...allow, decision: "block" } as const;
+    expect(approvalDisposition({ mode, rules: [] }, deviceCommand)).toBe("ask");
+    expect(
+      approvalDisposition({ mode, rules: [{ ...allow, executable: "other" }] }, deviceCommand),
+    ).toBe("ask");
+    expect(approvalDisposition({ mode, rules: [allow] }, deviceCommand)).toBe("approved");
+    expect(approvalDisposition({ mode, rules: [allow] }, deviceCommand, true)).toBe("ask");
+    expect(approvalDisposition({ mode, rules: [allow, block] }, deviceCommand)).toBe("blocked");
+  },
+);
+
 it.each(["computer_pointer", "computer_keyboard"] as const)(
   "keeps exact rules ahead of Auto review for %s and asks on untrusted input",
   (name) => {
@@ -380,6 +404,57 @@ function fixture(options: Parameters<typeof createApprovalsService>[1] = {}) {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+});
+it("rechecks device command permission after waiting for the driver without holding an approval wait", async () => {
+  const { service, effects, requests } = fixture();
+  const call: ApprovalCall = {
+    ...command,
+    device: { id: "018e2c42-08e0-4000-8000-000000000001", name: "Machine", directory: "/granted" },
+  };
+  await service.updateSettings("owner", {
+    expectedRevision: 0,
+    mode: "never",
+    rules: [{ toolName: "computer_run_command", executable: "echo", decision: "allow" }],
+  });
+  const signal = new AbortController().signal;
+  expect(await service.authorize(scope, run, call, signal)).toBe("approved");
+  const operation = vi.fn(async () => computerToolResult("succeeded", "done"));
+  const result = await service.executeEffect(
+    scope,
+    run,
+    call,
+    operation,
+    signal,
+    async (execute) => {
+      await service.updateSettings("owner", { expectedRevision: 1, mode: "never", rules: [] });
+      return execute();
+    },
+  );
+  expect(JSON.parse(result)).toMatchObject({ state: "refused", content: "APPROVAL_REQUIRED" });
+  expect(operation).not.toHaveBeenCalled();
+  expect(effects.size).toBe(0);
+  expect(requests.size).toBe(0);
+});
+it("retains a member decision through the driver gate and replays a completed device effect after recovery", async () => {
+  const { service, repository, requests } = fixture();
+  const call: ApprovalCall = {
+    ...command,
+    device: { id: "018e2c42-08e0-4000-8000-000000000001", name: "Machine", directory: "/granted" },
+  };
+  const signal = new AbortController().signal;
+  const authorization = service.authorize(scope, run, call, signal);
+  await vi.advanceTimersByTimeAsync(1);
+  await service.answer(scope, [...requests.values()][0]!.id, { decision: "approved" });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await authorization).toBe("approved");
+  const operation = vi.fn(async () => computerToolResult("succeeded", "done"));
+  const original = await service.executeEffect(scope, run, call, operation, signal, (execute) =>
+    execute(),
+  );
+  const recovered = createApprovalsService(repository);
+  expect(await recovered.executeEffect(scope, run, { ...call }, operation, signal)).toBe(original);
+  expect(operation).toHaveBeenCalledOnce();
+  expect(requests.size).toBe(1);
 });
 afterEach(() => vi.useRealTimers());
 

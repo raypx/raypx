@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "630285b6-b181-4a11-ba64-efb208199a63",
+  "id": "fef438a3-cc08-4ce8-8a5e-44526c5ec7fa",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -857,6 +857,143 @@
         "n|rel|public.conversations",
         "n|type|public.conversations",
         "n|rel|public.conversations_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_computer_pairings"
+      ],
+      "writes": [
+        "s|tbl|public.device_computer_pairings",
+        "n|tbl|public.device_computer_pairings",
+        "e|tbl|public.device_computer_pairings",
+        "n|rel|public.device_computer_pairings",
+        "n|type|public.device_computer_pairings",
+        "n|rel|public.device_computer_pairings_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_computer_selections"
+      ],
+      "writes": [
+        "s|tbl|public.device_computer_selections",
+        "n|tbl|public.device_computer_selections",
+        "e|tbl|public.device_computer_selections",
+        "n|rel|public.device_computer_selections",
+        "n|type|public.device_computer_selections",
+        "n|rel|public.device_computer_selections_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_computers"
+      ],
+      "writes": [
+        "s|tbl|public.device_computers",
+        "n|tbl|public.device_computers",
+        "e|tbl|public.device_computers",
+        "n|rel|public.device_computers",
+        "n|type|public.device_computers",
+        "n|rel|public.device_computers_pkey",
+        "n|rel|public.device_computers_owner_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_connector_events"
+      ],
+      "writes": [
+        "s|tbl|public.device_connector_events",
+        "n|tbl|public.device_connector_events",
+        "e|tbl|public.device_connector_events",
+        "n|rel|public.device_connector_events",
+        "n|type|public.device_connector_events",
+        "n|rel|public.device_connector_events_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_connector_operations"
+      ],
+      "writes": [
+        "s|tbl|public.device_connector_operations",
+        "n|tbl|public.device_connector_operations",
+        "e|tbl|public.device_connector_operations",
+        "n|rel|public.device_connector_operations",
+        "n|type|public.device_connector_operations",
+        "n|rel|public.device_connector_operations_pkey",
+        "n|rel|public.device_connector_operations_device_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_directory_grants"
+      ],
+      "writes": [
+        "s|tbl|public.device_directory_grants",
+        "n|tbl|public.device_directory_grants",
+        "e|tbl|public.device_directory_grants",
+        "n|rel|public.device_directory_grants",
+        "n|type|public.device_directory_grants",
+        "n|rel|public.device_directory_grants_pkey",
+        "n|rel|public.device_directory_grants_owner_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_space_devices"
+      ],
+      "writes": [
+        "s|tbl|public.device_space_devices",
+        "n|tbl|public.device_space_devices",
+        "e|tbl|public.device_space_devices",
+        "n|rel|public.device_space_devices",
+        "n|type|public.device_space_devices",
+        "n|rel|public.device_space_devices_pkey",
+        "n|rel|public.device_space_devices_owner_key"
       ],
       "reads": [
         "n|sch|public"
@@ -3436,6 +3573,46 @@
         "n|sch|public",
         "n|col|public.conversations.space_id",
         "n|col|public.conversations.agent_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "device_computer_pairings",
+        "device_computer_pairings_code_idx"
+      ],
+      "writes": [
+        "s|idx|public.device_computer_pairings_code_idx",
+        "n|idx|public.device_computer_pairings_code_idx",
+        "e|idx|public.device_computer_pairings_code_idx",
+        "n|rel|public.device_computer_pairings_code_idx"
+      ],
+      "reads": [
+        "n|tbl|public.device_computer_pairings",
+        "n|sch|public",
+        "n|col|public.device_computer_pairings.code_hash"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "device_computers",
+        "device_computers_owner_idx"
+      ],
+      "writes": [
+        "s|idx|public.device_computers_owner_idx",
+        "n|idx|public.device_computers_owner_idx",
+        "e|idx|public.device_computers_owner_idx",
+        "n|rel|public.device_computers_owner_idx"
+      ],
+      "reads": [
+        "n|tbl|public.device_computers",
+        "n|sch|public",
+        "n|col|public.device_computers.account_id"
       ]
     },
     {
@@ -6674,6 +6851,291 @@
       "statementTarget": [
         "table",
         "public",
+        "device_computer_pairings"
+      ],
+      "writes": [
+        "s|fk|public.device_computer_pairings.device_computer_pairings_DvKmovPbB1ID_fkey",
+        "n|fk|public.device_computer_pairings.device_computer_pairings_DvKmovPbB1ID_fkey",
+        "e|fk|public.device_computer_pairings.device_computer_pairings_DvKmovPbB1ID_fkey",
+        "n|con|public.device_computer_pairings.device_computer_pairings_DvKmovPbB1ID_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_computer_pairings",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.device_computer_pairings.space_id",
+        "n|col|public.device_computer_pairings.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_computer_selections"
+      ],
+      "writes": [
+        "s|fk|public.device_computer_selections.device_computer_selections_hYiviKeTWmKl_fkey",
+        "n|fk|public.device_computer_selections.device_computer_selections_hYiviKeTWmKl_fkey",
+        "e|fk|public.device_computer_selections.device_computer_selections_hYiviKeTWmKl_fkey",
+        "n|con|public.device_computer_selections.device_computer_selections_hYiviKeTWmKl_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_computer_selections",
+        "n|sch|public",
+        "n|tbl|public.conversations",
+        "n|sch|public",
+        "n|col|public.device_computer_selections.space_id",
+        "n|col|public.device_computer_selections.conversation_id",
+        "n|col|public.conversations.space_id",
+        "n|col|public.conversations.id",
+        "e|uniqueness|public.conversations.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_computer_selections"
+      ],
+      "writes": [
+        "s|fk|public.device_computer_selections.device_computer_selections_vdnT3Qxv7ZSM_fkey",
+        "n|fk|public.device_computer_selections.device_computer_selections_vdnT3Qxv7ZSM_fkey",
+        "e|fk|public.device_computer_selections.device_computer_selections_vdnT3Qxv7ZSM_fkey",
+        "n|con|public.device_computer_selections.device_computer_selections_vdnT3Qxv7ZSM_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_computer_selections",
+        "n|sch|public",
+        "n|tbl|public.device_directory_grants",
+        "n|sch|public",
+        "n|col|public.device_computer_selections.space_id",
+        "n|col|public.device_computer_selections.grant_id",
+        "n|col|public.device_computer_selections.device_id",
+        "n|col|public.device_computer_selections.account_id",
+        "n|col|public.device_directory_grants.space_id",
+        "n|col|public.device_directory_grants.id",
+        "n|col|public.device_directory_grants.device_id",
+        "n|col|public.device_directory_grants.account_id",
+        "e|uniqueness|public.device_directory_grants.account_id.device_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_computers"
+      ],
+      "writes": [
+        "s|fk|public.device_computers.device_computers_account_id_user_id_fkey",
+        "n|fk|public.device_computers.device_computers_account_id_user_id_fkey",
+        "e|fk|public.device_computers.device_computers_account_id_user_id_fkey",
+        "n|con|public.device_computers.device_computers_account_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_computers",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.device_computers.account_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_connector_events"
+      ],
+      "writes": [
+        "s|fk|public.device_connector_events.device_connector_events_bf9xJKnt8Z9Q_fkey",
+        "n|fk|public.device_connector_events.device_connector_events_bf9xJKnt8Z9Q_fkey",
+        "e|fk|public.device_connector_events.device_connector_events_bf9xJKnt8Z9Q_fkey",
+        "n|con|public.device_connector_events.device_connector_events_bf9xJKnt8Z9Q_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_connector_events",
+        "n|sch|public",
+        "n|tbl|public.device_connector_operations",
+        "n|sch|public",
+        "n|col|public.device_connector_events.space_id",
+        "n|col|public.device_connector_events.operation_id",
+        "n|col|public.device_connector_operations.space_id",
+        "n|col|public.device_connector_operations.id",
+        "e|uniqueness|public.device_connector_operations.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_connector_operations"
+      ],
+      "writes": [
+        "s|fk|public.device_connector_operations.device_connector_operations_IAV0h961AGMP_fkey",
+        "n|fk|public.device_connector_operations.device_connector_operations_IAV0h961AGMP_fkey",
+        "e|fk|public.device_connector_operations.device_connector_operations_IAV0h961AGMP_fkey",
+        "n|con|public.device_connector_operations.device_connector_operations_IAV0h961AGMP_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_connector_operations",
+        "n|sch|public",
+        "n|tbl|public.device_directory_grants",
+        "n|sch|public",
+        "n|col|public.device_connector_operations.space_id",
+        "n|col|public.device_connector_operations.grant_id",
+        "n|col|public.device_connector_operations.device_id",
+        "n|col|public.device_connector_operations.account_id",
+        "n|col|public.device_directory_grants.space_id",
+        "n|col|public.device_directory_grants.id",
+        "n|col|public.device_directory_grants.device_id",
+        "n|col|public.device_directory_grants.account_id",
+        "e|uniqueness|public.device_directory_grants.account_id.device_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_connector_operations"
+      ],
+      "writes": [
+        "s|fk|public.device_connector_operations.device_connector_operations_UrigbpBp1Ldg_fkey",
+        "n|fk|public.device_connector_operations.device_connector_operations_UrigbpBp1Ldg_fkey",
+        "e|fk|public.device_connector_operations.device_connector_operations_UrigbpBp1Ldg_fkey",
+        "n|con|public.device_connector_operations.device_connector_operations_UrigbpBp1Ldg_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_connector_operations",
+        "n|sch|public",
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.device_connector_operations.space_id",
+        "n|col|public.device_connector_operations.conversation_id",
+        "n|col|public.device_connector_operations.run_id",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.id",
+        "e|uniqueness|public.conversation_runs.conversation_id.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_directory_grants"
+      ],
+      "writes": [
+        "s|fk|public.device_directory_grants.device_directory_grants_space_id_id_computers_space_id_id_fkey",
+        "n|fk|public.device_directory_grants.device_directory_grants_space_id_id_computers_space_id_id_fkey",
+        "e|fk|public.device_directory_grants.device_directory_grants_space_id_id_computers_space_id_id_fkey",
+        "n|con|public.device_directory_grants.device_directory_grants_space_id_id_computers_space_id_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_directory_grants",
+        "n|sch|public",
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.device_directory_grants.space_id",
+        "n|col|public.device_directory_grants.id",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.id",
+        "e|uniqueness|public.computers.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_directory_grants"
+      ],
+      "writes": [
+        "s|fk|public.device_directory_grants.device_directory_grants_2tgovcFau3aw_fkey",
+        "n|fk|public.device_directory_grants.device_directory_grants_2tgovcFau3aw_fkey",
+        "e|fk|public.device_directory_grants.device_directory_grants_2tgovcFau3aw_fkey",
+        "n|con|public.device_directory_grants.device_directory_grants_2tgovcFau3aw_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_directory_grants",
+        "n|sch|public",
+        "n|tbl|public.device_space_devices",
+        "n|sch|public",
+        "n|col|public.device_directory_grants.space_id",
+        "n|col|public.device_directory_grants.device_id",
+        "n|col|public.device_directory_grants.account_id",
+        "n|col|public.device_space_devices.space_id",
+        "n|col|public.device_space_devices.device_id",
+        "n|col|public.device_space_devices.account_id",
+        "e|uniqueness|public.device_space_devices.account_id.device_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_space_devices"
+      ],
+      "writes": [
+        "s|fk|public.device_space_devices.device_space_devices_0oE1dGjEisZg_fkey",
+        "n|fk|public.device_space_devices.device_space_devices_0oE1dGjEisZg_fkey",
+        "e|fk|public.device_space_devices.device_space_devices_0oE1dGjEisZg_fkey",
+        "n|con|public.device_space_devices.device_space_devices_0oE1dGjEisZg_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_space_devices",
+        "n|sch|public",
+        "n|tbl|public.device_computers",
+        "n|sch|public",
+        "n|col|public.device_space_devices.device_id",
+        "n|col|public.device_space_devices.account_id",
+        "n|col|public.device_computers.id",
+        "n|col|public.device_computers.account_id",
+        "e|uniqueness|public.device_computers.account_id.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "device_space_devices"
+      ],
+      "writes": [
+        "s|fk|public.device_space_devices.device_space_devices_FOU0a8uzpSBo_fkey",
+        "n|fk|public.device_space_devices.device_space_devices_FOU0a8uzpSBo_fkey",
+        "e|fk|public.device_space_devices.device_space_devices_FOU0a8uzpSBo_fkey",
+        "n|con|public.device_space_devices.device_space_devices_FOU0a8uzpSBo_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.device_space_devices",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.device_space_devices.space_id",
+        "n|col|public.device_space_devices.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
         "mcp_server_secrets"
       ],
       "writes": [
@@ -8666,6 +9128,48 @@
     },
     {
       "schema": "public",
+      "name": "device_computer_pairings",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "device_computer_selections",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "device_computers",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "device_connector_events",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "device_connector_operations",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "device_directory_grants",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "device_space_devices",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "instance_enrollment",
       "isRlsEnabled": false,
       "entityType": "tables"
@@ -9711,6 +10215,19 @@
       "type": "text",
       "typeSchema": null,
       "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "approval_requests",
+      "name": "device",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
@@ -13795,6 +14312,786 @@
     {
       "schema": "public",
       "table": "conversations",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "code_hash",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "claim_token_hash",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "device_name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "platform",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "consumed_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "conversation_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "device_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "grant_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "origin",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "platform",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "credential_hash",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "previous_credential_hash",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "credential_revision",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "connection_fence",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "connection_owner",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "connection_expires_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "cursor",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "revoked_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_events",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_events",
+      "name": "device_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_events",
+      "name": "operation_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_events",
+      "name": "sequence",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_events",
+      "name": "event",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "device_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "grant_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "run_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "conversation_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "payload_hash",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "run_fence",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "connection_fence",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "output_bytes",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "terminal",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "device_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "directory",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "revision",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "revoked_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
+      "name": "device_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
       "name": "created_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
@@ -21829,6 +23126,48 @@
     },
     {
       "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "device_computer_pairings_code_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "code_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "device_computers_owner_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
       "table": "instance_enrollment",
       "name": "instance_enrollment_expiry_idx",
       "nameExplicit": true,
@@ -24993,6 +26332,225 @@
     },
     {
       "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "device_computer_pairings_DvKmovPbB1ID_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "space_members",
+      "columnsTo": [
+        "space_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "device_computer_selections_hYiviKeTWmKl_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversations",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "device_computer_selections_vdnT3Qxv7ZSM_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "grant_id",
+        "device_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "device_directory_grants",
+      "columnsTo": [
+        "space_id",
+        "id",
+        "device_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "device_computers_account_id_user_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_events",
+      "name": "device_connector_events_bf9xJKnt8Z9Q_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "operation_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "device_connector_operations",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "device_connector_operations_IAV0h961AGMP_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "grant_id",
+        "device_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "device_directory_grants",
+      "columnsTo": [
+        "space_id",
+        "id",
+        "device_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "device_connector_operations_UrigbpBp1Ldg_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "run_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "conversation_runs",
+      "columnsTo": [
+        "space_id",
+        "conversation_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "device_directory_grants_space_id_id_computers_space_id_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "computers",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "device_directory_grants_2tgovcFau3aw_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "device_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "device_space_devices",
+      "columnsTo": [
+        "space_id",
+        "device_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
+      "name": "device_space_devices_0oE1dGjEisZg_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "device_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "device_computers",
+      "columnsTo": [
+        "id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
+      "name": "device_space_devices_FOU0a8uzpSBo_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "space_members",
+      "columnsTo": [
+        "space_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
       "table": "mcp_server_secrets",
       "name": "mcp_server_secrets_DosQQutjQv11_fkey",
       "nameExplicit": false,
@@ -26713,6 +28271,73 @@
     },
     {
       "schema": "public",
+      "table": "device_computer_pairings",
+      "name": "device_computer_pairings_pkey",
+      "columns": [
+        "space_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "device_computer_selections",
+      "name": "device_computer_selections_pkey",
+      "columns": [
+        "space_id",
+        "conversation_id",
+        "account_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_events",
+      "name": "device_connector_events_pkey",
+      "columns": [
+        "device_id",
+        "sequence"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "device_connector_operations_pkey",
+      "columns": [
+        "space_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "device_directory_grants_pkey",
+      "columns": [
+        "space_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
+      "name": "device_space_devices_pkey",
+      "columns": [
+        "space_id",
+        "device_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "mcp_server_spaces",
       "name": "mcp_server_spaces_pkey",
       "columns": [
@@ -27065,6 +28690,16 @@
     },
     {
       "schema": "public",
+      "table": "device_computers",
+      "name": "device_computers_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "instance_enrollment",
       "name": "instance_enrollment_pkey",
       "columns": [
@@ -27358,6 +28993,57 @@
     },
     {
       "schema": "public",
+      "table": "device_computers",
+      "name": "device_computers_owner_key",
+      "nameExplicit": true,
+      "columns": [
+        "id",
+        "account_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "device_connector_operations_device_key",
+      "nameExplicit": true,
+      "columns": [
+        "device_id",
+        "id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "device_directory_grants_owner_key",
+      "nameExplicit": true,
+      "columns": [
+        "space_id",
+        "id",
+        "device_id",
+        "account_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "device_space_devices",
+      "name": "device_space_devices_owner_key",
+      "nameExplicit": true,
+      "columns": [
+        "space_id",
+        "device_id",
+        "account_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
       "table": "mcp_servers",
       "name": "mcp_servers_owner_idx",
       "nameExplicit": true,
@@ -27629,14 +29315,14 @@
       "schema": "public",
       "table": "computers",
       "name": "computers_scope_check",
-      "value": "(\"scope\" = 'team' and \"agent_id\" is null) or (\"scope\" = 'private' and \"agent_id\" is not null)",
+      "value": "(\"scope\" = 'team' and \"agent_id\" is null) or (\"scope\" = 'private' and \"agent_id\" is not null) or (\"scope\" = 'device' and \"agent_id\" is null)",
       "entityType": "checks"
     },
     {
       "schema": "public",
       "table": "computers",
       "name": "computers_provider_check",
-      "value": "\"provider\" in ('memory', 'sandbox')",
+      "value": "\"provider\" in ('memory', 'sandbox', 'device')",
       "entityType": "checks"
     },
     {
@@ -27854,6 +29540,27 @@
       "table": "conversations",
       "name": "conversations_group_name_check",
       "value": "\"kind\" <> 'group' or \"name\" is not null",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "device_computers",
+      "name": "device_computers_fence_check",
+      "value": "\"connection_fence\" >= 0 and \"credential_revision\" > 0 and \"cursor\" >= 0",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "device_connector_operations",
+      "name": "device_connector_operations_bounds_check",
+      "value": "\"output_bytes\" >= 0 and \"output_bytes\" <= 1048576 and \"run_fence\" > 0 and \"connection_fence\" > 0",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "device_directory_grants",
+      "name": "device_directory_grants_revision_check",
+      "value": "\"revision\" > 0",
       "entityType": "checks"
     },
     {

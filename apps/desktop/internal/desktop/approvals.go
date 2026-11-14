@@ -20,6 +20,7 @@ func (d *Desktop) UpdateLease() {
 	if d.stopped.Load() || d.Client.Status()["status"] != "ready" {
 		return
 	}
+	defer func() { go d.pollDeviceGrants() }()
 	if d.UI != nil {
 		d.visible = d.UI.IsVisible()
 	}

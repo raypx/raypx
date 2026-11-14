@@ -201,3 +201,13 @@ Exact strip steering uses optional `send.message.steerRunId`, rather than choosi
 a Run from its Agent name. The selected target is visible/cancellable and is frozen
 in uncertain-send receipts. A terminal target preserves the draft with a safe
 `RUN_NOT_ACTIVE` error; membership and conversation checks remain server-owned.
+
+Device computer selection/list/grants use `DeviceComputersController` and injected
+ports; DOM and Mobile render the same account/Space-scoped projection. Settings
+never confirm host directories. Device cards retain bounded device/directory and
+complete command metadata through events and outside-window summaries. Device
+commands require exact Allow or a member answer even in Never ask, and never use
+Auto review. Permission is checked again after the Computer driver wait; a removed
+Allow refuses before effect intent without holding a driver for another card.
+Recorded outcomes still replay. Initial untrusted recall is pinned before device
+admission, and an inherited team-computer pin never enters the device-only guard.

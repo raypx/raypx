@@ -1,6 +1,12 @@
 import { and, asc, eq, gt, isNull, lte, or, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
-import { computers, spaceAudit, spaceDeletionJobs, spaces } from "@raypx/database/schema";
+import {
+  deviceDirectoryGrants,
+  computers,
+  spaceAudit,
+  spaceDeletionJobs,
+  spaces,
+} from "@raypx/database/schema";
 import { cancelSpaceRuns } from "@raypx/agents/server/postgres";
 import { ComputerError, type ComputerProvider } from "@raypx/providers/computer";
 
@@ -74,6 +80,39 @@ export function createSpaceDeletionWorker(
       .orderBy(asc(computers.id));
     for (const row of rows) {
       if (row.state === "destroyed") continue;
+      if (row.provider === "device") {
+        await db.transaction(async (tx) => {
+          await requireLease(tx, job);
+          await tx
+            .update(deviceDirectoryGrants)
+            .set({ revokedAt: now(), revision: sql`${deviceDirectoryGrants.revision}+1` })
+            .where(
+              and(
+                eq(deviceDirectoryGrants.spaceId, job.spaceId),
+                eq(deviceDirectoryGrants.id, row.id),
+                isNull(deviceDirectoryGrants.revokedAt),
+              ),
+            );
+          await tx
+            .update(computers)
+            .set({
+              state: "destroyed",
+              generation: sql`${computers.generation}+1`,
+              updatedAt: now(),
+            })
+            .where(and(eq(computers.spaceId, job.spaceId), eq(computers.id, row.id)));
+          await tx.insert(spaceAudit).values({
+            spaceId: job.spaceId,
+            id: crypto.randomUUID(),
+            operationId: crypto.randomUUID(),
+            actorAccountId: job.requestedByAccountId,
+            action: "device.directory.revoked",
+            targetId: row.id,
+            outcome: "succeeded",
+          });
+        });
+        continue;
+      }
       if (!provider) throw new Error("COMPUTER_PROVIDER_UNAVAILABLE");
       try {
         // destroy retains the committed home under the provider's existing retention policy.

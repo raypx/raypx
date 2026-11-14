@@ -1,5 +1,4 @@
 import { useTranslations } from "../../../i18n.js";
-import { InstanceGate } from "./instance-gate.js";
 import { EngineGate } from "../../engine/gate.js";
 import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useRouterState } from "@tanstack/react-router";
@@ -81,9 +80,5 @@ export function SessionGate({ children }: { children: ReactNode }) {
         <Outlet />
       </AuthLayout>
     );
-  return (
-    <EngineGate>
-      <InstanceGate>{children}</InstanceGate>
-    </EngineGate>
-  );
+  return <EngineGate>{children}</EngineGate>;
 }

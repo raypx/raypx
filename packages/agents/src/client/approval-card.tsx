@@ -130,6 +130,18 @@ export function ApprovalCard({
           {t(`openapi.${operationKind}`)}
         </p>
       )}
+      {card.device && (
+        <div className="flex min-w-0 flex-col gap-1" data-approval-device={card.device.id}>
+          <p className="text-xs font-medium wrap-anywhere">
+            {t("devices.approvalDevice", { name: card.device.name })}
+          </p>
+          <p className="text-xs text-muted-foreground">{t("devices.warning")}</p>
+          <code className="text-xs whitespace-pre-wrap wrap-anywhere">{card.device.directory}</code>
+          {card.device.command && (
+            <pre className="text-xs whitespace-pre-wrap wrap-anywhere">{card.device.command}</pre>
+          )}
+        </div>
+      )}
       {agentName && (
         <p data-approval-agent className="min-w-0 text-xs text-muted-foreground wrap-anywhere">
           {t("approval.requestedBy", { name: agentName })}

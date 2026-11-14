@@ -30,6 +30,7 @@ export interface ApprovalCardView {
   state: ApprovalState;
   answeredByAccountId: string | null;
   review?: ApprovalRequest["review"] | undefined;
+  device?: ApprovalRequest["device"] | undefined;
   answering: boolean;
   error: ApprovalCardError | null;
 }
@@ -162,6 +163,7 @@ export class ApprovalProjection {
       toolCallId: event.toolCallId,
       toolName: event.toolName,
       target: event.target.slice(0, 1_024),
+      device: event.device,
       argumentSummary: event.argumentSummary.slice(0, 1_024),
       memberAccountId: event.memberAccountId,
       expiresAt: event.expiresAt,
@@ -263,6 +265,7 @@ export class ApprovalProjection {
       toolCallId: request.toolCallId,
       toolName: request.toolName,
       target: request.target.slice(0, 1_024),
+      device: request.device,
       argumentSummary: request.argumentSummary.slice(0, 1_024),
       memberAccountId: request.memberAccountId,
       expiresAt: request.expiresAt,

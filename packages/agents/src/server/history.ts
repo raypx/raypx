@@ -161,6 +161,7 @@ export async function readActiveRuns(tx: Reader, scope: SpaceScope, id: Conversa
       toolName: approvals.toolName,
       argumentSummary: approvals.argumentSummary,
       target: approvals.target,
+      device: approvals.device,
       memberAccountId: approvals.memberAccountId,
       expiresAt: approvals.expiresAt,
       createdAt: approvals.createdAt,
@@ -194,8 +195,9 @@ export async function readActiveRuns(tx: Reader, scope: SpaceScope, id: Conversa
         triggerMessage: { id: run.messageId, sequence: run.messageSequence },
         pendingApprovals: requests
           .slice(0, MAX_ACTIVE_RUN_APPROVALS)
-          .map(({ position: _position, ...request }) => ({
+          .map(({ position: _position, device, ...request }) => ({
             ...request,
+            ...(device ? { device } : {}),
             expiresAt: request.expiresAt.toISOString(),
             createdAt: request.createdAt.toISOString(),
           })),

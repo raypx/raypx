@@ -1,3 +1,4 @@
+import { createDeviceCommands } from "./device.js";
 import { createTaskCommands } from "./tasks.js";
 import type { InstanceAccess } from "../runtime/instances/index.js";
 import { createInterface } from "node:readline/promises";
@@ -104,6 +105,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
   groups.set("tasks", createTaskCommands(invocation, options));
   groups.set("ai", createAiCommands(invocation, options));
   groups.set("daemon", createDaemonCommands(invocation, options));
+  groups.set("device", createDeviceCommands(invocation, options));
   groups.set("connectors", createConnectorCommands(invocation, options));
   const stdio = defineCliCommand({
     meta: { name: "stdio", description: "Private Desktop NDJSON transport", hidden: true },

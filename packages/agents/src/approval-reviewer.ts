@@ -41,6 +41,8 @@ export const APPROVAL_REVIEW_PROMPT = [
 ].join("\n");
 
 export function autoReviewIneligibility(run: ExecutionRun, call: ApprovalCall): string | undefined {
+  if (call.device && call.name === "computer_run_command")
+    return "Device commands require an exact Allow rule or a member decision.";
   if ((run.instructionRevision ?? 0) > 0) return "Steered instructions require a member decision.";
   if (run.untrustedInput || run.inboundProvenance || call.argumentsUntrusted)
     return "Untrusted input requires a member decision.";

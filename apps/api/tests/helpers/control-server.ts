@@ -19,6 +19,7 @@ import {
   createConversationsRepository,
   createConversationFanout,
   createApprovalsRepository,
+  createComputerUseQueue,
   cancelSpaceRuns,
 } from "@raypx/agents/server/postgres";
 import {
@@ -61,12 +62,20 @@ import {
   sealStoredSecret,
   openStoredSecret,
 } from "../../src/conversations/secrets.js";
-import { createComputersService, createComputerScreensService } from "@raypx/computers/server";
+import {
+  createComputersService,
+  createComputerScreensService,
+  createDeviceConnectorRegistry,
+  createDeviceComputersService,
+} from "@raypx/computers/server";
 import {
   createComputersRepository,
   createComputerScreenRepository,
   revokeComputerScreenControl,
+  createDeviceComputersRepository,
 } from "@raypx/computers/server/postgres";
+import { withDeviceComputerTools } from "../../src/conversations/device-tools.js";
+import { browserDeviceFixture } from "./browser-devices.js";
 import { createMemoryComputerProvider } from "@raypx/providers/computer";
 import { AuditService } from "../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../src/admin/repository.js";
@@ -116,6 +125,13 @@ const computerScreens = createComputerScreensService(
   computerProvider,
 );
 const computers = createComputersService(computersRepository, computerProvider, "memory");
+const deviceComputersRepository = createDeviceComputersRepository(
+  connection.db,
+  `http://127.0.0.1:${port}`,
+);
+const deviceConnector = createDeviceConnectorRegistry(deviceComputersRepository);
+const deviceComputers = createDeviceComputersService(deviceComputersRepository, deviceConnector);
+const browserDevices = browserDeviceFixture(deviceComputersRepository, deviceConnector);
 // Sign-up reads the registration switch, so the fixture needs the real configuration service.
 const audit = new AuditService(createAdministrationRepository(connection.db));
 const config = createConfigService({
@@ -158,6 +174,7 @@ const protectedValues = () => [
   ...openApiServers.protectedValues(),
 ];
 const conversationRepository = createConversationsRepository(connection.db);
+const computerQueue = createComputerUseQueue(connection.db);
 const runner = new ConversationRunner(
   conversationRepository,
   conversationModels,
@@ -169,17 +186,24 @@ const runner = new ConversationRunner(
         withSkillTools(
           withPageTools(
             withMemoryTools(
-              createComputerTools(
-                computers,
-                computerProvider,
-                [],
+              withDeviceComputerTools(
+                createComputerTools(
+                  computers,
+                  computerProvider,
+                  [],
+                  conversationRepository.pinResources,
+                  computerQueue,
+                  {
+                    withAgentInput: computerScreens.withAgentInput,
+                    setPaused: (scope, run, paused) =>
+                      conversationRepository.setComputerInputPaused!(scope, run, paused),
+                  },
+                ),
+                deviceComputersRepository,
+                deviceConnector,
                 conversationRepository.pinResources,
-                undefined,
-                {
-                  withAgentInput: computerScreens.withAgentInput,
-                  setPaused: (scope, run, paused) =>
-                    conversationRepository.setComputerInputPaused!(scope, run, paused),
-                },
+                computerQueue,
+                protectedValues,
               ),
               spaceMemory,
               protectedValues,
@@ -265,6 +289,8 @@ const app = createApiApp({
   config,
   computers,
   computerScreens,
+  deviceComputers,
+  deviceConnector,
   modelConnections,
   agentApprovals,
   routines,
@@ -296,6 +322,7 @@ for (const account of accounts) {
 }
 type SocketData =
   | { id: string; kind: "relay" }
+  | { id: string; kind: "device-connector"; credential: string; opening?: Promise<void> }
   | { id: string; kind: "conversation"; accountId: string; headers: Headers };
 const server = serve<SocketData>({
   hostname: "127.0.0.1",
@@ -316,6 +343,35 @@ const server = serve<SocketData>({
     if (path === "/fixture/mcp") return fixtureMcpResponse(request);
     if (path === "/fixture/httpapi" || path.startsWith("/fixture/httpapi/"))
       return openApiResponse(request);
+    if (path === "/fixture/device/pair" || path === "/fixture/device/status") {
+      const origin = request.headers.get("origin");
+      if (!origin || !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
+        return new Response(null, { status: 403 });
+      const session = await readSession(request.headers);
+      if (!session || !accountEmails.includes(session.user.email))
+        return new Response(null, { status: 401 });
+      return browserDevices.handle(request, session.user.id);
+    }
+    if (path === "/device/connect") {
+      // The test listener owns Bun upgrades; production owns the same registry
+      // through its CrossWS adapter. Possession headers never enter public output.
+      const authorization = request.headers.get("authorization");
+      if (request.headers.has("origin") || !authorization?.startsWith("Bearer "))
+        return new Response(null, { status: 403 });
+      const credential = authorization.slice(7);
+      try {
+        await deviceComputersRepository.authenticate(credential);
+      } catch {
+        return new Response(null, { status: 401 });
+      }
+      if (
+        listener.upgrade(request, {
+          data: { id: crypto.randomUUID(), kind: "device-connector", credential },
+        })
+      )
+        return;
+      return new Response(null, { status: 426 });
+    }
     if (
       path === "/events" ||
       path === "/fixture/conversation/complete" ||
@@ -413,6 +469,21 @@ const server = serve<SocketData>({
   },
   websocket: {
     open(socket) {
+      if (socket.data.kind === "device-connector") {
+        socket.data.opening = deviceConnector
+          .open(socket.data.id, socket.data.credential, {
+            send(frame) {
+              socket.send(JSON.stringify(frame));
+            },
+            close(code, reason) {
+              socket.close(code, reason);
+            },
+          })
+          .catch(() => {
+            socket.close(4003, "Access denied");
+          });
+        return;
+      }
       if (socket.data.kind === "conversation") {
         stream.open(socket.data.id, socket.data.accountId, socket.data.headers, {
           send: (frame) => {
@@ -431,6 +502,12 @@ const server = serve<SocketData>({
       });
     },
     message(socket, value) {
+      if (socket.data.kind === "device-connector") {
+        const data = socket.data;
+        if (typeof value === "string")
+          void data.opening?.then(() => deviceConnector.receive(data.id, value));
+        return;
+      }
       if (socket.data.kind === "conversation") {
         if (typeof value === "string") stream.receive(socket.data.id, value);
         return;
@@ -438,6 +515,11 @@ const server = serve<SocketData>({
       if (typeof value === "string") void hub.receive(socket.data.id, value);
     },
     close(socket) {
+      if (socket.data.kind === "device-connector") {
+        const data = socket.data;
+        void data.opening?.then(() => deviceConnector.close(data.id));
+        return;
+      }
       if (socket.data.kind === "conversation") {
         stream.close(socket.data.id);
         return;
@@ -448,6 +530,8 @@ const server = serve<SocketData>({
 });
 console.log(`Control browser fixture ready on 127.0.0.1:${port}`);
 const stop = async () => {
+  await browserDevices.close();
+  await deviceConnector.shutdown();
   await hub.shutdown();
   await stream.shutdown();
   await runner.close();

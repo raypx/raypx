@@ -14,6 +14,18 @@ The renderer uses its own first-frame-authenticated loopback WebSocket. Never
 forward business methods through Go or expose the administrative daemon token.
 Restrict native calls to the owned main page; preserve external URL checks.
 
+Device pairing/directory grants run finite absolute bundled `device native`
+calls. The CLI resolves trusted account/Space metadata and owns expiring one-use
+confirmations and credentials. Native fixes the configured origin, picks each
+directory and shows a cancel-default dialog with the OS-permission disclosure.
+The renderer cannot supply a grant path, origin or confirmation; it receives a
+boolean only. Keep this separate from retained daemon/session execution.
+The existing heartbeat polls pending grants at most every five seconds through
+finite CLI calls. The daemon verifies the selected session; native rechecks its
+account/origin before the picker, dialog and confirmation. A consumed request is
+never an automatic grant. Logout or account changes stop authorization. Keep the
+poll admitted in the existing native lifetime and do not add a listener.
+
 MyGo Secrets uses `raypx-desktop-session-v1-` scoped to canonical native directory
 and canonical CLI profile directory. Create only when the daemon reports no
 stored sessions in the entire profile. An unavailable key permits memory-only

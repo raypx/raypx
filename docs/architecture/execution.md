@@ -342,3 +342,20 @@ adapter. Every call, including GET/HEAD, uses the existing fenced effect path;
 completed outcomes replay and uncertain outcomes block automatic redispatch.
 Read classification changes approval policy, not effect durability. Stop aborts
 the pinned HTTP request through the same Run signal.
+
+## Device computer admission
+
+A member's conversation selection applies to their next Run and pins the chosen
+device-directory Computer and generation. The backend checks current Space
+membership, initiating member, every delegated parent/root requester, routine
+actor, trusted initial provenance/context and different-member steering. A trusted
+Run keeps its admitted pin after its own tool results; later changes still follow
+untrusted approval policy. Retained untrusted history conservatively prevents a
+later Run from newly receiving a device.
+
+Every connector dispatch carries the current Run fence, connection fence and grant
+revision. Offline initial admission uses bounded five-second retries under the
+existing attempt limit. An in-flight disconnect or lost response follows the
+existing unknown-effect guard; no fallback sandbox or automatic redispatch occurs.
+Memory context is recalled and pinned before initial Computer admission so it cannot
+introduce untrusted authority after device selection. See [device decisions](../development/device-connector.md).

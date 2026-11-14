@@ -49,6 +49,12 @@ export function createDesktopPlatform(options: {
     pickDirectory: async () => {
       return (await getBridge()).request.pickDirectory({});
     },
+    pairDeviceConnector: async (code: string) => {
+      return (await getBridge()).request.pairDeviceConnector({ code });
+    },
+    grantDeviceDirectory: async (input: { spaceId: string; deviceId: string }) => {
+      return (await getBridge()).request.grantDeviceDirectory(input);
+    },
     restartEngine: async (replaceOwner = false) => {
       return (await getBridge()).request.restartEngine({ replaceOwner });
     },

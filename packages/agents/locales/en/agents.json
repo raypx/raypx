@@ -300,7 +300,8 @@
       "members": "Members",
       "invitations": "Invitations",
       "approvals": "Approvals",
-      "audit": "Audit"
+      "audit": "Audit",
+      "devices": "Devices"
     },
     "roles": {
       "owner": "Owner",
@@ -377,7 +378,13 @@
       "overrideSet": "Set Space approval override",
       "overrideCleared": "Cleared Space approval override",
       "approvalAnswered": "Answered approval",
-      "other": "Space activity"
+      "other": "Space activity",
+      "devicePairingStarted": "Device pairing started",
+      "devicePaired": "Device paired",
+      "deviceDirectoryGranted": "Device directory granted",
+      "deviceDirectoryRevoked": "Device directory revoked",
+      "deviceRevoked": "Device revoked",
+      "deviceCommand": "Device command"
     },
     "errors": {
       "SPACE_OWNER_REQUIRED": "Only a Space owner can do this.",
@@ -642,5 +649,34 @@
     "reconnecting": "Reconnecting to screen…",
     "expand": "Expand screen",
     "expandedTitle": "Computer screen"
+  },
+  "devices": {
+    "title": "Devices",
+    "warning": "Runs on your machine, not sandboxed. Commands use your OS permissions.",
+    "ownerOnly": "Only Runs you start can use your devices. Directory access needs confirmation on the device.",
+    "pair": "Pair a device",
+    "pairingCode": "Pairing code",
+    "pairingInstructions": "On the device, run raypx device pair and enter this code. Confirm the account and Space there.",
+    "expires": "Expires at {time}",
+    "confirmOnDevice": "Confirm the directory on the device, then refresh.",
+    "error": "Device request failed. Refresh before trying again.",
+    "empty": "No devices paired",
+    "connected": "Connected",
+    "offline": "Offline",
+    "revoked": "Revoked",
+    "grantDirectory": "Grant a directory",
+    "directories": "Granted directories",
+    "noDirectories": "No directories granted to this Space.",
+    "revoke": "Revoke",
+    "revokeDirectory": "Revoke {directory}",
+    "revokeTitle": "Revoke this device?",
+    "revokeGrantTitle": "Revoke this directory?",
+    "revokeDescription": "Access ends and work in flight is cancelled. An uncertain outcome stays unknown.",
+    "computer": "Run computer",
+    "teamSandbox": "Team sandbox",
+    "unavailable": "Selected device unavailable",
+    "nextRun": "Applies to your next Run in this conversation. Active Runs keep their computer.",
+    "approvalDevice": "Device: {name}",
+    "grantInstructions": "On the selected machine, confirm in Desktop or run this command and choose a directory:"
   }
 }

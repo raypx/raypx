@@ -108,6 +108,7 @@ export interface PreparedComputerCall {
   argumentSummary: string;
   target: string;
   executable?: string;
+  device?: import("@raypx/core/approvals").ApprovalDevice;
   changes: boolean;
   /** Reads such as screenshots retain effect evidence without asking as a change. */
   recordEffect?: boolean;

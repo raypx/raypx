@@ -1,7 +1,8 @@
 import type { ComputerProvider } from "@raypx/providers/computer";
 import type { ApiEnvironment, WorkerEnvironment } from "../env.js";
-export type AgentEnvironment = Omit<WorkerEnvironment, "_schema"> &
-  Partial<Omit<ApiEnvironment, "_schema">>;
+export type AgentEnvironment = Omit<WorkerEnvironment, "_schema" | "REDIS_URL"> & {
+  REDIS_URL?: string | undefined;
+} & Partial<Omit<ApiEnvironment, "_schema">>;
 
 /** Known deployment secrets stay in the backend and fail closed at the tool boundary. */
 export function knownComputerSecrets(environment: AgentEnvironment): string[] {

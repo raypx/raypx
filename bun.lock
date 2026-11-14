@@ -528,6 +528,8 @@
       "name": "@raypx/computers",
       "version": "0.0.0",
       "dependencies": {
+        "@raypx/contracts": "workspace:*",
+        "@raypx/control": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/providers": "workspace:*",
@@ -869,6 +871,7 @@
         "@earendil-works/pi-agent-core": "catalog:",
         "@modelcontextprotocol/client": "catalog:",
         "@raypx/ai": "workspace:*",
+        "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "zod": "catalog:",
       },

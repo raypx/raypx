@@ -16,7 +16,7 @@ Railway and Dev CLI. Turbo owns task scheduling through the root `turbo.json`; e
 | `./performance`                                                                 | CLI and Desktop performance runs    |
 
 - `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
-- `./build/deployment` owns service ports, health paths and API ingress routes.
+- `./build/deployment` owns service ports, health paths and API ingress routes, including `/device/*`.
   Policy checks static Docker, Compose and Caddy adapters plus API environment
   forwarding without importing application runtime or loading environment files.
 - `./build/start-env` keeps Start's dotenv behavior without reporting every inherited

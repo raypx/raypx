@@ -166,7 +166,7 @@ func Run(bundled fs.FS) error {
 				desktop.Close()
 				return
 			}
-			desktop.UI = &nativeUI{window: window}
+			desktop.UI = &nativeUI{window: window, desktop: desktop}
 			var recovery sync.Mutex
 			desktop.RecoverSession = func() bool {
 				if quitting.Load() || !recovery.TryLock() {

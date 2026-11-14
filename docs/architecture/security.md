@@ -151,3 +151,20 @@ credential echoes before durable lifecycle data or model continuation is stored.
 The document fetch sends no API credential. Calls use the registered base URL
 and admitted pinned address; model input cannot replace the host or headers, and
 redirects are refused. API responses remain bounded untrusted input.
+
+## Implemented device boundary
+
+The outbound-only connector has separate account/origin-bound restricted storage;
+its credential rotates on reconnect and never enters a renderer, URL or log.
+Native possession endpoints reject browser Origins and bound streamed HTTP bodies
+before parsing; session procedures require fresh Space admission and trusted
+mutation Origins. Pairing codes expire after five minutes and cannot be replayed.
+
+Local consent checks directory identity on every use, rejects traversal/symlinks
+and cancels revoked grants. An approved executable retains the user's OS rights,
+so neither file grants nor a per-command check claim sandbox isolation. Device
+commands ignore broad Never ask permission and are never model-reviewed. Initial
+untrusted provenance/context prevents receiving a device; delegated authority
+keeps the root requester. Audit stores pairing/grant/revocation and command intent
+and terminal outcome without credentials, private paths or command bodies.
+[Device setup](../development/device-connector.md) records conservative limits.

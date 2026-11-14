@@ -127,9 +127,14 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       },
       enabled: environment.JOBS_ENABLED,
     });
+    async function revokeDeviceComputers(accountId: string) {
+      await deviceComputersRepository.revokeAccount(accountId);
+    }
     const auth = createAuth({
-      revokeHostAuthorizations: (userId, sessionId) =>
-        control.credentials.revokeHostAuthorizations(userId, sessionId),
+      revokeHostAuthorizations: async (userId, sessionId) => {
+        await control.credentials.revokeHostAuthorizations(userId, sessionId);
+        await revokeDeviceComputers(userId);
+      },
       registrationAllowed: async () => (await config.read()).values.registrationEnabled,
       siteName: () =>
         config.readCached().then(
@@ -147,6 +152,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const spaces = createSpaceAccess(db);
     const {
       runner,
+      deviceComputers,
+      deviceComputersRepository,
+      deviceConnector,
       computerProvider,
       computers,
       computerScreens,
@@ -163,11 +171,15 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       spaceManagement,
       spaceDeletionWorker,
     } = await composeAgents(db, environment, logger, resources.createModels);
+    lifecycle.own(() => deviceConnector.shutdown());
     lifecycle.own(() => runner.close());
     lifecycle.own(() => routineWorker.close());
     lifecycle.own(() => spaceDeletionWorker.close());
     const conversations = runner.conversations;
     return {
+      deviceComputers,
+      deviceComputersRepository,
+      deviceConnector,
       pages,
       skills,
       mcpServers,
@@ -209,6 +221,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
+        deviceComputers,
+        deviceConnector,
         pages,
         skills,
         mcpServers,

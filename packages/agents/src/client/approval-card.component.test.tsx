@@ -62,6 +62,29 @@ function fixture(card = pendingCard(), language: "en" | "zh" = "en", accountId =
 
 afterEach(() => vi.useRealTimers());
 
+it.each(["en", "zh"] as const)(
+  "identifies the device, directory, command and OS permissions in %s",
+  (language) => {
+    const strings = { en, zh }[language].agents;
+    fixture(
+      pendingCard({
+        toolName: "computer_run_command",
+        device: {
+          id: "018e2c42-08e0-4000-8000-000000000001",
+          name: "My device",
+          directory: "/granted/project",
+          command: "echo hello",
+        },
+      }),
+      language,
+    );
+    expect(screen.getByText(/My device/)).toBeInTheDocument();
+    expect(screen.getByText("/granted/project")).toBeInTheDocument();
+    expect(screen.getByText("echo hello")).toBeInTheDocument();
+    expect(screen.getByText(strings.devices.warning)).toBeInTheDocument();
+  },
+);
+
 it.each(["en", "zh"] as const)("shows another member's request read-only in %s", (language) => {
   const strings = { en, zh }[language].agents;
   fixture(pendingCard({ memberAccountId: "another-member" }), language);

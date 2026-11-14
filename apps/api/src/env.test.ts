@@ -75,6 +75,37 @@ it("requires the shared application key for production member-connection recover
     }),
   ).toThrow("Production worker requires APP_KEY");
 });
+it("uses an optional explicitly supplied worker broker only for split device computers", () => {
+  vi.stubEnv("REDIS_URL", "redis://operator.example:6379");
+  expect(getWorkerEnvironment({})).not.toHaveProperty("REDIS_URL");
+  expect(getWorkerEnvironment({ REDIS_URL: "redis://127.0.0.1:6379" }).REDIS_URL).toBe(
+    "redis://127.0.0.1:6379",
+  );
+});
+it("shares one explicit origin across split device roles without reading auth configuration", () => {
+  const input = { DEVICE_CONNECTOR_ORIGIN: "https://api.example.test/", AUTH_URL: "invalid" };
+  expect(getWorkerEnvironment(input).DEVICE_CONNECTOR_ORIGIN).toBe("https://api.example.test");
+  expect(
+    getRelayEnvironment({
+      ...input,
+      DATABASE_URL: "postgres://localhost/raypx_test",
+      ALLOWED_ORIGINS: "https://app.example.test",
+    }).DEVICE_CONNECTOR_ORIGIN,
+  ).toBe("https://api.example.test");
+  expect(
+    getApiEnvironment({ DEVICE_CONNECTOR_ORIGIN: input.DEVICE_CONNECTOR_ORIGIN })
+      .DEVICE_CONNECTOR_ORIGIN,
+  ).toBe("https://api.example.test");
+  for (const origin of [
+    "https://user:secret@example.test",
+    "https://example.test/private",
+    "http://example.test",
+    "https://example.test/?secret=1",
+  ])
+    expect(() => getWorkerEnvironment({ DEVICE_CONNECTOR_ORIGIN: origin })).toThrow(
+      "Invalid environment variables",
+    );
+});
 it("validates lease heartbeat headroom and recovery bounds", () => {
   expect(() => getWorkerEnvironment({ RUN_RECOVERY_INTERVAL_MS: "0" })).toThrow(
     "Invalid environment variables",

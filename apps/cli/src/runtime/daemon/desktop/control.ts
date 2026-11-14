@@ -109,6 +109,20 @@ export class DesktopControl {
     this.selected = account;
     return true;
   }
+  /** Native-only current session identity; never exposed by the renderer router. */
+  async nativeIdentity(signal: AbortSignal) {
+    const scope = this.httpScope;
+    const operation = AbortSignal.any([signal, scope.signal]);
+    try {
+      const account = accountProfileSchema.parse(await this.api.rpc("account.get", {}, operation));
+      operation.throwIfAborted();
+      if (this.httpScope !== scope) throw unauthorized();
+      return { accountId: account.id, serverOrigin: this.origin };
+    } catch (error) {
+      if (error instanceof LocalError && error.code === "AUTH_REQUIRED") return null;
+      throw error;
+    }
+  }
   async request(
     method: string,
     raw: unknown,

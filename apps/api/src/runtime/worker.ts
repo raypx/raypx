@@ -38,12 +38,20 @@ export async function createWorkerRuntime(
   try {
     const connection = resources?.connect() ?? connectRuntimeDatabase(environment.DATABASE_URL);
     lifecycle.own(() => connection.close());
-    const { runner, routines, spaceMemory, routineWorker, spaceManagement, spaceDeletionWorker } =
-      await composeAgents(connection.db, environment, logger, resources?.createModels);
+    const {
+      runner,
+      routines,
+      spaceMemory,
+      routineWorker,
+      spaceManagement,
+      spaceDeletionWorker,
+      deviceConnector,
+    } = await composeAgents(connection.db, environment, logger, resources?.createModels);
     const fanout =
       resources?.createConversationFanout?.() ?? createConversationFanout(environment.DATABASE_URL);
     lifecycle.own(() => fanout.close());
     lifecycle.own(() => runner.close());
+    lifecycle.own(() => deviceConnector.shutdown());
     lifecycle.own(() => routineWorker.close());
     lifecycle.own(() => spaceDeletionWorker.close());
     const readiness = createReadinessCheck({
@@ -65,6 +73,7 @@ export async function createWorkerRuntime(
       allowedOrigins: [] as string[],
       clientIp: createClientIpReader([], []),
       start: async () => {
+        await deviceConnector.start().catch(() => {});
         await runner.startWorker(fanout);
         await routineWorker.start();
         await spaceDeletionWorker.start();

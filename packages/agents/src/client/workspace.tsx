@@ -32,6 +32,10 @@ import { SpaceLiveController } from "../model/space-live.js";
 import { SpaceManagementController, type SpaceManagementPort } from "../model/space-management.js";
 import type { ApprovalSettingsPort } from "../model/approval-settings.js";
 import { SpaceSettingsPanel } from "./space-settings.js";
+import {
+  DeviceComputersController,
+  type NativeDeviceConfirmation,
+} from "../model/device-computers.js";
 import { CapabilitySheet } from "./capability-sheet.js";
 import { PausedRoutinePanel } from "./space-routine.js";
 import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
@@ -112,6 +116,7 @@ function screenMethods(port: ComputerPort): Partial<ComputerScreenPort> {
 }
 
 export interface AgentsWorkspaceProps {
+  nativeDeviceConfirmation?: NativeDeviceConfirmation | undefined;
   client: AgentsWorkspacePort;
   renderWorkspace?:
     | ((context: {
@@ -148,6 +153,7 @@ export function AgentsWorkspace(props: AgentsWorkspaceProps) {
 
 function AgentsWorkspaceContents({
   client,
+  nativeDeviceConfirmation,
   onSessionEnded,
   renderWorkspace,
   onOpenPage,
@@ -367,6 +373,19 @@ function AgentsWorkspaceContents({
     [page.spaceId],
   );
   const membership = page.spaces.find(({ space }) => space.id === page.spaceId);
+  const devices = useMemo(
+    () =>
+      page.spaceId && client.deviceComputers
+        ? new DeviceComputersController(
+            page.spaceId,
+            client.deviceComputers,
+            undefined,
+            nativeDeviceConfirmation,
+          )
+        : null,
+    [page.spaceId, client.deviceComputers, nativeDeviceConfirmation],
+  );
+  useEffect(() => () => devices?.dispose(), [devices]);
   const management = useMemo(() => {
     if (!page.spaceId || !spaceManagement || typeof spaceManagement.members !== "function")
       return null;
@@ -1182,6 +1201,7 @@ function AgentsWorkspaceContents({
           {spaceSettingsOpen && (
             <SpaceSettingsPanel
               controller={management}
+              devices={devices}
               role={membership.member.role}
               invitationOrigin={invitationOrigin ?? origin}
               onExit={(reason) => exitSpace(reason, management.spaceId)}

@@ -37,6 +37,8 @@ export function browserModelFixture() {
       const requestsPage = lastMessage?.text.startsWith(pagePrefix) ?? false;
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
       const requestsAutoWrite = lastMessage?.text.startsWith("Fixture Auto write ") ?? false;
+      const requestsDeviceCommand = lastMessage?.text === "Fixture device command";
+      const requestsRealDevice = lastMessage?.text === "Fixture real device roundtrip";
       const autoUntrustedPrefix = "Fixture Auto untrusted ";
       const requestsAutoUntrusted = lastMessage?.text.startsWith(autoUntrustedPrefix) ?? false;
       const groupCoordinator = input.instructions.includes("Fixture group coordinator.");
@@ -57,6 +59,31 @@ export function browserModelFixture() {
         stream.push({ type: "done", reason: "toolUse", message: request });
         stream.end(request);
         return stream;
+      }
+      if (
+        requestsDeviceCommand &&
+        !results.some((entry) => entry.toolName === "computer_run_command")
+      )
+        return toolCall("computer_run_command", "browser-device-command", {
+          executable: "echo",
+          argv: ["Fixture device command"],
+          cwd: ".",
+        });
+      if (requestsRealDevice) {
+        if (!results.some((entry) => entry.toolName === "computer_read_file"))
+          return toolCall("computer_read_file", "browser-real-device-read", { path: "input.txt" });
+        if (!results.some((entry) => entry.toolName === "computer_write_file"))
+          return toolCall("computer_write_file", "browser-real-device-write", {
+            path: "output.txt",
+            content: "Read through device",
+          });
+        if (!results.some((entry) => entry.toolName === "computer_run_command"))
+          return toolCall("computer_run_command", "browser-real-device-command", {
+            executable: "/bin/sh",
+            argv: ["-c", "printf approved > command.txt; printf 'Device command complete\\n'"],
+            cwd: ".",
+          });
+        text = "Device roundtrip complete";
       }
       if (requestsAutoUntrusted && !results.some((entry) => entry.toolName === "agent_page_read"))
         return toolCall("agent_page_read", "browser-auto-untrusted-read", {
@@ -171,7 +198,9 @@ export function browserModelFixture() {
         requestsPage ||
         requestsOpenApi ||
         requestsAutoWrite ||
-        requestsAutoUntrusted
+        requestsAutoUntrusted ||
+        requestsDeviceCommand ||
+        requestsRealDevice
       )
         queueMicrotask(complete);
       return stream;

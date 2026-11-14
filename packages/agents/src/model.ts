@@ -160,6 +160,12 @@ export {
 } from "./model/openapi-servers.js";
 
 export { mentionQueryAt, mentionIds } from "./model/mentions.js";
+export {
+  DeviceComputersController,
+  type DeviceComputersPort,
+  type DeviceComputersView,
+  type NativeDeviceConfirmation,
+} from "./model/device-computers.js";
 
 export {
   ApprovalSettingsController,

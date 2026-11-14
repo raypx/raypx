@@ -1,9 +1,66 @@
-# Raypx device CLI (retained)
+# Raypx device CLI
 
-This retained runtime remains until the device connector replacement phase. New
-Spaces, Agent conversations, durable Runs and tools belong to the PostgreSQL
-backend. Local enrollment/profile history does not authorize a Space and is never
-imported into server history.
+The Space device-computer connector runs separately from the retained runtime.
+Spaces, Agent conversations, durable Runs, approvals, effects and tools belong to
+the PostgreSQL backend. Retained enrollment/profile history does not authorize a
+Space and is never imported into server history.
+
+## Space device computers
+
+In Space settings → Devices, create a short-lived pairing code. On the machine
+you want to connect, run `raypx device pair`, enter the exact server origin and
+code, and confirm the account and Space locally. The connector runs independently
+after pairing. Desktop performs the equivalent confirmation with native dialogs
+and its absolute bundled CLI. Credentials never enter the renderer.
+
+Grant a directory separately for each Space:
+
+```sh
+raypx device grant '{"spaceId":"SPACE_ID"}'
+raypx device grants --json
+raypx device status --json
+raypx device stop --json
+raypx device start --json
+raypx device revoke-grant '{"grantId":"GRANT_ID"}' --json
+raypx device revoke --json
+```
+
+`grant` prompts for an absolute directory and always asks for confirmation on the
+device. `--yes` and `--json` cannot skip pairing or directory confirmation.
+Remote grant requests remain bounded and expire after one minute; Desktop polls
+them only for its currently verified account, then asks through its native picker
+and confirmation dialog. Without Desktop, use the interactive command above.
+Select a connected device and confirmed directory in the conversation Computer
+panel. Only the owning member's trusted Runs can use it. The server retains all
+execution authority and device commands require approval unless an exact Allow
+rule applies; automatic review never authorizes a device command.
+
+Commands run with your OS account's permissions. Directory grants constrain
+built-in file operations and the admitted command working directory; **a device
+computer is not sandbox isolation**. File calls reject traversal, link components
+and replaced roots, and keep connector/profile credentials outside grants.
+The connector never inherits provider credentials into commands. Combined command
+output is capped at one MiB; each file call is capped at one MiB. Home
+export/import/snapshots and Screen are unavailable. Process-group cancellation
+cannot contain a command that deliberately escapes its group.
+
+The connector opens an authenticated outbound WebSocket only. It has no inbound
+listener and never exposes the retained local router. Disconnection cancels work;
+reconnection advances its fence and replays unacknowledged journal progress without
+re-executing an accepted operation whose outcome is unknown. Its restricted
+credentials and local enforcement journal live under
+`<profile>/device-connector`, separate from retained `profile.sqlite`. A profile
+binding never moves to a different account or server origin. Use a different
+`--profile` for another binding. Local revoke erases its credential even offline;
+`serverRevoked: false` means the server record must also be revoked in Web.
+Tests use private temporary homes and stop their
+own connector afterward.
+
+macOS arm64 source and real-daemon acceptance are verified. Linux remains
+unverified; secure Windows device-file operations explicitly remain unavailable.
+Packaged native dialog and distribution acceptance are separate platform gates.
+
+## Retained local runtime
 
 Raypx's TypeScript CLI and independent daemon run in the compiled `raypx`
 executable, with no installed Node.js or Bun required. Desktop uses a

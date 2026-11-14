@@ -48,7 +48,7 @@ starts. Each missing capability is an explicit state in the product.
 ## Deploys
 
 - The unreleased `next` database is disposable. Its migration payload now contains
-  one generated baseline, `20261114045504_baseline`, rather than the earlier chain.
+  one generated baseline, `20261114053131_baseline`, rather than the earlier chain.
   Use a fresh, isolated database for this baseline; an existing disposable `next`
   database must be recreated explicitly by its operator. This is not an upgrade
   procedure and imports no earlier schema, ledger or data. Never reset or migrate
@@ -154,3 +154,15 @@ host upstream network failure; direct upstream SERVFAIL remains a failure.
 from `AGENT_MODELS` using `AGENT_MODEL_CREDENTIALS`. Configure API and worker
 roles alike. Without a resolvable selection, Auto is unavailable; persisted Auto
 settings ask the member. Review never falls back to Never ask or ambient keys.
+
+## Device connector routing
+
+`/device/*` is API ingress alongside `/rpc/*` and `/events`; Authorization must
+reach it. Combined roles need no broker. Split device Computer frames reuse the
+private Redis broker with a dedicated namespace; durable Runs still use PostgreSQL
+only. Set `DEVICE_CONNECTOR_ORIGIN` to the same canonical public API origin in
+every split API/worker/Relay role. API defaults to its public auth origin; a role
+without the matching device origin fails closed instead of accepting another
+origin's registration. Compose supplies that common origin in its split overlay.
+The optional value accepts HTTPS or loopback HTTP, with no credentials, path,
+query or fragment. See [device limits and acceptance](../development/device-connector.md).

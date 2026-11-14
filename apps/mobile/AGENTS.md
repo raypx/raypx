@@ -123,3 +123,14 @@ its `mobile`, `mobile-capabilities` and `mobile-resources` JSON namespaces.
 Never import DOM i18n adapters.
 
 - Expo password login handles Better Auth TOTP and backup-code challenges.
+
+Space settings also lists the current member's device computers, issues pairing
+codes for confirmation on the target machine, requests native directory selection,
+and lists/revokes grants or a machine with native destructive confirmation.
+The existing Computer sheet selects the team sandbox or a connected member device
+for the caller's next Run. An offline/revoked selection remains explicit and never
+falls back automatically. Shared `DeviceComputersController` projections refresh
+on foreground and explicit Refresh; native Mobile holds no connector credential
+and cannot confirm a directory on another machine. Device commands retain the
+machine's OS permissions and are not sandboxed. Native iOS/Android acceptance
+remains a separate gate.

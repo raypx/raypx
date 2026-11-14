@@ -33,6 +33,7 @@ import type { ComputerFilesPort } from "./computer-files.js";
 import type { ComputerScreenPort } from "./computer-screen.js";
 import type { AgentSkillsPort, AgentMcpPort } from "./agent-capabilities.js";
 import type { SpaceManagementPort } from "./space-management.js";
+import type { DeviceComputersPort } from "./device-computers.js";
 
 export interface ApprovalPort {
   effectiveMode?(this: void, input: { spaceId: SpaceId }): Promise<EffectiveApprovalMode>;
@@ -152,6 +153,7 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  deviceComputers?: DeviceComputersPort;
   skills?: AgentSkillsPort;
   mcpServers?: AgentMcpPort;
   groups?: GroupsPort;

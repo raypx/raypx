@@ -7,7 +7,7 @@ export const deploymentServices = {
 } as const;
 
 export const apiIngress = {
-  prefixes: ["/api/", "/rpc/", "/routines/"],
+  prefixes: ["/api/", "/rpc/", "/routines/", "/device/"],
   paths: [
     "/.well-known/openid-configuration",
     "/.well-known/oauth-authorization-server",

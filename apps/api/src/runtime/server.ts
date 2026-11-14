@@ -126,6 +126,7 @@ export async function createApiRuntime(
     allowedOrigins: environment.allowedOrigins,
     clientIp: createClientIpReader(environment.ipAddressHeaders, environment.trustedProxies),
     start: async () => {
+      await runtime.deviceConnector.start().catch(() => {});
       if (combined) {
         await runtime.runner.startWorker(fanout);
         await runtime.routineWorker.start();

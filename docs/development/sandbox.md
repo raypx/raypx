@@ -145,3 +145,10 @@ Evidence goes to `.artifacts/sandbox/`. See
 for prerequisites, cleanup and recorded platform limits. Default source tests
 inject an Engine transport and never mutate firewall rules. A passing VM IPv4 gate
 does not establish IPv6, Windows, rootless or another Engine's acceptance.
+
+## Member devices
+
+Device computers use a separate outbound connector and locally confirmed Space
+directories. They do not use this supervisor, Docker lifecycle, home snapshots or
+network isolation. An approved command retains the device user's OS permissions;
+a directory grant is not sandbox isolation. See [device setup and acceptance](device-connector.md).

@@ -92,12 +92,17 @@ export function createComputersRepository(
           const [spaceCount] = await tx
             .select({ value: count() })
             .from(computers)
-            .where(eq(computers.spaceId, scope.spaceId));
+            .where(and(eq(computers.spaceId, scope.spaceId), sql`${computers.scope} <> 'device'`));
           // Account-owned quota admission is the only cross-Space aggregate; it returns no content.
           const [memberCount] = await tx
             .select({ value: count() })
             .from(computers)
-            .where(eq(computers.createdByAccountId, scope.member.accountId));
+            .where(
+              and(
+                eq(computers.createdByAccountId, scope.member.accountId),
+                sql`${computers.scope} <> 'device'`,
+              ),
+            );
           if (spaceCount!.value >= limits.perSpace || memberCount!.value >= limits.perMember)
             throw new ComputerOperationError("COMPUTER_LIMIT");
           [row] = await tx
@@ -167,3 +172,5 @@ export function createComputersRepository(
     },
   };
 }
+
+export { createDeviceComputersRepository } from "./devices-postgres.js";

@@ -23,8 +23,11 @@ availability and write-only credentials; Mobile shows their activity and approva
 Client coverage and separate acceptance gates are documented in PRODUCT.md.
 Auto review uses a separately configured deployment model with bounded, durable,
 fail-closed decisions. Untrusted input, HTTP changes and unlisted commands still ask.
-Protected input, hosted computers and the replacement device connector remain
-unimplemented. Do not describe roadmap targets as delivered.
+Protected input and hosted computers remain unimplemented. Member-owned device
+computers use a separate outbound-only CLI connector, locally confirmed Space
+directory grants and per-operation checks. Device commands require approval or an
+exact executable Allow even in Never ask; Auto never approves them. macOS arm64
+real-daemon acceptance is separate from packaged Desktop and unverified platforms.
 Optional graphical computers and member takeover use the private Computer port,
 session-authorized screen streams and PostgreSQL control grants; Mobile has no Screen UI.
 The retained CLI/daemon, SQLite profiles, enrollment and remote projections are
@@ -214,7 +217,8 @@ API, worker and Relay; split API/worker coordination uses PostgreSQL. The retain
 both value also combines those roles. Redis is required only for split retained
 device transport, not new Run coordination. Do not implement new Agent authority
 in the renderer, Go host or device profile. The outbound-only device connector
-with native-confirmed Space grants remains a later phase.
+uses native-confirmed Space grants without owning Agent execution. Retained local
+tasks/session transport still use their independent daemon and profile.
 
 Until replaced, the existing macOS/Windows daemon still owns device execution,
 approval arbitration, replay, restricted credentials and Desktop session transport.

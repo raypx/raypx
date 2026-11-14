@@ -39,3 +39,5 @@ provider after ten seconds. Neither frame nor input content is persisted or logg
 
 Run check and test. test:postgres requires a freshly created disposable *_test database;
 never run against an existing operator database. Tests use only their own fixtures.
+
+Device Computers are separate member-owned machines. `createDeviceComputersService` owns pairing, directory grants and per-member conversation selection; `createDeviceConnectorRegistry` routes bounded, credential-authenticated outbound channels. The PostgreSQL repository journals sequenced connector outcomes before ACK, validates the exact Space/member/root requester and Run fence on every dispatch, and retains revoked selections as unavailable. Split roles inject the existing private broker through `DeviceConnectorBroker`; constructors start no connection or scan. A grant is one device Computer row and requires local confirmation every time. It is not sandbox isolation. Home export/import/snapshot and Screen are unavailable on devices.

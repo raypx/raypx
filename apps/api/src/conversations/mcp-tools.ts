@@ -127,7 +127,7 @@ export function withMcpTools(
       ];
     },
     prepare(call: ToolCall, run?: ExecutionRun): PreparedComputerCall {
-      if (!call.name.startsWith("mcp_")) return base.prepare(call);
+      if (!call.name.startsWith("mcp_")) return base.prepare(call, run);
       const binding = run ? bindings.get(run.id)?.get(call.name) : find(call.name);
       if (!binding) throw new ComputerToolsError("INVALID_TOOL");
       if (

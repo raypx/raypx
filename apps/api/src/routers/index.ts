@@ -1,3 +1,4 @@
+import { createDeviceConnectorRoutes } from "./device-connector.js";
 import { Hono } from "hono";
 import type { ApiAppOptions } from "../app/options.js";
 import { createReadinessCheck } from "../app/readiness.js";
@@ -21,6 +22,13 @@ export function createApiApp(options: ApiAppOptions) {
   const router = createRpcRouter(options, readReadiness);
   const timeout = options.rpcTimeoutMs ?? 15_000;
   app
+    .route(
+      "/",
+      createDeviceConnectorRoutes(options.deviceConnector, {
+        ...(options.rateLimit ? { rateLimit: options.rateLimit } : {}),
+        ...(options.clientIpHeader ? { clientIpHeader: options.clientIpHeader } : {}),
+      }),
+    )
     .route(
       "/page-content",
       createPagesRoutes({

@@ -92,3 +92,14 @@ restart. Unsupported stored versions fail explicitly.
 Go retains the independent lifetime `desktop-instance.sqlite` lock and device
 preference file. It never opens the CLI database. The previous Go session store
 and key namespace are never read, imported, rewritten or deleted. See [Desktop transport](desktop.md#desktop-daemon-channel).
+
+## Space connector storage
+
+The outbound-only Space connector does not migrate or write `profile.sqlite`. Its
+separate restricted `device-connector/connector.json` stores account/origin-bound
+rotating credentials, local directory inode identities, one-use confirmations and
+bounded operation/outbox journals using the existing private-permission mechanism.
+These are transport/consent receipts, never server Runs, approvals or history.
+Offline local revocation removes local credentials and grants immediately; when
+server revocation cannot be confirmed, use Devices to revoke there too. No old
+credential or root-grant data is imported. See [device storage limits](device-connector.md).

@@ -151,3 +151,22 @@ Mobile uses native controls over the same model.
 - Keep keyboard focus, accessible labels and reduced motion.
 - English and Chinese are both first-class. See
   [internationalization](internationalization.md).
+
+## Device settings and selection
+
+Space settings includes Devices for the current member's machines: short-lived
+pairing code, connection state, per-Space confirmed directories and revocation.
+The existing Computer surface selects a team sandbox or one connected device
+directory per conversation/member. It says that execution runs on the machine
+without sandbox isolation, preserves unavailable selections and applies changes
+to the next Run. Device approval cards show the device, directory and bounded
+complete command. English and Chinese share the same controls and warnings.
+
+Desktop pairs through a native Cancel-default dialog and finite absolute bundled
+CLI calls. The connector queues remote directory requests; the native host checks
+the current cookie session and configured origin before showing a picker and
+confirmation. It rechecks before confirming the one-use token. Grant requests for
+other machines route through the backend. Headless devices use explicit interactive
+CLI consent; browser confirmation alone grants nothing. Retained instance
+enrollment no longer gates the server workspace; its independent runtime remains.
+See [device setup](../development/device-connector.md).

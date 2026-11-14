@@ -65,10 +65,12 @@ function requestView(row: typeof requests.$inferSelect): ApprovalRequest {
     reviewStartedAt: _started,
     reviewFence: _reviewFence,
     reviewEffectKey: _effectKey,
+    device,
     ...request
   } = row;
   return approvalRequestSchema.parse({
     ...request,
+    ...(device ? { device } : {}),
     createdAt: row.createdAt.toISOString(),
     expiresAt: row.expiresAt.toISOString(),
     resolvedAt: row.resolvedAt?.toISOString() ?? null,
@@ -90,6 +92,7 @@ export function approvalCardData(request: ApprovalRequest) {
     toolName: request.toolName,
     argumentSummary: request.argumentSummary,
     target: request.target,
+    ...(request.device ? { device: request.device } : {}),
     memberAccountId: request.memberAccountId,
     expiresAt: request.expiresAt,
   };
@@ -645,6 +648,14 @@ export function createApprovalsRepository(
             arguments: call.arguments,
             argumentSummary: call.argumentSummary,
             target: call.target,
+            device: call.device
+              ? {
+                  id: call.device.id,
+                  name: call.device.name,
+                  directory: call.device.directory,
+                  ...(call.device.command !== undefined ? { command: call.device.command } : {}),
+                }
+              : null,
             expiresAt,
             createdAt,
             ...(fallback

@@ -29,8 +29,10 @@ import { LoadingState } from "@raypx/ui/loading-state";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { type SpaceManagementController, filteredSpaceAudit } from "../model/space-management.js";
 import { useTranslations } from "./i18n.js";
+import type { DeviceComputersController } from "../model/device-computers.js";
+import { DevicesSettings } from "./device-computers.js";
 
-const sections = ["general", "members", "invitations", "approvals", "audit"] as const;
+const sections = ["general", "members", "invitations", "approvals", "devices", "audit"] as const;
 type Section = (typeof sections)[number];
 type State = ReturnType<SpaceManagementController["getSnapshot"]>;
 const auditCodes = [
@@ -60,6 +62,12 @@ const auditActions = {
   "settings.approval_override_set": "overrideSet",
   "settings.approval_override_cleared": "overrideCleared",
   "approval.answered": "approvalAnswered",
+  "device.pairing.created": "devicePairingStarted",
+  "device.paired": "devicePaired",
+  "device.directory.granted": "deviceDirectoryGranted",
+  "device.directory.revoked": "deviceDirectoryRevoked",
+  "device.revoked": "deviceRevoked",
+  "device.command": "deviceCommand",
 } as const;
 
 function displayDate(value: string) {
@@ -81,12 +89,14 @@ export function SpaceSettingsPanel({
   onExit,
   onOpenRoutine,
   invitationOrigin,
+  devices,
 }: {
   controller: SpaceManagementController;
   role: SpaceRole;
   onExit: (reason: "left" | "deleting" | "removed") => void;
   onOpenRoutine: (id: string) => void;
   invitationOrigin?: string;
+  devices?: DeviceComputersController | null | undefined;
 }) {
   const t = useTranslations("agents");
   const state = useSyncExternalStore(
@@ -99,7 +109,13 @@ export function SpaceSettingsPanel({
     state.members.find((member) => member.accountId === controller.accountId)?.role ?? role;
   const owner = currentRole === "owner";
   const visibleSections = sections.filter(
-    (entry) => owner || entry === "general" || entry === "members" || entry === "approvals",
+    (entry) =>
+      (entry !== "devices" || !!devices) &&
+      (owner ||
+        entry === "general" ||
+        entry === "members" ||
+        entry === "approvals" ||
+        entry === "devices"),
   );
   const activeSection = visibleSections.includes(section) ? section : "general";
   const id = useId();
@@ -184,6 +200,7 @@ export function SpaceSettingsPanel({
       {!state.loading && activeSection === "approvals" && (
         <OverrideSettings controller={controller} state={state} owner={owner} />
       )}
+      {activeSection === "devices" && devices && <DevicesSettings controller={devices} />}
       {!state.loading && owner && activeSection === "audit" && (
         <AuditSettings controller={controller} state={state} />
       )}

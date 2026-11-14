@@ -1,6 +1,14 @@
-import { createComputersService, createComputerScreensService } from "@raypx/computers/server";
+import {
+  createDeviceConnectorRegistry,
+  createDeviceComputersService,
+  createComputersService,
+  createComputerScreensService,
+} from "@raypx/computers/server";
+import { createDeviceBroker } from "./device-broker.js";
+import { withDeviceComputerTools } from "../conversations/device-tools.js";
 import {
   createComputersRepository,
+  createDeviceComputersRepository,
   createComputerScreenRepository,
   revokeComputerScreenControl,
 } from "@raypx/computers/server/postgres";
@@ -63,6 +71,15 @@ export async function composeAgents(
   logger: ApiLogging,
   createModels?: () => ConversationModels,
 ) {
+  const deviceComputersRepository = createDeviceComputersRepository(
+    db,
+    environment.DEVICE_CONNECTOR_ORIGIN ?? environment.publicApiOrigin ?? "",
+  );
+  const deviceConnector = createDeviceConnectorRegistry(
+    deviceComputersRepository,
+    environment.REDIS_URL ? createDeviceBroker(environment.REDIS_URL) : undefined,
+  );
+  const deviceComputers = createDeviceComputersService(deviceComputersRepository, deviceConnector);
   const computerProvider = await configuredComputerProvider(environment);
   const computersRepository = createComputersRepository(db, {
     perSpace: environment.COMPUTERS_PER_SPACE,
@@ -115,16 +132,23 @@ export async function composeAgents(
     ...openApiServers.protectedValues(),
   ];
   const memoryTools = withMemoryTools(
-    createComputerTools(
-      computers,
-      computerProvider,
-      protectedValues,
+    withDeviceComputerTools(
+      createComputerTools(
+        computers,
+        computerProvider,
+        protectedValues,
+        repository.pinResources,
+        createComputerUseQueue(db),
+        {
+          withAgentInput: computerScreens.withAgentInput,
+          setPaused: (scope, run, paused) => repository.setComputerInputPaused!(scope, run, paused),
+        },
+      ),
+      deviceComputersRepository,
+      deviceConnector,
       repository.pinResources,
       createComputerUseQueue(db),
-      {
-        withAgentInput: computerScreens.withAgentInput,
-        setPaused: (scope, run, paused) => repository.setComputerInputPaused!(scope, run, paused),
-      },
+      protectedValues,
     ),
     spaceMemory,
     protectedValues,
@@ -197,6 +221,9 @@ export async function composeAgents(
         .emit({ status: 503, code: "EXECUTION_FAILED" }),
   });
   return {
+    deviceConnector,
+    deviceComputers,
+    deviceComputersRepository,
     pages,
     skills,
     mcpServers,

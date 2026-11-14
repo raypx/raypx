@@ -24,6 +24,7 @@
     "@earendil-works/pi-agent-core": "catalog:",
     "@modelcontextprotocol/client": "catalog:",
     "@raypx/ai": "workspace:*",
+    "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "zod": "catalog:"
   },

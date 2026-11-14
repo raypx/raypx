@@ -235,3 +235,5 @@ indexes support the independently bounded snapshot/history projection.
 `openapi_server_agents` are Space-owned with composite same-Space foreign keys.
 The historical credential wrapping identity grants no account authority; API
 resolves current Space membership before exposing metadata or dispatching tools.
+
+Device Computer state is separate from retained `control_device` and instance enrollment: `device_computers` stores account/origin-bound restricted-credential digests and expiring connection fences; `device_computer_pairings` stores one-use five-minute hashes. `device_space_devices`, `device_directory_grants` and `device_computer_selections` use composite same-Space/member ownership keys. Each directory grant references a device Computer. `device_connector_operations/events` retain bounded sequenced outcomes before ACK and cascade with the original Run. Command audit intents and terminal outcomes are append-only Space evidence; credentials and private output are never logs. Approval requests add nullable bounded device presentation metadata. The single generated disposable baseline is `20261114053131_baseline`.

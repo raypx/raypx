@@ -24,6 +24,9 @@ func (c *testNative) Native(_ context.Context, input JSON) (any, error) {
 	if input["action"] == "notifications" {
 		return JSON{"revision": 0.0}, nil
 	}
+	if input["action"] == "device_connector_context" {
+		return JSON{"serverOrigin": "https://raypx.com", "accountId": "member"}, nil
+	}
 	return true, nil
 }
 func TestLocalProfileSelectsBundledCLIWithoutOpeningOldSessions(t *testing.T) {

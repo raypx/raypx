@@ -103,6 +103,8 @@ async function nativeEventsFixture(page: Page) {
         segmentsTruncated: false,
       },
       "/rpc/computers/get": { status: "not-configured" },
+      "/rpc/deviceComputers/list": { devices: [] },
+      "/rpc/deviceComputers/getSelection": { selection: null },
       "/rpc/approvals/pending": [],
       "/rpc/approvals/settings": { revision: 0, mode: "ask", rules: [], availableModes },
       "/rpc/approvals/effectiveMode": {

@@ -306,3 +306,16 @@ until this adapter is reviewed. The pinned CLI sources are copied into a version
 Remove the adapter when upstream provides this hook.
 
 See the [single-compile distribution and Strobe acceptance guide](mygo-bun-migration-plan.md) for prepared payloads and remaining platform gates.
+
+## Space device computers
+
+The new outbound-only `device` connector is separate from the retained daemon
+channel above. Server Agents use session/Space admission without retained instance
+enrollment. Desktop starts the absolute bundled CLI for finite pairing/grant
+prepare and one-use confirmation; OS dialogs default to Cancel. A bounded native
+heartbeat poll consumes a pending directory request only for the current freshly
+verified account and configured origin, checks again before/after confirmation
+and uses the native picker. Logout/session switching cannot grant a stale request.
+No connector secret enters the renderer or the Go host. The connector continues
+independently of the window; native UI acceptance remains a packaged platform gate.
+See [device setup and platform limits](device-connector.md).

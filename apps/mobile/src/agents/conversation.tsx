@@ -24,6 +24,7 @@ import {
   type ApprovalPort,
   mentionQueryAt,
   type ComputerController,
+  type DeviceComputersController,
   type ConversationController,
 } from "@raypx/agents/model";
 import { useCopy } from "../locale.js";
@@ -59,6 +60,7 @@ export function AgentConversation({
   initialRunId,
   controller,
   computer,
+  devices,
   accountId,
   origin,
   onBack,
@@ -73,6 +75,7 @@ export function AgentConversation({
   initialRunId?: RunId | undefined;
   controller: ConversationController;
   computer: ComputerController;
+  devices?: DeviceComputersController | undefined;
   accountId: string;
   origin: string;
   onBack(this: void): void;
@@ -357,6 +360,7 @@ export function AgentConversation({
             <View className="flex-row flex-wrap items-center justify-between gap-2">
               <Action label={t("agents.back")} secondary onPress={onBack} />
               <ComputerIndicator
+                devices={devices}
                 state={computerState}
                 open={computerOpen}
                 onOpen={() => setComputerOpen(true)}
@@ -739,6 +743,7 @@ export function AgentConversation({
       </KeyboardAvoidingView>
       <ComputerSheet
         controller={computer}
+        devices={devices}
         open={computerOpen}
         onClose={() => setComputerOpen(false)}
       />

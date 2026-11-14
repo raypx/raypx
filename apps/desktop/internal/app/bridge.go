@@ -55,7 +55,10 @@ func (b *Bridge) Request(ctx context.Context, method string, input host.JSON) (a
 	return desktop.Request(ctx, method, input)
 }
 
-type nativeUI struct{ window *mygo.Window }
+type nativeUI struct {
+	window  *mygo.Window
+	desktop *host.Desktop
+}
 
 func (b *nativeUI) IsVisible() bool { return b.window.IsVisible() && !b.window.IsMinimized() }
 func (b *nativeUI) Hide() bool      { b.window.Hide(); return !b.window.IsVisible() }

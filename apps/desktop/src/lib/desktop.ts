@@ -15,6 +15,8 @@ export const {
   getDesktopRuntime,
   onLocalEvent,
   pickDirectory,
+  pairDeviceConnector,
+  grantDeviceDirectory,
   restartEngine,
   localRequest,
   saveDesktopPreferences,

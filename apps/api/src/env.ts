@@ -10,6 +10,22 @@ function computerLimit(fallback: string) {
     .pipe(z.number().int().max(1000));
 }
 const server = {
+  DEVICE_CONNECTOR_ORIGIN: z
+    .url()
+    .refine((value) => {
+      const url = new URL(value);
+      const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+      return (
+        !url.username &&
+        !url.password &&
+        url.pathname === "/" &&
+        !url.search &&
+        !url.hash &&
+        (url.protocol === "https:" || (url.protocol === "http:" && loopback))
+      );
+    })
+    .transform((value) => new URL(value).origin)
+    .optional(),
   COMPUTER_PROVIDER: z.enum(["none", "docker"]).default("none"),
   SANDBOX_SUPERVISOR_URL: z.url().optional(),
   SANDBOX_SUPERVISOR_TOKEN: z
@@ -192,13 +208,14 @@ function validateRunTiming(environment: { RUN_HEARTBEAT_MS: number; RUN_LEASE_MS
     throw new Error("RUN_LEASE_MS must allow at least two heartbeats");
 }
 
-/** Worker configuration has no authentication, cookies, mail, signer or broker dependency. */
+/** Worker Runs need no broker; split device computers optionally reuse one. */
 export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
   const environment = defineEnv({
     isServer: true,
     runtimeEnv,
     server: {
       NODE_ENV: server.NODE_ENV,
+      DEVICE_CONNECTOR_ORIGIN: server.DEVICE_CONNECTOR_ORIGIN,
       DATABASE_URL: server.DATABASE_URL,
       DATABASE_MIGRATE_ON_START: server.DATABASE_MIGRATE_ON_START,
       COMPUTER_PROVIDER: server.COMPUTER_PROVIDER,
@@ -218,6 +235,7 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
       RUN_ATTEMPT_TIMEOUT_MS: server.RUN_ATTEMPT_TIMEOUT_MS,
       RUN_BACKUP_MARGIN_MS: server.RUN_BACKUP_MARGIN_MS,
       ROUTINE_EMAIL_DOMAIN: server.ROUTINE_EMAIL_DOMAIN,
+      REDIS_URL: server.REDIS_URL,
     },
   });
   validateRunTiming(environment);
@@ -237,7 +255,8 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
     throw new Error(
       "COMPUTER_PROVIDER=docker requires SANDBOX_SUPERVISOR_URL and SANDBOX_SUPERVISOR_TOKEN",
     );
-  return environment;
+  const { REDIS_URL, ...worker } = environment;
+  return { ...worker, ...(REDIS_URL ? { REDIS_URL } : {}) };
 }
 export type WorkerEnvironment = ReturnType<typeof getWorkerEnvironment>;
 
@@ -248,6 +267,7 @@ export function getRelayEnvironment(runtimeEnv: Record<string, string | undefine
     runtimeEnv,
     server: {
       NODE_ENV: server.NODE_ENV,
+      DEVICE_CONNECTOR_ORIGIN: server.DEVICE_CONNECTOR_ORIGIN,
       DATABASE_URL: z.url(),
       REDIS_URL: z.url().optional(),
       ALLOWED_ORIGINS: z.string().min(1),

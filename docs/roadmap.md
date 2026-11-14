@@ -249,14 +249,23 @@ PNG capture, input-driven pixel changes and stream closure on stop. Isolation,
 home replacement and IPv4 egress passed; IPv6 was unavailable on the VM. Browser,
 PostgreSQL and packaged platform acceptance remain independent gates.
 
-The device connector as a computer, the full mobile client, one hosted sandbox
-provider, and graphical desktops with takeover. See
+Implemented device slice: a separate outbound-only CLI connector, native-confirmed
+Space directory grants, per-member conversation selection, fenced Computer port
+operations, exact command approval, durable connector receipts and audit.
+PostgreSQL remains the authority; the retained local daemon/profile and Desktop
+session transport remain for their existing consumers. macOS arm64 real-daemon
+acceptance is separate from unverified Windows/Linux and packaged native gates.
+See [device setup and conservative decisions](development/device-connector.md).
+Home transfer and Screen are unavailable on device Computers. The full mobile
+client and one hosted sandbox provider remain broader phase targets. See
 [computers](architecture/computers.md#device-connectors) and
 [clients](architecture/clients.md).
 
 Acceptance:
 
-- The conformance suite passes for the device and hosted providers.
+- Device operation/admission suites and actual CLI-to-API acceptance cover the
+  supported device capabilities. Home/screen conformance is unavailable there.
+  Hosted-provider conformance remains future work.
 - A device grant needs native confirmation. Revoking it cancels its work. An
   offline device is a waiting state.
 - A device runs only Runs started by the member who granted it.
@@ -266,8 +275,9 @@ Acceptance:
   disconnect.
 - Packaged Desktop and Mobile acceptance are recorded per platform.
 
-Replaces: instance enrollment, the daemon-owned Desktop channel and the terminal
-host.
+Replaces the default execution path with server-owned Runs through the Computer
+port. Retained instance enrollment, daemon-owned Desktop session channel and
+terminal host still serve their independent consumers; no earlier data is imported.
 
 ## Not planned
 

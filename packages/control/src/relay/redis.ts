@@ -43,7 +43,7 @@ const REQUEST_MS = 15_000;
 
 /** Private, bounded, at-most-once transport. PostgreSQL remains the ownership authority. */
 export class RedisRelayCluster implements RelayCluster {
-  readonly nodeId = crypto.randomUUID();
+  readonly nodeId: string;
   private readonly publisher: Redis;
   private readonly subscriber: Redis;
   private readonly pending = new Map<
@@ -65,7 +65,9 @@ export class RedisRelayCluster implements RelayCluster {
   constructor(
     url: string,
     private readonly prefix = "raypx:relay:",
+    nodeId: string = crypto.randomUUID(),
   ) {
+    this.nodeId = nodeId;
     this.publisher = new Redis(url, {
       enableOfflineQueue: false,
       autoResendUnfulfilledCommands: false,

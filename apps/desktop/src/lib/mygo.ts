@@ -8,6 +8,8 @@ import {
   desktopLoginResults,
   desktopEventsRequests,
   desktopEventsResults,
+  desktopDeviceRequests,
+  desktopDeviceResults,
 } from "@raypx/contracts/desktop";
 import {
   DESKTOP_METHODS,
@@ -264,6 +266,17 @@ export async function createMyGoBridge(dispatch: (event: unknown) => void): Prom
           return !connection?.ready && value.engine.status === "ready"
             ? { ...value, engine: { status: "error", code: "HOST_UNAVAILABLE" } }
             : value;
+        }
+        const nativeMethod = DESKTOP_METHODS[key];
+        if (Object.hasOwn(desktopDeviceRequests, nativeMethod)) {
+          const action = nativeMethod as keyof typeof desktopDeviceRequests;
+          return desktopDeviceResults[action].parse(
+            await runtime.call(
+              "Desktop.Request",
+              action,
+              desktopDeviceRequests[action].parse(input),
+            ),
+          );
         }
         if (nativeMethods.has(key))
           return runtime.call("Desktop.Request", DESKTOP_METHODS[key], input);

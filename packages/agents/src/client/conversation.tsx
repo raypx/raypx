@@ -62,6 +62,7 @@ import { CapabilitySheet } from "./capability-sheet.js";
 import { CapabilityPanels } from "./capability-panel.js";
 import type { AgentsWorkspacePort } from "../model.js";
 import { ComputerIndicator, ComputerPanel } from "./computer.js";
+import { DeviceComputersController } from "../model/device-computers.js";
 import { ApprovalCard } from "./approval-card.js";
 import { ToolActivity } from "./tool-activity.js";
 import { EffectRecords } from "./effects.js";
@@ -86,7 +87,9 @@ interface AgentConversationProps {
   group?: GroupConversationView | undefined;
   agentDirectory?: readonly Agent[] | undefined;
   onManageParticipants?: (() => void) | undefined;
-  capabilities?: Pick<AgentsWorkspacePort, "routines" | "spaceMemory"> | undefined;
+  capabilities?:
+    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers">
+    | undefined;
   item: AgentConversationView;
   port: ConversationPort;
   computerPort: ComputerPort;
@@ -242,7 +245,9 @@ function ConversationContents({
   group: GroupConversationView | undefined;
   agentDirectory: readonly Agent[] | undefined;
   onManageParticipants: (() => void) | undefined;
-  capabilities: Pick<AgentsWorkspacePort, "routines" | "spaceMemory"> | undefined;
+  capabilities:
+    | Pick<AgentsWorkspacePort, "routines" | "spaceMemory" | "deviceComputers">
+    | undefined;
   origin: string;
   controller: ConversationController;
   computer: ComputerController;
@@ -269,6 +274,30 @@ function ConversationContents({
     computer.subscribe,
     computer.getSnapshot,
     computer.getSnapshot,
+  );
+  const devices = useMemo(
+    () =>
+      capabilities?.deviceComputers
+        ? new DeviceComputersController(
+            item.agent.spaceId,
+            capabilities.deviceComputers,
+            item.conversation.id,
+          )
+        : null,
+    [capabilities?.deviceComputers, item.agent.spaceId, item.conversation.id],
+  );
+  const deviceState = useSyncExternalStore(
+    devices?.subscribe ?? subscribeNoDevices,
+    devices?.getSnapshot ?? noDevices,
+    devices?.getSnapshot ?? noDevices,
+  );
+  useEffect(() => {
+    if (!devices) return;
+    void devices.refresh();
+    return () => devices.dispose();
+  }, [devices]);
+  const selectedDevice = deviceState?.devices.find(
+    (device) => device.id === deviceState.selection?.deviceId,
   );
   function openComputer(opener: HTMLButtonElement | null = computerTrigger.current) {
     computerMenuOpener.current = opener === computerTrigger.current ? null : opener;
@@ -668,6 +697,12 @@ function ConversationContents({
               <ComputerIndicator
                 ref={computerTrigger}
                 state={computerState}
+                deviceName={
+                  deviceState?.selection
+                    ? (selectedDevice?.name ?? t("devices.unavailable"))
+                    : undefined
+                }
+                deviceConnected={selectedDevice?.connected}
                 open={computerOpen}
                 panelId={panelId}
                 onOpen={() => {
@@ -1278,6 +1313,8 @@ function ConversationContents({
         >
           <ComputerPanel
             controller={computer}
+            devices={devices}
+            deviceSelected={!!deviceState?.selection}
             onClose={closeComputer}
             activity={activity ?? state.toolActivity}
             approvalPort={approvalPort}
@@ -1300,6 +1337,8 @@ function ConversationContents({
           <ComputerPanel
             sheet
             controller={computer}
+            devices={devices}
+            deviceSelected={!!deviceState?.selection}
             onClose={closeComputer}
             activity={activity ?? state.toolActivity}
             approvalPort={approvalPort}
@@ -1312,6 +1351,12 @@ function ConversationContents({
 }
 
 const wideQuery = "(min-width: 1280px)";
+function subscribeNoDevices() {
+  return () => {};
+}
+function noDevices() {
+  return null;
+}
 function subscribeWide(listener: () => void) {
   const media = window.matchMedia?.(wideQuery);
   media?.addEventListener("change", listener);

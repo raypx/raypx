@@ -192,6 +192,43 @@ describe("daemon Desktop adapter", () => {
       provider: "codex",
     });
   });
+  it("routes device pairing and directory confirmation only through native capabilities", async () => {
+    const call = runtime();
+    const bridge = await createMyGoBridge(() => {});
+    const frames = nextSocket().frames.length;
+    await expect(bridge.request.pairDeviceConnector({ code: "PAIR-CODE" })).resolves.toBe(true);
+    expect(call).toHaveBeenLastCalledWith("Desktop.Request", "pair_device_connector", {
+      code: "PAIR-CODE",
+    });
+    await expect(
+      bridge.request.grantDeviceDirectory({ spaceId: streamId, deviceId: streamId }),
+    ).resolves.toBe(true);
+    expect(call).toHaveBeenLastCalledWith("Desktop.Request", "grant_device_directory", {
+      spaceId: streamId,
+      deviceId: streamId,
+    });
+    expect(nextSocket().frames).toHaveLength(frames);
+    call.mockResolvedValueOnce(false);
+    await expect(bridge.request.pairDeviceConnector({ code: "PAIR-CODE" })).resolves.toBe(false);
+    call.mockResolvedValueOnce({ paired: true, credential: "private" });
+    await expect(bridge.request.pairDeviceConnector({ code: "PAIR-CODE" })).rejects.toMatchObject({
+      name: "ZodError",
+    });
+  });
+  it("rejects renderer supplied device paths and origins before native invocation", async () => {
+    const call = runtime();
+    const bridge = await createMyGoBridge(() => {});
+    call.mockClear();
+    const grant = { spaceId: streamId, deviceId: streamId, path: "/attacker" };
+    const pairing = { code: "PAIR-CODE", serverOrigin: "https://attacker.invalid" };
+    await expect(bridge.request.grantDeviceDirectory(grant)).rejects.toMatchObject({
+      name: "ZodError",
+    });
+    await expect(bridge.request.pairDeviceConnector(pairing)).rejects.toMatchObject({
+      name: "ZodError",
+    });
+    expect(call).not.toHaveBeenCalled();
+  });
   it("retires a pending bootstrap without letting its late failure close the replacement", async () => {
     const call = runtime();
     const bridge = await createMyGoBridge(() => {});

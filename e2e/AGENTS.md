@@ -116,3 +116,11 @@ approval service. A requested safe file write resolves automatically with its
 reason after reload; a Page carrying injected approval instructions forces the
 next write to the member. `auto-review.spec.ts` runs on both renderers and saves
 opt-in mode/decision screenshots under `.artifacts/auto/`.
+
+`device-computers.spec.ts` uses the owned backend's non-executing connector and
+explicit native-confirmation hook. Both renderers pair from Devices settings,
+grant a directory, select that computer, approve a command and revoke the device.
+The command remains pending with the always-approve reviewer and reaches the
+fake connector only after the member answers. Traces/video are disabled around
+pairing codes; optional captures after clearing the code use `.artifacts/device/`.
+This browser gate establishes no native dialog, real command or packaged result.

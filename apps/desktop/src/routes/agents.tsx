@@ -11,6 +11,9 @@ import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
 import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { desktopReturnTo } from "../features/auth/return-to.js";
+import { pairDeviceConnector, grantDeviceDirectory, isDesktop } from "../lib/desktop.js";
+
+const nativeDeviceConfirmation = { pair: pairDeviceConnector, grant: grantDeviceDirectory };
 
 export const Route = createFileRoute("/agents")({
   ssr: false,
@@ -51,6 +54,7 @@ function SignedInAgents({ accountId }: { accountId: string }) {
   return (
     <AgentsWorkspace
       client={agentsClient}
+      nativeDeviceConfirmation={isDesktop() ? nativeDeviceConfirmation : undefined}
       onSessionEnded={() => signOut.sessionEnded("/agents")}
       groups={agentsClient.conversations}
       spaceManagement={agentsClient.spaces}

@@ -119,7 +119,10 @@ export class StaleRunFenceError extends Error {
   }
 }
 export class RunResourceUnavailableError extends Error {
-  constructor(readonly code: "CONNECTION_UNAVAILABLE" | "COMPUTER_UNAVAILABLE") {
+  constructor(
+    readonly code: "CONNECTION_UNAVAILABLE" | "COMPUTER_UNAVAILABLE",
+    readonly retryAt?: number,
+  ) {
     super(code);
     this.name = "RunResourceUnavailableError";
   }

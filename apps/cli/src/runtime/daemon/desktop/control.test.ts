@@ -413,3 +413,45 @@ it("revokes host access on an explicit sign-out request", async () => {
     ["host.session", { accountId: null, apiUrl: origin }],
   ]);
 });
+
+it("keeps device grant polling native-only and verifies cookies without retained enrollment or selection", async () => {
+  let authenticated = true;
+  const fetch = vi.fn(async (_request: Request) =>
+    authenticated ? Response.json({ json: profile }) : new Response(null, { status: 401 }),
+  );
+  const f = eventsFixture(fetch);
+  try {
+    expect(await f.control.nativeIdentity(signal())).toEqual({
+      accountId: "owner",
+      serverOrigin: origin,
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(f.owner.request).not.toHaveBeenCalled();
+    await expect(
+      f.control.request("device_connector_context", {}, "page", signal()),
+    ).rejects.toMatchObject({ code: "METHOD_NOT_PERMITTED" });
+    authenticated = false;
+    expect(await f.control.nativeIdentity(signal())).toBeNull();
+  } finally {
+    f.control.close();
+  }
+});
+
+it("resolves a replaced cookie account without granting retained Host authority", async () => {
+  let returned = profile;
+  const f = eventsFixture(async () => Response.json({ json: returned }));
+  try {
+    expect(await f.control.nativeIdentity(signal())).toEqual({
+      accountId: "owner",
+      serverOrigin: origin,
+    });
+    returned = { ...profile, id: "other" };
+    expect(await f.control.nativeIdentity(signal())).toEqual({
+      accountId: "other",
+      serverOrigin: origin,
+    });
+    expect(f.owner.request).not.toHaveBeenCalled();
+  } finally {
+    f.control.close();
+  }
+});

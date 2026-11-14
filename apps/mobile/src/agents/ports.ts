@@ -68,6 +68,7 @@ export function mobileWorkspacePort(client: ApiClient): AgentsWorkspacePort {
     agents: client.agents,
     conversations: client.conversations,
     computers: client.computers,
+    deviceComputers: client.deviceComputers,
     groups: client.conversations,
     spaceManagement: client.spaces,
     accountApprovalSettings: client.approvals,

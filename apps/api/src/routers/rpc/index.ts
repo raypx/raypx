@@ -1,3 +1,4 @@
+import { createDeviceComputersHandlers } from "./device-computers.js";
 import { createPagesHandlers } from "./pages.js";
 import { createSkillsHandlers } from "./skills.js";
 import { createOpenApiServersHandlers } from "./openapi-servers.js";
@@ -34,6 +35,7 @@ export const rpcPrefix = "/rpc";
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
   const setup = createRpcSetup(options);
   return setup.implementer.router({
+    deviceComputers: createDeviceComputersHandlers(setup),
     pages: createPagesHandlers(setup),
     skills: createSkillsHandlers(setup),
     mcpServers: createMcpServersHandlers(setup),

@@ -385,3 +385,13 @@ Back up configuration and the database before changing the Compose configuration
 
 To reuse a bounded builder, set `RAYPX_BUILD_BUILDER` explicitly. Hostnames,
 credentials and storage are never inferred or migrated by the scripts.
+
+## Device connector ingress
+
+Forward `/device/*` to API with Authorization intact. The shared ingress contract,
+Compose router and gateway include that prefix. For split roles, supply the same
+`DEVICE_CONNECTOR_ORIGIN` canonical public API origin and optional `REDIS_URL`
+to API/worker/Relay. Redis carries device frames, while Run leases/checkpoints
+remain PostgreSQL-only. Compose defaults the explicit device origin to its
+application HTTPS origin; other deployments must set split-role inputs together.
+No listener or inbound connection to the member machine is required.

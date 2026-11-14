@@ -114,6 +114,13 @@ export const toolArgumentsSchema = z
     (value) => JSON.stringify(value).length <= MAX_APPROVAL_ARGUMENTS,
     "Tool input too large",
   );
+export const approvalDeviceSchema = z.strictObject({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(120),
+  directory: z.string().min(1).max(4096),
+  command: z.string().max(4096).optional(),
+});
+export type ApprovalDevice = z.infer<typeof approvalDeviceSchema>;
 export const approvalCardFields = {
   requestId: approvalRequestIdSchema,
   toolCallId: z.string().min(1).max(128).optional(),
@@ -121,6 +128,7 @@ export const approvalCardFields = {
   toolName: toolNameSchema,
   argumentSummary: z.string().max(1_024),
   target: z.string().min(1).max(1_024),
+  device: approvalDeviceSchema.optional(),
   memberAccountId: z.string().min(1).max(128),
   expiresAt: z.iso.datetime(),
 };
@@ -135,6 +143,7 @@ export const approvalRequestSchema = z.strictObject({
   arguments: toolArgumentsSchema,
   argumentSummary: approvalCardFields.argumentSummary,
   target: approvalCardFields.target,
+  device: approvalCardFields.device,
   state: approvalStateSchema,
   createdAt: z.iso.datetime(),
   expiresAt: z.iso.datetime(),

@@ -22,3 +22,5 @@ schemas. `task-ports.ts` injects owner-scoped readers, device authorization tran
 connection release and error mapping; context dispatch receipts are released in that
 same transaction. Memory/server/postgres owns account-context persistence. Project
 validation is independent of context resolution, so compose projects, Memory, then commands.
+
+The private broker additionally transports bounded `device-computer` frames for the new Computer registry. Its namespace and node lifetime are separate from retained Relay devices; the broker carries no new Agent authority. A constructor-supplied node ID permits lazy runtime startup. The retained Relay dispatcher explicitly refuses this operation; only the dedicated Computer registry adapter consumes it.

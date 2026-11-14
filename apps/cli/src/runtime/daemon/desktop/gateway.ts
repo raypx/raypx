@@ -59,6 +59,7 @@ const bootstrapSchema = z.strictObject({
 });
 const nativeInputSchema = z.discriminatedUnion("action", [
   z.strictObject({ action: z.literal("channel") }),
+  z.strictObject({ action: z.literal("device_connector_context") }),
   z.strictObject({ action: z.literal("visible"), active: z.boolean() }),
   z.strictObject({ action: z.literal("pick"), path: z.string().min(1).max(4096) }),
   z.strictObject({ action: z.literal("open_approvals"), scope: z.enum(["local", "remote"]) }),
@@ -363,6 +364,8 @@ export class DesktopGateway {
     binding.expires = this.clock.now() + leaseDuration;
     const operation = AbortSignal.any([signal, binding.abort.signal]);
     switch (input.action) {
+      case "device_connector_context":
+        return binding.control.nativeIdentity(operation);
       case "channel":
         return this.ticket(binding);
       case "visible":
