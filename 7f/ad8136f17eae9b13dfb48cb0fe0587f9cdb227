@@ -1,0 +1,249 @@
+packages/core/src/protected-input.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 7-10,12-17,19-22,27-31,81-90,102-117,130-131
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 6,11,18,23-26,32-34,39-42,77-80,91-101,120-129,132-139
+  s_e2a92f7fc167c5::t_212dcc97d7d45f 118-119
+apps/api/src/conversations/openapi-tools.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 10,93,100,271-275,278,288
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 179-182,276-277
+apps/cli/package.json
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 18
+packages/agents/src/client/mcp-servers.tsx
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 317-329
+  s_e2a92f7fc167c5::t_5bc329dc32deb5 316,330
+packages/providers/src/computer/docker.ts
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 138
+apps/mobile/src/agents/protected-input.component.test.tsx
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 65-68,70-84,88-89,92-101
+  s_e2a92f7fc167c5::t_dc4ecef915fb80 63-64,69,85-86,90,102
+  s_e2a92f7fc167c5::t_c3a9d217940d55 87,91
+docs/roadmap.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 119-120,247-248
+apps/cli/AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 31-32
+packages/database/AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 208-210
+apps/api/src/conversations/device-tools.ts
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 36-38,129-132
+apps/api/src/conversations/openapi-tools.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 206-247
+  s_e2a92f7fc167c5::t_09eb1c48ad1665 204-205
+apps/api/src/conversations/mcp-tools.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 140-187
+  s_e2a92f7fc167c5::t_7c65280e5dc47c 49,138-139,188-189
+packages/providers/src/computer/device.ts
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 150,153
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 151-152,156-162
+packages/agents/locales/zh/agents.json
+  s_e2a92f7fc167c5::t_c388ec2685d6a8 692-698
+  s_e2a92f7fc167c5::t_9160875dd6b6ad 699-700
+packages/providers/src/mcp/transport.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 282-293
+  s_e2a92f7fc167c5::t_923bafa837b7fa 1
+packages/agents/src/protected-input.ts
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 1,47-48
+apps/api/tests/helpers/browser-mcp.ts
+  s_e2a92f7fc167c5::t_f9544cc312c7a5 45
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 46-56
+packages/core/src/mcp-servers.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 1,12,40
+  s_e2a92f7fc167c5::t_3eb1bab89ce36b 25
+packages/agents/src/server/protected-input.ts
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 13,281,284,290-291,315,410,413
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 70-72,285-289,342-344,411-412
+  s_e2a92f7fc167c5::t_ba206f689a0084 282-283
+packages/providers/AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 35-36
+packages/providers/src/mcp/port.ts
+  s_e2a92f7fc167c5::t_ba206f689a0084 16-17
+apps/cli/src/runtime/state/index.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 22-27
+  s_e2a92f7fc167c5::t_087dac52fadb24 21,31
+docs/architecture/protected-input.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 3-8,17-27,71-74,83-98,101-112,114-118,122-123,126-129
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 9-16
+  s_e2a92f7fc167c5::t_36f01c4c41ca62 99-100,130-132
+docs/architecture/capabilities.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 315-318
+docs/architecture/computers.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 348-353
+PRODUCT.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 87,191-193,196-198
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 82-86,88-93
+apps/api/src/conversations/mcp-servers.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 229-266,270-277,286-289,291-292
+  s_e2a92f7fc167c5::t_ed3fc715653bd2 75,227-228,267-269,278-285,290,293-294
+apps/api/src/conversations/mcp-tools.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 1,28,42,76,188,193,238-242,252,255,266,274-275
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 78-97,168-179,243-251,253-254,256-265,267-273
+  s_e2a92f7fc167c5::t_b741833e89787c 276
+apps/api/src/conversations/openapi-servers.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 1,343-346,352-356,378
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 331-334,347-351,357-372,374-377
+packages/providers/src/computer/port.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 66-80
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 1
+packages/providers/src/openapi/transport.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 237-238
+  s_e2a92f7fc167c5::t_cc99124a294a1c 1,57,215,246
+  s_e2a92f7fc167c5::t_b85129df81d333 119,179
+packages/contracts/AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 14-15
+e2e/tests/journeys/protected-input.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 139-218,220-224,226-294
+  s_e2a92f7fc167c5::t_22a420e3269492 219,225,295-305
+packages/agents/src/protected-input.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 17-34
+  s_e2a92f7fc167c5::t_e6b5a7e291ae43 16
+apps/api/src/conversations/mcp-servers.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 1,227,300
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 102-104,253-258,263-268,309-317,319-323,329-332
+  s_e2a92f7fc167c5::t_a9033e0b04fc8e 304-307
+packages/agents/src/client/protected-input.component.test.tsx
+  s_e2a92f7fc167c5::t_dc4ecef915fb80 98-99,104,110-112,115,120,128-129
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 100-103,105-109,113-114,116-119,121-127
+packages/core/AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 22-23
+apps/mobile/src/agents/protected-input.tsx
+  s_e2a92f7fc167c5::t_dc4ecef915fb80 109
+  s_e2a92f7fc167c5::t_c388ec2685d6a8 30-32,48-50,53-54,57-58,86-88,101
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 33-47,78,89-100
+  s_e2a92f7fc167c5::t_cd118f00d25c33 1-8,29,102,119-123,136-140,142-143
+apps/cli/src/runtime/device-connector/engine.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 1,307
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 266-268,270-275,308-310
+docs/architecture/approvals.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 66-67
+apps/api/tests/helpers/browser-model.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 13-16,91-93,107-126,128-134,136-152,155-156,305-307
+  s_e2a92f7fc167c5::t_f9544cc312c7a5 94-106,135
+  s_e2a92f7fc167c5::t_0f94cf2ac99643 9,127,339
+apps/api/src/conversations/openapi-servers.test.ts
+  s_e2a92f7fc167c5::t_f9544cc312c7a5 135,238,255
+infra/sandbox/src/home.py
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 142,150-155
+  s_e2a92f7fc167c5::t_c8b2cc7c282c10 156
+packages/database/src/schema.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 2182
+packages/contracts/src/device-connector.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 108-115
+  s_e2a92f7fc167c5::t_e4d225acd82b18 36,106-107,116-132
+packages/agents/src/client/protected-input.tsx
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 25-36,68-73,90,101-110
+  s_e2a92f7fc167c5::t_dc4ecef915fb80 67,120
+  s_e2a92f7fc167c5::t_c388ec2685d6a8 22-24,37-39,41,44,47,66,74,98-100,111-112,149
+apps/api/tests/postgres/node/protected-input.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 83-85,91-100,110,121,133-135,170-175,177-183,298,509-560,562-596,598,601-715
+  s_e2a92f7fc167c5::t_eeb5fb99bffbfd 1-8,561,597,599-600
+packages/agents/locales/en/agents.json
+  s_e2a92f7fc167c5::t_c388ec2685d6a8 692-698
+  s_e2a92f7fc167c5::t_f453f55b3b6267 699-700
+AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 26-30
+apps/api/tests/helpers/browser-openapi.ts
+  s_e2a92f7fc167c5::t_f9544cc312c7a5 53-54,61-63
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 13-19,55-60
+apps/api/tests/helpers/workspace-server.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 357-358,365-368
+  s_e2a92f7fc167c5::t_841400025782a2 369-372
+packages/contracts/src/device-connector.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 103-107,109-118,268-271
+  s_e2a92f7fc167c5::t_cc99124a294a1c 1,5,108,267,272
+apps/cli/src/runtime/device-connector/engine.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 192-262
+  s_e2a92f7fc167c5::t_ec70e51908614a 42,191,263-265
+apps/api/tests/postgres/node/device-daemon.test.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 2-11,42,132-133,262-363
+  s_e2a92f7fc167c5::t_01ab6386e52e13 1,364
+packages/agents/src/computer-tools.ts
+  s_e2a92f7fc167c5::t_661e2b5ea5e486 68,83,85
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 2-6,551-556
+  s_e2a92f7fc167c5::t_d2354c29877ac9 91
+apps/api/tests/helpers/browser-devices.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 116-123
+  s_e2a92f7fc167c5::t_f9544cc312c7a5 1
+  s_e2a92f7fc167c5::t_c76120e901d87a 158
+packages/agents/AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 224-225
+docs/development/device-connector.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 162-169
+e2e/AGENTS.md
+  s_e2a92f7fc167c5::t_77db0a7d1b18f6 134-135
+packages/agents/src/runner.ts
+  s_e2a92f7fc167c5::t_be6b24dc1f13d4 579
+apps/api/src/conversations/mcp-postgres.ts
+  s_e2a92f7fc167c5::t_cc99124a294a1c 42,91
+apps/api/AGENTS.md
+  s_e2a92f7fc167c5::t_696c7676f68a74 39-40
+apps/api/package.json
+  s_48de261a2741d6::t_44991272433939 57
+apps/api/src/routers/device-connector.test.ts
+  s_e2a92f7fc167c5::t_e01032ade5eeb6 44,53,63,99,114,140
+apps/api/src/runtime/migrations.ts
+  s_e2a92f7fc167c5::t_07465abcb243da 16
+apps/api/tests/postgres/node/space-deletion.test.ts
+  s_e2a92f7fc167c5::t_63bede70cc5618 234-236
+apps/api/tests/redis/device-broker.test.ts
+  s_e2a92f7fc167c5::t_ee5a4a6b1c7d15 39,102
+apps/cli/scripts/archive-smoke.ts
+  s_e2a92f7fc167c5::t_0e80ffe7346201 35-36
+apps/cli/src/runtime/device-connector/actions.test.ts
+  s_e2a92f7fc167c5::t_7d2699a60636b1 29
+apps/cli/src/runtime/device-connector/storage.ts
+  s_e2a92f7fc167c5::t_fae81d19f45ace 126
+apps/cli/tests/integration/runtime/device-connector/process.test.ts
+  s_e2a92f7fc167c5::t_25e10e1392f414 44
+apps/cli/tests/smoke/artifact.ts
+  s_e2a92f7fc167c5::t_0e38003863eea0 11
+bun.lock
+  s_e2a92f7fc167c5::t_da7bf2fac1bcfa 61,83,985,3544-3545
+docs/architecture/operations.md
+  s_e2a92f7fc167c5::t_f92fa2eaa3a33c 48
+package.json
+  s_e2a92f7fc167c5::t_bcffbc0ff35707 59-60
+packages/agents/src/client/workspace.component.test.tsx
+  s_e2a92f7fc167c5::t_f0b92c52b0c50b 1131
+packages/agents/src/model/mcp-servers.ts
+  s_e2a92f7fc167c5::t_76f159486fe083 50,59
+packages/computers/src/device-registry.test.ts
+  s_e2a92f7fc167c5::t_bdd6ac1b462d5d 31,99
+packages/computers/src/server/devices-postgres.ts
+  s_e2a92f7fc167c5::t_e2f90b7c4a9798 401,493
+packages/core/src/protected-input.test.ts
+  s_e2a92f7fc167c5::t_e3f3e2a18af030 1-28
+packages/database/drizzle-foundation/20261114090050_baseline/migration.sql
+  s_48de261a2741d6::t_c0ec004692f13b 588
+packages/database/drizzle-foundation/20261114090050_baseline/snapshot.json
+  s_48de261a2741d6::t_89224335aa02c6 5,12883-12895
+packages/providers/src/computer/device.test.ts
+  s_e2a92f7fc167c5::t_f7011e2354cdc1 120-143
+packages/providers/src/computer/memory.test.ts
+  s_e2a92f7fc167c5::t_d3a74e47c7d6c9 1-25
+packages/providers/src/computer/memory.ts
+  s_e2a92f7fc167c5::t_a237b65ba66bc8 188-190
+packages/providers/tests/helpers/computer.ts
+  s_e2a92f7fc167c5::t_045667927d8631 160,167,174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7fad8136f17eae9b13dfb48cb0fe0587f9cdb227",
+  "prompts": {},
+  "sessions": {
+    "s_48de261a2741d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d904-4ba1-72a1-88db-42ea6481660b",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_e2a92f7fc167c5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d942-5c61-74e3-90b4-ad83c4dc2c4c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
