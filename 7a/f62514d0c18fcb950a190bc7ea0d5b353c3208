@@ -1,0 +1,57 @@
+deploy/sandbox-host/check-host.sh
+  s_f9cc0d01f49051::t_7c60bb9fb788b5 1-25
+deploy/sandbox-host/prepare-host.sh
+  s_f9cc0d01f49051::t_ff1199a41553d6 27-29
+deploy/sandbox-host/raypx-sandbox-check.service
+  s_f9cc0d01f49051::t_f79b823ed0d6db 1-12
+deploy/sandbox-host/raypx-sandbox-check.timer
+  s_f9cc0d01f49051::t_287d1ff60feef3 1-11
+docs/architecture/computers.md
+  s_f9cc0d01f49051::t_b1eb8e31359c0a 276-285
+docs/development/sandbox-hosting.md
+  s_f9cc0d01f49051::t_e63483f1e558b7 30-34,61-110,199-205,210,229-231,249-255,260,444-486,528-534
+docs/development/sandbox.md
+  s_f9cc0d01f49051::t_eda0d9c7811055 120-123,130-134,167-182
+docs/development/validation-artifacts.md
+  s_f9cc0d01f49051::t_71a2e2d40db81c 82-84,87-92,146-167
+docs/roadmap.md
+  s_f9cc0d01f49051::t_de022bc06a6bea 128,139-146
+infra/sandbox/AGENTS.md
+  s_f9cc0d01f49051::t_966e7084516a95 65-68
+infra/sandbox/src/host-check.test.ts
+  s_f9cc0d01f49051::t_a7500d8e9f1304 1-54
+infra/sandbox/src/host-prepare.test.ts
+  s_f9cc0d01f49051::t_7f4446843b5740 1-72
+packages/dev-cli/AGENTS.md
+  s_f9cc0d01f49051::t_8883d92aa48c55 42-47
+packages/dev-cli/src/validation/sandbox-capacity.ts
+  s_f9cc0d01f49051::t_5197f3a31b466b 1-158
+packages/dev-cli/src/validation/sandbox-lifecycle.ts
+  s_f9cc0d01f49051::t_959bbf6167d979 1-226
+packages/dev-cli/src/validation/sandbox-network.ts
+  s_f9cc0d01f49051::t_e9b9fc03746aeb 185-191
+packages/dev-cli/src/validation/sandbox-probes.ts
+  s_f9cc0d01f49051::t_866c4f27ce2498 405-407,409-411
+packages/dev-cli/src/validation/sandbox.test.ts
+  s_f9cc0d01f49051::t_f142e12d170f25 289,432-448,455-456
+packages/dev-cli/src/validation/sandbox.ts
+  s_f9cc0d01f49051::t_e407667a299d47 330,794-811,845
+packages/providers/tests/helpers/computer.ts
+  s_f9cc0d01f49051::t_1161691d760df2 101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7af62514d0c18fcb950a190bc7ea0d5b353c3208",
+  "prompts": {},
+  "sessions": {
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
