@@ -33,14 +33,14 @@ export function registerTests() {
       data: { email: "control-e2e@example.com", password: "Raypx-control-test-123" },
     });
     expect(signedIn.status()).toBe(200);
-    async function rpc(path: string, input: unknown) {
+    async function rpc<T = { space: { id: string } }>(path: string, input: unknown): Promise<T> {
       const response = await page.request.post(`${apiUrl}/rpc/${path}`, {
         headers: { origin },
         timeout,
         data: { json: input },
       });
       expect(response.ok()).toBe(true);
-      return ((await response.json()) as { json: { space: { id: string } } }).json;
+      return ((await response.json()) as { json: T }).json;
     }
     const isolated = await rpc("spaces/create", {
       name: `Pages ${info.project.name} ${crypto.randomUUID()}`,
@@ -191,6 +191,63 @@ export function registerTests() {
       } finally {
         await publicContext.close();
       }
+      // Follow server-produced activity identity live and again after bounded history reload.
+      await page.setViewportSize(viewports[0]!);
+      const created = await rpc<{ agent: { id: string } }>("agents/create", {
+        spaceId,
+        agent: {
+          name: "Page writer",
+          instructions: "Write fixture Pages.",
+          model: { modelId: "browser-fixture" },
+        },
+      });
+      const conversationUrl = `${baseURL}/agents?spaceId=${spaceId}&agentId=${created.agent.id}`;
+      await page.goto(conversationUrl, { timeout });
+      const producedTitle = `Agent Page ${crypto.randomUUID()}`;
+      await page
+        .getByRole("textbox", { name: "Message", exact: true })
+        .fill(`Fixture Page create ${producedTitle}`, { timeout });
+      await page.getByRole("button", { name: "Send", exact: true }).click({ timeout });
+      const approval = page.locator("[data-approval-card]");
+      await expect(approval).toBeVisible();
+      await approval.getByRole("button", { name: "Approve", exact: true }).click({ timeout });
+      await expect(approval).toBeHidden();
+      const activity = page.locator("[data-tool-activity]");
+      await activity.getByRole("button", { name: /^Used 1 tool/ }).click({ timeout });
+      await expect(activity.locator('[data-tool-outcome="succeeded"]')).toBeVisible();
+      await activity.getByRole("button", { name: "Create page", exact: true }).click({ timeout });
+      await expect(page.getByRole("heading", { name: producedTitle, exact: true })).toBeVisible();
+      const producedId = new URL(page.url()).searchParams.get("pageId");
+      expect(producedId).toBeTruthy();
+      if (embedded) {
+        await expect(
+          page
+            .frameLocator(`iframe[title="${producedTitle}"]`)
+            .getByText("Created from the conversation.", { exact: true }),
+        ).toBeVisible();
+      } else {
+        await expect(page.locator("iframe")).toHaveCount(0);
+        const [handoff] = await Promise.all([
+          page.waitForEvent("popup", { timeout }),
+          page.getByRole("button", { name: "Open in Web", exact: true }).click({ timeout }),
+        ]);
+        expect(new URL(handoff.url()).searchParams.get("pageId")).toBe(producedId);
+        await handoff.close();
+      }
+      // Deletion retains the activity reference; stale links resolve to an explicit state.
+      await page.getByRole("button", { name: "Delete page", exact: true }).click({ timeout });
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Delete page", exact: true })
+        .click({ timeout });
+      await page.goto(conversationUrl, { timeout });
+      await page
+        .locator("[data-tool-activity]")
+        .getByRole("button", { name: /^Used 1 tool/ })
+        .click({ timeout });
+      await page.getByRole("button", { name: "Create page", exact: true }).click({ timeout });
+      expect(new URL(page.url()).searchParams.get("pageId")).toBe(producedId);
+      await expect(page.getByRole("alert")).toHaveText("This Page was deleted");
     } finally {
       await rpc("spaces/delete", { spaceId });
     }

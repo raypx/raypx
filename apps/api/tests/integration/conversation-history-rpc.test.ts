@@ -11,6 +11,7 @@ import {
   runSchema,
 } from "@raypx/core/conversation";
 import { SpaceNotFound, spaceIdSchema, spaceMemberSchema } from "@raypx/core/spaces";
+import { pageIdSchema } from "@raypx/core/pages";
 import type { ConversationSnapshot, ConversationsRepository } from "@raypx/agents/server";
 import { resolveSpaceScope, type SpaceScope } from "@raypx/spaces/server";
 import { createApiApp } from "../helpers/app.js";
@@ -95,7 +96,7 @@ function fixture(kind: "direct" | "group" = "direct") {
         agentId: child.agentId,
         parentRunId: run.id,
         toolCallId: "historical-call",
-        toolName: "computer_read_file",
+        toolName: "agent_page_create",
         target: "workspace",
         argumentSummary: "Read one file",
         startedAt: instant,
@@ -103,6 +104,7 @@ function fixture(kind: "direct" | "group" = "direct") {
         outcome: "succeeded",
         durationMs: 10,
         exitStatus: null,
+        page: { id: pageIdSchema.parse("historical-page"), version: 1 },
       },
     ],
     toolActivityTruncated: false,
@@ -160,7 +162,32 @@ function fixture(kind: "direct" | "group" = "direct") {
       throw new Error("Unused send");
     },
     events: async () => {
-      throw new Error("Unused events");
+      const activity = expectedSnapshot.toolActivity![0]!;
+      return {
+        status: "events",
+        cursor: 12,
+        hasMore: false,
+        events: [
+          {
+            event: {
+              kind: "tool.finished",
+              spaceId,
+              conversationId,
+              sequence: 12,
+              createdAt: instant,
+              runId: activity.runId,
+              toolCallId: activity.toolCallId,
+              toolName: activity.toolName,
+              target: activity.target,
+              argumentSummary: activity.argumentSummary,
+              outcome: "succeeded",
+              durationMs: 10,
+              exitStatus: null,
+              page: activity.page,
+            },
+          },
+        ],
+      };
     },
     retainAfter: async () => {
       throw new Error("Unused retention");
@@ -288,4 +315,18 @@ it("validates history bounds and Space-bound cursors and resolves fresh membersh
   });
   expect(f.history).toHaveBeenCalledTimes(1);
   expect(f.snapshot).not.toHaveBeenCalled();
+});
+
+it("preserves the produced Page identity on replayed lifecycle events", async () => {
+  const f = fixture();
+  const result = await f.client.conversations.events({
+    spaceId: f.spaceId,
+    conversationId: f.conversationId,
+  });
+  expect(result.status).toBe("events");
+  if (result.status !== "events") throw new Error("Expected lifecycle events");
+  expect(result.events[0]!.event).toMatchObject({
+    kind: "tool.finished",
+    page: { id: "historical-page", version: 1 },
+  });
 });

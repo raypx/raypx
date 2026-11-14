@@ -5,6 +5,7 @@ import {
   conversationCounters,
   conversationRuns,
   pageShareLinks,
+  pageIdentities,
   pages,
   pageVersions,
   spaceEvents,
@@ -264,6 +265,7 @@ export function createPagesRepository(db: Database): PagesRepository {
           .from(pages)
           .where(eq(pages.spaceId, scope.spaceId));
         if ((count?.value ?? 0) >= MAX_PAGES_PER_SPACE) throw new PageError("PAGE_LIMIT");
+        await tx.insert(pageIdentities).values({ spaceId: scope.spaceId, id });
         const [row] = await tx
           .insert(pages)
           .values({

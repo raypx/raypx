@@ -1,5 +1,5 @@
 import { useTranslations } from "../../i18n.js";
-import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useAuthActions, type AuthActionResult } from "@raypx/auth/hooks";
@@ -12,6 +12,8 @@ import { authClient, webUrl } from "./client.js";
 
 interface SignOutState {
   busy: boolean;
+  suppressSessionRedirect: boolean;
+  sessionEnded(returnTo: string): void;
   error: ReturnType<typeof useAuthActions>["error"];
   clearError(): void;
   signOut(accountId: string | null, destination?: "/" | "/login"): Promise<AuthActionResult>;
@@ -26,6 +28,7 @@ export function DesktopSignOutProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const c = useTranslations("common");
   const { error, retryCompletion } = auth;
+  const explicitSignOut = useRef(false);
   useEffect(() => {
     // Recovery can arrive before React renders the failure. The auth action
     // retries only when it has retained an unfinished cleanup callback.
@@ -41,13 +44,21 @@ export function DesktopSignOutProvider({ children }: { children: ReactNode }) {
   }, [platform, retryCompletion]);
   const state: SignOutState = {
     busy: auth.busy,
+    suppressSessionRedirect: auth.busy || error?.kind === "completion",
+    sessionEnded: (returnTo) => {
+      // Session notifications and stream closure can arrive during explicit logout.
+      // Its completion owns navigation, including retries of native cleanup.
+      if (explicitSignOut.current) return;
+      void router.navigate({ to: "/login", search: { returnTo }, replace: true });
+    },
     error,
     clearError: () => {
       if (error?.kind !== "completion") auth.clearError();
     },
-    signOut: (accountId, destination) => {
+    signOut: async (accountId, destination) => {
       if (error?.kind === "completion") return retryCompletion();
-      return auth.signOut(async () => {
+      explicitSignOut.current = true;
+      const result = await auth.signOut(async () => {
         analytics.reset();
         if (accountId)
           queries.removeQueries({ predicate: (query) => query.queryKey.includes(accountId) });
@@ -57,9 +68,14 @@ export function DesktopSignOutProvider({ children }: { children: ReactNode }) {
         if (destination)
           await router.navigate({
             to: destination,
-            ...(destination === "/" ? { replace: true } : {}),
+            search: {},
+            replace: true,
           });
+        explicitSignOut.current = false;
       });
+      if (result.status === "error" && result.error.kind !== "completion")
+        explicitSignOut.current = false;
+      return result;
     },
   };
   return (

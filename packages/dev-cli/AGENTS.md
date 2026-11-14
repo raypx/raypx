@@ -30,6 +30,16 @@ Command behavior and the rules each check enforces are documented in
 [Dev CLI commands and checks](../../docs/development/dev-cli.md).
 `test sandbox` owns opt-in real-Engine conformance and isolation acceptance;
 ordinary source verification never starts Docker or changes host firewall rules.
+Its `--with-egress` case uses Engine-host controls and owned DROP counters;
+offline public HTTPS is explicitly unavailable. `--dns-resolver` selects the
+public IPv4 DNS upstream shared by the supervisor and firewall probe.
+`--engine-host-command` explicitly selects an argv prefix for root commands on a
+VM Engine host with the checkout mounted at the same absolute path. The gate owns
+a host-network canary and reports unavailable IPv6 separately.
+`test backends --database-url` uses an explicitly selected disposable loopback
+`*_test` or `*_test_<lane>` database without starting or stopping PostgreSQL.
+Without that option it provisions its own temporary cluster; inherited URLs never
+select a database.
 
 ## Constraints
 

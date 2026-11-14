@@ -8,6 +8,7 @@ import {
   conversationRuns,
   conversations,
   pages,
+  pageIdentities,
   pageShareLinks,
   pageVersions,
   spaceEvents,
@@ -22,8 +23,8 @@ import { createPagesRepository } from "../../src/server/postgres.js";
 import { createPagesService, pageTokenHash } from "../../src/server/service.js";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("An isolated *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("An isolated *_test or *_test_<lane> database is required");
 const connection = connectDatabase(url);
 const access = createSpaceAccess(connection.db);
 const repository = createPagesRepository(connection.db);
@@ -109,6 +110,12 @@ it("creates immutable versions with CAS conflict, rename, restore, bounds and or
   expect(JSON.stringify(events)).not.toContain("First");
   await service.delete(f.a, first.id, 4);
   expect(await service.list(f.a)).toEqual([]);
+  expect(
+    await connection.db
+      .select()
+      .from(pageIdentities)
+      .where(and(eq(pageIdentities.spaceId, f.a.spaceId), eq(pageIdentities.id, first.id))),
+  ).toEqual([{ spaceId: f.a.spaceId, id: first.id }]);
 });
 it("stores only link hashes, follows current or pinned versions, expires and revokes on the next read", async () => {
   const f = await fixture();
@@ -150,10 +157,12 @@ it("rejects every cross-Space Page, version and link foreign key including pinne
     agentId: f.agentId,
   });
   await service.update(f.a, page.id, 1, "Two");
+  const invalidId = crypto.randomUUID();
+  await connection.db.insert(pageIdentities).values({ spaceId: f.b.spaceId, id: invalidId });
   await expect(
     connection.db.insert(pages).values({
       spaceId: f.b.spaceId,
-      id: crypto.randomUUID(),
+      id: invalidId,
       title: "Invalid",
       kind: "document",
       agentId: f.agentId,

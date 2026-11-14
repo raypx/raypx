@@ -105,8 +105,11 @@ encrypted secret. Run/message actor IDs are historical selectors, so account del
 gaps in a surviving conversation stream. Memory's author FK becomes null while its
 immutable provenance remains historical context in a surviving shared Space.
 
-Phase 5 Page responses use `sandbox allow-scripts` without `allow-same-origin`,
-`default-src 'none'`, inline-only script/style, data-only images, `connect-src 'none'`,
+Phase 5 HTML Page responses use `sandbox allow-scripts` without `allow-same-origin`,
+`default-src 'none'` and their existing inline-only script/style policy. Markdown
+Page responses use `sandbox` without script permission, `script-src 'none'` and
+`style-src` containing only the SHA-256 hash of the server's inline stylesheet.
+Both kinds use data-only images, `connect-src 'none'`,
 `frame-src 'none'`, `form-action 'none'`, `base-uri 'none'` and application-only frame
 ancestors. Both document routes add nosniff, no-referrer and no-store and strip
 Set-Cookie. Public serving never invokes authentication; share tokens authorize

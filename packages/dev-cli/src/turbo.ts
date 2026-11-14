@@ -1,6 +1,8 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { run } from "@raypx/runtime-node/process";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { once } from "node:events";
+import { stripVTControlCharacters } from "node:util";
+import { spawnProcess } from "@raypx/runtime-node/process";
 
 export interface TurboTask {
   taskId: string;
@@ -52,10 +54,62 @@ function command(tasks: string[], { options = [], forwarded = [] }: TurboOptions
   ];
 }
 
-const summaries = (root: string) => {
-  const directory = join(root, ".turbo/runs");
-  return existsSync(directory) ? new Set(readdirSync(directory)) : new Set<string>();
-};
+async function runSummary(root: string, tasks: string[], options: TurboOptions) {
+  const child = spawnProcess(
+    [
+      process.execPath,
+      ...command(tasks, { ...options, options: ["--summarize", ...(options.options ?? [])] }),
+    ],
+    {
+      cwd: root,
+      env: environment(options.env),
+      stdin: "inherit",
+      stdout: "pipe",
+      stderr: "inherit",
+    },
+  );
+  const interrupt = () => child.kill("SIGINT");
+  const terminate = () => child.kill("SIGTERM");
+  process.once("SIGINT", interrupt);
+  process.once("SIGTERM", terminate);
+  let report: string | undefined;
+  const output = (async () => {
+    const decoder = new TextDecoder();
+    let pending = "";
+    function line(value: string) {
+      let text = stripVTControlCharacters(value);
+      if (options.options?.includes("--json")) {
+        try {
+          const event = JSON.parse(text) as { source?: unknown; text?: unknown };
+          if (event.source !== "turbo" || typeof event.text !== "string") return;
+          text = event.text;
+        } catch {
+          return;
+        }
+      }
+      const match = /^Summary:\s+(.+\.json)\s*$/.exec(text);
+      if (match) report = resolve(root, match[1]!);
+    }
+    for await (const chunk of child.stdout) {
+      if (!process.stdout.write(chunk)) await once(process.stdout, "drain");
+      pending += decoder.decode(chunk, { stream: true });
+      const lines = pending.split("\n");
+      pending = lines.pop()!;
+      for (const value of lines) line(value);
+    }
+    line(pending + decoder.decode());
+  })();
+  try {
+    const [code] = await Promise.all([child.exited, output]);
+    if (code !== 0) throw new Error(`${process.execPath} exited ${code}`);
+    if (!report || dirname(report) !== resolve(root, ".turbo/runs"))
+      throw new Error("Turbo run summary is unavailable");
+    return report;
+  } finally {
+    process.off("SIGINT", interrupt);
+    process.off("SIGTERM", terminate);
+  }
+}
 
 /** One Turbo invocation. Turbo alone schedules, hashes and restores its tasks. */
 export async function turbo(
@@ -63,16 +117,8 @@ export async function turbo(
   tasks: string[],
   options: TurboOptions = {},
 ): Promise<TurboTask[]> {
-  const before = summaries(root);
-  await run(
-    process.execPath,
-    command(tasks, { ...options, options: ["--summarize", ...(options.options ?? [])] }),
-    root,
-    environment(options.env),
-  );
-  const [report] = [...summaries(root)].filter((file) => !before.has(file));
-  if (!report) throw new Error("Turbo run summary is unavailable");
-  const summary = JSON.parse(readFileSync(join(root, ".turbo/runs", report), "utf8")) as {
+  const report = await runSummary(root, tasks, options);
+  const summary = JSON.parse(readFileSync(report, "utf8")) as {
     tasks: {
       taskId: string;
       command: string;

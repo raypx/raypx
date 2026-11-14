@@ -10,9 +10,13 @@ import {
 } from "./sandbox-plan.js";
 import {
   assertSandboxContainer,
+  assertSandboxEgress,
+  sandboxEgressControl,
+  sandboxEgressCounters,
   sandboxEgressProbe,
   sandboxIsolationProbe,
   type SandboxContainer,
+  type SandboxEgressResult,
 } from "./sandbox-probes.js";
 import { readBunPin } from "./toolchain.js";
 
@@ -217,6 +221,7 @@ export async function executeSandbox(
       SANDBOX_PIDS_LIMIT: String(plan.pids),
       SANDBOX_RESTRICTED_EGRESS: "false",
       SANDBOX_HOST_RULES_APPLIED: "false",
+      SANDBOX_DNS_RESOLVER: plan.dnsResolver,
     };
     await runtime.step("supervisor-ready", async () => {
       supervisor = runtime.start(
@@ -320,7 +325,16 @@ export async function executeSandbox(
       };
       if (result.bytes !== bytes) throw new Error("Home did not persist across replacement");
     });
-    if (plan.withEgress && runtime.platform === "linux") {
+    if (plan.withEgress && plan.engineHostCommand) {
+      if (
+        (await runtime.capture([...plan.engineHostCommand, "uname", "-s"])) !== "Linux" ||
+        (await runtime.capture([...plan.engineHostCommand, "id", "-u"])) !== "0"
+      )
+        throw new Error("Egress commands require root on the Linux Engine host");
+      // The operator's explicit argv prefix executes against the Engine host.
+      // That host must have the checkout mounted at the same absolute path.
+      firewall = [...plan.engineHostCommand, "sh"];
+    } else if (plan.withEgress && runtime.platform === "linux") {
       if (runtime.rootUser) firewall = ["sh"];
       else if (
         await runtime.capture(["sudo", "-n", "true"]).then(
@@ -333,16 +347,100 @@ export async function executeSandbox(
     if (firewall) {
       await runtime.command(
         "egress-apply",
-        [...firewall, join(root, "infra/sandbox/egress.sh"), "--bridge", plan.bridge, "--apply"],
+        [
+          ...firewall,
+          join(root, "infra/sandbox/egress.sh"),
+          "--bridge",
+          plan.bridge,
+          "--resolver",
+          plan.dnsResolver,
+          "--apply",
+        ],
         env,
       );
-      await runtime.step("egress-probe", async () => {
+      egress = await runtime.step("egress-probe", async () => {
         const value = await container();
         const gateway = value.NetworkSettings.Networks[plan.network]?.Gateway;
         if (!gateway) throw new Error("Sandbox bridge gateway missing");
-        await docker(["exec", value.Id, "python3", "-c", sandboxEgressProbe, gateway]);
+        if (value.HostConfig.Dns?.length !== 1 || value.HostConfig.Dns[0] !== plan.dnsResolver)
+          throw new Error("Sandbox DNS upstream differs from the egress policy");
+        const controlContainer = await docker([
+          "run",
+          "--detach",
+          "--network",
+          "host",
+          "--read-only",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges:true",
+          "--user",
+          "1000:1000",
+          "--memory",
+          String(plan.memory),
+          "--pids-limit",
+          String(plan.pids),
+          "--label",
+          `raypx.supervisor=${plan.network}`,
+          image,
+          "python3",
+          "-c",
+          sandboxEgressControl,
+          plan.dnsResolver,
+        ]);
+        let host: { port: number; checks: Record<string, string> } | undefined;
+        const deadline = Date.now() + 15_000;
+        while (Date.now() < deadline) {
+          runtime.check();
+          const output = await docker(["logs", controlContainer]);
+          if (output) {
+            host = JSON.parse(output) as NonNullable<typeof host>;
+            break;
+          }
+          await runtime.pause();
+        }
+        if (!host || !Number.isInteger(host.port) || host.port < 1024 || host.port > 65535)
+          throw new Error("Sandbox Engine-host canary did not become ready");
+        const control = host.checks;
+        const counters = async () => {
+          const output: string[] = [];
+          for (const [binary, chain] of [
+            ["iptables", `RPX_E_${plan.bridge.slice(3)}`],
+            ["iptables", "INPUT"],
+            ["ip6tables", "FORWARD"],
+          ])
+            output.push(
+              await runtime.capture([
+                ...firewall!.slice(0, -1),
+                binary!,
+                "-w",
+                "-L",
+                chain!,
+                "-n",
+                "-v",
+                "-x",
+              ]),
+            );
+          return sandboxEgressCounters(output.join("\n"), plan.bridge);
+        };
+        const before = await counters();
+        const result = JSON.parse(
+          await docker([
+            "exec",
+            value.Id,
+            "python3",
+            "-c",
+            sandboxEgressProbe,
+            gateway,
+            plan.dnsResolver,
+            String(host.port),
+          ]),
+        ) as SandboxEgressResult;
+        const after = await counters();
+        runtime.report(`egress-evidence: ${JSON.stringify({ control, result, before, after })}`);
+        return assertSandboxEgress(result, control, before, after);
       });
-      egress = "passed (public IPv4 TCP, bridge gateway TCP/80 and metadata TCP/80)";
+      runtime.report(`egress-probe: ${egress}`);
     } else runtime.report(`egress-probe: ${egress}`);
     outcome = { image, bases, egress, engine };
   } catch (error) {
@@ -384,6 +482,8 @@ export async function executeSandbox(
               join(root, "infra/sandbox/egress.sh"),
               "--bridge",
               plan.bridge,
+              "--resolver",
+              plan.dnsResolver,
               "--remove",
             ]);
         },

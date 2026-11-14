@@ -40,10 +40,27 @@ function service() {
   } as unknown as PagesService;
   return { pages, create, update, saved: () => saved };
 }
+it("refuses model-supplied Page activity metadata rather than copying it from arguments", () => {
+  const f = agentToolsFixture();
+  cleanups.push(() => f.runner.close());
+  const s = service();
+  const tools = withPageTools(f.tools, s.pages, () => []);
+  for (const forged of [{ pageId: "forged", version: 99 }, { page: { id: "forged", version: 99 } }])
+    expect(() =>
+      tools.prepare({
+        type: "toolCall",
+        id: "create",
+        name: "agent_page_create",
+        arguments: { title: "Report", kind: "document", body: "Body", ...forged },
+      }),
+    ).toThrow("INVALID_ARGUMENTS");
+  expect(s.create).not.toHaveBeenCalled();
+});
 it("asks for Page changes from a routine Run, records effects, and obeys exact Allow without a special routine bypass", async () => {
   const f = agentToolsFixture();
   cleanups.push(() => f.runner.close());
   const s = service();
+  const checkpoints = vi.spyOn(f.repository, "saveCheckpoint");
   Object.assign(
     f.tools,
     withPageTools({ ...f.tools }, s.pages, () => []),
@@ -100,6 +117,10 @@ it("asks for Page changes from a routine Run, records effects, and obeys exact A
     },
   ]);
   await expect.poll(() => f.calls.length).toBe(3);
+  expect(checkpoints.mock.calls.map((call) => call[3]?.page)).toEqual([
+    { id: s.saved()!.id, version: 1 },
+    { id: s.saved()!.id, version: 2 },
+  ]);
   expect(s.update).toHaveBeenCalledTimes(1);
   expect(f.requests).toHaveLength(1);
   expect(f.effects.map((effect) => [effect.toolName, effect.state])).toEqual([

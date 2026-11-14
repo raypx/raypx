@@ -2,8 +2,14 @@ import { describe, expect, it } from "vitest";
 import { sandboxBaseDigest, sandboxEnvironment, sandboxPlan } from "./sandbox-plan.js";
 import {
   assertSandboxContainer,
+  assertSandboxEgress,
+  sandboxEgressControl,
+  sandboxEgressCounters,
+  sandboxEgressProbe,
+  sandboxEgressRanges,
   sandboxIsolationProbe,
   type SandboxContainer,
+  type SandboxEgressResult,
 } from "./sandbox-probes.js";
 import { cleanupSandbox, executeSandbox, type SandboxRuntime } from "./sandbox.js";
 
@@ -27,6 +33,7 @@ function inspection(computer = "probe", generation = 1): SandboxContainer {
       CapDrop: ["ALL"],
       SecurityOpt: ["no-new-privileges:true"],
       Binds: null,
+      Dns: [plan.dnsResolver],
     },
     Mounts: [
       { Type: "volume", Destination: "/home/computer" },
@@ -79,6 +86,17 @@ describe("sandbox planning", () => {
     ).toMatchObject({ socket: "/Users/test/.colima/default/docker.sock", withEgress: true });
     expect(() => sandboxPlan(["--engine-socket", "relative"], {}, id, "1.4.4")).toThrow("absolute");
     expect(() => sandboxPlan(["--unknown"], {}, id, "1.4.4")).toThrow("unknown");
+    expect(sandboxPlan(["--dns-resolver", "9.9.9.9"], {}, id, "1.4.4").dnsResolver).toBe("9.9.9.9");
+    for (const resolver of [
+      "127.0.0.11",
+      "10.0.0.1",
+      "169.254.169.254",
+      "224.0.0.1",
+      "resolver.example.test",
+    ])
+      expect(() => sandboxPlan(["--dns-resolver", resolver], {}, id, "1.4.4")).toThrow(
+        "public IPv4",
+      );
   });
   it("drops inherited operator sandbox settings without changing the source", () => {
     const source = {
@@ -91,6 +109,20 @@ describe("sandbox planning", () => {
     };
     expect(sandboxEnvironment(source)).toEqual({ PATH: "/bin" });
     expect(source.SANDBOX_NAMESPACE).toBe("production");
+  });
+  it("accepts an explicit Engine-host argv only with egress opt-in", () => {
+    const args = ["--engine-host-command", '["vm-exec","--","sudo","-n"]'];
+    expect(sandboxPlan([...args, "--with-egress"], {}, id, "1.4.4").engineHostCommand).toEqual([
+      "vm-exec",
+      "--",
+      "sudo",
+      "-n",
+    ]);
+    expect(() => sandboxPlan(args, {}, id, "1.4.4")).toThrow("requires --with-egress");
+    for (const value of ["[]", '["ok",0]', '"shell text"', "bad JSON", '[""]'])
+      expect(() =>
+        sandboxPlan(["--with-egress", "--engine-host-command", value], {}, id, "1.4.4"),
+      ).toThrow("JSON argument array");
   });
   it("rejects weakened isolation settings and bind mounts", () => {
     for (const mutate of [
@@ -133,12 +165,27 @@ function fakeRuntime(failure?: string) {
   let computer = "probe";
   let generation = 1;
   let bytes = "";
+  let counterReads = 0;
   const runtime: SandboxRuntime = {
     platform: "linux",
     rootUser: true,
     hasDocker: () => true,
     async capture(argv) {
       calls.push(argv);
+      if (argv.includes("iptables")) {
+        const packets = counterReads++ * 2;
+        if (argv.includes("INPUT"))
+          return `${packets} 60 DROP all -- ${plan.bridge} * 0.0.0.0/0 0.0.0.0/0 /* raypx-sandbox-egress:${plan.bridge} */`;
+        return [
+          ...sandboxEgressRanges.map(
+            (range) => `${packets} 60 DROP all -- * * 0.0.0.0/0 ${range} /* owned */`,
+          ),
+          ...["udp", "tcp"].map(
+            (protocol) =>
+              `${packets} 60 DROP ${protocol} -- * * 0.0.0.0/0 !1.1.1.1 ${protocol} dpt:53 /* raypx-sandbox-dns:${plan.bridge}:1.1.1.1 */`,
+          ),
+        ].join("\n");
+      }
       if (argv[0] !== "docker") return "";
       expect(argv.slice(0, 3)).toEqual(["docker", "--host", `unix://${plan.socket}`]);
       const args = argv.slice(3);
@@ -174,6 +221,10 @@ function fakeRuntime(failure?: string) {
           memory: plan.memory,
           pids: plan.pids,
         });
+      if (args[0] === "exec" && args.includes(sandboxEgressProbe))
+        return JSON.stringify(egressResult());
+      if (args[0] === "run" && args.includes(sandboxEgressControl)) return "host-control";
+      if (args[0] === "logs") return JSON.stringify({ port: 40123, checks: egressControl() });
       return "";
     },
     async command(label, argv) {
@@ -280,12 +331,85 @@ describe("owned sandbox execution", () => {
     expect(calls.some((call) => call.includes("--apply"))).toBe(true);
     expect(calls.some((call) => call.includes("--remove"))).toBe(true);
   });
+  it("checks HTTPS, host controls, private DROP counters and configured DNS inside the replacement computer", async () => {
+    const { runtime, calls } = fakeRuntime();
+    const result = await executeSandbox("/repo", { ...plan, withEgress: true }, runtime);
+    expect(result.egress).toContain("public HTTPS passed");
+    expect(result.egress).toContain("configured DNS passed");
+    const probe = calls.find((call) => call.includes(sandboxEgressProbe))!;
+    expect(probe).toContain("owned-container-2");
+    expect(probe.slice(-3)).toEqual(["172.25.0.1", plan.dnsResolver, "40123"]);
+    expect(calls.find((call) => call.includes(sandboxEgressControl))).toContain("host");
+    expect(calls.find((call) => call[0] === "egress-apply")).toContain("--resolver");
+    expect(calls.some((call) => call.includes("--remove"))).toBe(true);
+  });
+  it("records public reachability as unavailable rather than passed on an offline Engine", async () => {
+    const { runtime } = fakeRuntime();
+    const capture = runtime.capture.bind(runtime);
+    runtime.capture = async (args) => {
+      if (args.includes("logs"))
+        return JSON.stringify({
+          port: 40123,
+          checks: { ...egressControl(), publicHttps: "network-unreachable" },
+        });
+      if (args.includes(sandboxEgressProbe)) {
+        const result = egressResult();
+        result.checks.publicHttps = "timeout";
+        return JSON.stringify(result);
+      }
+      return capture(args);
+    };
+    const result = await executeSandbox("/repo", { ...plan, withEgress: true }, runtime);
+    expect(result.egress).toContain("public HTTPS unavailable");
+    expect(result.egress).not.toContain("public HTTPS passed");
+  });
+  it("tears down rather than passing when the Engine-host HTTPS control succeeds but the computer cannot reach it", async () => {
+    const { runtime, calls } = fakeRuntime();
+    const capture = runtime.capture.bind(runtime);
+    runtime.capture = async (args) => {
+      if (args.includes(sandboxEgressProbe)) {
+        const result = egressResult();
+        result.checks.publicHttps = "timeout";
+        return JSON.stringify(result);
+      }
+      return capture(args);
+    };
+    await expect(executeSandbox("/repo", { ...plan, withEgress: true }, runtime)).rejects.toThrow(
+      "allowed network probe failed",
+    );
+    expect(calls.some((call) => call.includes("--remove"))).toBe(true);
+  });
   it("reports egress not run on unsupported hosts even with opt-in", async () => {
     const { runtime, calls } = fakeRuntime();
     runtime.platform = "darwin";
     const result = await executeSandbox("/repo", { ...plan, withEgress: true }, runtime);
     expect(result.egress).toContain("not run");
     expect(calls.some((call) => call.includes("--apply") || call.includes("sudo"))).toBe(false);
+  });
+  it("applies, reads and removes VM firewall rules only through the explicit host command", async () => {
+    const { runtime, calls } = fakeRuntime();
+    runtime.platform = "darwin";
+    const capture = runtime.capture.bind(runtime);
+    runtime.capture = async (args) => {
+      if (args[0] === "vm-exec" && args.includes("uname")) return "Linux";
+      if (args[0] === "vm-exec" && args.includes("id")) return "0";
+      return capture(args);
+    };
+    const result = await executeSandbox(
+      "/repo",
+      { ...plan, withEgress: true, engineHostCommand: ["vm-exec", "--"] },
+      runtime,
+    );
+    expect(result.egress).toContain("restrictions passed");
+    for (const call of calls.filter(
+      (args) =>
+        args.includes("--apply") ||
+        args.includes("--remove") ||
+        args.includes("iptables") ||
+        args.includes("ip6tables"),
+    ))
+      expect(call).toContain("vm-exec");
+    expect(calls.some((args) => args[0] === "sudo")).toBe(false);
   });
   it("requires passwordless sudo for an unprivileged Linux opt-in", async () => {
     const { runtime, calls } = fakeRuntime();
@@ -312,6 +436,182 @@ describe("owned sandbox execution", () => {
     );
     expect(calls.some((call) => call.includes("--remove"))).toBe(true);
     expect(calls.at(-1)).toEqual(["remove-state", "/tmp/owned-state"]);
+  });
+});
+
+function egressControl() {
+  return {
+    publicHttps: "connected",
+    resolverUdp: "connected",
+    resolverTcp: "connected",
+    hostLoopback: "connected",
+    publicIpv6: "network-unreachable",
+  };
+}
+
+function egressResult(): SandboxEgressResult {
+  return {
+    nameservers: ["127.0.0.11"],
+    checks: {
+      ...egressControl(),
+      embeddedUdp: "connected",
+      embeddedTcp: "connected",
+      hostLoopback: "connection-refused",
+      gateway: "timeout",
+      hostService: "timeout",
+      metadata: "timeout",
+      private10: "timeout",
+      private172: "timeout",
+      private192: "timeout",
+      otherDnsUdp0: "timeout",
+      otherDnsTcp0: "timeout",
+      otherDnsUdp1: "timeout",
+      otherDnsTcp1: "timeout",
+    },
+  };
+}
+
+describe("egress evidence", () => {
+  const after = Object.fromEntries(
+    [...sandboxEgressRanges, "dns:udp", "dns:tcp", "host:input"].map((range) => [range, 2]),
+  );
+  it("reads numeric TCP/UDP protocol counters from real Engine iptables output", () => {
+    const output = [
+      `2 114 DROP 17 -- * * 0.0.0.0/0 !1.1.1.1 udp dpt:53 /* raypx-sandbox-dns:${plan.bridge}:1.1.1.1 */`,
+      `6 360 DROP 6 -- * * 0.0.0.0/0 !1.1.1.1 tcp dpt:53 /* raypx-sandbox-dns:${plan.bridge}:1.1.1.1 */`,
+    ].join("\n");
+    expect(sandboxEgressCounters(output, plan.bridge)).toEqual({ "dns:udp": 2, "dns:tcp": 6 });
+  });
+  it("reports unavailable IPv6 separately and requires a DROP counter when the host has IPv6", () => {
+    expect(assertSandboxEgress(egressResult(), egressControl(), {}, after)).toContain(
+      "IPv6 enforcement unavailable",
+    );
+    const result = egressResult();
+    result.checks.publicIpv6 = "timeout";
+    const control = { ...egressControl(), publicIpv6: "connected" };
+    expect(() => assertSandboxEgress(result, control, {}, after)).toThrow("IPv6 probe");
+    expect(assertSandboxEgress(result, control, {}, { ...after, "ipv6:forward": 1 })).toContain(
+      "IPv6 enforcement passed",
+    );
+    result.checks.publicIpv6 = "connected";
+    expect(() => assertSandboxEgress(result, control, {}, { ...after, "ipv6:forward": 1 })).toThrow(
+      "IPv6 probe",
+    );
+    expect(() => assertSandboxEgress(result, egressControl(), {}, after)).toThrow("IPv6 control");
+  });
+  it.each(["publicHttps", "resolverUdp", "resolverTcp", "embeddedUdp", "embeddedTcp"])(
+    "never turns a %s protocol or implementation error into unavailable",
+    (name) => {
+      const result = egressResult();
+      for (const error of [
+        "tls-error",
+        "http-error",
+        "invalid-response",
+        "unexpected-error",
+        "permission-denied",
+      ]) {
+        result.checks[name] = error;
+        expect(() =>
+          assertSandboxEgress(result, { ...egressControl(), [name]: "timeout" }, {}, after),
+        ).toThrow("allowed network probe failed");
+      }
+    },
+  );
+  it.each([
+    "gateway",
+    "hostService",
+    "metadata",
+    "private10",
+    "private172",
+    "private192",
+    "otherDnsUdp0",
+    "otherDnsTcp0",
+    "otherDnsUdp1",
+    "otherDnsTcp1",
+  ])("rejects a reachable or inconclusive forbidden destination: %s", (name) => {
+    for (const status of [
+      "connected",
+      "connection-refused",
+      "invalid-response",
+      "unexpected-error",
+    ]) {
+      const result = egressResult();
+      result.checks[name] = status;
+      expect(() => assertSandboxEgress(result, egressControl(), {}, after)).toThrow(
+        "forbidden destination",
+      );
+    }
+  });
+  it("accepts embedded DNS SERVFAIL as unavailable only with an independently unreachable upstream", () => {
+    const result = egressResult();
+    result.checks.publicHttps = "timeout";
+    result.checks.resolverUdp = "timeout";
+    result.checks.resolverTcp = "network-unreachable";
+    result.checks.embeddedUdp = "dns-server-failure";
+    result.checks.embeddedTcp = "dns-server-failure";
+    const offline = {
+      ...egressControl(),
+      publicHttps: "network-unreachable",
+      resolverUdp: "timeout",
+      resolverTcp: "network-unreachable",
+    };
+    const report = assertSandboxEgress(result, offline, {}, after);
+    expect(report).toContain("public HTTPS unavailable");
+    expect(report).toContain("configured DNS unavailable");
+    for (const [embedded, upstream] of [
+      ["embeddedUdp", "resolverUdp"],
+      ["embeddedTcp", "resolverTcp"],
+    ] as const) {
+      const selected = egressResult();
+      selected.checks[embedded] = "dns-server-failure";
+      expect(() => assertSandboxEgress(selected, egressControl(), {}, after)).toThrow(
+        "allowed network probe failed",
+      );
+      selected.checks[embedded] = "invalid-response";
+      expect(() =>
+        assertSandboxEgress(selected, { ...egressControl(), [upstream]: "timeout" }, {}, after),
+      ).toThrow("allowed network probe failed");
+    }
+    for (const upstream of ["resolverUdp", "resolverTcp"]) {
+      const selected = egressResult();
+      selected.checks[upstream] = "dns-server-failure";
+      expect(() =>
+        assertSandboxEgress(selected, { ...offline, [upstream]: "timeout" }, {}, after),
+      ).toThrow("allowed network probe failed");
+    }
+  });
+  it("requires actual packet drops, an accessible host loopback control and the configured embedded resolver", () => {
+    expect(() => assertSandboxEgress(egressResult(), egressControl(), after, after)).toThrow(
+      "DROP rule",
+    );
+    expect(() =>
+      assertSandboxEgress(egressResult(), egressControl(), {}, { ...after, "dns:udp": 1 }),
+    ).toThrow("udp DROP rule");
+    expect(() =>
+      assertSandboxEgress(egressResult(), egressControl(), {}, { ...after, "host:input": 1 }),
+    ).toThrow("INPUT DROP rule");
+    expect(() =>
+      assertSandboxEgress(
+        egressResult(),
+        { ...egressControl(), hostLoopback: "connection-refused" },
+        {},
+        after,
+      ),
+    ).toThrow("control");
+    expect(() =>
+      assertSandboxEgress(
+        { ...egressResult(), nameservers: ["8.8.8.8"] },
+        egressControl(),
+        {},
+        after,
+      ),
+    ).toThrow("embedded DNS");
+    expect(
+      sandboxEgressCounters(
+        "pkts bytes target prot opt in out source destination\n2 120 DROP all -- * * 0.0.0.0/0 10.0.0.0/8\n3 180 RETURN all -- * * 0.0.0.0/0 172.16.0.0/12",
+        plan.bridge,
+      ),
+    ).toEqual({ "10.0.0.0/8": 2 });
   });
 });
 

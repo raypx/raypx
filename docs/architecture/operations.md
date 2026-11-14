@@ -47,6 +47,25 @@ starts. Each missing capability is an explicit state in the product.
 
 ## Deploys
 
+- The unreleased `next` database is disposable. Its migration payload now contains
+  one generated baseline, `20261114004139_baseline`, rather than the earlier chain.
+  Use a fresh, isolated database for this baseline; an existing disposable `next`
+  database must be recreated explicitly by its operator. This is not an upgrade
+  procedure and imports no earlier schema, ledger or data. Never reset or migrate
+  a retired/operator database. Later releases append migrations to this baseline.
+- Baseline SQL and its snapshot were generated offline from `src/schema.ts` using
+  the repository launcher, from `packages/database`:
+  `bun --bun raypx-drizzle-kit generate --dialect postgresql --schema ./src/schema.ts --out /private/tmp/raypx-next-baseline --name baseline`.
+  The output directory must be empty for a new baseline. Ordinary schema changes
+  use `bun run db:generate` and retain the committed history. Composite constraints
+  remain in the schema; content-free NOTIFY calls remain in feature transactions.
+  There are no migration-only triggers or notification functions to relocate.
+- Startup and explicit `bun run db:migrate` still serialize through one transaction
+  advisory lock and commit the public ledger with schema changes. Database-free
+  tests verify the single generated baseline and current table/column coverage;
+  `TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/api test:postgres`
+  verifies clean application, concurrent startup, retries and rollback separately.
+  Local PostgreSQL 17 acceptance covers the baseline and startup checks.
 - Apply migrations, then replace processes. The previous release keeps running for
   a short time, so every migration works with the previous release's code. See
   [domain](domain.md#migrations).
@@ -79,3 +98,42 @@ starts. Each missing capability is an explicit state in the product.
   configuration center by a deployment administrator.
 - A provider is configured once and used through its port. No provider-specific
   setting appears in domain records.
+
+## Sandbox egress acceptance
+
+Run `bun run raypx-dev test sandbox --with-egress --dns-resolver 1.1.1.1` on the
+Linux Engine host, with root or passwordless sudo, Docker's iptables backend and
+prepared gate prerequisites. `--engine-socket /absolute/path` selects a local
+Engine socket. The gate builds an owned computer image, starts its supervisor and
+computer, applies only its generated bridge's rules and removes owned resources
+and rules afterward. It never changes an existing deployment's bridge policy.
+Without `--with-egress`, or on a platform without the required host privileges,
+egress is reported as not run; conformance is a separate result. A namespace
+mismatch refuses application. A socket forwarding to another network namespace
+does not authorize changing the caller's firewall. For a VM Engine, explicitly
+set `--engine-host-command` to a JSON argv prefix that executes root commands on
+that host; the checkout must be mounted at the same absolute path. Every rule
+apply, counter read and removal uses that prefix. The host-service probe uses an
+owned host-network canary, independent of the supervisor's listener.
+
+For a deployment, use the same public IPv4 address in `SANDBOX_DNS_RESOLVER` and
+`infra/sandbox/egress.sh --bridge rpx<10hex> --resolver ADDRESS --apply`.
+The default is `1.1.1.1`. Preview with `--dry-run`; remove the previous owned rules
+before changing the resolver. Set `SANDBOX_RESTRICTED_EGRESS=true` and
+`SANDBOX_HOST_RULES_APPLIED=true` only after applying and verifying those host rules.
+The embedded resolver forwards only to that upstream; direct UDP/TCP DNS to
+other addresses is dropped. Public HTTPS is allowed, so encrypted DNS/tunnels
+over HTTPS remain outside this packet policy.
+
+The gate compares bounded HTTPS/DNS probes inside the computer with Engine-host
+controls. Metadata, private ranges and alternate DNS require owned DROP-counter
+increases as well as failed connections; host loopback has a known-open control.
+An offline host and computer yield explicit public HTTPS `unavailable` and a
+separate configured-DNS availability result. TLS/HTTP/DNS-protocol errors, malformed
+probe output and a computer-only failure fail acceptance. Never record an offline
+public reachability result as passed. See [computers](computers.md) for scope and
+platform limits. Fake Engine and dry-run tests do not establish live enforcement.
+IPv6 enforcement is unavailable when the Engine-host control cannot reach IPv6;
+a reachable control requires a computer timeout and an owned IPv6 DROP counter.
+An embedded-DNS SERVFAIL is unavailable only alongside an independently observed
+host upstream network failure; direct upstream SERVFAIL remains a failure.

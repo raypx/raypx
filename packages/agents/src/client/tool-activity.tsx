@@ -54,7 +54,7 @@ function ToolActivityRow({
     call.toolName === "agent_page_create" ||
     call.toolName === "agent_page_update" ||
     call.toolName === "agent_page_read";
-  // Activity has no Page ID; target is display text and must not become a resource selector.
+  // Only server-produced identity is a selector; target remains display text.
   const canOpenPage = pageTool && onOpenPage;
   return (
     <li
@@ -68,7 +68,7 @@ function ToolActivityRow({
           variant="link"
           size="sm"
           className="h-auto justify-start self-start p-0 text-xs"
-          onClick={() => onOpenPage?.("")}
+          onClick={() => onOpenPage?.(call.page?.id ?? "")}
         >
           {toolName}
         </Button>

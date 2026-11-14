@@ -34,7 +34,7 @@
   "newer": "A newer version is available. Your draft is kept.",
   "loadLatest": "Load latest, keep draft",
   "tooLarge": "This page is too large.",
-  "notFound": "This page is no longer available.",
+  "notFound": "This Page was deleted",
   "fullScreen": "Full screen",
   "history": "Version history",
   "version": "Version {version, number}",

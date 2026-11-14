@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import Markdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { PageVersion } from "@raypx/core/pages";
+import { documentStyles, documentStyleSource } from "./document-style.js";
 
 const elements = [
   "a",
@@ -50,14 +51,25 @@ export function renderPage(page: PageVersion): string {
         skipHtml: true,
         allowedElements: elements,
         remarkPlugins: [remarkGfm],
-        urlTransform: defaultUrlTransform,
+        urlTransform: (url, key) => {
+          // The document CSP allows self-contained raster images only. Keep data
+          // URLs out of links and exclude active image formats such as SVG.
+          if (key === "src")
+            return /^data:image\/(?:png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(url)
+              ? url
+              : undefined;
+          return defaultUrlTransform(url);
+        },
       },
       page.body,
     ),
   );
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(page.title)}</title></head><body>${content}</body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(page.title)}</title><style>${documentStyles}</style></head><body>${content}</body></html>`;
 }
-export function pageResponseHeaders(allowedOrigins: readonly string[]): Headers {
+export function pageResponseHeaders(
+  allowedOrigins: readonly string[],
+  kind: PageVersion["kind"] = "html",
+): Headers {
   const origins = [
     ...new Set(
       allowedOrigins.flatMap((value) => {
@@ -70,9 +82,13 @@ export function pageResponseHeaders(allowedOrigins: readonly string[]): Headers 
       }),
     ),
   ];
+  const contentPolicy =
+    kind === "html"
+      ? "sandbox allow-scripts; script-src 'unsafe-inline'; style-src 'unsafe-inline'"
+      : `sandbox; script-src 'none'; style-src ${documentStyleSource}`;
   return new Headers({
     "content-type": "text/html; charset=utf-8",
-    "content-security-policy": `default-src 'none'; sandbox allow-scripts; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors ${origins.length ? origins.join(" ") : "'none'"}`,
+    "content-security-policy": `default-src 'none'; ${contentPolicy}; img-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors ${origins.length ? origins.join(" ") : "'none'"}`,
     "x-content-type-options": "nosniff",
     "referrer-policy": "no-referrer",
     "cache-control": "no-store",

@@ -698,7 +698,12 @@ export function createApprovalsRepository(
         await lock(tx, scope, run.conversationId);
         await assertRunFence(tx, scope, run);
         const [effect] = await tx
-          .select({ runId: effects.runId, fence: effects.fence, toolCallId: effects.toolCallId })
+          .select({
+            runId: effects.runId,
+            fence: effects.fence,
+            toolCallId: effects.toolCallId,
+            toolName: effects.toolName,
+          })
           .from(effects)
           .where(and(eq(effects.spaceId, scope.spaceId), eq(effects.key, key)));
         if (!effect || effect.runId !== run.id) return false;
@@ -722,7 +727,7 @@ export function createApprovalsRepository(
             tx,
             scope,
             run,
-            toolCompletion(effect.toolCallId, result, state),
+            toolCompletion(effect.toolCallId, result, state, effect.toolName),
             publish,
             now,
           );

@@ -199,6 +199,7 @@ async function harness(
   const onEdit = vi.fn();
   const view = await renderNative(
     <AgentConversation
+      origin="https://app.example.test"
       item={item}
       controller={controller}
       computer={computer}

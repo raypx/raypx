@@ -1,1 +1,0 @@
-CREATE INDEX "control_credential_hash_idx" ON "raypx_foundation"."control_credential" ("id");

@@ -23,7 +23,9 @@ it("renders scoped host and routed rules without executing any firewall command"
     "iptables -w -N RPX_E_0123456789",
   ]);
   for (const rule of rules.filter((candidate) => !candidate.includes(" -N ")))
-    expect(rule).toContain(`--comment raypx-sandbox-egress:${bridge}`);
+    expect(rule).toMatch(
+      new RegExp(`--comment raypx-sandbox-(egress:${bridge}|dns:${bridge}:1\\.1\\.1\\.1)`),
+    );
   for (const rule of rules.filter((candidate) => candidate.includes(" -I ")))
     expect(rule).toContain(` -i ${bridge} `);
   for (const rule of rules.filter((candidate) => candidate.includes(" -A ")))
@@ -34,6 +36,19 @@ it("renders scoped host and routed rules without executing any firewall command"
   expect(rules).toContain(
     `iptables -w -I DOCKER-USER 1 -i ${bridge} -m comment --comment raypx-sandbox-egress:${bridge} -j RPX_E_0123456789`,
   );
+});
+
+it("restricts direct TCP and UDP DNS before and after DNAT to the configured resolver", () => {
+  const { stdout, status } = dryRun(["--bridge", bridge, "--resolver", "9.9.9.9", "--dry-run"]);
+  expect(status).toBe(0);
+  for (const protocol of ["udp", "tcp"]) {
+    expect(stdout).toContain(`-p ${protocol} ! -d 9.9.9.9 --dport 53`);
+    expect(stdout).toContain(
+      `-p ${protocol} -m conntrack ! --ctorigdst 9.9.9.9 --ctorigdstport 53`,
+    );
+  }
+  expect(stdout).toContain(`--comment raypx-sandbox-dns:${bridge}:9.9.9.9 -j DROP`);
+  expect(stdout).not.toContain(" -j ACCEPT");
 });
 
 it("blocks LAN, host, link-local and metadata destinations before and after DNAT while retaining public IPv4 egress", () => {
@@ -64,6 +79,22 @@ it("rejects ambiguous modes and arbitrary interface names", () => {
     ["--bridge", "rpx0123456789;id", "--dry-run"],
     ["--bridge", bridge, "--apply", "--dry-run"],
     ["--bridge", bridge],
+    ...[
+      "",
+      "1.1.1.1.",
+      "127.0.0.11",
+      "169.254.169.254",
+      "10.0.0.1",
+      "172.16.0.1",
+      "192.168.0.1",
+      "100.64.0.1",
+      "224.0.0.1",
+      "1.1.1",
+      "1.1.1.256",
+      "01.1.1.1",
+      "1.1.1.1;id",
+      "::1",
+    ].map((resolver) => ["--bridge", bridge, "--resolver", resolver, "--dry-run"]),
   ]) {
     const result = dryRun(args);
     expect(result.status).toBe(2);

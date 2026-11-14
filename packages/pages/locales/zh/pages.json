@@ -34,7 +34,7 @@
   "newer": "有新版本可用，草稿已保留。",
   "loadLatest": "加载最新版本并保留草稿",
   "tooLarge": "页面内容过大。",
-  "notFound": "此页面已不可用。",
+  "notFound": "此页面已被删除",
   "fullScreen": "全屏",
   "history": "版本历史",
   "version": "版本 {version, number}",

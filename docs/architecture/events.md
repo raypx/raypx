@@ -211,6 +211,14 @@ start order) and `toolActivityTruncated`. Each row contains the shared summary
 fields, `startedAt`, nullable `finishedAt`, `outcome`, `durationMs` and `exitStatus`.
 This projection survives event retention and contains no tool results.
 
+Successful Page create/update calls add optional nullable `page: { id, version }`
+to `tool.finished` and their snapshot/history activity. The backend takes both
+values from its Page operation result, never from model arguments. Other calls
+omit the field, preserving their existing projection. The version identifies the
+immutable version produced by that call, even after later edits. A same-Space
+identity remains after Page deletion, so historical activity retains its link;
+opening a deleted Page can still return not found. This metadata grants no access.
+
 ## Routine events
 
 `routines.events` returns immutable `routine.fired` and `routine.coalesced`

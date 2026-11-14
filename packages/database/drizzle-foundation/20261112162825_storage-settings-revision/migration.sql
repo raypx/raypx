@@ -1,2 +1,0 @@
-ALTER TABLE "raypx_foundation"."storage_configuration" ADD COLUMN "enabled" boolean DEFAULT true NOT NULL;--> statement-breakpoint
-ALTER TABLE "raypx_foundation"."storage_configuration" ADD COLUMN "revision" integer DEFAULT 1 NOT NULL;

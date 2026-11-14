@@ -1,5 +1,7 @@
 import type { ComponentProps } from "react";
-import { afterEach, expect, it } from "vitest";
+import { Linking } from "../../tests/mocks/react-native.js";
+import { pageIdSchema } from "@raypx/core/pages";
+import { afterEach, expect, it, vi } from "vitest";
 import { toolActivitySchema } from "@raypx/core/conversation";
 import en from "@raypx/agents/messages/en";
 import zh from "@raypx/agents/messages/zh";
@@ -42,7 +44,9 @@ it.each(["en", "zh"] as const)(
       arguments: { content: "PRIVATE BODY" },
       output: "PRIVATE OUTPUT",
     };
-    const view = await renderNative(<ToolActivity row={row([privateCall])} />);
+    const view = await renderNative(
+      <ToolActivity origin="https://app.example.test" spaceId="space" row={row([privateCall])} />,
+    );
     const label = view.root.find(
       (node) => typeof node.type === "string" && node.props.accessibilityState?.expanded === false,
     ).props.accessibilityLabel as string;
@@ -65,6 +69,8 @@ it.each(["succeeded", "failed", "refused", "cancelled", "unknown"] as const)(
   async (outcome) => {
     const view = await renderNative(
       <ToolActivity
+        origin="https://app.example.test"
+        spaceId="space"
         row={row([
           {
             ...call,
@@ -90,11 +96,19 @@ it.each(["succeeded", "failed", "refused", "cancelled", "unknown"] as const)(
 );
 
 it("surfaces waiting and failed calls on the collapsed summary", async () => {
-  const view = await renderNative(<ToolActivity row={row([], 1)} />);
+  const view = await renderNative(
+    <ToolActivity origin="https://app.example.test" spaceId="space" row={row([], 1)} />,
+  );
   expect(
     findByLabel(view.root, "Used 1 tool · Waiting for approval").props.accessibilityState.expanded,
   ).toBe(false);
-  await view.update(<ToolActivity row={row([{ ...call, outcome: "failed" }])} />);
+  await view.update(
+    <ToolActivity
+      origin="https://app.example.test"
+      spaceId="space"
+      row={row([{ ...call, outcome: "failed" }])}
+    />,
+  );
   expect(findByLabel(view.root, "Used 1 tool · 1 failed").props.accessibilityState.expanded).toBe(
     false,
   );
@@ -116,6 +130,8 @@ it.each(["en", "zh"] as const)(
     ];
     const view = await renderNative(
       <ToolActivity
+        origin="https://app.example.test"
+        spaceId="space"
         row={row(
           names.map((toolName, index) => ({ ...call, toolName, toolCallId: `call-${index}` })),
         )}
@@ -138,3 +154,39 @@ it.each(["en", "zh"] as const)(
     await view.unmount();
   },
 );
+
+it.each([null, { id: pageIdSchema.parse("exact-page"), version: 2 }])(
+  "hands Page activity to Web using only its server identity: %j",
+  async (page) => {
+    vi.mocked(Linking.openURL).mockClear();
+    const view = await renderNative(
+      <ToolActivity
+        origin="https://app.example.test"
+        spaceId="space"
+        row={row([{ ...call, toolName: "agent_page_update", target: "not-an-id", page }])}
+      />,
+    );
+    await press(findByLabel(view.root, "Used 1 tool · In progress"));
+    await press(findByLabel(view.root, en.agents.tools.updatePage));
+    const suffix = page ? "&pageId=exact-page" : "";
+    expect(Linking.openURL).toHaveBeenCalledExactlyOnceWith(
+      `https://app.example.test/pages?spaceId=space${suffix}`,
+    );
+    await view.unmount();
+  },
+);
+
+it("shows a recoverable error when the system cannot open a Page", async () => {
+  vi.mocked(Linking.openURL).mockRejectedValueOnce(new Error("Unavailable"));
+  const view = await renderNative(
+    <ToolActivity
+      origin="https://app.example.test"
+      spaceId="space"
+      row={row([{ ...call, toolName: "agent_page_read", page: null }])}
+    />,
+  );
+  await press(findByLabel(view.root, "Used 1 tool · In progress"));
+  await press(findByLabel(view.root, en.agents.tools.readPage));
+  expect(textContent(view.root)).toContain("Could not open the link.");
+  await view.unmount();
+});

@@ -38,6 +38,7 @@ export default function ConversationScreen() {
         controller={controllers.conversation}
         computer={controllers.computer}
         accountId={workspace.owner.accountId}
+        origin={workspace.owner.origin}
         onBack={() => router.replace("/")}
         onEdit={() =>
           router.push({

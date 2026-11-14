@@ -13,7 +13,7 @@ import {
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
-import { defineRelations, sql } from "drizzle-orm";
+import { defineRelations, sql, type SQL } from "drizzle-orm";
 import { oauthTables } from "./oauth-schema.js";
 
 const date = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -917,6 +917,17 @@ export const modelConnectionSpaces = pgTable(
     ),
   ],
 );
+/** Body-free historical identity retained when a Page and its versions are deleted. */
+export const pageIdentities = pgTable(
+  "page_identities",
+  {
+    spaceId: text("space_id")
+      .notNull()
+      .references(() => spaces.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.spaceId, table.id] })],
+);
 export const conversationToolCalls = pgTable(
   "conversation_tool_calls",
   {
@@ -932,10 +943,20 @@ export const conversationToolCalls = pgTable(
     outcome: text("outcome", { enum: ["succeeded", "failed", "refused", "cancelled", "unknown"] }),
     durationMs: integer("duration_ms"),
     exitStatus: integer("exit_status"),
+    pageId: text("page_id"),
+    pageVersion: integer("page_version"),
     fence: bigint("fence", { mode: "number" }).notNull().default(0),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.runId, table.toolCallId] }),
+    foreignKey({
+      columns: [table.spaceId, table.pageId],
+      foreignColumns: [pageIdentities.spaceId, pageIdentities.id],
+    }).onDelete("cascade"),
+    check(
+      "conversation_tool_calls_page_check",
+      sql`(${table.pageId} is null and ${table.pageVersion} is null) or (${table.pageId} is not null and ${table.pageVersion} is not null and ${table.pageVersion} > 0 and ${table.finishedAt} is not null and ${table.outcome} = 'succeeded' and ${table.toolName} in ('agent_page_create', 'agent_page_update'))`,
+    ),
     foreignKey({
       columns: [table.spaceId, table.conversationId, table.runId],
       foreignColumns: [
@@ -1140,10 +1161,18 @@ export const conversationEvents = pgTable(
     computerId: text("computer_id"),
     // Requests remain with their Run after membership removal.
     requestId: text("request_id"),
+    pageId: text("page_id").generatedAlwaysAs(
+      (): SQL =>
+        sql`case when ${conversationEvents.kind} = 'tool.finished' then ${conversationEvents.data}->'page'->>'id' else null end`,
+    ),
     createdAt: date("created_at").notNull().defaultNow(),
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.conversationId, table.sequence] }),
+    foreignKey({
+      columns: [table.spaceId, table.pageId],
+      foreignColumns: [pageIdentities.spaceId, pageIdentities.id],
+    }).onDelete("cascade"),
     index("conversation_events_activity_idx").on(
       table.spaceId,
       table.conversationId,
@@ -1963,6 +1992,10 @@ export const pages = pgTable(
   (table) => [
     primaryKey({ columns: [table.spaceId, table.id] }),
     foreignKey({
+      columns: [table.spaceId, table.id],
+      foreignColumns: [pageIdentities.spaceId, pageIdentities.id],
+    }).onDelete("cascade"),
+    foreignKey({
       columns: [table.spaceId, table.agentId],
       foreignColumns: [agents.spaceId, agents.id],
     }).onDelete("cascade"),
@@ -2281,6 +2314,7 @@ export const agentMcpServers = pgTable(
 );
 
 export const schema = {
+  pageIdentities,
   pages,
   pageVersions,
   pageShareLinks,

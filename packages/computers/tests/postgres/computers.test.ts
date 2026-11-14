@@ -15,8 +15,8 @@ import { createComputersRepository } from "../../src/server/postgres.js";
 import { createComputersService } from "../../src/server.js";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("A freshly created disposable *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("A freshly created disposable *_test or *_test_<lane> database is required");
 const connection = connectDatabase(url);
 const other = connectDatabase(url);
 const access = createSpaceAccess(connection.db);

@@ -22,8 +22,8 @@ import { SpaceNotFound } from "@raypx/core/spaces";
 import { createSpaceAccess, createSpaceManagement } from "../../src/server/postgres.js";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("An isolated *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("An isolated *_test or *_test_<lane> database is required");
 const first = connectDatabase(url, { max: 3 });
 const second = connectDatabase(url, { max: 3 });
 const access = createSpaceAccess(first.db);

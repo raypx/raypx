@@ -80,7 +80,9 @@ CommonJS `require` bypasses the native aliases. SVG stays a native host mock.
 The model picker groups offered choices by source. Tool activity renders the shared
 timeline's `activity` and `pendingCount`; approval rows render their single `card`.
 The shared model owns lifecycle replay and toolCallId matching; never project
-those events separately in Mobile.
+those events separately in Mobile. Page activity uses the server-produced ID to
+open Web Page detail at the configured origin; missing identity opens the Pages
+list. System handoff errors remain visible and retryable.
 The manual Mobile build workflow verifies unsigned native builds on GitHub runners.
 Mobile release uses EAS for signed builds. Both workflows configure generated native
 projects to run Metro with Bun. Keep native projects ignored.

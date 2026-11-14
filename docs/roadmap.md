@@ -40,6 +40,11 @@ Rules for every phase:
 - A phase removes the code and guides it replaces. It adds no compatibility path
   and no import of earlier data.
 
+The disposable, unreleased `next` PostgreSQL schema now has one generated baseline.
+Database-free migration coverage checks its current tables and columns; clean
+PostgreSQL 17 application and concurrent-startup acceptance passed on an empty
+disposable database on 2026-11-14. Released changes will append migrations.
+
 ## 1. Conversation
 
 Accounts, a private Space per account, Agents, one conversation per Agent, streamed
@@ -108,6 +113,16 @@ outcomes with unknown-outcome guards. Auto review, protected input, client UI an
 durable Run recovery remain outside this slice. PostgreSQL, loopback stream and
 live Docker acceptance remain separate, unclaimed gates.
 
+Backend egress follow-up: the supervisor selects one DNS upstream and host rules
+restrict direct UDP/TCP DNS to it. The real-Engine gate now checks public HTTPS,
+configured/alternate DNS, host-service/gateway isolation, metadata and private
+ranges with network controls and DROP-counter evidence. Offline public reachability
+is explicitly unavailable. On 2026-11-14, the real-Engine gate passed provider
+conformance (10/10), isolation, home replacement and IPv4 egress enforcement on
+a Linux arm64 Engine VM. IPv6 enforcement was unavailable because the host
+disables IPv6; other platform acceptance remains separate. This adds no Agent browser tool or hosted
+computer capability.
+
 Acceptance:
 
 - The conformance suite passes for the in-memory and Docker providers.
@@ -164,6 +179,12 @@ are checkpointed for recovery. Model connections were already implemented.
 Managed app connectors and OpenAPI tools remain outside this slice. Client delivery,
 PostgreSQL and loopback HTTP acceptance remain separate gates; an unrun database
 or listener is not claimed as passed.
+
+Backend follow-up: successful Page tool writes expose their server-produced Page
+ID and version in live and retained tool activity, with same-Space historical
+identity after deletion. Markdown member/share documents include neutral light/dark
+document styling authorized by an exact CSP hash. HTML documents retain their
+authored content. These changes add no client navigation or editor behavior.
 
 Acceptance:
 

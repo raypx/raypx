@@ -31,3 +31,22 @@ it("accepts immutable local Engine IDs and rejects malformed IDs", () => {
   for (const image of ["sha256:short", "computer:local", `sha256:${"B".repeat(64)}`])
     expect(() => sandboxConfig({ ...base, SANDBOX_COMPUTER_IMAGE: image })).toThrow("digest");
 });
+it("accepts only a public IPv4 DNS upstream", () => {
+  expect(sandboxConfig(base).dnsResolver).toBe("1.1.1.1");
+  expect(sandboxConfig({ ...base, SANDBOX_DNS_RESOLVER: "9.9.9.9" }).dnsResolver).toBe("9.9.9.9");
+  for (const resolver of [
+    "",
+    "127.0.0.11",
+    "10.0.0.1",
+    "172.16.0.1",
+    "192.168.0.1",
+    "169.254.169.254",
+    "100.64.0.1",
+    "224.0.0.1",
+    "::1",
+    "resolver.example.test",
+  ])
+    expect(() => sandboxConfig({ ...base, SANDBOX_DNS_RESOLVER: resolver })).toThrow(
+      "SANDBOX_DNS_RESOLVER",
+    );
+});

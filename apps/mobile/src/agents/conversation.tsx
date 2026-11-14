@@ -42,6 +42,7 @@ export function AgentConversation({
   controller,
   computer,
   accountId,
+  origin,
   onBack,
   onEdit,
 }: {
@@ -49,6 +50,7 @@ export function AgentConversation({
   controller: ConversationController;
   computer: ComputerController;
   accountId: string;
+  origin: string;
   onBack(this: void): void;
   onEdit(this: void): void;
 }) {
@@ -142,6 +144,8 @@ export function AgentConversation({
     if (row.kind === "activity")
       return (
         <ToolActivity
+          spaceId={item.agent.spaceId}
+          origin={origin}
           row={row}
           answers={state.cards}
           memberName={shared ? memberName : undefined}
@@ -187,6 +191,8 @@ export function AgentConversation({
                 {t("agents.delegation.task")} · {t(`agents.${child.run.state}`)}
               </Text>
               <ToolActivity
+                spaceId={item.agent.spaceId}
+                origin={origin}
                 row={{
                   id: `activity:${child.run.id}`,
                   kind: "activity",

@@ -87,6 +87,10 @@ ID across resumes and event retention. Effect outcomes and finish events commit
 together; reads/refusals finish with their checkpoint. Snapshot activity is capped
 at 100 and contains summaries only. Approval cards correlate by toolCallId.
 Every effect read/decision lazily expires old intents using the service clock.
+Successful built-in Page create/update results add optional nullable `page: { id,
+version }` to finished events and activity in snapshots/history. Only operation
+results supply it; arguments and display targets never do. Retained same-Space
+Page identities preserve the reference after Page deletion and event pruning.
 Member reads hold counter/Run locks and use the current stored fence without a
 live lease; tracked-tool unknown events commit once with expiry. Executor writes
 still require the current unexpired attempt fence.
@@ -133,6 +137,8 @@ stay outside observable drafts and are consumed on every submission. Optional `s
 `mcpServers` workspace ports provide per-member, per-Agent enablement; Native consumers
 need not implement them. Tool activity uses an optional Page opener; projections without
 a Page ID open only the Pages list; display targets are never parsed as Page IDs.
+Live projection preserves the server-produced `page` identity through history
+merges. Web/ Desktop open that Page detail; Desktop previews retain the Web handoff.
 
 Queued Run events expose optional trigger/routine/provenance-kind/untrusted-input
 metadata without inbound bodies. Snapshot Runs expose the same untrusted boolean.

@@ -22,7 +22,7 @@ import { connected, controlAuth, observed } from "@raypx/control/testing";
 
 const url = process.env.TEST_DATABASE_URL,
   redisUrl = process.env.TEST_REDIS_URL;
-if (!url || !new URL(url).pathname.endsWith("_test") || !redisUrl)
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname) || !redisUrl)
   throw new Error("Isolated *_test PostgreSQL and TEST_REDIS_URL are required");
 const database = connectDatabase(url, { max: 2 });
 const cleanups: (() => Promise<void>)[] = [];

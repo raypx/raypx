@@ -78,6 +78,9 @@ recovery fields ship with their writers in later phases.
 ## Migrations
 
 - Drizzle owns the schema and the migration ledger in `public`.
+- The unreleased, disposable `next` database starts from one generated baseline
+  in `packages/database/drizzle-foundation`. It has no upgrade/import path from
+  the earlier migration chain. Subsequent released changes append migrations.
 - A deploy keeps the previous release running briefly after migrations apply. Every
   migration must work with the previous release's code. Adding a table or column is
   safe.
@@ -144,3 +147,9 @@ or account does not erase a name used by surviving conversation history. The
 last captured participation name is used after departure; active members resolve
 their current name. No email is copied. Snapshot directories and approval answer
 summaries are independently capped at 100.
+
+Page tool history references `page_identities` through composite Space/Page keys
+on lifecycle rows and committed events. Deleting a Page removes its body, versions
+and shares while retaining this body-free identity until Space deletion. Historical
+activity keeps the produced version number; it is not a live document selector or
+an authorization grant. Model arguments cannot populate this identity metadata.

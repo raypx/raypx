@@ -9,6 +9,8 @@ import {
   conversationEffects,
   conversationRuns,
   conversationToolCalls,
+  pageIdentities,
+  pages,
   spaceMembers,
   spaceSettingsOverrides,
   spaceAudit,
@@ -32,8 +34,8 @@ import {
 } from "../../src/server/postgres.js";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("A newly created disposable *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("A newly created disposable *_test or *_test_<lane> database is required");
 const first = connectDatabase(url),
   second = connectDatabase(url);
 const access = createSpaceAccess(first.db);
@@ -168,6 +170,140 @@ it("changes a Run's approval policy through the Space exception and restores its
     updatedByAccountId: owner,
   });
   expect(await autoAnswer.authorize(other, run, call, signal)).toBe("blocked");
+});
+
+it("commits server Page results with effects, events, snapshots and history and retains identity after deletion", async () => {
+  const pageId = `page-${crypto.randomUUID()}`;
+  await first.db.insert(pageIdentities).values({ spaceId: scope.spaceId, id: pageId });
+  await first.db.insert(pages).values({
+    spaceId: scope.spaceId,
+    id: pageId,
+    agentId: run.agentId,
+    title: "Report",
+    kind: "document",
+  });
+  const produced: Array<{ id: string; version: number }> = [];
+  for (const [toolCallId, toolName, version] of [
+    ["page-create", "agent_page_create", 1],
+    ["page-update", "agent_page_update", 2],
+  ] as const) {
+    const summary = { toolCallId, toolName, target: "Space page", argumentSummary: "Page write" };
+    const now = new Date();
+    const effect: Effect = {
+      spaceId: scope.spaceId,
+      conversationId: run.conversationId,
+      runId: run.id,
+      key: uniqueEffectKey(),
+      argumentHash: "b".repeat(64),
+      toolCallId,
+      toolName,
+      state: "intent",
+      result: null,
+      createdAt: now.toISOString(),
+      completedAt: null,
+    };
+    await conversations.beginTool(scope, run, summary);
+    await approvals.beginEffect(scope, run, effect, now);
+    await approvals.completeEffect(
+      scope,
+      effect.key,
+      "succeeded",
+      JSON.stringify({ state: "succeeded", pageId, version }),
+      new Date(),
+      run,
+    );
+    produced.push({ id: pageId, version });
+  }
+  async function verify() {
+    const events = await conversations.events(scope, run.conversationId, 0, 100);
+    if (events.status !== "events") throw new Error("Expected lifecycle replay");
+    expect(
+      events.events
+        .filter(({ event }) => event.kind === "tool.finished")
+        .map(({ event }) => ("page" in event ? event.page : undefined)),
+    ).toEqual(produced);
+    expect(
+      events.events
+        .filter(({ event }) => event.kind === "tool.started")
+        .every(({ event }) => !("page" in event)),
+    ).toBe(true);
+    expect(
+      (await conversations.snapshot(scope, run.conversationId)).toolActivity?.map(
+        (activity) => activity.page,
+      ),
+    ).toEqual(produced);
+    expect(
+      (await conversations.history!(scope, run.conversationId, 10)).toolActivity?.map(
+        (activity) => activity.page,
+      ),
+    ).toEqual(produced);
+  }
+  await verify();
+  await first.db.delete(pages).where(and(eq(pages.spaceId, scope.spaceId), eq(pages.id, pageId)));
+  await verify();
+  const snapshot = await conversations.snapshot(scope, run.conversationId);
+  await conversations.retainAfter(scope, run.conversationId, snapshot.cursor);
+  expect(
+    (await conversations.snapshot(scope, run.conversationId)).toolActivity?.map(
+      (activity) => activity.page,
+    ),
+  ).toEqual(produced);
+  expect(
+    (await conversations.history!(scope, run.conversationId, 10)).toolActivity?.map(
+      (activity) => activity.page,
+    ),
+  ).toEqual(produced);
+});
+
+it("rejects cross-Space Page activity and event references and incomplete version pairs", async () => {
+  const foreignId = `page-${crypto.randomUUID()}`;
+  await first.db.insert(pageIdentities).values({ spaceId: foreignScope.spaceId, id: foreignId });
+  const summary = {
+    toolCallId: "page-foreign",
+    toolName: "agent_page_create",
+    target: "Space page",
+    argumentSummary: "Page write",
+  };
+  const complete = {
+    ...summary,
+    spaceId: scope.spaceId,
+    conversationId: run.conversationId,
+    runId: run.id,
+    finishedAt: new Date(),
+    outcome: "succeeded" as const,
+    pageId: foreignId,
+    pageVersion: 1,
+  };
+  await expect(first.db.insert(conversationToolCalls).values(complete)).rejects.toMatchObject({
+    cause: { code: "23503" },
+  });
+  const snapshot = await conversations.snapshot(scope, run.conversationId);
+  await expect(
+    first.db.insert(conversationEvents).values({
+      spaceId: scope.spaceId,
+      conversationId: run.conversationId,
+      runId: run.id,
+      sequence: snapshot.cursor + 1,
+      kind: "tool.finished",
+      data: {
+        ...summary,
+        page: { id: foreignId, version: 1 },
+        outcome: "succeeded",
+        durationMs: 1,
+        exitStatus: null,
+      },
+    }),
+  ).rejects.toMatchObject({ cause: { code: "23503" } });
+  const localId = `page-${crypto.randomUUID()}`;
+  await first.db.insert(pageIdentities).values({ spaceId: scope.spaceId, id: localId });
+  for (const pair of [
+    { pageId: localId, pageVersion: null },
+    { pageId: null, pageVersion: 1 },
+    { pageId: localId, pageVersion: 0 },
+  ])
+    await expect(
+      first.db.insert(conversationToolCalls).values({ ...complete, ...pair }),
+    ).rejects.toMatchObject({ cause: { code: "23514" } });
 });
 
 it("appends approval-answer success, refusal and rollback failure without private tool details", async () => {

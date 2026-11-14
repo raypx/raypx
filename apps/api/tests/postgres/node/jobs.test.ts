@@ -6,8 +6,8 @@ import type { CloudJobInput } from "@raypx/core/jobs";
 import { createCloudJobsRepository } from "@raypx/jobs/server/postgres";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("An isolated *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("An isolated *_test or *_test_<lane> database is required");
 const connection = connectDatabase(url, { max: 1 });
 const otherConnection = connectDatabase(url, { max: 1 });
 const repository = createCloudJobsRepository(connection.db);

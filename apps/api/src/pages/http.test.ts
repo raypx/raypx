@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { expect, it, vi } from "vitest";
 import { pageVersionSchema } from "@raypx/core/pages";
 import type { PagesService } from "@raypx/pages/server";
@@ -42,9 +43,11 @@ function fixture(kind: "html" | "document" = "document") {
     },
   };
 }
-function safeHeaders(response: Response) {
+function safeHeaders(response: Response, kind: "html" | "document" = "document") {
   const csp = response.headers.get("content-security-policy")!;
-  expect(csp).toContain("sandbox allow-scripts");
+  expect(csp).toContain(kind === "html" ? "sandbox allow-scripts" : "sandbox;");
+  expect(csp.includes("script-src 'none'")).toBe(kind === "document");
+  expect(csp.includes("unsafe-inline")).toBe(kind === "html");
   expect(csp).not.toContain("allow-same-origin");
   expect(csp).toContain("form-action 'none'");
   expect(csp).toContain("connect-src 'none'");
@@ -62,11 +65,12 @@ it("keeps sandbox headers through the complete API middleware and never resolves
       headers: { cookie: "session=private" },
     });
     expect(response.status).toBe(200);
-    safeHeaders(response);
+    safeHeaders(response, kind);
     expect(f.readSession).not.toHaveBeenCalled();
     const body = await response.text();
     const containsExecutableMarkup = /<script|<iframe|onerror=|javascript:/i.test(body);
     expect(containsExecutableMarkup).toBe(kind === "html");
+    expect(body.includes("<style>")).toBe(kind === "document");
   }
 });
 it("returns the identical not-found response for invalid, expired, revoked or unknown tokens and revokes on the next request", async () => {
@@ -123,8 +127,43 @@ it("resolves fresh membership for member rendering and returns the same sandboxe
   });
   const response = await app.request("/page-content/member/space/page?version=1");
   expect(response.status).toBe(200);
-  safeHeaders(response);
+  safeHeaders(response, "html");
   expect(resolve).toHaveBeenCalledExactlyOnceWith("member", "space");
   expect(f.get).toHaveBeenCalledWith(scope, "page", 1);
   expect((await f.app.request("/page-content/member/space/page")).status).toBe(404);
+});
+
+function stylesheetCoveredByPolicy(body: string, response: Response) {
+  const styles = [...body.matchAll(/<style>([\s\S]*?)<\/style>/g)];
+  expect(styles).toHaveLength(1);
+  const hash = createHash("sha256").update(styles[0]![1]!).digest("base64");
+  expect(response.headers.get("content-security-policy")!.split("; ")).toContain(
+    `style-src 'sha256-${hash}'`,
+  );
+}
+
+it("serves the same hash-authorized Markdown styling for member frames and public shares", async () => {
+  const f = fixture();
+  const scope = resolveSpaceScope(
+    { spaceId: spaceIdSchema.parse("space"), accountId: "member", role: "member", createdAt: at },
+    "member",
+    spaceIdSchema.parse("space"),
+  );
+  const app = createApiApp({
+    pages: f.pages,
+    spaces: { resolve: async () => scope } as unknown as SpaceAccess,
+    allowedOrigins: ["https://app.example"],
+    readSession: async () => ({ user: { id: "member" } }) as never,
+  });
+  const member = await app.request("/page-content/member/space/page");
+  const publicShare = await f.app.request(`/page-content/public/${token}`);
+  expect(member.status).toBe(200);
+  expect(publicShare.status).toBe(200);
+  safeHeaders(member);
+  safeHeaders(publicShare);
+  const memberBody = await member.text();
+  const publicBody = await publicShare.text();
+  expect(memberBody).toBe(publicBody);
+  stylesheetCoveredByPolicy(memberBody, member);
+  stylesheetCoveredByPolicy(publicBody, publicShare);
 });

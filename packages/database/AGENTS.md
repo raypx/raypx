@@ -26,6 +26,9 @@ cascades when memberships or Spaces disappear without deleting the connection.
 `conversation_tool_calls` retains bounded tool lifecycle metadata and deduplication
 after event pruning; its Run/Space reference cascades. Approval settings carry a
 monotonic revision for compare-and-swap writes.
+Nullable Page ID/version pairs reference body-free `page_identities` with a
+same-Space foreign key. These identities survive Page deletion until Space deletion.
+Finished-event JSON has a generated Page ID with the same composite foreign key.
 
 PostgreSQL persistence for the new account foundation.
 
@@ -81,8 +84,11 @@ never replace direct dispatch. Runtime construction does not query these tables.
 ## Constraints
 
 Use postgres.js and Drizzle. Application tables and `public.__drizzle_migrations`
-live in the dedicated Raypx database. Keep the `drizzle-foundation` history intact.
-Generate new migrations with drizzle-kit. Never edit generated SQL or snapshots.
+live in the dedicated Raypx database. `drizzle-foundation` starts with one generated
+baseline for the disposable, unreleased `next` database. Subsequent changes append
+generated migrations; never edit generated SQL or snapshots. No earlier schema or
+ledger is imported. Composite constraints stay in the Drizzle schema; content-free
+NOTIFY calls stay in feature transactions, rather than migration-only functions.
 No reset/drop command or runtime dependency on auth, tooling or apps.
 `studio` (root `db:studio`) opens Drizzle Studio with write access; only point it at the local foundation database.
 Schema generation and Studio run through the private `@raypx/drizzle-kit` workspace.
@@ -94,7 +100,6 @@ API startup and explicit commands share the migrator's transaction-scoped adviso
 before any ledger/schema access. Lock acquisition waits at most 120 seconds; subsequent
 DDL lock waits are bounded to ten seconds. Migration, ledger and lock release commit or
 roll back together. Keep the official Drizzle migrator inside that transaction.
-The migrator moves the previous ledger into `public` before Drizzle reads it.
 The API's `db:migrate` command can inject a provider import into the same
 transaction after the schema applies. Database has no dependency on provider policy.
 OAuth Provider and JWT signing tables live in `src/oauth-schema.ts`.
@@ -193,7 +198,11 @@ version pins. Skills separate account text/availability from Space-local learned
 text; tombstones retain fenced mutation targets. Remote server secrets are encrypted
 children of account-owned metadata. Agent skill/server selections bind current
 member identity and Space through composite keys. Every new relationship cascades
-with its owning record; soft membership removal explicitly clears selections.
+with its owning record; soft membership
+removal explicitly clears selections. `page_identities` retains only Space/Page
+keys until Space deletion. Lifecycle rows and generated event Page IDs use those
+composite keys. Space deletion cascades the identity and its references; removing a
+Page retains its identity and historical activity.
 
 `conversation_member_names` retains only bounded member display names under a
 same-Space conversation FK; account deletion does not erase historical attribution.

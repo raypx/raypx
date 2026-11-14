@@ -3,7 +3,7 @@ import { BrowserLanguageProvider } from "../../i18n.js";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
-import { Profiler } from "react";
+import { Profiler, useEffect } from "react";
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import {
   createRoute,
   createRouter,
   Outlet,
+  Navigate,
   RouterProvider,
 } from "@tanstack/react-router";
 
@@ -21,7 +22,12 @@ import { desktopFixture, deferred } from "../../../tests/helpers/desktop.js";
 import { DesktopSignOutProvider, useDesktopSignOut } from "./sign-out.js";
 
 expect.extend(matchers);
-const mocks = vi.hoisted(() => ({ signOut: vi.fn(), reset: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  signOut: vi.fn(),
+  reset: vi.fn(),
+  signedOut: false,
+  observeSession: false,
+}));
 vi.mock("./client.js", () => ({
   webUrl: "https://app.example.test",
   authClient: { signOut: mocks.signOut },
@@ -37,12 +43,19 @@ afterEach(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.signOut.mockResolvedValue({});
+  mocks.signedOut = false;
+  mocks.observeSession = false;
   localStorage.setItem("raypx_locale", "en");
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
 
 function SignOutPage() {
   const auth = useDesktopSignOut();
+  useEffect(() => {
+    if (mocks.observeSession && mocks.signedOut) auth.sessionEnded("/agents");
+  }, [auth]);
+  if (mocks.observeSession && mocks.signedOut && !auth.suppressSessionRedirect)
+    return <Navigate to="/login" search={{ returnTo: "/agents" }} replace />;
   return (
     <button disabled={auth.busy} onClick={() => void auth.signOut("owner", "/login")}>
       Sign out
@@ -172,4 +185,29 @@ it("does not revoke host authorization merely on mounting or reconnecting", asyn
   expect(mocks.signOut).not.toHaveBeenCalled();
   expect(fixture.session).not.toHaveBeenCalled();
   expect(fixture.detach).not.toHaveBeenCalled();
+});
+
+it("lets explicit logout own navigation while session loss and delayed host cleanup race", async () => {
+  mocks.observeSession = true;
+  mocks.signOut.mockImplementation(async () => {
+    mocks.signedOut = true;
+    return {};
+  });
+  const fixture = await page();
+  const pending = deferred<boolean>();
+  fixture.session.mockReturnValueOnce(pending.promise);
+  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  await waitFor(() => expect(fixture.session).toHaveBeenCalledOnce());
+  expect(fixture.router.state.location.href).toBe("/");
+  await act(async () => pending.resolve(true));
+  await waitFor(() => expect(fixture.router.state.location.href).toBe("/login"));
+  expect(fixture.router.state.location.search).toEqual({});
+});
+
+it("preserves the return destination for ordinary session expiry", async () => {
+  mocks.observeSession = true;
+  mocks.signedOut = true;
+  const fixture = await page();
+  await waitFor(() => expect(fixture.router.state.location.href).toBe("/login?returnTo=%2Fagents"));
+  expect(mocks.signOut).not.toHaveBeenCalled();
 });

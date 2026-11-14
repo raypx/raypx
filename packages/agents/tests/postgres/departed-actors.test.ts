@@ -20,8 +20,8 @@ import {
 import type { RunCheckpoint, RunClaimOptions } from "../../src/conversations.js";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("A newly created disposable *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("A newly created disposable *_test or *_test_<lane> database is required");
 const first = connectDatabase(url);
 const second = connectDatabase(url);
 const now = new Date("2026-11-14T00:00:00.000Z");

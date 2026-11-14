@@ -835,7 +835,7 @@ export class ConversationRunner {
             scope,
             run,
             checkpoint,
-            toolCompletion(call.id, text?.type === "text" ? text.text : null, "failed"),
+            toolCompletion(call.id, text?.type === "text" ? text.text : null, "failed", call.name),
           );
           storing = false;
         }

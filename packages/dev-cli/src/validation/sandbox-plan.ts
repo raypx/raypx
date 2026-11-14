@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { isAbsolute } from "node:path";
+import { isIP } from "node:net";
 import { parseArgs } from "node:util";
 
 export function sandboxPlan(args: string[], env: NodeJS.ProcessEnv, id: string, bun: string) {
@@ -9,6 +10,8 @@ export function sandboxPlan(args: string[], env: NodeJS.ProcessEnv, id: string, 
     options: {
       "engine-socket": { type: "string" },
       "with-egress": { type: "boolean", default: false },
+      "dns-resolver": { type: "string", default: "1.1.1.1" },
+      "engine-host-command": { type: "string" },
     },
   });
   if (!/^[a-f0-9]{32}$/.test(id)) throw new Error("Invalid sandbox validation run ID");
@@ -18,7 +21,41 @@ export function sandboxPlan(args: string[], env: NodeJS.ProcessEnv, id: string, 
   const socket = values["engine-socket"] ?? hostSocket;
   if (!isAbsolute(socket) || socket.includes("\0"))
     throw new Error("--engine-socket must be an absolute Unix socket path");
+  const dnsResolver = values["dns-resolver"];
+  const [a, b, c] = dnsResolver.split(".").map(Number);
+  if (
+    isIP(dnsResolver) !== 4 ||
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    a! >= 224 ||
+    (a === 100 && b! >= 64 && b! <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b! >= 16 && b! <= 31) ||
+    (a === 192 && (b === 168 || (b === 0 && [0, 2].includes(c!)))) ||
+    (a === 198 && ([18, 19].includes(b!) || (b === 51 && c === 100))) ||
+    (a === 203 && b === 0 && c === 113)
+  )
+    throw new Error("--dns-resolver must be a public IPv4 address");
   const namespace = `raypx-sandbox-${id}`;
+  let engineHostCommand: string[] | undefined;
+  if (values["engine-host-command"] !== undefined) {
+    try {
+      const command: unknown = JSON.parse(values["engine-host-command"]);
+      if (
+        !values["with-egress"] ||
+        !Array.isArray(command) ||
+        command.length === 0 ||
+        !command.every(
+          (part) => typeof part === "string" && part.length > 0 && !part.includes("\0"),
+        )
+      )
+        throw new Error();
+      engineHostCommand = command;
+    } catch {
+      throw new Error("--engine-host-command requires --with-egress and a JSON argument array");
+    }
+  }
   return {
     id,
     socket,
@@ -29,6 +66,8 @@ export function sandboxPlan(args: string[], env: NodeJS.ProcessEnv, id: string, 
     memory: 268_435_456,
     pids: 64,
     withEgress: values["with-egress"],
+    dnsResolver,
+    engineHostCommand,
     bases: { bun: `oven/bun:${bun}`, computer: "python:3.13-slim-bookworm" },
   };
 }

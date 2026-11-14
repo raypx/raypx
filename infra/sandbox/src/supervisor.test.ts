@@ -39,6 +39,7 @@ it("applies ceilings, a non-root user, only the owned home and a deterministic p
       NanoCpus: 1000000000,
       PidsLimit: 128,
       NetworkMode: f.config.network,
+      Dns: [f.config.dnsResolver],
       Privileged: false,
       ReadonlyRootfs: true,
       CapDrop: ["ALL"],
@@ -54,6 +55,13 @@ it("applies ceilings, a non-root user, only the owned home and a deterministic p
     Options: { "com.docker.network.bridge.name": f.config.bridge },
   });
   expect((create as { HostConfig: { Mounts: unknown[] } }).HostConfig.Mounts).toHaveLength(2);
+});
+it("sets the configured DNS resolver as the only Engine upstream", async () => {
+  const f = fixture({ SANDBOX_DNS_RESOLVER: "9.9.9.9" });
+  await f.provider.provision({ id: crypto.randomUUID(), generation: 1 });
+  expect(f.fake.calls.find((call) => call.path === "/containers/create")?.body).toMatchObject({
+    HostConfig: { Dns: ["9.9.9.9"] },
+  });
 });
 it("reports restricted egress only with both explicit assertions", async () => {
   for (const [enabled, applied, expected] of [

@@ -66,7 +66,9 @@ The root `DesktopSignOutProvider` owns explicit logout. Clear account caches aft
 web sign-out and retain failed native cleanup across route/gate changes. Retry
 cleanup manually or on engine/network recovery without repeating web sign-out or
 dropping device identity. Keep host revocation even though its task UI was removed.
-Logout returns to login; preferences and CLI profiles remain local.
+Logout owns navigation while session notifications and stream closure race with
+cleanup, including retained retries. Ordinary session expiry keeps its return
+destination. Logout returns to login; preferences and CLI profiles remain local.
 
 Development diagnostics use the private `@raypx/devtools` bridge under renderer
 providers and `import.meta.env.DEV`. The Dock runs only in Vite serve. Do not add a

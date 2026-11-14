@@ -9,6 +9,7 @@ import { agentIdSchema, agentModelChoiceSchema, conversationIdSchema } from "./a
 import { spaceIdSchema } from "./spaces.js";
 import { runIdSchema } from "./run-identity.js";
 import { approvalCardFields } from "./approvals.js";
+import { pageIdSchema, pageSchema } from "./pages.js";
 
 export { runIdSchema } from "./run-identity.js";
 
@@ -142,6 +143,12 @@ const eventFields = {
   createdAt: z.iso.datetime(),
 };
 export const toolOutcomeSchema = z.enum(["succeeded", "failed", "refused", "cancelled", "unknown"]);
+/** Historical identity of the Page version produced by a successful server operation. */
+export const toolPageSchema = z.strictObject({
+  id: pageIdSchema,
+  version: pageSchema.shape.version,
+});
+export type ToolPage = z.infer<typeof toolPageSchema>;
 export const toolLifecycleFields = {
   runId: runIdSchema,
   toolCallId: z.string().min(1).max(128),
@@ -158,6 +165,7 @@ export const toolActivitySchema = z.strictObject({
   outcome: toolOutcomeSchema.nullable(),
   durationMs: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).nullable(),
   exitStatus: z.number().int().nullable(),
+  page: toolPageSchema.nullable().optional(),
 });
 export type ToolActivity = z.infer<typeof toolActivitySchema>;
 export type ToolOutcome = z.infer<typeof toolOutcomeSchema>;
@@ -175,6 +183,7 @@ export const conversationEventSchema = z
       outcome: toolOutcomeSchema,
       durationMs: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
       exitStatus: z.number().int().nullable(),
+      page: toolPageSchema.nullable().optional(),
     }),
     z.strictObject({
       ...eventFields,

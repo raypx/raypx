@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { runIdSchema, type ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
+import { pageIdSchema } from "@raypx/core/pages";
 import { ComputerActivity, ToolActivity } from "./tool-activity.js";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
@@ -193,5 +194,31 @@ it.each(["page-one", "Space page", "unknown-page-target"])(
     const page = await screen.findByRole("button", { name: en.agents.tools.updatePage });
     fireEvent.click(page);
     expect(open).toHaveBeenCalledWith("");
+  },
+);
+
+it.each(["agent_page_create", "agent_page_update"])(
+  "opens the server-produced Page for %s instead of its display target",
+  (toolName) => {
+    const open = vi.fn();
+    render(
+      <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+        <ToolActivity
+          activity={[
+            {
+              ...call,
+              toolName,
+              target: "unrelated-title",
+              page: { id: pageIdSchema.parse("exact-page"), version: 2 },
+            },
+          ]}
+          runId={call.runId}
+          onOpenPage={open}
+        />
+      </BrowserLanguageProvider>,
+    );
+    fireEvent.click(screen.getByRole("button"));
+    fireEvent.click(within(screen.getByRole("listitem")).getByRole("button"));
+    expect(open).toHaveBeenCalledExactlyOnceWith("exact-page");
   },
 );

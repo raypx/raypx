@@ -15,7 +15,9 @@ Live provider conformance is opt-in via RAYPX_TEST_DOCKER=1 against a prepared s
 Dev CLI's `test sandbox` owns source-supervisor real-Engine acceptance. Prepared
 images accept repository digests or immutable local Engine IDs, never mutable tags.
 
-`egress.sh --bridge rpx<10hex> --dry-run|--apply|--remove` owns only that bridge's
+`egress.sh --bridge rpx<10hex> [--resolver public-IPv4] --dry-run|--apply|--remove` owns only that bridge's
 Linux host rules. Firewall mutation requires explicit operator opt-in on the Engine
 host, using Docker's iptables backend. IPv4 public egress remains available; IPv6
-egress is denied. Dry-run tests must never invoke the host firewall.
+egress is denied. `SANDBOX_DNS_RESOLVER` (default `1.1.1.1`) is the sole embedded
+DNS upstream; pass the same value to the script to restrict direct TCP/UDP DNS.
+Dry-run tests must never invoke the host firewall.

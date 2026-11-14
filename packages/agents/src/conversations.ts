@@ -17,6 +17,7 @@ import type {
   ConversationMember,
   ResolvedApprovalSummary,
   ConversationHistoryCursor,
+  ToolPage,
 } from "@raypx/core/conversation";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { Message as ModelMessage, ToolCall } from "@raypx/ai";
@@ -164,6 +165,7 @@ export interface ToolCompletion {
   toolCallId: string;
   outcome: ToolOutcome;
   exitStatus: number | null;
+  page?: ToolPage | null;
 }
 export interface DelegationInput {
   toolCallId: string;

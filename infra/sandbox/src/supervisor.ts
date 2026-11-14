@@ -103,6 +103,8 @@ export function createSupervisor(
           CapDrop: ["ALL"],
           SecurityOpt: ["no-new-privileges:true"],
           NetworkMode: config.network,
+          // Custom bridge networks keep Engine's embedded resolver, with this sole upstream.
+          Dns: [config.dnsResolver],
           Init: true,
           Tmpfs: { "/tmp": "rw,nosuid,nodev,noexec,size=67108864,mode=1777" },
           // The Engine refuses archive uploads into a read-only root or a tmpfs, so helper

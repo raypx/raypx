@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Linking, Text, View } from "react-native";
 import { Button } from "heroui-native/button";
 import {
   toolDisplayLabel,
@@ -18,19 +18,51 @@ function ToolCallRow({
   call,
   answer,
   memberName,
+  spaceId,
+  origin,
 }: {
+  spaceId: string;
+  origin: string;
   call: ToolCall;
   answer?: ApprovalCardView | undefined;
   memberName?: ((id: string) => string) | undefined;
 }) {
   const { t } = useCopy();
+  const [linkError, setLinkError] = useState(false);
+  const pageTool = ["agent_page_create", "agent_page_update", "agent_page_read"].includes(
+    call.toolName,
+  );
+  function openPage() {
+    const url = new URL("/pages", origin);
+    url.searchParams.set("spaceId", spaceId);
+    if (call.page) url.searchParams.set("pageId", call.page.id);
+    setLinkError(false);
+    void Linking.openURL(url.href).catch(() => setLinkError(true));
+  }
   const name = toolDisplayLabel(call.toolName, (key) => t(`agents.${key}`));
   return (
     <View
       testID={`tool:${call.runId}:${call.toolCallId}`}
       className="min-w-0 gap-1 border-l border-border pl-3"
     >
-      <Text className="text-sm font-medium text-foreground">{name}</Text>
+      {pageTool ? (
+        <Button
+          variant="ghost"
+          accessibilityRole="link"
+          accessibilityLabel={name}
+          onPress={openPage}
+          className="min-h-12 self-start"
+        >
+          <Button.Label>{name}</Button.Label>
+        </Button>
+      ) : (
+        <Text className="text-sm font-medium text-foreground">{name}</Text>
+      )}
+      {linkError && (
+        <Text accessibilityRole="alert" className="text-sm text-foreground">
+          {t("mobile.linkError")}
+        </Text>
+      )}
       <Text selectable className="font-mono text-sm text-muted-foreground">
         {call.target}
       </Text>
@@ -65,10 +97,14 @@ function ToolCallRow({
 
 /** Render the shared timeline; it alone correlates cards and deduplicates tool calls. */
 export function ToolActivity({
+  spaceId,
+  origin,
   row,
   answers = [],
   memberName,
 }: {
+  spaceId: string;
+  origin: string;
   row: ActivityRow;
   answers?: readonly ApprovalCardView[];
   memberName?: ((id: string) => string) | undefined;
@@ -107,6 +143,8 @@ export function ToolActivity({
             <ToolCallRow
               key={JSON.stringify([call.runId, call.toolCallId])}
               call={call}
+              spaceId={spaceId}
+              origin={origin}
               answer={answers.find(
                 (answer) => answer.runId === call.runId && answer.toolCallId === call.toolCallId,
               )}

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { AuthSession } from "@raypx/core/auth";
-import { PageError, pageIdSchema } from "@raypx/core/pages";
+import { PageError, pageIdSchema, type PageVersion } from "@raypx/core/pages";
 import { SpaceNotFound, spaceIdSchema } from "@raypx/core/spaces";
 import {
   pageResponseHeaders,
@@ -41,16 +41,21 @@ function localLimiter(): RateLimiter {
 export function createPagesRoutes(options: PagesHttpOptions) {
   const app = new Hono<ApiRouterEnv>();
   const limit = options.rateLimit ?? localLimiter();
-  function response(body: string, status = 200) {
-    return new Response(body, { status, headers: pageResponseHeaders(options.allowedOrigins) });
+  function response(body: string, status = 200, kind: PageVersion["kind"] = "document") {
+    return new Response(body, {
+      status,
+      headers: pageResponseHeaders(options.allowedOrigins, kind),
+    });
   }
   function missing() {
     return response("Not found", 404);
   }
   app.use("*", async (c, next) => {
     await next();
-    for (const [name, value] of pageResponseHeaders(options.allowedOrigins))
+    for (const [name, value] of pageResponseHeaders(options.allowedOrigins, "document")) {
+      if (name === "content-security-policy" && c.res.headers.has(name)) continue;
       c.res.headers.set(name, value);
+    }
     c.res.headers.delete("set-cookie");
     c.res.headers.delete("x-frame-options");
   });
@@ -80,7 +85,7 @@ export function createPagesRoutes(options: PagesHttpOptions) {
       return result;
     }
     const page = await options.pages.resolveShare(token);
-    return page ? response(renderPage(page)) : missing();
+    return page ? response(renderPage(page), 200, page.kind) : missing();
   });
   app.get("/member/:spaceId/:pageId", async (c) => {
     const spaceId = spaceIdSchema.safeParse(c.req.param("spaceId"));
@@ -101,7 +106,7 @@ export function createPagesRoutes(options: PagesHttpOptions) {
         pageId.data,
         requested === undefined ? undefined : Number(requested),
       );
-      return response(renderPage(page));
+      return response(renderPage(page), 200, page.kind);
     } catch (error) {
       if (error instanceof SpaceNotFound || error instanceof PageError) return missing();
       throw error;

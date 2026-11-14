@@ -27,6 +27,9 @@ vi.mock("./features/auth/client.js", () => ({
     }),
   },
 }));
+vi.mock("./features/auth/sign-out.js", () => ({
+  useDesktopSignOut: () => ({ suppressSessionRedirect: false, sessionEnded: vi.fn() }),
+}));
 vi.mock("./features/agents/client.js", () => ({
   agentsClient: {
     spaces: { list: mocks.spaces },

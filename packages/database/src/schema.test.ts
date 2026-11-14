@@ -24,6 +24,8 @@ import {
   conversationRunSteering,
   conversationRunBackupJobs,
   conversationToolCalls,
+  pageIdentities,
+  pages,
   modelConnections,
   modelConnectionSecrets,
   modelConnectionSpaces,
@@ -66,6 +68,35 @@ it("keeps membership history and new Space references scoped and removable", () 
   expect(getTableConfig(spaceAudit).columns.map((column) => column.name)).not.toEqual(
     expect.arrayContaining(["token", "email", "arguments", "content"]),
   );
+});
+
+it("retains Page identities across source deletion with same-Space activity and event references", () => {
+  expect(getTableConfig(pageIdentities).columns.map((column) => column.name)).toEqual([
+    "space_id",
+    "id",
+  ]);
+  expect(getTableConfig(pageIdentities).foreignKeys[0]?.onDelete).toBe("cascade");
+  for (const table of [pages, conversationToolCalls, conversationEvents]) {
+    const key = getTableConfig(table).foreignKeys.find(
+      (candidate) => candidate.reference().foreignTable === pageIdentities,
+    );
+    expect(key).toBeDefined();
+    expect(key!.reference().columns.map((column) => column.name)).toEqual([
+      "space_id",
+      table === pages ? "id" : "page_id",
+    ]);
+    expect(key!.reference().foreignColumns.map((column) => column.name)).toEqual([
+      "space_id",
+      "id",
+    ]);
+    expect(key!.onDelete).toBe("cascade");
+  }
+  expect(conversationEvents.pageId.generated).toBeDefined();
+  expect(
+    getTableConfig(conversationToolCalls).checks.some(
+      (check) => check.name === "conversation_tool_calls_page_check",
+    ),
+  ).toBe(true);
 });
 
 it("uses the public schema with Better Auth Admin fields", () => {

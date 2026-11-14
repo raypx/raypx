@@ -86,7 +86,11 @@ loopback API origin; static serving preserves its HTML/CSP.
 Pages and Skills/Tools journeys use isolated Spaces in the owned backend fixture.
 Pages checks immutable versions, public cookie-free sandboxing and revocation in a
 fresh browser context; traces/screenshots are disabled for one-time link display.
+Mocked Web shell journeys explicitly inject an unavailable SSR account read with
+their dummy cookie, even when the owned API is reachable; it grants no session.
 Desktop always asserts the Web handoff and absence of frames, including fullscreen
 and historical preview, while still saving, restoring and sharing Page versions.
+The Page journey follows a produced activity link live, then follows the retained
+history link after deletion and checks the explicit deleted state.
 The fixture MCP endpoint is non-executing JSON-RPC and the deterministic model calls
 only its discovered tool, through the real approval pipeline.

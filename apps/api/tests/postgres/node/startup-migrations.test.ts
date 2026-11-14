@@ -9,8 +9,8 @@ import { eq, sql } from "drizzle-orm";
 import { databaseMailer } from "../../../src/config/resend.js";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("An isolated *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("An isolated *_test or *_test_<lane> database is required");
 const connection = connectDatabase(url, { max: 3 });
 const migrations = fileURLToPath(
   new URL("../../../../../packages/database/drizzle-foundation", import.meta.url),
@@ -36,6 +36,8 @@ it("serializes independent migration processes and does not reapply committed hi
   const results = await Promise.all([worker(), worker(), worker()]);
   expect(results.map(([code]) => code)).toEqual([0, 0, 0]);
   const expected = (await readdir(migrations)).sort();
+  expect(expected).toHaveLength(1);
+  expect(expected[0]).toMatch(/^\d{14}_baseline$/);
   const rows = await connection.db.execute<{ name: string }>(sql`
     select name from public.__drizzle_migrations order by name
   `);
@@ -45,6 +47,11 @@ it("serializes independent migration processes and does not reapply committed hi
     select count(*)::integer as count from public.__drizzle_migrations
   `);
   expect(count[0]!.count).toBe(expected.length);
+  const schemas = await connection.db.execute<{ name: string }>(sql`
+    select nspname as name from pg_namespace
+    where nspname in ('raypx_foundation', 'raypx_foundation_migrations')
+  `);
+  expect(schemas).toHaveLength(0);
 });
 
 it("waits for another migrator's transaction before reading migration history", async () => {

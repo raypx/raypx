@@ -34,6 +34,7 @@ export function toolActivityView(row: typeof calls.$inferSelect): ToolActivity {
     outcome: row.outcome,
     durationMs: row.durationMs,
     exitStatus: row.exitStatus,
+    ...(row.pageId !== null ? { page: { id: row.pageId, version: row.pageVersion } } : {}),
   });
 }
 function selection(scope: Pick<SpaceScope, "spaceId">, run: Identity, toolCallId: string) {
@@ -65,7 +66,12 @@ async function append(
     target: row.target,
     argumentSummary: row.argumentSummary,
     ...(kind === "tool.finished"
-      ? { outcome: row.outcome, durationMs: row.durationMs, exitStatus: row.exitStatus }
+      ? {
+          outcome: row.outcome,
+          durationMs: row.durationMs,
+          exitStatus: row.exitStatus,
+          ...(row.pageId !== null ? { page: { id: row.pageId, version: row.pageVersion } } : {}),
+        }
       : {}),
   };
   await tx.insert(events).values({
@@ -123,6 +129,8 @@ export async function finishToolEvent(
       outcome: result.outcome,
       durationMs: Math.min(2_147_483_647, Math.max(0, now.getTime() - current.startedAt.getTime())),
       exitStatus: result.exitStatus,
+      pageId: result.page?.id ?? null,
+      pageVersion: result.page?.version ?? null,
       fence: run.fence,
     })
     .where(and(where, isNull(calls.finishedAt)))

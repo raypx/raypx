@@ -34,12 +34,19 @@ boundaries; this page keeps the behavior.
   `policy` also requires one workspace to declare `use-intl`, rejects `next-intl` and keeps
   FormatJS runtimes out of other product workspaces (`src/validation/intl-engine.ts`).
 - raypx-dev test inventory [--layers] [--baseline file] [--owners file]
-- raypx-dev test backends [--with-e2e [-- Playwright flags]]
-- raypx-dev test sandbox [--engine-socket /absolute/socket] [--with-egress]
+- raypx-dev test backends [--database-url URL] [--with-e2e [-- Playwright flags]]
+  Uses an explicit disposable loopback `*_test` or `*_test_<lane>` database when
+  selected; otherwise starts an owned temporary cluster. Inherited database URLs
+  never select the target. Explicit databases are neither created nor dropped.
+- raypx-dev test sandbox [--engine-socket /absolute/socket] [--with-egress] [--dns-resolver IPv4] [--engine-host-command JSON]
   Owns a temporary source supervisor, a digest-built computer image, provider
   conformance, Engine/container isolation and persistent-home replacement probes.
   Requires a reachable Linux Engine through a Unix socket. Egress rules require
   the explicit flag plus Linux root or passwordless sudo on that Engine host.
+  For a VM host, `--engine-host-command` accepts a JSON argv prefix for root
+  commands; the checkout must be mounted at the same absolute path. An owned
+  host-network canary verifies loopback/service isolation independently of the
+  supervisor location. IPv6 without a reachable host control is unavailable.
   Writes `.artifacts/sandbox/`; cleans only run-labeled resources, with no global
   pruning. See [prerequisites and evidence](validation-artifacts.md#owned-sandbox-real-engine-acceptance).
 - raypx-dev size [--package name|path] [--native] [--browser] [--require]

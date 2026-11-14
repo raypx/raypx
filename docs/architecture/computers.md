@@ -210,13 +210,48 @@ also verifies the bridge exists in the current host namespace. It blocks compute
 traffic to the host and private/reserved IPv4 destinations before and after DNAT.
 Public IPv4 follows Docker's policy; all computer IPv6 egress is denied. Set both
 egress assertions only after applying and verifying the rules on that Engine host.
+`SANDBOX_DNS_RESOLVER` selects one public IPv4 upstream (default `1.1.1.1`);
+pass that same address as `egress.sh --resolver ADDRESS`. Computers use the
+Engine's embedded `127.0.0.11` resolver with that sole upstream. Direct UDP/TCP
+port 53 is blocked to every other destination, including original destinations
+before DNAT. Changing the resolver requires removing the previous owned rules
+before applying the new configuration. Public HTTPS remains available and can
+carry encrypted DNS or other tunnels; this policy does not inspect HTTPS content.
 Native nftables Docker networking and rootless/remote network namespaces are not
 supported by this script. macOS/Colima requires rules inside the Linux Engine VM.
 
 `bun run raypx-dev test sandbox` owns real-Engine conformance, isolation and home
 replacement acceptance, with optional `--with-egress` host probes. Ordinary source
-verification uses fakes and never invokes Docker. The only recorded real-Engine
-acceptance is manual provider conformance on macOS arm64 / Docker Engine 29.5
-through Colima (`77a9421c`, 10/10). The new gate, Ubuntu/Linux amd64 or arm64,
-macOS x64/other Engine configurations, Windows, rootless engines and restricted
-egress have no recorded real-Engine acceptance. CI wiring is not a passing run.
+verification uses fakes and never invokes Docker. On 2026-11-14 the gate passed
+on macOS arm64 with a Linux arm64 Engine VM (29.5.2, API 1.54): provider conformance
+10/10, isolation, home replacement and IPv4 egress enforcement. IPv6 enforcement
+was unavailable because the VM disables IPv6. Native Linux distributions, amd64,
+other macOS Engine configurations, Windows and rootless engines remain unverified.
+CI wiring is not a passing run.
+
+The `--with-egress` case now probes a started computer and compares its public
+HTTPS and configured UDP/TCP DNS results with controls in the Engine host network.
+It checks the embedded resolver and its configured upstream, alternate public
+resolvers, metadata `169.254.169.254`, host loopback, an owned host-service canary, the
+computer bridge gateway and one destination in each RFC 1918 range. Private and
+alternate-DNS probes must time out and increment the owned firewall DROP counters;
+a missing listener or an offline runner alone cannot satisfy those assertions.
+Loopback is compared with the known-open canary listener on the Engine host.
+`--engine-host-command` accepts an explicit JSON argv prefix for root firewall
+commands inside a VM; the checkout must be mounted at the same absolute path.
+The gate reads and mutates only the rules for its generated bridge.
+
+An allowed public HTTPS request passes only after a verified TLS connection and
+successful HTTP response. When both the host control and computer fail for reported
+network reasons, public reachability is explicitly `unavailable`, never passed.
+TLS, HTTP, malformed DNS and probe errors fail the gate. A failed computer request
+with a successful host control also fails. Configured DNS availability is reported
+separately when the runner is offline. Source fakes cover these decisions, resolver
+configuration and cleanup. IPv6 enforcement needs a reachable Engine-host
+control and an increasing owned DROP counter; an unreachable host control is
+reported as unavailable, even if the IPv6 rules were installed.
+
+A valid embedded-DNS SERVFAIL counts as unavailable only when the corresponding
+host UDP/TCP upstream control independently fails for a network reason. Direct
+upstream SERVFAIL and malformed replies still fail; a working public HTTPS path
+with unavailable configured DNS also fails.

@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
 import { isDesktop, getBridge } from "../lib/desktop.js";
 import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
+import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { desktopReturnTo } from "../features/auth/return-to.js";
 import { desktopConversationSocket } from "../features/agents/socket.js";
 
@@ -29,8 +30,9 @@ export const Route = createFileRoute("/pages")({
 });
 function PagesPage() {
   const session = authClient.useSession();
+  const signOut = useDesktopSignOut();
   const href = useLocation({ select: (location) => location.href });
-  if (!session.isPending && !session.error && !session.data)
+  if (!signOut.suppressSessionRedirect && !session.isPending && !session.error && !session.data)
     return <Navigate to="/login" search={{ returnTo: desktopReturnTo(href) }} replace />;
   return (
     <RemoteBoundary>
@@ -39,6 +41,7 @@ function PagesPage() {
   );
 }
 function SignedInPages({ accountId }: { accountId: string }) {
+  const signOut = useDesktopSignOut();
   const port: PagesClientPort = agentsClient.pages;
   const selection = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -46,9 +49,7 @@ function SignedInPages({ accountId }: { accountId: string }) {
   return (
     <AgentsWorkspace
       client={agentsClient}
-      onSessionEnded={() =>
-        void navigate({ to: "/login", search: { returnTo: "/agents" }, replace: true })
-      }
+      onSessionEnded={() => signOut.sessionEnded("/agents")}
       groups={agentsClient.conversations}
       spaceManagement={agentsClient.spaces}
       accountApprovalSettings={agentsClient.approvals}

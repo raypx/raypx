@@ -34,6 +34,8 @@ adapters, execution hosts and product views. Schemas are the single source of in
   are stable resumed-Run failures; execution capabilities and fences stay private to
   Agents/server. Writers implement `message.created`, `run.state`, `reply.segment`, `computer.state`, `card.created`, `card.resolved`, `tool.started` and `tool.finished`.
   Tool lifecycle metadata and bounded snapshot activity exclude arguments and results.
+  Finished tool events and activity optionally carry nullable `page: { id, version }`,
+  validated with Page identity/version schemas and populated only from server Page writes.
 - `/memory` owns document/version schemas, mutation inputs and domain errors.
 - `/jobs` owns local/cloud schedule schemas, domain errors and pure calendar
   calculations. Cron instances stay paused and are stopped after calculation;

@@ -20,17 +20,6 @@ export async function migrateDatabase(
         sql`select pg_advisory_xact_lock(hashtext('raypx_foundation_migrations'), 0)`,
       );
       await tx.execute(sql`set local lock_timeout = '10s'`);
-      // Move the ledger before Drizzle reads it so applied migrations retain their IDs and hashes.
-      await tx.execute(sql`
-        do $$
-        begin
-          if to_regclass('raypx_foundation_migrations.__drizzle_migrations') is not null then
-            alter table raypx_foundation_migrations.__drizzle_migrations set schema public;
-            drop schema raypx_foundation_migrations;
-          end if;
-        end
-        $$;
-      `);
       await migrate(tx, {
         migrationsFolder,
         migrationsSchema: "public",

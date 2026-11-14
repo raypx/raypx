@@ -69,7 +69,7 @@ const port = Number(process.env.CONTROL_E2E_PORT);
 if (
   process.env.RAYPX_VALIDATION !== "1" ||
   !url ||
-  !new URL(url).pathname.endsWith("_test") ||
+  !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname) ||
   !Number.isInteger(port) ||
   port < 1024
 )
@@ -255,6 +255,17 @@ const server = serve<SocketData>({
   port,
   async fetch(request, listener) {
     const path = new URL(request.url).pathname;
+    // Browser-mocked shell journeys intentionally start with unavailable SSR
+    // account data, then hydrate from their own HTTP fixtures. Keep that explicit
+    // failure injection deterministic when this owned API is also reachable.
+    if (
+      path === "/rpc/account/get" &&
+      request.headers
+        .get("cookie")
+        ?.split(";")
+        .some((value) => value.trim() === "better-auth.session_token=browser-fixture-only")
+    )
+      return new Response(null, { status: 503 });
     if (path === "/fixture/mcp") return fixtureMcpResponse(request);
     if (
       path === "/events" ||

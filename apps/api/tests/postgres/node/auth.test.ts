@@ -22,8 +22,8 @@ import { createConfigRepository } from "../../../src/config/repository.js";
 import { createConfigService } from "../../../src/config/service.js";
 
 const databaseURL = process.env.TEST_DATABASE_URL;
-if (!databaseURL || !new URL(databaseURL).pathname.endsWith("_test"))
-  throw new Error("TEST_DATABASE_URL must name an isolated *_test database");
+if (!databaseURL || !/_test(?:_[a-z0-9]+)?$/.test(new URL(databaseURL).pathname))
+  throw new Error("TEST_DATABASE_URL must name an isolated *_test or *_test_<lane> database");
 const connection = connectDatabase(databaseURL);
 const emails: AuthMailInput[] = [];
 const codes: { email: string; code: string; locale?: string }[] = [];

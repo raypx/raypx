@@ -3,12 +3,14 @@
 set -efu
 
 usage() {
-  echo 'Usage: egress.sh --bridge rpx<10 lowercase hex digits> --dry-run|--apply|--remove' >&2
+  echo 'Usage: egress.sh --bridge rpx<10 lowercase hex digits> [--resolver public-IPv4] --dry-run|--apply|--remove' >&2
   exit 2
 }
 
 bridge=
 mode=
+resolver=1.1.1.1
+resolver_set=false
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --bridge)
@@ -22,6 +24,13 @@ while [ "$#" -gt 0 ]; do
       mode=$1
       shift
       ;;
+    --resolver)
+      [ "$#" -ge 2 ] || usage
+      [ "$resolver_set" = false ] || usage
+      resolver=$2
+      resolver_set=true
+      shift 2
+      ;;
     *) usage ;;
   esac
 done
@@ -32,6 +41,24 @@ suffix=${bridge#rpx}
 case "$suffix" in *[!0-9a-f]*) usage ;; esac
 chain=RPX_E_$suffix
 tag=raypx-sandbox-egress:$bridge
+# No DNS lookup, shell evaluation or alternate address spelling reaches iptables.
+case "$resolver" in *[!0-9.]*|''|.*|*.) usage ;; esac
+saved_ifs=$IFS
+IFS=.
+set -- $resolver
+IFS=$saved_ifs
+[ "$#" -eq 4 ] || usage
+for octet do
+  case "$octet" in ''|0[0-9]*) usage ;; esac
+  [ "${#octet}" -le 3 ] && [ "$octet" -le 255 ] || usage
+done
+case "$1.$2.$3" in
+  0.*|10.*|127.*|169.254.*|192.0.0|192.0.2|192.168.*|198.18.*|198.19.*|198.51.100|203.0.113) usage ;;
+esac
+[ "$1" -lt 224 ] || usage
+if [ "$1" -eq 100 ] && [ "$2" -ge 64 ] && [ "$2" -le 127 ]; then usage; fi
+if [ "$1" -eq 172 ] && [ "$2" -ge 16 ] && [ "$2" -le 31 ]; then usage; fi
+dns_tag=raypx-sandbox-dns:$bridge:$resolver
 created_chain=false
 added_hooks=
 # Include non-public special-use destinations, CGNAT, benchmarks and multicast.
@@ -45,6 +72,12 @@ policy() {
     "$policy_visitor" append iptables "$chain" -d "$destination" -m comment --comment "$tag" -j DROP
     # DOCKER-USER sees packets after DNAT. Also reject a private original destination.
     "$policy_visitor" append iptables "$chain" -m conntrack --ctorigdst "$destination" -m comment --comment "$tag" -j DROP
+  done
+  # Engine's embedded DNS is configured separately with the same sole upstream.
+  # Direct DNS may use that resolver only, including TCP fallback and pre-DNAT destinations.
+  for protocol in udp tcp; do
+    "$policy_visitor" append iptables "$chain" -p "$protocol" ! -d "$resolver" --dport 53 -m comment --comment "$dns_tag" -j DROP
+    "$policy_visitor" append iptables "$chain" -p "$protocol" -m conntrack ! --ctorigdst "$resolver" --ctorigdstport 53 -m comment --comment "$dns_tag" -j DROP
   done
   # INPUT blocks the Docker host regardless of the address used to reach it.
   "$policy_visitor" hook iptables INPUT -i "$bridge" -m comment --comment "$tag" -j DROP
@@ -67,7 +100,7 @@ render_rule() {
 }
 
 if [ "$mode" = --dry-run ]; then
-  echo "# Engine host only; Docker must use the iptables backend. Owned bridge: $bridge"
+  echo "# Engine host only; Docker must use the iptables backend. Owned bridge: $bridge; DNS: $resolver"
   echo '# Idempotent apply adds absent rules; existing hooks must remain first or apply refuses.'
   echo "iptables -w -N $chain"
   policy render_rule
@@ -133,6 +166,15 @@ iptables -w -S DOCKER-USER >/dev/null 2>&1 || {
 }
 if iptables -w -S "$chain" >/dev/null 2>&1; then
   owned_chain || { echo 'Refusing to modify an unowned firewall chain' >&2; exit 1; }
+  existing_rules=$(iptables -w -S "$chain")
+  case "$existing_rules" in
+    *raypx-sandbox-dns:*)
+      iptables -w -C "$chain" -p udp ! -d "$resolver" --dport 53 -m comment --comment "$dns_tag" -j DROP 2>/dev/null || {
+        echo 'DNS resolver changed; remove the previous rules before applying the new resolver' >&2
+        exit 1
+      }
+      ;;
+  esac
 fi
 
 check_hook() {

@@ -115,7 +115,8 @@ bun run test backends --with-e2e -- --workers=1
 ```
 
 This explicit POSIX gate promotes the earlier local backend-validation scripts.
-Provide PostgreSQL's `initdb`, `postgres`, `pg_isready` and `createdb` on PATH, or set
+For automatic provisioning, provide PostgreSQL's `initdb`, `postgres`, `pg_isready`
+and `createdb` on PATH, or set
 `TEST_POSTGRES_BIN` to their directory. Redis's `redis-server` comes from PATH or
 `TEST_REDIS_BINARY`. These are test prerequisites, not product dependencies;
 provisioning is not part of default verify. Run as an ordinary user, as required
@@ -129,8 +130,12 @@ Playwright flags after `--` retain the normal browser launcher's selection rules
 use `--workers=1` on a busy machine. `VP_RUN_CONCURRENCY_LIMIT=1` likewise lowers
 workspace-task concurrency for inventory or backend gates without changing assertions.
 
-Each run creates its own temporary data, loopback ports and random SCRAM password.
-Operator database/Redis URLs are replaced; no existing service or volume is used.
+By default each run creates its own temporary data, loopback ports and random
+SCRAM password. Inherited database/Redis URLs are replaced. To use an existing
+disposable loopback database, pass `--database-url postgres://user@127.0.0.1:PORT/name_test_lane`.
+The explicit URL must have a `*_test` or `*_test_<lane>` name and no query options;
+PostgreSQL is neither provisioned, stopped nor reset in this mode. Redis remains
+an owned temporary process.
 External Agent inference is explicitly disabled even when the parent environment
 has a live-acceptance opt-in; run that separate gate deliberately instead.
 Processes are stopped on success, failure or handled interruption before their data
@@ -180,14 +185,23 @@ preserve a written home file.
 `--with-egress` additionally applies [the operator ruleset](deployment.md#optional-computers)
 when running on Linux as root or with passwordless `sudo`. The Engine bridge must
 exist on that host and Docker must use its iptables backend; both `iptables` and
-`ip6tables` are required. The probe expects public `1.1.1.1:443` to connect and bridge
-gateway TCP/80 plus `169.254.169.254:80` to time out. Refused connections or routing
-errors are inconclusive and fail the probe. These bounded checks do not demonstrate
+`ip6tables` are required. The probe compares public `1.1.1.1:443` with an independent
+Engine-host control; network failure on both is unavailable. TLS or HTTP errors
+fail acceptance. Bridge gateway TCP/80 and `169.254.169.254:80` must time out;
+refused connections or routing errors alone cannot prove these restrictions. These bounded checks do not demonstrate
 every private address/port is blocked; the static ruleset test covers generated
 ranges. Public IPv6 is denied by the ruleset. Without the flag, or on a host without
 the supported OS/privilege combination, egress probing is reported as not run. A
 supported opted-in apply/probe failure fails the gate. macOS/Colima firewall rules
-belong inside the Linux Engine VM; a gate on macOS does not apply them.
+belong inside the Linux Engine VM. Set `--engine-host-command` to an explicit
+JSON argv prefix for root commands there, with the checkout mounted at the same
+absolute path. Apply, counter reads and removal all use that prefix. The gate
+owns a host-network canary for loopback and service isolation, independent of the
+supervisor location. `--dns-resolver` selects the shared public IPv4 upstream.
+Both direct and embedded UDP/TCP DNS are checked; alternate resolvers, metadata
+and RFC 1918 destinations require timeouts and increasing owned DROP counters.
+IPv6 enforcement is unavailable without a reachable host control; a reachable
+control additionally requires a timeout and increasing IPv6 DROP counter.
 
 Every run uses a unique supervisor namespace and labels. On success, failure or
 handled interruption, it stops the supervisor before removing only its labeled
@@ -207,9 +221,13 @@ Computer provider/conformance inputs and sandbox acceptance/deployment inputs,
 or full/manual/tag plans. The artifact is uploaded on success or failure. A root
 lockfile change or missing Git base alone does not request Docker acceptance.
 
-Only manual macOS arm64 / Docker Engine 29.5 provider conformance is recorded
-(`77a9421c`, 10/10). There is no recorded run of this gate, Ubuntu/Linux acceptance,
-Windows acceptance, rootless acceptance or restricted-egress acceptance yet.
+On 2026-11-14 the gate passed on macOS arm64 with a Linux arm64 Engine VM
+(29.5.2, API 1.54): provider conformance 10/10, isolation, home replacement and
+IPv4 restricted egress. Public HTTPS and configured direct/embedded UDP/TCP DNS
+succeeded; private, metadata, gateway, host-service and alternate-DNS probes
+timed out with increasing owned DROP counters. IPv6 enforcement was unavailable
+because the VM disables IPv6. Native Linux distributions, amd64, Windows, other
+Engine configurations and rootless acceptance remain unverified.
 
 ## Deployment images
 

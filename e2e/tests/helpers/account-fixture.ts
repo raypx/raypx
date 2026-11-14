@@ -32,7 +32,8 @@ export async function accountAccessFixture(
 
 export async function webShellFixture(page: Page) {
   // This deliberately invalid cookie lets SSR render its API-unavailable state.
-  // Browser HTTP fixtures below supply UI data; this does not authenticate a user.
+  // The owned backend fixture recognizes this marker only to return 503 on the
+  // SSR account read. Browser HTTP fixtures below supply UI data; it grants no session.
   await page.context().addCookies([
     {
       name: "better-auth.session_token",

@@ -213,6 +213,23 @@ no same-origin, forms, frames, objects, external images/scripts or network acces
 CSP frame ancestors are the configured application origins. Public admission is
 120 requests per address/minute and 60 per token/minute; only digests enter limits.
 
+Markdown documents include one self-contained neutral stylesheet for both member
+frames and public shares. It uses the visual system's light/dark tokens, system
+fonts and document measure, with `prefers-color-scheme` selecting dark mode.
+Headings, lists, code, tables, quotes, links and images remain within the reading
+column. The exact stylesheet bytes are authorized by a SHA-256 CSP hash;
+Markdown permits no scripts, external assets or arbitrary inline styles. HTML
+Page bodies and their existing sandbox policy remain unchanged. Self-contained
+base64 PNG/JPEG/GIF/WebP images render under the existing data-only image policy;
+SVG images and data links remain blocked.
+
+Page write tools attach the server-produced Page identity and version to committed
+tool activity. Live events, snapshots and bounded conversation history expose the
+same optional nullable `page` metadata. Same-Space identity tombstones retain the
+link after deletion without retaining the document body or granting access.
+Web opens Page detail, Desktop retains its Web preview handoff, and Mobile hands
+off to Web. Null identity opens the Pages list; stale IDs show a deleted state.
+
 Skills use `@raypx/skills/server`. Account skills follow all/selected membership
 availability, including future Spaces in all mode. Learned skills are separate
 Space-local text records. Agent enablement is per member and Agent so sharing an

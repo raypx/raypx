@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import { agentIdSchema, conversationIdSchema } from "@raypx/core/agents";
 import { approvalRequestIdSchema } from "@raypx/core/approvals";
 import { runIdSchema, type ConversationEvent, type ToolActivity } from "@raypx/core/conversation";
+import { pageIdSchema } from "@raypx/core/pages";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { applyToolActivityEvent, mergeToolActivity } from "./tool-activity.js";
 import { ConversationState, conversationTimelineRows } from "./conversation.js";
@@ -181,4 +182,22 @@ it("bounds retained activity to one hundred calls in start order", () => {
   expect(activity).toHaveLength(100);
   expect(activity[0]?.toolCallId).toBe("call-2");
   expect(activity.at(-1)?.toolCallId).toBe("call-101");
+});
+
+it("preserves Page identity through live finish, delayed start and history merge", () => {
+  const page = { id: pageIdSchema.parse("produced-page"), version: 3 };
+  const event: ConversationEvent = {
+    ...start(2),
+    kind: "tool.finished",
+    toolName: "agent_page_update",
+    outcome: "succeeded",
+    durationMs: 2000,
+    exitStatus: null,
+    page,
+  };
+  const activity = applyToolActivityEvent([], event);
+  expect(activity[0]?.page).toEqual(page);
+  expect(applyToolActivityEvent(activity, start(1))[0]?.page).toEqual(page);
+  expect(mergeToolActivity([], activity)[0]?.page).toEqual(page);
+  expect(applyToolActivityEvent([], { ...event, page: null })[0]?.page).toBeNull();
 });

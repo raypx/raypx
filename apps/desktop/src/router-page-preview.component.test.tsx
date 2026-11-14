@@ -1,3 +1,6 @@
+vi.mock("./features/auth/sign-out.js", () => ({
+  useDesktopSignOut: () => ({ suppressSessionRedirect: false, sessionEnded: vi.fn() }),
+}));
 import type { AgentsWorkspaceProps } from "@raypx/agents/client";
 import {
   createMemoryHistory,

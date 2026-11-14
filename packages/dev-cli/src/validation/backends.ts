@@ -1,6 +1,7 @@
 import { copyFile, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
 import { Evidence, type ValidationProcess } from "./evidence.js";
 
 export function backendEnvironment(
@@ -44,83 +45,114 @@ async function ready(evidence: Evidence, child: ValidationProcess, probe: () => 
   throw new Error(`Validation service startup timed out; see ${evidence.directory}`);
 }
 
-/** Provision owned local services; never accept an operator database URL. */
-export async function validateBackends(root: string, args: string[]) {
-  if (process.platform === "win32")
-    throw new Error("Local backend provisioning currently requires POSIX");
+export function backendPlan(args: string[]) {
   const separator = args.indexOf("--");
   const flags = separator < 0 ? args : args.slice(0, separator);
   const browserArgs = separator < 0 ? [] : args.slice(separator + 1);
-  if (
-    flags.some((arg) => !["--with-e2e"].includes(arg)) ||
-    (browserArgs.length > 0 && !flags.includes("--with-e2e"))
-  )
-    throw new Error("Usage: test backends [--with-e2e [-- Playwright flags]]");
-  const pg = Object.fromEntries(
-    ["initdb", "postgres", "pg_isready", "createdb"].map((name) => [
-      name,
-      executable(name, process.env.TEST_POSTGRES_BIN),
-    ]),
-  );
+  const { values } = parseArgs({
+    args: flags,
+    strict: true,
+    options: {
+      "with-e2e": { type: "boolean", default: false },
+      "database-url": { type: "string" },
+    },
+  });
+  if (browserArgs.length > 0 && !values["with-e2e"])
+    throw new Error("Browser flags require --with-e2e");
+  const databaseURL = values["database-url"];
+  if (databaseURL !== undefined) {
+    try {
+      const url = new URL(databaseURL);
+      if (
+        !["postgres:", "postgresql:"].includes(url.protocol) ||
+        !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
+        !/^\/[a-z0-9_]+_test(?:_[a-z0-9]+)?$/.test(url.pathname) ||
+        url.search ||
+        url.hash
+      )
+        throw new Error();
+    } catch {
+      throw new Error(
+        "--database-url must name a disposable loopback *_test or *_test_<lane> database without query options",
+      );
+    }
+  }
+  return { databaseURL, withE2E: values["with-e2e"], browserArgs };
+}
+
+/** Provision owned services, or use only an explicitly selected disposable local database. */
+export async function validateBackends(root: string, args: string[]) {
+  if (process.platform === "win32")
+    throw new Error("Local backend provisioning currently requires POSIX");
+  const plan = backendPlan(args);
   const redisBinary = Bun.which(process.env.TEST_REDIS_BINARY ?? "redis-server");
   if (!redisBinary) throw new Error("Missing redis-server; configure TEST_REDIS_BINARY or PATH");
   const evidence = new Evidence(root, "backends");
   await evidence.run(async () => {
     const directory = await mkdtemp(join(tmpdir(), "raypx-validation-"));
     try {
-      const password = crypto.randomUUID();
-      const passwordFile = join(directory, "password");
-      const data = join(directory, "postgres");
-      await writeFile(passwordFile, password, { mode: 0o600 });
-      await evidence.command("postgres-init", [
-        pg.initdb!,
-        "-D",
-        data,
-        "-A",
-        "scram-sha-256",
-        "--pwfile",
-        passwordFile,
-        "-U",
-        "raypx_validation",
-        "--no-locale",
-        "--encoding=UTF8",
-      ]);
-      const port = await freePort();
-      const postgres = evidence.start("postgres-server", [
-        pg.postgres!,
-        "-D",
-        data,
-        "-h",
-        "127.0.0.1",
-        "-p",
-        String(port),
-        "-k",
-        "",
-      ]);
-      await ready(
-        evidence,
-        postgres,
-        async () =>
-          Bun.spawnSync(
-            [pg.pg_isready!, "-h", "127.0.0.1", "-p", String(port), "-U", "raypx_validation"],
-            { stdout: "ignore", stderr: "ignore" },
-          ).exitCode === 0,
-      );
-      await evidence.command(
-        "postgres-create",
-        [
-          pg.createdb!,
+      let url = plan.databaseURL;
+      if (!url) {
+        const pg = Object.fromEntries(
+          ["initdb", "postgres", "pg_isready", "createdb"].map((name) => [
+            name,
+            executable(name, process.env.TEST_POSTGRES_BIN),
+          ]),
+        );
+        const password = crypto.randomUUID();
+        const passwordFile = join(directory, "password");
+        const data = join(directory, "postgres");
+        await writeFile(passwordFile, password, { mode: 0o600 });
+        await evidence.command("postgres-init", [
+          pg.initdb!,
+          "-D",
+          data,
+          "-A",
+          "scram-sha-256",
+          "--pwfile",
+          passwordFile,
+          "-U",
+          "raypx_validation",
+          "--no-locale",
+          "--encoding=UTF8",
+        ]);
+        const port = await freePort();
+        const postgres = evidence.start("postgres-server", [
+          pg.postgres!,
+          "-D",
+          data,
           "-h",
           "127.0.0.1",
           "-p",
           String(port),
-          "-U",
-          "raypx_validation",
-          "raypx_validation_test",
-        ],
-        { ...process.env, PGPASSWORD: password },
-      );
-      const url = `postgres://raypx_validation:${password}@127.0.0.1:${port}/raypx_validation_test`;
+          "-k",
+          "",
+        ]);
+        await ready(
+          evidence,
+          postgres,
+          async () =>
+            Bun.spawnSync(
+              [pg.pg_isready!, "-h", "127.0.0.1", "-p", String(port), "-U", "raypx_validation"],
+              { stdout: "ignore", stderr: "ignore" },
+            ).exitCode === 0,
+        );
+        await evidence.command(
+          "postgres-create",
+          [
+            pg.createdb!,
+            "-h",
+            "127.0.0.1",
+            "-p",
+            String(port),
+            "-U",
+            "raypx_validation",
+            "raypx_validation_test",
+          ],
+          { ...process.env, PGPASSWORD: password },
+        );
+        url = `postgres://raypx_validation:${password}@127.0.0.1:${port}/raypx_validation_test`;
+      }
       let redisURL: string | undefined;
       if (redisBinary) {
         const redisPort = await freePort();
@@ -181,7 +213,7 @@ export async function validateBackends(root: string, args: string[]) {
           join(evidence.directory, `${label}.json`),
         );
       }
-      if (flags.includes("--with-e2e")) {
+      if (plan.withE2E) {
         const apiPort = await freePort(),
           apiUrl = `http://127.0.0.1:${apiPort}`;
         const api = evidence.start(
@@ -209,7 +241,7 @@ export async function validateBackends(root: string, args: string[]) {
             "e2e",
             "--",
             "--reporter=list,json",
-            ...browserArgs,
+            ...plan.browserArgs,
           ],
           {
             ...env,

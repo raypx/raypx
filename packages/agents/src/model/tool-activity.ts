@@ -44,6 +44,7 @@ export function applyToolActivityEvent(
     outcome: finished ? event.outcome : null,
     durationMs: finished ? event.durationMs : null,
     exitStatus: finished ? event.exitStatus : null,
+    ...(finished && event.page !== undefined ? { page: event.page } : {}),
   };
   return mergeToolActivity(previous, [call], limit);
 }

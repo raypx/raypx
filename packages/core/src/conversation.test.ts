@@ -4,6 +4,7 @@ import {
   eventCursorStatus,
   memberMessageInputSchema,
   runSchema,
+  toolActivitySchema,
 } from "./conversation.js";
 
 it("accepts only implemented immutable event variants and references message content", () => {
@@ -132,6 +133,53 @@ it("bounds lifecycle metadata and excludes raw arguments, contents and tool outp
     exitStatus: null,
   };
   expect(conversationEventSchema.parse(finished).kind).toBe("tool.finished");
+  expect(conversationEventSchema.parse(finished)).not.toHaveProperty("page");
+  expect(conversationEventSchema.parse({ ...finished, page: null })).toHaveProperty("page", null);
+  expect(
+    conversationEventSchema.parse({ ...finished, page: { id: "page", version: 2 } }),
+  ).toHaveProperty("page", { id: "page", version: 2 });
+  const {
+    kind: _kind,
+    sequence: _sequence,
+    createdAt,
+    spaceId: _space,
+    conversationId: _conversation,
+    ...activity
+  } = finished;
+  for (const page of [undefined, null, { id: "page", version: 2 }])
+    expect(
+      toolActivitySchema.safeParse({
+        ...activity,
+        startedAt: createdAt,
+        finishedAt: createdAt,
+        ...(page === undefined ? {} : { page }),
+      }).success,
+    ).toBe(true);
+  for (const page of [
+    { id: "", version: 1 },
+    { id: "x".repeat(129), version: 1 },
+    { id: "page", version: 0 },
+    { id: "page", version: 1.5 },
+    { id: "page" },
+    { id: "page", version: 1, body: "private" },
+  ]) {
+    expect(conversationEventSchema.safeParse({ ...finished, page }).success).toBe(false);
+    expect(
+      toolActivitySchema.safeParse({
+        ...activity,
+        startedAt: createdAt,
+        finishedAt: createdAt,
+        page,
+      }).success,
+    ).toBe(false);
+  }
+  expect(
+    conversationEventSchema.safeParse({
+      ...base,
+      kind: "tool.started",
+      page: { id: "page", version: 1 },
+    }).success,
+  ).toBe(false);
   for (const extra of [
     { arguments: { path: "private" } },
     { output: "private" },

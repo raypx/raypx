@@ -400,11 +400,15 @@ Phase 5 composes Pages, skills and remote HTTP servers for both API and worker R
 `/page-content/public/:token` never resolves a session; `/page-content/member/:spaceId/:pageId`
 resolves it freshly. Both preserve their sandbox CSP rather than API's deny-frame
 policy, set no cookies and use no-store. Public limits use token/address digests.
+Markdown routes use the server stylesheet's exact CSP hash and deny scripts;
+HTML routes retain their existing authored content and sandbox policy.
 Only model/remote adapters open secret-store envelopes. Remote credential guards
 cover tool metadata, arguments and results before checkpoints/effects/events.
 
 `conversations.history` uses the same fresh Space admission as snapshot, with a
 1–100 message limit and scoped older-history cursor. Existing snapshots remain
-full-history reads and add only optional bounded attribution fields. Ingress
-addresses on routine reads use explicitly configured AUTH_URL; auth's localhost
+full-history reads and add only optional bounded attribution fields.
+Successful Page write activity additionally carries optional nullable `page: { id,
+version }` in events, snapshots and history; it comes only from server results.
+Ingress addresses on routine reads use explicitly configured AUTH_URL; auth's localhost
 fallback is never advertised as a public ingress origin.

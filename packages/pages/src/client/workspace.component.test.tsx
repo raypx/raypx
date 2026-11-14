@@ -341,3 +341,18 @@ it("saves, restores and shares versions with authenticated document embedding di
   });
   expect(document.querySelector("iframe")).toBeNull();
 });
+
+it.each(["en", "zh"] as const)(
+  "shows a deleted Page when opening a stale activity link in %s",
+  async (language) => {
+    const { port } = fixture();
+    vi.mocked(port.list).mockResolvedValue([]);
+    vi.mocked(port.get).mockRejectedValue({ code: "PAGE_NOT_FOUND" });
+    mount(port, language);
+    const strings = { en, zh }[language].pages;
+    expect(await screen.findByRole("alert")).toHaveTextContent(strings.notFound);
+    expect(screen.queryByTitle(page.title)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: strings.back }));
+    expect(await screen.findByText(strings.empty)).toBeVisible();
+  },
+);

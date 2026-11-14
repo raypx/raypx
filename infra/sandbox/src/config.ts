@@ -12,6 +12,7 @@ export interface SandboxConfig {
   pids: number;
   restrictedEgress: boolean;
   hostRulesApplied: boolean;
+  dnsResolver: string;
   network: string;
   bridge: string;
 }
@@ -55,6 +56,22 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
   const socket = env.SANDBOX_ENGINE_SOCKET ?? "/var/run/docker.sock";
   if (!socket.startsWith("/") || socket.includes("\0"))
     throw new Error("Invalid SANDBOX_ENGINE_SOCKET");
+  const dnsResolver = env.SANDBOX_DNS_RESOLVER ?? "1.1.1.1";
+  const [a, b, c] = dnsResolver.split(".").map(Number);
+  if (
+    isIP(dnsResolver) !== 4 ||
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    a! >= 224 ||
+    (a === 100 && b! >= 64 && b! <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b! >= 16 && b! <= 31) ||
+    (a === 192 && (b === 168 || (b === 0 && [0, 2].includes(c!)))) ||
+    (a === 198 && ([18, 19].includes(b!) || (b === 51 && c === 100))) ||
+    (a === 203 && b === 0 && c === 113)
+  )
+    throw new Error("Invalid SANDBOX_DNS_RESOLVER: public IPv4 required");
   return {
     address,
     port: positive("SANDBOX_PORT", "4020", 65535),
@@ -67,6 +84,7 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
     pids: positive("SANDBOX_PIDS_LIMIT", "128", 1_000_000),
     restrictedEgress: flag("SANDBOX_RESTRICTED_EGRESS"),
     hostRulesApplied: flag("SANDBOX_HOST_RULES_APPLIED"),
+    dnsResolver,
     network: `${namespace}-computers`,
     bridge: `rpx${hash}`,
   };

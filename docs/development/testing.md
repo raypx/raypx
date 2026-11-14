@@ -253,11 +253,16 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
   a reachable Linux Docker Engine (API v1.47+) through a Unix socket. For Colima:
   `bun run raypx-dev test sandbox --engine-socket "$HOME/.colima/default/docker.sock"`.
   Unix `DOCKER_HOST` is also honored; other transports use `/var/run/docker.sock`
-  unless overridden. Add `--with-egress` only on the Linux Engine host to authorize
-  temporary firewall rules and public/gateway/metadata TCP probes. Otherwise egress
+  unless overridden. Add `--with-egress` to authorize temporary firewall rules on the Linux Engine
+  host. A VM host requires an explicit `--engine-host-command` JSON argv prefix
+  for root commands and the checkout mounted at the same absolute path. HTTPS,
+  DNS, private destinations and an owned host-service canary are probed. Otherwise egress
   is explicitly not run. See [owned sandbox acceptance](validation-artifacts.md#owned-sandbox-real-engine-acceptance).
-- TEST_DATABASE_URL pointing to an isolated *_test database, NODE_ENV=test:
-  bun run test postgres validates full verification/login/reset/session revocation.
+- TEST_DATABASE_URL pointing to an isolated *_test or *_test_<lane> database, NODE_ENV=test:
+  `bun run test postgres --concurrency=1` validates all workspace PostgreSQL suites,
+  including full verification/login/reset/session revocation. Workspaces sharing
+  one database run serially: global worker scans can otherwise lock another suite
+  during its raw-fixture teardown.
   CI uses PostgreSQL 17; an older local server is reported separately.
 - `TEST_REDIS_URL` pointing to a disposable Redis or Valkey (`docker compose up -d valkey`
   serves `redis://localhost:6380`): `bun run test redis` checks the session cache,
@@ -271,11 +276,11 @@ peer. Independent runner setup files preserve the shared Bun/happy-dom setup.
   Quit, explicit daemon shutdown and PTY resize/cancellation. Renderer previews
   cannot establish these native results.
 
-Recorded sandbox real-Engine acceptance is limited to the manual macOS arm64 run
-against Docker Engine 29.5 through Colima (provider conformance 10/10, commit
-`77a9421c`). It did not establish restricted egress. The new gate and its Ubuntu CI
-job have no recorded real-Engine run yet. Linux amd64/arm64, macOS x64, other
-macOS Engine configurations, Windows and rootless engines remain unverified.
+On 2026-11-14 the sandbox gate passed on macOS arm64 with a Linux arm64
+Engine VM (29.5.2, API 1.54): provider conformance 10/10, isolation, home replacement
+and IPv4 HTTPS/DNS/private-network enforcement. IPv6 enforcement was unavailable
+because the VM disables IPv6. Native Linux distributions, amd64, other macOS Engine
+configurations, Windows and rootless engines remain unverified.
 
 ### Faster browser feedback
 

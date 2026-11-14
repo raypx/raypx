@@ -23,8 +23,8 @@ import { createRoutinesRepository } from "../../src/routines/postgres.js";
 import type { RoutineSecretStore } from "../../src/routines/types.js";
 
 const url = process.env.TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith("_test"))
-  throw new Error("An isolated *_test database is required");
+if (!url || !/_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname))
+  throw new Error("An isolated *_test or *_test_<lane> database is required");
 const first = connectDatabase(url, { max: 2 });
 const second = connectDatabase(url, { max: 2 });
 const accounts: string[] = [];

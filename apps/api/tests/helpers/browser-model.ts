@@ -32,6 +32,8 @@ export function browserModelFixture() {
       }
       const lastMessage = [...input.history].reverse().find((entry) => entry.role === "user");
       const requestsMcp = lastMessage?.text.startsWith("Fixture MCP call ") ?? false;
+      const pagePrefix = "Fixture Page create ";
+      const requestsPage = lastMessage?.text.startsWith(pagePrefix) ?? false;
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
       const groupCoordinator = input.instructions.includes("Fixture group coordinator.");
       const groupResponder = input.instructions.includes("Fixture group responder.");
@@ -52,6 +54,12 @@ export function browserModelFixture() {
         stream.end(request);
         return stream;
       }
+      if (requestsPage && !results.some((entry) => entry.toolName === "agent_page_create"))
+        return toolCall("agent_page_create", "browser-page-create", {
+          title: lastMessage!.text.slice(pagePrefix.length),
+          kind: "document",
+          body: "# Agent Page\n\nCreated from the conversation.",
+        });
       if (requestsMcp && !results.some((entry) => entry.toolName.startsWith("mcp_"))) {
         const remoteTool = input.tools?.find((candidate) =>
           candidate.name.endsWith("__fixture_echo"),
@@ -129,7 +137,8 @@ export function browserModelFixture() {
       });
       // Background-triggered replies complete independently of the interactive
       // streaming gate, so parallel browser journeys cannot release each other.
-      if (completeImmediately || groupCoordinator || child || requestsMcp) queueMicrotask(complete);
+      if (completeImmediately || groupCoordinator || child || requestsMcp || requestsPage)
+        queueMicrotask(complete);
       return stream;
     },
   });
