@@ -25,6 +25,10 @@ import { createSkillsService } from "@raypx/skills/server";
 import { createSkillsRepository } from "@raypx/skills/server/postgres";
 import { withPageTools } from "../conversations/page-tools.js";
 import { withSkillTools } from "../conversations/skill-tools.js";
+import { withOpenApiTools } from "../conversations/openapi-tools.js";
+import { createOpenApiServers } from "../conversations/openapi-servers.js";
+import { createOpenApiServersRepository } from "../conversations/openapi-postgres.js";
+import { createOpenApiTransport } from "@raypx/providers/openapi";
 import { withMcpTools } from "../conversations/mcp-tools.js";
 import { createMcpServers } from "../conversations/mcp-servers.js";
 import { createMcpServersRepository } from "../conversations/mcp-postgres.js";
@@ -87,10 +91,16 @@ export async function composeAgents(
   const pages = createPagesService(createPagesRepository(db));
   const skills = createSkillsService(createSkillsRepository(db));
   const mcpServers = createMcpServers(createMcpServersRepository(db), keys, createMcpTransport());
+  const openApiServers = createOpenApiServers(
+    createOpenApiServersRepository(db),
+    keys,
+    createOpenApiTransport(),
+  );
   const protectedValues = () => [
     ...deploymentSecrets,
     ...modelConnections.protectedValues(),
     ...mcpServers.protectedValues(),
+    ...openApiServers.protectedValues(),
   ];
   const memoryTools = withMemoryTools(
     createComputerTools(
@@ -103,9 +113,13 @@ export async function composeAgents(
     spaceMemory,
     protectedValues,
   );
-  const tools = withMcpTools(
-    withSkillTools(withPageTools(memoryTools, pages, protectedValues), skills, protectedValues),
-    mcpServers,
+  const tools = withOpenApiTools(
+    withMcpTools(
+      withSkillTools(withPageTools(memoryTools, pages, protectedValues), skills, protectedValues),
+      mcpServers,
+      protectedValues,
+    ),
+    openApiServers,
     protectedValues,
   );
   const runner = new ConversationRunner(
@@ -166,6 +180,7 @@ export async function composeAgents(
     pages,
     skills,
     mcpServers,
+    openApiServers,
     spaceManagement,
     spaceDeletionWorker,
     routines,

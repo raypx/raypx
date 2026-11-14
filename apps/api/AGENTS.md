@@ -10,8 +10,8 @@ conversation cursor. These capabilities add no environment variables.
 
 Bun composition root for the server-owned Agent platform: session/Space RPC,
 conversation paging/events, durable Runs, approvals/effects, computers, routines,
-memory, Pages, skills, remote MCP, models, membership, groups and delegation.
-Feature packages own use cases and scoped repositories; API injects database,
+memory, Pages, skills, remote MCP, OpenAPI tools, models, membership, groups and
+delegation. Feature packages own use cases and scoped repositories; API injects database,
 configuration, secrets and transports. Retained account/device projections and
 cloud jobs remain separate until their replacement phase.
 
@@ -68,6 +68,20 @@ prefixes/deltas stay in the executor; all API processes replay committed events.
 Shutdown drains HTTP, releases leases and preserves approval requests for another
 worker before closing storage. No provider text or credentials enter execution logs. `RuntimeProviders.createConversationFanout`
 can inject the subscriber for offline runtime tests.
+
+`openApiServers.*` manages Space-owned HTTP APIs next to member-owned remote
+servers. Current members read credential-free metadata; only current owners can
+register, edit, test or delete. Credentials use the existing envelope store and
+are shared only through explicit all/selected Agent availability in that Space.
+GET/HEAD are read policy; every HTTP call still records an effect. Run checkpoints
+freeze credential-free operations and endpoint fingerprints, and recovery checks
+current membership and availability before dispatch.
+
+Conversation snapshot/history expose bounded active-Run summaries independently
+of the loaded message window. Optional `send.message.steerRunId` addresses exactly
+one active Run in that Space/conversation, including queued/delegated work; a
+terminal target returns `RUN_NOT_ACTIVE`, and unrelated selectors remain not found.
+
 `modelConnections.list/create/update/delete/test` uses the session account only.
 Secrets are write-only and envelope-encrypted with the configuration cipher and
 APP_KEY key provider. API and recovery workers share APP_KEY; constructors do no I/O.

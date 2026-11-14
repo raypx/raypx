@@ -1,7 +1,12 @@
 import { useTranslations } from "../../i18n.js";
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AppearanceSettings, LanguageSettings } from "@raypx/blocks/settings";
-import { ApprovalSettings, ModelConnections, McpServers } from "@raypx/agents/client";
+import {
+  ApprovalSettings,
+  ModelConnections,
+  McpServers,
+  OpenApiServers,
+} from "@raypx/agents/client";
 
 import { getBridge, isDesktop } from "../../lib/desktop.js";
 import { useState } from "react";
@@ -28,6 +33,8 @@ export default function SettingsContent() {
           key={accountId}
           port={agentsClient.approvals}
           mcpServers={agentsClient.mcpServers}
+          openApiServers={agentsClient.openApiServers}
+          spaces={agentsClient.spaces}
         />
       )}
       {accountId && (
@@ -44,6 +51,14 @@ export default function SettingsContent() {
           key={`tools:${accountId}`}
           port={agentsClient.mcpServers}
           spaces={agentsClient.spaces}
+        />
+      )}
+      {accountId && (
+        <OpenApiServers
+          key={`apis:${accountId}`}
+          port={agentsClient.openApiServers}
+          spaces={agentsClient.spaces}
+          agents={agentsClient.agents}
         />
       )}
       <div className="border-b border-border">

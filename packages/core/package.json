@@ -23,7 +23,8 @@
     "./space-memory": "./src/space-memory.ts",
     "./pages": "./src/pages.ts",
     "./skills": "./src/skills.ts",
-    "./mcp-servers": "./src/mcp-servers.ts"
+    "./mcp-servers": "./src/mcp-servers.ts",
+    "./openapi-servers": "./src/openapi-servers.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

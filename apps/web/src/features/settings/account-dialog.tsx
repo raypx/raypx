@@ -5,7 +5,12 @@ import type { ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { AccountDetails } from "@raypx/account/client";
-import { ApprovalSettings, ModelConnections, McpServers } from "@raypx/agents/client";
+import {
+  ApprovalSettings,
+  ModelConnections,
+  McpServers,
+  OpenApiServers,
+} from "@raypx/agents/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
 
@@ -86,7 +91,15 @@ export default function AccountSettingsDialog({
       <AccountSettingsContent value="tools">
         <PrivateSettings>
           {(id) => (
-            <McpServers key={id} port={agentsClient.mcpServers} spaces={agentsClient.spaces} />
+            <>
+              <McpServers key={id} port={agentsClient.mcpServers} spaces={agentsClient.spaces} />
+              <OpenApiServers
+                key={`apis:${id}`}
+                port={agentsClient.openApiServers}
+                spaces={agentsClient.spaces}
+                agents={agentsClient.agents}
+              />
+            </>
           )}
         </PrivateSettings>
       </AccountSettingsContent>
@@ -257,7 +270,12 @@ function AccountProfile({
           </p>
         )}
       </AccountDetails>
-      <ApprovalSettings port={agentsClient.approvals} mcpServers={agentsClient.mcpServers} />
+      <ApprovalSettings
+        port={agentsClient.approvals}
+        mcpServers={agentsClient.mcpServers}
+        openApiServers={agentsClient.openApiServers}
+        spaces={agentsClient.spaces}
+      />
     </div>
   );
 }

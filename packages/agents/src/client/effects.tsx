@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Effect } from "@raypx/core/approvals";
-import type { RunId } from "@raypx/core/conversation";
+import type { RunId, ToolActivity } from "@raypx/core/conversation";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Dialog,
@@ -10,17 +10,21 @@ import {
   DialogDescription,
 } from "@raypx/ui/components/ui/dialog";
 import type { ApprovalPort, ConversationSelection } from "../model.js";
-import { toolDisplayLabel } from "../model/tool-label.js";
+import { toolDisplayLabel, toolOperationLabel } from "../model/tool-label.js";
 import { useTranslations } from "./i18n.js";
 
 export function EffectRecords({
   port,
   selection,
   runId,
+  activity = [],
 }: {
   port: ApprovalPort;
   selection: ConversationSelection;
   runId: RunId;
+  activity?:
+    | readonly Pick<ToolActivity, "runId" | "toolCallId" | "toolName" | "argumentSummary">[]
+    | undefined;
 }) {
   const t = useTranslations("agents");
   const [open, setOpen] = useState(false);
@@ -42,6 +46,15 @@ export function EffectRecords({
       cancelled = true;
     };
   }, [open, port, selection.spaceId, runId, refresh]);
+  function effectLabel(effect: Effect) {
+    const call = activity.find(
+      (entry) =>
+        entry.runId === effect.runId &&
+        entry.toolCallId === effect.toolCallId &&
+        entry.toolName === effect.toolName,
+    );
+    return call ? toolOperationLabel(call, t) : toolDisplayLabel(effect.toolName, t);
+  }
   return (
     <>
       <Button
@@ -85,7 +98,7 @@ export function EffectRecords({
           <ul className="flex min-w-0 flex-col gap-3">
             {effects?.map((effect) => (
               <li key={effect.key} className="flex min-w-0 flex-col gap-1 border-b pb-3 text-xs">
-                <span className="font-medium">{toolDisplayLabel(effect.toolName, t)}</span>
+                <span className="font-medium">{effectLabel(effect)}</span>
                 <span>{t(`effects.states.${effect.state}`)}</span>
                 <time
                   className="tabular-nums wrap-anywhere"

@@ -9,6 +9,12 @@ and authored acceptance cases do not establish a passed platform gate.
 [Root instructions](../AGENTS.md) define repository rules. Discover workspaces and
 suites with `bun run workspace:list` and `bun run test list`.
 
+Active Runs outside loaded history remain reachable through Still working on
+Web, Desktop and Mobile. Space owners register bounded OpenAPI tools alongside
+remote MCP servers in Web/Desktop; all three clients show activity and addressed
+approvals. See [capabilities](architecture/capabilities.md) and
+[UI workflows](development/ui.md).
+
 ## Architecture and decisions
 
 - [Overview and decision history](architecture/README.md)

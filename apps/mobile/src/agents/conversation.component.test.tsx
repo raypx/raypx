@@ -680,3 +680,77 @@ it.each(["en", "zh"] as const)(
     await h.close();
   },
 );
+
+it.each(["en", "zh"] as const)(
+  "shows old active work and accepts approval without loading history in %s",
+  async (language) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const translator = createTranslator({
+      locale: language,
+      messages: language === "en" ? en : zh,
+    });
+    const request = pendingRequest();
+    const active = {
+      run: { ...run("waiting"), untrustedInput: true },
+      triggerMessage: { id: message().id, sequence: 1 },
+      pendingApprovals: [
+        {
+          requestId: request.id,
+          runId: request.runId,
+          toolCallId: request.toolCallId,
+          toolName: request.toolName,
+          argumentSummary: request.argumentSummary,
+          target: request.target,
+          memberAccountId: accountId,
+          createdAt: time,
+          expiresAt: request.expiresAt,
+        },
+      ],
+      pendingApprovalsTruncated: false,
+      latestCommittedSegment: null,
+    };
+    const historyPort = vi.fn<NonNullable<ConversationPort["history"]>>(async (input) => ({
+      conversation,
+      messages: input.before ? [message()] : [message("Recent", 100)],
+      runs: input.before ? [active.run] : [],
+      segments: [],
+      cursor: 100,
+      olderCursor: input.before ? null : { ...selection, beforeSequence: 100 },
+      runsTruncated: false,
+      segmentsTruncated: false,
+      activeRuns: [active],
+    }));
+    const h = await harness({}, [request], historyPort);
+    expect(textContent(h.view.root)).toContain(translator("agents.stillWorking.title"));
+    expect(textContent(h.view.root)).not.toContain("Member question");
+    await press(findByLabel(h.view.root, translator("agents.stillWorking.steer")));
+    expect(textContent(h.view.root)).toContain(
+      translator("agents.stillWorking.targeted", { name: agent.name }),
+    );
+    await changeText(findByLabel(h.view.root, translator("agents.message")), "Steer this old work");
+    await press(findByLabel(h.view.root, translator("agents.send")));
+    expect(h.port.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.objectContaining({
+          steerRunId: active.run.id,
+          text: "Steer this old work",
+        }),
+      }),
+    );
+    await press(findByLabel(h.view.root, translator("agents.approval.approve")));
+    expect(h.approvals.answer).toHaveBeenCalledWith({
+      spaceId: agent.spaceId,
+      requestId: request.id,
+      decision: "approved",
+    });
+    expect(historyPort).toHaveBeenCalledTimes(1);
+    await press(findByLabel(h.view.root, translator("agents.stillWorking.showRun")));
+    expect(historyPort).toHaveBeenLastCalledWith({
+      ...selection,
+      limit: 30,
+      before: { ...selection, beforeSequence: 2 },
+    });
+    expect(textContent(h.view.root)).not.toContain(translator("agents.stillWorking.title"));
+    await h.close();
+  },
+);

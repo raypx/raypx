@@ -85,7 +85,7 @@ CREATE TABLE "approval_requests" (
 	"resolved_at" timestamp with time zone,
 	"answered_by_account_id" text,
 	CONSTRAINT "approval_requests_pkey" PRIMARY KEY("space_id","conversation_id","id"),
-	CONSTRAINT "approval_requests_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or "tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length("tool_name") <= 128)),
+	CONSTRAINT "approval_requests_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
 	CONSTRAINT "approval_requests_state_check" CHECK ("state" in ('pending', 'approved', 'denied', 'expired', 'cancelled')),
 	CONSTRAINT "approval_requests_resolution_check" CHECK (("state" = 'pending' and "resolved_at" is null and "answered_by_account_id" is null) or ("state" in ('approved', 'denied') and "resolved_at" is not null and "answered_by_account_id" is not null and "answered_by_account_id" = "member_account_id") or ("state" in ('expired', 'cancelled') and "resolved_at" is not null and "answered_by_account_id" is null)),
 	CONSTRAINT "approval_requests_bounds_check" CHECK (length("argument_summary") <= 1024 and length("target") between 1 and 1024 and jsonb_typeof("arguments") = 'object' and length("arguments"::text) <= 262144 and "expires_at" > "created_at")
@@ -99,7 +99,7 @@ CREATE TABLE "approval_rules" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "approval_rules_action_idx" UNIQUE NULLS NOT DISTINCT("account_id","tool_name","executable"),
 	CONSTRAINT "approval_rules_decision_check" CHECK ("decision" in ('allow', 'block')),
-	CONSTRAINT "approval_rules_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or "tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length("tool_name") <= 128)),
+	CONSTRAINT "approval_rules_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
 	CONSTRAINT "approval_rules_executable_check" CHECK (("tool_name" = 'computer_run_command' and "executable" is not null and length("executable") between 1 and 1024) or ("tool_name" <> 'computer_run_command' and "executable" is null))
 );
 --> statement-breakpoint
@@ -322,7 +322,7 @@ CREATE TABLE "conversation_effects" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"completed_at" timestamp with time zone,
 	CONSTRAINT "conversation_effects_pkey" PRIMARY KEY("space_id","key"),
-	CONSTRAINT "conversation_effects_tool_check" CHECK (("tool_name" in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or "tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length("tool_name") <= 128)),
+	CONSTRAINT "conversation_effects_tool_check" CHECK (("tool_name" in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
 	CONSTRAINT "conversation_effects_state_check" CHECK ("state" in ('intent', 'succeeded', 'failed', 'unknown')),
 	CONSTRAINT "conversation_effects_key_check" CHECK ("key" ~ '^[a-f0-9]{64}$' and "argument_hash" ~ '^[a-f0-9]{64}$'),
 	CONSTRAINT "conversation_effects_outcome_check" CHECK (("state" in ('intent', 'unknown') and "result" is null and "completed_at" is null) or ("state" in ('succeeded', 'failed') and "result" is not null and length("result") <= 16384 and "completed_at" is not null))
@@ -798,6 +798,41 @@ CREATE TABLE "oauth_resource" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
+CREATE TABLE "openapi_server_agents" (
+	"space_id" text,
+	"server_id" text,
+	"agent_id" text,
+	CONSTRAINT "openapi_server_agents_pkey" PRIMARY KEY("space_id","server_id","agent_id")
+);
+--> statement-breakpoint
+CREATE TABLE "openapi_server_secrets" (
+	"space_id" text,
+	"server_id" text,
+	"id" text NOT NULL,
+	"ciphertext" text NOT NULL,
+	"wrapped_data_key" text NOT NULL,
+	"key_id" text NOT NULL,
+	CONSTRAINT "openapi_server_secrets_pkey" PRIMARY KEY("space_id","server_id")
+);
+--> statement-breakpoint
+CREATE TABLE "openapi_servers" (
+	"space_id" text,
+	"id" text,
+	"credential_owner_id" text NOT NULL,
+	"secret_id" text NOT NULL,
+	"name" text NOT NULL,
+	"url" text NOT NULL,
+	"operations" jsonb NOT NULL,
+	"selected_operation_ids" jsonb NOT NULL,
+	"availability" text NOT NULL,
+	"has_credentials" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "openapi_servers_pkey" PRIMARY KEY("space_id","id"),
+	CONSTRAINT "openapi_servers_secret_idx" UNIQUE("space_id","id","secret_id"),
+	CONSTRAINT "openapi_servers_availability_check" CHECK ("availability" in ('all', 'selected'))
+);
+--> statement-breakpoint
 CREATE TABLE "page_identities" (
 	"space_id" text,
 	"id" text,
@@ -1230,6 +1265,7 @@ CREATE UNIQUE INDEX "conversation_messages_sequence_idx" ON "conversation_messag
 CREATE UNIQUE INDEX "conversation_messages_event_ref_idx" ON "conversation_messages" ("space_id","conversation_id","id","sequence");--> statement-breakpoint
 CREATE UNIQUE INDEX "conversation_messages_idempotency_idx" ON "conversation_messages" ("space_id","conversation_id","author_account_id","idempotency_key");--> statement-breakpoint
 CREATE INDEX "conversation_participants_agent_idx" ON "conversation_participants" ("space_id","agent_id");--> statement-breakpoint
+CREATE INDEX "conversation_reply_segments_run_idx" ON "conversation_reply_segments" ("space_id","conversation_id","run_id","sequence" DESC NULLS LAST);--> statement-breakpoint
 CREATE UNIQUE INDEX "conversation_reply_segments_sequence_idx" ON "conversation_reply_segments" ("space_id","conversation_id","sequence");--> statement-breakpoint
 CREATE UNIQUE INDEX "conversation_run_attempts_fence_idx" ON "conversation_run_attempts" ("space_id","conversation_id","run_id","fence");--> statement-breakpoint
 CREATE INDEX "conversation_run_backup_jobs_due_idx" ON "conversation_run_backup_jobs" ("run_at","locked_until");--> statement-breakpoint
@@ -1239,6 +1275,7 @@ CREATE INDEX "conversation_run_steering_pending_idx" ON "conversation_run_steeri
 CREATE UNIQUE INDEX "conversation_runs_message_idx" ON "conversation_runs" ("space_id","conversation_id","message_id","agent_id") WHERE "parent_run_id" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "conversation_runs_actor_idx" ON "conversation_runs" ("space_id","conversation_id","id","member_account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "conversation_runs_active_agent_idx" ON "conversation_runs" ("space_id","agent_id") WHERE "state" in ('running', 'waiting') and "parent_run_id" is null;--> statement-breakpoint
+CREATE INDEX "conversation_runs_active_window_idx" ON "conversation_runs" ("space_id","conversation_id","message_sequence","id") WHERE "state" in ('queued', 'running', 'waiting');--> statement-breakpoint
 CREATE INDEX "conversation_runs_routine_idx" ON "conversation_runs" ("space_id","routine_id");--> statement-breakpoint
 CREATE INDEX "conversation_runs_inbound_routine_idx" ON "conversation_runs" ("space_id","inbound_routine_id");--> statement-breakpoint
 CREATE INDEX "conversation_runs_queue_idx" ON "conversation_runs" ("space_id","conversation_id","state","message_sequence");--> statement-breakpoint
@@ -1270,6 +1307,8 @@ CREATE INDEX "oauth_refresh_token_client_idx" ON "oauth_refresh_token" ("client_
 CREATE INDEX "oauth_refresh_token_session_idx" ON "oauth_refresh_token" ("session_id");--> statement-breakpoint
 CREATE INDEX "oauth_refresh_token_user_idx" ON "oauth_refresh_token" ("user_id");--> statement-breakpoint
 CREATE INDEX "oauth_refresh_token_code_idx" ON "oauth_refresh_token" ("authorization_code_id");--> statement-breakpoint
+CREATE INDEX "openapi_server_agents_agent_idx" ON "openapi_server_agents" ("space_id","agent_id","server_id");--> statement-breakpoint
+CREATE INDEX "openapi_servers_space_idx" ON "openapi_servers" ("space_id","created_at","id");--> statement-breakpoint
 CREATE UNIQUE INDEX "page_share_links_token_idx" ON "page_share_links" ("token_hash");--> statement-breakpoint
 CREATE INDEX "page_share_links_page_idx" ON "page_share_links" ("space_id","page_id","created_at","id");--> statement-breakpoint
 CREATE UNIQUE INDEX "page_versions_mutation_idx" ON "page_versions" ("space_id","mutation_key") WHERE "mutation_key" is not null;--> statement-breakpoint
@@ -1400,6 +1439,10 @@ ALTER TABLE "oauth_consent" ADD CONSTRAINT "oauth_consent_user_id_user_id_fkey" 
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_client_id_oauth_client_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "oauth_client"("client_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_session_id_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "session"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "oauth_refresh_token" ADD CONSTRAINT "oauth_refresh_token_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "openapi_server_agents" ADD CONSTRAINT "openapi_server_agents_jUVusABQYTPv_fkey" FOREIGN KEY ("space_id","server_id") REFERENCES "openapi_servers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "openapi_server_agents" ADD CONSTRAINT "openapi_server_agents_space_id_agent_id_agents_space_id_id_fkey" FOREIGN KEY ("space_id","agent_id") REFERENCES "agents"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "openapi_server_secrets" ADD CONSTRAINT "openapi_server_secrets_OYYaba9M8tQZ_fkey" FOREIGN KEY ("space_id","server_id","id") REFERENCES "openapi_servers"("space_id","id","secret_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "openapi_servers" ADD CONSTRAINT "openapi_servers_space_id_spaces_id_fkey" FOREIGN KEY ("space_id") REFERENCES "spaces"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "page_identities" ADD CONSTRAINT "page_identities_space_id_spaces_id_fkey" FOREIGN KEY ("space_id") REFERENCES "spaces"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "page_share_links" ADD CONSTRAINT "page_share_links_space_id_page_id_pages_space_id_id_fkey" FOREIGN KEY ("space_id","page_id") REFERENCES "pages"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "page_share_links" ADD CONSTRAINT "page_share_links_cekgp5Csym7P_fkey" FOREIGN KEY ("space_id","page_id","version") REFERENCES "page_versions"("space_id","page_id","version") ON DELETE CASCADE;--> statement-breakpoint

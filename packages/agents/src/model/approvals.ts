@@ -6,6 +6,7 @@ import {
   type ToolName,
 } from "@raypx/core/approvals";
 import type {
+  PendingApprovalSummary,
   ConversationEvent,
   RunId,
   ResolvedApprovalSummary,
@@ -67,6 +68,11 @@ export function approvalExtraSummary(
     "tools.waitForChildren": ["Wait for delegated work", "等待委派任务"],
   } satisfies Record<ToolLabelKey, string[]>;
   const summary = card.argumentSummary.trim();
+  if (
+    card.toolName.startsWith("openapi_") &&
+    /^(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS) .+$/u.test(summary)
+  )
+    return "";
   const display = toolDisplayLabel(card.toolName);
   const variants = Object.hasOwn(labels, display) ? labels[display as ToolLabelKey] : [display];
   const redundant = variants.some(
@@ -136,6 +142,21 @@ export class ApprovalProjection {
       const previous = this.cards.find((card) => card.requestId === request.id);
       if (previous && previous.state !== "pending") continue;
       this.receive(request, previous?.sequence ?? position(request));
+    }
+  }
+  hydratePending(summaries: readonly PendingApprovalSummary[], sequence: number) {
+    for (const summary of summaries) {
+      const previous = this.cards.find((card) => card.requestId === summary.requestId);
+      if (previous) continue;
+      this.put({
+        ...summary,
+        createdAt: summary.createdAt,
+        sequence,
+        state: "pending",
+        answeredByAccountId: null,
+        answering: false,
+        error: null,
+      });
     }
   }
   /** Resolved summaries expose attribution; lifecycle rows supply their bounded display metadata. */
@@ -214,7 +235,7 @@ export class ApprovalProjection {
     });
   }
   /** Retain addressed pending requests while releasing resolved rows with their history window. */
-  retainRuns(runIds: ReadonlySet<string>) {
+  retainRuns(runIds: ReadonlySet<string>, boundOutsidePending = false) {
     const recentResolved = new Set(
       this.cards
         .filter((card) => card.state !== "pending")
@@ -223,7 +244,9 @@ export class ApprovalProjection {
     );
     this.cards = this.cards.filter(
       (card) =>
-        card.state === "pending" || runIds.has(card.runId) || recentResolved.has(card.requestId),
+        (card.state === "pending" && (!boundOutsidePending || runIds.has(card.runId))) ||
+        runIds.has(card.runId) ||
+        recentResolved.has(card.requestId),
     );
     const retained = new Set(this.cards.map((card) => card.requestId));
     for (const id of this.submitted) if (!retained.has(id)) this.submitted.delete(id);

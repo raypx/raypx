@@ -157,6 +157,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       pages,
       skills,
       mcpServers,
+      openApiServers,
       routineWorker,
       spaceManagement,
       spaceDeletionWorker,
@@ -169,6 +170,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       pages,
       skills,
       mcpServers,
+      openApiServers,
       routines,
       spaceMemory,
       routineWorker,
@@ -208,6 +210,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         pages,
         skills,
         mcpServers,
+        openApiServers,
         routines,
         spaceMemory,
         ...(environment.ROUTINE_EMAIL_RELAY_TOKEN

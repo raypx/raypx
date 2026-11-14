@@ -64,7 +64,8 @@ behavioral assertion; do not substitute arbitrary sleeps, weaken counts or read
 an effect before React has applied the state that triggers it.
 
 Shared Agent model suites own stream/cursor application, send receipts, paging,
-approval/activity matching and lifecycle recovery. Feature component suites own
+approval/activity matching, outside-window active-Run projection and targeted
+steering, and lifecycle recovery. Feature component suites own
 Agent/group conversation, Space management, effects, computer files, routines,
 Space memory, Pages, Skills and Tools. Web/Desktop suites own auth, routes and
 platform adapters. Default fixtures never invoke paid model inference.
@@ -102,6 +103,14 @@ migration coverage is not evidence of applying migrations to PostgreSQL.
 The backend gate's API mode composes real RPC/auth and feature repositories;
 feature modes test their own persistence boundaries. Redis and cluster modes
 cover retained device routing and shared counters, not a Redis dependency for new Runs.
+
+Active-Run PostgreSQL cases cover every lifecycle transition, trigger/segment
+positions, approval summaries and the history-window boundary. HTTP API cases
+cover same-Space keys and membership/owner admission, encrypted input-only
+credentials, selected operations, approval classification and durable effects.
+Provider suites inject DNS/socket transports to check host pinning, redirect and
+private-range refusal, document/schema/response bounds and secret-echo rejection.
+RPC/event/log assertions keep credentials out of public projections.
 
 Direct API modes remain available when supplying their required explicit test
 URLs: `bun run --cwd apps/api test:postgres`, `test:redis` and `test:cluster`.
@@ -146,10 +155,29 @@ This starts the test-only control API fixture and builds clients with its explic
 origin. The fixture requires `RAYPX_VALIDATION=1` and an isolated test database;
 it is not an operator account tool. Owned journeys cover streamed/committed replies
 and reload, routines and memory revisions, Page versions/shares/revocation,
-Skills/remote MCP approvals, and shared-Space/group/delegation behavior. Each case
+Skills/remote MCP approvals, outside-window active Runs, Space OpenAPI tools,
+and shared-Space/group/delegation behavior. Each case
 owns its account/Space resources. Cases requiring the owned fixture skip without
 it; a green ordinary browser run does not imply those journeys ran. Check the
 selected inventory and skipped results rather than quoting a fixed case count.
+
+`active-runs.spec.ts` creates an old Run waiting for approval behind more than one
+history window, reloads, answers from Still working and jumps to the trigger page.
+`openapi-tools.spec.ts` imports a local fixture document, enables read and mutating
+operations, executes both through the deterministic model, answers the change
+approval and inspects activity/effects. Both run on Web and Desktop with isolated
+Spaces. Repeat the new journeys through the owned gate:
+
+```sh
+bun run test backends \
+  --database-url postgres://raypx@127.0.0.1:55439/raypx_next_test_b \
+  --with-e2e -- active-runs.spec.ts openapi-tools.spec.ts \
+  --workers=1 --repeat-each=3 --visual
+```
+
+Type through the real controls, use explicit short timeouts and measure geometry
+only after the surface is at rest. Light strip/API-management screenshots cover
+1440×860 and 375×812; generated evidence belongs under `.artifacts/`.
 
 Conversation reading acceptance uses bounded history (at most 200 messages),
 explicit older/gap loads, revisions, virtual/full-text switching, focus and reading
@@ -198,7 +226,8 @@ bun --bun expo install --check
 
 The build exports iOS and Android JavaScript bundles; it does not compile native
 apps. Native component mocks cover Agent directory/conversation, Markdown,
-approvals and the computer sheet; port tests cover session headers, storage and
+the active-Run strip, targeted steering, HTTP API activity/approval labels and the
+computer sheet; port tests cover session headers, storage and
 AppState resume. Neither proves device layout, keyboard, screen reader or live
 socket behavior. The manual unsigned-native build and signed-release workflows
 are separate. [Mobile](mobile.md#device-acceptance) lists iOS/Android device checks;

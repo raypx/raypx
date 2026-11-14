@@ -1,5 +1,6 @@
 import { pagesContract } from "./pages.js";
 import { skillsContract } from "./skills.js";
+import { openApiServersContract } from "./openapi-servers.js";
 import { mcpServersContract } from "./mcp-servers.js";
 export * from "./desktop-login.js";
 import { collectApiExposure, exposeApiTo } from "./exposure.js";
@@ -67,6 +68,7 @@ export const apiContract = {
   pages: pagesContract,
   skills: skillsContract,
   mcpServers: mcpServersContract,
+  openApiServers: openApiServersContract,
   routines: routinesContract,
   spaceMemory: spaceMemoryContract,
   modelConnections: modelConnectionsContract,

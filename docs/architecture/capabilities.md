@@ -260,4 +260,52 @@ A read-only annotation grants read approval behavior only with an exact member
 Allow; Block always wins. Other calls follow change policy, including untrusted
 write rules. Completed effects replay their durable result without dispatching
 again; uncertain external outcomes remain unknown and are never retried automatically.
-Managed app connectors and OpenAPI tools remain outside this backend slice.
+Managed app connectors remain outside this backend slice.
+
+### Space HTTP APIs
+
+A Space owner registers an HTTP API with an explicit base URL and an OpenAPI
+3.x document, pasted as JSON/YAML or fetched once. The
+document is bounded to 256 KiB UTF-8, 128 operations, 16,000 traversed nodes and
+24 document levels; request schemas have a separate 12-level bound. Only local
+references and a bounded JSON-schema subset are supported. Unsupported schema
+composition, remote references and header/cookie parameters are refused. The
+document is data and never installs or executes code. Import with no selected
+operations exposes no tools until the owner selects them.
+
+`openApiServers.*` resolves fresh membership; list exposes safe metadata to current
+members, while create/update/delete/test require the Space owner. Definitions,
+selected operations, Agent availability
+and encrypted credential children are stored under composite same-Space keys.
+PostgreSQL retains the normalized validated operation/schema definition; the
+source URL is fetched only on registration and is never a runtime dependency.
+Availability is all Agents, including future Agents in that Space, or selected
+Agent IDs. Unlike account-owned MCP resources, registration intentionally makes
+the selected operations usable by those Agents for the Space's current members.
+Changing the base URL or source document requires a new registration; operation
+selection, name, credentials and availability can be edited. Connection testing
+sends HEAD to the registered base URL; endpoints that refuse HEAD report a failed
+test rather than probing an operation that could have effects.
+
+The providers HTTP/OpenAPI adapter uses the same DNS-pinned resolver admission as
+remote MCP. HTTPS is required except for explicit loopback development endpoints;
+private/nonpublic DNS answers are refused. Document fetches use that same path
+without sending the API credential. Operations append only their registered path
+to the explicit base URL, regardless of document `servers` values. Model input
+cannot supply headers or replace the host. Every redirect is refused. Requests
+have a ten-second deadline and a 256 KiB response read bound; model results contain
+at most 12,000 UTF-16 units and are labelled untrusted.
+
+Names are `openapi_<server UUID without hyphens>__<operationId>`. Only selected
+operations enter the frozen Run catalog; recovery checks the same definition
+fingerprint and current Agent availability. Credentials use the existing encrypted
+envelopes, remain write-only, and are absent from tool catalogs, checkpoints,
+events, effects and logs. GET and HEAD have read approval behavior; every other
+supported method is a change. Exact Allow/Block rules and untrusted-write policy
+still apply. Every dispatch, including reads, records an effect intent/outcome and
+tool lifecycle. Unknown effects are never retried automatically.
+
+Web/Desktop's Tools settings manage APIs next to remote servers, with connection
+testing, operation selection, credential replacement and confirmed deletion.
+Mobile shows activity and addressed approval cards, including read/change labels;
+management remains in Web/Desktop.

@@ -1,6 +1,6 @@
 import { ComputerFilesError, ComputerOperationError } from "@raypx/computers/server";
 import { GroupConversationError } from "@raypx/core/agents";
-import { InvalidConversationCursor } from "@raypx/core/conversation";
+import { ConversationSteeringError, InvalidConversationCursor } from "@raypx/core/conversation";
 import { ORPCError } from "@orpc/server";
 import { SpaceMutationError, SpaceNotFound, type SpaceId } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
@@ -18,6 +18,10 @@ export function createSpaceHandlers({
     try {
       return await run();
     } catch (error) {
+      if (error instanceof ConversationSteeringError)
+        throw new ORPCError("CONFLICT", {
+          data: { error: { code: error.code }, requestId: context.requestId },
+        });
       if (error instanceof GroupConversationError)
         throw new ORPCError("BAD_REQUEST", {
           data: { error: { code: error.code }, requestId: context.requestId },

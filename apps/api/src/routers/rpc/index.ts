@@ -1,5 +1,6 @@
 import { createPagesHandlers } from "./pages.js";
 import { createSkillsHandlers } from "./skills.js";
+import { createOpenApiServersHandlers } from "./openapi-servers.js";
 import { createMcpServersHandlers } from "./mcp-servers.js";
 import { Hono } from "hono";
 import { limitAttachmentBody } from "../../middleware/attachment-limit.js";
@@ -36,6 +37,7 @@ export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadi
     pages: createPagesHandlers(setup),
     skills: createSkillsHandlers(setup),
     mcpServers: createMcpServersHandlers(setup),
+    openApiServers: createOpenApiServersHandlers(setup),
     routines: createRoutineHandlers(setup),
     spaceMemory: createSpaceMemoryHandlers(setup),
     ...createSpaceHandlers(setup),

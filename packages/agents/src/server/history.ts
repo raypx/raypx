@@ -14,6 +14,9 @@ import {
 } from "@raypx/database/schema";
 import { agentIdSchema, type ConversationId } from "@raypx/core/agents";
 import {
+  activeRunSchema,
+  MAX_ACTIVE_CONVERSATION_RUNS,
+  MAX_ACTIVE_RUN_APPROVALS,
   conversationHistoryCursorSchema,
   conversationMemberSchema,
   resolvedApprovalSummarySchema,
@@ -116,6 +119,89 @@ export async function snapshotAttribution(
         }),
       ),
     resolvedApprovalsTruncated: resolved.length > 100,
+  };
+}
+
+/** The counter lock makes active work, approvals, committed position and resume cursor atomic. */
+export async function readActiveRuns(tx: Reader, scope: SpaceScope, id: ConversationId) {
+  const latestSegment = tx
+    .select({ id: segments.id, sequence: segments.sequence })
+    .from(segments)
+    .where(
+      and(
+        eq(segments.spaceId, runs.spaceId),
+        eq(segments.conversationId, runs.conversationId),
+        eq(segments.runId, runs.id),
+      ),
+    )
+    .orderBy(desc(segments.sequence))
+    .limit(1)
+    .as("latest_segment");
+  const active = await tx
+    .select({ run: runs, latest: { id: latestSegment.id, sequence: latestSegment.sequence } })
+    .from(runs)
+    .leftJoinLateral(latestSegment, sql`true`)
+    .where(
+      and(
+        eq(runs.spaceId, scope.spaceId),
+        eq(runs.conversationId, id),
+        inArray(runs.state, ["queued", "running", "waiting"]),
+      ),
+    )
+    .orderBy(asc(runs.messageSequence), asc(runs.id))
+    .limit(MAX_ACTIVE_CONVERSATION_RUNS + 1);
+  const selected = active.slice(0, MAX_ACTIVE_CONVERSATION_RUNS);
+  const ranked = tx
+    .select({
+      requestId: approvals.id,
+      runId: approvals.runId,
+      toolCallId: approvals.toolCallId,
+      toolName: approvals.toolName,
+      argumentSummary: approvals.argumentSummary,
+      target: approvals.target,
+      memberAccountId: approvals.memberAccountId,
+      expiresAt: approvals.expiresAt,
+      createdAt: approvals.createdAt,
+      position:
+        sql<number>`row_number() over (partition by ${approvals.runId} order by ${approvals.createdAt}, ${approvals.id})`.as(
+          "position",
+        ),
+    })
+    .from(approvals)
+    .where(
+      and(
+        eq(approvals.spaceId, scope.spaceId),
+        eq(approvals.conversationId, id),
+        eq(approvals.state, "pending"),
+        inArray(
+          approvals.runId,
+          selected.map(({ run }) => run.id),
+        ),
+      ),
+    )
+    .as("ranked_approvals");
+  const pending = await tx
+    .select()
+    .from(ranked)
+    .where(lte(ranked.position, MAX_ACTIVE_RUN_APPROVALS + 1));
+  return {
+    activeRuns: selected.map(({ run, latest }) => {
+      const requests = pending.filter((request) => request.runId === run.id);
+      return activeRunSchema.parse({
+        run: runView(run),
+        triggerMessage: { id: run.messageId, sequence: run.messageSequence },
+        pendingApprovals: requests
+          .slice(0, MAX_ACTIVE_RUN_APPROVALS)
+          .map(({ position: _position, ...request }) => ({
+            ...request,
+            expiresAt: request.expiresAt.toISOString(),
+            createdAt: request.createdAt.toISOString(),
+          })),
+        pendingApprovalsTruncated: requests.length > MAX_ACTIVE_RUN_APPROVALS,
+        latestCommittedSegment: latest,
+      });
+    }),
+    activeRunsTruncated: active.length > MAX_ACTIVE_CONVERSATION_RUNS,
   };
 }
 
@@ -238,6 +324,7 @@ export async function readHistory(
     },
     messages: await Promise.all(rows.map((row) => message(tx, row))),
     runs: includedRuns.map(runView),
+    ...(await readActiveRuns(tx, scope, id)),
     runsTruncated: runRows.length > 500,
     segments: segmentRows
       .slice(0, 500)

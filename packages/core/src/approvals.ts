@@ -24,7 +24,16 @@ export const mcpToolNameSchema = z
   .regex(/^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$/)
   .brand<"McpToolName">();
 export type McpToolName = z.infer<typeof mcpToolNameSchema>;
-export const toolNameSchema = z.union([computerToolNameSchema, mcpToolNameSchema]);
+export const openApiToolNameSchema = z
+  .string()
+  .max(128)
+  .regex(/^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$/)
+  .brand<"OpenApiToolName">();
+export const toolNameSchema = z.union([
+  computerToolNameSchema,
+  mcpToolNameSchema,
+  openApiToolNameSchema,
+]);
 export type ToolName = z.infer<typeof toolNameSchema>;
 export const approvalModeSchema = z.enum(["ask", "never"]);
 export type ApprovalMode = z.infer<typeof approvalModeSchema>;

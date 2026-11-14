@@ -10,9 +10,13 @@ Read the nearest workspace AGENTS.md, docs/README.md and DESIGN.md before change
 
 The implemented platform includes paged conversations, durable Runs with fenced
 leases/checkpoints/recovery, Computer tools, approvals/effects, routines, Agent and
-Space memory, Pages, text skills, remote HTTP MCP servers, model connections,
-shared Spaces, groups and delegation. Web/Desktop compose the shared workspace;
+Space memory, Pages, text skills, remote HTTP MCP servers, Space-owned OpenAPI
+tools, model connections, shared Spaces, groups and delegation. Web/Desktop compose the shared workspace;
 Mobile supports Space Agents, direct conversations, approvals and computer lifecycle.
+Web/Desktop and Mobile keep active Runs outside loaded history reachable through
+a bounded Still working strip with Stop, targeted steering, approvals and a
+trigger-page jump. Only Space owners manage HTTP API definitions, operations,
+availability and write-only credentials; Mobile shows their activity and approvals.
 Client coverage and separate acceptance gates are documented in PRODUCT.md.
 Auto review, protected input, hosted computers, graphical takeover and the replacement
 device connector remain unimplemented. Do not describe roadmap targets as delivered.

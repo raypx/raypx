@@ -135,10 +135,9 @@ Expo Router owns the protected routes:
 | `/account`                          | Existing account details and sign-out                                |
 
 The Space switcher appears only when more than one membership is available. The
-directory shows an initials avatar, Agent name and model. The current Agent list
-contract has no conversation last-activity field; Agent `updatedAt` is labelled
-as last edited. Forms use the server's offered models, including an explicit
-empty catalog state. Deletion requires native confirmation and deletes the
+directory shows an initials avatar, Agent name, model and the server's nullable
+conversation `lastActivityAt`. Forms use the server's offered models, including an
+explicit empty catalog state. Deletion requires native confirmation and deletes the
 conversation as the backend contract specifies.
 
 `@raypx/agents/model` supplies page selection, snapshot/event application,
@@ -159,6 +158,18 @@ use existing SecureStore with origin/account/Space/conversation tuple keys encod
 to valid key characters. Restoring either never sends. Delivery retry reuses the
 same idempotency key; failed-Run retry prepares text for an explicit new Send.
 No message history or transient reply text is persisted on the device.
+
+Active Runs outside the loaded message window remain in a bounded Still working
+strip above the composer, with Agent attribution, state and origin/untrusted
+markers. Stop, addressed approvals and targeted Steer work without loading history;
+the steering target stays visible and cancellable. Show Run loads its triggering
+message page and hides the strip row when that message is loaded. Truncated
+summaries offer an explicit refresh. The shared model owns this projection.
+
+HTTP API tools show readable operation labels, method and read/change
+classification in activity and approval cards. Space owners manage OpenAPI
+documents, write-only credentials, operation selections and Agent availability in
+Web/Desktop; the native client does not provide that management surface.
 
 The conversation keeps a scrollable native Markdown transcript above a composer
 with keyboard avoidance and safe-area insets. Run statuses include queued,
@@ -233,8 +244,9 @@ Run the workspace's `check`, `test` and `build` commands above, plus repository
 delivery. The production export is a JavaScript bundle check, not native or live
 backend acceptance. Port unit tests cover native session headers, socket frames,
 storage isolation and lifecycle resume. Native component tests cover the Agent
-directory, conversation, approval card and computer sheet using Vitest and
-`react-test-renderer` with native/HeroUI host mocks. Shared model tests remain
+directory, conversation, the outside-window strip, HTTP API activity, approval
+cards and computer sheet using Vitest and `react-test-renderer` with native/HeroUI
+host mocks. Shared model tests remain
 platform-neutral. These mocks do not prove native layout or accessibility.
 
 Use the checked-in manifest and lockfile as the dependency inventory. Record the
@@ -259,7 +271,11 @@ committed text. Expire a session on the conversation route, sign in again and
 verify the destination and unsent draft restore without sending. Resolve or
 expire approvals from another client, approve/deny/remember a request, and send
 while a card is pending. Verify computer states, not-configured behavior and
-stop-confirmation cancellation/acceptance.
+stop-confirmation cancellation/acceptance. Reload with an old Run waiting outside
+the recent window; approve, stop or steer from Still working, then load its trigger
+page and check that the strip row disappears. Check long Agent names and pending
+cards above the keyboard. Exercise HTTP API read/change labels and addressed
+approvals after enabling operations in Web/Desktop.
 
 Check a small phone and tablet in portrait and landscape, safe-area cutouts,
 keyboard opening/closing, large text, VoiceOver/TalkBack, reduced motion and

@@ -93,6 +93,8 @@ export interface PreparedComputerCall {
   changes: boolean;
   /** Remote annotation only grants read semantics with an exact member Allow. */
   readOnlyAnnotated?: boolean;
+  /** HTTP method classification comes from the validated server document. */
+  readOnlyHttp?: boolean;
 }
 export interface ComputerTools {
   definitions(run?: ExecutionRun): Tool[];

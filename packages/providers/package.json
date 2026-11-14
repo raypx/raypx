@@ -12,7 +12,8 @@
     "./computer": "./src/computer/index.ts",
     "./computer/docker": "./src/computer/docker.ts",
     "./testing/computer": "./tests/helpers/computer.ts",
-    "./mcp": "./src/mcp/index.ts"
+    "./mcp": "./src/mcp/index.ts",
+    "./openapi": "./src/openapi/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vitest": "catalog:dev"
   }

@@ -21,6 +21,7 @@ import type { ConversationModels } from "../conversations/models.js";
 export interface ApiAppOptions {
   pages: import("@raypx/pages/server").PagesService;
   skills: import("@raypx/skills/server").SkillsService;
+  openApiServers: import("../conversations/openapi-servers.js").OpenApiServersService;
   mcpServers: import("../conversations/mcp-servers.js").McpServersService;
   routines: import("@raypx/jobs/routines").RoutinesService;
   spaceMemory: import("@raypx/memory/space-server").SpaceMemoryService;

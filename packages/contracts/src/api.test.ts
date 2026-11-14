@@ -15,6 +15,7 @@ describe("foundation contract", () => {
       "pages",
       "skills",
       "mcpServers",
+      "openApiServers",
       "routines",
       "spaceMemory",
       "modelConnections",

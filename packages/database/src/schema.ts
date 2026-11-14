@@ -542,6 +542,9 @@ export const conversationRuns = pgTable(
     uniqueIndex("conversation_runs_active_agent_idx")
       .on(table.spaceId, table.agentId)
       .where(sql`${table.state} in ('running', 'waiting') and ${table.parentRunId} is null`),
+    index("conversation_runs_active_window_idx")
+      .on(table.spaceId, table.conversationId, table.messageSequence, table.id)
+      .where(sql`${table.state} in ('queued', 'running', 'waiting')`),
     index("conversation_runs_routine_idx").on(table.spaceId, table.routineId),
     index("conversation_runs_inbound_routine_idx").on(table.spaceId, table.inboundRoutineId),
     index("conversation_runs_queue_idx").on(
@@ -809,6 +812,12 @@ export const conversationReplySegments = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.spaceId, table.conversationId, table.id] }),
+    index("conversation_reply_segments_run_idx").on(
+      table.spaceId,
+      table.conversationId,
+      table.runId,
+      table.sequence.desc(),
+    ),
     uniqueIndex("conversation_reply_segments_sequence_idx").on(
       table.spaceId,
       table.conversationId,
@@ -992,7 +1001,7 @@ export const approvalRules = pgTable(
     check("approval_rules_decision_check", sql`${table.decision} in ('allow', 'block')`),
     check(
       "approval_rules_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_rules_executable_check",
@@ -1071,7 +1080,7 @@ export const approvalRequests = pgTable(
     }).onDelete("cascade"),
     check(
       "approval_requests_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_requests_state_check",
@@ -1118,7 +1127,7 @@ export const conversationEffects = pgTable(
     }).onDelete("cascade"),
     check(
       "conversation_effects_tool_check",
-      sql`(${table.toolName} in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or ${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "conversation_effects_state_check",
@@ -2313,7 +2322,73 @@ export const agentMcpServers = pgTable(
   ],
 );
 
+export const openApiServers = pgTable(
+  "openapi_servers",
+  {
+    spaceId: text("space_id").notNull(),
+    id: text("id").notNull(),
+    credentialOwnerId: text("credential_owner_id").notNull(),
+    secretId: text("secret_id").notNull(),
+    name: text("name").notNull(),
+    url: text("url").notNull(),
+    operations: jsonb("operations").$type<unknown[]>().notNull(),
+    selectedOperationIds: jsonb("selected_operation_ids").$type<string[]>().notNull(),
+    availability: text("availability", { enum: ["all", "selected"] }).notNull(),
+    hasCredentials: boolean("has_credentials").notNull().default(false),
+    createdAt: date("created_at").notNull().defaultNow(),
+    updatedAt: date("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.id] }),
+    foreignKey({ columns: [t.spaceId], foreignColumns: [spaces.id] }).onDelete("cascade"),
+    unique("openapi_servers_secret_idx").on(t.spaceId, t.id, t.secretId),
+    check("openapi_servers_availability_check", sql`${t.availability} in ('all', 'selected')`),
+    index("openapi_servers_space_idx").on(t.spaceId, t.createdAt, t.id),
+  ],
+);
+export const openApiServerSecrets = pgTable(
+  "openapi_server_secrets",
+  {
+    spaceId: text("space_id").notNull(),
+    serverId: text("server_id").notNull(),
+    id: text("id").notNull(),
+    ciphertext: text("ciphertext").notNull(),
+    wrappedDataKey: text("wrapped_data_key").notNull(),
+    keyId: text("key_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.serverId] }),
+    foreignKey({
+      columns: [t.spaceId, t.serverId, t.id],
+      foreignColumns: [openApiServers.spaceId, openApiServers.id, openApiServers.secretId],
+    }).onDelete("cascade"),
+  ],
+);
+export const openApiServerAgents = pgTable(
+  "openapi_server_agents",
+  {
+    spaceId: text("space_id").notNull(),
+    serverId: text("server_id").notNull(),
+    agentId: text("agent_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.serverId, t.agentId] }),
+    foreignKey({
+      columns: [t.spaceId, t.serverId],
+      foreignColumns: [openApiServers.spaceId, openApiServers.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.spaceId, t.agentId],
+      foreignColumns: [agents.spaceId, agents.id],
+    }).onDelete("cascade"),
+    index("openapi_server_agents_agent_idx").on(t.spaceId, t.agentId, t.serverId),
+  ],
+);
+
 export const schema = {
+  openApiServers,
+  openApiServerSecrets,
+  openApiServerAgents,
   pageIdentities,
   pages,
   pageVersions,

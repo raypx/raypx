@@ -30,6 +30,14 @@ of replay cursors; virtual and full-text modes preserve reading position. Enter
 sends, Shift+Enter inserts a newline and IME owns composition. Only lifecycle
 changes are announced, never every token or countdown tick.
 
+Active Runs whose triggering messages are outside the loaded window appear in a
+bounded Still working strip above the composer. Show Agent attribution, state and
+origin/untrusted markers; Stop, addressed approvals and targeted Steer work without
+loading history. Show Run loads the trigger page and hides the strip row once its
+message is loaded. Preserve the composer, reading anchor and visible steering
+target; an uncertain-send receipt keeps that exact target. Truncation has an
+explicit refresh action. The shared model owns this projection for all clients.
+
 Replies use shared safe Markdown, with no raw HTML, executable URLs or remote
 images. Pending approvals render once as addressed cards; resolving them folds
 status into activity. Tool rows contain bounded names/targets/status and durations,
@@ -47,6 +55,16 @@ narrow widths. Pages mounts at `/pages` with versions, restore and sharing. Web
 can embed sandboxed authenticated documents; Desktop always opens Web preview.
 Models, approval policy, Skills and Tools compose account settings. Closing editors
 clears one-time secrets; failed mutations preserve ordinary drafts for retry.
+
+Tools places Space-owned HTTP APIs beside member-owned remote MCP servers. Owners
+paste OpenAPI JSON/YAML or fetch a document once, test the registered endpoint,
+select operations and choose all/selected Agent availability. New imports expose
+no operations until selected. Bearer/header credentials are write-only and clear
+on submit or close; deletion requires confirmation. Activity and approval cards
+show readable operation labels, method and read/change classification; effects
+use the existing inspector. Mobile renders activity and approvals, while API
+management remains in Web/Desktop. Keep long names and controls within the phone
+viewport without horizontal overflow.
 
 ## Controls, focus and motion
 
@@ -99,7 +117,11 @@ compiled routes and private-state boundaries. Owned-backend journeys add actual
 PostgreSQL/listener/deterministic-tool behavior. See [testing](testing.md).
 
 Run focused suites and `bun run verify` for implementation. Conversation reading
-changes use `conversation-history.spec.ts` on both browser surfaces; retained
+changes use `conversation-history.spec.ts` on both browser surfaces.
+`active-runs.spec.ts` covers reload, off-window approval and trigger-page loading;
+`openapi-tools.spec.ts` covers registration, selected read/change calls, approval
+and effects through the owned backend. Measure geometry only after surfaces are
+at rest, use explicit short timeouts and isolate each case's resources. Retained
 `perf:tasks` measures device-task helpers independently. Browser fixtures establish
 no packaged WebView, Mobile device or installer result. Unrun platforms remain
 unverified.

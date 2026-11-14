@@ -2,7 +2,12 @@ import { expect, it, vi } from "vitest";
 import { computerToolNameSchema } from "@raypx/core/approvals";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
-import { toolDisplayLabel, type ToolLabelKey } from "./tool-label.js";
+import {
+  toolDisplayLabel,
+  toolOperationLabel,
+  openApiOperationKind,
+  type ToolLabelKey,
+} from "./tool-label.js";
 
 const names = [
   ...computerToolNameSchema.options,
@@ -52,4 +57,27 @@ it.each(
   expect(label).not.toMatch(/[<>]/);
   expect(label).not.toContain("\u0000");
   expect(label).not.toContain("\u202e");
+});
+
+it("uses bounded server-produced operation labels and explicit HTTP classifications", () => {
+  const toolName = "openapi_0123456789abcdef0123456789abcdef__createItem";
+  expect(toolDisplayLabel(toolName)).toBe("API 0123456789abcdef0123456789abcdef / createItem");
+  expect(toolOperationLabel({ toolName, argumentSummary: "POST Create inventory item" })).toBe(
+    "Create inventory item",
+  );
+  expect(
+    toolOperationLabel({ toolName, argumentSummary: "POST \u202e" + "x".repeat(500) }),
+  ).toHaveLength(160);
+  expect(openApiOperationKind({ toolName, target: "GET https://api.example.test/items" })).toBe(
+    "readOnly",
+  );
+  expect(openApiOperationKind({ toolName, target: "HEAD https://api.example.test/items" })).toBe(
+    "readOnly",
+  );
+  expect(openApiOperationKind({ toolName, target: "POST https://api.example.test/items" })).toBe(
+    "mutating",
+  );
+  expect(
+    openApiOperationKind({ toolName: "computer_read_file", target: "GET notes.txt" }),
+  ).toBeNull();
 });

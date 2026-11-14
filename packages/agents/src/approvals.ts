@@ -64,6 +64,7 @@ export interface ApprovalCall {
   executable?: string;
   changes: boolean;
   readOnlyAnnotated?: boolean;
+  readOnlyHttp?: boolean;
 }
 export interface ApprovalSettingsInput {
   mode: ApprovalMode | "auto";
@@ -168,6 +169,7 @@ export function approvalDisposition(
 ): "approved" | "blocked" | "ask" {
   const rules = settings.rules.filter((rule) => matchingRule(rule, call));
   if (rules.some((rule) => rule.decision === "block")) return "blocked";
+  if (call.name.startsWith("openapi_") && call.readOnlyHttp) return "approved";
   // Remote annotations are untrusted metadata. Only an exact Allow promotes
   // that annotated call to a read; all remote calls still record effects.
   if (

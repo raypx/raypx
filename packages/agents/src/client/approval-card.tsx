@@ -4,7 +4,8 @@ import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { cn } from "@raypx/ui/lib/utils";
 import {
-  toolDisplayLabel,
+  toolOperationLabel,
+  openApiOperationKind,
   approvalRemainingSeconds,
   approvalDuration,
   approvalDeadlineProminent,
@@ -94,6 +95,7 @@ export function ApprovalCard({
   const addressed = card.memberAccountId === accountId;
   const expired = elapsed;
   const summary = approvalExtraSummary(card);
+  const operationKind = openApiOperationKind(card);
   const disabled =
     card.answering || expired || card.error === "unconfirmed" || card.error === "resolvedElsewhere";
   const errorKeys = {
@@ -121,8 +123,13 @@ export function ApprovalCard({
       className="flex min-w-0 flex-col gap-2 rounded-lg border p-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <h3 id={id} className="min-w-0 font-medium wrap-anywhere">
-        {toolDisplayLabel(card.toolName, t)}
+        {toolOperationLabel(card, t)}
       </h3>
+      {operationKind && (
+        <p data-openapi-operation-kind={operationKind} className="text-xs text-muted-foreground">
+          {t(`openapi.${operationKind}`)}
+        </p>
+      )}
       {agentName && (
         <p data-approval-agent className="min-w-0 text-xs text-muted-foreground wrap-anywhere">
           {t("approval.requestedBy", { name: agentName })}

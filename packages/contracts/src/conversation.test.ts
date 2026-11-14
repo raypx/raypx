@@ -70,3 +70,68 @@ it("separates transient prefix/appends from acknowledged durable events", () => 
     }).success,
   ).toBe(false);
 });
+
+it("adds independently bounded active work without requiring it from existing snapshot consumers", async () => {
+  const time = "2026-11-14T00:00:00.000Z";
+  const base = {
+    conversation: {
+      id: "conversation",
+      spaceId: "space",
+      agentId: "agent",
+      kind: "direct",
+      createdAt: time,
+    },
+    messages: [],
+    runs: [],
+    segments: [],
+    cursor: 2,
+  };
+  const active = {
+    run: {
+      id: "run",
+      spaceId: "space",
+      conversationId: "conversation",
+      agentId: "agent",
+      trigger: "message",
+      messageId: "message",
+      memberAccountId: "member",
+      model: { modelId: "fixture" },
+      state: "running",
+      failureCode: null,
+      createdAt: time,
+      startedAt: time,
+      firstResponseAt: null,
+      finishedAt: null,
+    },
+    triggerMessage: { id: "message", sequence: 1 },
+    pendingApprovals: [],
+    pendingApprovalsTruncated: false,
+    latestCommittedSegment: null,
+  };
+  for (const [name, extra] of [
+    ["snapshot", {}],
+    ["history", { olderCursor: null, runsTruncated: false, segmentsTruncated: false }],
+  ] as const) {
+    const schema = apiContract.conversations[name]["~orpc"].outputSchemas![0]!;
+    expect((await schema["~standard"].validate({ ...base, ...extra })).issues).toBeUndefined();
+    expect(
+      (
+        await schema["~standard"].validate({
+          ...base,
+          ...extra,
+          activeRuns: [active],
+          activeRunsTruncated: false,
+        })
+      ).issues,
+    ).toBeUndefined();
+    expect(
+      (
+        await schema["~standard"].validate({
+          ...base,
+          ...extra,
+          activeRuns: Array.from({ length: 101 }, () => active),
+        })
+      ).issues,
+    ).toBeDefined();
+  }
+});

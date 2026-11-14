@@ -83,7 +83,12 @@ bun run raypx-dev tasks dev --filter web
 Web runs on 3000 and API on 3002. Sign in and open `/agents`. The sidebar selects
 a Space and direct Agent or group; the conversation header opens routines, Space
 memory and the computer panel. Pages has its own navigation entry. Account settings
-hold model connections, approval rules, Skills and Tools.
+hold model connections, approval rules, Skills and Tools. Still working keeps
+active Runs reachable above the composer when their triggers are outside loaded
+history. In Tools, Space owners can register OpenAPI JSON/YAML or fetch it once,
+select operations and choose Agent availability; credentials are write-only.
+Mobile shares the active-Run model and renders API activity/approvals, while API
+management remains in Web/Desktop.
 
 Bun runs Nitro's `bun` output in production:
 

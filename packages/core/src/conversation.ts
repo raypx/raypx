@@ -15,15 +15,18 @@ export { runIdSchema } from "./run-identity.js";
 
 export const eventSequenceSchema = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
 export const messageIdSchema = z.string().min(1).max(128).brand<"MessageId">();
-export const memberMessageInputSchema = z.strictObject({
-  idempotencyKey: z.string().min(1).max(128),
-  mentions: z.array(agentIdSchema).max(32).optional(),
-  text: z
-    .string()
-    .min(1)
-    .max(32_000)
-    .refine((text) => text.trim().length > 0),
-});
+export const memberMessageInputSchema = z
+  .strictObject({
+    idempotencyKey: z.string().min(1).max(128),
+    mentions: z.array(agentIdSchema).max(32).optional(),
+    steerRunId: runIdSchema.optional(),
+    text: z
+      .string()
+      .min(1)
+      .max(32_000)
+      .refine((text) => text.trim().length > 0),
+  })
+  .refine((input) => !input.steerRunId || !input.mentions?.length, "Steering addresses one Run");
 export type MemberMessageInput = z.infer<typeof memberMessageInputSchema>;
 export const messageSchema = z.strictObject({
   id: messageIdSchema,
@@ -121,6 +124,35 @@ export const runSchema = z
 export type Run = z.infer<typeof runSchema>;
 export type RunId = z.infer<typeof runIdSchema>;
 export type RunFailure = z.infer<typeof runFailureSchema>;
+/** Bounded command projection independent of the loaded message window. */
+export const pendingApprovalSummarySchema = z.strictObject({
+  ...approvalCardFields,
+  createdAt: z.iso.datetime(),
+});
+export type PendingApprovalSummary = z.infer<typeof pendingApprovalSummarySchema>;
+export const MAX_ACTIVE_CONVERSATION_RUNS = 100;
+export const MAX_ACTIVE_RUN_APPROVALS = 16;
+export const activeRunSchema = z
+  .strictObject({
+    run: runSchema.refine((run) => ["queued", "running", "waiting"].includes(run.state)),
+    triggerMessage: z.strictObject({ id: messageIdSchema, sequence: eventSequenceSchema }),
+    pendingApprovals: z.array(pendingApprovalSummarySchema).max(MAX_ACTIVE_RUN_APPROVALS),
+    pendingApprovalsTruncated: z.boolean(),
+    latestCommittedSegment: z
+      .strictObject({
+        id: z.string().min(1).max(128),
+        sequence: eventSequenceSchema,
+      })
+      .nullable(),
+  })
+  .refine(
+    (item) =>
+      item.triggerMessage.id === item.run.messageId &&
+      item.pendingApprovals.every((approval) => approval.runId === item.run.id),
+    "Active Run references must match their Run",
+  );
+export type ActiveRun = z.infer<typeof activeRunSchema>;
+
 export const MAX_REPLY_TEXT = 32_000;
 export const replySegmentSchema = z.strictObject({
   id: z.string().min(1).max(128),
@@ -214,6 +246,9 @@ export const conversationEventSchema = z
       ...eventFields,
       kind: z.literal("run.state"),
       runId: runIdSchema,
+      triggerMessage: z
+        .strictObject({ id: messageIdSchema, sequence: eventSequenceSchema })
+        .optional(),
       state: runStateSchema,
       failureCode: runFailureSchema.nullable(),
       trigger: runSchema.shape.trigger.optional(),
@@ -247,6 +282,14 @@ export function eventCursorStatus(cursor: number, retainedAfter: number, latest:
   if (!Number.isSafeInteger(cursor) || cursor < 0 || cursor > latest) return "invalid-cursor";
   if (cursor < retainedAfter) return "snapshot-required";
   return "ready";
+}
+
+export class ConversationSteeringError extends Error {
+  readonly code = "RUN_NOT_ACTIVE";
+  constructor() {
+    super("RUN_NOT_ACTIVE");
+    this.name = "ConversationSteeringError";
+  }
 }
 
 export class InvalidConversationCursor extends Error {

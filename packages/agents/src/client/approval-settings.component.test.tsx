@@ -234,3 +234,84 @@ it("offers exact remote tools only after a server test and creates an Allow rule
     },
   ]);
 });
+
+it("offers members registered selected API operations as exact Allow and Block choices", async () => {
+  const user = (await import("@testing-library/user-event")).default.setup();
+  const { openApiServerSchema } = await import("@raypx/core/openapi-servers");
+  const { spaceSchema, spaceMemberSchema } = await import("@raypx/core/spaces");
+  const time = "2026-11-14T00:00:00Z";
+  const space = spaceSchema.parse({ id: "space", name: "Team", createdAt: time, updatedAt: time });
+  const server = openApiServerSchema.parse({
+    id: "00000000-0000-4000-8000-000000000001",
+    spaceId: space.id,
+    name: "Inventory",
+    url: "https://api.example.test",
+    operations: [
+      {
+        operationId: "getItem",
+        label: "Read inventory item",
+        method: "GET",
+        path: "/items/{id}",
+        readOnly: true,
+      },
+      {
+        operationId: "createItem",
+        label: "Create inventory item",
+        method: "POST",
+        path: "/items",
+        readOnly: false,
+      },
+    ],
+    selectedOperationIds: ["getItem"],
+    availability: { mode: "all" },
+    hasCredentials: true,
+    createdAt: time,
+    updatedAt: time,
+  });
+  const controller = new ApprovalSettingsController({
+    settings: async () => ({ mode: "ask", rules: [], revision: 0, availableModes }),
+    updateSettings: async ({ expectedRevision, ...saved }) => ({
+      ...saved,
+      revision: expectedRevision + 1,
+      availableModes,
+    }),
+  });
+  await controller.load();
+  render(
+    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+      <ApprovalSettingsEditor
+        controller={controller}
+        spaces={{
+          list: async () => [
+            {
+              space,
+              member: spaceMemberSchema.parse({
+                spaceId: space.id,
+                accountId: "member",
+                role: "member",
+                createdAt: time,
+              }),
+            },
+          ],
+        }}
+        openApiServers={{ list: async () => [server] }}
+      />
+    </BrowserLanguageProvider>,
+  );
+  await user.click(screen.getByRole("combobox", { name: "Tool" }));
+  const selected = await screen.findByRole("option", { name: "Inventory / Read inventory item" });
+  expect(
+    screen.queryByRole("option", { name: "Inventory / Create inventory item" }),
+  ).not.toBeInTheDocument();
+  await user.click(selected);
+  await user.click(screen.getByRole("combobox", { name: "List" }));
+  await user.click(screen.getByRole("option", { name: "Block list" }));
+  await user.click(screen.getByRole("button", { name: "Add rule" }));
+  expect(controller.getSnapshot().draft?.rules).toEqual([
+    {
+      toolName: "openapi_00000000000040008000000000000001__getItem",
+      executable: null,
+      decision: "block",
+    },
+  ]);
+});

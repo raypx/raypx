@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import { Linking } from "../../tests/mocks/react-native.js";
+import { openApiToolNameSchema } from "@raypx/core/approvals";
 import { pageIdSchema } from "@raypx/core/pages";
 import { afterEach, expect, it, vi } from "vitest";
 import { toolActivitySchema } from "@raypx/core/conversation";
@@ -190,3 +191,33 @@ it("shows a recoverable error when the system cannot open a Page", async () => {
   expect(textContent(view.root)).toContain("Could not open the link.");
   await view.unmount();
 });
+
+it.each(["en", "zh"] as const)(
+  "renders HTTP activity labels and read classification in %s",
+  async (language) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const view = await renderNative(
+      <ToolActivity
+        origin="https://app.example.test"
+        spaceId="space"
+        row={row([
+          {
+            ...call,
+            toolName: openApiToolNameSchema.parse(
+              "openapi_0123456789abcdef0123456789abcdef__getItem",
+            ),
+            target: "GET https://api.example.test/items/1",
+            argumentSummary: "GET Read inventory item",
+          },
+        ])}
+      />,
+    );
+    const trigger = view.root.find(
+      (node) => typeof node.type === "string" && node.props.accessibilityState?.expanded === false,
+    );
+    await press(trigger);
+    expect(textContent(view.root)).toContain("Read inventory item");
+    expect(textContent(view.root)).toContain({ en, zh }[language].agents.openapi.readOnly);
+    await view.unmount();
+  },
+);

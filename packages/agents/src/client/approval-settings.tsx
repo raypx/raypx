@@ -3,6 +3,7 @@ import {
   type McpServersPort,
   type DiscoveredMcpTool,
 } from "../model/mcp-servers.js";
+import type { OpenApiServersPort, OpenApiDirectoryPort } from "../model/openapi-servers.js";
 import type { McpServer } from "@raypx/core/mcp-servers";
 import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import {
@@ -94,9 +95,13 @@ function SettingsChanges({
 export function ApprovalSettings({
   port,
   mcpServers,
+  openApiServers,
+  spaces,
 }: {
   port: ApprovalSettingsPort;
   mcpServers?: Pick<McpServersPort, "list" | "test"> | undefined;
+  openApiServers?: Pick<OpenApiServersPort, "list"> | undefined;
+  spaces?: OpenApiDirectoryPort["spaces"] | undefined;
 }) {
   const t = useTranslations("agents");
   const [controller, setController] = useState<ApprovalSettingsController | null>(null);
@@ -115,7 +120,12 @@ export function ApprovalSettings({
     };
   }, [port]);
   return controller ? (
-    <ApprovalSettingsEditor controller={controller} mcpServers={mcpServers} />
+    <ApprovalSettingsEditor
+      controller={controller}
+      mcpServers={mcpServers}
+      openApiServers={openApiServers}
+      spaces={spaces}
+    />
   ) : (
     <LoadingState label={t("loading")} />
   );
@@ -124,9 +134,13 @@ export function ApprovalSettings({
 export function ApprovalSettingsEditor({
   controller,
   mcpServers,
+  openApiServers,
+  spaces,
 }: {
   controller: ApprovalSettingsController;
   mcpServers?: Pick<McpServersPort, "list" | "test"> | undefined;
+  openApiServers?: Pick<OpenApiServersPort, "list"> | undefined;
+  spaces?: OpenApiDirectoryPort["spaces"] | undefined;
 }) {
   const t = useTranslations("agents");
   const state = useSyncExternalStore(
@@ -140,6 +154,7 @@ export function ApprovalSettingsEditor({
   const [executable, setExecutable] = useState("");
   const [decision, setDecision] = useState<ApprovalRule["decision"]>("allow");
   const [discovered, setDiscovered] = useState<DiscoveredMcpTool[]>([]);
+  const [apiTools, setApiTools] = useState<{ name: ToolName; label: string }[]>([]);
   const [servers, setServers] = useState<McpServer[]>([]);
   const [serverId, setServerId] = useState("");
   const [discovering, setDiscovering] = useState(false);
@@ -164,6 +179,39 @@ export function ApprovalSettingsEditor({
       active = false;
     };
   }, [mcpServers]);
+  useEffect(() => {
+    let active = true;
+    if (openApiServers && spaces) {
+      void spaces
+        .list({})
+        .then(async (memberships) => {
+          const apiServers = (
+            await Promise.all(
+              memberships.map(({ space }) => openApiServers.list({ spaceId: space.id })),
+            )
+          ).flat();
+          const tools = apiServers.flatMap((server) =>
+            server.operations
+              .filter((operation) => server.selectedOperationIds.includes(operation.operationId))
+              .flatMap((operation) => {
+                const name = toolNameSchema.safeParse(
+                  `openapi_${server.id.replaceAll("-", "")}__${operation.operationId}`,
+                );
+                return name.success
+                  ? [{ name: name.data, label: `${server.name} / ${operation.label}` }]
+                  : [];
+              }),
+          );
+          if (active) setApiTools(tools);
+        })
+        .catch(() => {
+          if (active) setApiTools([]);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [openApiServers, spaces]);
   async function discover() {
     const server = servers.find((entry) => entry.id === serverId);
     if (!mcpServers || !server || discovering) return;
@@ -189,6 +237,7 @@ export function ApprovalSettingsEditor({
       value,
       label: toolDisplayLabel(value, t),
     })),
+    ...apiTools.map((entry) => ({ value: entry.name, label: entry.label })),
     ...discovered.map((entry) => ({
       value: entry.name,
       label: `${entry.serverName} / ${entry.remoteName}`,
@@ -196,7 +245,7 @@ export function ApprovalSettingsEditor({
   ];
   function addRule() {
     if (!computerToolNameSchema.safeParse(tool).success) {
-      controller.addDiscoveredRule(tool, decision, discovered);
+      controller.addDiscoveredRule(tool, decision, [...discovered, ...apiTools]);
       return;
     }
     const added = controller.addRule({

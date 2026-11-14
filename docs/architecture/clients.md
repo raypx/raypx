@@ -1,7 +1,7 @@
 # Clients
 
 Web and Desktop show the same Agents and state through shared contracts. Mobile
-shares Core and contracts; its Agent views remain roadmap work. An implemented
+shares Core, contracts and the conversation model. An implemented
 workflow works on each client or degrades for a stated reason.
 
 ## Shared layers
@@ -22,12 +22,13 @@ draft ports.
 `@raypx/agents/client` adapts them to React for `/agents`, the signed-in home in
 Web and Desktop. Project/session pages, Waiting, New session and guest task drafts
 are removed, together with dependent Automations and Desktop project tools.
-Account/security, administration/configuration, authentication, public Web pages,
-device preferences and the standalone earlier Memory library remain. That Memory
-is device/account-owned; phase 1 replies do not recall it.
+Account/security, administration/configuration, authentication, public Web pages
+and device preferences remain. Earlier device/account Memory code is retained for
+its remaining consumers; Agent/Space memory opens from the conversation capability
+surface and is a separate PostgreSQL-backed feature.
 The sidebar header owns Space selection and its New Space menu. An account without
 a Space first gets a New Space action. Navigation
-contains Agents, the retained Memory view, account controls and administration
+contains Agents, Pages, account controls and administration
 for administrators. The primary action creates an Agent; a first-run empty state
 offers one clear action to create the first Agent. Search and keyboard shortcuts
 target only available destinations. Agent forms use the backend's offered model
@@ -46,9 +47,9 @@ Computer reads and commands use `computers.get/start/stop`. The model applies
 reconnect; changing Space discards
 the previous Space's state. The backend resolves current membership for every
 request. No provider credentials or execution port enter either renderer.
-The panel has structure for additional sections when implemented, with no empty
-files, output or approval placeholders. Agent tools and approvals are not yet
-implemented.
+The panel shows bounded computer files and tool activity. Agent tool approvals
+render as addressed conversation cards, including active work outside the loaded
+history window.
 
 Conversation history and its cursor live together in component memory. Reload
 starts from an authoritative snapshot; reconnect resumes the existing projection.
@@ -102,9 +103,18 @@ from packaged WKWebView/WebView2 acceptance.
 
 - The Expo app shares Core, contracts and message catalogs. It keeps its own
   Expo-supported React version.
-- Mobile currently provides account/sign-in. Agent conversations, approvals,
-  routines and notifications remain roadmap work.
+- Mobile provides account/sign-in, Agent conversations,
+  active work outside the loaded history window, tool activity and approvals.
+  Push notifications remain roadmap work. OpenAPI management stays in
+  Web/Desktop; Mobile can approve and inspect calls to configured operations.
 - Mobile uses native controls for navigation, pickers and alerts.
+
+All three clients show active Runs outside their bounded conversation window in
+a Still working strip above the composer. It includes Agent name, Run state,
+origin/untrusted markers and addressed pending cards. Stop, approval answers and
+steering work without loading old messages. Show Run loads the trigger's page and
+removes that Run's duplicate strip entry. Web/Desktop share the DOM implementation;
+Mobile uses native controls over the same model.
 
 ## Interface rules
 

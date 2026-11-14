@@ -10,7 +10,7 @@ current execution leases and fences.
 ## Purpose
 
 PostgreSQL authority for accounts, Spaces, Agents, conversations, durable Runs,
-approvals/effects, computers, routines, memory, Pages, skills, model/MCP resources
+approvals/effects, computers, routines, memory, Pages, skills, model/MCP/OpenAPI resources
 and sharing/delegation. Retained account/device projections stay distinct.
 
 ## Interface
@@ -34,7 +34,7 @@ same-Space foreign key. These identities survive Page deletion until Space delet
 Finished-event JSON has a generated Page ID with the same composite foreign key.
 
 PostgreSQL authority for accounts, Spaces, Agents, conversations, durable Runs,
-approvals/effects, computers, routines, memory, Pages, skills, model/MCP resources
+approvals/effects, computers, routines, memory, Pages, skills, model/MCP/OpenAPI resources
 and sharing/delegation. Retained account/device projections stay distinct.
 
 `spaces`, `space_members`, `agents` and `conversations` add the server-owned domain
@@ -212,4 +212,10 @@ Page retains its identity and historical activity.
 `conversation_member_names` retains only bounded member display names under a
 same-Space conversation FK; account deletion does not erase historical attribution.
 Message-sequence history and resolved-approval indexes support bounded conversation
-windows independently of event replay retention.
+windows independently of event replay retention. Active-Run and latest-segment
+indexes support the independently bounded snapshot/history projection.
+
+`openapi_servers`, encrypted `openapi_server_secrets` and selected
+`openapi_server_agents` are Space-owned with composite same-Space foreign keys.
+The historical credential wrapping identity grants no account authority; API
+resolves current Space membership before exposing metadata or dispatching tools.

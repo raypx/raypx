@@ -7,6 +7,7 @@ const services = [
   "pages",
   "skills",
   "mcpServers",
+  "openApiServers",
   "routines",
   "spaceMemory",
   "modelConnections",

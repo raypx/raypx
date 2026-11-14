@@ -57,6 +57,7 @@ vi.mock("@raypx/agents/client", () => ({
   ApprovalSettings: mocks.approvalSettings,
   ModelConnections: mocks.modelConnections,
   McpServers: () => null,
+  OpenApiServers: () => null,
 }));
 vi.mock("./features/settings/capabilities.js", () => ({ AccountSkills: () => null }));
 vi.mock("@raypx/devtools", () => ({ DevtoolsBridge: () => null }));

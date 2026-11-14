@@ -12,6 +12,7 @@ import type {
   Message,
   ReplySegment,
   Run,
+  ActiveRun,
   RunId,
   ToolActivity,
   ConversationMember,
@@ -65,6 +66,8 @@ export interface ConversationSnapshot {
   conversation: Conversation;
   messages: Message[];
   runs: Run[];
+  activeRuns?: ActiveRun[] | undefined;
+  activeRunsTruncated?: boolean | undefined;
   segments: ReplySegment[];
   cursor: number;
   toolActivity?: ToolActivity[] | undefined;

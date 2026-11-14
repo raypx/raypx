@@ -34,10 +34,17 @@ turn checkpoints own execution. Model stream text is transient; committed reply
 segments and events are durable. Steering is applied at model boundaries. Workers
 recover from accepted checkpoints rather than restarting arbitrary tool effects.
 
-Computer, memory, Page, skill, remote MCP, messaging and delegation tools use the
-backend approval/effect path. Completed effects reuse their stored result; unknown
+Computer, memory, Page, skill, remote MCP, OpenAPI, messaging and delegation tools
+use the backend approval/effect path. Completed effects reuse their stored result; unknown
 outcomes block automatic replay. Never infer permission from model output or
 recalled text. Delegation inherits the initiating member's authority.
+
+Space-owned OpenAPI catalogs contain only selected normalized operations and safe
+labels. Their credentials stay in API's encrypted store and are injected only by
+the HTTP adapter. GET/HEAD use read approval policy; other methods use change
+policy, and all dispatches record effects. Recovery rechecks membership, Agent
+availability and the frozen definition fingerprint before using the DNS-pinned
+registered endpoint. See [Space HTTP APIs](../architecture/capabilities.md#space-http-apis).
 
 ## Library boundary
 

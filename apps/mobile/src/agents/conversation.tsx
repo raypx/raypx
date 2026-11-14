@@ -1,4 +1,11 @@
-import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import {
+  type ComponentRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { FlatList, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
@@ -71,8 +78,23 @@ export function AgentConversation({
   const [away, setAway] = useState(false);
   const atBottom = useRef(true);
   const history = useRef<FlatList<TimelineRow>>(null);
+  const editor = useRef<ComponentRef<typeof TextArea>>(null);
+  const targetRun = useRef<string | null>(null);
   const active = activeConversationRun(state.runs);
   const rows = conversationTimelineRows(state, state.cards);
+  const outsideRuns = state.runs.filter(
+    (run) => run.outsideWindow && ["queued", "running", "waiting"].includes(run.state),
+  );
+  useEffect(() => {
+    if (!targetRun.current) return;
+    const index = rows.findIndex(
+      (row) => row.kind === "reply" && row.run?.id === targetRun.current,
+    );
+    if (index >= 0) {
+      history.current?.scrollToIndex({ index, animated: false });
+      targetRun.current = null;
+    }
+  }, [rows]);
   const memberName = (id: string) =>
     conversationMemberLabel(id, accountId, state.participants ?? [], undefined, {
       you: t("agents.you"),
@@ -112,12 +134,12 @@ export function AgentConversation({
   );
   const lastRun = active ?? state.runs.at(-1);
   const pendingCards = rows.filter((row) => row.kind === "approval");
-  async function stop() {
-    if (!active || stopPending.current) return;
+  async function stop(runId = active?.id) {
+    if (!runId || stopPending.current) return;
     stopPending.current = true;
     setStopping(true);
     try {
-      await controller.stop(active.id);
+      await controller.stop(runId);
     } finally {
       stopPending.current = false;
       setStopping(false);
@@ -375,6 +397,91 @@ export function AgentConversation({
             contentContainerClassName="gap-2 px-4 py-2"
             keyboardShouldPersistTaps="handled"
           >
+            {(outsideRuns.length > 0 || state.activeRunsTruncated) && (
+              <View
+                accessibilityLabel={t("agents.stillWorking.title")}
+                className="gap-2 rounded-lg border border-border p-3"
+              >
+                <Text className="text-xs font-semibold text-foreground">
+                  {t("agents.stillWorking.title")}
+                </Text>
+                {outsideRuns.map((run) => (
+                  <View key={run.id} className="gap-2">
+                    <View className="flex-row flex-wrap items-center gap-2">
+                      <Text className="min-w-0 flex-1 text-sm text-foreground">
+                        {item.agent.name} · {t(`agents.${run.state}`)}
+                      </Text>
+                      <Action
+                        label={t("agents.stillWorking.showRun")}
+                        secondary
+                        busy={state.history.loading !== null}
+                        onPress={() => {
+                          atBottom.current = false;
+                          setAway(true);
+                          targetRun.current = run.id;
+                          void controller.loadRun(run.id);
+                        }}
+                      />
+                      <Action
+                        label={t("agents.stillWorking.steer")}
+                        secondary
+                        onPress={() => {
+                          controller.beginSteering(run.id);
+                          editor.current?.focus();
+                        }}
+                      />
+                      <Action
+                        label={t("agents.stop")}
+                        secondary
+                        busy={stopping}
+                        onPress={() => void stop(run.id)}
+                      />
+                    </View>
+                    {run.trigger && run.trigger !== "message" && (
+                      <Text className="text-xs text-muted-foreground">
+                        {t(
+                          (run.provenanceKind ?? run.inboundProvenance?.kind) === "repository"
+                            ? "agents.origins.repository"
+                            : `agents.origins.${run.trigger}`,
+                        )}
+                      </Text>
+                    )}
+                    {(run.untrustedInput ?? Boolean(run.inboundProvenance)) && (
+                      <Text className="text-xs text-muted-foreground">
+                        {t("agents.untrustedInput")}
+                      </Text>
+                    )}
+                    {state.cards
+                      .filter((card) => card.runId === run.id && card.state === "pending")
+                      .map((card) => (
+                        <ApprovalCard
+                          key={card.requestId}
+                          card={card}
+                          accountId={accountId}
+                          memberName={memberName}
+                          onAnswer={(id, decision, allow) =>
+                            void controller.answerApproval(id, decision, allow)
+                          }
+                          onRefresh={() => void controller.refreshApprovals()}
+                        />
+                      ))}
+                  </View>
+                ))}
+                {state.activeRunsTruncated && (
+                  <View className="gap-2">
+                    <Text className="text-xs text-muted-foreground">
+                      {t("agents.stillWorking.truncated")}
+                    </Text>
+                    <Action
+                      label={t("agents.refresh")}
+                      secondary
+                      busy={state.history.loading !== null}
+                      onPress={() => void controller.loadLatest()}
+                    />
+                  </View>
+                )}
+              </View>
+            )}
             {lastRun ? (
               <Text accessibilityLiveRegion="polite" className="text-xs text-muted-foreground">
                 {t(`agents.${lastRun.state}`)}
@@ -410,7 +517,10 @@ export function AgentConversation({
                 onPress={() => {
                   atBottom.current = false;
                   const index = rows.findIndex((row) => row.kind === "approval");
-                  if (index >= 0) history.current?.scrollToIndex({ index, animated: false });
+                  if (index >= 0) {
+                    history.current?.scrollToIndex({ index, animated: false });
+                    targetRun.current = null;
+                  }
                 }}
               />
             ) : null}
@@ -425,9 +535,28 @@ export function AgentConversation({
                 )}
               </Text>
             )}
+            {state.sendCode && (
+              <Text accessibilityRole="alert" className="text-sm text-foreground">
+                {t(`agents.${state.sendCode}`)}
+              </Text>
+            )}
+            {state.steeringRunId && (
+              <View className="flex-row flex-wrap items-center gap-2">
+                <Text className="min-w-0 flex-1 text-xs text-muted-foreground">
+                  {t("agents.stillWorking.targeted", { name: item.agent.name })}
+                </Text>
+                <Action
+                  label={t("agents.stillWorking.cancelSteering")}
+                  secondary
+                  disabled={!!state.pending}
+                  onPress={() => controller.clearSteering()}
+                />
+              </View>
+            )}
             <TextField className="gap-1">
               <Label>{t("agents.message")}</Label>
               <TextArea
+                ref={editor}
                 accessibilityLabel={t("agents.message")}
                 value={state.draft}
                 onChangeText={(text) => controller.setDraft(text)}

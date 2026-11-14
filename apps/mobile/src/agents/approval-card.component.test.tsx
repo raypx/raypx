@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react-test-renderer";
 import type { ApprovalCardView } from "@raypx/agents/model";
-import { approvalRequestIdSchema, mcpToolNameSchema } from "@raypx/core/approvals";
+import {
+  approvalRequestIdSchema,
+  mcpToolNameSchema,
+  openApiToolNameSchema,
+} from "@raypx/core/approvals";
 import { runIdSchema } from "@raypx/core/conversation";
 import { findByLabel, press, renderNative, textContent } from "../../tests/native.js";
 import en from "@raypx/agents/messages/en";
@@ -133,5 +137,29 @@ it.each(["en", "zh"] as const)(
       expect(textContent(view.root)).toContain(label);
       await view.unmount();
     }
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "renders HTTP operation approval labels and classification in %s",
+  async (language) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const view = await renderNative(
+      <ApprovalCard
+        card={card({
+          toolName: openApiToolNameSchema.parse(
+            "openapi_0123456789abcdef0123456789abcdef__createItem",
+          ),
+          target: "POST https://api.example.test/items",
+          argumentSummary: "POST Create inventory item",
+        })}
+        accountId="member-1"
+        onAnswer={vi.fn()}
+        onRefresh={vi.fn()}
+      />,
+    );
+    expect(textContent(view.root)).toContain("Create inventory item");
+    expect(textContent(view.root)).toContain({ en, zh }[language].agents.openapi.mutating);
+    await view.unmount();
   },
 );

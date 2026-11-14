@@ -17,6 +17,7 @@ export async function seedBrowserHistory(
   displayName: string,
   count: number,
   prefix: string,
+  append = false,
 ) {
   return db.transaction(async (tx) => {
     const selection = and(
@@ -28,13 +29,14 @@ export async function seedBrowserHistory(
       .values({ spaceId: scope.spaceId, conversationId })
       .onConflictDoNothing();
     const [counter] = await tx.select().from(conversationCounters).where(selection).for("update");
-    if (!counter || counter.sequence !== 0) return null;
+    if (!counter || (!append && counter.sequence !== 0)) return null;
+    const startSequence = counter.sequence;
     const createdAt = new Date();
     const messages = Array.from({ length: count }, (_, index) => ({
       spaceId: scope.spaceId,
       conversationId,
       id: crypto.randomUUID(),
-      sequence: index + 1,
+      sequence: startSequence + index + 1,
       authorAccountId: scope.member.accountId,
       idempotencyKey: crypto.randomUUID(),
       text: `${prefix} ${String(index + 1).padStart(3, "0")} — A message in the continuing conversation.`,
@@ -60,9 +62,10 @@ export async function seedBrowserHistory(
         displayName,
       })
       .onConflictDoNothing();
-    await tx.update(conversationCounters).set({ sequence: count }).where(selection);
+    const finalSequence = startSequence + count;
+    await tx.update(conversationCounters).set({ sequence: finalSequence }).where(selection);
     await tx.execute(
-      sql`select pg_notify('raypx_conversation_events', ${JSON.stringify({ conversationId, sequence: count })})`,
+      sql`select pg_notify('raypx_conversation_events', ${JSON.stringify({ conversationId, sequence: finalSequence })})`,
     );
     return messages.map(({ id, sequence, text }) => ({ id, sequence, text }));
   });

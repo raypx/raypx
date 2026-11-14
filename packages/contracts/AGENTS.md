@@ -181,3 +181,14 @@ is an independent HTTP route and never an API credential.
 `conversations.history` adds bounded initial/older windows with a scoped message
 boundary, separate from the event resume cursor. Existing snapshots keep their
 full-history behavior and add optional bounded participants and resolved approvals.
+
+Snapshot/history add optional `activeRuns` and `activeRunsTruncated` independently
+of the message window. Each active Run contains its trigger position, bounded
+pending approval summaries and committed segment position. Existing requests and
+stream versions remain supported; `run.state.triggerMessage` is additive metadata.
+
+`openApiServers.list/create/update/delete/test` uses fresh Space membership. Lists
+expose only safe metadata; registration, changes, tests and deletion require an
+owner. Credentials are input-only; source documents are accepted once on create.
+`send.message.steerRunId` optionally addresses one active Run, including queued or
+delegated work, without loading its message. It cannot combine Agent mentions.

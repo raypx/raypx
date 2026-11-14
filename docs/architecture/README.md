@@ -13,6 +13,11 @@ transient reply text, committed segments, fenced leases, checkpoints, steering,
 recovery and cancellation. The bounded Computer tool loop supports approvals,
 effect records and durable tool lifecycle activity. Members can browse bounded
 team-computer files and manage their own encrypted model connections.
+Bounded conversation windows retain a separate active-Run projection, rendered in
+Web/Desktop and Mobile above the composer. Space-owned OpenAPI tools use the same
+approval/effect pipeline and the remote-tool DNS-pinned HTTP adapter. Web/Desktop
+owners manage API definitions and write-only credentials; Mobile renders calls
+and addressed approvals.
 
 The shared `/agents` workspace is the signed-in home in Web and Desktop. Project
 and session pages, Waiting, New session and the guest task editor/handoff are

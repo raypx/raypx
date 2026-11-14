@@ -4,6 +4,7 @@ import { createApiClient } from "@raypx/client/api";
 import { conversationIdSchema, conversationSchema } from "@raypx/core/agents";
 import type { AuthSession } from "@raypx/core/auth";
 import {
+  ConversationSteeringError,
   conversationHistoryCursorSchema,
   InvalidConversationCursor,
   messageSchema,
@@ -152,15 +153,16 @@ function fixture(kind: "direct" | "group" = "direct") {
       return expectedHistory;
     },
   );
+  const send = vi.fn<ConversationsRepository["send"]>(async () => {
+    throw new Error("Unused send");
+  });
   const conversations: ConversationsRepository = {
     snapshot,
     history,
     stop: async () => {
       throw new Error("Unused stop");
     },
-    send: async () => {
-      throw new Error("Unused send");
-    },
+    send,
     events: async () => {
       const activity = expectedSnapshot.toolActivity![0]!;
       return {
@@ -238,6 +240,7 @@ function fixture(kind: "direct" | "group" = "direct") {
     scope,
     snapshot,
     history,
+    send,
     resolve,
     expectedSnapshot,
     expectedHistory,
@@ -329,4 +332,29 @@ it("preserves the produced Page identity on replayed lifecycle events", async ()
     kind: "tool.finished",
     page: { id: "historical-page", version: 1 },
   });
+});
+
+it("forwards exact Run steering after fresh admission and returns a safe terminal-target conflict", async () => {
+  const f = fixture();
+  const message = f.expectedSnapshot.messages[0]!;
+  const steerRunId = f.expectedSnapshot.runs[0]!.id;
+  const input = {
+    spaceId: f.spaceId,
+    conversationId: f.conversationId,
+    message: { text: "Continue this old Run", idempotencyKey: "exact-steering", steerRunId },
+  };
+  f.send.mockResolvedValueOnce(message);
+  expect(await f.client.conversations.send(input)).toEqual(message);
+  expect(f.send).toHaveBeenCalledWith(f.scope, f.conversationId, input.message);
+  f.send.mockRejectedValueOnce(new ConversationSteeringError());
+  await expect(
+    f.client.conversations.send({
+      ...input,
+      message: { ...input.message, idempotencyKey: "terminal" },
+    }),
+  ).rejects.toMatchObject({ code: "CONFLICT", data: { error: { code: "RUN_NOT_ACTIVE" } } });
+  expect(f.resolve).toHaveBeenCalledTimes(2);
+  f.removeMember();
+  await expect(f.client.conversations.send(input)).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(f.send).toHaveBeenCalledTimes(2);
 });

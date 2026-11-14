@@ -11,7 +11,10 @@ Space management, direct/group conversations, history paging, approvals, tool an
 delegated activity, routines and memory with Web. `/pages` supports editing,
 versions, restore and sharing; previews open Web instead of embedding authenticated
 documents. `/join` handles invitation admission. Account settings include Models,
-approval policy, Skills and Tools.
+approval policy, Skills and Tools. Still working keeps outside-window active Runs
+reachable with Stop, targeted steering, approvals and a trigger-page jump. Tools
+shares Web's Space-owner OpenAPI import, operation/Agent selection, connection
+testing and write-only credential management.
 
 Settings opens over the current route, for example `#/agents#settings`, preserving
 selection, search, mounted drafts and reading position. Close returns through the

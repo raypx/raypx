@@ -16,6 +16,8 @@ Waiting and Automations have been removed from this renderer. Do not restore the
   The shared workspace places its Space menu and New Agent action in sidebar slots;
   Space selection has no second page control. Its conversation-header computer
   indicator opens the shared lifecycle/files panel through the existing API client.
+  The shared Still working strip keeps outside-window active Runs reachable with
+  Stop, targeted steering, addressed approvals and a bounded trigger-page jump.
 - The conversation header opens Space-scoped routines and memory. The earlier
   standalone account Memory route and its navigation have been removed.
 - The `(app)` loader resolves account context through a router-owned QueryClient.
@@ -111,3 +113,5 @@ source drafts and one-time share links stay in component memory. Page invalidati
 arrive through the shared Space stream. Asking about a Page only restores a composer
 reference. Account settings compose Skills and remote Tools; Agent forms enable the
 member's available resources. Remote credentials remain write-only.
+
+Tools settings also compose Space-owner HTTP API management beside remote servers: one-time OpenAPI imports, explicit operation selection, write-only credentials and all/selected Agent availability. API activity and approvals use the shared conversation views.

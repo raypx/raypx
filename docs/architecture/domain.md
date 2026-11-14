@@ -153,3 +153,12 @@ on lifecycle rows and committed events. Deleting a Page removes its body, versio
 and shares while retaining this body-free identity until Space deletion. Historical
 activity keeps the produced version number; it is not a live document selector or
 an authorization grant. Model arguments cannot populate this identity metadata.
+
+Space HTTP APIs use `openapi_servers`, encrypted `openapi_server_secrets` children
+and optional `openapi_server_agents` selections. Composite Space/server and
+Space/Agent foreign keys prevent a definition, credential or Agent selection from
+crossing the Space boundary. Definitions store normalized validated operations and
+schemas, with explicit selected operation IDs. The historical credential-wrapping
+identity is not an authorization grant and survives the creator's departure; the
+Space owns this deliberately shared capability until an owner removes it or the
+Space is deleted. No credential value or storage reference is a public field.

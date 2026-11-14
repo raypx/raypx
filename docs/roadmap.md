@@ -92,6 +92,8 @@ Acceptance:
 - A write with an older fence is rejected.
 - A message during an active Run steers it. Stop ends it and records `cancelled`.
 - A stuck Run does not delay the start of another Run.
+- Active Runs remain visible outside the loaded history window after reload;
+  members can stop, steer, answer approvals or load the Run's trigger page.
 - A process that receives a stop signal releases its Runs, and another process
   resumes them.
 - A resume uses the pinned model and connection. A missing one fails the Run with
@@ -176,7 +178,11 @@ sandboxed public/member document serving, text-only skills with non-executing
 Markdown/ZIP imports, and member-owned remote HTTP MCP servers use the existing
 approval/effect/secret-store path. Enabled skill metadata and remote tool catalogs
 are checkpointed for recovery. Model connections were already implemented.
-Managed app connectors and OpenAPI tools remain outside this slice. Client delivery,
+Space-owned OpenAPI tools now import bounded documents once, expose selected
+operations with encrypted credentials through the existing approval/effect path,
+and pin HTTP egress through the remote-tool resolver. Web/Desktop owners manage
+them beside remote servers; Mobile shows activity and addressed approvals.
+Managed app connectors remain outside this slice. Client delivery,
 PostgreSQL and loopback HTTP acceptance remain separate gates; an unrun database
 or listener is not claimed as passed.
 
@@ -196,6 +202,9 @@ Acceptance:
   later when the owner chose all.
 - Installing a skill or an MCP server runs no third-party code in the backend
   process. Left-out parts are named.
+- Importing an OpenAPI document executes no code. API tools stay within their
+  registered host, refuse private addresses/redirects, and distinguish reads from
+  changes under the same approval rules and effect lifecycle.
 
 ## 6. Shared Spaces and groups
 

@@ -1,5 +1,6 @@
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import type {
+  ActiveRun,
   ConversationEvent,
   LiveReply,
   Message,
@@ -11,7 +12,7 @@ import type {
   ConversationMember,
   ResolvedApprovalSummary,
 } from "@raypx/core/conversation";
-import { MAX_REPLY_TEXT } from "@raypx/core/conversation";
+import { MAX_ACTIVE_CONVERSATION_RUNS, MAX_REPLY_TEXT } from "@raypx/core/conversation";
 import type { ConversationHistory, ConversationSelection, ConversationSnapshot } from "./port.js";
 import type { ApprovalCardView } from "./approvals.js";
 import { applyToolActivityEvent, mergeToolActivity } from "./tool-activity.js";
@@ -30,6 +31,8 @@ export interface RunView {
   routineId?: string | null | undefined;
   untrustedInput?: boolean | undefined;
   outsideWindow?: boolean | undefined;
+  triggerMessageSequence?: number | undefined;
+  latestCommittedSegment?: ActiveRun["latestCommittedSegment"] | undefined;
 }
 export interface ConversationView {
   cursor: number;
@@ -46,6 +49,7 @@ export interface ConversationView {
   resolvedApprovalsTruncated?: boolean | undefined;
   runsTruncated?: boolean | undefined;
   segmentsTruncated?: boolean | undefined;
+  activeRunsTruncated?: boolean | undefined;
 }
 export type ConversationRow =
   | {
@@ -265,6 +269,7 @@ export class ConversationState {
     toolActivityTruncated: false,
   };
   private latestMessageId: string | undefined;
+  private latestMessageSequence: number | undefined;
   private historyWindow = false;
   constructor(readonly selection: ConversationSelection) {}
   getSnapshot = (): ConversationView => this.view;
@@ -274,6 +279,33 @@ export class ConversationState {
       value.conversationId === this.selection.conversationId
     );
   }
+  /** Loaded message metadata is independent; background work has the same bound as the wire projection. */
+  private boundOutsideRuns() {
+    const outside = this.view.runs.filter((run) => run.outsideWindow);
+    const active = outside.filter((run) => !terminal(run.state));
+    active.sort(
+      (left, right) =>
+        (left.triggerMessageSequence ?? Number.MAX_SAFE_INTEGER) -
+          (right.triggerMessageSequence ?? Number.MAX_SAFE_INTEGER) ||
+        left.createdAt.localeCompare(right.createdAt) ||
+        left.id.localeCompare(right.id),
+    );
+    const omitted = new Set([
+      ...outside.filter((run) => terminal(run.state)).map((run) => run.id),
+      ...active.slice(MAX_ACTIVE_CONVERSATION_RUNS).map((run) => run.id),
+    ]);
+    if (!omitted.size) return;
+    this.view = {
+      ...this.view,
+      runs: this.view.runs.filter((run) => !omitted.has(run.id)),
+      liveReplies: this.view.liveReplies.filter((reply) => !omitted.has(reply.runId)),
+      segments: this.view.segments.filter((segment) => !omitted.has(segment.runId)),
+      toolActivity: this.view.toolActivity.filter((call) => !omitted.has(call.runId)),
+      resolvedApprovals: this.view.resolvedApprovals?.filter((card) => !omitted.has(card.runId)),
+      activeRunsTruncated:
+        this.view.activeRunsTruncated || active.length > MAX_ACTIVE_CONVERSATION_RUNS,
+    };
+  }
   applySnapshot(snapshot: ConversationSnapshot): boolean {
     if (
       snapshot.conversation.id !== this.selection.conversationId ||
@@ -282,7 +314,13 @@ export class ConversationState {
       snapshot.cursor < this.view.cursor ||
       snapshot.messages.some((item) => !this.owns(item) || item.sequence > snapshot.cursor) ||
       snapshot.segments.some((item) => !this.owns(item) || item.sequence > snapshot.cursor) ||
-      snapshot.runs.some((item) => !this.owns(item))
+      snapshot.runs.some((item) => !this.owns(item)) ||
+      snapshot.activeRuns?.some(
+        (item) =>
+          !this.owns(item.run) ||
+          item.triggerMessage.sequence > snapshot.cursor ||
+          (item.latestCommittedSegment?.sequence ?? 0) > snapshot.cursor,
+      )
     )
       return false;
     this.historyWindow = "olderCursor" in snapshot;
@@ -305,7 +343,14 @@ export class ConversationState {
       segments: [...new Map(snapshot.segments.map((item) => [item.id, item])).values()].sort(
         (a, b) => a.sequence - b.sequence,
       ),
-      runs: snapshot.runs.map((run) => ({
+      runs: [
+        ...new Map(
+          [...(snapshot.activeRuns ?? []).map((item) => item.run), ...snapshot.runs].map((run) => [
+            run.id,
+            run,
+          ]),
+        ).values(),
+      ].map((run) => ({
         id: run.id,
         agentId: run.agentId,
         parentRunId: run.parentRunId,
@@ -318,6 +363,11 @@ export class ConversationState {
         provenanceKind: run.inboundProvenance?.kind,
         routineId: run.routineId,
         untrustedInput: run.untrustedInput,
+        outsideWindow: !snapshot.messages.some((message) => message.id === run.messageId),
+        triggerMessageSequence: snapshot.activeRuns?.find((item) => item.run.id === run.id)
+          ?.triggerMessage.sequence,
+        latestCommittedSegment: snapshot.activeRuns?.find((item) => item.run.id === run.id)
+          ?.latestCommittedSegment,
       })),
       liveReplies: [],
       toolActivity: toolActivity.slice(-activityLimit),
@@ -329,8 +379,11 @@ export class ConversationState {
       resolvedApprovalsTruncated: snapshot.resolvedApprovalsTruncated ?? false,
       runsTruncated: "runsTruncated" in snapshot && snapshot.runsTruncated === true,
       segmentsTruncated: "segmentsTruncated" in snapshot && snapshot.segmentsTruncated === true,
+      activeRunsTruncated: snapshot.activeRunsTruncated ?? false,
     };
+    this.boundOutsideRuns();
     this.latestMessageId = this.view.messages.at(-1)?.id;
+    this.latestMessageSequence = this.view.messages.at(-1)?.sequence;
     return true;
   }
   /** History boundaries never advance the replay cursor. Existing live rows win overlaps. */
@@ -363,6 +416,8 @@ export class ConversationState {
           const previous = prior.runs.find((item) => item.id === run.id);
           const detail = next.runs.find((item) => item.id === run.id);
           if (!detail) return run;
+          if (!messages.some((message) => message.id === detail.messageId))
+            return previous ?? detail;
           if (!previous || prior.cursor <= page.cursor) return { ...run, outsideWindow: false };
           return {
             ...previous,
@@ -389,7 +444,9 @@ export class ConversationState {
         prior.resolvedApprovalsTruncated || next.resolvedApprovalsTruncated,
       runsTruncated: prior.runsTruncated || next.runsTruncated,
       segmentsTruncated: prior.segmentsTruncated || next.segmentsTruncated,
+      activeRunsTruncated: prior.activeRunsTruncated || next.activeRunsTruncated,
     };
+    this.boundOutsideRuns();
     return true;
   }
   /** Release message bodies and their dependent activity together; identifiers are never reordered. */
@@ -410,6 +467,7 @@ export class ConversationState {
       toolActivity: this.view.toolActivity.filter((call) => runIds.has(call.runId)),
       resolvedApprovals: this.view.resolvedApprovals?.filter((card) => runIds.has(card.runId)),
     };
+    this.boundOutsideRuns();
   }
   /** Keep command state for active Runs even when their message bodies are outside the reader window. */
   hydrateActiveRuns(runs: readonly Run[], latestMessageId?: string) {
@@ -435,6 +493,7 @@ export class ConversationState {
       });
     }
     this.view = { ...this.view, runs: [...current.values()] };
+    this.boundOutsideRuns();
   }
   /** Snapshot metadata fills fields absent from run.state without replacing newer events. */
   applyRunDetails(runs: readonly Run[]): boolean {
@@ -484,12 +543,14 @@ export class ConversationState {
       )
         return "snapshot-required";
       this.latestMessageId = message.id;
+      this.latestMessageSequence = message.sequence;
       if (includeNewMessages) this.receiveMessage(message);
     }
     if (event.kind === "run.state") {
       if ((event.state === "failed") !== (event.failureCode !== null)) return "snapshot-required";
       const previous = this.view.runs.find((run) => run.id === event.runId);
       const messageId =
+        event.triggerMessage?.id ??
         previous?.messageId ??
         this.view.runs.find((run) => run.id === event.parentRunId)?.messageId ??
         this.latestMessageId ??
@@ -502,7 +563,14 @@ export class ConversationState {
         state: event.state,
         failureCode: event.failureCode,
         messageId,
-        outsideWindow: previous?.outsideWindow ?? !includeNewMessages,
+        triggerMessageSequence:
+          event.triggerMessage?.sequence ??
+          previous?.triggerMessageSequence ??
+          this.view.runs.find((item) => item.id === event.parentRunId)?.triggerMessageSequence ??
+          this.latestMessageSequence,
+        outsideWindow: messageId
+          ? !this.view.messages.some((message) => message.id === messageId)
+          : (previous?.outsideWindow ?? !includeNewMessages),
         createdAt: previous?.createdAt ?? event.createdAt,
         trigger: event.trigger ?? previous?.trigger,
         provenanceKind: event.provenanceKind ?? previous?.provenanceKind,
@@ -514,15 +582,28 @@ export class ConversationState {
         : [...this.view.runs, run];
       this.view = {
         ...this.view,
-        runs: runs.filter((item) => !(item.outsideWindow && terminal(item.state))),
+        runs,
         liveReplies: terminal(run.state)
           ? this.view.liveReplies.filter((item) => item.runId !== run.id)
           : this.view.liveReplies,
       };
     }
+    if (event.kind === "reply.segment") {
+      this.view = {
+        ...this.view,
+        runs: this.view.runs.map((run) =>
+          run.id === event.segment.runId
+            ? {
+                ...run,
+                latestCommittedSegment: { id: event.segment.id, sequence: event.segment.sequence },
+              }
+            : run,
+        ),
+      };
+    }
     if (
       event.kind === "reply.segment" &&
-      (includeNewMessages ||
+      ((includeNewMessages && !this.historyWindow) ||
         this.view.runs.some((run) => run.id === event.segment.runId && !run.outsideWindow))
     ) {
       const segment = event.segment;
@@ -539,7 +620,7 @@ export class ConversationState {
     }
     if (
       (event.kind === "tool.started" || event.kind === "tool.finished") &&
-      (includeNewMessages ||
+      ((includeNewMessages && !this.historyWindow) ||
         this.view.runs.some((run) => run.id === event.runId && !run.outsideWindow))
     ) {
       const toolActivity = applyToolActivityEvent(
@@ -559,12 +640,14 @@ export class ConversationState {
       };
     }
     this.view = { ...this.view, cursor: event.sequence, lastActivityAt: event.createdAt };
+    this.boundOutsideRuns();
     return "applied";
   }
   receiveMessage(message: Message, include = true): boolean {
     if (!this.owns(message)) return false;
     if (!include) {
       this.latestMessageId = message.id;
+      this.latestMessageSequence = message.sequence;
       return true;
     }
     const previous = this.view.messages.find((item) => item.id === message.id);
@@ -572,12 +655,16 @@ export class ConversationState {
     this.view = {
       ...this.view,
       messages: [...this.view.messages, message].sort((a, b) => a.sequence - b.sequence),
+      runs: this.view.runs.map((run) =>
+        run.messageId === message.id ? { ...run, outsideWindow: false } : run,
+      ),
     };
     return true;
   }
   applyReply(frame: ReplyFrame): ReplyApplication {
     if (!this.owns(frame)) return "ignored";
     const run = this.view.runs.find((item) => item.id === frame.runId);
+    if (!run && this.view.activeRunsTruncated) return "ignored";
     if (
       (run && terminal(run.state)) ||
       this.view.segments.some((item) => item.id === frame.segmentId)

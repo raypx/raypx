@@ -7,9 +7,12 @@ Runs and permissions; Web, Desktop and Mobile render server state.
 The implemented platform includes paged conversation history, streamed replies,
 durable Runs with recovery and stop, Computer tools, approvals and effects,
 routines, Agent and Space memory, versioned Pages, text skills, remote HTTP MCP
-servers and member-owned model connections. Shared Spaces support invitations,
-membership management, group conversations and bounded delegation. See the
-[product overview](PRODUCT.md) for client coverage and limits, and the
+servers, Space-owned OpenAPI tools and member-owned model connections. Shared
+Spaces support invitations, membership management, group conversations and bounded
+delegation. Active Runs
+outside loaded history stay reachable through Still working on all three clients.
+Space owners manage HTTP APIs in Web/Desktop; Mobile shows activity and approvals.
+See the [product overview](PRODUCT.md) for client coverage and limits, and the
 [architecture](docs/architecture/README.md) and [roadmap](docs/roadmap.md) for
 technical decisions and separate acceptance gates.
 

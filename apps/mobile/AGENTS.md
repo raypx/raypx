@@ -26,6 +26,14 @@ draft restoration or retry editing. Drafts and frozen uncertain-send receipts us
 SecureStore with keys scoped by origin, account, Space and conversation. Do not
 persist server history or live text as a second authority.
 
+The shared model supplies the bounded Still working strip for outside-window
+active Runs. Stop, addressed approvals and targeted Steer work before loading
+history; the target remains visible/cancellable. Show Run loads the trigger's
+bounded page and hides its strip row when the message is loaded. HTTP API tools
+share the native activity/approval views with bounded operation labels and explicit
+read/change classification. OpenAPI registration and credential management remain
+in Web/Desktop Tools.
+
 `EXPO_PUBLIC_API_URL` selects one HTTPS gateway origin (default `https://raypx.com`).
 It is public build configuration, never a credential. SecureStore namespaces
 session cookies by origin; do not store passwords or trust cached user profiles.

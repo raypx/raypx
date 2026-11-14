@@ -1,7 +1,11 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
-import { approvalRequestIdSchema, mcpToolNameSchema } from "@raypx/core/approvals";
+import {
+  approvalRequestIdSchema,
+  mcpToolNameSchema,
+  openApiToolNameSchema,
+} from "@raypx/core/approvals";
 import { runIdSchema } from "@raypx/core/conversation";
 import type { ApprovalCardView } from "../model.js";
 import { ApprovalCard } from "./approval-card.js";
@@ -304,3 +308,22 @@ it.each(["en", "zh"] as const)("renders remote tool names as text in %s", (langu
   fixture(pendingCard({ toolName: mcpToolNameSchema.parse("mcp_server__read_page") }), language);
   expect(screen.getByRole("heading", { name: "MCP server / read page" })).toBeVisible();
 });
+
+it.each(["en", "zh"] as const)(
+  "shows readable HTTP approval labels and change classification in %s",
+  (language) => {
+    fixture(
+      pendingCard({
+        toolName: openApiToolNameSchema.parse(
+          "openapi_0123456789abcdef0123456789abcdef__createItem",
+        ),
+        target: "POST https://api.example.test/items",
+        argumentSummary: "POST Create inventory item",
+      }),
+      language,
+    );
+    expect(screen.getByRole("heading", { name: "Create inventory item" })).toBeVisible();
+    expect(screen.getByText({ en, zh }[language].agents.openapi.mutating)).toBeVisible();
+    expect(screen.getByText("POST https://api.example.test/items")).toBeVisible();
+  },
+);

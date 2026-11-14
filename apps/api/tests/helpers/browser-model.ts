@@ -32,6 +32,7 @@ export function browserModelFixture() {
       }
       const lastMessage = [...input.history].reverse().find((entry) => entry.role === "user");
       const requestsMcp = lastMessage?.text.startsWith("Fixture MCP call ") ?? false;
+      const requestsOpenApi = lastMessage?.text.startsWith("Fixture API call ") ?? false;
       const pagePrefix = "Fixture Page create ";
       const requestsPage = lastMessage?.text.startsWith(pagePrefix) ?? false;
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
@@ -66,6 +67,14 @@ export function browserModelFixture() {
         );
         if (remoteTool)
           return toolCall(remoteTool.name, "browser-mcp-echo", { text: "Fixture MCP result" });
+      }
+      if (requestsOpenApi) {
+        const read = input.tools?.find((candidate) => candidate.name.endsWith("__getItem"));
+        const change = input.tools?.find((candidate) => candidate.name.endsWith("__createItem"));
+        if (read && !results.some((entry) => entry.toolName === read.name))
+          return toolCall(read.name, "browser-api-read", { path: { id: "fixture" } });
+        if (change && !results.some((entry) => entry.toolName === change.name))
+          return toolCall(change.name, "browser-api-create", { body: { name: "Fixture item" } });
       }
       // These instruction markers are private to the owned browser fixture. The
       // actual backend still decides which explicit mentions start which Runs.
@@ -137,7 +146,14 @@ export function browserModelFixture() {
       });
       // Background-triggered replies complete independently of the interactive
       // streaming gate, so parallel browser journeys cannot release each other.
-      if (completeImmediately || groupCoordinator || child || requestsMcp || requestsPage)
+      if (
+        completeImmediately ||
+        groupCoordinator ||
+        child ||
+        requestsMcp ||
+        requestsPage ||
+        requestsOpenApi
+      )
         queueMicrotask(complete);
       return stream;
     },

@@ -22,6 +22,7 @@ import type {
   ConversationSocketPort,
   ApprovalPort,
   ConversationHistory,
+  ConversationSnapshot,
 } from "./port.js";
 
 export type ConversationConnection = "connecting" | "live" | "reconnecting" | "snapshot-required";
@@ -54,6 +55,7 @@ export interface ConversationControllerView extends ConversationView {
   mentionTokens?: MentionToken[] | undefined;
   sendCode?: SendFailureCode | null | undefined;
   sending: boolean;
+  steeringRunId?: RunId | undefined;
   pending: PendingMessage | null;
 }
 export interface ConversationControllerOptions {
@@ -122,6 +124,7 @@ export class ConversationController {
       draft: draft.text,
       mentionTokens: draft.mentionTokens ?? [],
       pending: draft.pending,
+      steeringRunId: draft.pending?.steerRunId,
       sending: false,
     };
   }
@@ -148,7 +151,10 @@ export class ConversationController {
         return message ? message.sequence + 0.75 : state.cursor + 0.25;
       });
     }
-    this.approvals.retainRuns(new Set(state.runs.map((run) => run.id)));
+    this.approvals.retainRuns(
+      new Set(state.runs.map((run) => run.id)),
+      state.activeRunsTruncated === true,
+    );
     this.view = {
       ...this.view,
       ...this.state.getSnapshot(),
@@ -277,7 +283,11 @@ export class ConversationController {
         if (this.disposed || generation !== this.generation) return;
         const snapshot = combineHistoryPages(pages, recent.cursor);
         if (!this.state.applySnapshot(snapshot)) throw new Error("Invalid conversation history");
-        this.state.hydrateActiveRuns(recent.runs, recent.messages.at(-1)?.id);
+        this.state.hydrateActiveRuns(
+          [...(recent.activeRuns ?? []).map((item) => item.run), ...recent.runs],
+          recent.messages.at(-1)?.id,
+        );
+        this.hydrateActiveApprovals(recent);
         this.update({
           history: {
             ...this.view.history,
@@ -294,6 +304,7 @@ export class ConversationController {
         const snapshot = await this.options.port.snapshot(this.options.selection);
         if (this.disposed || generation !== this.generation) return;
         if (!this.state.applySnapshot(snapshot)) throw new Error("Invalid conversation snapshot");
+        this.hydrateActiveApprovals(snapshot);
       }
       this.hasSnapshot = true;
       this.update({ loading: false });
@@ -302,6 +313,68 @@ export class ConversationController {
     } catch {
       if (this.disposed || generation !== this.generation) return;
       this.update({ loading: false, error: "load" });
+    } finally {
+      if (request === this.snapshotRequest) this.snapshotLoading = false;
+    }
+  }
+  private hydrateActiveApprovals(snapshot: ConversationSnapshot) {
+    for (const item of snapshot.activeRuns ?? [])
+      this.approvals.hydratePending(item.pendingApprovals, item.triggerMessage.sequence + 0.75);
+  }
+  /** Jump directly to the trigger's bounded page, without walking the intervening history. */
+  async loadRun(runId: RunId): Promise<boolean> {
+    const run = this.view.runs.find((item) => item.id === runId);
+    if (!run) return false;
+    if (!run.outsideWindow) return true;
+    const history = this.options.port.history;
+    if (
+      !history ||
+      !run.triggerMessageSequence ||
+      this.disposed ||
+      this.suspended ||
+      this.snapshotLoading ||
+      this.view.history.loading
+    )
+      return false;
+    this.cancelTimer();
+    const generation = ++this.generation;
+    const request = ++this.snapshotRequest;
+    ++this.historyGeneration;
+    this.snapshotLoading = true;
+    this.closeSocket();
+    this.update({ history: { ...this.view.history, loading: "earlier", error: false } });
+    try {
+      const page = await history({
+        ...this.options.selection,
+        limit: CONVERSATION_HISTORY_PAGE_SIZE,
+        before: { ...this.options.selection, beforeSequence: run.triggerMessageSequence + 1 },
+      });
+      if (this.disposed || generation !== this.generation) return false;
+      if (
+        !page.messages.some((message) => message.id === run.messageId) ||
+        !this.state.applySnapshot(page)
+      )
+        throw new Error("Run page unavailable");
+      this.hydrateActiveApprovals(page);
+      this.readingAnchor = { messageId: run.messageId!, offset: 0 };
+      this.update({
+        history: {
+          olderCursor: page.olderCursor,
+          hasNewer: true,
+          loading: null,
+          error: false,
+          anchor: this.readingAnchor,
+          revision: this.view.history.revision + 1,
+        },
+      });
+      this.openSocket();
+      return true;
+    } catch {
+      if (!this.disposed && generation === this.generation) {
+        this.update({ history: { ...this.view.history, loading: null, error: true } });
+        this.openSocket();
+      }
+      return false;
     } finally {
       if (request === this.snapshotRequest) this.snapshotLoading = false;
     }
@@ -573,7 +646,13 @@ export class ConversationController {
           })
         : await this.options.port.snapshot(this.options.selection);
       if (this.disposed || generation !== this.generation) return;
-      if (this.state.applyRunDetails(snapshot.runs)) this.update();
+      if (
+        this.state.applyRunDetails([
+          ...snapshot.runs,
+          ...(snapshot.activeRuns ?? []).map((item) => item.run),
+        ])
+      )
+        this.update();
     } catch {
       // Reconnect or the next Run event retries metadata; never infer an origin.
     } finally {
@@ -644,13 +723,30 @@ export class ConversationController {
     if (!this.started) void this.start();
     else this.reconnect();
   }
+  beginSteering(runId: RunId): boolean {
+    const run = this.view.runs.find((item) => item.id === runId);
+    if (
+      this.disposed ||
+      this.view.pending ||
+      !run ||
+      !["queued", "running", "waiting"].includes(run.state)
+    )
+      return false;
+    this.update({ steeringRunId: runId, sendCode: null });
+    return true;
+  }
+  clearSteering() {
+    if (!this.view.pending) this.update({ steeringRunId: undefined });
+  }
   async send(): Promise<boolean> {
     if (this.disposed || this.view.sending || !this.view.draft.trim()) return false;
     if (this.view.pending && this.view.pending.text !== this.view.draft) return false;
+    const mentions = this.view.steeringRunId ? [] : mentionIds(this.view.mentionTokens ?? []);
     const pending = this.view.pending ?? {
       text: this.view.draft,
       idempotencyKey: this.options.key(),
-      ...(this.view.mentionTokens?.length ? { mentions: mentionIds(this.view.mentionTokens) } : {}),
+      ...(this.view.steeringRunId ? { steerRunId: this.view.steeringRunId } : {}),
+      ...(mentions.length ? { mentions } : {}),
     };
     if (!pending.idempotencyKey || pending.idempotencyKey.length > 128) return false;
     if (!this.persist(this.view.draft, pending)) return false;
@@ -736,6 +832,7 @@ export class ConversationController {
         pending: null,
         draft,
         mentionTokens: draft ? this.view.mentionTokens : [],
+        steeringRunId: undefined,
         sendCode: null,
       });
       this.persist(draft, null);
@@ -788,6 +885,7 @@ const sendFailureCodes = [
   "GROUP_AGENT_NOT_PARTICIPANT",
   "GROUP_AGENT_LIMIT",
   "AGENT_TARGET_UNAVAILABLE",
+  "RUN_NOT_ACTIVE",
 ] as const;
 type SendFailureCode = (typeof sendFailureCodes)[number];
 function sendFailureCode(error: unknown): SendFailureCode | null {

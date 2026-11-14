@@ -31,12 +31,17 @@ import { createPagesRepository } from "@raypx/pages/server/postgres";
 import { createSkillsService } from "@raypx/skills/server";
 import { createSkillsRepository } from "@raypx/skills/server/postgres";
 import { createMcpTransport } from "@raypx/providers/mcp";
+import { createOpenApiTransport } from "@raypx/providers/openapi";
 import { createMcpServers } from "../../src/conversations/mcp-servers.js";
 import { createMcpServersRepository } from "../../src/conversations/mcp-postgres.js";
 import { withPageTools } from "../../src/conversations/page-tools.js";
 import { withSkillTools } from "../../src/conversations/skill-tools.js";
 import { withMcpTools } from "../../src/conversations/mcp-tools.js";
+import { createOpenApiServers } from "../../src/conversations/openapi-servers.js";
+import { createOpenApiServersRepository } from "../../src/conversations/openapi-postgres.js";
+import { withOpenApiTools } from "../../src/conversations/openapi-tools.js";
 import { fixtureMcpResponse } from "./browser-mcp.js";
+import { browserOpenApiFixture } from "./browser-openapi.js";
 import { createRoutinesService } from "@raypx/jobs/routines";
 import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
 import { createSpaceMemoryService } from "@raypx/memory/space-server";
@@ -111,6 +116,7 @@ const config = createConfigService({
 });
 const spaces = createSpaceAccess(connection.db);
 const model = browserModelFixture();
+const openApiResponse = browserOpenApiFixture();
 const modelConnections = createModelConnections(
   createModelConnectionsRepository(connection.db),
   createPostgresSecretStore(
@@ -129,9 +135,15 @@ const mcpServers = createMcpServers(
   applicationSecretKeyProvider("browser-fixture-mcp-encryption-key"),
   createMcpTransport(),
 );
+const openApiServers = createOpenApiServers(
+  createOpenApiServersRepository(connection.db),
+  applicationSecretKeyProvider("browser-fixture-api-encryption-key"),
+  createOpenApiTransport(),
+);
 const protectedValues = () => [
   ...modelConnections.protectedValues(),
   ...mcpServers.protectedValues(),
+  ...openApiServers.protectedValues(),
 ];
 const runner = new ConversationRunner(
   createConversationsRepository(connection.db),
@@ -139,21 +151,25 @@ const runner = new ConversationRunner(
   undefined,
   undefined,
   {
-    tools: withMcpTools(
-      withSkillTools(
-        withPageTools(
-          withMemoryTools(
-            createComputerTools(computers, computerProvider, []),
-            spaceMemory,
+    tools: withOpenApiTools(
+      withMcpTools(
+        withSkillTools(
+          withPageTools(
+            withMemoryTools(
+              createComputerTools(computers, computerProvider, []),
+              spaceMemory,
+              protectedValues,
+            ),
+            pages,
             protectedValues,
           ),
-          pages,
+          skills,
           protectedValues,
         ),
-        skills,
+        mcpServers,
         protectedValues,
       ),
-      mcpServers,
+      openApiServers,
       protectedValues,
     ),
     approvals: agentApprovals,
@@ -226,6 +242,7 @@ const app = createApiApp({
   pages,
   skills,
   mcpServers,
+  openApiServers,
   spaces,
   spaceManagement,
   agents: createAgentsRepository(connection.db),
@@ -267,6 +284,8 @@ const server = serve<SocketData>({
     )
       return new Response(null, { status: 503 });
     if (path === "/fixture/mcp") return fixtureMcpResponse(request);
+    if (path === "/fixture/httpapi" || path.startsWith("/fixture/httpapi/"))
+      return openApiResponse(request);
     if (
       path === "/events" ||
       path === "/fixture/conversation/complete" ||
@@ -308,6 +327,7 @@ const server = serve<SocketData>({
             session.user.name,
             input.count,
             input.prefix,
+            "append" in input && input.append === true,
           );
           if (!messages) return new Response(null, { status: 409 });
           return Response.json({ messages });

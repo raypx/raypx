@@ -152,3 +152,25 @@ with scoped exclusive older cursors independent of event replay cursors. Associa
 Runs/segments cap at 500, tool/approval summaries and member directories at 100,
 with explicit truncation flags. Snapshots retain their full-history default and
 add bounded resolved-answer and email-free historical member projections.
+
+Snapshot/history `activeRuns` is an independently bounded (100) Space/conversation
+projection, including trigger message position, up to 16 pending card summaries
+and the latest committed segment position. It contains no request arguments.
+The shared model merges those Runs outside its loaded message window and applies
+state, segment and card events before ACK. `run.state.triggerMessage` identifies
+old-trigger and delegated work without guessing from the most recent message.
+DOM and Mobile show this work above the composer with direct Stop, approval,
+steering and a bounded trigger-page jump; loading its message hides the strip row.
+
+Space-owner HTTP API management sits beside remote servers in Tools.
+`OpenApiServers` scopes requests to the selected owned Space, imports JSON/YAML or
+fetches once, then enables explicit operations for all or selected Agents.
+Credentials stay outside observable drafts and clear on submit and unmount.
+OpenAPI card/activity labels use bounded summaries and classify GET/HEAD as reads.
+Exact names remain rule identities; members can choose registered operations for
+Allow/Block settings using safe metadata. API effects use the existing inspector.
+
+Exact strip steering uses optional `send.message.steerRunId`, rather than choosing
+a Run from its Agent name. The selected target is visible/cancellable and is frozen
+in uncertain-send receipts. A terminal target preserves the draft with a safe
+`RUN_NOT_ACTIVE` error; membership and conversation checks remain server-owned.

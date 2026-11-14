@@ -122,7 +122,8 @@ Do not duplicate domain models, add compatibility aliases or make Core depend on
 contracts, React or host implementations.
 
 `@raypx/agents/model` owns page selection, bounded conversation history, event/cursor
-application and injected command, stream and draft ports. `/client` adapts those
+application, outside-window active-Run summaries and targeted steering, and
+injected command, stream and draft ports. `/client` adapts those
 ports to React for Web/Desktop. Mobile consumes `/model` with native adapters.
 Applications own auth, routing and platform transports. PostgreSQL state is
 authoritative; only scoped drafts/uncertain-send receipts persist on devices.
@@ -133,6 +134,13 @@ credentials, the fenced ConversationRunner and worker lifecycle. Computers owns
 Space computer lifecycle; Providers owns its port/adapters; Sandbox alone holds
 the Engine socket. Feature packages follow the same model/client/server split
 where there are established consumers, without speculative entries.
+
+Core's `/openapi-servers` owns API metadata and credential input schemas; Contracts
+composes `openApiServers.*`. API owns Space admission, persistence and encrypted
+secrets. Providers' `/openapi` owns document parsing and HTTP calls, sharing the
+private DNS/socket admission path with `/mcp`. Agents owns the injected management
+model, Web/Desktop views and shared readable activity/approval labels. Mobile
+consumes those projections through `/model` and native views.
 
 ```mermaid
 flowchart TD

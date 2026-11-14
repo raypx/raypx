@@ -727,3 +727,19 @@ it("reuses a completed remote effect after resume without invoking the transport
   expect(resumed).toBe(first);
   expect(transport).toHaveBeenCalledTimes(1);
 });
+
+it("classifies validated HTTP methods as reads while exact Block and untrusted mutation rules retain precedence", () => {
+  const name =
+    "openapi_00000000000040008000000000000001__read" as import("@raypx/core/approvals").ToolName;
+  const read: ApprovalCall = { ...write, name, readOnlyHttp: true };
+  const allow = { toolName: name, executable: null, decision: "allow" as const };
+  const block = { ...allow, decision: "block" as const };
+  expect(approvalDisposition({ mode: "ask", rules: [] }, read, true)).toBe("approved");
+  expect(approvalDisposition({ mode: "never", rules: [allow, block] }, read)).toBe("blocked");
+  expect(approvalDisposition({ mode: "ask", rules: [] }, { ...read, readOnlyHttp: false })).toBe(
+    "ask",
+  );
+  expect(
+    approvalDisposition({ mode: "ask", rules: [allow] }, { ...read, readOnlyHttp: false }, true),
+  ).toBe("ask");
+});

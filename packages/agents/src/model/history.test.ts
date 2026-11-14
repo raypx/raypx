@@ -651,3 +651,382 @@ describe("bounded conversation history", () => {
     expect(h.controller.getSnapshot().subscriptionEnd).toBe(expected);
   });
 });
+
+it("reloads old active work, approves/stops/steers it and jumps directly to its trigger page", async () => {
+  const request = {
+    id: "old-request" as import("@raypx/core/approvals").ApprovalRequest["id"],
+    ...selection,
+    runId: run(1).id,
+    memberAccountId: "viewer",
+    toolCallId: "write",
+    toolName: "computer_write_file" as const,
+    arguments: { path: "report.txt", text: "private body" },
+    argumentSummary: "Write file",
+    target: "report.txt",
+    state: "pending" as const,
+    createdAt: time,
+    expiresAt: "2099-11-14T00:00:00.000Z",
+    resolvedAt: null,
+    answeredByAccountId: null,
+  };
+  const approvals: ApprovalPort = {
+    pending: vi.fn(async () => [request]),
+    effects: async () => [],
+    answer: vi.fn(async () => ({
+      ...request,
+      state: "approved" as const,
+      answeredByAccountId: "viewer",
+      resolvedAt: time,
+    })),
+  };
+  const h = harness(100, approvals);
+  const active = {
+    run: { ...run(1, "waiting"), untrustedInput: true },
+    triggerMessage: { id: message(1).id, sequence: 1 },
+    pendingApprovals: [
+      {
+        requestId: request.id,
+        runId: request.runId,
+        toolCallId: request.toolCallId,
+        toolName: request.toolName,
+        argumentSummary: request.argumentSummary,
+        target: request.target,
+        memberAccountId: request.memberAccountId,
+        createdAt: time,
+        expiresAt: request.expiresAt,
+      },
+    ],
+    pendingApprovalsTruncated: false,
+    latestCommittedSegment: { id: "old-segment", sequence: 2 },
+  };
+  vi.mocked(h.port.history!).mockImplementation(async (input) => {
+    const eligible = h.messages.filter(
+      (item) => !input.before || item.sequence < input.before.beforeSequence,
+    );
+    const selected = eligible.slice(-(input.limit ?? 50));
+    return { ...page(selected, 100, eligible.length > selected.length), activeRuns: [active] };
+  });
+  await h.controller.start();
+  let projected = h.controller.getSnapshot();
+  expect(projected.runs.find((item) => item.id === run(1).id)).toMatchObject({
+    outsideWindow: true,
+    triggerMessageSequence: 1,
+    untrustedInput: true,
+    latestCommittedSegment: { id: "old-segment", sequence: 2 },
+  });
+  expect(conversationRows(projected).some((row) => row.id === "reply:run-1")).toBe(false);
+  expect(projected.cards[0]).toMatchObject({
+    requestId: request.id,
+    state: "pending",
+    target: "report.txt",
+  });
+  expect(projected.cards[0]).not.toHaveProperty("arguments");
+  expect(await h.controller.answerApproval(request.id, "approved")).toBe(true);
+  expect(approvals.answer).toHaveBeenCalledWith({
+    spaceId: selection.spaceId,
+    requestId: request.id,
+    decision: "approved",
+  });
+  expect(await h.controller.stop(run(1).id)).toBe(true);
+  expect(h.port.stop).toHaveBeenCalledWith({ ...selection, runId: run(1).id });
+  h.controller.setDraft("Continue with this instruction");
+  expect(await h.controller.send()).toBe(true);
+  expect(h.port.send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: expect.objectContaining({ text: "Continue with this instruction" }),
+    }),
+  );
+  expect(await h.controller.loadRun(run(1).id)).toBe(true);
+  expect(h.port.history).toHaveBeenLastCalledWith({
+    ...selection,
+    limit: 30,
+    before: { ...selection, beforeSequence: 2 },
+  });
+  projected = h.controller.getSnapshot();
+  expect(projected.messages.some((item) => item.id === message(1).id)).toBe(true);
+  expect(projected.runs.find((item) => item.id === run(1).id)?.outsideWindow).toBe(false);
+  expect(projected.history.hasNewer).toBe(true);
+  expect(projected.cursor).toBe(100);
+});
+
+it.each(["succeeded", "failed", "cancelled"] as const)(
+  "keeps outside-window work current through queue, running, approval, committed output and %s",
+  (state) => {
+    const projection = new ConversationState(selection);
+    const recent = page([message(10)], 10);
+    recent.activeRuns = [
+      {
+        run: run(1, "queued"),
+        triggerMessage: { id: message(1).id, sequence: 1 },
+        pendingApprovals: [],
+        pendingApprovalsTruncated: false,
+        latestCommittedSegment: null,
+      },
+    ];
+    expect(projection.applySnapshot(recent)).toBe(true);
+    for (const [index, next] of ["running", "waiting", "running"].entries()) {
+      expect(
+        projection.applyEvent({
+          event: {
+            ...selection,
+            kind: "run.state",
+            runId: run(1).id,
+            state: next as Run["state"],
+            failureCode: null,
+            sequence: index + 11,
+            createdAt: time,
+          },
+        }),
+      ).toBe("applied");
+      expect(activeConversationRun(projection.getSnapshot().runs)?.state).toBe(next);
+    }
+    projection.applyEvent({
+      event: {
+        ...selection,
+        kind: "reply.segment",
+        sequence: 14,
+        createdAt: time,
+        segment: {
+          ...selection,
+          id: "commit",
+          runId: run(1).id,
+          sequence: 14,
+          text: "Committed",
+          createdAt: time,
+        },
+      },
+    });
+    expect(
+      projection.getSnapshot().runs.find((item) => item.id === run(1).id)?.latestCommittedSegment,
+    ).toEqual({ id: "commit", sequence: 14 });
+    projection.applyEvent({
+      event: {
+        ...selection,
+        kind: "run.state",
+        runId: run(1).id,
+        state,
+        failureCode: state === "failed" ? "MODEL_FAILED" : null,
+        sequence: 15,
+        createdAt: time,
+      },
+    });
+    expect(activeConversationRun(projection.getSnapshot().runs)).toBeUndefined();
+    expect(projection.getSnapshot().runs.some((item) => item.id === run(1).id)).toBe(false);
+    expect(projection.getSnapshot().cursor).toBe(15);
+  },
+);
+
+it("uses stream trigger references when new work starts for a message older than the window", () => {
+  const state = new ConversationState(selection);
+  state.applySnapshot(page([message(50)], 50));
+  state.applyEvent({
+    event: {
+      ...selection,
+      kind: "run.state",
+      runId: run(1).id,
+      triggerMessage: { id: message(1).id, sequence: 1 },
+      agentId: conversation.agentId,
+      state: "queued",
+      failureCode: null,
+      trigger: "webhook",
+      untrustedInput: true,
+      sequence: 51,
+      createdAt: time,
+    },
+  });
+  expect(state.getSnapshot().runs.find((item) => item.id === run(1).id)).toMatchObject({
+    messageId: message(1).id,
+    triggerMessageSequence: 1,
+    outsideWindow: true,
+    untrustedInput: true,
+  });
+  expect(conversationRows(state.getSnapshot()).some((row) => row.id === "reply:run-1")).toBe(false);
+});
+
+it("freezes the selected outside-window Run in an uncertain send receipt and restores it without sending", async () => {
+  const h = harness(100);
+  const active = {
+    run: run(1, "waiting"),
+    triggerMessage: { id: message(1).id, sequence: 1 },
+    pendingApprovals: [],
+    pendingApprovalsTruncated: false,
+    latestCommittedSegment: null,
+  };
+  vi.mocked(h.port.history!).mockResolvedValue({
+    ...page([message(100)], 100, true),
+    activeRuns: [active],
+  });
+  await h.controller.start();
+  expect(h.controller.beginSteering(run(1).id)).toBe(true);
+  h.controller.setDraft("This instruction is for old work");
+  vi.mocked(h.port.send).mockRejectedValueOnce(new Error("Lost response"));
+  expect(await h.controller.send()).toBe(false);
+  expect(h.port.send).toHaveBeenCalledWith({
+    ...selection,
+    message: {
+      idempotencyKey: "key",
+      text: "This instruction is for old work",
+      steerRunId: run(1).id,
+    },
+  });
+  const frozen = h.controller.getSnapshot().pending;
+  expect(frozen?.steerRunId).toBe(run(1).id);
+  h.controller.clearSteering();
+  expect(h.controller.getSnapshot().steeringRunId).toBe(run(1).id);
+  const { readConversationDraft, writeConversationDraft } = await import("./drafts.js");
+  expect(
+    readConversationDraft(
+      writeConversationDraft({ text: h.controller.getSnapshot().draft, pending: frozen }),
+    ).pending?.steerRunId,
+  ).toBe(run(1).id);
+  expect(
+    readConversationDraft(
+      JSON.stringify({ version: 1, text: "text", pending: { ...frozen, steerRunId: "" } }),
+    ).pending,
+  ).toBeNull();
+});
+
+it("bounds streamed background Runs and their pending controls while preserving loaded Runs and the ACK cursor", async () => {
+  const h = harness(1000);
+  vi.mocked(h.port.history!).mockResolvedValue(page([message(1000)], 1000, true));
+  await h.controller.start();
+  h.callbacks[0]!.onFrame({ type: "ready", version: 1 });
+  let sequence = 1000;
+  for (let index = 1; index <= 120; index++) {
+    const background = run(index, "queued");
+    h.callbacks[0]!.onFrame({
+      type: "event",
+      entry: {
+        event: {
+          ...selection,
+          kind: "run.state",
+          sequence: ++sequence,
+          createdAt: time,
+          runId: background.id,
+          state: "queued",
+          failureCode: null,
+          agentId: background.agentId,
+          triggerMessage: { id: background.messageId, sequence: index },
+          trigger: "message",
+        },
+      },
+    });
+    h.callbacks[0]!.onFrame({
+      type: "event",
+      entry: {
+        event: {
+          ...selection,
+          kind: "card.created",
+          sequence: ++sequence,
+          createdAt: time,
+          runId: background.id,
+          requestId: `request-${index}` as import("@raypx/core/approvals").ApprovalRequest["id"],
+          toolCallId: `call-${index}`,
+          toolName: "computer_write_file",
+          target: "workspace",
+          argumentSummary: "Write",
+          memberAccountId: "viewer",
+          expiresAt: "2099-11-14T00:00:00.000Z",
+        },
+      },
+    });
+    h.callbacks[0]!.onFrame({
+      type: "event",
+      entry: {
+        event: {
+          ...selection,
+          kind: "run.state",
+          sequence: ++sequence,
+          createdAt: time,
+          runId: background.id,
+          state: "waiting",
+          failureCode: null,
+          triggerMessage: { id: background.messageId, sequence: index },
+        },
+      },
+    });
+  }
+  const view = h.controller.getSnapshot();
+  expect(view.runs.filter((item) => item.outsideWindow)).toHaveLength(100);
+  expect(view.runs.find((item) => item.id === run(1000).id)).toMatchObject({
+    outsideWindow: false,
+  });
+  expect(view.runs.some((item) => item.id === run(101).id)).toBe(false);
+  expect(view.activeRunsTruncated).toBe(true);
+  expect(view.cards).toHaveLength(100);
+  expect(view.cards.every((card) => view.runs.some((item) => item.id === card.runId))).toBe(true);
+  expect(view.cursor).toBe(sequence);
+  h.callbacks[0]!.onFrame({
+    type: "reply.prefix",
+    ...selection,
+    runId: run(120).id,
+    segmentId: "omitted-prefix",
+    offset: 0,
+    text: "Omitted reply",
+  });
+  expect(h.controller.getSnapshot().liveReplies).toEqual([]);
+  h.callbacks[0]!.onFrame({
+    type: "event",
+    entry: {
+      event: {
+        ...selection,
+        kind: "reply.segment",
+        sequence: ++sequence,
+        createdAt: time,
+        segment: {
+          ...selection,
+          id: "omitted-segment",
+          runId: run(120).id,
+          sequence,
+          text: "Omitted reply",
+          createdAt: time,
+        },
+      },
+    },
+  });
+  expect(h.controller.getSnapshot().segments).toEqual([]);
+  expect(h.controller.getSnapshot().cursor).toBe(sequence);
+  for (let index = 121; index <= 240; index++)
+    h.callbacks[0]!.onFrame({
+      type: "event",
+      entry: {
+        event: {
+          ...selection,
+          kind: "run.state",
+          sequence: ++sequence,
+          createdAt: time,
+          runId: run(index).id,
+          triggerMessage: { id: message(index).id, sequence: index },
+          state: "succeeded",
+          failureCode: null,
+        },
+      },
+    });
+  expect(h.controller.getSnapshot().runs).toHaveLength(101);
+  expect(h.controller.getSnapshot().runs.filter((item) => item.outsideWindow)).toHaveLength(100);
+  expect(h.controller.getSnapshot().runs.find((item) => item.id === run(1000).id)?.state).toBe(
+    "succeeded",
+  );
+  expect(h.controller.getSnapshot().cursor).toBe(sequence);
+  expect(h.controller.getSnapshot().segments).toEqual([]);
+  const earlier = page([message(1)], sequence);
+  earlier.runs = [run(1, "waiting")];
+  expect(h.controller.state.applyHistory(earlier)).toBe(true);
+  expect(
+    h.controller.state.getSnapshot().runs.find((item) => item.id === run(1).id)?.outsideWindow,
+  ).toBe(false);
+  h.controller.state.hydrateActiveRuns(
+    Array.from({ length: 150 }, (_, index) => run(index + 1, "queued")),
+  );
+  expect(h.controller.state.getSnapshot().runs.filter((item) => item.outsideWindow)).toHaveLength(
+    100,
+  );
+  h.controller.state.retainMessages(new Set([message(1000).id]));
+  expect(h.controller.state.getSnapshot().runs.filter((item) => item.outsideWindow)).toHaveLength(
+    100,
+  );
+  expect(
+    h.controller.state.getSnapshot().runs.find((item) => item.id === run(1000).id)?.outsideWindow,
+  ).toBe(false);
+  expect(h.controller.state.getSnapshot().activeRunsTruncated).toBe(true);
+});

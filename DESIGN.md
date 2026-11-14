@@ -40,8 +40,8 @@ conversations; there is no guest task editor or draft handoff. Preserve validate
 return destinations for account and administration flows. Conversations need a
 reachable server. The earlier CLI/native runtime remains during the transition,
 but the renderer does not restore a local project as its home. Web layouts serve
-phone browsers. Mobile currently provides account/sign-in, with full Agent views
-and notifications later in the roadmap.
+phone browsers. Mobile provides account/sign-in and native Agent conversations,
+activity and approvals; push notifications remain later work.
 
 Public pages (landing, authentication, privacy) share one header, which gains a surface
 only after scrolling. The landing header adds a compact account avatar with the same
@@ -148,6 +148,11 @@ Phase 1 replies have no tools, approval cards or recovery. Do not add ornamental
 activity, fake progress or controls for later capabilities. When those phases
 arrive, chat keeps useful progress and results while tool lifecycle belongs in the
 activity view. Keep failures, unavailable states and uncertain outcomes explicit.
+Current durable conversations render real tool activity and addressed approval
+cards. Active Runs outside the loaded history window use a compact Still working
+strip above the composer, with Agent attribution, state and direct controls.
+Space HTTP APIs live beside remote tools in settings; operation and approval rows
+distinguish read-only calls from changes without exposing credentials.
 Charts, where used in administration, use thin columns with rounded data ends on
 one baseline. Label the extremes and latest value, expose every actual value on
 hover and retain a table view.

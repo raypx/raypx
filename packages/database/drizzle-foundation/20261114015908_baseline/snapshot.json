@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "1a7b2963-bde2-422a-990c-5759e45448a0",
+  "id": "163cbd4e-84d4-4bf8-b4fd-060eb341981e",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -1171,6 +1171,64 @@
         "n|type|public.oauth_resource",
         "n|rel|public.oauth_resource_pkey",
         "n|rel|public.oauth_resource_identifier_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "openapi_server_agents"
+      ],
+      "writes": [
+        "s|tbl|public.openapi_server_agents",
+        "n|tbl|public.openapi_server_agents",
+        "e|tbl|public.openapi_server_agents",
+        "n|rel|public.openapi_server_agents",
+        "n|type|public.openapi_server_agents",
+        "n|rel|public.openapi_server_agents_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "openapi_server_secrets"
+      ],
+      "writes": [
+        "s|tbl|public.openapi_server_secrets",
+        "n|tbl|public.openapi_server_secrets",
+        "e|tbl|public.openapi_server_secrets",
+        "n|rel|public.openapi_server_secrets",
+        "n|type|public.openapi_server_secrets",
+        "n|rel|public.openapi_server_secrets_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "openapi_servers"
+      ],
+      "writes": [
+        "s|tbl|public.openapi_servers",
+        "n|tbl|public.openapi_servers",
+        "e|tbl|public.openapi_servers",
+        "n|rel|public.openapi_servers",
+        "n|type|public.openapi_servers",
+        "n|rel|public.openapi_servers_pkey",
+        "n|rel|public.openapi_servers_secret_idx"
       ],
       "reads": [
         "n|sch|public"
@@ -2839,6 +2897,29 @@
         "index",
         "public",
         "conversation_reply_segments",
+        "conversation_reply_segments_run_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_reply_segments_run_idx",
+        "n|idx|public.conversation_reply_segments_run_idx",
+        "e|idx|public.conversation_reply_segments_run_idx",
+        "n|rel|public.conversation_reply_segments_run_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_reply_segments",
+        "n|sch|public",
+        "n|col|public.conversation_reply_segments.space_id",
+        "n|col|public.conversation_reply_segments.conversation_id",
+        "n|col|public.conversation_reply_segments.run_id",
+        "n|col|public.conversation_reply_segments.sequence"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_reply_segments",
         "conversation_reply_segments_sequence_idx"
       ],
       "writes": [
@@ -3032,6 +3113,29 @@
         "n|sch|public",
         "n|col|public.conversation_runs.space_id",
         "n|col|public.conversation_runs.agent_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_runs",
+        "conversation_runs_active_window_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_runs_active_window_idx",
+        "n|idx|public.conversation_runs_active_window_idx",
+        "e|idx|public.conversation_runs_active_window_idx",
+        "n|rel|public.conversation_runs_active_window_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_runs",
+        "n|sch|public",
+        "n|col|public.conversation_runs.space_id",
+        "n|col|public.conversation_runs.conversation_id",
+        "n|col|public.conversation_runs.message_sequence",
+        "n|col|public.conversation_runs.id"
       ]
     },
     {
@@ -3682,6 +3786,50 @@
         "n|tbl|public.oauth_refresh_token",
         "n|sch|public",
         "n|col|public.oauth_refresh_token.authorization_code_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "openapi_server_agents",
+        "openapi_server_agents_agent_idx"
+      ],
+      "writes": [
+        "s|idx|public.openapi_server_agents_agent_idx",
+        "n|idx|public.openapi_server_agents_agent_idx",
+        "e|idx|public.openapi_server_agents_agent_idx",
+        "n|rel|public.openapi_server_agents_agent_idx"
+      ],
+      "reads": [
+        "n|tbl|public.openapi_server_agents",
+        "n|sch|public",
+        "n|col|public.openapi_server_agents.space_id",
+        "n|col|public.openapi_server_agents.agent_id",
+        "n|col|public.openapi_server_agents.server_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "openapi_servers",
+        "openapi_servers_space_idx"
+      ],
+      "writes": [
+        "s|idx|public.openapi_servers_space_idx",
+        "n|idx|public.openapi_servers_space_idx",
+        "e|idx|public.openapi_servers_space_idx",
+        "n|rel|public.openapi_servers_space_idx"
+      ],
+      "reads": [
+        "n|tbl|public.openapi_servers",
+        "n|sch|public",
+        "n|col|public.openapi_servers.space_id",
+        "n|col|public.openapi_servers.created_at",
+        "n|col|public.openapi_servers.id"
       ]
     },
     {
@@ -6798,6 +6946,106 @@
       "statementTarget": [
         "table",
         "public",
+        "openapi_server_agents"
+      ],
+      "writes": [
+        "s|fk|public.openapi_server_agents.openapi_server_agents_jUVusABQYTPv_fkey",
+        "n|fk|public.openapi_server_agents.openapi_server_agents_jUVusABQYTPv_fkey",
+        "e|fk|public.openapi_server_agents.openapi_server_agents_jUVusABQYTPv_fkey",
+        "n|con|public.openapi_server_agents.openapi_server_agents_jUVusABQYTPv_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.openapi_server_agents",
+        "n|sch|public",
+        "n|tbl|public.openapi_servers",
+        "n|sch|public",
+        "n|col|public.openapi_server_agents.space_id",
+        "n|col|public.openapi_server_agents.server_id",
+        "n|col|public.openapi_servers.space_id",
+        "n|col|public.openapi_servers.id",
+        "e|uniqueness|public.openapi_servers.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "openapi_server_agents"
+      ],
+      "writes": [
+        "s|fk|public.openapi_server_agents.openapi_server_agents_space_id_agent_id_agents_space_id_id_fkey",
+        "n|fk|public.openapi_server_agents.openapi_server_agents_space_id_agent_id_agents_space_id_id_fkey",
+        "e|fk|public.openapi_server_agents.openapi_server_agents_space_id_agent_id_agents_space_id_id_fkey",
+        "n|con|public.openapi_server_agents.openapi_server_agents_space_id_agent_id_agents_space_id_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.openapi_server_agents",
+        "n|sch|public",
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|col|public.openapi_server_agents.space_id",
+        "n|col|public.openapi_server_agents.agent_id",
+        "n|col|public.agents.space_id",
+        "n|col|public.agents.id",
+        "e|uniqueness|public.agents.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "openapi_server_secrets"
+      ],
+      "writes": [
+        "s|fk|public.openapi_server_secrets.openapi_server_secrets_OYYaba9M8tQZ_fkey",
+        "n|fk|public.openapi_server_secrets.openapi_server_secrets_OYYaba9M8tQZ_fkey",
+        "e|fk|public.openapi_server_secrets.openapi_server_secrets_OYYaba9M8tQZ_fkey",
+        "n|con|public.openapi_server_secrets.openapi_server_secrets_OYYaba9M8tQZ_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.openapi_server_secrets",
+        "n|sch|public",
+        "n|tbl|public.openapi_servers",
+        "n|sch|public",
+        "n|col|public.openapi_server_secrets.space_id",
+        "n|col|public.openapi_server_secrets.server_id",
+        "n|col|public.openapi_server_secrets.id",
+        "n|col|public.openapi_servers.space_id",
+        "n|col|public.openapi_servers.id",
+        "n|col|public.openapi_servers.secret_id",
+        "e|uniqueness|public.openapi_servers.id.secret_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "openapi_servers"
+      ],
+      "writes": [
+        "s|fk|public.openapi_servers.openapi_servers_space_id_spaces_id_fkey",
+        "n|fk|public.openapi_servers.openapi_servers_space_id_spaces_id_fkey",
+        "e|fk|public.openapi_servers.openapi_servers_space_id_spaces_id_fkey",
+        "n|con|public.openapi_servers.openapi_servers_space_id_spaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.openapi_servers",
+        "n|sch|public",
+        "n|tbl|public.spaces",
+        "n|sch|public",
+        "n|col|public.openapi_servers.space_id",
+        "n|col|public.spaces.id",
+        "e|uniqueness|public.spaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
         "page_identities"
       ],
       "writes": [
@@ -8232,6 +8480,24 @@
     {
       "schema": "public",
       "name": "oauth_resource",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "openapi_server_agents",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "openapi_server_secrets",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "openapi_servers",
       "isRlsEnabled": false,
       "entityType": "tables"
     },
@@ -15189,6 +15455,279 @@
     },
     {
       "schema": "public",
+      "table": "openapi_server_agents",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_agents",
+      "name": "server_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_agents",
+      "name": "agent_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "server_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "ciphertext",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "wrapped_data_key",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "key_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "credential_owner_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "secret_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "url",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "operations",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "selected_operation_ids",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "availability",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "has_credentials",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
       "table": "page_identities",
       "name": "space_id",
       "type": "text",
@@ -19890,6 +20429,48 @@
     {
       "schema": "public",
       "table": "conversation_reply_segments",
+      "name": "conversation_reply_segments_run_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "conversation_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "run_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "sequence",
+          "isExpression": false,
+          "asc": false,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_reply_segments",
       "name": "conversation_reply_segments_sequence_idx",
       "nameExplicit": true,
       "columns": [
@@ -20218,6 +20799,48 @@
       ],
       "isUnique": true,
       "where": "\"state\" in ('running', 'waiting') and \"parent_run_id\" is null",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_runs",
+      "name": "conversation_runs_active_window_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "conversation_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "message_sequence",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"state\" in ('queued', 'running', 'waiting')",
       "with": "",
       "method": "btree",
       "concurrently": false,
@@ -21071,6 +21694,76 @@
       "columns": [
         {
           "value": "authorization_code_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_agents",
+      "name": "openapi_server_agents_agent_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "agent_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "server_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "openapi_servers_space_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -23874,6 +24567,82 @@
     },
     {
       "schema": "public",
+      "table": "openapi_server_agents",
+      "name": "openapi_server_agents_jUVusABQYTPv_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "server_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "openapi_servers",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_agents",
+      "name": "openapi_server_agents_space_id_agent_id_agents_space_id_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "agent_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "agents",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "openapi_server_secrets_OYYaba9M8tQZ_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "server_id",
+        "id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "openapi_servers",
+      "columnsTo": [
+        "space_id",
+        "id",
+        "secret_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "openapi_servers_space_id_spaces_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "spaces",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
       "table": "page_identities",
       "name": "page_identities_space_id_spaces_id_fkey",
       "nameExplicit": false,
@@ -25117,6 +25886,40 @@
     },
     {
       "schema": "public",
+      "table": "openapi_server_agents",
+      "name": "openapi_server_agents_pkey",
+      "columns": [
+        "space_id",
+        "server_id",
+        "agent_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_server_secrets",
+      "name": "openapi_server_secrets_pkey",
+      "columns": [
+        "space_id",
+        "server_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "openapi_servers_pkey",
+      "columns": [
+        "space_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "page_identities",
       "name": "page_identities_pkey",
       "columns": [
@@ -25757,6 +26560,19 @@
     },
     {
       "schema": "public",
+      "table": "openapi_servers",
+      "name": "openapi_servers_secret_idx",
+      "nameExplicit": true,
+      "columns": [
+        "space_id",
+        "id",
+        "secret_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
       "table": "instance_enrollment",
       "name": "instance_enrollment_code_hash_key",
       "nameExplicit": false,
@@ -25869,7 +26685,7 @@
       "schema": "public",
       "table": "approval_requests",
       "name": "approval_requests_tool_check",
-      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or \"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(\"tool_name\") <= 128)",
+      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
       "entityType": "checks"
     },
     {
@@ -25904,7 +26720,7 @@
       "schema": "public",
       "table": "approval_rules",
       "name": "approval_rules_tool_check",
-      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or \"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(\"tool_name\") <= 128)",
+      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
       "entityType": "checks"
     },
     {
@@ -25988,7 +26804,7 @@
       "schema": "public",
       "table": "conversation_effects",
       "name": "conversation_effects_tool_check",
-      "value": "(\"tool_name\" in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or \"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' and length(\"tool_name\") <= 128)",
+      "value": "(\"tool_name\" in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
       "entityType": "checks"
     },
     {
@@ -26192,6 +27008,13 @@
       "table": "model_connections",
       "name": "model_connections_protocol_check",
       "value": "(\"kind\" = 'compatible' and \"base_url\" is not null and \"api\" in ('anthropic-messages', 'openai-completions', 'openai-responses')) or (\"kind\" <> 'compatible' and \"base_url\" is null and \"api\" is null)",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "openapi_servers",
+      "name": "openapi_servers_availability_check",
+      "value": "\"availability\" in ('all', 'selected')",
       "entityType": "checks"
     },
     {

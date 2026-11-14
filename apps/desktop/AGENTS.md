@@ -25,6 +25,10 @@ and suppresses late results after local close. Go only bootstraps the channel.
 The shared Space menu and New Agent action occupy sidebar slots. The conversation
 header opens the shared team-computer lifecycle/files panel; its API reads and commands
 use the existing daemon-authenticated client without exposing credentials.
+Still working keeps outside-window active Runs reachable with Stop, targeted
+steering, addressed approvals and a bounded trigger-page jump. Tools settings
+compose Web's Space-owner OpenAPI management, write-only credentials and explicit
+operation/Agent availability through the existing API client.
 
 The current renderer has no project/session editor, Waiting inbox, Automations,
 Files, Terminal or local onboarding screen. Their native/CLI implementations remain

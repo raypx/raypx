@@ -90,7 +90,13 @@ export {
   type ApprovalCardView,
   type ApprovalCardError,
 } from "./model/approvals.js";
-export { toolDisplayLabel, toolLabelKeys, type ToolLabelKey } from "./model/tool-label.js";
+export {
+  toolDisplayLabel,
+  toolOperationLabel,
+  openApiOperationKind,
+  toolLabelKeys,
+  type ToolLabelKey,
+} from "./model/tool-label.js";
 
 export {
   SpaceManagementController,
@@ -135,3 +141,12 @@ export { compareLastActivity, relativeActivityTime } from "./model/activity.js";
 export { conversationMemberLabel } from "./model/participant-display.js";
 
 export { delegatedWork } from "./model/conversation.js";
+
+export {
+  OpenApiServersController,
+  OpenApiSecret,
+  createOpenApiServerDraft,
+  type OpenApiServersPort,
+  type OpenApiDirectoryPort,
+  type OpenApiTestResult,
+} from "./model/openapi-servers.js";

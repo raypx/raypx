@@ -329,3 +329,12 @@ snapshot/history metadata include the same field. It is an ISO timestamp from th
 newest retained event, or null without a retained event; editing Agent or group
 metadata does not reset it. Transport schemas retain the additive optional field
 for existing consumers, while PostgreSQL projections always populate it.
+
+Space HTTP APIs join the injected tool chain alongside remote servers. The first
+checkpoint freezes selected operation schemas and a credential-free definition
+fingerprint. Resume revalidates membership, definition identity and Agent
+availability before dispatch. Credentials are resolved only by the backend header
+adapter. Every call, including GET/HEAD, uses the existing fenced effect path;
+completed outcomes replay and uncertain outcomes block automatic redispatch.
+Read classification changes approval policy, not effect durability. Stop aborts
+the pinned HTTP request through the same Run signal.

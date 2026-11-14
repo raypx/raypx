@@ -377,3 +377,33 @@ state and `cursor` together. `cursor` keeps its existing event replay meaning;
 not replace an already newer event-stream cursor. No ACK, retention or stream
 resume semantics change. The new procedure leaves existing snapshot clients
 unchanged while giving adopting clients a bounded initial and older-history read.
+
+Snapshot and history also return optional additive `activeRuns` and
+`activeRunsTruncated`, independent of the requested message window. At most 100
+queued, running or waiting Runs are selected within the admitted Space and
+Conversation, including children. Each entry contains its credential-free `run`
+(including origin and untrusted-input attribution), `triggerMessage: { id,
+sequence }`, at most 16 `pendingApprovals` summaries with
+`pendingApprovalsTruncated`, and nullable `latestCommittedSegment: { id, sequence }`.
+No trigger text, exact approval arguments or tool results enter this projection.
+The counter lock covers this read and its event cursor together. Existing Run,
+card and segment events maintain the client projection; steering remains an input
+to a running/waiting Run rather than a new public Run state.
+`run.state` adds optional `triggerMessage: { id, sequence }`, hydrated from its
+same-Space immutable Run reference, so a late old-trigger or child Run can be
+projected without guessing from the latest loaded message. Different-member
+steering persists the untrusted marker and emits the existing state variant.
+
+Clients retain this bounded active-work projection alongside their bounded history.
+They show work whose trigger is outside the loaded window above the composer;
+loading that Run's trigger page removes its duplicate strip entry. Stop and
+addressed approval answers use the Run/request identity directly and need no page
+read. A page load does not repurpose the event cursor as a message boundary.
+An optional `conversations.send.message.steerRunId` targets an active Run in that
+same Conversation, including queued or delegated work. A terminal target returns
+`RUN_NOT_ACTIVE`; a foreign selector remains not found. The client freezes that
+target into an uncertain-send receipt so a retry never steers a different Run.
+The live model also caps outside-window work at 100 independently of loaded Run
+history. It removes terminal outside rows and ignores omitted reply bodies.
+Overflow keeps a visible truncation warning with an explicit Refresh action;
+refresh replaces it from an authoritative projection without sending the draft.

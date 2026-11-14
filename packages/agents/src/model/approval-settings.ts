@@ -1,4 +1,3 @@
-import type { DiscoveredMcpTool } from "./mcp-servers.js";
 import {
   approvalRuleSchema,
   approvalSettingsStateSchema,
@@ -6,6 +5,7 @@ import {
   type ApprovalRule,
   type ApprovalSettings,
   type ApprovalSettingsState,
+  type ToolName,
 } from "@raypx/core/approvals";
 
 export interface ApprovalSettingsPort {
@@ -142,7 +142,7 @@ export class ApprovalSettingsController {
   addDiscoveredRule(
     name: string,
     decision: ApprovalRule["decision"],
-    tools: readonly DiscoveredMcpTool[],
+    tools: readonly { name: ToolName }[],
   ): boolean {
     const tool = tools.find((entry) => entry.name === name);
     if (!tool) {

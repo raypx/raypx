@@ -31,6 +31,7 @@ import {
   GROUP_HISTORY_BUDGET,
   eventCursorStatus,
   InvalidConversationCursor,
+  ConversationSteeringError,
   memberMessageInputSchema,
   conversationEventSchema,
   toolActivitySchema,
@@ -54,7 +55,7 @@ import { RunResourceUnavailableError } from "../conversations.js";
 import { conversationView } from "../views.js";
 import { message, runView, segmentView } from "./conversation-views.js";
 import { lastConversationActivity } from "./activity.js";
-import { readHistory, snapshotAttribution, rememberMember } from "./history.js";
+import { readHistory, readActiveRuns, snapshotAttribution, rememberMember } from "./history.js";
 import { createGroupsRepository } from "./groups.js";
 import { createDelegationsRepository } from "./delegations.js";
 import { assertRunFence } from "./fence.js";
@@ -168,14 +169,10 @@ export function createConversationsRepository(
         failureCode: run.failureCode,
         agentId: run.agentId,
         parentRunId: run.parentRunId ?? null,
-        ...(run.state === "queued"
-          ? {
-              trigger: run.trigger,
-              routineId: run.routineId ?? null,
-              provenanceKind: run.inboundProvenance?.kind ?? null,
-              untrustedInput: run.untrustedInput === true,
-            }
-          : {}),
+        trigger: run.trigger,
+        routineId: run.routineId ?? null,
+        provenanceKind: run.inboundProvenance?.kind ?? null,
+        untrustedInput: run.untrustedInput === true,
       },
     });
     await tx.update(counters).set({ sequence }).where(counterSelection(scope, run.conversationId));
@@ -1544,6 +1541,16 @@ export function createConversationsRepository(
             ),
           );
         if (existing) return message(tx, existing);
+        const [steeringTarget] = values.steerRunId
+          ? await tx
+              .select()
+              .from(runs)
+              .where(runSelection(scope, id, values.steerRunId))
+              .limit(1)
+          : [];
+        if (values.steerRunId && !steeringTarget) throw new SpaceNotFound();
+        if (steeringTarget && !["queued", "running", "waiting"].includes(steeringTarget.state))
+          throw new ConversationSteeringError();
         await rememberMember(tx, scope, id, scope.member.accountId);
         const sequence = counter.sequence + 1;
         const [row] = await tx
@@ -1592,6 +1599,7 @@ export function createConversationsRepository(
           selected.some((agentId) => !participantRows.some((p) => p.agentId === agentId))
         )
           throw new GroupConversationError("GROUP_AGENT_NOT_PARTICIPANT");
+        if (steeringTarget) selected = [steeringTarget.agentId];
         if (values.mentions?.length)
           await tx.insert(messageMentions).values(
             [...new Set(values.mentions)].map((agentId, position) => ({
@@ -1612,8 +1620,11 @@ export function createConversationsRepository(
                 eq(runs.spaceId, scope.spaceId),
                 eq(runs.conversationId, id),
                 eq(runs.agentId, agentId),
-                isNull(runs.parentRunId),
-                inArray(runs.state, ["running", "waiting"]),
+                steeringTarget ? eq(runs.id, steeringTarget.id) : isNull(runs.parentRunId),
+                inArray(
+                  runs.state,
+                  steeringTarget ? ["queued", "running", "waiting"] : ["running", "waiting"],
+                ),
               ),
             )
             .orderBy(asc(runs.messageSequence), asc(runs.id))
@@ -1626,10 +1637,15 @@ export function createConversationsRepository(
               messageId: row!.id,
               sequence,
             });
-            await tx
+            const untrustedInput =
+              active.untrustedInput || active.memberAccountId !== scope.member.accountId;
+            const [steered] = await tx
               .update(runs)
-              .set({ instructionRevision: sql`${runs.instructionRevision} + 1` })
-              .where(runSelection(scope, id, active.id as RunId));
+              .set({ instructionRevision: sql`${runs.instructionRevision} + 1`, untrustedInput })
+              .where(runSelection(scope, id, active.id as RunId))
+              .returning();
+            if (untrustedInput && !active.untrustedInput)
+              await appendState(tx, scope, runView(steered!), ++latest, active.fence);
             continue;
           }
           const [agent] = await tx
@@ -1721,7 +1737,18 @@ export function createConversationsRepository(
               if (row.event.kind === "tool.started" || row.event.kind === "tool.finished")
                 payload = { ...(row.event.data as object), runId: row.event.runId };
               if (row.event.kind === "run.state")
-                payload = { ...(row.event.data as object), runId: row.event.runId };
+                payload = {
+                  ...(row.event.data as object),
+                  runId: row.event.runId,
+                  ...(row.run
+                    ? {
+                        triggerMessage: {
+                          id: row.run.messageId,
+                          sequence: row.run.messageSequence,
+                        },
+                      }
+                    : {}),
+                };
               if (row.event.kind === "card.created" || row.event.kind === "card.resolved")
                 payload = {
                   ...(row.event.data as object),
@@ -1796,6 +1823,7 @@ export function createConversationsRepository(
             .limit(101);
           return {
             ...(await snapshotAttribution(tx, scope, id)),
+            ...(await readActiveRuns(tx, scope, id)),
             toolActivity: activity
               .slice(0, 100)
               .reverse()

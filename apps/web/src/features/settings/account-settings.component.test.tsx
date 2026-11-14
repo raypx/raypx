@@ -45,6 +45,7 @@ async function openPanel(url = "/agents#settings/account") {
             <AccountSettingsContent value="models">
               Model connection controls
             </AccountSettingsContent>
+            <AccountSettingsContent value="tools">Tools controls</AccountSettingsContent>
             <AccountSettingsContent value="password">Password controls</AccountSettingsContent>
             <AccountSettingsContent value="sessions">
               <PrivateSessions />
@@ -305,4 +306,14 @@ it("opens the Models category directly without replacing the background", async 
   expect(screen.getByRole("tab", { name: "Models" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("tabpanel")).toHaveTextContent("Model connection controls");
   expect(router.state.location.pathname).toBe("/agents");
+});
+
+it("omits the Account-wide scope from mixed account and Space Tools only", async () => {
+  await openPanel();
+  expect(screen.getByText("Account-wide")).toBeVisible();
+  await act(async () => fireEvent.click(screen.getByRole("tab", { name: "Tools" })));
+  expect(screen.queryByText("Account-wide")).not.toBeInTheDocument();
+  expect(screen.getByRole("tabpanel")).toHaveTextContent("Tools controls");
+  await act(async () => fireEvent.click(screen.getByRole("tab", { name: "Models" })));
+  expect(screen.getByText("Account-wide")).toBeVisible();
 });

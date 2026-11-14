@@ -1,5 +1,11 @@
 # HTTP API and OpenAPI
 
+This guide describes Raypx's versioned HTTP API. Space owners can separately
+register external OpenAPI operations as Agent tools through Web/Desktop Tools;
+see [Space HTTP APIs](../architecture/capabilities.md#space-http-apis) for imports,
+credentials, availability, egress bounds and approval/effect behavior. Mobile
+shows those tools' activity and addressed approvals.
+
 The API and combined backend roles serve Swagger UI at `/api/docs` and the same
 generated OpenAPI 3.1 document at `/api/openapi.json`. Both use the API's existing
 Compose and Railway routes. Use **Try it out** from the reference page to send

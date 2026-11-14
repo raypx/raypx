@@ -93,3 +93,12 @@ Group mutation and Agent messaging refusals are separate from Run failure unions
 text-only skill ownership/availability and remote server configuration/test outcomes.
 `/approvals` separately validates namespaced remote names without extending the
 built-in enum. Space events add content-free `page.created/updated/deleted` records.
+
+`/conversation` also owns bounded `ActiveRun` and pending-card summary schemas:
+active states only, an exact trigger-message reference, latest committed segment
+position and no exact arguments. `run.state` optionally carries that immutable
+trigger reference so windowed clients do not infer it from unrelated messages.
+
+`/openapi-servers` owns bounded Space-owned HTTP API metadata, selected operations,
+all/selected Agent availability and write-only bearer/header credential inputs.
+Exact `openapi_<server>__<operation>` names join tool rules without extending built-ins.

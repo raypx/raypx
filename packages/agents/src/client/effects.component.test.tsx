@@ -107,3 +107,66 @@ it("ignores an inspection response after the dialog unmounts", async () => {
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(port.effects).toHaveBeenCalledOnce();
 });
+
+it.each(["en", "zh"] as const)(
+  "uses exact lifecycle identities for readable API effect labels in %s",
+  async (language) => {
+    const read = effectSchema.parse({
+      ...effect,
+      key: "c".repeat(64),
+      toolCallId: "read-item",
+      toolName: "openapi_0123456789abcdef0123456789abcdef__getItem",
+      state: "succeeded",
+      completedAt: "2026-01-01T00:00:01.000Z",
+    });
+    const write = effectSchema.parse({
+      ...read,
+      key: "d".repeat(64),
+      toolCallId: "create-item",
+      toolName: "openapi_0123456789abcdef0123456789abcdef__createItem",
+    });
+    const port: ApprovalPort = {
+      pending: async () => [],
+      answer: async () => {
+        throw new Error("Unused");
+      },
+      effects: vi.fn(async () => [read, write]),
+    };
+    render(
+      <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+        <EffectRecords
+          port={port}
+          selection={selection}
+          runId={runId}
+          activity={[
+            {
+              runId,
+              toolCallId: read.toolCallId,
+              toolName: read.toolName,
+              argumentSummary: "GET Read inventory item",
+            },
+            {
+              runId,
+              toolCallId: write.toolCallId,
+              toolName: write.toolName,
+              argumentSummary: "POST Create inventory item",
+            },
+            {
+              runId: runIdSchema.parse("unrelated-run"),
+              toolCallId: read.toolCallId,
+              toolName: read.toolName,
+              argumentSummary: "GET Wrong label",
+            },
+          ]}
+        />
+      </BrowserLanguageProvider>,
+    );
+    const strings = { en, zh }[language].agents.effects;
+    fireEvent.click(screen.getByRole("button", { name: strings.open }));
+    const dialog = await screen.findByRole("dialog", { name: strings.title });
+    expect(await within(dialog).findByText("Read inventory item")).toBeVisible();
+    expect(within(dialog).getByText("Create inventory item")).toBeVisible();
+    expect(within(dialog).queryByText("Wrong label")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("PRIVATE OUTPUT")).not.toBeInTheDocument();
+  },
+);

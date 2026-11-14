@@ -1,4 +1,7 @@
 {
   "extends": "@raypx/tsconfig/base.json",
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "compilerOptions": {
+    "types": ["bun"]
+  }
 }

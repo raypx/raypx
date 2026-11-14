@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { runIdSchema, type ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
+import { openApiToolNameSchema } from "@raypx/core/approvals";
 import { pageIdSchema } from "@raypx/core/pages";
 import { ComputerActivity, ToolActivity } from "./tool-activity.js";
 import en from "../../locales/en/index.js";
@@ -220,5 +221,31 @@ it.each(["agent_page_create", "agent_page_update"])(
     fireEvent.click(screen.getByRole("button"));
     fireEvent.click(within(screen.getByRole("listitem")).getByRole("button"));
     expect(open).toHaveBeenCalledExactlyOnceWith("exact-page");
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "shows readable HTTP activity and read classification in %s",
+  (language) => {
+    render(
+      <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+        <ToolActivity
+          activity={[
+            {
+              ...call,
+              toolName: openApiToolNameSchema.parse(
+                "openapi_0123456789abcdef0123456789abcdef__getItem",
+              ),
+              target: "GET https://api.example.test/items/1",
+              argumentSummary: "GET Read inventory item",
+            },
+          ]}
+          runId={call.runId}
+        />
+      </BrowserLanguageProvider>,
+    );
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByText("Read inventory item")).toBeVisible();
+    expect(screen.getByText({ en, zh }[language].agents.openapi.readOnly)).toBeVisible();
   },
 );

@@ -42,8 +42,9 @@ unrelated Space selectors keep the generic refusal.
 - Model credentials, connector tokens and webhook keys live in an encrypted secret
   store. The data key is wrapped by a key provider: a local key by default, or an
   external key service.
-- A secret is readable only by the member who owns it and by Runs that run as that
-  member.
+- Account connection secrets are readable only by their owner and Runs acting as
+  that member. A Space owner can separately grant an HTTP API's credentialed
+  operations to all or selected Agents in that Space; callers never receive the value.
 - A webhook key and an invitation link are stored as digests.
 - Rotating the wrapping key re-wraps data keys without rewriting secret values.
 
@@ -55,7 +56,7 @@ key provider may use an external service. Internal `rewrap` changes only the
 wrapped data key. It is an operator capability, with no account API procedure.
 API and recovery workers must share the same `APP_KEY`. Relay needs none.
 
-Only backend model resolution and owner-requested connection tests decrypt values.
+Only backend model/tool adapters and authorized connection tests decrypt values.
 No read API returns a value, ciphertext, wrapped key or secret reference. Run pins
 contain no credential. Model response guards and request-owned Computer tool
 guards reject credential echoes before events, effects or checkpoints persist
@@ -118,3 +119,14 @@ Remote tool endpoints bind the validated DNS address to the socket lookup for
 each request and revalidate redirects, preventing an unchecked second resolution.
 Remote header values use the existing encrypted envelopes and never enter public
 server projections, tool catalogs, effects, lifecycle events or checkpoints.
+
+Space-owned HTTP API registration is an explicit owner grant to all or selected
+Agents in that Space. Current members' Runs can use those configured operations;
+they do not receive the credential. Only owners can import/edit/test/delete the
+definition. Credential envelopes and selected-Agent references include same-Space
+keys. Secret values are supplied only as backend headers, never as model
+arguments, tool definitions or response metadata. Input/output guards refuse
+credential echoes before durable lifecycle data or model continuation is stored.
+The document fetch sends no API credential. Calls use the registered base URL
+and admitted pinned address; model input cannot replace the host or headers, and
+redirects are refused. API responses remain bounded untrusted input.

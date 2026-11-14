@@ -7,7 +7,7 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import type { ApprovalCardView, ApprovalPort, ConversationSelection } from "../model.js";
-import { toolDisplayLabel } from "../model/tool-label.js";
+import { toolOperationLabel, openApiOperationKind } from "../model/tool-label.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
 
@@ -48,7 +48,8 @@ function ToolActivityRow({
   selection?: ConversationSelection | undefined;
 }) {
   const t = useTranslations("agents");
-  const toolName = toolDisplayLabel(call.toolName, t);
+  const toolName = toolOperationLabel(call, t);
+  const operationKind = openApiOperationKind(call);
   const refusal = interactionCode(call);
   const pageTool =
     call.toolName === "agent_page_create" ||
@@ -74,6 +75,11 @@ function ToolActivityRow({
         </Button>
       ) : (
         <span className="min-w-0 font-medium wrap-anywhere">{toolName}</span>
+      )}
+      {operationKind && (
+        <span data-openapi-operation-kind={operationKind} className="text-muted-foreground">
+          {t(`openapi.${operationKind}`)}
+        </span>
       )}
       <span className="min-w-0 font-mono text-muted-foreground wrap-anywhere">
         {call.target.slice(0, 1_024)}
@@ -103,9 +109,16 @@ function ToolActivityRow({
             )}
           </span>
         )}
-      {call.outcome === "unknown" && approvalPort && selection && (
-        <EffectRecords port={approvalPort} selection={selection} runId={call.runId} />
-      )}
+      {(call.outcome === "unknown" || call.toolName.startsWith("openapi_")) &&
+        approvalPort &&
+        selection && (
+          <EffectRecords
+            port={approvalPort}
+            selection={selection}
+            runId={call.runId}
+            activity={[call]}
+          />
+        )}
     </li>
   );
 }
@@ -137,7 +150,9 @@ export function ToolActivity({
   ).length;
   const unknown = activity.some((call) => call.outcome === "unknown");
   const running = activity.some((call) => call.outcome === null);
-  const unknownRun = activity.find((call) => call.outcome === "unknown")?.runId;
+  const effectsRun = activity.find(
+    (call) => call.outcome === "unknown" || call.toolName.startsWith("openapi_"),
+  )?.runId;
   let status = "";
   if (running) status = t("activity.outcomes.running");
   if (failed) status = t("activity.failedCount", { count: failed });
@@ -165,8 +180,13 @@ export function ToolActivity({
               />
             ))}
           </ul>
-          {unknownRun && approvalPort && selection && (
-            <EffectRecords port={approvalPort} selection={selection} runId={unknownRun} />
+          {effectsRun && approvalPort && selection && (
+            <EffectRecords
+              port={approvalPort}
+              selection={selection}
+              runId={effectsRun}
+              activity={activity}
+            />
           )}
         </div>
       </CollapsibleContent>

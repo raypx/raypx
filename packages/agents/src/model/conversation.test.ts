@@ -672,6 +672,8 @@ describe("chat presentation", () => {
     const state = new ConversationState(selection);
     state.applySnapshot(
       snapshot({
+        messages: [message()],
+        cursor: 1,
         runs: [
           run("failed"),
           { ...run(), id: runIdSchema.parse("queued") },

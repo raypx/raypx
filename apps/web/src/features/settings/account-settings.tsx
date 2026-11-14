@@ -181,7 +181,7 @@ export function AccountSettingsPanel({
           value={section}
           onValueChange={changeSection}
           orientation="vertical"
-          className="min-h-0 flex-col gap-0 md:flex-row"
+          className="min-h-0 min-w-0 flex-col gap-0 md:flex-row"
         >
           <aside className="flex shrink-0 flex-col gap-5 border-b border-border bg-muted/30 p-4 md:w-56 md:border-r md:border-b-0 md:py-6">
             <DialogTitle className="flex items-center gap-2 px-2 pr-10">
@@ -293,14 +293,16 @@ export function AccountSettingsPanel({
                   {currentSection.label}
                 </h1>
               </div>
-              <Badge variant="outline">
-                {deviceSection ? (
-                  <MonitorIcon aria-hidden="true" data-icon="inline-start" />
-                ) : (
-                  <UserCircleIcon aria-hidden="true" data-icon="inline-start" />
-                )}
-                {deviceSection ? c("device") : s("accountScope")}
-              </Badge>
+              {section !== "tools" && (
+                <Badge variant="outline">
+                  {deviceSection ? (
+                    <MonitorIcon aria-hidden="true" data-icon="inline-start" />
+                  ) : (
+                    <UserCircleIcon aria-hidden="true" data-icon="inline-start" />
+                  )}
+                  {deviceSection ? c("device") : s("accountScope")}
+                </Badge>
+              )}
             </header>
             <div className="p-5 md:px-8 md:py-7">
               <VisitedSections value={visited}>

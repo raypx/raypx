@@ -324,7 +324,12 @@ it.each(["en", "zh"] as const)(
       },
     });
     await act(async () =>
-      finish?.({ ...request, state: "approved", answeredByAccountId: "account", resolvedAt: time }),
+      finish?.({
+        ...request,
+        state: "approved" as const,
+        answeredByAccountId: "account",
+        resolvedAt: time,
+      }),
     );
     expect(
       screen.queryByRole("button", { name: strings.approval.approve }),
@@ -2284,5 +2289,164 @@ it.each(["en", "zh"] as const)(
     expect(
       await screen.findByText(strings.spaceSettings.approvedBy.replace("{name}", name)),
     ).toBeInTheDocument();
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "keeps old active work actionable outside history in %s",
+  async (language) => {
+    const request = approvalRequestSchema.parse({
+      id: "old-approval",
+      spaceId: agent.spaceId,
+      conversationId: conversation.id,
+      runId: run.id,
+      memberAccountId: "account",
+      toolCallId: "write",
+      toolName: "computer_write_file",
+      arguments: { path: "report.txt", text: "private body" },
+      argumentSummary: "Write file",
+      target: "report.txt",
+      state: "pending",
+      createdAt: time,
+      expiresAt: "2099-11-14T00:00:00Z",
+      resolvedAt: null,
+      answeredByAccountId: null,
+    });
+    const approvalPort: ApprovalPort = {
+      pending: async () => [request],
+      effects: async () => [],
+      answer: vi.fn(async () => ({
+        ...request,
+        state: "approved" as const,
+        resolvedAt: time,
+        answeredByAccountId: "account",
+      })),
+    };
+    const f = fixture({ language, approvals: approvalPort });
+    const recentMessage = {
+      ...message,
+      id: messageSchema.shape.id.parse("recent"),
+      sequence: 100,
+      text: "Recent message",
+    };
+    const active = {
+      run: { ...run, state: "waiting" as const, untrustedInput: true },
+      triggerMessage: { id: message.id, sequence: 1 },
+      pendingApprovals: [
+        {
+          requestId: request.id,
+          runId: run.id,
+          toolCallId: "write",
+          toolName: request.toolName,
+          argumentSummary: "Write file",
+          target: "report.txt",
+          memberAccountId: "account",
+          createdAt: time,
+          expiresAt: request.expiresAt,
+        },
+      ],
+      pendingApprovalsTruncated: false,
+      latestCommittedSegment: null,
+    };
+    f.client.conversations.history = vi.fn(async (input) => ({
+      conversation,
+      messages: input.before ? [message] : [recentMessage],
+      runs: input.before ? [active.run] : [],
+      segments: [],
+      cursor: 100,
+      olderCursor: input.before
+        ? null
+        : { spaceId: agent.spaceId, conversationId: conversation.id, beforeSequence: 100 },
+      runsTruncated: false,
+      segmentsTruncated: false,
+      activeRuns: [active],
+      activeRunsTruncated: false,
+    }));
+    f.mount(true);
+    const strip = await screen.findByRole("region", {
+      name: language === "en" ? "Still working" : "仍在工作",
+    });
+    expect(within(strip).getByText(agent.name)).toBeVisible();
+    expect(screen.queryByText(message.text)).not.toBeInTheDocument();
+    expect(
+      within(strip).getByText(
+        language === "en"
+          ? "This Run received untrusted external input."
+          : "此运行接收了不可信的外部输入。",
+      ),
+    ).toBeVisible();
+    await userEvent.click(
+      within(strip).getByRole("button", { name: language === "en" ? "Steer" : "补充指示" }),
+    );
+    expect(screen.getByRole("textbox")).toHaveFocus();
+    expect(
+      screen.getByRole("button", { name: language === "en" ? "Cancel steering" : "取消补充指示" }),
+    ).toBeVisible();
+    await userEvent.click(
+      within(strip).getByRole("button", { name: language === "en" ? "Approve" : "批准" }),
+    );
+    await waitFor(() =>
+      expect(approvalPort.answer).toHaveBeenCalledWith({
+        spaceId: agent.spaceId,
+        requestId: request.id,
+        decision: "approved",
+      }),
+    );
+    await userEvent.click(
+      within(strip).getByRole("button", { name: language === "en" ? "Show Run" : "查看运行" }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("region", { name: language === "en" ? "Still working" : "仍在工作" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText(message.text)).toBeVisible();
+    await userEvent.type(screen.getByRole("textbox"), "Continue the selected work{enter}");
+    await waitFor(() =>
+      expect(f.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.objectContaining({
+            steerRunId: run.id,
+            text: "Continue the selected work",
+          }),
+        }),
+      ),
+    );
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "makes omitted active work explicit and offers authoritative refresh in %s",
+  async (language) => {
+    const f = fixture({
+      language,
+      snapshot: {
+        conversation,
+        messages: [],
+        runs: [],
+        segments: [],
+        cursor: 0,
+        activeRunsTruncated: true,
+      },
+    });
+    f.mount(true);
+    const copy = language === "en" ? en.agents : zh.agents;
+    const strip = await screen.findByRole("region", { name: copy.stillWorking.title });
+    expect(within(strip).getByText(copy.stillWorking.truncated)).toBeVisible();
+    f.readSnapshot.mockResolvedValueOnce({
+      conversation,
+      messages: [],
+      runs: [],
+      segments: [],
+      cursor: 0,
+      activeRunsTruncated: false,
+    });
+    await userEvent.click(within(strip).getByRole("button", { name: copy.refresh }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("region", { name: copy.stillWorking.title }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(f.readSnapshot).toHaveBeenCalledTimes(2);
   },
 );

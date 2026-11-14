@@ -94,3 +94,10 @@ The Page journey follows a produced activity link live, then follows the retaine
 history link after deletion and checks the explicit deleted state.
 The fixture MCP endpoint is non-executing JSON-RPC and the deterministic model calls
 only its discovered tool, through the real approval pipeline.
+
+Active-Run acceptance appends bounded fixture history after an old waiting Run,
+reloads, answers from Still working and jumps to its trigger page. OpenAPI
+acceptance imports the fixture document once, enables one read and one mutating
+operation, answers the change approval and inspects committed activity/effects.
+Both journeys use isolated Spaces and the same owned API in both renderers.
+Opt-in light screenshots at 1440×860 and 375×812 live under `.artifacts/`.

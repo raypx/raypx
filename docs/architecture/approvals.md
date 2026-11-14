@@ -165,3 +165,13 @@ there are no wildcard or prefix rules. Every remote call records an effect, even
 a read. An annotation alone cannot grant read behavior: an exact Allow is also
 required. Block precedes both that read allowance and Never ask. A normal remote
 change retains untrusted-input precedence over Allow.
+
+OpenAPI tools use the same exact-name rules, addressed cards and effect lifecycle.
+GET/HEAD are read-only for approval classification; other supported HTTP methods
+are changes. A read can run in Ask without an Allow rule, while an exact Block
+still wins. A mutating operation follows Ask/Never ask and untrusted-write rules.
+Cards and activity show the registered operation label, method and read/change
+classification. Every HTTP call records intent/outcome, including reads, so a
+completed result replays without redispatch and an unknown result is never retried
+automatically. The configured API credential is absent from the approval arguments,
+summaries and effect results.

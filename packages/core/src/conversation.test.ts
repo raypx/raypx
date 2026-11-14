@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 import {
+  activeRunSchema,
   conversationEventSchema,
   eventCursorStatus,
   memberMessageInputSchema,
@@ -188,4 +189,66 @@ it("bounds lifecycle metadata and excludes raw arguments, contents and tool outp
     { durationMs: -1 },
   ])
     expect(conversationEventSchema.safeParse({ ...finished, ...extra }).success).toBe(false);
+});
+
+it("bounds active Run summaries and rejects mismatched references, terminal Runs and exact arguments", () => {
+  const time = "2026-11-14T00:00:00.000Z";
+  const run = {
+    id: "run",
+    spaceId: "space",
+    conversationId: "conversation",
+    agentId: "agent",
+    trigger: "webhook",
+    messageId: "trigger",
+    memberAccountId: "member",
+    model: { modelId: "fixture" },
+    state: "waiting",
+    failureCode: null,
+    createdAt: time,
+    startedAt: time,
+    firstResponseAt: null,
+    finishedAt: null,
+    untrustedInput: true,
+  };
+  const approval = {
+    requestId: "request",
+    runId: "run",
+    toolCallId: "call",
+    toolName: "computer_write_file",
+    argumentSummary: "Write file",
+    target: "workspace",
+    memberAccountId: "member",
+    expiresAt: time,
+    createdAt: time,
+  };
+  const item = {
+    run,
+    triggerMessage: { id: "trigger", sequence: 1 },
+    pendingApprovals: [approval],
+    pendingApprovalsTruncated: false,
+    latestCommittedSegment: { id: "segment", sequence: 2 },
+  };
+  expect(activeRunSchema.parse(item).run.untrustedInput).toBe(true);
+  for (const state of ["queued", "running", "waiting"])
+    expect(activeRunSchema.safeParse({ ...item, run: { ...run, state } }).success).toBe(true);
+  for (const change of [
+    { run: { ...run, state: "succeeded" } },
+    { triggerMessage: { id: "other", sequence: 1 } },
+    { pendingApprovals: [{ ...approval, runId: "other" }] },
+    { pendingApprovals: [{ ...approval, arguments: { text: "private" } }] },
+    { pendingApprovals: Array.from({ length: 17 }, () => approval) },
+    { latestCommittedSegment: { id: "segment", sequence: 0 } },
+  ])
+    expect(activeRunSchema.safeParse({ ...item, ...change }).success).toBe(false);
+});
+
+it("validates exact Run steering without ambiguous Agent mention routing", () => {
+  const message = { text: "Continue this Run", idempotencyKey: "steer", steerRunId: "run" };
+  expect(memberMessageInputSchema.parse(message).steerRunId).toBe("run");
+  for (const change of [
+    { steerRunId: "" },
+    { steerRunId: "x".repeat(129) },
+    { mentions: ["other-agent"] },
+  ])
+    expect(memberMessageInputSchema.safeParse({ ...message, ...change }).success).toBe(false);
 });

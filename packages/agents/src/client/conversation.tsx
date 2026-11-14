@@ -26,6 +26,7 @@ import { Alert, AlertDescription, AlertAction } from "@raypx/ui/components/ui/al
 import { IconButton } from "@raypx/ui/icon-button";
 import { HelpHint } from "@raypx/ui/help-hint";
 import { AgentIcon } from "@raypx/icons/agent";
+import { CloseIcon } from "@raypx/icons/close";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SendIcon } from "@raypx/icons/send";
@@ -332,6 +333,7 @@ function ConversationContents({
     follow.current = false;
     node.scrollIntoView?.({ block: "center", behavior: "instant" });
     node.focus({ preventScroll: true });
+    setTargetRun(null);
     anchor.current = {
       id: node.dataset.messageRow ?? "",
       offset:
@@ -340,7 +342,7 @@ function ConversationContents({
   }, [targetRun, rows]);
   function openRun(runId: string) {
     setTargetRun(runId);
-    controller.reconnect();
+    void controller.loadRun(runId as RunId);
   }
   const pendingCards = useMemo(
     () =>
@@ -357,6 +359,9 @@ function ConversationContents({
           ),
       ),
     [state.cards, state.toolActivity, accountId],
+  );
+  const outsideRuns = runs.filter(
+    (run) => run.outsideWindow && ["queued", "running", "waiting"].includes(run.state),
   );
   const memberName = (memberAccountId: string) =>
     conversationMemberLabel(memberAccountId, accountId, state.participants ?? [], members, {
@@ -1037,6 +1042,110 @@ function ConversationContents({
             </Button>
           </div>
         )}
+        {(outsideRuns.length > 0 || state.activeRunsTruncated) && (
+          <div
+            role="region"
+            aria-label={t("stillWorking.title")}
+            data-still-working
+            className="max-h-[min(24rem,50dvh)] min-w-0 shrink-0 overflow-y-auto rounded-lg border sm:max-h-64"
+          >
+            <h3 className="px-3 pt-2 text-xs font-medium">{t("stillWorking.title")}</h3>
+            {outsideRuns.map((run) => (
+              <div key={run.id} data-active-run-id={run.id} className="min-w-0 space-y-2 px-3 py-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
+                  <div className="flex min-w-0 basis-full items-start justify-between gap-2 sm:basis-auto sm:flex-1">
+                    <span className="min-w-0 font-medium wrap-anywhere">
+                      {agentName(run.agentId)}
+                    </span>
+                    <span className="shrink-0 text-muted-foreground">{t(run.state)}</span>
+                  </div>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    disabled={state.history.loading !== null}
+                    onClick={() => openRun(run.id)}
+                  >
+                    {t("stillWorking.showRun")}
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => {
+                      controller.beginSteering(run.id);
+                      editor.current?.focus();
+                    }}
+                  >
+                    {t("stillWorking.steer")}
+                  </Button>
+                  <IconButton
+                    size="icon-xs"
+                    variant="ghost"
+                    label={t("mentions.stop", { name: agentName(run.agentId) })}
+                    disabled={stopping.has(run.id)}
+                    onClick={() => void stop(run.id)}
+                  >
+                    <StopIcon aria-hidden="true" />
+                  </IconButton>
+                </div>
+                {run.trigger && run.trigger !== "message" && (
+                  <p className="text-xs text-muted-foreground">
+                    {(run.provenanceKind ?? run.inboundProvenance?.kind) === "repository"
+                      ? t("origins.repository")
+                      : t(`origins.${run.trigger}`)}
+                  </p>
+                )}
+                {(run.untrustedInput ?? Boolean(run.inboundProvenance)) && (
+                  <p className="text-xs text-muted-foreground">{t("untrustedInput")}</p>
+                )}
+                {pendingCards
+                  .filter((card) => card.runId === run.id)
+                  .map((card) => (
+                    <ApprovalCard
+                      key={card.requestId}
+                      card={card}
+                      accountId={accountId}
+                      onAnswer={(decision, allowTool) =>
+                        controller.answerApproval(card.requestId, decision, allowTool)
+                      }
+                      onExpired={() => void controller.refreshApprovals()}
+                      onAnswered={() => editor.current?.focus()}
+                    />
+                  ))}
+              </div>
+            ))}
+            {state.activeRunsTruncated && (
+              <div className="flex flex-wrap items-center gap-2 px-3 pb-2 text-xs text-muted-foreground">
+                <p className="min-w-0 flex-1">{t("stillWorking.truncated")}</p>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  disabled={state.history.loading !== null}
+                  onClick={() => void controller.loadLatest()}
+                >
+                  {t("refresh")}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+        {state.steeringRunId && (
+          <div className="flex min-w-0 shrink-0 items-center gap-2 text-xs text-muted-foreground">
+            <span className="min-w-0 flex-1 truncate">
+              {t("stillWorking.targeted", {
+                name: agentName(runs.find((run) => run.id === state.steeringRunId)?.agentId),
+              })}
+            </span>
+            <IconButton
+              size="icon-xs"
+              variant="ghost"
+              label={t("stillWorking.cancelSteering")}
+              disabled={!!state.pending}
+              onClick={() => controller.clearSteering()}
+            >
+              <CloseIcon aria-hidden="true" />
+            </IconButton>
+          </div>
+        )}
         <form onSubmit={submit} className="min-w-0 shrink-0">
           <Field>
             <FieldLabel htmlFor={id} className="sr-only">
@@ -1127,7 +1236,12 @@ function ConversationContents({
                     : {t(`approvalSettings.${appliedMode}`)}
                   </span>
                 )}
-                <PendingApprovalControl cards={pendingCards} history={history} />
+                <PendingApprovalControl
+                  cards={pendingCards.filter(
+                    (card) => !outsideRuns.some((run) => run.id === card.runId),
+                  )}
+                  history={history}
+                />
                 {showStop && active ? (
                   <IconButton
                     variant="default"

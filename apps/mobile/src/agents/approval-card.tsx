@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { Switch } from "heroui-native/switch";
 import {
-  toolDisplayLabel,
+  toolOperationLabel,
+  openApiOperationKind,
   approvalDeadlineProminent,
   approvalDuration,
   approvalExtraSummary,
@@ -57,6 +58,7 @@ export function ApprovalCard({
     card.error === "unconfirmed" ||
     card.error === "resolvedElsewhere";
   const summary = approvalExtraSummary(card);
+  const operationKind = openApiOperationKind(card);
   const rememberLabel = t(
     card.toolName === "computer_run_command"
       ? "agents.approval.alwaysExecutable"
@@ -72,8 +74,13 @@ export function ApprovalCard({
   return (
     <View className="gap-3 rounded-lg border border-border p-4">
       <Text accessibilityRole="header" className="text-base font-semibold text-foreground">
-        {toolDisplayLabel(card.toolName, (key) => t(`agents.${key}`))}
+        {toolOperationLabel(card, (key) => t(`agents.${key}`))}
       </Text>
+      {operationKind && (
+        <Text className="text-xs text-muted-foreground">
+          {t(`agents.openapi.${operationKind}`)}
+        </Text>
+      )}
       <Text selectable className="text-sm text-foreground">
         {card.target}
       </Text>

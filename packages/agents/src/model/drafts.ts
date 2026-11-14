@@ -1,4 +1,5 @@
 import { validMentionTokens, type MentionToken } from "./mentions.js";
+import { runIdSchema, type RunId } from "@raypx/core/conversation";
 import type { AgentId } from "@raypx/core/agents";
 import type { ConversationOwner, ConversationSelection } from "./port.js";
 
@@ -6,6 +7,7 @@ export const MAX_CONVERSATION_DRAFT = 32_000;
 export interface PendingMessage {
   idempotencyKey: string;
   mentions?: AgentId[] | undefined;
+  steerRunId?: RunId | undefined;
   text: string;
 }
 export interface ConversationDraft {
@@ -60,12 +62,15 @@ export function readConversationDraft(raw: string | null): ConversationDraft {
         ))
     )
       return empty;
+    const steerRunId = "steerRunId" in pending ? runIdSchema.safeParse(pending.steerRunId) : null;
+    if (steerRunId && !steerRunId.success) return empty;
     return {
       text: value.text,
       ...tokens,
       pending: {
         text: pending.text,
         idempotencyKey: pending.idempotencyKey,
+        ...(steerRunId?.success ? { steerRunId: steerRunId.data } : {}),
         ...("mentions" in pending &&
         Array.isArray(pending.mentions) &&
         pending.mentions.length <= 32 &&

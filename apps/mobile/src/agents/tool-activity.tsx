@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { Button } from "heroui-native/button";
 import {
-  toolDisplayLabel,
+  toolOperationLabel,
+  openApiOperationKind,
   type ApprovalCardView,
   type conversationTimelineRows,
 } from "@raypx/agents/model";
@@ -39,7 +40,8 @@ function ToolCallRow({
     setLinkError(false);
     void Linking.openURL(url.href).catch(() => setLinkError(true));
   }
-  const name = toolDisplayLabel(call.toolName, (key) => t(`agents.${key}`));
+  const name = toolOperationLabel(call, (key) => t(`agents.${key}`));
+  const operationKind = openApiOperationKind(call);
   return (
     <View
       testID={`tool:${call.runId}:${call.toolCallId}`}
@@ -57,6 +59,11 @@ function ToolCallRow({
         </Button>
       ) : (
         <Text className="text-sm font-medium text-foreground">{name}</Text>
+      )}
+      {operationKind && (
+        <Text className="text-xs text-muted-foreground">
+          {t(`agents.openapi.${operationKind}`)}
+        </Text>
       )}
       {linkError && (
         <Text accessibilityRole="alert" className="text-sm text-foreground">
