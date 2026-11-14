@@ -38,6 +38,27 @@ afterEach(() => {
 });
 
 describe("native approval card", () => {
+  it.each(["en", "zh"] as const)(
+    "attributes a group approval to its Agent in %s",
+    async (locale) => {
+      useLocales.mockReturnValue([{ languageTag: locale, languageCode: locale }]);
+      const answer = vi.fn();
+      const view = await renderNative(
+        <ApprovalCard
+          card={card()}
+          accountId="member-1"
+          agentName="Writer"
+          onAnswer={answer}
+          onRefresh={vi.fn()}
+        />,
+      );
+      expect(textContent(view.root)).toContain(
+        { en, zh }[locale].agents.approval.requestedBy.replace("{name}", "Writer"),
+      );
+      expect(answer).not.toHaveBeenCalled();
+      await view.unmount();
+    },
+  );
   it("submits an explicit approval and remembered exact-tool choice, then follows resolution", async () => {
     const request = card();
     const answer = vi.fn();

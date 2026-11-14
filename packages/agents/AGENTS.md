@@ -10,7 +10,8 @@ operations use a fenced gate independently of concurrent model work.
 `/model` owns pure Space/Agent page selection, the conversation projection and its
 injected RPC, stream and draft ports. ComputerController owns the Space computer
 lifecycle projection, guarded commands and refreshes from events/reconnects. Applied state and cursor advance together;
-React lives only in `/client`. Web and Desktop consume that shared workspace. The shell owns its single title;
+React lives only in `/client`. `/model` also exposes the existing structural
+mention helpers and foreground Space live controller for native consumers. Web and Desktop consume that shared workspace. The shell owns its single title;
 list/detail panes fill the tool layout, with a scrolling transcript and fixed composer.
 Space selection and New Agent mount into sidebar slots. The conversation header opens Routines and Space memory sheets through optional
 `routines` and `spaceMemory` ports, and the computer panel: a sheet below 1280px, an inline side panel

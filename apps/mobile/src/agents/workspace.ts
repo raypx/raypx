@@ -1,17 +1,22 @@
 import {
   applyAgents,
+  applyGroups,
   applySpaces,
   ComputerController,
   ConversationController,
+  SpaceLiveController,
   createAgentsPageState,
   selectSpace,
   type AgentConversationView,
+  type GroupConversationView,
+  type SpaceSubscriptionEnd,
   type AgentsPageState,
   type AgentsWorkspacePort,
   type ConversationDraftStore,
   type ConversationOwner,
   type ConversationSocketPort,
 } from "@raypx/agents/model";
+import type { ApiClient } from "@raypx/client/api";
 import { messageKey } from "./ports.js";
 
 export interface MobileWorkspaceView {
@@ -34,6 +39,7 @@ export class MobileWorkspace {
   private disposed = false;
   private active = false;
   private focused = false;
+  private live: { spaceId: string; controller: SpaceLiveController } | undefined;
   private selected:
     | {
         id: string;
@@ -48,6 +54,8 @@ export class MobileWorkspace {
     private socket: ConversationSocketPort,
     private drafts: ConversationDraftStore,
     private preference: { read(): string | null; write(id: string): void },
+    readonly api?: ApiClient,
+    private onSpaceExit?: (reason: SpaceSubscriptionEnd) => void,
   ) {}
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -86,6 +94,39 @@ export class MobileWorkspace {
     this.selected?.computer.dispose();
     this.selected = undefined;
   }
+  private syncLive() {
+    const spaceId = this.view.page.spaceId;
+    if (!this.active || !spaceId || !this.api) {
+      this.live?.controller.dispose();
+      this.live = undefined;
+      return;
+    }
+    if (this.live?.spaceId === spaceId) return;
+    this.live?.controller.dispose();
+    const controller = new SpaceLiveController({
+      spaceId,
+      accountId: this.owner.accountId,
+      socket: this.socket,
+      list: () => this.port.spaces.list({}),
+      onMemberships: (spaces) => {
+        if (this.disposed) return;
+        const page = applySpaces(this.view.page, spaces);
+        if (page.spaceId !== this.view.page.spaceId) this.clearConversation();
+        this.update({ page });
+      },
+      onEvent: async () => {
+        await this.refresh();
+      },
+      onExit: (reason) => {
+        this.clearConversation();
+        this.update({ page: { ...this.view.page, agents: [], groups: [] } });
+        this.onSpaceExit?.(reason);
+        void this.refresh();
+      },
+    });
+    this.live = { spaceId, controller };
+    controller.start();
+  }
   async refresh(preferredSpaceId?: string) {
     if (this.disposed) return;
     const revision = ++this.revision;
@@ -104,20 +145,36 @@ export class MobileWorkspace {
       const page = applySpaces(this.view.page, spaces, preferred);
       if (page.spaceId !== this.view.page.spaceId) this.clearConversation();
       this.update({ page });
+      this.syncLive();
       if (!page.spaceId) {
         this.update({ loading: false, refreshing: false });
         return;
       }
       const spaceId = page.spaceId;
-      const [agents, models] = await Promise.all([
+      const [agents, models, groups] = await Promise.all([
         this.port.agents.list({ spaceId, limit: 100 }),
         this.port.agents.models({ spaceId }),
+        this.port.groups?.listGroups({ spaceId, limit: 100 }) ?? [],
       ]);
       if (this.disposed || revision !== this.revision) return;
-      if (this.selected && !agents.some((item) => item.agent.id === this.selected?.id))
+      if (
+        this.selected &&
+        !agents.some((item) => item.agent.id === this.selected?.id) &&
+        !groups.some((group) => `group:${group.id}` === this.selected?.id)
+      )
         this.clearConversation();
       this.update({
-        page: { ...applyAgents(this.view.page, spaceId, agents), models },
+        page: {
+          ...applyGroups(
+            applyAgents(this.view.page, spaceId, agents),
+            spaceId,
+            groups.map((conversation) => ({
+              conversation,
+              agents: agents.map((item) => item.agent),
+            })),
+          ),
+          models,
+        },
         loading: false,
         refreshing: false,
       });
@@ -140,12 +197,18 @@ export class MobileWorkspace {
     void this.refresh(id);
   }
   conversation(item: AgentConversationView) {
-    if (item.agent.spaceId !== this.view.page.spaceId) throw new Error("Wrong Space");
-    if (this.selected?.id === item.agent.id) return this.selected;
+    return this.openConversation(item.agent.id, item.conversation);
+  }
+  groupConversation(item: GroupConversationView) {
+    return this.openConversation(`group:${item.conversation.id}`, item.conversation);
+  }
+  private openConversation(id: string, item: AgentConversationView["conversation"]) {
+    if (item.spaceId !== this.view.page.spaceId) throw new Error("Wrong Space");
+    if (this.selected?.id === id) return this.selected;
     this.clearConversation();
-    const computer = new ComputerController(item.agent.spaceId, this.port.computers);
+    const computer = new ComputerController(item.spaceId, this.port.computers);
     const conversation = new ConversationController({
-      selection: { spaceId: item.agent.spaceId, conversationId: item.conversation.id },
+      selection: { spaceId: item.spaceId, conversationId: item.id },
       owner: this.owner,
       port: this.port.conversations,
       socket: this.socket,
@@ -154,7 +217,7 @@ export class MobileWorkspace {
       computer,
       ...(this.port.approvals ? { approvals: this.port.approvals } : {}),
     });
-    this.selected = { id: item.agent.id, conversation, computer };
+    this.selected = { id, conversation, computer };
     if (!this.active || !this.focused) conversation.suspend();
     void conversation.start();
     if (this.active && this.focused) void computer.refresh();
@@ -163,6 +226,7 @@ export class MobileWorkspace {
   setActive(active: boolean) {
     if (this.disposed || this.active === active) return;
     this.active = active;
+    this.syncLive();
     if (!active) this.selected?.conversation.suspend();
     else {
       if (this.focused) this.selected?.conversation.resume();
@@ -182,6 +246,7 @@ export class MobileWorkspace {
   dispose() {
     this.disposed = true;
     ++this.revision;
+    this.live?.controller.dispose();
     this.clearConversation();
     this.listeners.clear();
   }

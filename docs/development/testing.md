@@ -227,8 +227,9 @@ bun --bun expo install --check
 The build exports iOS and Android JavaScript bundles; it does not compile native
 apps. Native component mocks cover Agent directory/conversation, Markdown,
 the active-Run strip, targeted steering, HTTP API activity/approval labels and the
-computer sheet; port tests cover session headers, storage and
-AppState resume. Neither proves device layout, keyboard, screen reader or live
+computer sheet, groups/mentions, shared Spaces/invitations, routines, memory
+revision restore, Pages handoff and resource enablement/availability; port tests
+cover session headers, storage, precise close reasons and AppState resume. Neither proves device layout, keyboard, screen reader or live
 socket behavior. The manual unsigned-native build and signed-release workflows
 are separate. [Mobile](mobile.md#device-acceptance) lists iOS/Android device checks;
 unrun device/simulator/platform acceptance remains unverified.

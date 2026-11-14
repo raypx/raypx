@@ -7,18 +7,35 @@ export function safeDestination(
   params: Record<string, unknown>,
 ): Destination | null {
   if (pathname === "/account") return { pathname, params: {} };
-  if (!/^\/conversation\/[^/?#]+$/.test(pathname) && pathname !== "/agent" && pathname !== "/space")
+  if (pathname === "/join") {
+    const token = params.token;
+    if (typeof token !== "string" || !/^[A-Za-z0-9_-]{16,256}$/.test(token)) return null;
+    return { pathname, params: { token } };
+  }
+  if (
+    !/^\/(?:conversation|group-conversation)\/[^/?#]+$/.test(pathname) &&
+    ![
+      "/agent",
+      "/space",
+      "/groups",
+      "/space-settings",
+      "/routines",
+      "/space-memory",
+      "/pages",
+      "/resources",
+    ].includes(pathname)
+  )
     return null;
-  if (pathname.startsWith("/conversation/")) {
+  if (/^\/(?:conversation|group-conversation)\//.test(pathname)) {
     try {
-      const id = decodeURIComponent(pathname.slice("/conversation/".length));
+      const id = decodeURIComponent(pathname.slice(pathname.lastIndexOf("/") + 1));
       if (!id || id.length > 128 || /[/?#]/.test(id)) return null;
     } catch {
       return null;
     }
   }
   const selected: Record<string, string> = {};
-  for (const key of ["spaceId", "agentId"]) {
+  for (const key of ["spaceId", "agentId", "groupId", "runId"]) {
     const value = params[key];
     if (typeof value === "string" && value.length > 0 && value.length <= 128) selected[key] = value;
   }

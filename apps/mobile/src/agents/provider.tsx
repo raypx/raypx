@@ -114,7 +114,13 @@ export function AgentsProvider({
         },
         forbidden: (reason) => {
           if (!current()) return;
-          announceForbidden(reason);
+          // Known Space exits are reconciled by SpaceLiveController, including
+          // removals delivered as events while outside a conversation.
+          if (
+            !reason ||
+            !["SPACE_MEMBER_REMOVED", "SPACE_MEMBER_LEFT", "SPACE_DELETING"].includes(reason)
+          )
+            announceForbidden();
           void next?.refresh();
         },
       });
@@ -127,6 +133,20 @@ export function AgentsProvider({
         {
           read: () => secureDevice.getItem(preferenceKey),
           write: (id) => secureDevice.setItem(preferenceKey, id),
+        },
+        client,
+        (reason) => {
+          if (!current()) return;
+          if (reason === "session-ended") session.expired();
+          else {
+            const reasons = {
+              removed: "SPACE_MEMBER_REMOVED",
+              left: "SPACE_MEMBER_LEFT",
+              deleting: "SPACE_DELETING",
+              unavailable: "",
+            } as const;
+            announceForbidden(reasons[reason]);
+          }
         },
       );
       setWorkspace(next);

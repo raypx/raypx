@@ -5,10 +5,13 @@ import {
   toolOperationLabel,
   openApiOperationKind,
   type ApprovalCardView,
+  type ApprovalPort,
+  type ConversationSelection,
   type conversationTimelineRows,
 } from "@raypx/agents/model";
 import type { ToolActivity as ToolCall } from "@raypx/core/conversation";
 import { useCopy } from "../locale.js";
+import { EffectRecords } from "./effects.js";
 
 type ActivityRow = Extract<
   ReturnType<typeof conversationTimelineRows>[number],
@@ -73,6 +76,9 @@ function ToolCallRow({
       <Text selectable className="font-mono text-sm text-muted-foreground">
         {call.target}
       </Text>
+      <Text selectable className="text-sm text-muted-foreground">
+        {call.argumentSummary}
+      </Text>
       {answer && answer.state !== "pending" && (
         <Text className="text-xs text-muted-foreground">
           {t(`agents.approval.states.${answer.state}`)}
@@ -109,12 +115,16 @@ export function ToolActivity({
   row,
   answers = [],
   memberName,
+  approvalPort,
+  selection,
 }: {
   spaceId: string;
   origin: string;
   row: ActivityRow;
   answers?: readonly ApprovalCardView[];
   memberName?: ((id: string) => string) | undefined;
+  approvalPort?: ApprovalPort | undefined;
+  selection?: ConversationSelection | undefined;
 }) {
   const { t } = useCopy();
   const [expanded, setExpanded] = useState(false);
@@ -146,6 +156,14 @@ export function ToolActivity({
       </Button>
       {expanded ? (
         <View accessibilityLabel={t("agents.activity.title")} className="min-w-0 gap-3 py-1">
+          {approvalPort && selection && row.activity[0] && (
+            <EffectRecords
+              port={approvalPort}
+              selection={selection}
+              runId={row.activity[0].runId}
+              activity={row.activity}
+            />
+          )}
           {row.activity.map((call) => (
             <ToolCallRow
               key={JSON.stringify([call.runId, call.toolCallId])}

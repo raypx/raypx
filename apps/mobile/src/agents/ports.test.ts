@@ -64,6 +64,16 @@ function socketHarness(cookie = vi.fn(async () => "session=device-cookie")) {
 }
 
 describe("mobile authenticated transports", () => {
+  it("forwards a terminal close once and ignores subsequent private frames", async () => {
+    const h = socketHarness();
+    await Promise.resolve();
+    h.native.emitClose(4003, "SPACE_MEMBER_LEFT");
+    h.native.emitClose(4003, "SPACE_MEMBER_LEFT");
+    h.native.emitMessage(JSON.stringify({ type: "ready", version: 1 }));
+    expect(h.callbacks.onClose).toHaveBeenCalledExactlyOnceWith(4003, "SPACE_MEMBER_LEFT");
+    expect(h.forbidden).toHaveBeenCalledExactlyOnceWith("SPACE_MEMBER_LEFT");
+    expect(h.callbacks.onFrame).not.toHaveBeenCalled();
+  });
   it("loads the current cookie for each RPC and keeps credentials in headers", async () => {
     let cookie = "session=first";
     const seen: Request[] = [];

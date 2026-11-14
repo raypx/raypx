@@ -97,7 +97,8 @@
         "tailwind-variants": "^3.3.1",
         "uniwind": "1.13.2",
         "react": "19.3.0",
-        "@types/react": "^19.3.0"
+        "@types/react": "^19.3.0",
+        "expo-clipboard": "~58.0.4"
       },
       "dev": {
         "@formatjs/icu-messageformat-parser": "3.5.23",

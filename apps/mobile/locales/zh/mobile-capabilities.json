@@ -1,0 +1,13 @@
+{
+  "copyAddress": "复制地址",
+  "copyFailed": "无法复制，请选择地址后复制。",
+  "routineAgent": "{name} 的例行任务",
+  "memoryAgent": "{name} 的记忆",
+  "backToList": "返回列表",
+  "shared": "共享",
+  "agent": "智能体",
+  "removeConfirm": "移除此文档？",
+  "restoreConfirm": "恢复此修订？",
+  "unavailable": "此功能暂不可用，请刷新重试。",
+  "chooseAgent": "选择智能体"
+}

@@ -8,9 +8,10 @@ import {
   type SpaceMembership,
 } from "@raypx/agents/model";
 import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
-import { agentIdSchema, conversationIdSchema } from "@raypx/core/agents";
+import { agentIdSchema, conversationIdSchema, conversationSchema } from "@raypx/core/agents";
 import { messageIdSchema } from "@raypx/core/conversation";
 import { spaceIdSchema } from "@raypx/core/spaces";
+import type { ApiClient } from "@raypx/client/api";
 import { MobileWorkspace } from "./workspace.js";
 
 const createdAt = "2026-11-14T00:00:00.000Z";
@@ -72,7 +73,8 @@ function messageEvent(value: AgentConversationView, sequence = 1): ConversationS
   };
 }
 
-function harness() {
+function harness(live = false) {
+  const exited = vi.fn();
   const connections: Array<Parameters<ConversationSocketPort["connect"]>[0]> = [];
   const frames: ConversationClientFrame[] = [];
   const close = vi.fn();
@@ -134,9 +136,11 @@ function harness() {
       },
     },
     preference,
+    live ? ({} as ApiClient) : undefined,
+    exited,
   );
   workspaces.push(workspace);
-  return { workspace, port, connections, frames, close, stored, preference };
+  return { workspace, port, connections, frames, close, stored, preference, exited };
 }
 
 async function settle() {
@@ -284,4 +288,56 @@ it("carries durable conversation activity back to the Agent directory", async ()
   h.workspace.leaveConversation();
   expect(h.workspace.getSnapshot().page.agents[0]?.agent.lastActivityAt).toBe(createdAt);
   expect(h.workspace.getSnapshot().page.agents[0]?.conversation.lastActivityAt).toBe(createdAt);
+});
+
+it("loads groups and retains an independently scoped device draft without sending", async () => {
+  const h = harness();
+  const group = conversationSchema.parse({
+    ...one.conversation,
+    id: "group",
+    kind: "group",
+    name: "Team",
+    agentIds: [one.agent.id],
+  });
+  h.port.groups = {
+    listGroups: vi.fn(async () => [group]),
+    createGroup: vi.fn(),
+    getGroup: vi.fn(),
+    renameGroup: vi.fn(),
+    addGroupAgent: vi.fn(),
+    removeGroupAgent: vi.fn(),
+    deleteGroup: vi.fn(),
+  };
+  await h.workspace.refresh();
+  expect(h.workspace.getSnapshot().page.groups?.[0]).toEqual({
+    conversation: group,
+    agents: [one.agent],
+  });
+  const entry = h.workspace.getSnapshot().page.groups![0]!;
+  const selected = h.workspace.groupConversation(entry);
+  selected.conversation.setDraft("Group draft");
+  h.workspace.conversation(one).conversation.setDraft("Direct draft");
+  expect(h.workspace.groupConversation(entry).conversation.getSnapshot().draft).toBe("Group draft");
+  expect(h.workspace.conversation(one).conversation.getSnapshot().draft).toBe("Direct draft");
+  expect(h.port.conversations.send).not.toHaveBeenCalled();
+});
+
+it.each([
+  ["SPACE_MEMBER_REMOVED", "removed"],
+  ["SPACE_MEMBER_LEFT", "left"],
+  ["SPACE_DELETING", "deleting"],
+])("reconciles %s outside a conversation and clears revoked state", async (reason, expected) => {
+  const h = harness(true);
+  await h.workspace.refresh();
+  h.workspace.setActive(true);
+  await vi.waitFor(() => expect(h.connections).toHaveLength(1));
+  h.connections[0]!.onFrame({ type: "ready", version: 1 });
+  await vi.waitFor(() =>
+    expect(h.frames.some((frame) => frame.type === "space.subscribe")).toBe(true),
+  );
+  vi.spyOn(h.port.spaces, "list").mockResolvedValue([membership("space-two")]);
+  h.connections[0]!.onClose(4003, reason);
+  await vi.waitFor(() => expect(h.exited).toHaveBeenCalledWith(expected));
+  await vi.waitFor(() => expect(h.workspace.getSnapshot().page.spaceId).toBe("space-two"));
+  expect(h.workspace.getSnapshot().page.agents).not.toContainEqual(one);
 });

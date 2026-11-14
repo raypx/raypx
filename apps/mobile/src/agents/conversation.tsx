@@ -20,6 +20,9 @@ import {
   conversationTimelineRows,
   MAX_CONVERSATION_DRAFT,
   type AgentConversationView,
+  type GroupConversationView,
+  type ApprovalPort,
+  mentionQueryAt,
   type ComputerController,
   type ConversationController,
 } from "@raypx/agents/model";
@@ -28,7 +31,9 @@ import { Action } from "../ui.js";
 import { ApprovalCard } from "./approval-card.js";
 import { ComputerIndicator, ComputerSheet } from "./computer-sheet.js";
 import { ReplyMarkdown } from "./markdown.js";
+import { MentionSuggestions } from "../groups/mention-suggestions.js";
 import { ToolActivity } from "./tool-activity.js";
+import type { RunId } from "@raypx/core/conversation";
 
 const StyledSafeAreaView = withUniwind(SafeAreaView);
 type TimelineRow = ReturnType<typeof conversationTimelineRows>[number];
@@ -46,6 +51,12 @@ const connectionKeys = {
 
 export function AgentConversation({
   item,
+  group,
+  approvalPort,
+  onRoutines,
+  onMemory,
+  onResources,
+  initialRunId,
   controller,
   computer,
   accountId,
@@ -53,7 +64,13 @@ export function AgentConversation({
   onBack,
   onEdit,
 }: {
-  item: AgentConversationView;
+  item?: AgentConversationView | undefined;
+  group?: GroupConversationView | undefined;
+  approvalPort?: ApprovalPort | undefined;
+  onRoutines?: (() => void) | undefined;
+  onMemory?: (() => void) | undefined;
+  onResources?: (() => void) | undefined;
+  initialRunId?: RunId | undefined;
   controller: ConversationController;
   computer: ComputerController;
   accountId: string;
@@ -72,6 +89,24 @@ export function AgentConversation({
     computer.getSnapshot,
     computer.getSnapshot,
   );
+  const spaceId = group?.conversation.spaceId ?? item!.agent.spaceId;
+  const conversationId = group?.conversation.id ?? item!.conversation.id;
+  const title = group?.conversation.name ?? item?.agent.name ?? t("agents.groups.title");
+  const agentName = (id: string | undefined) =>
+    group?.agents.find((agent) => agent.id === id)?.name ??
+    item?.agent.name ??
+    t("agents.mentions.unknownAgent");
+  const [mentionRange, setMentionRange] = useState<ReturnType<typeof mentionQueryAt>>(null);
+  const caret = useRef(0);
+  const insertionCaret = useRef<number | null>(null);
+  function queryMentions(text: string, position: number) {
+    if (!group || state.pending) return;
+    const range = mentionQueryAt(text, position);
+    const selected = controller
+      .getSnapshot()
+      .mentionTokens?.some((token) => token.start === range?.start && position <= token.end);
+    setMentionRange(selected ? null : range);
+  }
   const [computerOpen, setComputerOpen] = useState(false);
   const [stopping, setStopping] = useState(false);
   const stopPending = useRef(false);
@@ -80,6 +115,21 @@ export function AgentConversation({
   const history = useRef<FlatList<TimelineRow>>(null);
   const editor = useRef<ComponentRef<typeof TextArea>>(null);
   const targetRun = useRef<string | null>(null);
+  const openedRun = useRef<string | null>(null);
+  useEffect(() => {
+    if (!initialRunId || state.loading || openedRun.current === initialRunId) return;
+    if (!state.runs.some((run) => run.id === initialRunId)) return;
+    openedRun.current = initialRunId;
+    atBottom.current = false;
+    targetRun.current = initialRunId;
+    void controller.loadRun(initialRunId);
+  }, [initialRunId, state.loading, state.runs, controller]);
+  useEffect(() => {
+    if (insertionCaret.current === null) return;
+    const position = insertionCaret.current;
+    insertionCaret.current = null;
+    editor.current?.setNativeProps({ selection: { start: position, end: position } });
+  }, [state.draft]);
   const active = activeConversationRun(state.runs);
   const rows = conversationTimelineRows(state, state.cards);
   const outsideRuns = state.runs.filter(
@@ -157,6 +207,11 @@ export function AgentConversation({
       return (
         <ApprovalCard
           card={row.card}
+          agentName={
+            group
+              ? agentName(state.runs.find((run) => run.id === row.card.runId)?.agentId)
+              : undefined
+          }
           memberName={memberName}
           accountId={accountId}
           onAnswer={(id, decision, allow) => void controller.answerApproval(id, decision, allow)}
@@ -165,20 +220,31 @@ export function AgentConversation({
       );
     if (row.kind === "activity")
       return (
-        <ToolActivity
-          spaceId={item.agent.spaceId}
-          origin={origin}
-          row={row}
-          answers={state.cards}
-          memberName={shared ? memberName : undefined}
-        />
+        <View className="gap-1">
+          {group && (
+            <Text className="text-xs text-muted-foreground">
+              {agentName(state.runs.find((run) => run.id === row.runId)?.agentId)}
+            </Text>
+          )}
+          <ToolActivity
+            spaceId={spaceId}
+            origin={origin}
+            row={row}
+            approvalPort={approvalPort}
+            selection={{ spaceId, conversationId }}
+            answers={state.cards}
+            memberName={shared ? memberName : undefined}
+          />
+        </View>
       );
     if (row.kind === "member")
       return (
         <View className="items-end">
-          {shared && (
+          {(shared || group || row.agentId) && (
             <Text className="text-xs text-muted-foreground">
-              {memberName(row.sender.slice("member:".length))}
+              {row.agentId
+                ? agentName(row.agentId)
+                : memberName(row.sender.slice("member:".length))}
             </Text>
           )}
           <View className="max-w-[92%] rounded-lg bg-default px-3 py-2">
@@ -194,6 +260,29 @@ export function AgentConversation({
       state.pending !== null || (state.draft !== "" && state.draft !== message?.text);
     return (
       <View className="gap-2 rounded-lg border border-border px-3 py-2">
+        {group && (
+          <Text className="text-sm font-semibold text-foreground">{agentName(row.agentId)}</Text>
+        )}
+        {run && ["queued", "running", "waiting"].includes(run.state) && (
+          <View className="flex-row flex-wrap gap-2">
+            {group && (
+              <Action
+                label={t("agents.mentions.stop", { name: agentName(run.agentId) })}
+                secondary
+                busy={stopping}
+                onPress={() => void stop(run.id)}
+              />
+            )}
+            <Action
+              label={t("agents.stillWorking.steer")}
+              secondary
+              onPress={() => {
+                controller.beginSteering(run.id);
+                editor.current?.focus();
+              }}
+            />
+          </View>
+        )}
         {run?.trigger && run.trigger !== "message" && (
           <Text className="text-xs text-muted-foreground">
             {t(
@@ -209,11 +298,14 @@ export function AgentConversation({
         {run &&
           delegatedWork(state, run.id).map((child) => (
             <View key={child.run.id} className="gap-1 border-l border-border pl-3">
+              <Text className="text-sm text-foreground">
+                {child.task.slice(0, 240) || t("agents.delegation.task")}
+              </Text>
               <Text className="text-xs text-muted-foreground">
-                {t("agents.delegation.task")} · {t(`agents.${child.run.state}`)}
+                {agentName(child.run.agentId)} · {t(`agents.${child.run.state}`)}
               </Text>
               <ToolActivity
-                spaceId={item.agent.spaceId}
+                spaceId={spaceId}
                 origin={origin}
                 row={{
                   id: `activity:${child.run.id}`,
@@ -224,6 +316,8 @@ export function AgentConversation({
                   activity: child.activity,
                   pendingCount: 0,
                 }}
+                approvalPort={approvalPort}
+                selection={{ spaceId, conversationId }}
                 answers={state.cards}
                 memberName={shared ? memberName : undefined}
               />
@@ -273,9 +367,20 @@ export function AgentConversation({
                 accessibilityRole="header"
                 className="min-w-0 flex-1 text-xl font-semibold text-foreground"
               >
-                {item.agent.name}
+                {title}
               </Text>
-              <Action label={t("agents.editAgent")} secondary onPress={onEdit} />
+              <Action
+                label={t(group ? "agents.groups.title" : "agents.editAgent")}
+                secondary
+                onPress={onEdit}
+              />
+            </View>
+            <View className="flex-row flex-wrap gap-2">
+              {onRoutines && <Action label={t("routines.title")} secondary onPress={onRoutines} />}
+              {onMemory && <Action label={t("memory.space.title")} secondary onPress={onMemory} />}
+              {onResources && (
+                <Action label={t("mobile.resources")} secondary onPress={onResources} />
+              )}
             </View>
             {state.connection !== "live" ? (
               <Text accessibilityLiveRegion="polite" className="text-sm text-muted-foreground">
@@ -409,7 +514,7 @@ export function AgentConversation({
                   <View key={run.id} className="gap-2">
                     <View className="flex-row flex-wrap items-center gap-2">
                       <Text className="min-w-0 flex-1 text-sm text-foreground">
-                        {item.agent.name} · {t(`agents.${run.state}`)}
+                        {title} · {t(`agents.${run.state}`)}
                       </Text>
                       <Action
                         label={t("agents.stillWorking.showRun")}
@@ -457,6 +562,7 @@ export function AgentConversation({
                         <ApprovalCard
                           key={card.requestId}
                           card={card}
+                          agentName={group ? agentName(run.agentId) : undefined}
                           accountId={accountId}
                           memberName={memberName}
                           onAnswer={(id, decision, allow) =>
@@ -543,7 +649,11 @@ export function AgentConversation({
             {state.steeringRunId && (
               <View className="flex-row flex-wrap items-center gap-2">
                 <Text className="min-w-0 flex-1 text-xs text-muted-foreground">
-                  {t("agents.stillWorking.targeted", { name: item.agent.name })}
+                  {t("agents.stillWorking.targeted", {
+                    name: agentName(
+                      state.runs.find((run) => run.id === state.steeringRunId)?.agentId,
+                    ),
+                  })}
                 </Text>
                 <Action
                   label={t("agents.stillWorking.cancelSteering")}
@@ -553,13 +663,42 @@ export function AgentConversation({
                 />
               </View>
             )}
+            {group && mentionRange && (
+              <MentionSuggestions
+                agents={group.agents.filter((agent) =>
+                  group.conversation.agentIds?.includes(agent.id),
+                )}
+                query={mentionRange.query}
+                onSelect={(agent) => {
+                  const position = controller.addMention(
+                    mentionRange.start,
+                    mentionRange.end,
+                    agent.id,
+                    agent.name,
+                  );
+                  caret.current = position;
+                  insertionCaret.current = position;
+                  setMentionRange(null);
+                  editor.current?.focus();
+                }}
+                onClose={() => setMentionRange(null)}
+              />
+            )}
             <TextField className="gap-1">
               <Label>{t("agents.message")}</Label>
               <TextArea
                 ref={editor}
                 accessibilityLabel={t("agents.message")}
                 value={state.draft}
-                onChangeText={(text) => controller.setDraft(text)}
+                onChangeText={(text) => {
+                  controller.setDraft(text);
+                  caret.current = text.length;
+                  queryMentions(text, text.length);
+                }}
+                onSelectionChange={({ nativeEvent }) => {
+                  caret.current = nativeEvent.selection.start;
+                  queryMentions(controller.getSnapshot().draft, caret.current);
+                }}
                 editable={!state.pending && !state.sending}
                 maxLength={MAX_CONVERSATION_DRAFT}
                 multiline
@@ -567,8 +706,16 @@ export function AgentConversation({
                 className="max-h-36 min-h-12 px-3 py-2 text-base"
               />
             </TextField>
+            {group &&
+              !group.conversation.defaultResponderAgentId &&
+              !state.mentionTokens?.length &&
+              !state.steeringRunId && (
+                <Text className="text-sm text-muted-foreground">
+                  {t("agents.mentions.noReply")}
+                </Text>
+              )}
             <View className="flex-row flex-wrap justify-end gap-2">
-              {active ? (
+              {active && !group ? (
                 <Action
                   label={t("agents.stop")}
                   secondary
@@ -582,6 +729,7 @@ export function AgentConversation({
                 disabled={state.loading || !state.draft.trim() || !!state.pending}
                 onPress={() => {
                   atBottom.current = true;
+                  setMentionRange(null);
                   void controller.send();
                 }}
               />

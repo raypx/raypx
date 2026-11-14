@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
+import { runIdSchema } from "@raypx/core/conversation";
 import { Text } from "react-native";
 import { Spinner } from "heroui-native/spinner";
 import { AgentConversation } from "../../../src/agents/conversation.js";
@@ -11,6 +12,7 @@ import { Action, Screen } from "../../../src/ui.js";
 export default function ConversationScreen() {
   const { workspace, view, selected, current, item } = useRouteSelection();
   const router = useRouter();
+  const target = runIdSchema.safeParse(useLocalSearchParams().runId);
   const { t } = useCopy();
   const [controllers, setControllers] = useState<ReturnType<
     MobileWorkspace["conversation"]
@@ -39,6 +41,26 @@ export default function ConversationScreen() {
         computer={controllers.computer}
         accountId={workspace.owner.accountId}
         origin={workspace.owner.origin}
+        initialRunId={target.success ? target.data : undefined}
+        approvalPort={workspace.port.approvals}
+        onRoutines={() =>
+          router.push({
+            pathname: "/routines",
+            params: { spaceId: item.agent.spaceId, agentId: item.agent.id },
+          })
+        }
+        onMemory={() =>
+          router.push({
+            pathname: "/space-memory",
+            params: { spaceId: item.agent.spaceId, agentId: item.agent.id },
+          })
+        }
+        onResources={() =>
+          router.push({
+            pathname: "/resources",
+            params: { spaceId: item.agent.spaceId, agentId: item.agent.id },
+          })
+        }
         onBack={() => router.replace("/")}
         onEdit={() =>
           router.push({

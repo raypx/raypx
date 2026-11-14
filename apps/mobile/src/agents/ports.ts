@@ -68,6 +68,13 @@ export function mobileWorkspacePort(client: ApiClient): AgentsWorkspacePort {
     agents: client.agents,
     conversations: client.conversations,
     computers: client.computers,
+    groups: client.conversations,
+    spaceManagement: client.spaces,
+    accountApprovalSettings: client.approvals,
+    routines: client.routines,
+    spaceMemory: client.spaceMemory,
+    skills: client.skills,
+    mcpServers: client.mcpServers,
     approvals: {
       effectiveMode: client.approvals.effectiveMode,
       pending: client.approvals.pending,
@@ -135,6 +142,7 @@ export function mobileConversationSocket(
             });
             socket.addEventListener("close", (event) => {
               if (closed) return;
+              closed = true;
               if (event.code === 4001) options.expired();
               if (event.code === 4003) options.forbidden(event.reason);
               callbacks.onClose(event.code, event.reason);

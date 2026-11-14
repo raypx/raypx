@@ -1,0 +1,13 @@
+{
+  "copyAddress": "Copy address",
+  "copyFailed": "Could not copy. Select the address to copy it.",
+  "routineAgent": "Routines for {name}",
+  "memoryAgent": "Memory for {name}",
+  "backToList": "Back to list",
+  "shared": "Shared",
+  "agent": "Agent",
+  "removeConfirm": "Remove this document?",
+  "restoreConfirm": "Restore this revision?",
+  "unavailable": "This capability is unavailable. Refresh and try again.",
+  "chooseAgent": "Choose an Agent"
+}

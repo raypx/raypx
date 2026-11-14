@@ -17,6 +17,7 @@ export interface ApprovalCardProps {
   card: ApprovalCardView;
   accountId: string;
   memberName?: ((id: string) => string) | undefined;
+  agentName?: string | undefined;
   onAnswer: (
     requestId: ApprovalCardView["requestId"],
     decision: "approved" | "denied",
@@ -30,6 +31,7 @@ export function ApprovalCard({
   card,
   accountId,
   memberName,
+  agentName,
   onAnswer,
   onRefresh,
 }: ApprovalCardProps) {
@@ -73,6 +75,11 @@ export function ApprovalCard({
   }
   return (
     <View className="gap-3 rounded-lg border border-border p-4">
+      {agentName && (
+        <Text className="text-sm text-muted-foreground">
+          {t("agents.approval.requestedBy", { name: agentName })}
+        </Text>
+      )}
       <Text accessibilityRole="header" className="text-base font-semibold text-foreground">
         {toolOperationLabel(card, (key) => t(`agents.${key}`))}
       </Text>

@@ -23,6 +23,7 @@ export default mergeConfig(
     resolve: {
       // Shared sources and the test renderer must use Expo's exact React version.
       alias: [
+        { find: /^expo-clipboard$/, replacement: local("./tests/mocks/clipboard.ts") },
         { find: /^react$/, replacement: local("./node_modules/react/index.js") },
         {
           find: /^react\/(jsx-runtime|jsx-dev-runtime)$/,

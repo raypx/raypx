@@ -1,10 +1,16 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { Text } from "react-native";
-import { renderNative } from "../../tests/native.js";
+import { Alert } from "../../tests/mocks/react-native.js";
+import { act, renderNative } from "../../tests/native.js";
+import en from "@raypx/agents/messages/en";
 import { useLocales } from "../../tests/mocks/localization.js";
 import { MobileWorkspace } from "./workspace.js";
 
-const ports = vi.hoisted(() => ({ workspace: vi.fn(() => ({})), replace: vi.fn() }));
+const ports = vi.hoisted(() => ({
+  workspace: vi.fn(() => ({})),
+  replace: vi.fn(),
+  socket: vi.fn((_options: { forbidden(reason?: string): void }) => ({})),
+}));
 vi.mock("expo-router", () => ({ useRouter: () => ({ replace: ports.replace }) }));
 vi.mock("expo-secure-store", () => ({
   getItem: vi.fn(() => null),
@@ -15,7 +21,7 @@ vi.mock("../auth.js", () => ({ apiOrigin: "https://api.test", authClient: {} }))
 vi.mock("./ports.js", () => ({
   mobileApi: vi.fn(() => ({})),
   mobileWorkspacePort: ports.workspace,
-  mobileConversationSocket: vi.fn(() => ({})),
+  mobileConversationSocket: ports.socket,
   deviceDrafts: vi.fn(() => ({})),
   messageKey: vi.fn(() => "key"),
 }));
@@ -25,6 +31,26 @@ afterEach(() => {
   useLocales.mockReset();
   vi.restoreAllMocks();
   ports.workspace.mockClear();
+  ports.socket.mockClear();
+  ports.replace.mockClear();
+  vi.mocked(Alert.alert).mockClear();
+});
+
+it("routes an unknown forbidden close to the directory without displaying its private reason", async () => {
+  const view = await renderNative(
+    <AgentsProvider accountId="member" enabled={false}>
+      <Text>Workspace</Text>
+    </AgentsProvider>,
+  );
+  await act(async () => {
+    ports.socket.mock.calls[0]![0].forbidden("PRIVATE_PROVIDER_DIAGNOSTIC");
+  });
+  expect(ports.replace).toHaveBeenCalledWith("/");
+  expect(Alert.alert).toHaveBeenCalledWith(en.agents.spaceSettings.exitUnavailable);
+  expect(JSON.stringify(vi.mocked(Alert.alert).mock.calls)).not.toContain(
+    "PRIVATE_PROVIDER_DIAGNOSTIC",
+  );
+  await view.unmount();
 });
 
 it("preserves the workspace when language and router objects change", async () => {

@@ -103,8 +103,12 @@ from packaged WKWebView/WebView2 acceptance.
 
 - The Expo app shares Core, contracts and message catalogs. It keeps its own
   Expo-supported React version.
-- Mobile provides account/sign-in, Agent conversations,
-  active work outside the loaded history window, tool activity and approvals.
+- Mobile provides account/sign-in, direct/group conversations, structural mentions,
+  Space members/invitations, routines, Agent/shared memory, resource catalogs,
+  enablement and account resource availability. Pages use Web handoff with no
+  authenticated native document frame. The exact native/read-only/Web split is in
+  [Product](../../PRODUCT.md#operating-context). Mobile also supports
+  active work outside the loaded history window, tool activity/effects and approvals.
   Push notifications remain roadmap work. OpenAPI management stays in
   Web/Desktop; Mobile can approve and inspect calls to configured operations.
 - Mobile uses native controls for navigation, pickers and alerts.

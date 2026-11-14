@@ -754,3 +754,17 @@ it.each(["en", "zh"] as const)(
     await h.close();
   },
 );
+
+it("steers a visible direct Run only after explicit selection and send", async () => {
+  const h = await harness({ messages: [message()], runs: [run()], cursor: 1 });
+  await press(findByLabel(h.view.root, "Steer"));
+  expect(textContent(h.view.root)).toContain("Steering Reader");
+  expect(h.port.send).not.toHaveBeenCalled();
+  await changeText(findByLabel(h.view.root, "Message"), "Keep it brief");
+  await press(findByLabel(h.view.root, "Send"));
+  expect(h.port.send).toHaveBeenCalledWith({
+    ...selection,
+    message: { text: "Keep it brief", idempotencyKey: "mobile-receipt", steerRunId: run().id },
+  });
+  await h.close();
+});

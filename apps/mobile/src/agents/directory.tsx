@@ -37,6 +37,10 @@ interface AgentDirectoryProps {
   onDelete(this: void, item: AgentConversationView): void;
   onAccount(this: void): void;
   onCreateSpace(this: void): void;
+  onGroups?: (() => void) | undefined;
+  onPages?: (() => void) | undefined;
+  onSpaceSettings?: (() => void) | undefined;
+  onResources?: (() => void) | undefined;
 }
 
 export function AgentDirectory({
@@ -52,6 +56,10 @@ export function AgentDirectory({
   onDelete,
   onAccount,
   onCreateSpace,
+  onGroups,
+  onPages,
+  onSpaceSettings,
+  onResources,
 }: AgentDirectoryProps) {
   const { t } = useCopy();
   const agentsByActivity = useMemo(
@@ -85,6 +93,26 @@ export function AgentDirectory({
             <Text className="text-sm text-muted-foreground">{space.name}</Text>
           ) : null}
           {space ? <Action label={t("agents.newAgent")} onPress={onCreate} /> : null}
+          {space && (
+            <ScrollView
+              horizontal
+              contentContainerClassName="gap-2"
+              keyboardShouldPersistTaps="handled"
+            >
+              {onGroups && <Action label={t("agents.groups.title")} secondary onPress={onGroups} />}
+              {onPages && <Action label={t("pages.title")} secondary onPress={onPages} />}
+              {onSpaceSettings && (
+                <Action
+                  label={t("agents.spaceSettings.title")}
+                  secondary
+                  onPress={onSpaceSettings}
+                />
+              )}
+              {onResources && (
+                <Action label={t("mobile.resources")} secondary onPress={onResources} />
+              )}
+            </ScrollView>
+          )}
           {error ? (
             <View className="gap-2">
               <Text accessibilityRole="alert" className="text-sm text-foreground">

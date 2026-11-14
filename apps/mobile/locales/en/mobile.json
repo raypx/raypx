@@ -6,5 +6,6 @@
   "modelSource": {
     "connection": "Connection",
     "deployment": "Deployment"
-  }
+  },
+  "resources": "Skills and tools"
 }

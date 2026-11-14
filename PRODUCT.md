@@ -50,12 +50,31 @@ transport. Its Page preview opens Web because authenticated document embedding
 is disabled in Desktop. The host targets macOS 13.5+ and Windows; Linux Desktop
 acceptance remains unverified. A browser renderer check is not a packaged test.
 
-Mobile provides Agent creation/editing/deletion, Space selection/creation,
-direct conversations, streaming, the active-Run strip, approval cards, tool activity,
-computer lifecycle and account/sign-out. Page activity opens Web. Full shared-Space/group management,
-routine and memory editors, Page editing, API/resource settings and push notifications
-are not native Mobile workflows. OTA updates are not configured. iOS/Android
-device acceptance remains unverified.
+Mobile provides native everyday Space and Agent workflows through shared feature
+models and authenticated backend ports. Its exact coverage is below. “Supported”
+describes implemented native UI; native platform acceptance remains a separate gate.
+
+| Feature             | Supported in Mobile                                                                                                                        | Read-only in Mobile                                                                                                          | Web handoff                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Agents              | Create, edit, delete; offered models and instructions                                                                                      | Model connection catalog                                                                                                     | Model connection and approval-rule management                       |
+| Conversations       | Direct/groups, bounded virtualized history, streaming, structural mentions, attribution, departed-member names, device-local scoped drafts | Run origins and untrusted-input markers                                                                                      | —                                                                   |
+| Runs and activity   | Stop, targeted steer, active-Run strip, addressed approvals                                                                                | Expandable tool details, effects and delegated child work                                                                    | Page results open the Web Page workspace                            |
+| Groups              | List, create, rename, add/remove Agents, delete                                                                                            | —                                                                                                                            | —                                                                   |
+| Shared Spaces       | Select/create, members, owner role/removal actions, create/revoke/copy invitations, explicit deep-link acceptance, leave                   | Roles and effective approval mode/source                                                                                     | Rename/delete Space, approval overrides, full audit                 |
+| Routines            | Per-Agent list/create/edit, cron/time zone, triggers, pause/resume, run now, history, server ingress copying                               | Run outcomes; ingress unavailable reasons                                                                                    | —                                                                   |
+| Memory              | Agent/shared documents, Markdown edit/preview, pin/remove, revisions, restore and conflict reload                                          | Provenance and untrusted-input marker                                                                                        | —                                                                   |
+| Pages               | List and open                                                                                                                              | Title, kind and version                                                                                                      | Authenticated Page viewing, editing, versions, restore and sharing  |
+| Skills              | Per-Agent enablement; account-skill all/selected Space availability                                                                        | Account/Space catalogs and Space-skill availability                                                                          | Definition editing, imports and deletion                            |
+| Remote tool servers | Per-Agent enablement; all/selected Space availability                                                                                      | Server names and endpoints                                                                                                   | Definitions, credentials, discovery/testing and deletion            |
+| HTTP APIs           | Approvals for configured operations                                                                                                        | Owners: definitions, selected operations, read/change labels and Agent availability; all members: conversation calls/effects | Import, credentials, operation selection, availability and deletion |
+| Computers           | Existing team lifecycle and stop confirmation                                                                                              | Lifecycle/failure state                                                                                                      | No new native Screen surface                                        |
+
+Native authenticated Page frames are disabled; Mobile opens the configured Web
+origin without forwarding credentials. Account skill/server availability can be
+all Spaces or selected Spaces. Turning All Spaces off explicitly keeps only the
+current Space; toggling that Space preserves other existing selections.
+Push notifications and OTA updates are not configured. iOS/Android device
+acceptance remains unverified.
 
 ## Capabilities and Constraints
 

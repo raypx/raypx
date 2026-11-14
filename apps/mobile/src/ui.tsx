@@ -43,6 +43,7 @@ export function Action({
   const spinnerColor = useThemeColor(secondary ? "foreground" : "accent-foreground");
   return (
     <Button
+      accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: disabled || busy, busy }}
       isDisabled={disabled || busy}

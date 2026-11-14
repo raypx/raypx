@@ -11,9 +11,11 @@ export async function renderNative(element: ReactElement) {
       createNodeMock: () => ({
         focus() {},
         blur() {},
+        setNativeProps() {},
         scrollTo() {},
         scrollToEnd() {},
         scrollToIndex() {},
+        scrollToOffset() {},
       }),
     });
   });

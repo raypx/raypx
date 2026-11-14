@@ -9,6 +9,33 @@ import {
 afterEach(clearDestination);
 
 describe("post-login mobile destinations", () => {
+  it("preserves native capability and group selectors without retaining unrelated input", () => {
+    for (const pathname of [
+      "/groups",
+      "/group-conversation/group",
+      "/space-settings",
+      "/pages",
+      "/resources",
+      "/routines",
+      "/space-memory",
+    ])
+      expect(
+        safeDestination(pathname, {
+          spaceId: "space",
+          groupId: "group",
+          agentId: "agent",
+          redirect: "https://elsewhere.example",
+        }),
+      ).toEqual({ pathname, params: { spaceId: "space", groupId: "group", agentId: "agent" } });
+  });
+  it("retains a bounded invitation for explicit acceptance after sign-in", () => {
+    const token = "single-use-invitation-token";
+    rememberDestination("/join", { token, cookie: "discard" });
+    expect(takeDestination("new-member")).toEqual({ pathname: "/join", params: { token } });
+    for (const invalidToken of ["", ["token"], "x".repeat(257), "https://elsewhere.example"])
+      expect(safeDestination("/join", { token: invalidToken })).toBeNull();
+    expect(takeDestination("new-member")).toBeNull();
+  });
   it("keeps only native destinations and bounded resource selectors", () => {
     expect(
       safeDestination("/conversation/agent-one", {

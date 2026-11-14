@@ -12,7 +12,10 @@ The implemented platform includes paged conversations, durable Runs with fenced
 leases/checkpoints/recovery, Computer tools, approvals/effects, routines, Agent and
 Space memory, Pages, text skills, remote HTTP MCP servers, Space-owned OpenAPI
 tools, model connections, shared Spaces, groups and delegation. Web/Desktop compose the shared workspace;
-Mobile supports Space Agents, direct conversations, approvals and computer lifecycle.
+Mobile supports Space Agents and groups, shared Space membership/invitations,
+routines, Agent/Space memory, read-only Pages/resource directories, resource
+enablement/availability, approvals and computer lifecycle. Full Page/resource
+management uses Web handoff; native platform acceptance remains separate.
 Web/Desktop and Mobile keep active Runs outside loaded history reachable through
 a bounded Still working strip with Stop, targeted steering, approvals and a
 trigger-page jump. Only Space owners manage HTTP API definitions, operations,

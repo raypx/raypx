@@ -86,6 +86,22 @@ export default function AgentsScreen() {
         onDelete={remove}
         onAccount={() => router.push("/account")}
         onCreateSpace={() => router.push("/space")}
+        onGroups={() => {
+          if (view.page.spaceId)
+            router.push({ pathname: "/groups", params: { spaceId: view.page.spaceId } });
+        }}
+        onPages={() => {
+          if (view.page.spaceId)
+            router.push({ pathname: "/pages", params: { spaceId: view.page.spaceId } });
+        }}
+        onSpaceSettings={() => {
+          if (view.page.spaceId)
+            router.push({ pathname: "/space-settings", params: { spaceId: view.page.spaceId } });
+        }}
+        onResources={() => {
+          if (view.page.spaceId)
+            router.push({ pathname: "/resources", params: { spaceId: view.page.spaceId } });
+        }}
       />
     </>
   );

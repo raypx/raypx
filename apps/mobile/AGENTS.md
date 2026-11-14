@@ -10,7 +10,16 @@ access. Every application screen requires login; execution stays on the backend.
 Expo Router owns `app/` routes. The root session boundary protects `(app)` and
 exposes `/login` only while signed out. Session restoration, refresh failures,
 expiry and verification must fail closed before protected screens mount.
-Agents is the authenticated home. `/conversation/[agentId]` selects a conversation
+Agents is the authenticated home. `/groups` and `/group-conversation/[groupId]`
+provide structural mentions and attributed concurrent replies. `/space-settings`
+provides members, roles, invitations and leave; `/join?token` previews and explicitly
+accepts invitations after login. `/routines`, `/space-memory`, `/pages` and `/resources`
+compose their shared feature models. Capability links without an Agent offer a chooser.
+Pages use the configured Web origin without authenticated native document frames.
+Resource definitions/credentials and HTTP API management remain Web/Desktop;
+account skill/server enablement and Space availability switches are native.
+
+`/conversation/[agentId]` selects a conversation
 with `spaceId`; `/agent` creates or edits an Agent, `/space` creates a Space and
 `/account` retains account/sign-out. Preserve validated return destinations across
 session expiry. A route parameter is a selector, never authorization.
@@ -19,6 +28,10 @@ OTA updates are not configured; keep updates.enabled false until an update servi
 Import `@raypx/agents/model` for page state, conversation/event projections,
 idempotent sends, approvals and computer lifecycle. Never import its DOM client.
 Mobile injects authenticated RPC, `/events`, device storage and AppState ports.
+The foreground Space live controller reconciles membership even outside chat;
+known Space close reasons route to the directory, session expiry to login.
+Feature screens read the same session-fenced API client through the workspace;
+never retain credentials in screen state.
 Close the socket in the background; resume the retained projection/cursor on
 foreground and refresh pending approvals and computer state. Apply durable events
 before ACK; transient reply text never advances the cursor. No automatic send on

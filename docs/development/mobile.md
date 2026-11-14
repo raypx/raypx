@@ -125,14 +125,22 @@ appearance follows Uniwind's adaptive light/dark themes.
 
 Expo Router owns the protected routes:
 
-| Route                               | Purpose                                                              |
-| ----------------------------------- | -------------------------------------------------------------------- |
-| `/`                                 | Agent list for the current Space, pull-to-refresh and account access |
-| `/conversation/[agentId]?spaceId=…` | Agent conversation and team computer indicator                       |
-| `/agent?spaceId=…`                  | Create an Agent                                                      |
-| `/agent?spaceId=…&agentId=…`        | Edit an Agent                                                        |
-| `/space`                            | Create the first or another Space                                    |
-| `/account`                          | Existing account details and sign-out                                |
+| Route                                     | Purpose                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `/`                                       | Agent list for the current Space, pull-to-refresh and account access    |
+| `/conversation/[agentId]?spaceId=…`       | Agent conversation and team computer indicator                          |
+| `/agent?spaceId=…`                        | Create an Agent                                                         |
+| `/agent?spaceId=…&agentId=…`              | Edit an Agent                                                           |
+| `/space`                                  | Create the first or another Space                                       |
+| `/account`                                | Existing account details and sign-out                                   |
+| `/groups?spaceId=…`                       | Group list and create/rename/participation management                   |
+| `/group-conversation/[groupId]?spaceId=…` | Group conversation, mentions and attributed concurrent replies          |
+| `/space-settings?spaceId=…`               | Members, roles, invitations, leave and effective approval mode          |
+| `/join?token=…`                           | Preview and explicitly accept a single-use invitation                   |
+| `/routines?spaceId=…&agentId=…`           | Routine list/editor/history and ingress copying                         |
+| `/space-memory?spaceId=…&agentId=…`       | Agent/shared Markdown documents, revisions and restore                  |
+| `/pages?spaceId=…`                        | Read-only directory with Web Page handoff                               |
+| `/resources?spaceId=…&agentId=…`          | Skill/server catalogs, enablement and availability; owner API inventory |
 
 The Space switcher appears only when more than one membership is available. The
 directory shows an initials avatar, Agent name, model and the server's nullable
@@ -185,14 +193,71 @@ action; it is independent of event replay cursors. Tool activity uses the shared
 timeline and tool-call identity rather than a separate Mobile projection. Successful
 Page-tool activity opens Page detail at the configured Web origin, falling back to
 the Pages list when identity is absent. Handoff failures remain visible/retryable.
-Mobile has no native Page editor, group/member management, routine or memory editor,
-or account resource-settings workflow; those use Web/Desktop.
+Native Page viewing always hands off to Web; no authenticated Page document frame
+or WebView is mounted. The Page URL uses only the configured origin, selected Space
+and server-provided Page identity, never a display target or credential.
 
 The compact header computer indicator opens a native Modal bottom sheet with
 the team's lifecycle state, failure reasons and guarded start/stop controls.
 Stop requires native confirmation; not configured is explicit and has no
 lifecycle controls. The sheet uses static presentation so reduced motion needs
 no extra animation path or native sheet dependency.
+
+## Everyday workflow coverage
+
+The [Mobile coverage matrix](../../PRODUCT.md#operating-context) is the exact
+native/read-only/Web split. Native screens compose `@raypx/agents/model`,
+`@raypx/jobs/model`, `@raypx/memory/model`, `@raypx/pages/model` and
+`@raypx/skills/model`; no DOM adapters or backend execution enter the bundle.
+The shared Agent model additionally exports its existing mention helpers and
+Space live controller. Web/Desktop behavior remains unchanged.
+
+Groups use explicit suggestion selections to create structural mention tokens.
+Typing an Agent name alone never selects a recipient. Suggestions include only
+current group Agents; history retains member names after departure. Concurrent
+replies and Stop/Steer actions identify the exact Agent/Run. Child work stays
+under parent activity, with its Agent and status. Effects open a lazy read-only
+inspector with explicit unknown outcomes and refresh; inspection never replays work.
+
+Shared Space settings show current roles and effective approval mode/source.
+Owners can change roles, remove members, create and revoke invitations. Leaving
+requires native confirmation. Copied invitation links use
+`raypx-mobile://join?token=…`; sign-in preserves only a bounded validated token,
+and acceptance always requires a separate press. One-time invitation values clear
+on close. Space subscriptions run while foregrounded, including outside chat;
+removed/left/deleting reasons return to the directory, session expiry returns to
+sign-in, and fresh membership remains authoritative. Backgrounding closes streams.
+
+Routines support all shared trigger form fields, including cron/time zone,
+next occurrences, pause/resume, explicit run now and history. Copy uses only
+server-provided ingress metadata, including explicit unavailable reasons; the
+client never constructs an address from a key. Creation-only keys are transient
+and clear when the editor closes. History links open the Agent conversation;
+trigger-page jumps are available for Runs in its retained/active projection.
+Group capability links offer an Agent chooser before opening per-Agent tools.
+
+Memory lists Agent and shared Space documents. Native Markdown editing and safe
+preview support pinning, removal, revisions, restoration and conflict reload with
+the draft retained. Server history is never persisted on the device.
+
+Skills and remote server definitions are read-only. Per-Agent enablement and
+account resource all/selected Space availability are native switches. Turning
+All Spaces off explicitly keeps only this Space; toggling a selected Space keeps
+other selections. Space-created skill availability stays read-only. HTTP API
+inventory is owner-only and read-only; selected operation labels, read/change
+classification and Agent availability are visible. Imports, definitions,
+credentials, operation selection, API availability and deletion remain Web/Desktop.
+The native management action opens Web Tools; Pages open Web for viewing/editing,
+versions, restoration and sharing, without forwarding the native session cookie.
+Model connections, approval-rule management, Space rename/delete and full audit
+also remain Web/Desktop.
+
+Lists and transcripts use native virtualization; forms use keyboard avoidance,
+safe areas, wrapping text and bounded tablet widths. Controls retain native
+Dynamic Type, neutral system light/dark tokens, accessibility labels/roles and
+reduced-motion presentation. Errors and reconnect state have explicit refresh
+controls. Source mocks verify state and interaction, not on-device geometry or
+screen-reader behavior.
 
 ## Native components and styling
 
@@ -233,7 +298,8 @@ such as the navigation stack's background. One rem is configured as 16 native un
 Uniwind's generated theme types stay in ignored `.expo/`; `tsconfig.json` loads
 `uniwind/types` directly so type checking also works before Metro has run.
 
-English and Chinese compose the pure common, Auth and Agents catalogs. The app's
+English and Chinese compose the pure common, Auth, Agents, routines, memory,
+Pages and skills catalogs, plus private native capability/resource catalogs. The app's
 private `mobile` catalog owns mobile-only navigation/status copy; never import
 shared DOM adapters or render content as raw HTML.
 
@@ -246,7 +312,9 @@ backend acceptance. Port unit tests cover native session headers, socket frames,
 storage isolation and lifecycle resume. Native component tests cover the Agent
 directory, conversation, the outside-window strip, HTTP API activity, approval
 cards and computer sheet using Vitest and `react-test-renderer` with native/HeroUI
-host mocks. Shared model tests remain
+host mocks. Additional suites cover groups/structural mentions, shared Spaces,
+invitation acceptance, effects inspection, routines, memory revisions/restore,
+Pages and resource enablement/availability. Shared model tests remain
 platform-neutral. These mocks do not prove native layout or accessibility.
 
 Use the checked-in manifest and lockfile as the dependency inventory. Record the
