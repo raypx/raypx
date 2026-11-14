@@ -1,4 +1,5 @@
 import { expect as baseExpect, test, type Page } from "@playwright/test";
+import { createOwnedSpace } from "../helpers/owned-space.js";
 import { selectOption } from "../helpers/select.js";
 import { expectConversationHeaderControls } from "../helpers/conversation-header.js";
 import { expectSurfaceAtRest, expectSurfaceControls } from "../helpers/geometry.js";
@@ -56,9 +57,10 @@ export function registerTests() {
     });
     expect(signedIn.status()).toBe(200);
     await page.setViewportSize(viewports[0]!);
-    await page.goto(`${baseURL}/agents`, { timeout: actionTimeout });
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
     const suffix = `${info.project.name}-${crypto.randomUUID()}`;
+    const spaceId = await createOwnedSpace(page, apiUrl, origin, `Group ${suffix}`);
+    await page.goto(`${baseURL}/agents?spaceId=${spaceId}`, { timeout: actionTimeout });
+    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
     const coordinator = `协调者 Coordinator ${"long name ".repeat(4)}${suffix}`;
     const responder = `独立回复 Independent responder ${"长名称".repeat(12)}${suffix}`;
     const groupName = `协作讨论 Group conversation ${"long name 长名称 ".repeat(2)}${suffix}`;

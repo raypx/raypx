@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Avatar } from "heroui-native/avatar";
 import { Button } from "heroui-native/button";
 import { Input } from "heroui-native/input";
@@ -13,6 +13,8 @@ import { withUniwind } from "uniwind";
 import type { AgentInput } from "@raypx/core/agents";
 import {
   modelChoiceGroups,
+  compareLastActivity,
+  relativeActivityTime,
   type AgentConversationView,
   type AgentsPageState,
   type OfferedModel,
@@ -52,6 +54,10 @@ export function AgentDirectory({
   onCreateSpace,
 }: AgentDirectoryProps) {
   const { t } = useCopy();
+  const agentsByActivity = useMemo(
+    () => [...state.agents].sort((left, right) => compareLastActivity(left.agent, right.agent)),
+    [state.agents],
+  );
   const space = state.spaces.find((entry) => entry.space.id === state.spaceId)?.space;
   return (
     <StyledSafeAreaView className="flex-1 bg-background">
@@ -90,7 +96,7 @@ export function AgentDirectory({
         </View>
         <FlatList
           accessibilityLabel={t("agents.title")}
-          data={state.agents}
+          data={agentsByActivity}
           keyExtractor={(item) => item.agent.id}
           refreshing={refreshing}
           onRefresh={onRefresh}
@@ -147,8 +153,6 @@ function AgentRow({
     .slice(0, 2)
     .join("")
     .toLocaleUpperCase(locale);
-  // The contract has no last-message timestamp. Label the available timestamp honestly.
-  const date = new Date(item.agent.updatedAt).toLocaleString(locale);
   return (
     <View className="gap-1 border-b border-border py-3">
       <Button
@@ -163,7 +167,7 @@ function AgentRow({
         <View className="min-w-0 flex-1 gap-1">
           <Text className="text-base font-semibold text-foreground">{item.agent.name}</Text>
           <Text className="text-sm text-muted-foreground">{modelName}</Text>
-          <Text className="text-xs text-muted-foreground">{t("mobile.lastEdited", { date })}</Text>
+          <ActivityTime value={item.agent.lastActivityAt} />
         </View>
       </Button>
       <View className="flex-row flex-wrap justify-end gap-2">
@@ -186,6 +190,20 @@ function AgentRow({
       </View>
     </View>
   );
+}
+
+function ActivityTime({ value }: { value?: string | null | undefined }) {
+  const { locale, t } = useCopy();
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (!value) return;
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, [value]);
+  const label = value
+    ? t("agents.activity.active", { time: relativeActivityTime(value, locale, now) })
+    : t("agents.activity.none");
+  return <Text className="text-xs text-muted-foreground">{label}</Text>;
 }
 
 export function AgentEditor({

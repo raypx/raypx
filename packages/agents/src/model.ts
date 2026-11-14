@@ -13,6 +13,10 @@ export {
 } from "./model/conversation.js";
 export {
   ConversationController,
+  CONVERSATION_HISTORY_PAGE_SIZE,
+  MAX_LOADED_CONVERSATION_MESSAGES,
+  type ConversationReadingAnchor,
+  type ConversationHistoryView,
   type ConversationControllerOptions,
   type ConversationControllerView,
   type ConversationConnection,
@@ -43,6 +47,7 @@ export type {
   ConversationSelection,
   ConversationOwner,
   ConversationSnapshot,
+  ConversationHistory,
   ConversationPort,
   ConversationSocket,
   ConversationSocketPort,
@@ -124,3 +129,9 @@ export {
   type AgentCapabilitiesPort,
   type AgentCapabilitySelection,
 } from "./model/agent-capabilities.js";
+
+export { compareLastActivity, relativeActivityTime } from "./model/activity.js";
+
+export { conversationMemberLabel } from "./model/participant-display.js";
+
+export { delegatedWork } from "./model/conversation.js";

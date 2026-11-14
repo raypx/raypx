@@ -123,7 +123,7 @@ async function fixture(language: "en" | "zh") {
   let directory: SpaceDirectoryMember[] = [viewer, teammate];
   const connections: {
     receive(frame: ConversationServerFrame): void;
-    disconnect(code: number): void;
+    disconnect(code: number, reason?: string): void;
     sent: ConversationClientFrame[];
     close: ReturnType<typeof vi.fn>;
   }[] = [];
@@ -131,7 +131,7 @@ async function fixture(language: "en" | "zh") {
     connect(callbacks) {
       const connection = {
         receive: (frame: ConversationServerFrame) => callbacks.onFrame(frame),
-        disconnect: (code: number) => callbacks.onClose(code),
+        disconnect: (code: number, reason?: string) => callbacks.onClose(code, reason),
         sent: [] as ConversationClientFrame[],
         close: vi.fn(),
       };
@@ -189,6 +189,19 @@ async function fixture(language: "en" | "zh") {
   };
   const send = vi.fn<AgentsWorkspacePort["conversations"]["send"]>(async () => messages[0]!);
   const client: AgentsWorkspacePort = {
+    approvals: {
+      effectiveMode: async ({ spaceId }) => ({
+        spaceId,
+        mode: "never",
+        source: "space_override",
+        availableModes: accountSettings.availableModes,
+      }),
+      pending: async () => [],
+      effects: async () => [],
+      answer: async () => {
+        throw new Error("No pending approval");
+      },
+    },
     computers: {
       get: async () => ({ status: "not-configured" }),
       start: async () => ({ status: "not-configured" }),
@@ -203,7 +216,17 @@ async function fixture(language: "en" | "zh") {
       delete: async () => ({ deleted: true }),
     },
     conversations: {
-      snapshot: async () => ({ conversation, messages, runs: [], segments: [], cursor: 2 }),
+      snapshot: async () => ({
+        conversation,
+        messages,
+        runs: [],
+        segments: [],
+        cursor: 2,
+        participants: [
+          { accountId: "viewer", displayName: "Alex", isMember: true },
+          { accountId: "teammate", displayName: "Lin", isMember: true },
+        ],
+      }),
       send,
       stop: async () => {
         throw new Error("No Run is active");
@@ -211,6 +234,7 @@ async function fixture(language: "en" | "zh") {
     },
   };
   const navigate = vi.fn();
+  const sessionEnded = vi.fn();
   await act(async () => {
     render(
       <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
@@ -233,6 +257,7 @@ async function fixture(language: "en" | "zh") {
             socket={socket}
             drafts={{ read: () => null, write() {}, remove() {} }}
             onNavigate={navigate}
+            onSessionEnded={sessionEnded}
           />
         </AppShell>
       </BrowserLanguageProvider>,
@@ -281,17 +306,18 @@ async function fixture(language: "en" | "zh") {
     connections,
     send,
     navigate,
+    sessionEnded,
     getMembers,
     emitSpace,
     emitConversation,
-    async disconnectSpace() {
+    async disconnectSpace(code = 4003, reason = "SPACE_MEMBER_REMOVED") {
       const stream = connections.find(
         (connection) =>
           connection.close.mock.calls.length === 0 &&
           connection.sent.some((frame) => frame.type === "space.subscribe"),
       );
       expect(stream).toBeDefined();
-      await act(async () => stream!.disconnect(4003));
+      await act(async () => stream!.disconnect(code, reason));
     },
     setMembers(members: SpaceDirectoryMember[]) {
       directory = members;
@@ -303,7 +329,7 @@ async function fixture(language: "en" | "zh") {
 }
 
 it.each(["en", "zh"] as const)(
-  "refreshes sender names from the live directory and omits all labels with one member in %s",
+  "refreshes live directory names and retains historical sender attribution after removal in %s",
   async (language) => {
     const strings = catalogs[language].agents;
     const test = await fixture(language);
@@ -341,7 +367,11 @@ it.each(["en", "zh"] as const)(
       payload: { accountId: "teammate" },
       createdAt: eventTime,
     });
-    await waitFor(() => expect(within(log).queryByRole("heading")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(log).getByRole("heading", { name: "Lin" })).toBeInTheDocument(),
+    );
+    expect(within(log).getByRole("heading", { name: strings.you })).toBeInTheDocument();
+    expect(within(log).queryByRole("heading", { name: "Lin Chen" })).not.toBeInTheDocument();
     expect(within(log).getByText("Lin's team message")).toBeInTheDocument();
     expect(test.send).not.toHaveBeenCalled();
   },
@@ -434,9 +464,8 @@ it.each(["en", "zh"] as const)(
       payload: { accountId: "teammate" },
       createdAt: eventTime,
     });
-    await waitFor(() =>
-      expect(within(viewerActivity).queryByText(answeredByYou)).not.toBeInTheDocument(),
-    );
+    expect(await within(activity).findByText(answeredByLin)).toBeInTheDocument();
+    expect(within(viewerActivity).getByText(answeredByYou)).toBeInTheDocument();
     expect(
       within(activity).queryByText(strings.spaceSettings.approvedBy.replace("{name}", "Lin Chen")),
     ).not.toBeInTheDocument();
@@ -483,12 +512,7 @@ it.each([
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Lin's team message")).not.toBeInTheDocument();
     expect(
-      await screen.findByText(
-        signal === "event"
-          ? strings.spaceSettings.exitRemoved
-          : strings.spaceSettings.exitUnavailable,
-        { exact: true },
-      ),
+      await screen.findByText(strings.spaceSettings.exitRemoved, { exact: true }),
     ).toBeInTheDocument();
     await waitFor(() => expect(test.navigate).toHaveBeenCalledWith({ spaceId: otherSpace.id }));
     expect(screen.getByRole("button", { name: strings.space })).toHaveTextContent(otherSpace.name);
@@ -505,4 +529,39 @@ it.each([
     expect(test.send).not.toHaveBeenCalled();
   },
   15_000,
+);
+
+it.each([
+  ["en", 4003, "SPACE_MEMBER_REMOVED", "exitRemoved"],
+  ["zh", 4003, "SPACE_MEMBER_REMOVED", "exitRemoved"],
+  ["en", 4003, "SPACE_MEMBER_LEFT", "exitLeft"],
+  ["zh", 4003, "SPACE_MEMBER_LEFT", "exitLeft"],
+  ["en", 4003, "SPACE_DELETING", "exitDeleted"],
+  ["zh", 4003, "SPACE_DELETING", "exitDeleted"],
+  ["en", 4001, "SESSION_ENDED", "exitSessionEnded"],
+  ["zh", 4001, "SESSION_ENDED", "exitSessionEnded"],
+] as const)(
+  "shows the precise %s %s subscription close reason and routes correctly",
+  async (language, code, reason, key) => {
+    const copy = catalogs[language].agents;
+    const test = await fixture(language);
+    await screen.findByText("Lin's team message");
+    await waitFor(() =>
+      expect(
+        test.connections.some((connection) =>
+          connection.sent.some((frame) => frame.type === "space.subscribe"),
+        ),
+      ).toBe(true),
+    );
+    if (code === 4003) test.removeCurrentMembership();
+    await test.disconnectSpace(code, reason);
+    expect(await screen.findByText(copy.spaceSettings[key], { exact: true })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("log")).not.toBeInTheDocument());
+    await waitFor(() => expect(test.sessionEnded).toHaveBeenCalledTimes(code === 4001 ? 1 : 0));
+    await waitFor(() =>
+      expect(
+        test.navigate.mock.calls.some(([selection]) => selection.spaceId === otherSpace.id),
+      ).toBe(code === 4003),
+    );
+  },
 );

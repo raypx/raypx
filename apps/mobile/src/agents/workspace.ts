@@ -35,7 +35,11 @@ export class MobileWorkspace {
   private active = false;
   private focused = false;
   private selected:
-    | { id: string; conversation: ConversationController; computer: ComputerController }
+    | {
+        id: string;
+        conversation: ConversationController;
+        computer: ComputerController;
+      }
     | undefined;
 
   constructor(
@@ -57,7 +61,27 @@ export class MobileWorkspace {
     this.view = { ...this.view, ...patch };
     for (const listener of this.listeners) listener();
   }
+  private applyActivity() {
+    const at = this.selected?.conversation.getSnapshot().lastActivityAt;
+    const existing = this.view.page.agents.find((entry) => entry.agent.id === this.selected?.id);
+    if (!at || !existing || existing.agent.lastActivityAt === at) return;
+    this.update({
+      page: {
+        ...this.view.page,
+        agents: this.view.page.agents.map((entry) =>
+          entry === existing
+            ? {
+                ...entry,
+                agent: { ...entry.agent, lastActivityAt: at },
+                conversation: { ...entry.conversation, lastActivityAt: at },
+              }
+            : entry,
+        ),
+      },
+    });
+  }
   private clearConversation() {
+    this.applyActivity();
     this.selected?.conversation.dispose();
     this.selected?.computer.dispose();
     this.selected = undefined;
@@ -148,6 +172,7 @@ export class MobileWorkspace {
   /** Leaving the conversation closes its stream but retains the acknowledged projection. */
   leaveConversation() {
     this.focused = false;
+    this.applyActivity();
     this.selected?.conversation.suspend();
   }
   enterConversation() {

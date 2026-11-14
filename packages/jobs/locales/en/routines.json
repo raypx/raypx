@@ -74,5 +74,9 @@
   "invalidInput": "Check the prompt and trigger settings.",
   "notFound": "This routine is unavailable. Refresh the list.",
   "unauthorized": "You no longer have access to this routine.",
-  "requestFailed": "The request failed. Try again."
+  "requestFailed": "The request failed. Try again.",
+  "publicAddressUnavailable": "This deployment has no public address configured.",
+  "emailUnavailable": "Inbound email is not configured on this deployment.",
+  "triggerUnavailable": "This trigger is not configured.",
+  "ingressUnavailable": "Ingress address is unavailable. Refresh to try again."
 }

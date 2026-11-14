@@ -759,6 +759,7 @@ it("does not send while Chinese IME composition or its keyCode fallback owns Ent
   test.mount(true);
   const editor = await screen.findByRole("textbox", { name: "Message" });
   fireEvent.change(editor, { target: { value: "你好" } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Send" })).toBeEnabled());
   fireEvent.compositionStart(editor);
   fireEvent.keyDown(editor, { key: "Enter" });
   fireEvent.compositionEnd(editor);
@@ -2157,3 +2158,131 @@ it("keeps a newer Agent form open when a dismissed creation finishes", async () 
   expect(within(second).getByRole("button", { name: "Create Agent" })).toBeEnabled();
   expect(test.update).not.toHaveBeenCalled();
 });
+
+it.each(["en", "zh"] as const)(
+  "loads earlier windows without moving the reading message in %s",
+  async (language) => {
+    const strings = catalogs[language].agents;
+    const entries = Array.from({ length: 60 }, (_, index) => ({
+      ...message,
+      id: messageSchema.shape.id.parse(`history-${index + 1}`),
+      sequence: index + 1,
+      text: `History ${index + 1}`,
+    }));
+    const test = fixture({ language });
+    const history = vi.fn(async ({ before }: { before?: { beforeSequence: number } }) => ({
+      conversation,
+      messages: before ? entries.slice(0, 30) : entries.slice(30),
+      runs: [],
+      segments: [],
+      cursor: 60,
+      olderCursor: before
+        ? null
+        : { spaceId: agent.spaceId, conversationId: conversation.id, beforeSequence: 31 },
+      runsTruncated: false,
+      segmentsTruncated: false,
+    }));
+    test.client.conversations.history = history;
+    test.mount(true);
+    const line = await screen.findByText("History 34");
+    expect(screen.queryByText("History 1", { exact: true })).not.toBeInTheDocument();
+    const log = screen.getByRole("log");
+    Object.defineProperties(log, {
+      clientHeight: { value: 200 },
+      scrollHeight: { get: () => log.querySelectorAll("[data-message-id]").length * 40 },
+    });
+    vi.spyOn(log, "getBoundingClientRect").mockReturnValue({
+      top: 0,
+      bottom: 200,
+      height: 200,
+      width: 600,
+      left: 0,
+      right: 600,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    });
+    for (const row of log.querySelectorAll<HTMLElement>("[data-message-id]")) {
+      vi.spyOn(row, "getBoundingClientRect").mockImplementation(() => {
+        const top =
+          [...log.querySelectorAll("[data-message-id]")].indexOf(row) * 40 - log.scrollTop;
+        return {
+          top,
+          bottom: top + 40,
+          height: 40,
+          left: 0,
+          right: 600,
+          width: 600,
+          x: 0,
+          y: top,
+          toJSON() {},
+        };
+      });
+    }
+    log.scrollTop = 120;
+    fireEvent.scroll(log);
+    const anchor = line.closest<HTMLElement>("[data-message-id]")!;
+    const offset = anchor.getBoundingClientRect().top;
+    await userEvent.click(screen.getByRole("button", { name: strings.history.earlier }));
+    await screen.findByText("History 1", { exact: true });
+    expect(screen.getByText("History 34").closest("[data-message-id]")).toBe(anchor);
+    expect(anchor.getBoundingClientRect().top).toBe(offset);
+    expect(log).toHaveAttribute("data-history-count", "60");
+    expect(screen.getByText(strings.history.start)).toBeInTheDocument();
+    expect(history).toHaveBeenCalledTimes(2);
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "restores historical names and resolved answerers from snapshot in %s",
+  async (language) => {
+    const strings = catalogs[language].agents;
+    const departed = { ...message, author: { kind: "member" as const, accountId: "departed" } };
+    const test = fixture({
+      language,
+      snapshot: {
+        conversation,
+        messages: [departed],
+        runs: [{ ...run, state: "succeeded" }],
+        segments: [],
+        cursor: 6,
+        participants: [
+          { accountId: "departed", displayName: "Mei", isMember: false },
+          { accountId: "account", displayName: "Alex", isMember: true },
+        ],
+        resolvedApprovals: [
+          {
+            requestId: "answered",
+            runId: run.id,
+            toolCallId: "historical-tool",
+            outcome: "approved",
+            answeredByAccountId: "departed",
+            resolvedAt: time,
+          },
+        ],
+        toolActivity: [
+          {
+            runId: run.id,
+            toolCallId: "historical-tool",
+            toolName: "computer_write_file",
+            target: "old.txt",
+            argumentSummary: "Write",
+            startedAt: time,
+            finishedAt: time,
+            outcome: "succeeded",
+            durationMs: 5,
+            exitStatus: null,
+          },
+        ],
+      },
+    });
+    test.mount(true);
+    const name = strings.departedMember.replace("{name}", "Mei");
+    expect(await screen.findByRole("heading", { name })).toBeInTheDocument();
+    const activity = await screen.findByRole("button", { name: /1/ });
+    fireEvent.click(activity);
+    expect(
+      await screen.findByText(strings.spaceSettings.approvedBy.replace("{name}", name)),
+    ).toBeInTheDocument();
+  },
+);

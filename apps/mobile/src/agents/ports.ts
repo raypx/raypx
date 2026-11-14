@@ -69,6 +69,7 @@ export function mobileWorkspacePort(client: ApiClient): AgentsWorkspacePort {
     conversations: client.conversations,
     computers: client.computers,
     approvals: {
+      effectiveMode: client.approvals.effectiveMode,
       pending: client.approvals.pending,
       effects: client.approvals.effects,
       async answer(input) {
@@ -84,7 +85,10 @@ export function mobileWorkspacePort(client: ApiClient): AgentsWorkspacePort {
 
 export interface NativeEventSocket {
   addEventListener(type: "message", listener: (event: { data: unknown }) => void): void;
-  addEventListener(type: "close", listener: (event: { code: number }) => void): void;
+  addEventListener(
+    type: "close",
+    listener: (event: { code: number; reason?: string }) => void,
+  ): void;
   addEventListener(type: "error", listener: () => void): void;
   send(text: string): void;
   close(code?: number): void;
@@ -94,7 +98,7 @@ export interface NativeEventSocket {
 export function mobileConversationSocket(
   options: SessionPort & {
     open(url: string, headers: Record<string, string>): NativeEventSocket;
-    forbidden(): void;
+    forbidden(reason?: string): void;
   },
 ): ConversationSocketPort {
   return {
@@ -132,8 +136,8 @@ export function mobileConversationSocket(
             socket.addEventListener("close", (event) => {
               if (closed) return;
               if (event.code === 4001) options.expired();
-              if (event.code === 4003) options.forbidden();
-              callbacks.onClose(event.code);
+              if (event.code === 4003) options.forbidden(event.reason);
+              callbacks.onClose(event.code, event.reason);
             });
             socket.addEventListener("error", () => {
               if (!closed) callbacks.onError();

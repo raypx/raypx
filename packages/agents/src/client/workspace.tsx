@@ -73,6 +73,8 @@ import { SpaceForm } from "./space-form.js";
 import { AgentConversation } from "./conversation.js";
 import { browserConversationDrafts, browserConversationSocket } from "./browser-ports.js";
 import { useTranslations } from "./i18n.js";
+import { ActivityTime } from "./activity-time.js";
+import { compareLastActivity } from "../model/activity.js";
 
 export interface AgentsWorkspaceProps {
   client: AgentsWorkspacePort;
@@ -84,6 +86,7 @@ export interface AgentsWorkspaceProps {
         subscribe: (listener: (event: SpaceEvent) => void) => () => void;
       }) => ReactNode)
     | undefined;
+  onSessionEnded?: (() => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
   composerReference?: { id: string; text: string } | undefined;
   spaceManagement?: SpaceManagementPort | undefined;
@@ -110,6 +113,7 @@ export function AgentsWorkspace(props: AgentsWorkspaceProps) {
 
 function AgentsWorkspaceContents({
   client,
+  onSessionEnded,
   renderWorkspace,
   onOpenPage,
   composerReference,
@@ -140,6 +144,17 @@ function AgentsWorkspaceContents({
     [pageListeners],
   );
   const [page, setPage] = useState(createAgentsPageState);
+  const agentsByActivity = useMemo(
+    () => [...page.agents].sort((left, right) => compareLastActivity(left.agent, right.agent)),
+    [page.agents],
+  );
+  const groupsByActivity = useMemo(
+    () =>
+      [...(page.groups ?? [])].sort((left, right) =>
+        compareLastActivity(left.conversation, right.conversation),
+      ),
+    [page.groups],
+  );
   const current = useRef(page);
   const mounted = useRef(true);
   const navigationRevision = useRef(0);
@@ -171,7 +186,7 @@ function AgentsWorkspaceContents({
   const [spaceSettingsOpen, setSpaceSettingsOpen] = useState(false);
   const [routineTarget, setRoutineTarget] = useState<string | null>(null);
   const [spaceNotice, setSpaceNotice] = useState<
-    "removed" | "unavailable" | "deleting" | "left" | null
+    "removed" | "unavailable" | "deleting" | "left" | "session-ended" | null
   >(null);
   const spaceTrigger = useRef<HTMLButtonElement>(null);
   const [newSpace, setNewSpace] = useState(false);
@@ -191,6 +206,12 @@ function AgentsWorkspaceContents({
   const draftStore = useMemo(() => drafts ?? browserConversationDrafts(), [drafts]);
   const conversationPort = useMemo<ConversationPort>(
     () => ({
+      ...(client.conversations.history
+        ? {
+            history: (input: Parameters<NonNullable<ConversationPort["history"]>>[0]) =>
+              client.conversations.history!(input),
+          }
+        : {}),
       snapshot: (input) => client.conversations.snapshot(input),
       send: (input) => client.conversations.send(input),
       stop: (input) => client.conversations.stop(input),
@@ -217,6 +238,12 @@ function AgentsWorkspaceContents({
     const approvals = client.approvals;
     if (!approvals) return undefined;
     return {
+      ...(approvals.effectiveMode
+        ? {
+            effectiveMode: (input: Parameters<NonNullable<ApprovalPort["effectiveMode"]>>[0]) =>
+              approvals.effectiveMode!(input),
+          }
+        : {}),
       pending: (input) => approvals.pending(input),
       answer: (input) => approvals.answer(input),
       effects: (input) => approvals.effects(input),
@@ -311,9 +338,10 @@ function AgentsWorkspaceContents({
       spaceId: page.spaceId,
       accountId,
       port: spaceManagement,
+      ...(client.approvals ? { effectiveApprovals: client.approvals } : {}),
       ...(accountApprovalSettings ? { accountApprovals: accountApprovalSettings } : {}),
     });
-  }, [page.spaceId, accountId, spaceManagement, accountApprovalSettings]);
+  }, [page.spaceId, accountId, spaceManagement, accountApprovalSettings, client.approvals]);
   const managementState = useSyncExternalStore(
     management?.subscribe ?? subscribeNothing,
     management?.getSnapshot ?? emptyManagement,
@@ -328,7 +356,10 @@ function AgentsWorkspaceContents({
     if (management) void management.load(membership?.member.role === "owner");
   }, [management, membership?.member.role, modelCatalogKey]);
   const exitSpace = useCallback(
-    (reason: "removed" | "unavailable" | "deleting" | "left", selectedSpace: string) => {
+    (
+      reason: "removed" | "unavailable" | "deleting" | "left" | "session-ended",
+      selectedSpace: string,
+    ) => {
       if (!mounted.current || current.current.spaceId !== selectedSpace) return;
       const revision = ++navigationRevision.current;
       lastSpaceExit.current = { spaceId: selectedSpace, revision };
@@ -341,6 +372,12 @@ function AgentsWorkspaceContents({
       ++groupFormRevision.current;
       setNewGroup(false);
       setSpaceNotice(reason);
+      if (reason === "session-ended") {
+        current.current = createAgentsPageState();
+        setPage(current.current);
+        onSessionEnded?.();
+        return;
+      }
       // Close the old conversation immediately, before discovery can finish.
       const fallback = applySpaces(
         current.current,
@@ -361,7 +398,7 @@ function AgentsWorkspaceContents({
         })
         .catch(() => {});
     },
-    [client, onNavigate],
+    [client, onNavigate, onSessionEnded],
   );
   useEffect(() => {
     if (!management || !page.spaceId) return;
@@ -409,6 +446,35 @@ function AgentsWorkspaceContents({
     };
   }, [management, page.spaceId, accountId, eventSocket, client, exitSpace, pageListeners]);
 
+  const rememberLastActivity = useCallback((at: string, conversationId: string) => {
+    setPage((state) => {
+      const selected = state.agents.find((entry) => entry.conversation.id === conversationId);
+      const selectedGroup = state.groups?.find((entry) => entry.conversation.id === conversationId);
+      if (selected && at !== selected.agent.lastActivityAt)
+        return {
+          ...state,
+          agents: state.agents.map((entry) =>
+            entry === selected
+              ? {
+                  ...entry,
+                  agent: { ...entry.agent, lastActivityAt: at },
+                  conversation: { ...entry.conversation, lastActivityAt: at },
+                }
+              : entry,
+          ),
+        };
+      if (selectedGroup && at !== selectedGroup.conversation.lastActivityAt)
+        return {
+          ...state,
+          groups: (state.groups ?? []).map((entry) =>
+            entry === selectedGroup
+              ? { ...entry, conversation: { ...entry.conversation, lastActivityAt: at } }
+              : entry,
+          ),
+        };
+      return state;
+    });
+  }, []);
   const activityRefresh = useRef(0);
   async function refreshSpaceActivity() {
     const selectedSpace = current.current.spaceId;
@@ -439,7 +505,9 @@ function AgentsWorkspaceContents({
         )
           return;
         try {
-          const snapshot = await conversationPort.snapshot(item);
+          const snapshot = conversationPort.history
+            ? await conversationPort.history({ ...item, limit: 30 })
+            : await conversationPort.snapshot(item);
           if (
             mounted.current &&
             current.current.spaceId === selectedSpace &&
@@ -862,7 +930,7 @@ function AgentsWorkspaceContents({
               {t("groups.direct")}
             </h2>
             <ul className="flex min-w-0 flex-col gap-1">
-              {page.agents.map((item) => (
+              {agentsByActivity.map((item) => (
                 <li
                   key={item.agent.id}
                   className={cn(
@@ -893,6 +961,7 @@ function AgentsWorkspaceContents({
                         {page.models.find((model) => model.modelId === item.agent.model.modelId)
                           ?.name ?? item.agent.model.modelId}
                       </span>
+                      <ActivityTime value={item.agent.lastActivityAt} />
                     </span>
                   </Button>
                   <DropdownMenu>
@@ -937,7 +1006,7 @@ function AgentsWorkspaceContents({
                   <h2 className="text-xs font-medium text-muted-foreground">{t("groups.title")}</h2>
                 </div>
                 <ul className="flex min-w-0 flex-col gap-1">
-                  {page.groups?.map((item) => (
+                  {groupsByActivity.map((item) => (
                     <li key={item.conversation.id}>
                       <Button
                         ref={(node) => {
@@ -956,7 +1025,10 @@ function AgentsWorkspaceContents({
                         onClick={() => chooseGroup(item)}
                       >
                         <GroupAvatars agents={item.agents} />
-                        <span className="min-w-0 flex-1 truncate">{item.conversation.name}</span>
+                        <span className="flex min-w-0 flex-1 flex-col gap-1">
+                          <span className="truncate">{item.conversation.name}</span>
+                          <ActivityTime value={item.conversation.lastActivityAt} />
+                        </span>
                       </Button>
                     </li>
                   ))}
@@ -993,6 +1065,8 @@ function AgentsWorkspaceContents({
                 accountId={accountId}
                 members={managementState?.members}
                 spaceSettings={managementState?.settings}
+                effectiveMode={managementState?.effectiveMode}
+                onLastActivity={rememberLastActivity}
               />
             </div>
           ) : (
@@ -1108,6 +1182,7 @@ function AgentsWorkspaceContents({
 }
 
 const spaceExitKeys = {
+  "session-ended": "spaceSettings.exitSessionEnded",
   removed: "spaceSettings.exitRemoved",
   unavailable: "spaceSettings.exitUnavailable",
   deleting: "spaceSettings.exitDeleted",

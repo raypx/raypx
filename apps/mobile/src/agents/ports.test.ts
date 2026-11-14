@@ -19,24 +19,28 @@ import {
 
 class EventSocket implements NativeEventSocket {
   private message: ((event: { data: unknown }) => void) | undefined;
-  private closed: ((event: { code: number }) => void) | undefined;
+  private closed: ((event: { code: number; reason?: string }) => void) | undefined;
   private failed: (() => void) | undefined;
   send = vi.fn<(text: string) => void>();
   close = vi.fn<(code?: number) => void>();
 
   addEventListener(type: "message", listener: (event: { data: unknown }) => void): void;
-  addEventListener(type: "close", listener: (event: { code: number }) => void): void;
+  addEventListener(
+    type: "close",
+    listener: (event: { code: number; reason?: string }) => void,
+  ): void;
   addEventListener(type: "error", listener: () => void): void;
   addEventListener(type: string, listener: unknown) {
     if (type === "message") this.message = listener as (event: { data: unknown }) => void;
-    if (type === "close") this.closed = listener as (event: { code: number }) => void;
+    if (type === "close")
+      this.closed = listener as (event: { code: number; reason?: string }) => void;
     if (type === "error") this.failed = listener as () => void;
   }
   emitMessage(data: unknown) {
     this.message?.({ data });
   }
-  emitClose(code: number) {
-    this.closed?.({ code });
+  emitClose(code: number, reason?: string) {
+    this.closed?.({ code, ...(reason ? { reason } : {}) });
   }
   emitError() {
     this.failed?.();
@@ -187,14 +191,14 @@ describe("mobile authenticated transports", () => {
     expired.native.emitClose(4001);
     expect(expired.expired).toHaveBeenCalledOnce();
     expect(expired.forbidden).not.toHaveBeenCalled();
-    expect(expired.callbacks.onClose).toHaveBeenCalledWith(4001);
+    expect(expired.callbacks.onClose).toHaveBeenCalledWith(4001, undefined);
     expired.socket.close();
     const forbidden = socketHarness();
     await Promise.resolve();
     forbidden.native.emitClose(4003);
     expect(forbidden.forbidden).toHaveBeenCalledOnce();
     expect(forbidden.expired).not.toHaveBeenCalled();
-    expect(forbidden.callbacks.onClose).toHaveBeenCalledWith(4003);
+    expect(forbidden.callbacks.onClose).toHaveBeenCalledWith(4003, undefined);
     forbidden.socket.close();
     const missing = socketHarness(vi.fn(async () => ""));
     await Promise.resolve();
@@ -202,6 +206,19 @@ describe("mobile authenticated transports", () => {
     expect(missing.expired).toHaveBeenCalledOnce();
     expect(missing.callbacks.onClose).toHaveBeenCalledWith(4001);
   });
+
+  it.each(["SPACE_MEMBER_REMOVED", "SPACE_MEMBER_LEFT", "SPACE_DELETING"])(
+    "forwards the precise %s native close reason",
+    async (reason) => {
+      const h = socketHarness();
+      await Promise.resolve();
+      h.native.emitClose(4003, reason);
+      expect(h.forbidden).toHaveBeenCalledWith(reason);
+      expect(h.callbacks.onClose).toHaveBeenCalledWith(4003, reason);
+      expect(h.expired).not.toHaveBeenCalled();
+      h.socket.close();
+    },
+  );
 
   it("preserves stable approval errors for the shared projection", async () => {
     const client = mobileApi({

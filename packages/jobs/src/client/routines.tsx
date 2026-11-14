@@ -27,6 +27,9 @@ import {
   routineErrorKey,
   clearRoutineSecrets,
   revealedRoutineSecrets,
+  routineIngressAddress,
+  type RoutineIngressKind,
+  type RoutineIngressReason,
   type RoutinesPort,
   type RoutineFormState,
   type RoutineSecrets,
@@ -38,7 +41,6 @@ export interface RoutinesPanelProps {
   spaceId: string;
   agentId: string;
   accountId: string;
-  apiOrigin: string;
   port: RoutinesPort;
   onOpenRun: (runId: string) => void;
 }
@@ -335,7 +337,6 @@ function RoutineEditor({
   spaceId,
   agentId,
   accountId,
-  apiOrigin,
   port,
 }: RoutinesPanelProps & {
   initial: Routine | null;
@@ -369,6 +370,23 @@ function RoutineEditor({
   );
   const input = routineFormInput(form, agentId);
   const selected = saved ?? initial;
+  const [readRoutine, setReadRoutine] = useState<Routine | null>(initial);
+  useEffect(() => {
+    if (!selected) return;
+    let current = true;
+    void port
+      .get({ spaceId, id: selected.id })
+      .then((routine) => {
+        if (current) setReadRoutine(routine);
+      })
+      .catch(() => {
+        if (current) setError("requestFailed");
+      });
+    return () => {
+      current = false;
+    };
+  }, [port, spaceId, selected]);
+  const ingressRoutine = readRoutine?.id === selected?.id ? readRoutine : selected;
   function change<Key extends keyof RoutineFormState>(key: Key, value: RoutineFormState[Key]) {
     setForm((previous) => ({ ...previous, [key]: value }));
   }
@@ -547,9 +565,7 @@ function RoutineEditor({
           {selected?.triggers.webhook ? (
             <div className="flex min-w-0 flex-col gap-2">
               <p className="text-sm font-medium">{t("webhookUrl")}</p>
-              <code className="select-all text-xs wrap-anywhere">
-                {new URL(`/routines/${selected.id}/webhook`, apiOrigin).href}
-              </code>
+              <IngressAddress routine={ingressRoutine!} kind="webhook" />
               <Button
                 type="button"
                 size="sm"
@@ -561,10 +577,10 @@ function RoutineEditor({
               </Button>
             </div>
           ) : null}
-          {selected?.emailAddress ? (
+          {selected?.triggers.email ? (
             <div>
               <p className="text-sm font-medium">{t("emailAddress")}</p>
-              <p className="select-all text-xs wrap-anywhere">{selected.emailAddress}</p>
+              <IngressAddress routine={ingressRoutine!} kind="email" />
               <p className="text-sm font-medium">{t("allowedSender")}</p>
               <p className="text-xs wrap-anywhere">{selected.triggers.email?.allowedSender}</p>
             </div>
@@ -572,9 +588,7 @@ function RoutineEditor({
           {selected?.triggers.repository ? (
             <div>
               <p className="text-sm font-medium">{t("repositoryUrl")}</p>
-              <code className="select-all text-xs wrap-anywhere">
-                {new URL(`/routines/${selected.id}/repository`, apiOrigin).href}
-              </code>
+              <IngressAddress routine={ingressRoutine!} kind="repository" />
             </div>
           ) : null}
           {secrets.webhookKey || secrets.repositorySecret ? (
@@ -633,6 +647,25 @@ function RoutineEditor({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+const ingressReasonKeys = {
+  TRIGGER_NOT_CONFIGURED: "triggerUnavailable",
+  PUBLIC_API_ORIGIN_NOT_CONFIGURED: "publicAddressUnavailable",
+  EMAIL_NOT_CONFIGURED: "emailUnavailable",
+  ADDRESS_UNAVAILABLE: "ingressUnavailable",
+} as const satisfies Record<RoutineIngressReason, string>;
+
+function IngressAddress({ routine, kind }: { routine: Routine; kind: RoutineIngressKind }) {
+  const t = useTranslations("routines");
+  const address = routineIngressAddress(routine, kind);
+  if (address.value)
+    return <code className="select-all text-xs wrap-anywhere">{address.value}</code>;
+  return (
+    <p className="text-xs text-muted-foreground">
+      {t(ingressReasonKeys[address.unavailableReason ?? "ADDRESS_UNAVAILABLE"])}
+    </p>
   );
 }
 

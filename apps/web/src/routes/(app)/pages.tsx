@@ -41,6 +41,9 @@ function SignedInPages({ accountId }: { accountId: string }) {
   return (
     <AgentsWorkspace
       client={agentsClient}
+      onSessionEnded={() =>
+        void navigate({ to: "/login", search: { returnTo: "/agents" }, replace: true })
+      }
       groups={agentsClient.conversations}
       spaceManagement={agentsClient.spaces}
       accountApprovalSettings={agentsClient.approvals}

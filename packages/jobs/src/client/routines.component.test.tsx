@@ -31,7 +31,7 @@ function routine(): Routine {
     updatedAt: "2026-11-14T00:00:00Z",
   });
 }
-function setup(initial: Routine[] = []) {
+function setup(initial: Routine[] = [], language: "en" | "zh" = "en") {
   let items = initial;
   const port: RoutinesPort = {
     list: vi.fn(async () => items),
@@ -64,12 +64,11 @@ function setup(initial: Routine[] = []) {
   };
   const openRun = vi.fn();
   render(
-    <BrowserLanguageProvider>
+    <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
       <RoutinesPanel
         spaceId={spaceId}
         agentId={agentId}
         accountId="member"
-        apiOrigin="https://api.example.test"
         port={port}
         onOpenRun={openRun}
       />
@@ -223,3 +222,69 @@ it("requires confirmation before deletion and announces failures without droppin
     "Keep my edited prompt",
   );
 });
+
+it("shows authoritative ingress URLs and email rather than renderer-derived addresses", async () => {
+  const user = userEvent.setup();
+  const configured = {
+    ...routine(),
+    triggers: {
+      webhook: true,
+      repository: { events: ["push"] },
+      email: { allowedSender: "member@example.test" },
+    },
+    emailAddress: "old-unused@example.test",
+    ingress: {
+      webhook: { url: "https://ingress.example.test/custom/webhook", unavailableReason: null },
+      repository: {
+        url: "https://ingress.example.test/custom/repository",
+        unavailableReason: null,
+      },
+      email: { address: "server-provided@example.test", unavailableReason: null },
+    },
+  };
+  setup([configured]);
+  const article = await screen.findByRole("article", { name: configured.name });
+  await user.click(within(article).getByRole("button", { name: "Edit" }));
+  const dialog = await screen.findByRole("dialog");
+  await within(dialog).findByText("https://ingress.example.test/custom/webhook");
+  expect(
+    within(dialog).getByText("https://ingress.example.test/custom/repository"),
+  ).toBeInTheDocument();
+  expect(within(dialog).getByText("server-provided@example.test")).toBeInTheDocument();
+  expect(within(dialog).queryByText("old-unused@example.test")).not.toBeInTheDocument();
+});
+
+it.each([
+  [
+    "en",
+    "Edit",
+    "This deployment has no public address configured.",
+    "Inbound email is not configured on this deployment.",
+  ],
+  ["zh", "编辑", "此部署未配置公共地址。", "此部署未配置收件邮箱。"],
+] as const)(
+  "displays deployment ingress reasons in %s",
+  async (language, edit, publicReason, emailReason) => {
+    const user = userEvent.setup();
+    const configured: Routine = {
+      ...routine(),
+      triggers: {
+        webhook: true,
+        repository: { events: ["push"] },
+        email: { allowedSender: "member@example.test" },
+      },
+      ingress: {
+        webhook: { url: null, unavailableReason: "PUBLIC_API_ORIGIN_NOT_CONFIGURED" },
+        repository: { url: null, unavailableReason: "PUBLIC_API_ORIGIN_NOT_CONFIGURED" },
+        email: { address: null, unavailableReason: "EMAIL_NOT_CONFIGURED" },
+      },
+    };
+    setup([configured], language);
+    const article = await screen.findByRole("article", { name: configured.name });
+    await user.click(within(article).getByRole("button", { name: edit }));
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findAllByText(publicReason)).toHaveLength(2);
+    expect(within(dialog).getByText(emailReason)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/https:\/\/api\.example\.test/)).not.toBeInTheDocument();
+  },
+);

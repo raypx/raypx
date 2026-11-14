@@ -603,3 +603,27 @@ it.each(["deleting", "left"] as const)(
     expect(controller.getSnapshot()).toBe(before);
   },
 );
+
+it.each(["space_override", "account_default"] as const)(
+  "reads a member's effective mode from %s without owner settings",
+  async (source) => {
+    const h = fixture("member");
+    const effectiveMode = vi.fn(async () => ({
+      spaceId,
+      mode: "never" as const,
+      source,
+      availableModes: accountSettings.availableModes,
+    }));
+    const controller = new SpaceManagementController({
+      spaceId,
+      accountId: "member",
+      port: h.port,
+      effectiveApprovals: { effectiveMode },
+    });
+    await controller.load(false);
+    expect(controller.getSnapshot().effectiveMode).toMatchObject({ mode: "never", source });
+    expect(effectiveMode).toHaveBeenCalledExactlyOnceWith({ spaceId });
+    expect(h.port.settings).not.toHaveBeenCalled();
+    controller.dispose();
+  },
+);

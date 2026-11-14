@@ -4,6 +4,7 @@ import {
   openConversationCapability,
 } from "../helpers/conversation-header.js";
 import { selectOption } from "../helpers/select.js";
+import { createOwnedSpace } from "../helpers/owned-space.js";
 
 const apiUrl = process.env.CONTROL_E2E_API_URL;
 const viewports = [
@@ -65,9 +66,10 @@ export function registerTests() {
     });
     expect(signIn.status()).toBe(200);
     await page.setViewportSize({ width: 1440, height: 860 });
-    await page.goto(`${baseURL}/agents`);
-    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
     const suffix = `${info.project.name}-${crypto.randomUUID()}`;
+    const spaceId = await createOwnedSpace(page, apiUrl, origin, `Routine ${suffix}`);
+    await page.goto(`${baseURL}/agents?spaceId=${spaceId}`, { timeout: 5_000 });
+    await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible();
     const agentName = `团队例行检查 Long Agent name 团队例行检查 Long Agent name ${suffix}`;
     await page.getByRole("button", { name: "New Agent", exact: true }).click();
     const agentForm = page.getByRole("dialog");

@@ -7,7 +7,10 @@ import { changeText, findByLabel, press, renderNative, textContent } from "../..
 import { AgentDirectory, AgentEditor } from "./directory.js";
 import { useLocales } from "../../tests/mocks/localization.js";
 
-afterEach(() => useLocales.mockReset());
+afterEach(() => {
+  useLocales.mockReset();
+  vi.useRealTimers();
+});
 
 const date = "2026-11-14T00:00:00.000Z";
 const agent = agentSchema.parse({
@@ -70,7 +73,7 @@ describe("mobile Agent directory", () => {
     const props = directoryProps();
     const view = await renderNative(<AgentDirectory {...props} />);
     expect(textContent(view.root)).toContain("Offered model");
-    expect(textContent(view.root)).toContain("Last edited");
+    expect(textContent(view.root)).toContain("No activity yet");
     expect(view.root.findAll((node) => node.props.accessibilityLabel === "Space")).toHaveLength(0);
     await press(findByLabel(view.root, "Ray"));
     await press(findByLabel(view.root, "Edit Agent: Ray"));
@@ -92,7 +95,7 @@ describe("mobile Agent directory", () => {
       (node) =>
         typeof node.type === "string" &&
         typeof node.props.onRefresh === "function" &&
-        node.props.data === props.state.agents,
+        node.props.onRefresh === props.onRefresh,
     );
     list.props.onRefresh();
     expect(props.onRefresh).toHaveBeenCalledOnce();
@@ -203,3 +206,35 @@ describe("mobile Agent directory", () => {
     },
   );
 });
+
+it.each([
+  ["en", "Active 5 min. ago"],
+  ["zh", "5分钟前活跃"],
+] as const)(
+  "shows activity rather than metadata edits and sorts the mobile directory in %s",
+  async (language, label) => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    vi.setSystemTime(new Date("2026-11-14T12:00:00Z"));
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const props = directoryProps();
+    const active = {
+      ...item,
+      agent: {
+        ...item.agent,
+        id: "active-agent" as typeof agent.id,
+        name: "Active Agent",
+        lastActivityAt: "2026-11-14T11:55:00Z",
+      },
+    };
+    props.state.agents = [item, active];
+    const view = await renderNative(<AgentDirectory {...props} />);
+    expect(textContent(view.root)).toContain(label);
+    const rows = view.root.findAll(
+      (node) =>
+        typeof node.type === "string" &&
+        ["Ray", "Active Agent"].includes(node.props.accessibilityLabel),
+    );
+    expect(rows.map((node) => node.props.accessibilityLabel)).toEqual(["Active Agent", "Ray"]);
+    await view.unmount();
+  },
+);

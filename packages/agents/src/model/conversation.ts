@@ -8,9 +8,11 @@ import type {
   RunFailure,
   RunId,
   ToolActivity,
+  ConversationMember,
+  ResolvedApprovalSummary,
 } from "@raypx/core/conversation";
 import { MAX_REPLY_TEXT } from "@raypx/core/conversation";
-import type { ConversationSelection, ConversationSnapshot } from "./port.js";
+import type { ConversationHistory, ConversationSelection, ConversationSnapshot } from "./port.js";
 import type { ApprovalCardView } from "./approvals.js";
 import { applyToolActivityEvent, mergeToolActivity } from "./tool-activity.js";
 
@@ -24,15 +26,26 @@ export interface RunView {
   createdAt: string;
   trigger?: Run["trigger"] | undefined;
   inboundProvenance?: Run["inboundProvenance"] | undefined;
+  provenanceKind?: "webhook" | "email" | "repository" | null | undefined;
+  routineId?: string | null | undefined;
+  untrustedInput?: boolean | undefined;
+  outsideWindow?: boolean | undefined;
 }
 export interface ConversationView {
   cursor: number;
+  lastActivityAt?: string | null | undefined;
   messages: Message[];
   segments: ReplySegment[];
   runs: RunView[];
   liveReplies: LiveReply[];
   toolActivity: ToolActivity[];
   toolActivityTruncated: boolean;
+  participants?: ConversationMember[] | undefined;
+  participantsTruncated?: boolean | undefined;
+  resolvedApprovals?: ResolvedApprovalSummary[] | undefined;
+  resolvedApprovalsTruncated?: boolean | undefined;
+  runsTruncated?: boolean | undefined;
+  segmentsTruncated?: boolean | undefined;
 }
 export type ConversationRow =
   | {
@@ -78,6 +91,7 @@ export function conversationRows(view: ConversationView): ConversationRow[] {
     const run = view.runs.find((item) => item.id === id);
     const segments = view.segments.filter((item) => item.runId === id);
     const live = view.liveReplies.find((item) => item.runId === id);
+    if (run?.outsideWindow) continue;
     if (run?.parentRunId || segments.some((segment) => segment.parentRunId) || live?.parentRunId)
       continue;
     if (
@@ -139,6 +153,7 @@ export function conversationTimelineRows(
     ...pending.map((card) => card.runId),
   ]);
   for (const runId of runIds) {
+    if (view.runs.find((run) => run.id === runId)?.outsideWindow) continue;
     const requests = pending.filter((card) => card.runId === runId);
     const child =
       view.runs.find((run) => run.id === runId)?.parentRunId ||
@@ -249,6 +264,8 @@ export class ConversationState {
     toolActivity: [],
     toolActivityTruncated: false,
   };
+  private latestMessageId: string | undefined;
+  private historyWindow = false;
   constructor(readonly selection: ConversationSelection) {}
   getSnapshot = (): ConversationView => this.view;
   private owns(value: { spaceId: string; conversationId: string }) {
@@ -268,8 +285,13 @@ export class ConversationState {
       snapshot.runs.some((item) => !this.owns(item))
     )
       return false;
+    this.historyWindow = "olderCursor" in snapshot;
+    const activityLimit = this.historyWindow ? 500 : 100;
+    const toolActivity = mergeToolActivity([], snapshot.toolActivity ?? [], activityLimit + 1);
+    const participants = mergeParticipants([], snapshot.participants ?? [], 101);
     this.view = {
       cursor: snapshot.cursor,
+      lastActivityAt: snapshot.conversation.lastActivityAt ?? null,
       // A send receipt can finish after the snapshot transaction captured its cursor.
       // Preserve those confirmed messages while replay catches up to them.
       messages: [
@@ -293,12 +315,126 @@ export class ConversationState {
         createdAt: run.createdAt,
         trigger: run.trigger,
         inboundProvenance: run.inboundProvenance,
+        provenanceKind: run.inboundProvenance?.kind,
+        routineId: run.routineId,
+        untrustedInput: run.untrustedInput,
       })),
       liveReplies: [],
-      toolActivity: mergeToolActivity([], snapshot.toolActivity ?? []),
-      toolActivityTruncated: snapshot.toolActivityTruncated ?? false,
+      toolActivity: toolActivity.slice(-activityLimit),
+      toolActivityTruncated:
+        snapshot.toolActivityTruncated === true || toolActivity.length > activityLimit,
+      participants: participants.slice(0, 100),
+      participantsTruncated: snapshot.participantsTruncated === true || participants.length > 100,
+      resolvedApprovals: snapshot.resolvedApprovals ?? [],
+      resolvedApprovalsTruncated: snapshot.resolvedApprovalsTruncated ?? false,
+      runsTruncated: "runsTruncated" in snapshot && snapshot.runsTruncated === true,
+      segmentsTruncated: "segmentsTruncated" in snapshot && snapshot.segmentsTruncated === true,
+    };
+    this.latestMessageId = this.view.messages.at(-1)?.id;
+    return true;
+  }
+  /** History boundaries never advance the replay cursor. Existing live rows win overlaps. */
+  applyHistory(page: ConversationHistory): boolean {
+    if (
+      !this.owns({ spaceId: page.conversation.spaceId, conversationId: page.conversation.id }) ||
+      page.messages.some((message) => !this.owns(message) || message.sequence > page.cursor) ||
+      page.segments.some((segment) => !this.owns(segment) || segment.sequence > page.cursor) ||
+      page.runs.some((run) => !this.owns(run))
+    )
+      return false;
+    const incoming = new ConversationState(this.selection);
+    if (!incoming.applySnapshot(page)) return false;
+    const prior = this.view;
+    const next = incoming.getSnapshot();
+    const messages = mergeById(next.messages, prior.messages).sort(
+      (a, b) => a.sequence - b.sequence,
+    );
+    const messageSequences = new Map<string, number>(
+      messages.map((message) => [message.id, message.sequence]),
+    );
+    const toolActivity = mergeToolActivity(next.toolActivity, prior.toolActivity, 501);
+    const participants = mergeParticipants(prior.participants ?? [], next.participants ?? [], 101);
+    this.view = {
+      ...prior,
+      messages,
+      segments: mergeById(next.segments, prior.segments).sort((a, b) => a.sequence - b.sequence),
+      runs: mergeById(prior.runs, next.runs)
+        .map((run) => {
+          const previous = prior.runs.find((item) => item.id === run.id);
+          const detail = next.runs.find((item) => item.id === run.id);
+          if (!detail) return run;
+          if (!previous || prior.cursor <= page.cursor) return { ...run, outsideWindow: false };
+          return {
+            ...previous,
+            ...detail,
+            state: previous.state,
+            failureCode: previous.failureCode,
+            outsideWindow: false,
+          };
+        })
+        .sort(
+          (left, right) =>
+            Date.parse(left.createdAt) - Date.parse(right.createdAt) ||
+            (messageSequences.get(left.messageId ?? "") ?? 0) -
+              (messageSequences.get(right.messageId ?? "") ?? 0),
+        ),
+      toolActivity: toolActivity.slice(-500),
+      toolActivityTruncated:
+        prior.toolActivityTruncated || next.toolActivityTruncated || toolActivity.length > 500,
+      participants: participants.slice(0, 100),
+      participantsTruncated:
+        prior.participantsTruncated || next.participantsTruncated || participants.length > 100,
+      resolvedApprovals: mergeResolved(next.resolvedApprovals ?? [], prior.resolvedApprovals ?? []),
+      resolvedApprovalsTruncated:
+        prior.resolvedApprovalsTruncated || next.resolvedApprovalsTruncated,
+      runsTruncated: prior.runsTruncated || next.runsTruncated,
+      segmentsTruncated: prior.segmentsTruncated || next.segmentsTruncated,
     };
     return true;
+  }
+  /** Release message bodies and their dependent activity together; identifiers are never reordered. */
+  retainMessages(ids: ReadonlySet<string>) {
+    const messages = this.view.messages.filter((message) => ids.has(message.id));
+    const runs = this.view.runs
+      .filter((run) => (run.messageId && ids.has(run.messageId)) || !terminal(run.state))
+      .map((run) => ({ ...run, outsideWindow: !run.messageId || !ids.has(run.messageId) }));
+    const runIds = new Set(runs.filter((run) => !run.outsideWindow).map((run) => run.id));
+    this.view = {
+      ...this.view,
+      messages,
+      runs,
+      segments: this.view.segments.filter((segment) => runIds.has(segment.runId)),
+      liveReplies: this.view.liveReplies.filter((reply) =>
+        runs.some((run) => run.id === reply.runId),
+      ),
+      toolActivity: this.view.toolActivity.filter((call) => runIds.has(call.runId)),
+      resolvedApprovals: this.view.resolvedApprovals?.filter((card) => runIds.has(card.runId)),
+    };
+  }
+  /** Keep command state for active Runs even when their message bodies are outside the reader window. */
+  hydrateActiveRuns(runs: readonly Run[], latestMessageId?: string) {
+    if (latestMessageId) this.latestMessageId = latestMessageId;
+    const visible = new Set(this.view.messages.map((message) => message.id));
+    const current = new Map(this.view.runs.map((run) => [run.id, run]));
+    for (const run of runs) {
+      if (!this.owns(run) || terminal(run.state) || current.has(run.id)) continue;
+      current.set(run.id, {
+        id: run.id,
+        agentId: run.agentId,
+        parentRunId: run.parentRunId,
+        messageId: run.messageId,
+        state: run.state,
+        failureCode: run.failureCode,
+        createdAt: run.createdAt,
+        trigger: run.trigger,
+        routineId: run.routineId,
+        inboundProvenance: run.inboundProvenance,
+        provenanceKind: run.inboundProvenance?.kind,
+        untrustedInput: run.untrustedInput,
+        outsideWindow: !run.messageId || !visible.has(run.messageId),
+      });
+    }
+    this.view = { ...this.view, runs: [...current.values()] };
   }
   /** Snapshot metadata fills fields absent from run.state without replacing newer events. */
   applyRunDetails(runs: readonly Run[]): boolean {
@@ -312,7 +448,8 @@ export class ConversationState {
           run.inboundProvenance === detail.inboundProvenance &&
           run.agentId === detail.agentId &&
           run.parentRunId === detail.parentRunId &&
-          run.messageId === detail.messageId)
+          run.messageId === detail.messageId &&
+          run.untrustedInput === detail.untrustedInput)
       )
         return run;
       changed = true;
@@ -323,12 +460,15 @@ export class ConversationState {
         parentRunId: detail.parentRunId,
         trigger: detail.trigger,
         inboundProvenance: detail.inboundProvenance,
+        provenanceKind: detail.inboundProvenance?.kind,
+        routineId: detail.routineId,
+        untrustedInput: detail.untrustedInput,
       };
     });
     if (changed) this.view = { ...this.view, runs: projected };
     return changed;
   }
-  applyEvent(entry: ConversationEventEntry): EventApplication {
+  applyEvent(entry: ConversationEventEntry, includeNewMessages = true): EventApplication {
     const { event } = entry;
     if (!this.owns(event)) return "ignored";
     if (!Number.isSafeInteger(event.sequence) || event.sequence < 1) return "snapshot-required";
@@ -343,13 +483,16 @@ export class ConversationState {
         message.sequence !== event.sequence
       )
         return "snapshot-required";
-      this.receiveMessage(message);
+      this.latestMessageId = message.id;
+      if (includeNewMessages) this.receiveMessage(message);
     }
     if (event.kind === "run.state") {
       if ((event.state === "failed") !== (event.failureCode !== null)) return "snapshot-required";
       const previous = this.view.runs.find((run) => run.id === event.runId);
       const messageId =
         previous?.messageId ??
+        this.view.runs.find((run) => run.id === event.parentRunId)?.messageId ??
+        this.latestMessageId ??
         [...this.view.messages].reverse().find((message) => message.sequence < event.sequence)?.id;
       const run: RunView = {
         ...previous,
@@ -359,19 +502,29 @@ export class ConversationState {
         state: event.state,
         failureCode: event.failureCode,
         messageId,
+        outsideWindow: previous?.outsideWindow ?? !includeNewMessages,
         createdAt: previous?.createdAt ?? event.createdAt,
+        trigger: event.trigger ?? previous?.trigger,
+        provenanceKind: event.provenanceKind ?? previous?.provenanceKind,
+        routineId: event.routineId ?? previous?.routineId,
+        untrustedInput: event.untrustedInput ?? previous?.untrustedInput,
       };
+      const runs = previous
+        ? this.view.runs.map((item) => (item.id === run.id ? run : item))
+        : [...this.view.runs, run];
       this.view = {
         ...this.view,
-        runs: previous
-          ? this.view.runs.map((item) => (item.id === run.id ? run : item))
-          : [...this.view.runs, run],
+        runs: runs.filter((item) => !(item.outsideWindow && terminal(item.state))),
         liveReplies: terminal(run.state)
           ? this.view.liveReplies.filter((item) => item.runId !== run.id)
           : this.view.liveReplies,
       };
     }
-    if (event.kind === "reply.segment") {
+    if (
+      event.kind === "reply.segment" &&
+      (includeNewMessages ||
+        this.view.runs.some((run) => run.id === event.segment.runId && !run.outsideWindow))
+    ) {
       const segment = event.segment;
       if (!this.owns(segment) || segment.sequence !== event.sequence) return "snapshot-required";
       this.view = {
@@ -384,24 +537,36 @@ export class ConversationState {
         ),
       };
     }
-    if (event.kind === "tool.started" || event.kind === "tool.finished") {
-      const toolActivity = applyToolActivityEvent(this.view.toolActivity, event);
+    if (
+      (event.kind === "tool.started" || event.kind === "tool.finished") &&
+      (includeNewMessages ||
+        this.view.runs.some((run) => run.id === event.runId && !run.outsideWindow))
+    ) {
+      const toolActivity = applyToolActivityEvent(
+        this.view.toolActivity,
+        event,
+        this.historyWindow ? 500 : 100,
+      );
       this.view = {
         ...this.view,
         toolActivity,
         toolActivityTruncated:
           this.view.toolActivityTruncated ||
-          (this.view.toolActivity.length === 100 &&
+          (this.view.toolActivity.length === (this.historyWindow ? 500 : 100) &&
             !this.view.toolActivity.some(
               (call) => call.runId === event.runId && call.toolCallId === event.toolCallId,
             )),
       };
     }
-    this.view = { ...this.view, cursor: event.sequence };
+    this.view = { ...this.view, cursor: event.sequence, lastActivityAt: event.createdAt };
     return "applied";
   }
-  receiveMessage(message: Message): boolean {
+  receiveMessage(message: Message, include = true): boolean {
     if (!this.owns(message)) return false;
+    if (!include) {
+      this.latestMessageId = message.id;
+      return true;
+    }
     const previous = this.view.messages.find((item) => item.id === message.id);
     if (previous) return true;
     this.view = {
@@ -445,4 +610,24 @@ export class ConversationState {
   clearLiveReplies() {
     if (this.view.liveReplies.length) this.view = { ...this.view, liveReplies: [] };
   }
+}
+
+function mergeById<T extends { id: string }>(older: readonly T[], newer: readonly T[]): T[] {
+  return [...new Map([...older, ...newer].map((item) => [item.id, item])).values()];
+}
+function mergeParticipants(
+  older: readonly ConversationMember[],
+  newer: readonly ConversationMember[],
+  limit = 100,
+) {
+  return [...new Map([...older, ...newer].map((item) => [item.accountId, item])).values()].slice(
+    0,
+    limit,
+  );
+}
+function mergeResolved(
+  older: readonly ResolvedApprovalSummary[],
+  newer: readonly ResolvedApprovalSummary[],
+) {
+  return [...new Map([...older, ...newer].map((item) => [item.requestId, item])).values()];
 }

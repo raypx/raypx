@@ -10,7 +10,6 @@ export function PausedRoutinePanel({
   id,
   spaceId,
   accountId,
-  origin,
   port,
 }: {
   id: string;
@@ -60,7 +59,6 @@ export function PausedRoutinePanel({
       spaceId={spaceId}
       agentId={routine.agentId}
       accountId={accountId}
-      apiOrigin={origin}
       port={selected}
       onOpenRun={() => {}}
     />

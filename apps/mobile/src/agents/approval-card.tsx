@@ -15,6 +15,7 @@ import { Action } from "../ui.js";
 export interface ApprovalCardProps {
   card: ApprovalCardView;
   accountId: string;
+  memberName?: ((id: string) => string) | undefined;
   onAnswer: (
     requestId: ApprovalCardView["requestId"],
     decision: "approved" | "denied",
@@ -24,7 +25,13 @@ export interface ApprovalCardProps {
 }
 
 /** The shared projection gates submission; this card only expresses the member's choice. */
-export function ApprovalCard({ card, accountId, onAnswer, onRefresh }: ApprovalCardProps) {
+export function ApprovalCard({
+  card,
+  accountId,
+  memberName,
+  onAnswer,
+  onRefresh,
+}: ApprovalCardProps) {
   const { t } = useCopy();
   const [now, setNow] = useState(Date.now);
   const [remember, setRemember] = useState(false);
@@ -92,7 +99,9 @@ export function ApprovalCard({ card, accountId, onAnswer, onRefresh }: ApprovalC
           </Text>
           {!addressed ? (
             <Text className="text-sm text-muted-foreground">
-              {t("agents.approval.waitingFor", { member: t("agents.member") })}
+              {t("agents.approval.waitingFor", {
+                member: memberName?.(card.memberAccountId) ?? t("agents.member"),
+              })}
             </Text>
           ) : (
             <>
@@ -140,7 +149,9 @@ export function ApprovalCard({ card, accountId, onAnswer, onRefresh }: ApprovalC
       {!pending && card.answeredByAccountId ? (
         <Text className="text-sm text-muted-foreground">
           {t("agents.approval.answeredBy", {
-            member: t(card.answeredByAccountId === accountId ? "agents.you" : "agents.member"),
+            member:
+              memberName?.(card.answeredByAccountId) ??
+              t(card.answeredByAccountId === accountId ? "agents.you" : "agents.member"),
           })}
         </Text>
       ) : null}

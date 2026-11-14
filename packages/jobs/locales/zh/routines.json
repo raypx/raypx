@@ -74,5 +74,9 @@
   "invalidInput": "请检查提示词和触发设置。",
   "notFound": "此例行任务不可用，请刷新列表。",
   "unauthorized": "你已无权访问此例行任务。",
-  "requestFailed": "请求失败，请重试。"
+  "requestFailed": "请求失败，请重试。",
+  "publicAddressUnavailable": "此部署未配置公共地址。",
+  "emailUnavailable": "此部署未配置收件邮箱。",
+  "triggerUnavailable": "尚未配置此触发器。",
+  "ingressUnavailable": "接入地址暂不可用，请刷新后重试。"
 }

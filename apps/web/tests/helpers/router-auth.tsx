@@ -86,6 +86,7 @@ vi.mock("../../src/features/auth/access.js", async (original) => ({
 }));
 vi.mock("../../src/features/agents/client.js", () => ({
   agentsClient: {
+    conversations: { history: vi.fn(), snapshot: vi.fn(), send: vi.fn(), stop: vi.fn() },
     spaces: { list: mocks.agentsSpaces },
     computers: {
       get: async () => ({ status: "not-configured" as const }),

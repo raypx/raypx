@@ -216,3 +216,21 @@ export function routineErrorKey(
   }
   return "requestFailed";
 }
+
+export type RoutineIngressKind = "webhook" | "repository" | "email";
+export type RoutineIngressReason =
+  | "TRIGGER_NOT_CONFIGURED"
+  | "PUBLIC_API_ORIGIN_NOT_CONFIGURED"
+  | "EMAIL_NOT_CONFIGURED"
+  | "ADDRESS_UNAVAILABLE";
+
+/** Display only deployment-provided addresses; renderer origins cannot describe ingress. */
+export function routineIngressAddress(
+  routine: Pick<Routine, "ingress">,
+  kind: RoutineIngressKind,
+): { value: string | null; unavailableReason: RoutineIngressReason | null } {
+  const ingress = routine.ingress?.[kind];
+  if (!ingress) return { value: null, unavailableReason: "ADDRESS_UNAVAILABLE" };
+  const value = "address" in ingress ? ingress.address : ingress.url;
+  return { value, unavailableReason: ingress.unavailableReason };
+}

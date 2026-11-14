@@ -99,7 +99,7 @@ export function SpaceSettingsPanel({
     state.members.find((member) => member.accountId === controller.accountId)?.role ?? role;
   const owner = currentRole === "owner";
   const visibleSections = sections.filter(
-    (entry) => owner || entry === "general" || entry === "members",
+    (entry) => owner || entry === "general" || entry === "members" || entry === "approvals",
   );
   const activeSection = visibleSections.includes(section) ? section : "general";
   const id = useId();
@@ -181,8 +181,8 @@ export function SpaceSettingsPanel({
           invitationOrigin={invitationOrigin}
         />
       )}
-      {!state.loading && owner && activeSection === "approvals" && (
-        <OverrideSettings controller={controller} state={state} />
+      {!state.loading && activeSection === "approvals" && (
+        <OverrideSettings controller={controller} state={state} owner={owner} />
       )}
       {!state.loading && owner && activeSection === "audit" && (
         <AuditSettings controller={controller} state={state} />
@@ -254,9 +254,16 @@ function GeneralSettings({
         <>
           <div className="flex flex-col gap-2 border-t pt-4">
             <h3 className="text-sm font-medium">{t("spaceSettings.effectiveMode")}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t("spaceSettings.approvalUnavailable")}
-            </p>
+            {state.effectiveMode && (
+              <p className="text-sm text-muted-foreground">
+                {t(`approvalSettings.${state.effectiveMode.mode}`)} ·{" "}
+                {t(
+                  state.effectiveMode.source === "space_override"
+                    ? "spaceSettings.overridesDefault"
+                    : "spaceSettings.followsDefault",
+                )}
+              </p>
+            )}
           </div>
           <Button
             className="self-start"
@@ -630,20 +637,16 @@ function InvitationSettings({
 function OverrideSettings({
   controller,
   state,
+  owner,
 }: {
   controller: SpaceManagementController;
   state: State;
+  owner: boolean;
 }) {
   const t = useTranslations("agents");
   const id = useId();
   const confirmation = useConfirmation();
   const mode = state.settings?.approvalMode ?? "default";
-  let effectiveMode = t("computerUnavailable");
-  if (state.settings) {
-    effectiveMode = state.settings.approvalMode
-      ? t(`approvalSettings.${state.settings.approvalMode}`)
-      : t("spaceSettings.followDefault");
-  }
   const options = [
     { value: "default", label: t("spaceSettings.followDefault") },
     ...(state.accountSettings?.availableModes ?? []).map((entry) => ({
@@ -674,57 +677,69 @@ function OverrideSettings({
       className="flex min-w-0 flex-col gap-4"
       aria-label={t("spaceSettings.sections.approvals")}
     >
-      <p className="text-sm">
-        {t("spaceSettings.accountDefault", {
-          mode: state.accountSettings
-            ? t(`approvalSettings.${state.accountSettings.mode}`)
-            : t("computerUnavailable"),
-        })}
-      </p>
-      <Field>
-        <FieldLabel htmlFor={`${id}-mode`}>{t("spaceSettings.override")}</FieldLabel>
-        <Select
-          value={mode}
-          items={options}
-          disabled={!!state.busy || !state.settings}
-          onValueChange={(value) => {
-            if (value) void change(value);
-          }}
-        >
-          <SelectTrigger id={`${id}-mode`} className="w-full min-w-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {options.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  disabled={
-                    option.value !== "default" &&
-                    !state.accountSettings?.availableModes.some(
-                      (entry) => entry.mode === option.value && entry.available,
-                    )
-                  }
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </Field>
-      {state.accountSettings?.availableModes
-        .filter((entry) => entry.reasonCode)
-        .map((entry) => (
-          <p key={entry.mode} className="text-xs text-muted-foreground">
-            {t(`approvalSettings.${entry.mode}`)}:{" "}
-            {t("spaceSettings.errors.REVIEW_MODEL_NOT_CONFIGURED")}
+      {owner && (
+        <>
+          <p className="text-sm">
+            {t("spaceSettings.accountDefault", {
+              mode: state.accountSettings
+                ? t(`approvalSettings.${state.accountSettings.mode}`)
+                : t("computerUnavailable"),
+            })}
           </p>
-        ))}
-      <p className="text-sm">
-        {t("spaceSettings.effectiveMode")}: {effectiveMode}
-      </p>
+          <Field>
+            <FieldLabel htmlFor={`${id}-mode`}>{t("spaceSettings.override")}</FieldLabel>
+            <Select
+              value={mode}
+              items={options}
+              disabled={!!state.busy || !state.settings}
+              onValueChange={(value) => {
+                if (value) void change(value);
+              }}
+            >
+              <SelectTrigger id={`${id}-mode`} className="w-full min-w-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {options.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      data-value={option.value}
+                      disabled={
+                        option.value !== "default" &&
+                        !state.accountSettings?.availableModes.some(
+                          (entry) => entry.mode === option.value && entry.available,
+                        )
+                      }
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+          {state.accountSettings?.availableModes
+            .filter((entry) => entry.reasonCode)
+            .map((entry) => (
+              <p key={entry.mode} className="text-xs text-muted-foreground">
+                {t(`approvalSettings.${entry.mode}`)}:{" "}
+                {t("spaceSettings.errors.REVIEW_MODEL_NOT_CONFIGURED")}
+              </p>
+            ))}
+        </>
+      )}
+      {state.effectiveMode && (
+        <p className="text-sm" data-effective-approval-mode={state.effectiveMode.mode}>
+          {t("spaceSettings.effectiveMode")}: {t(`approvalSettings.${state.effectiveMode.mode}`)} ·{" "}
+          {t(
+            state.effectiveMode.source === "space_override"
+              ? "spaceSettings.overridesDefault"
+              : "spaceSettings.followsDefault",
+          )}
+        </p>
+      )}
       {confirmation.dialog}
     </section>
   );

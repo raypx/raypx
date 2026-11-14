@@ -1,5 +1,9 @@
 import type { z } from "zod";
-import type { ApprovalMode, ApprovalSettingsState } from "@raypx/core/approvals";
+import type {
+  ApprovalMode,
+  ApprovalSettingsState,
+  EffectiveApprovalMode,
+} from "@raypx/core/approvals";
 import {
   spaceMutationErrorCodeSchema,
   type Space,
@@ -78,6 +82,7 @@ export interface SpaceManagementView {
   issuedInvitation: IssuedSpaceInvitation | null;
   settings: SpaceSettings | null;
   accountSettings: ApprovalSettingsState | null;
+  effectiveMode: EffectiveApprovalMode | null;
   audit: readonly SpaceAuditEntry[];
   auditCursor: string | null;
   auditFilter: SpaceAuditFilter;
@@ -142,6 +147,7 @@ export class SpaceManagementController {
     issuedInvitation: null,
     settings: null,
     accountSettings: null,
+    effectiveMode: null,
     audit: [],
     auditCursor: null,
     auditFilter: "all",
@@ -160,6 +166,9 @@ export class SpaceManagementController {
   private readonly accountApprovals:
     | { settings(input: Record<string, never>): Promise<ApprovalSettingsState> }
     | undefined;
+  private readonly effectiveApprovals:
+    | { effectiveMode?(input: { spaceId: SpaceId }): Promise<EffectiveApprovalMode> }
+    | undefined;
   private onExitConfirmed: ((reason: "deleting" | "left") => void) | undefined;
   private disposed = false;
   private owner = false;
@@ -174,12 +183,16 @@ export class SpaceManagementController {
     accountId: string;
     port: SpaceManagementPort;
     accountApprovals?: { settings(input: Record<string, never>): Promise<ApprovalSettingsState> };
+    effectiveApprovals?: {
+      effectiveMode?(input: { spaceId: SpaceId }): Promise<EffectiveApprovalMode>;
+    };
     onExitConfirmed?: (reason: "deleting" | "left") => void;
   }) {
     this.spaceId = options.spaceId;
     this.accountId = options.accountId;
     this.port = options.port;
     this.accountApprovals = options.accountApprovals;
+    this.effectiveApprovals = options.effectiveApprovals;
     this.onExitConfirmed = options.onExitConfirmed;
   }
   /** Hosts observe confirmed acknowledgements after a stream has revoked access. */
@@ -237,13 +250,15 @@ export class SpaceManagementController {
     ++this.auditRead;
     this.update({ loading: true, auditLoading: false, error: null });
     try {
-      const [space, members, accountSettings] = await Promise.all([
+      const [space, members, accountSettings, effectiveMode] = await Promise.all([
         this.port.get({ spaceId: this.spaceId }),
         this.port.members({ spaceId: this.spaceId }),
         this.accountApprovals?.settings({}).catch(() => null) ?? Promise.resolve(null),
+        this.effectiveApprovals?.effectiveMode?.({ spaceId: this.spaceId }) ??
+          Promise.resolve(null),
       ]);
       if (!this.active(revision)) return;
-      this.update({ space, accountSettings });
+      this.update({ space, accountSettings, effectiveMode });
       this.applyDirectory(members);
       if (!this.owner) this.clearOwnerData();
       if (this.owner) {
@@ -386,13 +401,21 @@ export class SpaceManagementController {
   setApprovalOverride(mode: "ask" | "never" | "auto") {
     return this.mutate("approvalOverride", async (current) => {
       const settings = await this.port.setApprovalOverride({ spaceId: this.spaceId, mode });
-      if (current() && this.owner) this.update({ settings });
+      if (current() && this.owner) {
+        const effectiveMode =
+          (await this.effectiveApprovals?.effectiveMode?.({ spaceId: this.spaceId })) ?? null;
+        if (current()) this.update({ settings, effectiveMode });
+      }
     });
   }
   clearApprovalOverride() {
     return this.mutate("approvalOverride", async (current) => {
       const settings = await this.port.clearApprovalOverride({ spaceId: this.spaceId });
-      if (current() && this.owner) this.update({ settings });
+      if (current() && this.owner) {
+        const effectiveMode =
+          (await this.effectiveApprovals?.effectiveMode?.({ spaceId: this.spaceId })) ?? null;
+        if (current()) this.update({ settings, effectiveMode });
+      }
     });
   }
   setAuditFilter(auditFilter: SpaceAuditFilter) {
@@ -437,7 +460,7 @@ export class SpaceManagementController {
     if (!this.active() || event.spaceId !== this.spaceId || event.id <= this.view.eventCursor)
       return false;
     if (event.kind === "space.member.removed" && event.payload.accountId === this.accountId) {
-      this.exit("removed");
+      this.exit(event.payload.reason === "left" ? "left" : "removed");
       this.update({ eventCursor: event.id });
       return true;
     }

@@ -1,4 +1,4 @@
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { FlatList, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
@@ -7,6 +7,8 @@ import { Label } from "heroui-native/label";
 import { TextField } from "heroui-native/text-field";
 import { Spinner } from "heroui-native/spinner";
 import {
+  conversationMemberLabel,
+  delegatedWork,
   activeConversationRun,
   conversationTimelineRows,
   MAX_CONVERSATION_DRAFT,
@@ -69,7 +71,44 @@ export function AgentConversation({
   const history = useRef<FlatList<TimelineRow>>(null);
   const active = activeConversationRun(state.runs);
   const rows = conversationTimelineRows(state, state.cards);
-  const lastRun = state.runs.at(-1);
+  const memberName = (id: string) =>
+    conversationMemberLabel(id, accountId, state.participants ?? [], undefined, {
+      you: t("agents.you"),
+      member: t("agents.member"),
+      departed: (name) => t("agents.departedMember", { name }),
+    });
+  const shared = (state.participants ?? []).some((member) => member.accountId !== accountId);
+  const firstVisible = useRef<string | null>(null);
+  const scrollOffset = useRef(0);
+  async function earlier() {
+    atBottom.current = false;
+    setAway(true);
+    await controller.loadEarlier();
+  }
+  const rememberRow = useCallback(
+    (row: TimelineRow | undefined, offset = 0) => {
+      const projection = controller.getSnapshot();
+      if (!row) return;
+      let messageId: string | undefined;
+      if (row.kind === "member") messageId = row.id;
+      if (row.kind === "reply") messageId = row.run?.messageId;
+      if (row.kind === "activity")
+        messageId = projection.runs.find((run) => run.id === row.runId)?.messageId;
+      if (row.kind === "approval")
+        messageId = projection.runs.find((run) => run.id === row.card.runId)?.messageId;
+      controller.setReadingAnchor(messageId && !atBottom.current ? { messageId, offset } : null);
+    },
+    [controller],
+  );
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: { item: TimelineRow }[] }) => {
+      const first = viewableItems[0]?.item;
+      firstVisible.current = first?.id ?? null;
+      rememberRow(first, scrollOffset.current);
+    },
+    [rememberRow],
+  );
+  const lastRun = active ?? state.runs.at(-1);
   const pendingCards = rows.filter((row) => row.kind === "approval");
   async function stop() {
     if (!active || stopPending.current) return;
@@ -83,8 +122,10 @@ export function AgentConversation({
     }
   }
   function latest() {
+    controller.setReadingAnchor(null);
     atBottom.current = true;
     setAway(false);
+    if (state.history?.hasNewer) void controller.loadLatest();
     history.current?.scrollToEnd({ animated: false });
   }
   function renderRow({ item: row }: { item: TimelineRow }) {
@@ -92,15 +133,28 @@ export function AgentConversation({
       return (
         <ApprovalCard
           card={row.card}
+          memberName={memberName}
           accountId={accountId}
           onAnswer={(id, decision, allow) => void controller.answerApproval(id, decision, allow)}
           onRefresh={() => void controller.refreshApprovals()}
         />
       );
-    if (row.kind === "activity") return <ToolActivity row={row} />;
+    if (row.kind === "activity")
+      return (
+        <ToolActivity
+          row={row}
+          answers={state.cards}
+          memberName={shared ? memberName : undefined}
+        />
+      );
     if (row.kind === "member")
       return (
         <View className="items-end">
+          {shared && (
+            <Text className="text-xs text-muted-foreground">
+              {memberName(row.sender.slice("member:".length))}
+            </Text>
+          )}
           <View className="max-w-[92%] rounded-lg bg-default px-3 py-2">
             <Text selectable className="text-base leading-6 text-foreground">
               {row.text}
@@ -114,6 +168,39 @@ export function AgentConversation({
       state.pending !== null || (state.draft !== "" && state.draft !== message?.text);
     return (
       <View className="gap-2 rounded-lg border border-border px-3 py-2">
+        {run?.trigger && run.trigger !== "message" && (
+          <Text className="text-xs text-muted-foreground">
+            {t(
+              (run.provenanceKind ?? run.inboundProvenance?.kind) === "repository"
+                ? "agents.origins.repository"
+                : `agents.origins.${run.trigger}`,
+            )}
+          </Text>
+        )}
+        {(run?.untrustedInput ?? Boolean(run?.inboundProvenance)) && (
+          <Text className="text-xs text-muted-foreground">{t("agents.untrustedInput")}</Text>
+        )}
+        {run &&
+          delegatedWork(state, run.id).map((child) => (
+            <View key={child.run.id} className="gap-1 border-l border-border pl-3">
+              <Text className="text-xs text-muted-foreground">
+                {t("agents.delegation.task")} · {t(`agents.${child.run.state}`)}
+              </Text>
+              <ToolActivity
+                row={{
+                  id: `activity:${child.run.id}`,
+                  kind: "activity",
+                  sender: "approval",
+                  sequence: 0,
+                  runId: child.run.id,
+                  activity: child.activity,
+                  pendingCount: 0,
+                }}
+                answers={state.cards}
+                memberName={shared ? memberName : undefined}
+              />
+            </View>
+          ))}
         {row.text ? <ReplyMarkdown text={row.text} /> : null}
         {run ? (
           <Text accessibilityLiveRegion="polite" className="text-sm text-muted-foreground">
@@ -197,13 +284,61 @@ export function AgentConversation({
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+            onViewableItemsChanged={onViewableItemsChanged}
+            ListHeaderComponent={
+              !state.loading && state.history ? (
+                <View className="gap-2 py-2">
+                  {state.history.olderCursor ? (
+                    <Action
+                      label={t("agents.history.earlier")}
+                      secondary
+                      busy={state.history.loading !== null}
+                      onPress={() => void earlier()}
+                    />
+                  ) : (
+                    <Text className="text-center text-xs text-muted-foreground">
+                      {t("agents.history.start")}
+                    </Text>
+                  )}
+                  {state.history.error && (
+                    <Text accessibilityRole="alert" className="text-sm text-muted-foreground">
+                      {t("agents.history.error")}
+                    </Text>
+                  )}
+                </View>
+              ) : undefined
+            }
+            ListFooterComponent={
+              state.history?.hasNewer ? (
+                <Action
+                  label={t("agents.history.later")}
+                  secondary
+                  busy={state.history.loading !== null}
+                  onPress={() => void controller.loadLater()}
+                />
+              ) : undefined
+            }
             onScroll={({ nativeEvent }) => {
               const near =
                 nativeEvent.contentSize.height -
                   nativeEvent.layoutMeasurement.height -
                   nativeEvent.contentOffset.y <
                 80;
+              scrollOffset.current = nativeEvent.contentOffset.y;
               atBottom.current = near;
+              rememberRow(
+                rows.find((row) => row.id === firstVisible.current),
+                nativeEvent.contentOffset.y,
+              );
+              if (
+                nativeEvent.contentOffset.y <= 48 &&
+                !state.loading &&
+                state.history?.olderCursor &&
+                !state.history.loading
+              )
+                void earlier();
+              if (near && state.history?.hasNewer && !state.history.loading)
+                void controller.loadLater();
               setAway(!near);
             }}
             scrollEventThrottle={100}
@@ -273,6 +408,17 @@ export function AgentConversation({
                 }}
               />
             ) : null}
+            {state.effectiveMode && (
+              <Text className="text-xs text-muted-foreground">
+                {t("agents.spaceSettings.effectiveMode")}:{" "}
+                {t(`agents.approvalSettings.${state.effectiveMode.mode}`)} ·{" "}
+                {t(
+                  state.effectiveMode.source === "space_override"
+                    ? "agents.spaceSettings.overridesDefault"
+                    : "agents.spaceSettings.followsDefault",
+                )}
+              </Text>
+            )}
             <TextField className="gap-1">
               <Label>{t("agents.message")}</Label>
               <TextArea

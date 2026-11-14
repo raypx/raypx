@@ -26,6 +26,7 @@ export function mergeToolActivity(
 export function applyToolActivityEvent(
   previous: readonly ToolActivity[],
   event: ConversationEvent,
+  limit = 100,
 ): ToolActivity[] {
   if (event.kind !== "tool.started" && event.kind !== "tool.finished") return [...previous];
   const existing = previous.find((call) => toolActivityKey(call) === toolActivityKey(event));
@@ -44,5 +45,5 @@ export function applyToolActivityEvent(
     durationMs: finished ? event.durationMs : null,
     exitStatus: finished ? event.exitStatus : null,
   };
-  return mergeToolActivity(previous, [call]);
+  return mergeToolActivity(previous, [call], limit);
 }

@@ -2,11 +2,13 @@ import {
   createContext,
   useContext,
   useEffect,
+  useEffectEvent,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { AppState } from "react-native";
+import { useRouter } from "expo-router";
+import { Alert, AppState } from "react-native";
 import { Spinner } from "heroui-native/spinner";
 import * as SecureStore from "expo-secure-store";
 import { apiOrigin, authClient } from "../auth.js";
@@ -47,10 +49,28 @@ export function AgentsProvider({
   enabled: boolean;
   children: ReactNode;
 }) {
+  const router = useRouter();
   const [workspace, setWorkspace] = useState<MobileWorkspace | null>(null);
   const { t } = useCopy();
+  const announceSessionEnded = useEffectEvent(() => {
+    Alert.alert(t("agents.spaceSettings.exitSessionEnded"));
+  });
+  const announceForbidden = useEffectEvent((reason?: string) => {
+    const keys = {
+      SPACE_MEMBER_REMOVED: "agents.spaceSettings.exitRemoved",
+      SPACE_MEMBER_LEFT: "agents.spaceSettings.exitLeft",
+      SPACE_DELETING: "agents.spaceSettings.exitDeleted",
+    } as const;
+    const key =
+      reason && Object.hasOwn(keys, reason)
+        ? keys[reason as keyof typeof keys]
+        : "agents.spaceSettings.exitUnavailable";
+    Alert.alert(t(key));
+    router.replace("/");
+  });
   useEffect(() => {
     let cancelled = false;
+    let sessionAnnounced = false;
     let next: MobileWorkspace | undefined;
     const requests = new AbortController();
     function current() {
@@ -72,7 +92,11 @@ export function AgentsProvider({
           return cookie;
         },
         expired() {
-          if (current()) expireSession();
+          if (current()) {
+            if (!sessionAnnounced) announceSessionEnded();
+            sessionAnnounced = true;
+            expireSession();
+          }
         },
       };
       const client = mobileApi({
@@ -88,8 +112,10 @@ export function AgentsProvider({
           if (!current()) throw new Error("Session changed");
           return new (WebSocket as unknown as SocketConstructor)(url, [], { headers });
         },
-        forbidden: () => {
-          if (current()) void next?.refresh();
+        forbidden: (reason) => {
+          if (!current()) return;
+          announceForbidden(reason);
+          void next?.refresh();
         },
       });
       const preferenceKey = `space.${sessionStoragePrefix(JSON.stringify([apiOrigin, accountId]))}`;

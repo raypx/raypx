@@ -14,10 +14,18 @@ import type {
   Run,
   RunId,
   ToolActivity,
+  ConversationMember,
+  ResolvedApprovalSummary,
+  ConversationHistoryCursor,
 } from "@raypx/core/conversation";
 import type { Space, SpaceId, SpaceInput, SpaceMember } from "@raypx/core/spaces";
 import type { SpaceComputer } from "@raypx/core/computers";
-import type { ApprovalRequest, ApprovalSettingsState, Effect } from "@raypx/core/approvals";
+import type {
+  ApprovalRequest,
+  ApprovalSettingsState,
+  Effect,
+  EffectiveApprovalMode,
+} from "@raypx/core/approvals";
 import type { RoutinesPort } from "@raypx/jobs/model";
 import type { SpaceMemoryClientPort } from "@raypx/memory/model";
 import type { ComputerFilesPort } from "./computer-files.js";
@@ -25,6 +33,7 @@ import type { AgentSkillsPort, AgentMcpPort } from "./agent-capabilities.js";
 import type { SpaceManagementPort } from "./space-management.js";
 
 export interface ApprovalPort {
+  effectiveMode?(this: void, input: { spaceId: SpaceId }): Promise<EffectiveApprovalMode>;
   pending(this: void, input: { spaceId: SpaceId }): Promise<ApprovalRequest[]>;
   answer(
     this: void,
@@ -60,8 +69,21 @@ export interface ConversationSnapshot {
   cursor: number;
   toolActivity?: ToolActivity[] | undefined;
   toolActivityTruncated?: boolean | undefined;
+  participants?: ConversationMember[] | undefined;
+  participantsTruncated?: boolean | undefined;
+  resolvedApprovals?: ResolvedApprovalSummary[] | undefined;
+  resolvedApprovalsTruncated?: boolean | undefined;
+}
+export interface ConversationHistory extends ConversationSnapshot {
+  olderCursor: ConversationHistoryCursor | null;
+  runsTruncated: boolean;
+  segmentsTruncated: boolean;
 }
 export interface ConversationPort {
+  history?(
+    this: void,
+    input: ConversationSelection & { limit?: number; before?: ConversationHistoryCursor },
+  ): Promise<ConversationHistory>;
   snapshot(this: void, input: ConversationSelection): Promise<ConversationSnapshot>;
   send(
     this: void,
@@ -76,7 +98,7 @@ export interface ConversationSocket {
 export interface ConversationSocketPort {
   connect(callbacks: {
     onFrame(frame: ConversationServerFrame): void;
-    onClose(code?: number): void;
+    onClose(code?: number, reason?: string): void;
     onError(): void;
   }): ConversationSocket;
 }

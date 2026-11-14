@@ -240,7 +240,7 @@ it("leaves immediately for an authentication close without retrying", async () =
   h.controller.start();
   await settle();
   h.connections[0]!.onClose(4001);
-  expect(h.onExit).toHaveBeenCalledExactlyOnceWith("unavailable");
+  expect(h.onExit).toHaveBeenCalledExactlyOnceWith("session-ended");
   await vi.advanceTimersByTimeAsync(5_000);
   expect(h.connections).toHaveLength(1);
 });
@@ -516,4 +516,39 @@ it("applies Page invalidations before ACK and retains the cursor on reconnect", 
   h.connections[0]!.onFrame({ type: "space.event", spaceId, event });
   await settle();
   expect(h.onPageEvent).toHaveBeenCalledTimes(1);
+});
+
+it.each([
+  ["SPACE_MEMBER_REMOVED", "removed"],
+  ["SPACE_MEMBER_LEFT", "left"],
+  ["SPACE_DELETING", "deleting"],
+] as const)("retains precise %s close reason after fresh discovery", async (reason, expected) => {
+  const h = fixture();
+  h.controller.start();
+  h.connections[0]!.onFrame({ type: "ready", version: 1 });
+  await settle();
+  h.list.mockResolvedValue([]);
+  h.connections[0]!.onClose(4003, reason);
+  await settle();
+  expect(h.onExit).toHaveBeenCalledExactlyOnceWith(expected);
+});
+
+it("uses the persisted leave reason on a member removal event", async () => {
+  const h = fixture();
+  h.controller.start();
+  h.connections[0]!.onFrame({ type: "ready", version: 1 });
+  await settle();
+  h.connections[0]!.onFrame({
+    type: "space.event",
+    spaceId,
+    event: {
+      id: 1,
+      spaceId,
+      kind: "space.member.removed",
+      createdAt,
+      payload: { accountId: "viewer", reason: "left" },
+    },
+  });
+  await settle();
+  expect(h.onExit).toHaveBeenCalledExactlyOnceWith("left");
 });

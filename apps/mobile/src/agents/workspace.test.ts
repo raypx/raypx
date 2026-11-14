@@ -271,3 +271,17 @@ describe("mobile workspace composition", () => {
     expect(h.connections).toHaveLength(2);
   });
 });
+
+it("carries durable conversation activity back to the Agent directory", async () => {
+  const h = harness();
+  h.workspace.setActive(true);
+  await h.workspace.refresh();
+  h.workspace.enterConversation();
+  const selected = h.workspace.conversation(one);
+  await vi.waitFor(() => expect(selected.conversation.getSnapshot().loading).toBe(false));
+  h.connections[0]!.onFrame({ type: "ready", version: 1 });
+  h.connections[0]!.onFrame(messageEvent(one));
+  h.workspace.leaveConversation();
+  expect(h.workspace.getSnapshot().page.agents[0]?.agent.lastActivityAt).toBe(createdAt);
+  expect(h.workspace.getSnapshot().page.agents[0]?.conversation.lastActivityAt).toBe(createdAt);
+});

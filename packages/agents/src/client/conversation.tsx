@@ -30,10 +30,12 @@ import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { RefreshIcon } from "@raypx/icons/refresh";
 import { SendIcon } from "@raypx/icons/send";
 import { StopIcon } from "@raypx/icons/stop";
+import type { EffectiveApprovalMode } from "@raypx/core/approvals";
 import type { Agent } from "@raypx/core/agents";
 import type { SpaceDirectoryMember, SpaceSettings } from "@raypx/core/spaces";
 import type { RunId, ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import {
+  conversationMemberLabel,
   toolDisplayLabel,
   ConversationController,
   ComputerController,
@@ -77,6 +79,7 @@ const errorKeys = {
 } as const;
 
 interface AgentConversationProps {
+  onLastActivity?: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
   composerReference?: { id: string; text: string } | undefined;
   group?: GroupConversationView | undefined;
@@ -99,10 +102,12 @@ interface AgentConversationProps {
   /** A mount may supply membership context when its data source exposes it. */
   hasOtherMembers?: boolean;
   members?: readonly SpaceDirectoryMember[] | undefined;
+  effectiveMode?: EffectiveApprovalMode | null | undefined;
   spaceSettings?: SpaceSettings | null | undefined;
 }
 
 export function AgentConversation({
+  onLastActivity,
   onOpenPage,
   composerReference,
   group,
@@ -124,6 +129,7 @@ export function AgentConversation({
   hasOtherMembers = false,
   members,
   spaceSettings,
+  effectiveMode,
 }: AgentConversationProps) {
   const t = useTranslations("agents");
   const referenceText = composerReference?.text;
@@ -185,6 +191,7 @@ export function AgentConversation({
     <ConversationContents
       item={item}
       onOpenPage={onOpenPage}
+      onLastActivity={onLastActivity}
       group={group}
       agentDirectory={agentDirectory}
       onManageParticipants={onManageParticipants}
@@ -197,6 +204,7 @@ export function AgentConversation({
       hasOtherMembers={hasOtherMembers}
       members={members}
       spaceSettings={spaceSettings}
+      effectiveMode={effectiveMode}
       approvalPort={approvalPort}
       activity={activity}
       onActivity={onActivity}
@@ -206,6 +214,7 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  onLastActivity,
   onOpenPage,
   group,
   agentDirectory,
@@ -220,11 +229,13 @@ function ConversationContents({
   hasOtherMembers,
   members,
   spaceSettings,
+  effectiveMode,
   approvalPort,
   activity,
   onActivity,
   onComputerOpen,
 }: {
+  onLastActivity: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage: ((id: string) => void) | undefined;
   item: AgentConversationView;
   group: GroupConversationView | undefined;
@@ -238,6 +249,7 @@ function ConversationContents({
   showAgentNames: boolean;
   hasOtherMembers: boolean;
   members: readonly SpaceDirectoryMember[] | undefined;
+  effectiveMode: EffectiveApprovalMode | null | undefined;
   spaceSettings: SpaceSettings | null | undefined;
   approvalPort: ApprovalPort | undefined;
   activity: readonly ToolCallActivity[] | undefined;
@@ -276,9 +288,10 @@ function ConversationContents({
   const history = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
-  const anchor = useRef<{ node: HTMLElement; offset: number } | null>(null);
+  const anchor = useRef<{ id: string; offset: number } | null>(null);
   const composing = useRef(false);
   const dismissedMention = useRef<{ text: string; caret: number } | null>(null);
+  const mentionCaret = useRef<number | null>(null);
   const [mentionRange, setMentionRange] = useState<ReturnType<typeof mentionQueryAt>>(null);
   const [away, setAway] = useState(false);
   const [targetRun, setTargetRun] = useState<string | null>(null);
@@ -320,7 +333,7 @@ function ConversationContents({
     node.scrollIntoView?.({ block: "center", behavior: "instant" });
     node.focus({ preventScroll: true });
     anchor.current = {
-      node,
+      id: node.dataset.messageRow ?? "",
       offset:
         node.getBoundingClientRect().top - (history.current?.getBoundingClientRect().top ?? 0),
     };
@@ -345,18 +358,21 @@ function ConversationContents({
       ),
     [state.cards, state.toolActivity, accountId],
   );
-  const memberName = (memberAccountId: string) => {
-    if (memberAccountId === accountId) return t("you");
-    return members?.find((member) => member.accountId === memberAccountId)?.name || t("member");
-  };
+  const memberName = (memberAccountId: string) =>
+    conversationMemberLabel(memberAccountId, accountId, state.participants ?? [], members, {
+      you: t("you"),
+      member: t("member"),
+      departed: (name) => t("departedMember", { name }),
+    });
   const senderContext = {
     showAgentNames: !!group || showAgentNames,
-    hasOtherMembers: members
-      ? members.length > 1
-      : hasOtherMembers ||
-        messages.some(
-          (message) => message.author.kind === "member" && message.author.accountId !== accountId,
-        ),
+    hasOtherMembers:
+      (members?.length ?? 0) > 1 ||
+      (state.participants ?? []).some((member) => member.accountId !== accountId) ||
+      hasOtherMembers ||
+      messages.some(
+        (message) => message.author.kind === "member" && message.author.accountId !== accountId,
+      ),
   };
   const visibleSenders = useMemo(() => {
     const visible = new Set<string>();
@@ -381,6 +397,12 @@ function ConversationContents({
   useEffect(() => {
     if (state.toolActivity.length) onActivity?.(item.agent.spaceId, state.toolActivity);
   }, [state.toolActivity, onActivity, item.agent.spaceId]);
+  useEffect(() => {
+    if (state.lastActivityAt) onLastActivity?.(state.lastActivityAt, item.conversation.id);
+  }, [state.lastActivityAt, item.conversation.id, onLastActivity]);
+  const appliedMode =
+    effectiveMode?.mode ?? state.effectiveMode?.mode ?? spaceSettings?.approvalMode;
+  const modeSource = effectiveMode?.source ?? state.effectiveMode?.source;
   const active = activeConversationRun(state.runs);
   const showStop = !group && active !== undefined && !state.draft.trim();
   const agentName = (agentId: string | undefined) => {
@@ -435,6 +457,13 @@ function ConversationContents({
   }, []);
   useLayoutEffect(resizeEditor, [state.draft, resizeEditor]);
   useLayoutEffect(() => {
+    if (mentionCaret.current === null) return;
+    const caret = mentionCaret.current;
+    mentionCaret.current = null;
+    editor.current?.focus();
+    editor.current?.setSelectionRange(caret, caret);
+  }, [state.draft]);
+  useLayoutEffect(() => {
     const node = editor.current;
     if (!node || typeof ResizeObserver === "undefined") return;
     let width = node.getBoundingClientRect().width;
@@ -452,6 +481,12 @@ function ConversationContents({
   }, []);
   // Only lifecycle changes reach this live region. Delta text stays outside it.
   useEffect(() => {
+    const runIds = new Set(state.runs.map((run) => run.id));
+    for (const runId of observed.current.keys())
+      if (!runIds.has(runId)) observed.current.delete(runId);
+    const cardIds = new Set<string>(state.cards.map((card) => card.requestId));
+    for (const requestId of observedCards.current.keys())
+      if (!cardIds.has(requestId)) observedCards.current.delete(requestId);
     let next = "";
     for (const run of state.runs) {
       const previous = observed.current.get(run.id);
@@ -487,13 +522,17 @@ function ConversationContents({
     const node = history.current;
     if (!node) return;
     if (follow.current) node.scrollTop = node.scrollHeight;
-    else if (anchor.current?.node.isConnected) {
+    else if (anchor.current) {
       const saved = anchor.current;
-      node.scrollTop +=
-        saved.node.getBoundingClientRect().top - node.getBoundingClientRect().top - saved.offset;
+      const row = [...node.querySelectorAll<HTMLElement>("[data-message-row]")].find(
+        (entry) => entry.dataset.messageRow === saved.id,
+      );
+      if (row)
+        node.scrollTop +=
+          row.getBoundingClientRect().top - node.getBoundingClientRect().top - saved.offset;
     }
   }, []);
-  useLayoutEffect(restoreReading, [rows, restoreReading]);
+  useLayoutEffect(restoreReading, [rows, state.history?.revision, restoreReading]);
   useLayoutEffect(() => {
     if (!content.current || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(restoreReading);
@@ -501,23 +540,53 @@ function ConversationContents({
     if (history.current) observer.observe(history.current);
     return () => observer.disconnect();
   }, [restoreReading]);
-  function trackReading() {
-    const node = history.current;
-    if (!node) return;
-    follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48;
-    setAway(!follow.current);
+  function captureReadingAnchor(node: HTMLDivElement) {
     const top = node.getBoundingClientRect().top;
     const first = [...node.querySelectorAll<HTMLElement>("[data-message-row]")].find(
       (row) => row.getBoundingClientRect().bottom > top,
     );
     anchor.current = first
-      ? { node: first, offset: first.getBoundingClientRect().top - top }
+      ? { id: first.dataset.messageRow ?? "", offset: first.getBoundingClientRect().top - top }
       : null;
+    const row = rows.find((entry) => entry.id === first?.dataset.messageRow);
+    const messageId = row?.kind === "member" ? row.id : undefined;
+    let runId: string | undefined;
+    if (row?.kind === "reply") runId = row.run?.id;
+    if (row?.kind === "activity") runId = row.runId;
+    if (row?.kind === "approval") runId = row.card.runId;
+    const rootId = messageId ?? state.runs.find((entry) => entry.id === runId)?.messageId;
+    controller.setReadingAnchor(
+      rootId && !follow.current ? { messageId: rootId, offset: anchor.current?.offset ?? 0 } : null,
+    );
+  }
+  function trackReading() {
+    const node = history.current;
+    if (!node) return;
+    follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48;
+    setAway(!follow.current);
+    captureReadingAnchor(node);
+    if (
+      node.scrollTop <= 48 &&
+      !state.loading &&
+      state.history?.olderCursor &&
+      !state.history.loading
+    )
+      void loadEarlier();
+    if (follow.current && state.history?.hasNewer && !state.history.loading)
+      void controller.loadLater();
+  }
+  async function loadEarlier() {
+    follow.current = false;
+    if (history.current) captureReadingAnchor(history.current);
+    setAway(true);
+    await controller.loadEarlier();
   }
   function latest() {
+    controller.setReadingAnchor(null);
     follow.current = true;
     anchor.current = null;
     setAway(false);
+    if (state.history?.hasNewer) void controller.loadLatest();
     restoreReading();
     history.current?.focus();
   }
@@ -635,8 +704,36 @@ function ConversationContents({
           </p>
         )}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          {!state.loading && state.history && (
+            <div className="flex shrink-0 flex-col items-center gap-2 py-2">
+              {state.history.olderCursor ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={state.history.loading !== null}
+                  onClick={() => void loadEarlier()}
+                >
+                  {t("history.earlier")}
+                </Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">{t("history.start")}</p>
+              )}
+              {state.history.loading && (
+                <p role="status" className="text-xs text-muted-foreground">
+                  {t("history.loading")}
+                </p>
+              )}
+              {state.history.error && (
+                <p role="alert" className="text-xs text-muted-foreground">
+                  {t("history.error")}
+                </p>
+              )}
+            </div>
+          )}
+
           <div
             ref={history}
+            data-history-count={state.messages.length}
             role="log"
             aria-live="off"
             aria-label={t("conversation")}
@@ -645,6 +742,12 @@ function ConversationContents({
             onScroll={trackReading}
           >
             <div ref={content} className="flex min-h-full min-w-0 flex-col gap-2 pb-2">
+              {(state.runsTruncated ||
+                state.segmentsTruncated ||
+                state.resolvedApprovalsTruncated ||
+                state.participantsTruncated) && (
+                <p className="text-xs text-muted-foreground">{t("history.truncated")}</p>
+              )}
               {state.toolActivityTruncated && (
                 <p className="text-xs text-muted-foreground">{t("activity.truncated")}</p>
               )}
@@ -708,6 +811,7 @@ function ConversationContents({
                     <article
                       key={row.id}
                       data-message-row={row.id}
+                      data-message-id={row.id.startsWith("message:") ? row.id.slice(8) : row.id}
                       data-agent-message={row.agentId}
                       className="flex min-w-0 flex-col gap-1 pr-6"
                     >
@@ -734,6 +838,7 @@ function ConversationContents({
                     <article
                       key={row.id}
                       data-message-row={row.id}
+                      data-message-id={row.id.startsWith("message:") ? row.id.slice(8) : row.id}
                       className={cn(
                         "flex min-w-0 flex-col items-end gap-1 pl-6",
                         index > 0 && rows[index - 1]?.kind !== "member" && "mt-4",
@@ -783,12 +888,12 @@ function ConversationContents({
                     <div className="flex w-fit min-w-0 max-w-[90%] flex-col gap-2">
                       {run?.trigger && run.trigger !== "message" && (
                         <p className="text-xs text-muted-foreground" data-run-origin>
-                          {run.inboundProvenance?.kind === "repository"
+                          {(run.provenanceKind ?? run.inboundProvenance?.kind) === "repository"
                             ? t("origins.repository")
                             : t(`origins.${run.trigger}`)}
                         </p>
                       )}
-                      {run?.inboundProvenance && (
+                      {(run?.untrustedInput ?? Boolean(run?.inboundProvenance)) && (
                         <p className="text-xs text-muted-foreground" data-untrusted-input>
                           {t("untrustedInput")}
                         </p>
@@ -887,6 +992,16 @@ function ConversationContents({
                   </article>
                 );
               })}
+              {state.history?.hasNewer && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={state.history.loading !== null}
+                  onClick={() => void controller.loadLater()}
+                >
+                  {t("history.later")}
+                </Button>
+              )}
             </div>
           </div>
           {away && (
@@ -940,11 +1055,8 @@ function ConversationContents({
                     agent.id,
                     agent.name,
                   );
+                  mentionCaret.current = caret;
                   closeMentions();
-                  requestAnimationFrame(() => {
-                    editor.current?.focus();
-                    editor.current?.setSelectionRange(caret, caret);
-                  });
                 }}
               />
             )}
@@ -1005,10 +1117,14 @@ function ConversationContents({
                       {t("mentions.noReply")}
                     </span>
                   )}
-                {spaceSettings?.approvalMode && (
+                {appliedMode && (
                   <span className="min-w-0 flex-1 text-xs wrap-anywhere text-muted-foreground">
-                    {t("spaceSettings.overridesDefault")}:{" "}
-                    {t(`approvalSettings.${spaceSettings.approvalMode}`)}
+                    {t(
+                      modeSource !== "account_default"
+                        ? "spaceSettings.overridesDefault"
+                        : "spaceSettings.followsDefault",
+                    )}
+                    : {t(`approvalSettings.${appliedMode}`)}
                   </span>
                 )}
                 <PendingApprovalControl cards={pendingCards} history={history} />

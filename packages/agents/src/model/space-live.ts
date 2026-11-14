@@ -1,6 +1,13 @@
 import type { SpaceEvent, SpaceId } from "@raypx/core/spaces";
 import type { ConversationSocket, ConversationSocketPort, SpaceMembership } from "./port.js";
 
+export type SpaceSubscriptionEnd =
+  | "removed"
+  | "left"
+  | "deleting"
+  | "session-ended"
+  | "unavailable";
+
 /** The stream carries invalidation, never admission. Reconcile against fresh membership. */
 export class SpaceLiveController {
   private socket: ConversationSocket | undefined;
@@ -13,6 +20,7 @@ export class SpaceLiveController {
   private disposed = false;
   private exited = false;
   private connecting = false;
+  private endReason: SpaceSubscriptionEnd = "unavailable";
   private reconcileRead = 0;
   private pending = Promise.resolve();
 
@@ -25,7 +33,7 @@ export class SpaceLiveController {
       onMemberships(spaces: SpaceMembership[]): void;
       onEvent(event: SpaceEvent): void | Promise<void>;
       onPageEvent?(event: SpaceEvent): void | Promise<void>;
-      onExit(reason: "removed" | "unavailable"): void;
+      onExit(reason: SpaceSubscriptionEnd): void;
     },
   ) {}
 
@@ -52,7 +60,7 @@ export class SpaceLiveController {
       // The generation already prevents late transport callbacks from applying.
     }
   }
-  private exit(reason: "removed" | "unavailable") {
+  private exit(reason: SpaceSubscriptionEnd) {
     if (this.disposed || this.exited) return;
     this.exited = true;
     ++this.generation;
@@ -67,11 +75,19 @@ export class SpaceLiveController {
     this.timer = undefined;
     const generation = ++this.generation;
     this.pending = Promise.resolve();
-    const interrupted = (code?: number) => {
+    const interrupted = (code?: number, reason?: string) => {
       if (!this.current(generation)) return;
       if (code === 4001) {
-        this.exit("unavailable");
+        this.exit("session-ended");
         return;
+      }
+      const reasons = {
+        SPACE_MEMBER_REMOVED: "removed",
+        SPACE_MEMBER_LEFT: "left",
+        SPACE_DELETING: "deleting",
+      } as const;
+      if (code === 4003 && reason && Object.hasOwn(reasons, reason)) {
+        this.endReason = reasons[reason as keyof typeof reasons];
       }
       const nextGeneration = ++this.generation;
       this.closeSocket();
@@ -119,7 +135,8 @@ export class SpaceLiveController {
                   event.kind === "space.member.removed" &&
                   event.payload.accountId === this.options.accountId
                 ) {
-                  if (event.spaceId === this.options.spaceId) this.exit("removed");
+                  if (event.spaceId === this.options.spaceId)
+                    this.exit(event.payload.reason === "left" ? "left" : "removed");
                   else await this.reconcileAt(generation);
                   return;
                 }
@@ -192,10 +209,11 @@ export class SpaceLiveController {
     if (!this.current(generation) || read !== this.reconcileRead) return;
     const membership = spaces.find(({ space }) => space.id === this.options.spaceId);
     if (!membership) {
-      this.exit("unavailable");
+      this.exit(this.endReason);
       if (!this.disposed) this.options.onMemberships(spaces);
       return;
     }
+    this.endReason = "unavailable";
     this.memberships = new Map(spaces.map((entry) => [entry.space.id, entry]));
     this.options.onMemberships(spaces);
     if (this.current(generation) && this.ready) this.syncSubscriptions();

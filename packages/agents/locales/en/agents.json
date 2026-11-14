@@ -146,7 +146,9 @@
       "refused": "Refused",
       "cancelled": "Cancelled",
       "unknown": "Outcome unknown"
-    }
+    },
+    "active": "Active {time}",
+    "none": "No activity yet"
   },
   "effects": {
     "open": "Review effects",
@@ -339,7 +341,6 @@
     "effectiveMode": "Effective approval mode",
     "neverConsequences": "Actions in this Space can change files and run commands without approval for every member. Blocked actions remain refused.",
     "overridesDefault": "Space overrides your approval default",
-    "approvalUnavailable": "The current Space approval mode is unavailable.",
     "outcomeFilter": "Outcome",
     "outcomes": {
       "all": "All outcomes",
@@ -399,10 +400,10 @@
       "team_computer": "Team computer: its files and installed tools are visible to every member.",
       "pages": "Pages: everyone can view pages and their share links."
     },
-    "exitRemoved": "Your access to this Space ended. Switched to another Space.",
-    "exitUnavailable": "Your access to this Space ended, or it was deleted. Switched to another Space.",
-    "exitDeleted": "This Space is deleting. Access has ended. Switched to another Space.",
-    "exitLeft": "You left this Space. Switched to another Space.",
+    "exitRemoved": "You were removed from this Space.",
+    "exitUnavailable": "Access to this Space has ended.",
+    "exitDeleted": "This Space is being deleted.",
+    "exitLeft": "You left this Space.",
     "auditCodes": {
       "MUTATION_FAILED": "The change failed.",
       "WRITE_FAILED": "The approval answer could not be saved.",
@@ -416,7 +417,9 @@
     "approvedBy": "Approved by {name}",
     "deniedBy": "Denied by {name}",
     "joinSignIn": "Sign in",
-    "joinSignInHint": "Sign in in the new tab, then return to this invitation."
+    "joinSignInHint": "Sign in in the new tab, then return to this invitation.",
+    "followsDefault": "Uses your account approval default",
+    "exitSessionEnded": "Your session ended. Sign in again."
   },
   "groups": {
     "title": "Groups",
@@ -515,5 +518,14 @@
       "MCP_STDIO_UNSUPPORTED": "Local command servers are not supported.",
       "TOOL_LIMIT": "The server offers too many tools."
     }
+  },
+  "departedMember": "{name} (no longer in this Space)",
+  "history": {
+    "earlier": "Load earlier messages",
+    "later": "Load later messages",
+    "start": "Start of conversation",
+    "loading": "Loading messages…",
+    "error": "Messages could not be loaded. Try again.",
+    "truncated": "Some activity in this window is omitted."
   }
 }

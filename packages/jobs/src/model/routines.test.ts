@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RoutineHistory } from "@raypx/core/routines";
+import type { Routine, RoutineHistory } from "@raypx/core/routines";
 import {
   createRoutineForm,
   routineFormInput,
@@ -121,4 +121,49 @@ it("maps transport and ingress error codes without exposing arbitrary text", () 
   );
   expect(routineErrorKey({ code: "NOT_FOUND", message: "Not found" })).toBe("notFound");
   expect(routineErrorKey(new Error("private payload"))).toBe("requestFailed");
+});
+
+it("uses only server ingress addresses and preserves each unavailable reason", async () => {
+  const { routineIngressAddress } = await import("./routines.js");
+  const routine: Pick<Routine, "ingress"> = {
+    ingress: {
+      webhook: { url: "https://public.example/webhook", unavailableReason: null },
+      repository: { url: null, unavailableReason: "PUBLIC_API_ORIGIN_NOT_CONFIGURED" },
+      email: { address: "incoming@example.test", unavailableReason: null },
+    },
+  };
+  expect(routineIngressAddress(routine, "webhook")).toEqual({
+    value: "https://public.example/webhook",
+    unavailableReason: null,
+  });
+  expect(routineIngressAddress(routine, "email").value).toBe("incoming@example.test");
+  expect(routineIngressAddress(routine, "repository")).toEqual({
+    value: null,
+    unavailableReason: "PUBLIC_API_ORIGIN_NOT_CONFIGURED",
+  });
+  expect(routineIngressAddress({}, "webhook").unavailableReason).toBe("ADDRESS_UNAVAILABLE");
+  expect(
+    routineIngressAddress(
+      {
+        ...routine,
+        ingress: {
+          ...routine.ingress!,
+          email: { address: null, unavailableReason: "EMAIL_NOT_CONFIGURED" },
+        },
+      },
+      "email",
+    ).unavailableReason,
+  ).toBe("EMAIL_NOT_CONFIGURED");
+  expect(
+    routineIngressAddress(
+      {
+        ...routine,
+        ingress: {
+          ...routine.ingress!,
+          webhook: { url: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" },
+        },
+      },
+      "webhook",
+    ).unavailableReason,
+  ).toBe("TRIGGER_NOT_CONFIGURED");
 });

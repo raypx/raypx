@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { Button } from "heroui-native/button";
-import { toolDisplayLabel, type conversationTimelineRows } from "@raypx/agents/model";
+import {
+  toolDisplayLabel,
+  type ApprovalCardView,
+  type conversationTimelineRows,
+} from "@raypx/agents/model";
 import type { ToolActivity as ToolCall } from "@raypx/core/conversation";
 import { useCopy } from "../locale.js";
 
@@ -10,7 +14,15 @@ type ActivityRow = Extract<
   { kind: "activity" }
 >;
 
-function ToolCallRow({ call }: { call: ToolCall }) {
+function ToolCallRow({
+  call,
+  answer,
+  memberName,
+}: {
+  call: ToolCall;
+  answer?: ApprovalCardView | undefined;
+  memberName?: ((id: string) => string) | undefined;
+}) {
   const { t } = useCopy();
   const name = toolDisplayLabel(call.toolName, (key) => t(`agents.${key}`));
   return (
@@ -22,6 +34,14 @@ function ToolCallRow({ call }: { call: ToolCall }) {
       <Text selectable className="font-mono text-sm text-muted-foreground">
         {call.target}
       </Text>
+      {answer && answer.state !== "pending" && (
+        <Text className="text-xs text-muted-foreground">
+          {t(`agents.approval.states.${answer.state}`)}
+          {answer.answeredByAccountId && memberName
+            ? ` · ${t("agents.approval.answeredBy", { member: memberName(answer.answeredByAccountId) })}`
+            : ""}
+        </Text>
+      )}
       <View className="flex-row flex-wrap gap-x-3 gap-y-1">
         <Text className="text-xs text-muted-foreground">
           {t(`agents.activity.outcomes.${call.outcome ?? "running"}`)}
@@ -44,7 +64,15 @@ function ToolCallRow({ call }: { call: ToolCall }) {
 }
 
 /** Render the shared timeline; it alone correlates cards and deduplicates tool calls. */
-export function ToolActivity({ row }: { row: ActivityRow }) {
+export function ToolActivity({
+  row,
+  answers = [],
+  memberName,
+}: {
+  row: ActivityRow;
+  answers?: readonly ApprovalCardView[];
+  memberName?: ((id: string) => string) | undefined;
+}) {
   const { t } = useCopy();
   const [expanded, setExpanded] = useState(false);
   const count = row.activity.length + row.pendingCount;
@@ -76,7 +104,14 @@ export function ToolActivity({ row }: { row: ActivityRow }) {
       {expanded ? (
         <View accessibilityLabel={t("agents.activity.title")} className="min-w-0 gap-3 py-1">
           {row.activity.map((call) => (
-            <ToolCallRow key={JSON.stringify([call.runId, call.toolCallId])} call={call} />
+            <ToolCallRow
+              key={JSON.stringify([call.runId, call.toolCallId])}
+              call={call}
+              answer={answers.find(
+                (answer) => answer.runId === call.runId && answer.toolCallId === call.toolCallId,
+              )}
+              memberName={memberName}
+            />
           ))}
         </View>
       ) : null}

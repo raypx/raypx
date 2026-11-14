@@ -1,5 +1,16 @@
-import type { ApprovalRequest, ApprovalState, ToolName } from "@raypx/core/approvals";
-import type { ConversationEvent, RunId } from "@raypx/core/conversation";
+import {
+  approvalRequestIdSchema,
+  toolNameSchema,
+  type ApprovalRequest,
+  type ApprovalState,
+  type ToolName,
+} from "@raypx/core/approvals";
+import type {
+  ConversationEvent,
+  RunId,
+  ResolvedApprovalSummary,
+  ToolActivity,
+} from "@raypx/core/conversation";
 import type { ConversationSelection } from "./port.js";
 import { toolDisplayLabel, type ToolLabelKey } from "./tool-label.js";
 
@@ -127,6 +138,41 @@ export class ApprovalProjection {
       this.receive(request, previous?.sequence ?? position(request));
     }
   }
+  /** Resolved summaries expose attribution; lifecycle rows supply their bounded display metadata. */
+  hydrateResolved(
+    summaries: readonly ResolvedApprovalSummary[],
+    activity: readonly ToolActivity[],
+    position: (runId: RunId) => number,
+  ) {
+    const calls = new Map(
+      activity.map((call) => [JSON.stringify([call.runId, call.toolCallId]), call]),
+    );
+    for (const summary of summaries) {
+      const call = calls.get(JSON.stringify([summary.runId, summary.toolCallId]));
+      if (!call) continue;
+      const toolName = toolNameSchema.safeParse(call.toolName);
+      if (!toolName.success) continue;
+      const requestId = approvalRequestIdSchema.parse(summary.requestId);
+      const previous = this.cards.find((card) => card.requestId === requestId);
+      if (previous && previous.state !== "pending") continue;
+      this.put({
+        requestId,
+        runId: summary.runId,
+        toolCallId: summary.toolCallId,
+        toolName: toolName.data,
+        target: call.target,
+        argumentSummary: call.argumentSummary,
+        memberAccountId: previous?.memberAccountId ?? "",
+        expiresAt: summary.resolvedAt,
+        createdAt: previous?.createdAt ?? call.startedAt,
+        sequence: previous?.sequence ?? position(summary.runId),
+        state: summary.outcome,
+        answeredByAccountId: summary.answeredByAccountId,
+        answering: false,
+        error: null,
+      });
+    }
+  }
   reconcileMissing(
     requests: readonly ApprovalRequest[],
     known: ReadonlySet<ApprovalRequest["id"]>,
@@ -166,6 +212,21 @@ export class ApprovalProjection {
       answering: request.state === "pending" && (previous?.answering ?? false),
       error: request.state === "pending" ? (previous?.error ?? null) : null,
     });
+  }
+  /** Retain addressed pending requests while releasing resolved rows with their history window. */
+  retainRuns(runIds: ReadonlySet<string>) {
+    const recentResolved = new Set(
+      this.cards
+        .filter((card) => card.state !== "pending")
+        .slice(-100)
+        .map((card) => card.requestId),
+    );
+    this.cards = this.cards.filter(
+      (card) =>
+        card.state === "pending" || runIds.has(card.runId) || recentResolved.has(card.requestId),
+    );
+    const retained = new Set(this.cards.map((card) => card.requestId));
+    for (const id of this.submitted) if (!retained.has(id)) this.submitted.delete(id);
   }
   begin(requestId: ApprovalRequest["id"], accountId: string, now: number) {
     const card = this.cards.find((item) => item.requestId === requestId);

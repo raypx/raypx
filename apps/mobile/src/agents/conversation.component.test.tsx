@@ -1,7 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
 import { agentSchema, conversationIdSchema, directConversation } from "@raypx/core/agents";
-import { approvalRequestSchema, type ApprovalRequest } from "@raypx/core/approvals";
+import {
+  approvalRequestSchema,
+  type ApprovalRequest,
+  type EffectiveApprovalMode,
+} from "@raypx/core/approvals";
 import {
   messageIdSchema,
   runIdSchema,
@@ -27,6 +31,12 @@ import {
   textContent,
 } from "../../tests/native.js";
 import { AgentConversation } from "./conversation.js";
+import { useLocales } from "../../tests/mocks/localization.js";
+import en from "@raypx/agents/messages/en";
+import { createTranslator } from "@raypx/i18n";
+import zh from "@raypx/agents/messages/zh";
+
+afterEach(() => useLocales.mockReset());
 
 const time = "2026-11-14T00:00:00.000Z";
 const accountId = "member";
@@ -116,11 +126,14 @@ function toolRows(root: import("react-test-renderer").ReactTestInstance) {
 async function harness(
   initial: Partial<ConversationSnapshot> = {},
   requests: ApprovalRequest[] = [],
+  historyPort?: ConversationPort["history"],
+  effective?: EffectiveApprovalMode,
 ) {
   const frames: ConversationClientFrame[] = [];
   const connections: Parameters<ConversationSocketPort["connect"]>[0][] = [];
   const stored = new Map<string, string>();
   const port: ConversationPort = {
+    ...(historyPort ? { history: historyPort } : {}),
     snapshot: vi.fn(async () => ({
       conversation,
       messages: [],
@@ -135,6 +148,7 @@ async function harness(
     stop: vi.fn(async () => run("cancelled")),
   };
   const approvals: ApprovalPort = {
+    ...(effective ? { effectiveMode: async () => effective } : {}),
     pending: vi.fn(async () => requests),
     answer: vi.fn(async (input) => ({
       ...pendingRequest(),
@@ -436,12 +450,23 @@ describe("mobile Agent conversation", () => {
     expect(activityText).toContain("2.0 s");
     expect(h.frames.at(-1)).toEqual({ type: "ack", version: 1, ...selection, sequence: 8 });
     const toolActivity = h.controller.getSnapshot().toolActivity;
+    const resolvedApprovals: NonNullable<ConversationSnapshot["resolvedApprovals"]> = [
+      {
+        requestId: request.id,
+        runId: request.runId,
+        toolCallId: request.toolCallId,
+        outcome: "approved",
+        answeredByAccountId: accountId,
+        resolvedAt: time,
+      },
+    ];
     await h.close();
     const restored = await harness({
       messages: [message()],
       runs: [run()],
       cursor: 8,
       toolActivity,
+      resolvedApprovals,
     });
     expect(findByLabel(restored.view.root, "Used 1 tool").props.accessibilityState.expanded).toBe(
       false,
@@ -503,3 +528,154 @@ describe("mobile Agent conversation", () => {
     await h.close();
   });
 });
+
+it("opens only the recent window and loads older messages through the native control and top scroll", async () => {
+  const entries = Array.from({ length: 90 }, (_, index) =>
+    message(`History ${index + 1}`, index + 1),
+  );
+  const history = vi.fn<NonNullable<ConversationPort["history"]>>(async ({ before }) => {
+    const end = before ? before.beforeSequence - 1 : 90;
+    const start = Math.max(0, end - 30);
+    return {
+      conversation,
+      messages: entries.slice(start, end),
+      runs: [],
+      segments: [],
+      cursor: 90,
+      olderCursor: start ? { ...selection, beforeSequence: start + 1 } : null,
+      runsTruncated: false,
+      segmentsTruncated: false,
+    };
+  });
+  const h = await harness({}, [], history);
+  expect(textContent(h.view.root)).toContain("History 90");
+  expect(textContent(h.view.root)).not.toContain("History 1");
+  expect(h.controller.getSnapshot().messages[0]?.sequence).toBe(61);
+  expect(h.controller.getSnapshot().messages).toHaveLength(30);
+  await press(findByLabel(h.view.root, "Load earlier messages"));
+  expect(h.controller.getSnapshot().messages[0]?.sequence).toBe(31);
+  const list = findByLabel(h.view.root, "Conversation");
+  await act(async () =>
+    list.props.onScroll({
+      nativeEvent: {
+        contentSize: { height: 3000 },
+        layoutMeasurement: { height: 400 },
+        contentOffset: { y: 0 },
+      },
+    }),
+  );
+  expect(h.controller.getSnapshot().messages[0]?.sequence).toBe(1);
+  expect(list.props.maintainVisibleContentPosition).toEqual({ minIndexForVisible: 0 });
+  expect(textContent(h.view.root)).toContain("Start of conversation");
+  await h.close();
+});
+
+it.each(["en", "zh"] as const)(
+  "restores participant names, departed answerers and first-event origin on native in %s",
+  async (language) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const copy = language === "en" ? en.agents : zh.agents;
+    const t = createTranslator({ locale: language, messages: language === "en" ? en : zh });
+    const request = pendingRequest();
+    const h = await harness({
+      messages: [{ ...message(), author: { kind: "member", accountId: "departed" } }],
+      runs: [run("succeeded")],
+      cursor: 4,
+      participants: [
+        { accountId: "departed", displayName: "Mei", isMember: false },
+        { accountId, displayName: "Alex", isMember: true },
+      ],
+      toolActivity: [{ ...toolCall(), finishedAt: time, outcome: "succeeded", durationMs: 3 }],
+      resolvedApprovals: [
+        {
+          requestId: request.id,
+          runId: request.runId,
+          toolCallId: request.toolCallId,
+          outcome: "approved",
+          answeredByAccountId: "departed",
+          resolvedAt: time,
+        },
+      ],
+    });
+    const departedName = copy.departedMember.replace("{name}", "Mei");
+    expect(textContent(h.view.root)).toContain(departedName);
+    const activity = findByLabel(h.view.root, t("agents.activity.used", { count: 1 }));
+    await press(activity);
+    expect(textContent(h.view.root)).toContain(
+      copy.approval.answeredBy.replace("{member}", departedName),
+    );
+    await h.frame({
+      type: "event",
+      entry: {
+        event: {
+          ...selection,
+          sequence: 5,
+          createdAt: time,
+          kind: "run.state",
+          runId: runIdSchema.parse("inbound"),
+          state: "queued",
+          failureCode: null,
+          trigger: "webhook",
+          provenanceKind: "repository",
+          untrustedInput: true,
+        },
+      },
+    });
+    expect(textContent(h.view.root)).toContain(copy.origins.repository);
+    expect(textContent(h.view.root)).toContain(copy.untrustedInput);
+    await h.close();
+  },
+);
+
+it.each([
+  ["en", "ask", "account_default"],
+  ["zh", "ask", "account_default"],
+  ["en", "never", "space_override"],
+  ["zh", "never", "space_override"],
+] as const)(
+  "shows the native viewer's effective approval mode in %s from %s %s",
+  async (language, mode, source) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const t = createTranslator({ locale: language, messages: language === "en" ? en : zh });
+    const effective: EffectiveApprovalMode = {
+      spaceId: agent.spaceId,
+      mode,
+      source,
+      availableModes: [
+        { mode: "ask", available: true, reasonCode: null },
+        { mode: "never", available: true, reasonCode: null },
+        { mode: "auto", available: false, reasonCode: "REVIEW_MODEL_NOT_CONFIGURED" },
+      ],
+    };
+    const h = await harness({}, [], undefined, effective);
+    const sourceKey =
+      source === "space_override"
+        ? "agents.spaceSettings.overridesDefault"
+        : "agents.spaceSettings.followsDefault";
+    expect(textContent(h.view.root)).toContain(
+      `${t("agents.spaceSettings.effectiveMode")}: ${t(`agents.approvalSettings.${mode}`)} · ${t(sourceKey)}`,
+    );
+    expect(h.port.send).not.toHaveBeenCalled();
+    await h.close();
+  },
+);
+
+it.each(["en", "zh"] as const)(
+  "omits sender labels for a single-member native conversation in %s",
+  async (language) => {
+    useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+    const copy = language === "en" ? en.agents : zh.agents;
+    const h = await harness({
+      messages: [message()],
+      cursor: 1,
+      participants: [{ accountId, displayName: "Alex", isMember: true }],
+    });
+    expect(textContent(h.view.root)).toContain("Member question");
+    expect(
+      h.view.root.findAll(
+        (node) => typeof node.type === "string" && textContent(node) === copy.you,
+      ),
+    ).toHaveLength(0);
+    await h.close();
+  },
+);

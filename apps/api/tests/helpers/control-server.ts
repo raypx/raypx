@@ -42,8 +42,11 @@ import { createRoutinesRepository } from "@raypx/jobs/routines/postgres";
 import { createSpaceMemoryService } from "@raypx/memory/space-server";
 import { createSpaceMemoryRepository } from "@raypx/memory/space-server/postgres";
 import type { ConversationId } from "@raypx/core/agents";
+import { conversationIdSchema } from "@raypx/core/agents";
+import { spaceIdSchema } from "@raypx/core/spaces";
 import { ConversationStream } from "../../src/conversations/stream.js";
 import { browserModelFixture } from "./browser-model.js";
+import { seedBrowserHistory } from "./browser-history.js";
 import { createModelConnections } from "../../src/conversations/connections.js";
 import { withMemoryTools } from "../../src/conversations/memory-tools.js";
 import { createModelConnectionsRepository } from "../../src/conversations/connections-postgres.js";
@@ -253,12 +256,54 @@ const server = serve<SocketData>({
   async fetch(request, listener) {
     const path = new URL(request.url).pathname;
     if (path === "/fixture/mcp") return fixtureMcpResponse(request);
-    if (path === "/events" || path === "/fixture/conversation/complete") {
+    if (
+      path === "/events" ||
+      path === "/fixture/conversation/complete" ||
+      path === "/fixture/conversation/history"
+    ) {
       const origin = request.headers.get("origin");
       if (origin && !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
         return new Response(null, { status: 403 });
       const session = await readSession(request.headers);
       if (!session) return new Response(null, { status: 401 });
+      if (path === "/fixture/conversation/history") {
+        if (request.method !== "POST") return new Response(null, { status: 405 });
+        if (!accountEmails.includes(session.user.email)) return new Response(null, { status: 403 });
+        try {
+          const input: unknown = await request.json();
+          if (!input || typeof input !== "object") return new Response(null, { status: 400 });
+          if (!("spaceId" in input) || !("conversationId" in input))
+            return new Response(null, { status: 400 });
+          if (
+            !("count" in input) ||
+            typeof input.count !== "number" ||
+            !Number.isInteger(input.count) ||
+            input.count < 1 ||
+            input.count > 300 ||
+            !("prefix" in input) ||
+            typeof input.prefix !== "string" ||
+            !input.prefix ||
+            input.prefix.length > 100
+          )
+            return new Response(null, { status: 400 });
+          const spaceId = spaceIdSchema.parse(input.spaceId);
+          const conversationId = conversationIdSchema.parse(input.conversationId);
+          const scope = await spaces.resolve(session.user.id, spaceId);
+          await runner.conversations.snapshot(scope, conversationId);
+          const messages = await seedBrowserHistory(
+            connection.db,
+            scope,
+            conversationId,
+            session.user.name,
+            input.count,
+            input.prefix,
+          );
+          if (!messages) return new Response(null, { status: 409 });
+          return Response.json({ messages });
+        } catch {
+          return new Response(null, { status: 400 });
+        }
+      }
       if (path === "/fixture/conversation/complete") {
         if (request.method !== "POST") return new Response(null, { status: 405 });
         const body = await request.text();

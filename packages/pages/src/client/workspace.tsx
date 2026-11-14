@@ -232,7 +232,7 @@ function PagesSession({
       <TooltipProvider escapeKeyBubbles>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
           <ShellToolbar>
-            <h1 className="truncate text-2xl font-medium">
+            <h1 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
               {visibleEditor?.current.title ?? t("title")}
             </h1>
           </ShellToolbar>

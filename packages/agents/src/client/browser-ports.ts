@@ -20,7 +20,7 @@ export function browserConversationSocket(origin: string): ConversationSocketPor
           socket.close(4000);
         }
       });
-      socket.addEventListener("close", (event) => callbacks.onClose(event.code));
+      socket.addEventListener("close", (event) => callbacks.onClose(event.code, event.reason));
       socket.addEventListener("error", () => callbacks.onError());
       return {
         send: (frame) => socket.send(JSON.stringify(frame)),

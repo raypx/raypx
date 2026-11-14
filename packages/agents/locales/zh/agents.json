@@ -146,7 +146,9 @@
       "refused": "已拒绝",
       "cancelled": "已取消",
       "unknown": "结果未知"
-    }
+    },
+    "active": "{time}活跃",
+    "none": "暂无活动"
   },
   "effects": {
     "open": "查看操作记录",
@@ -339,7 +341,6 @@
     "effectiveMode": "当前审批模式",
     "neverConsequences": "此空间中所有成员的操作均可直接更改文件和运行命令，无需审批。阻止列表中的操作仍会被拒绝。",
     "overridesDefault": "空间已覆盖你的默认审批模式",
-    "approvalUnavailable": "当前空间审批模式暂不可用。",
     "outcomeFilter": "结果",
     "outcomes": {
       "all": "所有结果",
@@ -399,10 +400,10 @@
       "team_computer": "团队电脑：所有成员均可查看其中的文件和已安装工具。",
       "pages": "页面：所有成员均可查看页面及其分享链接。"
     },
-    "exitRemoved": "你对此空间的访问权限已终止，已切换到其他空间。",
-    "exitUnavailable": "你已失去此空间的访问权限，或空间已被删除。已切换到另一个空间。",
-    "exitDeleted": "此空间正在删除，访问权限已终止，已切换到其他空间。",
-    "exitLeft": "你已退出此空间，已切换到其他空间。",
+    "exitRemoved": "你已被移出此空间。",
+    "exitUnavailable": "你已无法访问此空间。",
+    "exitDeleted": "此空间正在删除。",
+    "exitLeft": "你已离开此空间。",
     "auditCodes": {
       "MUTATION_FAILED": "更改失败。",
       "WRITE_FAILED": "无法保存审批回应。",
@@ -416,7 +417,9 @@
     "approvedBy": "{name} 已批准",
     "deniedBy": "{name} 已拒绝",
     "joinSignIn": "登录",
-    "joinSignInHint": "在新标签页中登录，然后返回此邀请。"
+    "joinSignInHint": "在新标签页中登录，然后返回此邀请。",
+    "followsDefault": "使用你的账户默认审批模式",
+    "exitSessionEnded": "你的登录会话已结束，请重新登录。"
   },
   "groups": {
     "title": "群组",
@@ -515,5 +518,14 @@
       "MCP_STDIO_UNSUPPORTED": "不支持本地命令服务器。",
       "TOOL_LIMIT": "服务器提供的工具过多。"
     }
+  },
+  "departedMember": "{name}（已离开此空间）",
+  "history": {
+    "earlier": "加载更早的消息",
+    "later": "加载后续消息",
+    "start": "对话起点",
+    "loading": "正在加载消息…",
+    "error": "消息加载失败，请重试。",
+    "truncated": "此窗口中的部分活动未显示。"
   }
 }

@@ -1,8 +1,8 @@
 import type { ConversationServerFrame } from "@raypx/contracts/api";
 import type { AgentId } from "@raypx/core/agents";
 import { editMentionTokens, insertMention, mentionIds, type MentionToken } from "./mentions.js";
-import type { RunId } from "@raypx/core/conversation";
-import type { ApprovalRequest } from "@raypx/core/approvals";
+import type { ConversationHistoryCursor, RunId } from "@raypx/core/conversation";
+import type { ApprovalRequest, EffectiveApprovalMode } from "@raypx/core/approvals";
 import { ApprovalProjection, type ApprovalCardView } from "./approvals.js";
 import { ConversationState, type ConversationView } from "./conversation.js";
 import type { ComputerController } from "./computer.js";
@@ -21,11 +21,29 @@ import type {
   ConversationSocket,
   ConversationSocketPort,
   ApprovalPort,
+  ConversationHistory,
 } from "./port.js";
 
 export type ConversationConnection = "connecting" | "live" | "reconnecting" | "snapshot-required";
 export type ConversationError = "load" | "send" | "stop" | "storage";
+export const CONVERSATION_HISTORY_PAGE_SIZE = 30;
+export const MAX_LOADED_CONVERSATION_MESSAGES = CONVERSATION_HISTORY_PAGE_SIZE * 5;
+export interface ConversationReadingAnchor {
+  messageId: string;
+  offset: number;
+}
+export interface ConversationHistoryView {
+  olderCursor: ConversationHistoryCursor | null;
+  hasNewer: boolean;
+  loading: "earlier" | "later" | null;
+  error: boolean;
+  anchor: ConversationReadingAnchor | null;
+  revision: number;
+}
 export interface ConversationControllerView extends ConversationView {
+  history: ConversationHistoryView;
+  effectiveMode?: EffectiveApprovalMode | null | undefined;
+  subscriptionEnd?: "removed" | "left" | "deleting" | "session-ended" | undefined;
   cards: ApprovalCardView[];
   approvalsLoading: boolean;
   approvalsError: boolean;
@@ -66,6 +84,12 @@ export class ConversationController {
   private storageUnavailable = false;
   private approvalsGeneration = 0;
   private runDetailsLoading = false;
+  private historyGeneration = 0;
+  private snapshotRequest = 0;
+  private snapshotLoading = false;
+  private readingAnchor: ConversationReadingAnchor | null = null;
+  private resolvedSummaries: ConversationView["resolvedApprovals"];
+  private resolvedActivity: ConversationView["toolActivity"] | undefined;
   constructor(private readonly options: ConversationControllerOptions) {
     this.state = new ConversationState(options.selection);
     this.approvals = new ApprovalProjection(options.selection);
@@ -80,6 +104,15 @@ export class ConversationController {
     }
     this.view = {
       ...this.state.getSnapshot(),
+      history: {
+        olderCursor: null,
+        hasNewer: false,
+        loading: null,
+        error: false,
+        anchor: null,
+        revision: 0,
+      },
+      effectiveMode: null,
       cards: [],
       approvalsLoading: false,
       approvalsError: false,
@@ -102,6 +135,20 @@ export class ConversationController {
   private update(patch: Partial<ConversationControllerView> = {}) {
     if (this.disposed) return;
     const error = patch.error === null && this.storageUnavailable ? "storage" : patch.error;
+    const state = this.state.getSnapshot();
+    if (
+      this.resolvedSummaries !== state.resolvedApprovals ||
+      this.resolvedActivity !== state.toolActivity
+    ) {
+      this.resolvedSummaries = state.resolvedApprovals;
+      this.resolvedActivity = state.toolActivity;
+      this.approvals.hydrateResolved(state.resolvedApprovals ?? [], state.toolActivity, (runId) => {
+        const run = state.runs.find((item) => item.id === runId);
+        const message = state.messages.find((item) => item.id === run?.messageId);
+        return message ? message.sequence + 0.75 : state.cursor + 0.25;
+      });
+    }
+    this.approvals.retainRuns(new Set(state.runs.map((run) => run.id)));
     this.view = {
       ...this.view,
       ...this.state.getSnapshot(),
@@ -175,13 +222,79 @@ export class ConversationController {
   private async refreshSnapshot(connection: ConversationConnection) {
     this.cancelTimer();
     const generation = ++this.generation;
+    const request = ++this.snapshotRequest;
+    this.snapshotLoading = true;
     this.closeSocket();
+    ++this.historyGeneration;
     this.state.clearLiveReplies();
-    this.update({ connection, loading: !this.hasSnapshot, error: null });
+    this.update({
+      connection,
+      loading: !this.hasSnapshot,
+      error: null,
+      history: { ...this.view.history, loading: null, error: false },
+    });
     try {
-      const snapshot = await this.options.port.snapshot(this.options.selection);
-      if (this.disposed || generation !== this.generation) return;
-      if (!this.state.applySnapshot(snapshot)) throw new Error("Invalid conversation snapshot");
+      const history = this.options.port.history;
+      if (history) {
+        const recent = await history({
+          ...this.options.selection,
+          limit: CONVERSATION_HISTORY_PAGE_SIZE,
+        });
+        if (this.disposed || generation !== this.generation) return;
+        let pages = [recent];
+        let hasNewer = false;
+        const messages = this.state.getSnapshot().messages;
+        const oldest = messages[0];
+        const newest = messages.at(-1);
+        if (this.hasSnapshot && this.readingAnchor && oldest && newest) {
+          hasNewer = (recent.messages.at(-1)?.sequence ?? 0) > newest.sequence;
+          const before =
+            newest.sequence < recent.cursor
+              ? { ...this.options.selection, beforeSequence: newest.sequence + 1 }
+              : undefined;
+          const page = await history({
+            ...this.options.selection,
+            limit: Math.min(100, messages.length),
+            ...(before ? { before } : {}),
+          });
+          if (this.disposed || generation !== this.generation) return;
+          pages = [page];
+          while (
+            pages[0]!.olderCursor &&
+            pages[0]!.messages[0]!.sequence > oldest.sequence &&
+            pages.reduce((count, item) => count + item.messages.length, 0) <
+              MAX_LOADED_CONVERSATION_MESSAGES
+          ) {
+            const previous = await history({
+              ...this.options.selection,
+              limit: CONVERSATION_HISTORY_PAGE_SIZE,
+              before: pages[0]!.olderCursor,
+            });
+            if (this.disposed || generation !== this.generation) return;
+            pages.unshift(previous);
+          }
+        }
+        if (this.disposed || generation !== this.generation) return;
+        const snapshot = combineHistoryPages(pages, recent.cursor);
+        if (!this.state.applySnapshot(snapshot)) throw new Error("Invalid conversation history");
+        this.state.hydrateActiveRuns(recent.runs, recent.messages.at(-1)?.id);
+        this.update({
+          history: {
+            ...this.view.history,
+            olderCursor: pages[0]!.olderCursor,
+            hasNewer,
+            loading: null,
+            error: false,
+            anchor: this.readingAnchor,
+            revision: this.view.history.revision + 1,
+          },
+        });
+        this.releaseHistory(hasNewer ? "earlier" : "later");
+      } else {
+        const snapshot = await this.options.port.snapshot(this.options.selection);
+        if (this.disposed || generation !== this.generation) return;
+        if (!this.state.applySnapshot(snapshot)) throw new Error("Invalid conversation snapshot");
+      }
       this.hasSnapshot = true;
       this.update({ loading: false });
       void this.refreshApprovals();
@@ -189,6 +302,150 @@ export class ConversationController {
     } catch {
       if (this.disposed || generation !== this.generation) return;
       this.update({ loading: false, error: "load" });
+    } finally {
+      if (request === this.snapshotRequest) this.snapshotLoading = false;
+    }
+  }
+  /** UI adapters supply a stable message identity and its viewport-relative offset. */
+  setReadingAnchor(anchor: ConversationReadingAnchor | null) {
+    if (this.disposed) return;
+    this.readingAnchor = anchor;
+  }
+  /** An explicit jump releases the old reader window and establishes a fresh replay boundary. */
+  async loadLatest(): Promise<void> {
+    if (this.disposed || this.suspended || this.snapshotLoading) return;
+    this.readingAnchor = null;
+    await this.refreshSnapshot("snapshot-required");
+  }
+  private releaseHistory(direction: "earlier" | "later") {
+    const messages = this.state.getSnapshot().messages;
+    if (!this.options.port.history || messages.length <= MAX_LOADED_CONVERSATION_MESSAGES) return;
+    let start = direction === "earlier" ? 0 : messages.length - MAX_LOADED_CONVERSATION_MESSAGES;
+    const anchorIndex = messages.findIndex(
+      (message) => message.id === this.readingAnchor?.messageId,
+    );
+    if (anchorIndex >= 0) {
+      start = Math.max(
+        anchorIndex - MAX_LOADED_CONVERSATION_MESSAGES + 1,
+        Math.min(start, anchorIndex),
+      );
+    }
+    const keep = messages.slice(start, start + MAX_LOADED_CONVERSATION_MESSAGES);
+    this.state.retainMessages(new Set(keep.map((message) => message.id)));
+    this.approvals.retainRuns(new Set(this.state.getSnapshot().runs.map((run) => run.id)));
+    const olderCursor =
+      start > 0 && keep[0]
+        ? { ...this.options.selection, beforeSequence: keep[0].sequence }
+        : this.view.history.olderCursor;
+    this.update({
+      history: {
+        ...this.view.history,
+        olderCursor,
+        hasNewer: start + keep.length < messages.length || this.view.history.hasNewer,
+        anchor: this.readingAnchor,
+        revision: this.view.history.revision + 1,
+      },
+    });
+  }
+  async loadEarlier(): Promise<boolean> {
+    const history = this.options.port.history;
+    const before = this.view.history.olderCursor;
+    if (
+      !history ||
+      !before ||
+      this.disposed ||
+      this.suspended ||
+      this.snapshotLoading ||
+      this.view.history.loading
+    )
+      return false;
+    const generation = ++this.historyGeneration;
+    this.update({ history: { ...this.view.history, loading: "earlier", error: false } });
+    try {
+      const page = await history({
+        ...this.options.selection,
+        limit: CONVERSATION_HISTORY_PAGE_SIZE,
+        before,
+      });
+      if (this.disposed || generation !== this.historyGeneration) return false;
+      if (!this.state.applyHistory(page)) throw new Error("Invalid conversation history");
+      this.update({
+        history: {
+          ...this.view.history,
+          olderCursor: page.olderCursor,
+          loading: null,
+          error: false,
+          anchor: this.readingAnchor,
+          revision: this.view.history.revision + 1,
+        },
+      });
+      this.releaseHistory("earlier");
+      this.update();
+      return true;
+    } catch {
+      if (!this.disposed && generation === this.historyGeneration)
+        this.update({ history: { ...this.view.history, loading: null, error: true } });
+      return false;
+    }
+  }
+  /** The wire cursor reads backwards. Walk bounded pages to find the immediate newer window. */
+  async loadLater(): Promise<boolean> {
+    const history = this.options.port.history;
+    if (
+      !history ||
+      !this.view.history.hasNewer ||
+      this.disposed ||
+      this.suspended ||
+      this.snapshotLoading ||
+      this.view.history.loading
+    )
+      return false;
+    const generation = ++this.historyGeneration;
+    const tail = this.state.getSnapshot().messages.at(-1)?.sequence ?? 0;
+    this.update({ history: { ...this.view.history, loading: "later", error: false } });
+    try {
+      let page = await history({
+        ...this.options.selection,
+        limit: CONVERSATION_HISTORY_PAGE_SIZE,
+      });
+      if (this.disposed || generation !== this.historyGeneration) return false;
+      let candidate = page;
+      let candidateIsLatest = true;
+      let currentIsLatest = true;
+      while (page.messages[0] && page.messages[0].sequence > tail && page.olderCursor) {
+        candidate = page;
+        candidateIsLatest = currentIsLatest;
+        page = await history({
+          ...this.options.selection,
+          limit: CONVERSATION_HISTORY_PAGE_SIZE,
+          before: page.olderCursor,
+        });
+        currentIsLatest = false;
+        if (this.disposed || generation !== this.historyGeneration) return false;
+      }
+      if (page.messages.some((message) => message.sequence > tail)) {
+        candidate = page;
+        candidateIsLatest = currentIsLatest;
+      }
+      if (this.disposed || generation !== this.historyGeneration) return false;
+      if (!this.state.applyHistory(candidate)) throw new Error("Invalid conversation history");
+      this.update({
+        history: {
+          ...this.view.history,
+          hasNewer: !candidateIsLatest,
+          loading: null,
+          error: false,
+          anchor: this.readingAnchor,
+          revision: this.view.history.revision + 1,
+        },
+      });
+      this.releaseHistory("later");
+      this.update();
+      return true;
+    } catch {
+      if (!this.disposed && generation === this.historyGeneration)
+        this.update({ history: { ...this.view.history, loading: null, error: true } });
+      return false;
     }
   }
   private openSocket() {
@@ -207,8 +464,20 @@ export class ConversationController {
     try {
       const socket = this.options.socket.connect({
         onFrame,
-        onClose: (code) => {
+        onClose: (code, reason) => {
           if (this.disposed || generation !== this.generation) return;
+          const endings = {
+            SPACE_MEMBER_REMOVED: "removed",
+            SPACE_MEMBER_LEFT: "left",
+            SPACE_DELETING: "deleting",
+            SESSION_ENDED: "session-ended",
+          } as const;
+          const subscriptionEnd =
+            reason && Object.hasOwn(endings, reason)
+              ? endings[reason as keyof typeof endings]
+              : undefined;
+          if (subscriptionEnd || code === 4001)
+            this.update({ subscriptionEnd: subscriptionEnd ?? "session-ended" });
           this.interrupted(code === 4001 || code === 4003);
         },
         onError: () => {
@@ -254,7 +523,7 @@ export class ConversationController {
       return;
     }
     if (frame.type === "event") {
-      const applied = this.state.applyEvent(frame.entry);
+      const applied = this.state.applyEvent(frame.entry, !this.view.history.hasNewer);
       if (applied === "snapshot-required") {
         void this.refreshSnapshot("snapshot-required");
         return;
@@ -263,6 +532,7 @@ export class ConversationController {
       if (applied === "applied" && frame.entry.event.kind === "computer.state")
         this.options.computer?.applyEvent(frame.entry.event);
       if (applied === "applied") this.approvals.applyEvent(frame.entry.event);
+      if (applied === "applied" && !this.view.history.hasNewer) this.releaseHistory("later");
       this.update();
       if (applied === "applied" && frame.entry.event.kind === "run.state")
         void this.refreshRunDetails();
@@ -283,6 +553,7 @@ export class ConversationController {
       void this.refreshSnapshot("snapshot-required");
       return;
     }
+    if (this.view.history.hasNewer && !this.view.runs.some((run) => run.id === frame.runId)) return;
     const applied = this.state.applyReply(frame);
     if (applied === "reconnect") this.interrupted(false);
     else if (applied === "applied") this.update();
@@ -295,7 +566,12 @@ export class ConversationController {
     );
     const generation = this.generation;
     try {
-      const snapshot = await this.options.port.snapshot(this.options.selection);
+      const snapshot = this.options.port.history
+        ? await this.options.port.history({
+            ...this.options.selection,
+            limit: CONVERSATION_HISTORY_PAGE_SIZE,
+          })
+        : await this.options.port.snapshot(this.options.selection);
       if (this.disposed || generation !== this.generation) return;
       if (this.state.applyRunDetails(snapshot.runs)) this.update();
     } catch {
@@ -345,12 +621,17 @@ export class ConversationController {
   suspend() {
     if (this.disposed || this.suspended) return;
     this.suspended = true;
+    ++this.historyGeneration;
     ++this.generation;
     ++this.approvalsGeneration;
     this.cancelTimer();
     this.closeSocket();
     this.state.clearLiveReplies();
-    this.update({ connection: "reconnecting", approvalsLoading: false });
+    this.update({
+      connection: "reconnecting",
+      approvalsLoading: false,
+      history: { ...this.view.history, loading: null },
+    });
   }
   /** Resume the same projection; a fresh mount still begins with an authoritative snapshot. */
   resume() {
@@ -380,6 +661,15 @@ export class ConversationController {
     const port = this.options.approvals;
     if (!port || this.disposed || this.suspended) return;
     const generation = ++this.approvalsGeneration;
+    if (port.effectiveMode) {
+      void port
+        .effectiveMode({ spaceId: this.options.selection.spaceId })
+        .then((effectiveMode) => {
+          if (!this.disposed && generation === this.approvalsGeneration)
+            this.update({ effectiveMode });
+        })
+        .catch(() => {});
+    }
     const known = new Set(this.approvals.getSnapshot().map((card) => card.requestId));
     this.update({ approvalsLoading: true, approvalsError: false });
     try {
@@ -437,7 +727,9 @@ export class ConversationController {
     try {
       const message = await this.options.port.send({ ...this.options.selection, message: pending });
       if (this.disposed) return false;
-      if (!this.state.receiveMessage(message)) throw new Error("Invalid conversation receipt");
+      if (!this.state.receiveMessage(message, !this.view.history.hasNewer))
+        throw new Error("Invalid conversation receipt");
+      this.releaseHistory("later");
       const draft = this.view.draft === pending.text ? "" : this.view.draft;
       this.update({
         sending: false,
@@ -483,6 +775,7 @@ export class ConversationController {
     if (this.disposed) return;
     this.disposed = true;
     ++this.approvalsGeneration;
+    ++this.historyGeneration;
     ++this.generation;
     this.cancelTimer();
     this.closeSocket();
@@ -508,4 +801,47 @@ function sendFailureCode(error: unknown): SendFailureCode | null {
     nested && typeof nested === "object" && "code" in nested ? nested.code : undefined,
   ];
   return sendFailureCodes.find((code) => candidates.includes(code)) ?? null;
+}
+
+function combineHistoryPages(
+  pages: readonly ConversationHistory[],
+  cursor: number,
+): ConversationHistory {
+  const latest = pages.at(-1)!;
+  const participants = new Map(
+    pages.flatMap((page) => page.participants ?? []).map((item) => [item.accountId, item]),
+  );
+  const approvals = new Map(
+    pages.flatMap((page) => page.resolvedApprovals ?? []).map((item) => [item.requestId, item]),
+  );
+  return {
+    ...latest,
+    cursor,
+    messages: [
+      ...new Map(
+        pages
+          .flatMap((page) => page.messages)
+          .filter((item) => item.sequence <= cursor)
+          .map((item) => [item.id, item]),
+      ).values(),
+    ].sort((a, b) => a.sequence - b.sequence),
+    runs: [...new Map(pages.flatMap((page) => page.runs).map((item) => [item.id, item])).values()],
+    segments: [
+      ...new Map(
+        pages
+          .flatMap((page) => page.segments)
+          .filter((item) => item.sequence <= cursor)
+          .map((item) => [item.id, item]),
+      ).values(),
+    ].sort((a, b) => a.sequence - b.sequence),
+    toolActivity: pages.flatMap((page) => page.toolActivity ?? []),
+    participants: [...participants.values()],
+    resolvedApprovals: [...approvals.values()],
+    olderCursor: pages[0]!.olderCursor,
+    toolActivityTruncated: pages.some((page) => page.toolActivityTruncated),
+    participantsTruncated: pages.some((page) => page.participantsTruncated),
+    resolvedApprovalsTruncated: pages.some((page) => page.resolvedApprovalsTruncated),
+    runsTruncated: pages.some((page) => page.runsTruncated),
+    segmentsTruncated: pages.some((page) => page.segmentsTruncated),
+  };
 }

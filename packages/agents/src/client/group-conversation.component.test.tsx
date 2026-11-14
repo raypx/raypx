@@ -354,3 +354,30 @@ it("limits Escape suppression to the exact text and caret", async () => {
   const reopened = await screen.findByRole("combobox", { name: "Mention an Agent" });
   expect(reopened).toHaveValue("Co");
 });
+
+it("keeps typing after a selected mention when the next animation frame arrives", async () => {
+  fixture();
+  const editor = await screen.findByRole<HTMLTextAreaElement>("textbox", { name: "Message" });
+  const user = userEvent.setup();
+  await user.type(editor, "@");
+  const picker = await screen.findByRole("combobox", { name: "Mention an Agent" });
+  await waitFor(() => expect(picker).toHaveFocus());
+  const frames: FrameRequestCallback[] = [];
+  const animation = vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+    frames.push(callback);
+    return frames.length;
+  });
+  try {
+    await user.click(screen.getByRole("option", { name: agents[0]!.name }));
+    await waitFor(() => expect(editor).toHaveFocus());
+    await user.keyboard("first");
+    act(() => {
+      for (const callback of frames.splice(0)) callback(performance.now());
+    });
+    await user.keyboard(" second");
+    expect(editor).toHaveValue(`@${agents[0]!.name} first second`);
+    expect(editor.selectionStart).toBe(editor.value.length);
+  } finally {
+    animation.mockRestore();
+  }
+});

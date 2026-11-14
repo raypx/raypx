@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { spaceIdSchema, type SpaceDirectoryMember } from "@raypx/core/spaces";
-import type { ApprovalSettingsState } from "@raypx/core/approvals";
+import type { ApprovalSettingsState, EffectiveApprovalMode } from "@raypx/core/approvals";
 import {
   SpaceJoinController,
   SpaceManagementController,
@@ -125,15 +125,24 @@ async function mount(
     language?: "en" | "zh";
     role?: "owner" | "member";
     port?: ReturnType<typeof fixture>;
+    effective?: Pick<EffectiveApprovalMode, "mode" | "source">;
   } = {},
 ) {
   const port = options.port ?? fixture();
   const role = options.role ?? "owner";
+  const effectiveMode = vi.fn(async () => ({
+    spaceId,
+    availableModes: accountSettings.availableModes,
+    mode: "ask" as const,
+    source: "account_default" as const,
+    ...options.effective,
+  }));
   const controller = new SpaceManagementController({
     spaceId,
     accountId: role,
     port,
     accountApprovals: { settings: async () => accountSettings },
+    effectiveApprovals: { effectiveMode },
   });
   await controller.load(role === "owner");
   const onExit = vi.fn();
@@ -149,7 +158,7 @@ async function mount(
       />
     </BrowserLanguageProvider>,
   );
-  return { port, controller, onExit, onOpenRoutine };
+  return { port, controller, onExit, onOpenRoutine, effectiveMode };
 }
 async function section(name: string, label = "Section") {
   await userEvent.click(screen.getByRole("combobox", { name: label }));
@@ -175,14 +184,20 @@ it.each(["en", "zh"] as const)(
   },
 );
 
-it("gives members read-only General and Members without requesting owner data", async () => {
+it("gives members read-only General, Members and Approvals without requesting owner data", async () => {
   const { port } = await mount({ role: "member" });
   expect(screen.getByRole("textbox", { name: "Space name" })).toHaveAttribute("readonly");
-  expect(screen.getByText("The current Space approval mode is unavailable.")).toBeVisible();
+  expect(
+    await screen.findByText("Ask before changes · Uses your account approval default"),
+  ).toBeVisible();
   await userEvent.click(screen.getByRole("combobox", { name: "Section" }));
-  expect(screen.getAllByRole("option")).toHaveLength(2);
+  expect(screen.getAllByRole("option")).toHaveLength(3);
   expect(screen.getByRole("option", { name: "General" })).toHaveAttribute("data-value", "general");
   expect(screen.getByRole("option", { name: "Members" })).toHaveAttribute("data-value", "members");
+  expect(screen.getByRole("option", { name: "Approvals" })).toHaveAttribute(
+    "data-value",
+    "approvals",
+  );
   expect(screen.queryByRole("option", { name: "Invitations" })).not.toBeInTheDocument();
   expect(port.settings).not.toHaveBeenCalled();
   expect(port.invitations).not.toHaveBeenCalled();
@@ -479,3 +494,37 @@ it("filters audit outcomes across loaded pages without changing their cursor", a
   expect(screen.getByRole("button", { name: "Load older entries" })).toBeEnabled();
   expect(port.audit).toHaveBeenCalledOnce();
 });
+
+it.each([
+  ["en", "account_default", "ask"],
+  ["zh", "account_default", "ask"],
+  ["en", "space_override", "never"],
+  ["zh", "space_override", "never"],
+] as const)(
+  "shows a member's effective approval mode and %s %s source",
+  async (language, source, mode) => {
+    const copy = language === "en" ? en.agents : zh.agents;
+    const { port, effectiveMode } = await mount({
+      role: "member",
+      language,
+      effective: { source, mode },
+    });
+    const modeLabel = copy.approvalSettings[mode];
+    const sourceLabel =
+      source === "space_override"
+        ? copy.spaceSettings.overridesDefault
+        : copy.spaceSettings.followsDefault;
+    expect(await screen.findByText(`${modeLabel} · ${sourceLabel}`)).toBeVisible();
+    await section(copy.spaceSettings.sections.approvals, copy.spaceSettings.section);
+    expect(
+      await screen.findByText(`${copy.spaceSettings.effectiveMode}: ${modeLabel} · ${sourceLabel}`),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("combobox", { name: copy.spaceSettings.override }),
+    ).not.toBeInTheDocument();
+    expect(effectiveMode).toHaveBeenCalledWith({ spaceId });
+    expect(port.settings).not.toHaveBeenCalled();
+    expect(port.setApprovalOverride).not.toHaveBeenCalled();
+    expect(port.clearApprovalOverride).not.toHaveBeenCalled();
+  },
+);

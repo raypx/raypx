@@ -22,7 +22,6 @@ export function CapabilityPanels({
   item,
   client,
   accountId,
-  origin,
   onOpenRun,
   onOpen,
   onOpenComputer,
@@ -61,7 +60,6 @@ export function CapabilityPanels({
         spaceId={item.agent.spaceId}
         agentId={item.agent.id}
         accountId={accountId}
-        apiOrigin={origin}
         port={client.routines}
         onOpenRun={(id) => {
           lastTrigger.current = null;
