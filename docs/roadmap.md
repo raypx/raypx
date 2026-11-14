@@ -130,6 +130,13 @@ a Linux arm64 Engine VM. IPv6 enforcement was unavailable because the host
 disables IPv6; other platform acceptance remains separate. This adds no Agent browser tool or hosted
 computer capability.
 
+Self-hosted untrusted-tenant controls now include configurable OCI runtime startup
+checks, runsc production guidance, measured writable-storage enforcement,
+Space/deployment admission quotas, idle/lifetime stops and orphan recovery.
+A dedicated-host WireGuard/systemd deployment keeps Docker and backend credentials
+apart. Source tests and each runtime's real-Engine acceptance remain separate;
+see [sandbox hosting](development/sandbox-hosting.md).
+
 Acceptance:
 
 - The conformance suite passes for the in-memory and Docker providers.

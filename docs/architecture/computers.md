@@ -93,6 +93,26 @@ The supervisor is a separate service under `infra/sandbox`.
 - The computer image is built from this repository and pinned by repository digest
   or immutable local Engine image ID. Mutable tags are rejected.
 
+## Untrusted tenant hosting
+
+The first production path is a dedicated self-hosted supervisor, with `runsc`
+selected explicitly and `SANDBOX_UNTRUSTED_TENANTS=true`. Startup validates runtime
+registration and refuses the default runtime without an explicit diagnostic
+override. A WireGuard private channel authenticates and encrypts backend-to-host
+traffic. The supervisor receives no database/model credentials. See the
+[deployment artifacts and operating procedure](../development/sandbox-hosting.md).
+
+Supervisor metadata binds each computer to an immutable Space identity received
+from trusted backend provisioning. Serialized admission caps running computers and
+reserved home storage per Space/deployment, including stopped homes. Read-only
+trusted meter containers inspect paused writable volumes outside tenant namespaces;
+exceeding bytes/entries or failing measurement stops compute. Idle and maximum
+lifetime limits persist across supervisor crashes. Orphan cleanup uses exact owned
+labels and the durable inventory. Backend lifecycle observations update PostgreSQL
+under generation/lease fences and emit the existing state events; they never
+provision during reads. Additive lifecycle availability reasons explain quota refusals.
+These controls are local to one supervisor; fleet quotas are not implemented.
+
 ## Device connectors
 
 The device connector is the bundled CLI daemon. It offers the device it runs on as
@@ -155,8 +175,7 @@ leases, not the later per-Agent execution leases. The database commits each
 transition with a `computer.state` event in every existing Conversation in the
 Space, using the existing locked counters and content-free PostgreSQL notices.
 Quotas count retained computer records created by a member across their Spaces;
-there is still only one team computer per Space. Private allocation, Run leases
-and automatic idle shutdown will arrive with their consumers.
+there is still only one team computer per Space. Private allocation remains constrained; supervisor idle shutdown is now implemented.
 
 The supervisor runs as one instance per private state volume. It persists
 fences before replacement I/O and retains generation tombstones after destroy.
@@ -167,7 +186,8 @@ Snapshots cancel and drain known command process groups before exporting the
 whole home. Stop commits a snapshot. Restores use a fresh home volume and candidate
 container, verify the exported revision, then switch; failure retains the previous
 revision and never substitutes an empty home. Snapshots are local to the
-supervisor state volume; off-host backup and retention cleanup are not implemented.
+supervisor state volume; obsolete revisions are pruned after the current one commits.
+Off-host backup remains an operator procedure.
 
 Paths for file calls and cwd are relative to `/home/computer/workspace`.
 File helpers walk directory descriptors with `O_NOFOLLOW`; traversal, absolute
@@ -199,7 +219,8 @@ Execution streams base64 stdout/stderr with one combined budget of at most 1 MiB
 and one exit event. Command environments belong only to that command. Cancellation
 kills its process group; detached processes that deliberately escape that group
 are not individually contained, and container stop/destroy is the final boundary.
-There is no home disk quota in this slice. Provider descriptions report these
+Writable volumes now have measured byte/entry enforcement and stop-on-exceed;
+this is not a hard filesystem quota. Provider descriptions report these
 limits and never claim network restriction without the host-rules assertion.
 
 The supervisor uses Engine HTTP API v1.47 directly through Bun's Unix-socket
@@ -219,7 +240,10 @@ Public IPv4 follows Docker's policy; all computer IPv6 egress is denied. Set bot
 egress assertions only after applying and verifying the rules on that Engine host.
 `SANDBOX_DNS_RESOLVER` selects one public IPv4 upstream (default `1.1.1.1`);
 pass that same address as `egress.sh --resolver ADDRESS`. Computers use the
-Engine's embedded `127.0.0.11` resolver with that sole upstream. Direct UDP/TCP
+Engine's embedded `127.0.0.11` resolver with that sole upstream under runc.
+For runsc, an owned root-owned read-only volume subpath pins the configured public
+resolver at `/etc/resolv.conf`, because the stable netstack cannot reach Docker's
+loopback DNS service. No host bind or host network mode is used. Direct UDP/TCP
 port 53 is blocked to every other destination, including original destinations
 before DNAT. Changing the resolver requires removing the previous owned rules
 before applying the new configuration. Public HTTPS remains available and can
@@ -230,15 +254,19 @@ supported by this script. macOS/Colima requires rules inside the Linux Engine VM
 `bun run raypx-dev test sandbox` owns real-Engine conformance, isolation and home
 replacement acceptance, with optional `--with-egress` host probes. Ordinary source
 verification uses fakes and never invokes Docker. On 2026-11-14 the gate passed
-on macOS arm64 with a Linux arm64 Engine VM (29.5.2, API 1.54): provider conformance
-10/10, isolation, home replacement and IPv4 egress enforcement. IPv6 enforcement
-was unavailable because the VM disables IPv6. Native Linux distributions, amd64,
+on macOS arm64 with a Linux arm64 Engine VM (29.5.2, API 1.54) under runc and
+runsc release-20261109.0: provider conformance 12/12 (six live, six reference)
+and eleven safety/input probes per runtime, including protected stdin/environment,
+inbox delivery and IPv4 egress enforcement. Separate runc graphical conformance
+passed; final runsc member graphical startup failed and that generation reports
+Screen unavailable. IPv6 enforcement was unavailable because
+the VM has no usable IPv6 route. Native Linux distributions, amd64,
 other macOS Engine configurations, Windows and rootless engines remain unverified.
 CI wiring is not a passing run.
 
 The `--with-egress` case now probes a started computer and compares its public
 HTTPS and configured UDP/TCP DNS results with controls in the Engine host network.
-It checks the embedded resolver and its configured upstream, alternate public
+It checks the runtime’s resolver file and configured upstream, alternate public
 resolvers, metadata `169.254.169.254`, host loopback, an owned host-service canary, the
 computer bridge gateway and one destination in each RFC 1918 range. Private and
 alternate-DNS probes must time out and increment the owned firewall DROP counters;

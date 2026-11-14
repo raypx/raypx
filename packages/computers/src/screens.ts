@@ -190,7 +190,12 @@ export function createComputerScreensService(
     const ref = { id: computer.id, generation: computer.generation };
     try {
       const screen = await provider.screen!(ref);
-      if (!screen.available) return { status: "unavailable", code: "SCREEN_UNAVAILABLE" };
+      if (!screen.available)
+        return {
+          status: "unavailable",
+          code: "SCREEN_UNAVAILABLE",
+          ...(screen.reason ? { reason: screen.reason } : {}),
+        };
       const control = await controls.control(scope, ref);
       return {
         status: "available",

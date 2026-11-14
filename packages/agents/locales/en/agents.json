@@ -650,7 +650,9 @@
     "idleTimeout": "The screen stopped sending frames. Try again.",
     "reconnecting": "Reconnecting to screen…",
     "expand": "Expand screen",
-    "expandedTitle": "Computer screen"
+    "expandedTitle": "Computer screen",
+    "GRAPHICAL_IMAGE_NOT_CONFIGURED": "Screen is not enabled on this computer service.",
+    "GRAPHICAL_RUNTIME_UNAVAILABLE": "Screen is unavailable in this computer environment."
   },
   "devices": {
     "title": "Devices",
@@ -774,5 +776,13 @@
   },
   "ATTACHMENT_EXPIRED": "An upload expired. Attach it again.",
   "ATTACHMENT_INVALID": "Unsupported file type",
-  "ATTACHMENT_LIMIT": "Up to 4 files, 1 MiB each"
+  "ATTACHMENT_LIMIT": "Up to 4 files, 1 MiB each",
+  "computerAvailability": {
+    "SPACE_RUNNING_LIMIT": "This Space has reached its running computer limit.",
+    "DEPLOYMENT_RUNNING_LIMIT": "The computer service has reached its running limit. Try again later.",
+    "SPACE_STORAGE_LIMIT": "This Space has reached its computer storage limit.",
+    "DEPLOYMENT_STORAGE_LIMIT": "The computer service has reached its storage limit.",
+    "HOME_STORAGE_LIMIT": "This computer has reached its file storage limit.",
+    "CAPACITY_UNAVAILABLE": "Computer capacity is temporarily unavailable. Try again later."
+  }
 }

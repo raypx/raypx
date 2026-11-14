@@ -273,6 +273,7 @@ export function ComputerScreen({
   let message = t("loading");
   if (status !== "running" || state?.status === "not-running")
     message = t("screen.computerStopped");
+  else if (state?.status === "unavailable" && state.reason) message = t(`screen.${state.reason}`);
   else if (state?.status === "not-configured" || state?.status === "unavailable")
     message = t("screen.unavailable");
   else if (available && !running) message = t("screen.stopped");

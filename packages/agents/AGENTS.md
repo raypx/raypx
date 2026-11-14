@@ -228,3 +228,8 @@ MessageAttachmentsService owns validation, transactional upload claiming and
 fenced inbox/image delivery. Notification service queries PostgreSQL sources;
 models expose injected upload/feed ports. Drafts never persist bytes or restart
 uploads. DOM chips, menu/drop/paste and sidebar bell share these models.
+
+ComputerController retains value-free admission reasons for the failed generation
+through racing events/refreshes. DOM and Mobile render the shared en/zh catalog;
+successful lifecycle state clears the reason. Screen runtime reasons use the same
+catalog on Web/Desktop; Mobile has no Screen surface.

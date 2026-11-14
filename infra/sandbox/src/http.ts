@@ -6,6 +6,7 @@ import {
   MAX_HOME_BYTES,
   commandSchema,
   computerRefSchema,
+  computerProvisionContextSchema,
   homeArchiveSchema,
   type ComputerProcess,
   type ComputerProvider,
@@ -103,7 +104,14 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
           );
         }
         case "create":
-          return Response.json(await provider.provision(ref));
+          return Response.json(
+            await provider.provision(
+              ref,
+              body.spaceId === undefined
+                ? undefined
+                : computerProvisionContextSchema.parse({ spaceId: body.spaceId }),
+            ),
+          );
         case "get":
           return Response.json(await provider.get(ref));
         case "stop":
@@ -195,6 +203,12 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
         LIMIT_EXCEEDED: 413,
         RESTORE_FAILED: 422,
         SCREEN_UNAVAILABLE: 409,
+        SPACE_RUNNING_LIMIT: 429,
+        DEPLOYMENT_RUNNING_LIMIT: 429,
+        SPACE_STORAGE_LIMIT: 429,
+        DEPLOYMENT_STORAGE_LIMIT: 429,
+        HOME_STORAGE_LIMIT: 429,
+        CAPACITY_UNAVAILABLE: 503,
       };
       return Response.json({ code }, { status: statuses[code] ?? 503 });
     }

@@ -8,9 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends coreutils git c
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 1000 --create-home --shell /bin/sh computer \
     && mkdir -p /home/computer/workspace && chown -R 1000:1000 /home/computer \
-    && mkdir -p /run/raypx && chown 1000:1000 /run/raypx && chmod 700 /run/raypx
+    && mkdir -p /run/raypx /usage/home /usage/input && chown 1000:1000 /run/raypx && chmod 700 /run/raypx
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY infra/sandbox/src/home.py /opt/raypx/home.py
+COPY infra/sandbox/src/usage.py /opt/raypx/usage.py
 USER 1000:1000
 ENV HOME=/home/computer
 WORKDIR /home/computer/workspace
@@ -24,6 +25,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends xvfb xdotool op
 COPY infra/sandbox/src/screen.py /opt/raypx/screen.py
 COPY infra/sandbox/src/screen.html /opt/raypx/screen.html
 USER 1000:1000
+ARG RAYPX_VALIDATION_ID
+LABEL raypx.validation=$RAYPX_VALIDATION_ID
 
 # The default image intentionally keeps all graphical packages out.
 FROM runtime AS default
+ARG RAYPX_VALIDATION_ID
+LABEL raypx.validation=$RAYPX_VALIDATION_ID

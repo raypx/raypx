@@ -39,6 +39,7 @@ described in [member input and notifications](architecture/member-input-and-noti
 
 - [Local PostgreSQL, API, Web, Desktop and Mobile setup](development/getting-started.md)
 - [Docker/Colima supervisor and egress setup](development/sandbox.md)
+- [Dedicated sandbox hosting for untrusted tenants](development/sandbox-hosting.md)
 - [Source suites and separate acceptance gates](development/testing.md)
 - [Validation automation, CI, caches and evidence](development/validation-artifacts.md)
 - [Dev CLI reference](development/dev-cli.md)

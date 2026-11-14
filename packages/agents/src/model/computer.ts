@@ -11,6 +11,7 @@ export interface ComputerView {
   pending: "start" | "stop" | null;
   refreshing: boolean;
   error: "load" | "start" | "stop" | null;
+  unavailableReason?: Extract<SpaceComputer, { status: "available" }>["unavailableReason"] | null;
 }
 
 /** A Space-scoped lifecycle projection. Only the server authorizes or performs work. */
@@ -77,18 +78,24 @@ export class ComputerController {
     if (result.status === "not-configured") {
       this.computerId = undefined;
       this.generation = 0;
-      this.update({ status: "not-configured", failureCode: null });
+      this.update({ status: "not-configured", failureCode: null, unavailableReason: null });
       return;
     }
     const computer = result.computer;
     if (computer && computer.spaceId !== this.spaceId) throw new Error("Wrong Space");
     if (computer && computer.generation < this.generation) return;
+    const sameFailure =
+      computer?.state === "failed" &&
+      computer.id === this.computerId &&
+      computer.generation === this.generation;
     this.computerId = computer?.id;
     this.generation = computer?.generation ?? 0;
     const status = computer?.state ?? "stopped";
     this.update({
       status: status === "destroyed" ? "stopped" : status,
       failureCode: computer?.failureCode ?? null,
+      unavailableReason:
+        result.unavailableReason ?? (sameFailure ? (this.view.unavailableReason ?? null) : null),
     });
   }
   async refresh(): Promise<void> {
@@ -110,12 +117,14 @@ export class ComputerController {
     if (this.disposed || event.spaceId !== this.spaceId) return;
     if (event.generation < this.generation) return;
     if (this.computerId && this.computerId !== event.computerId) return;
+    const sameFailure = event.state === "failed" && event.generation === this.generation;
     ++this.revision;
     this.computerId = event.computerId;
     this.generation = event.generation;
     this.update({
       status: event.state === "destroyed" ? "stopped" : event.state,
       failureCode: null,
+      unavailableReason: sameFailure ? (this.view.unavailableReason ?? null) : null,
       error: null,
     });
     // Events intentionally omit failure details; get also reconciles configuration.
@@ -129,7 +138,7 @@ export class ComputerController {
   async start(): Promise<boolean> {
     if (!this.canAct() || (this.view.status !== "stopped" && this.view.status !== "failed"))
       return false;
-    this.update({ pending: "start", error: null });
+    this.update({ pending: "start", error: null, unavailableReason: null });
     return this.perform("start");
   }
   async stop(confirm: () => Promise<boolean>): Promise<boolean> {
@@ -161,9 +170,23 @@ export class ComputerController {
         ++this.read;
         this.apply(result);
         this.update({ refreshing: false });
-      } else await this.refresh();
+      } else {
+        await this.refresh();
+        if (
+          result.status === "available" &&
+          result.unavailableReason &&
+          result.computer?.id === this.computerId &&
+          result.computer?.generation === this.generation &&
+          this.view.status === "failed"
+        )
+          this.update({ unavailableReason: result.unavailableReason });
+      }
       this.update({ pending: null });
-      return result.status === "available" && result.computer?.state !== "failed";
+      return (
+        result.status === "available" &&
+        !result.unavailableReason &&
+        result.computer?.state !== "failed"
+      );
     } catch {
       if (this.disposed) return false;
       this.update({ error: operation });

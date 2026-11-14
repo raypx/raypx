@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
 import { sandboxBaseDigest, sandboxEnvironment, sandboxPlan } from "./sandbox-plan.js";
 import {
+  sandboxEscapeProbe,
+  sandboxForkProbe,
+  sandboxMemoryProbe,
+  sandboxDiskProbe,
+  sandboxCrossNetworkProbe,
   assertSandboxContainer,
   assertSandboxEgress,
   sandboxEgressControl,
@@ -24,9 +30,15 @@ function inspection(computer = "probe", generation = 1): SandboxContainer {
       Labels: { "raypx.supervisor": plan.network, "raypx.computer": computer },
     },
     HostConfig: {
+      Runtime: plan.runtime,
+      NanoCpus: 1_000_000_000,
+      PidMode: "",
+      IpcMode: "private",
+      CgroupnsMode: "private",
+      LogConfig: { Type: "none" },
       Memory: plan.memory,
       MemorySwap: plan.memory,
-      PidsLimit: plan.pids,
+      PidsLimit: plan.hostPids,
       ReadonlyRootfs: true,
       Privileged: false,
       NetworkMode: plan.network,
@@ -39,7 +51,9 @@ function inspection(computer = "probe", generation = 1): SandboxContainer {
       { Type: "volume", Destination: "/home/computer" },
       { Type: "volume", Destination: "/run/raypx" },
     ],
-    NetworkSettings: { Networks: { [plan.network]: { Gateway: "172.25.0.1" } } },
+    NetworkSettings: {
+      Networks: { [plan.network]: { Gateway: "172.25.0.1", IPAddress: "172.25.0.2" } },
+    },
   };
 }
 
@@ -59,8 +73,8 @@ describe("sandbox planning", () => {
   it("uses one unique namespace for every Engine selector and derives the supervisor bridge", () => {
     expect(plan).toMatchObject({
       socket: "/var/run/docker.sock",
-      memory: 268435456,
-      pids: 64,
+      memory: 536870912,
+      pids: 128,
       withEgress: false,
     });
     expect(plan.namespace).toContain(id);
@@ -164,7 +178,9 @@ function fakeRuntime(failure?: string) {
   const steps: string[] = [];
   let computer = "probe";
   let generation = 1;
+  let inspectionComputer = "";
   let bytes = "";
+  let screen = false;
   let counterReads = 0;
   const runtime: SandboxRuntime = {
     platform: "linux",
@@ -198,9 +214,33 @@ function fakeRuntime(failure?: string) {
         const repository = args.at(-1)!.split(":")[0];
         return JSON.stringify([`${repository}@sha256:${"b".repeat(64)}`]);
       }
-      if (args[0] === "ps") return "owned-container";
+      if (args[0] === "ps") {
+        inspectionComputer =
+          args
+            .find((arg) => arg.startsWith("label=raypx.computer="))
+            ?.slice("label=raypx.computer=".length) ?? computer;
+        return "owned-container";
+      }
+      if (args[0] === "inspect" && args.includes("{{json .State}}"))
+        return JSON.stringify({ Running: false });
+      if (args[0] === "exec" && args.includes(sandboxEscapeProbe))
+        return JSON.stringify({
+          setuid: true,
+          mount: true,
+          unshare: true,
+          "proc-sys": true,
+          "raw-socket": true,
+        });
+      if (args[0] === "exec" && args.includes(sandboxForkProbe))
+        return JSON.stringify({ forkLimited: true });
+      if (args[0] === "exec" && args.includes(sandboxMemoryProbe))
+        return JSON.stringify({ memoryLimited: true });
+      if (args[0] === "exec" && args.includes(sandboxCrossNetworkProbe))
+        return JSON.stringify({ crossSandboxBlocked: true });
+      if (args[0] === "exec" && args.includes(sandboxDiskProbe))
+        return JSON.stringify({ written: 37748736 });
       if (args[0] === "container" && args[1] === "inspect")
-        return JSON.stringify([inspection(computer, generation)]);
+        return JSON.stringify([inspection(inspectionComputer || computer, generation)]);
       if (args[0] === "network" && args[1] === "inspect")
         return JSON.stringify([
           {
@@ -235,6 +275,7 @@ function fakeRuntime(failure?: string) {
     },
     start(argv, env) {
       calls.push(["start", ...argv]);
+      screen = env.SANDBOX_GRAPHICAL === "true";
       expect(env.SANDBOX_STATE_DIRECTORY).toBe("/tmp/owned-state");
       expect(env.SANDBOX_NAMESPACE).toBe(plan.namespace);
       expect(env.SANDBOX_SUPERVISOR_TOKEN?.length).toBeGreaterThanOrEqual(32);
@@ -253,12 +294,49 @@ function fakeRuntime(failure?: string) {
     },
     async request(_url, _token, operation, body) {
       calls.push(["request", operation]);
+      if (operation === "description") return { screen };
       if (operation.endsWith("/create")) {
-        computer = operation.split("/")[1]!;
-        generation = (body as { generation: number }).generation;
+        if (computer === "probe" || computer === operation.split("/")[1]) {
+          computer = operation.split("/")[1]!;
+          generation = (body as { generation: number }).generation;
+        }
+      }
+      if (operation.endsWith("/exec")) {
+        const input = body as { generation: number; command: { argv: string[] } };
+        const argv = input.command.argv;
+        calls.push(["probe", `generation=${input.generation}`, ...argv]);
+        let value: unknown = {};
+        if (argv.includes(sandboxIsolationProbe))
+          value = {
+            uid: 1000,
+            capEff: 0,
+            noNewPrivileges: true,
+            memory: plan.memory,
+            pids: plan.pids,
+          };
+        if (argv.includes(sandboxEgressProbe)) value = egressResult();
+        if (argv.includes(sandboxEscapeProbe))
+          value = {
+            setuid: true,
+            mount: true,
+            unshare: true,
+            "proc-sys": true,
+            "raw-socket": true,
+          };
+        if (argv.includes(sandboxForkProbe)) value = { forkLimited: true };
+        if (argv.includes(sandboxMemoryProbe)) value = { memoryLimited: true };
+        if (argv.includes(sandboxCrossNetworkProbe)) value = { crossSandboxBlocked: true };
+        if (argv.some((arg) => arg.includes("RAYPX_PRIVATE_INPUT"))) {
+          const command = (body as { command: { stdin?: string } }).command;
+          if (command.stdin) {
+            const digest = createHash("sha256").update(command.stdin).digest("hex");
+            value = { stdin: digest, environment: digest, cleared: true };
+          } else value = { clean: true };
+        }
+        return { status: 0, stdout: JSON.stringify(value) };
       }
       if (operation.endsWith("/files/write")) bytes = (body as { bytes: string }).bytes;
-      return { bytes };
+      return { bytes, state: "stopped" };
     },
     async temporary() {
       calls.push(["temporary"]);
@@ -345,7 +423,7 @@ describe("owned sandbox execution", () => {
     expect(result.egress).toContain("public HTTPS passed");
     expect(result.egress).toContain("configured DNS passed");
     const probe = calls.find((call) => call.includes(sandboxEgressProbe))!;
-    expect(probe).toContain("owned-container-2");
+    expect(probe).toContain("generation=2");
     expect(probe.slice(-3)).toEqual(["172.25.0.1", plan.dnsResolver, "40123"]);
     expect(calls.find((call) => call.includes(sandboxEgressControl))).toContain("host");
     expect(calls.find((call) => call[0] === "egress-apply")).toContain("--resolver");
@@ -360,12 +438,16 @@ describe("owned sandbox execution", () => {
           port: 40123,
           checks: { ...egressControl(), publicHttps: "network-unreachable" },
         });
-      if (args.includes(sandboxEgressProbe)) {
+      return capture(args);
+    };
+    const request = runtime.request.bind(runtime);
+    runtime.request = async (url, token, operation, body) => {
+      if ((body as { command?: { argv: string[] } })?.command?.argv.includes(sandboxEgressProbe)) {
         const result = egressResult();
         result.checks.publicHttps = "timeout";
-        return JSON.stringify(result);
+        return { status: 0, stdout: JSON.stringify(result) };
       }
-      return capture(args);
+      return request(url, token, operation, body);
     };
     const result = await executeSandbox("/repo", { ...plan, withEgress: true }, runtime);
     expect(result.egress).toContain("public HTTPS unavailable");
@@ -375,12 +457,16 @@ describe("owned sandbox execution", () => {
     const { runtime, calls } = fakeRuntime();
     const capture = runtime.capture.bind(runtime);
     runtime.capture = async (args) => {
-      if (args.includes(sandboxEgressProbe)) {
+      return capture(args);
+    };
+    const request = runtime.request.bind(runtime);
+    runtime.request = async (url, token, operation, body) => {
+      if ((body as { command?: { argv: string[] } })?.command?.argv.includes(sandboxEgressProbe)) {
         const result = egressResult();
         result.checks.publicHttps = "timeout";
-        return JSON.stringify(result);
+        return { status: 0, stdout: JSON.stringify(result) };
       }
-      return capture(args);
+      return request(url, token, operation, body);
     };
     await expect(executeSandbox("/repo", { ...plan, withEgress: true }, runtime)).rejects.toThrow(
       "allowed network probe failed",
@@ -462,8 +548,8 @@ function egressResult(): SandboxEgressResult {
     nameservers: ["127.0.0.11"],
     checks: {
       ...egressControl(),
-      embeddedUdp: "connected",
-      embeddedTcp: "connected",
+      fileResolverUdp: "connected",
+      fileResolverTcp: "connected",
       hostLoopback: "connection-refused",
       gateway: "timeout",
       hostService: "timeout",
@@ -507,7 +593,7 @@ describe("egress evidence", () => {
     );
     expect(() => assertSandboxEgress(result, egressControl(), {}, after)).toThrow("IPv6 control");
   });
-  it.each(["publicHttps", "resolverUdp", "resolverTcp", "embeddedUdp", "embeddedTcp"])(
+  it.each(["publicHttps", "resolverUdp", "resolverTcp", "fileResolverUdp", "fileResolverTcp"])(
     "never turns a %s protocol or implementation error into unavailable",
     (name) => {
       const result = egressResult();
@@ -555,8 +641,8 @@ describe("egress evidence", () => {
     result.checks.publicHttps = "timeout";
     result.checks.resolverUdp = "timeout";
     result.checks.resolverTcp = "network-unreachable";
-    result.checks.embeddedUdp = "dns-server-failure";
-    result.checks.embeddedTcp = "dns-server-failure";
+    result.checks.fileResolverUdp = "dns-server-failure";
+    result.checks.fileResolverTcp = "dns-server-failure";
     const offline = {
       ...egressControl(),
       publicHttps: "network-unreachable",
@@ -567,8 +653,8 @@ describe("egress evidence", () => {
     expect(report).toContain("public HTTPS unavailable");
     expect(report).toContain("configured DNS unavailable");
     for (const [embedded, upstream] of [
-      ["embeddedUdp", "resolverUdp"],
-      ["embeddedTcp", "resolverTcp"],
+      ["fileResolverUdp", "resolverUdp"],
+      ["fileResolverTcp", "resolverTcp"],
     ] as const) {
       const selected = egressResult();
       selected.checks[embedded] = "dns-server-failure";
@@ -613,7 +699,7 @@ describe("egress evidence", () => {
         {},
         after,
       ),
-    ).toThrow("embedded DNS");
+    ).toThrow("configured resolver file");
     expect(
       sandboxEgressCounters(
         "pkts bytes target prot opt in out source destination\n2 120 DROP all -- * * 0.0.0.0/0 10.0.0.0/8\n3 180 RETURN all -- * * 0.0.0.0/0 172.16.0.0/12",
@@ -667,3 +753,13 @@ it("rechecks resource labels and continues teardown after an unowned resource or
   for (const call of calls.filter((args) => args.includes("--filter")))
     expect(call.some((arg) => arg.includes(plan.network) || arg.includes(plan.id))).toBe(true);
 });
+it.each(["graphical-conformance", "graphical-supervisor-ready"])(
+  "keeps optional %s failure explicitly unavailable after headless safety acceptance",
+  async (failure) => {
+    const f = fakeRuntime(failure);
+    const result = await executeSandbox("/repo", plan, f.runtime);
+    expect(result.graphical).toContain("unavailable: GRAPHICAL_RUNTIME_UNAVAILABLE");
+    expect(f.steps).toContain("unlinked-disk-exhaustion-stop");
+    expect(f.calls.at(-1)).toEqual(["remove-state", "/tmp/owned-state"]);
+  },
+);

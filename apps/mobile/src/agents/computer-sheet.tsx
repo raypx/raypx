@@ -45,6 +45,7 @@ export function ComputerIndicator({
   const { t } = useCopy();
   const deviceState = useDeviceComputerView(devices);
   let status = t(state.error === "load" ? "agents.computerUnavailable" : statusKeys[state.status]);
+  if (state.unavailableReason) status = t(`agents.computerAvailability.${state.unavailableReason}`);
   if (deviceState.selection) {
     const selected = deviceState.devices.find(
       (device) => device.id === deviceState.selection?.deviceId,
@@ -178,7 +179,12 @@ export function ComputerSheet({
             <Text accessibilityLiveRegion="polite" className="text-base text-foreground">
               {displayStatus}
             </Text>
-            {!deviceState.selection && state.failureCode ? (
+            {!deviceState.selection && state.unavailableReason ? (
+              <Text accessibilityRole="alert" className="text-sm leading-5 text-foreground">
+                {t(`agents.computerAvailability.${state.unavailableReason}`)}
+              </Text>
+            ) : null}
+            {!deviceState.selection && state.failureCode && !state.unavailableReason ? (
               <Text className="text-sm leading-5 text-foreground">
                 {t(failureKeys[state.failureCode])}
               </Text>

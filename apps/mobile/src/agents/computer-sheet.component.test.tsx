@@ -1,16 +1,27 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react-test-renderer";
 import type { AlertButton } from "react-native";
 import { Alert } from "../../tests/mocks/react-native.js";
 import { ComputerController, type ComputerPort } from "@raypx/agents/model";
-import { computerSchema, type SpaceComputer } from "@raypx/core/computers";
+import {
+  computerAvailabilityReasonSchema,
+  computerSchema,
+  type SpaceComputer,
+} from "@raypx/core/computers";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { findByLabel, press, renderNative, textContent } from "../../tests/native.js";
 import { ComputerIndicator, ComputerSheet } from "./computer-sheet.js";
+import { useLocales } from "../../tests/mocks/localization.js";
+import en from "@raypx/agents/messages/en";
+import zh from "@raypx/agents/messages/zh";
+
+afterEach(() => useLocales.mockReset());
 
 const spaceId = spaceIdSchema.parse("space-1");
 
-function available(state: "stopped" | "running" | "starting" | "failed"): SpaceComputer {
+function available(
+  state: "stopped" | "running" | "starting" | "failed",
+): Extract<SpaceComputer, { status: "available" }> {
   return {
     status: "available",
     computer: computerSchema.parse({
@@ -42,6 +53,25 @@ function fixture(initial: SpaceComputer) {
 }
 
 describe("native computer sheet", () => {
+  it.each(["en", "zh"] as const)(
+    "renders every admission reason without raw codes in %s",
+    async (language) => {
+      useLocales.mockReturnValue([{ languageTag: language, languageCode: language }]);
+      for (const unavailableReason of computerAvailabilityReasonSchema.options) {
+        const { controller } = fixture({ ...available("failed"), unavailableReason });
+        await controller.refresh();
+        const view = await renderNative(
+          <ComputerSheet controller={controller} open onClose={vi.fn()} />,
+        );
+        expect(textContent(view.root)).toContain(
+          { en, zh }[language].agents.computerAvailability[unavailableReason],
+        );
+        expect(textContent(view.root)).not.toContain(unavailableReason);
+        await view.unmount();
+        controller.dispose();
+      }
+    },
+  );
   it("shows not configured without lifecycle controls and exposes a labelled indicator", async () => {
     const { controller, port } = fixture({ status: "not-configured" });
     await controller.refresh();

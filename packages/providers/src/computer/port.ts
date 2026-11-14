@@ -2,6 +2,7 @@ import { commandInputDestinationSchema } from "@raypx/core/protected-input";
 import { z } from "zod";
 import {
   computerIdSchema,
+  computerAvailabilityReasonSchema,
   computerGenerationSchema,
   computerStateSchema,
   homeRevisionSchema,
@@ -18,6 +19,11 @@ export const computerRefSchema = z.strictObject({
   generation: computerGenerationSchema,
 });
 export type ComputerRef = z.infer<typeof computerRefSchema>;
+export const computerProvisionContextSchema = z.strictObject({
+  spaceId: z.string().min(1).max(128),
+});
+export type ComputerProvisionContext = z.infer<typeof computerProvisionContextSchema>;
+export const computerAdmissionReasonSchema = computerAvailabilityReasonSchema;
 export class ComputerError extends Error {
   constructor(
     readonly code:
@@ -28,6 +34,7 @@ export class ComputerError extends Error {
       | "LIMIT_EXCEEDED"
       | "RESTORE_FAILED"
       | "SCREEN_UNAVAILABLE"
+      | z.infer<typeof computerAdmissionReasonSchema>
       | "PROVIDER_UNAVAILABLE",
   ) {
     super(code);
@@ -131,12 +138,13 @@ export interface ComputerDescription {
   unenforced: string[];
   /** True only when this deployment prepared a graphical computer image. */
   screen?: boolean;
+  screenUnavailableReason?: "GRAPHICAL_IMAGE_NOT_CONFIGURED" | "GRAPHICAL_RUNTIME_UNAVAILABLE";
 }
 export interface ComputerProvider {
   describe(): Promise<ComputerDescription>;
   get(ref: ComputerRef): Promise<ProviderComputer>;
   /** Same generation reconnects. A greater one fences and replaces the old computer. */
-  provision(ref: ComputerRef): Promise<ProviderComputer>;
+  provision(ref: ComputerRef, context?: ComputerProvisionContext): Promise<ProviderComputer>;
   stop(ref: ComputerRef): Promise<ProviderComputer>;
   /** Removes compute; retains the last committed home and the generation tombstone. */
   destroy(ref: ComputerRef): Promise<ProviderComputer>;

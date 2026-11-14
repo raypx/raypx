@@ -7,7 +7,7 @@ import {
   type HomeArchive,
   type ComputerCommand,
 } from "@raypx/providers/computer";
-import type { EngineFetch } from "../src/engine.js";
+import { COMMAND_READY, type EngineFetch } from "../src/engine.js";
 import type { ComputerStore, StoredComputer } from "../src/store.js";
 import type { ComputerScreenInput } from "@raypx/core/computers";
 
@@ -15,6 +15,14 @@ export function memoryStore(): ComputerStore {
   const rows = new Map<string, StoredComputer>();
   const homes = new Map<string, HomeArchive>();
   return {
+    async pruneTemporary() {},
+    async all() {
+      return structuredClone([...rows.values()]);
+    },
+    async pruneHomes(id, revision) {
+      for (const key of homes.keys())
+        if (key.startsWith(`${id}:`) && key !== `${id}:${revision}`) homes.delete(key);
+    },
     async read(id) {
       return structuredClone(rows.get(id));
     },
@@ -42,6 +50,9 @@ interface Container {
   provider: ComputerProvider;
   ref: ComputerRef;
   running: boolean;
+  paused: boolean;
+  labels: Record<string, string>;
+  meter: boolean;
 }
 interface Exec {
   container: Container;
@@ -57,6 +68,9 @@ export function fakeEngine() {
   const processes = new Map<string, ComputerProcess>();
   const networks: { Name: string; Id: string }[] = [];
   let restoreFailure = false;
+  let screenFailure = false;
+  let writeBytes = 4096;
+  let removeFailure = false;
   const request: EngineFetch = async (raw, init) => {
     const path = raw.replace("/v1.47", "");
     const method = init.method ?? "GET";
@@ -67,11 +81,44 @@ export function fakeEngine() {
       const tar = Buffer.from(init.body as Uint8Array);
       const name = tar.subarray(0, 100).toString().replace(/\0.*$/, "");
       const size = Number.parseInt(tar.subarray(124, 136).toString().replace(/\0.*$/, ""), 8);
-      inputs.set(`/run/raypx/${name}`, JSON.parse(tar.subarray(512, 512 + size).toString()));
+      if (name !== "resolv.conf")
+        inputs.set(`/run/raypx/${name}`, JSON.parse(tar.subarray(512, 512 + size).toString()));
       return new Response(null);
     }
     const body = init.body ? (JSON.parse(init.body as string) as Record<string, unknown>) : {};
     calls.push({ path, method, body });
+    if (path === "/info")
+      return Response.json({
+        Runtimes: {
+          runc: {},
+          runsc: { runtimeArgs: ["--oci-seccomp=true"] },
+        },
+        DefaultRuntime: "runc",
+        SecurityOptions: ["name=seccomp,profile=builtin"],
+        MemoryLimit: true,
+        CpuCfsQuota: true,
+        PidsLimit: true,
+      });
+    if (path.startsWith("/containers/json?"))
+      return Response.json([...containers].map(([Id, c]) => ({ Id, Labels: c.labels })));
+    if (path.startsWith("/volumes?")) return Response.json({ Volumes: [] });
+    if (path.startsWith("/networks/") && path !== "/networks/create")
+      return Response.json({
+        Driver: "bridge",
+        Options: {
+          "com.docker.network.bridge.name": (
+            calls.find((c) => c.path === "/networks/create")?.body as {
+              Options: Record<string, string>;
+            }
+          )?.Options["com.docker.network.bridge.name"],
+          "com.docker.network.bridge.enable_icc": "false",
+        },
+        Labels: (
+          calls.find((c) => c.path === "/networks/create")?.body as {
+            Labels: Record<string, string>;
+          }
+        )?.Labels,
+      });
     if (path === "/networks") return Response.json(networks);
     if (path === "/networks/create") {
       networks.push({ Name: String(body.Name), Id: "network" });
@@ -84,7 +131,14 @@ export function fakeEngine() {
       const provider = createMemoryComputerProvider();
       const ref = { id, generation: 1 };
       await provider.provision(ref);
-      containers.set(id, { provider, ref, running: false });
+      containers.set(id, {
+        provider,
+        ref,
+        running: false,
+        paused: false,
+        labels: body.Labels as Record<string, string>,
+        meter: (body.Labels as Record<string, string>)["raypx.role"] === "meter",
+      });
       return Response.json({ Id: id });
     }
     const match = /^\/containers\/([^/?]+)(.*)$/.exec(path);
@@ -92,7 +146,25 @@ export function fakeEngine() {
       const c = containers.get(match[1]!);
       if (!c) return Response.json({}, { status: 404 });
       const suffix = match[2];
-      if (suffix === "/json") return Response.json({ State: { Running: c.running } });
+      if (suffix === "/pause" || suffix === "/unpause") {
+        c.paused = suffix === "/pause";
+        return new Response(null);
+      }
+      if (suffix === "/wait") return Response.json({ StatusCode: 0 });
+      if (suffix?.startsWith("/logs?"))
+        return new Response(
+          frame(
+            Buffer.from(JSON.stringify({ bytes: 4096, entries: 1, complete: true })).toString(
+              "base64",
+            ),
+          ),
+        );
+      if (suffix?.startsWith("/stats?"))
+        return Response.json({
+          blkio_stats: { io_service_bytes_recursive: [{ op: "write", value: writeBytes }] },
+        });
+      if (suffix === "/json")
+        return Response.json({ State: { Running: c.running, Paused: c.paused } });
       if (suffix === "/start") {
         c.running = true;
         await c.provider.provision(c.ref);
@@ -104,18 +176,24 @@ export function fakeEngine() {
         return new Response(null);
       }
       if (suffix?.startsWith("?force")) {
+        if (removeFailure) return Response.json({}, { status: 500 });
         await c.provider.destroy(c.ref);
         containers.delete(match[1]!);
         return new Response(null);
       }
       if (suffix === "/exec") {
+        if (c.paused) return Response.json({}, { status: 409 });
         const argv = body.Cmd as string[];
         const helper = argv.indexOf("/opt/raypx/home.py");
         const id = crypto.randomUUID();
         execs.set(id, {
           container: c,
-          operation: argv[helper + 1]!,
-          input: inputs.get(argv[helper + 2]!)!,
+          operation: argv.includes("/opt/raypx/usage.py")
+            ? "usage"
+            : helper < 0
+              ? "io-probe"
+              : argv[helper + 1]!,
+          input: helper < 0 ? {} : inputs.get(argv[helper + 2]!)!,
           status: 0,
         });
         return Response.json({ Id: id });
@@ -127,7 +205,7 @@ export function fakeEngine() {
       if (execution[2] === "json") return Response.json({ ExitCode: e.status });
       const { provider, ref } = e.container;
       if (e.operation === "exec") {
-        const { executionId: _, ...command } = e.input;
+        const { executionId: _, limits: _limits, ...command } = e.input;
         const process = await provider.execute(ref, {
           ...command,
           outputBudget: 1024 * 1024,
@@ -136,6 +214,7 @@ export function fakeEngine() {
         return new Response(
           new ReadableStream<Uint8Array>({
             start(controller) {
+              controller.enqueue(frame(Buffer.from(COMMAND_READY).toString("base64")));
               void (async () => {
                 for await (const event of process.events) {
                   if (event.kind === "exit") e.status = event.status;
@@ -152,10 +231,17 @@ export function fakeEngine() {
       try {
         const { path: selected, limit, maxBytes, bytes, archive, executionId } = e.input;
         switch (e.operation) {
+          case "io-probe":
+            value = {};
+            break;
+          case "usage":
+            value = { bytes: 4096, entries: 1, complete: true };
+            break;
           case "screen-get":
             value = await provider.screen!(ref);
             break;
           case "screen-start":
+            if (screenFailure) throw new ComputerError("SCREEN_UNAVAILABLE");
             value = await provider.startScreen!(ref);
             break;
           case "screen-stop":
@@ -206,6 +292,15 @@ export function fakeEngine() {
   return {
     request,
     calls,
+    failRemovals(value: boolean) {
+      removeFailure = value;
+    },
+    setWrittenBytes(value: number) {
+      writeBytes = value;
+    },
+    failScreen() {
+      screenFailure = true;
+    },
     failRestore() {
       restoreFailure = true;
     },

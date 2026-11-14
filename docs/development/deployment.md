@@ -29,8 +29,8 @@ data access in the same transaction as schema changes. Use a dedicated runtime
 role per database on a shared PostgreSQL cluster. API and Relay receive that
 login, and only the migration job receives the database owner connection. `AUTH_SECRET` and `APP_KEY` must be independent per
 project and differ from each other: `AUTH_SECRET` signs sessions, `APP_KEY`
-encrypts stored provider credentials and signs instance receipts, so replacing it
-requires re-entering those credentials and re-enrolling instances. All
+encrypts stored provider credentials and protected-input envelopes, so replacing it
+requires re-entering credentials and invalidates pending protected input. All
 production API-enabled roles require explicit database, both secrets, HTTPS auth URL
 and exact allowed origins. `POSTGRES_IMAGE_DIGEST` must be the verified
 64-character manifest digest for postgres:17-alpine. Keep its prior value for
@@ -106,6 +106,10 @@ implemented. Gateway readiness alone does not validate Page document routing.
 
 ## Optional computers
 
+For external untrusted users, deploy the supervisor on a dedicated host using
+[the sandbox hosting guide](sandbox-hosting.md). Keep this same-host Compose profile
+for development; do not give API/worker a Docker socket.
+
 The default `COMPUTER_PROVIDER=none` keeps every other backend capability available.
 To enable isolated computers, build the supervisor and computer images separately;
 `build.sh` still builds the three required application images only. Supply verified
@@ -150,10 +154,13 @@ from the protected environment. For rootless or Colima sockets, set
 to `/var/run/docker.sock` inside the supervisor only. These configurations still
 need their own acceptance; a socket path alone does not establish isolation.
 
+Runtime selection, automatic stops, measured home quotas and Space/deployment
+admission limits are described in [sandbox hosting](sandbox-hosting.md#limits-and-accounting).
+
 `SANDBOX_MEMORY_BYTES`, `SANDBOX_NANO_CPUS` (one CPU = 1,000,000,000) and
 `SANDBOX_PIDS_LIMIT` are positive decimal ceilings; malformed settings fail startup
 and name the setting. Computers run as UID/GID 1000, with no privileges or host
-network, read-only root, bounded tmpfs, their own home volume and a private anonymous
+network, read-only root, bounded tmpfs, their own home volume and a private owned
 helper-input volume at `/run/raypx`. Container removal also removes that helper volume.
 `COMPUTERS_PER_SPACE` and `COMPUTERS_PER_MEMBER` cap retained records (defaults 1
 and 10). Stopped homes still count. API stores no command output or file content

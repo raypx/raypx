@@ -31,7 +31,12 @@ Command behavior and the rules each check enforces are documented in
 `test sandbox` owns opt-in real-Engine conformance and isolation acceptance;
 ordinary source verification never starts Docker or changes host firewall rules.
 The gate builds default and optional graphical targets, records their byte sizes
-and includes real graphical start/image/input/stream-stop conformance.
+and tests headless safety first. Optional graphical start/image/input/stream-stop
+conformance has a separate result; unavailable Screen never counts as passed.
+`--runtime` selects the registered OCI runtime (default runc). The gate additionally
+probes privilege/kernel controls, fork/memory/disk exhaustion and peer network
+isolation, private UTF-8 stdin/environment scope, and bounded inbox writes with
+post-write accounting; evidence is under `.artifacts/sandbox-hosting/<runtime>/`.
 Its `--with-egress` case uses Engine-host controls and owned DROP counters;
 offline public HTTPS is explicitly unavailable. `--dns-resolver` selects the
 public IPv4 DNS upstream shared by the supervisor and firewall probe.

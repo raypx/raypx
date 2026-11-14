@@ -50,7 +50,10 @@ it("reads without allocating and starts exactly the claimed team computer", asyn
   const service = createComputersService(f.repository, provider, "memory");
   expect(await service.get(scope)).toEqual({ status: "available", computer: null });
   await service.start(scope);
-  expect(provision).toHaveBeenCalledWith({ id: f.row()!.id, generation: f.row()!.generation });
+  expect(provision).toHaveBeenCalledWith(
+    { id: f.row()!.id, generation: f.row()!.generation },
+    { spaceId: scope.spaceId },
+  );
   expect(f.repository.complete).toHaveBeenCalledWith(
     scope,
     expect.objectContaining({ leaseOwner: "operation" }),
@@ -194,4 +197,38 @@ it("reports a provider without member previews explicitly", async () => {
     status: "unavailable",
     code: "FILES_UNAVAILABLE",
   });
+});
+
+it("surfaces additive admission reasons without exposing provider detail", async () => {
+  const f = fixture();
+  const provider = createMemoryComputerProvider();
+  vi.spyOn(provider, "provision").mockRejectedValue(new ComputerError("SPACE_RUNNING_LIMIT"));
+  const result = await createComputersService(f.repository, provider).start(scope);
+  expect(result).toMatchObject({
+    status: "available",
+    unavailableReason: "SPACE_RUNNING_LIMIT",
+    computer: { state: "failed", failureCode: "PROVIDER_UNAVAILABLE" },
+  });
+});
+it("observes automatic provider stops without provisioning or fabricating a stop on transport failure", async () => {
+  const f = fixture();
+  const provider = createMemoryComputerProvider();
+  f.repository.observe = vi.fn(async (_, expected, result) => ({ ...expected, ...result }));
+  const service = createComputersService(f.repository, provider);
+  await service.start(scope);
+  const ref = { id: f.row()!.id, generation: f.row()!.generation };
+  await provider.stop(ref);
+  const provision = vi.spyOn(provider, "provision");
+  expect(await service.get(scope)).toMatchObject({
+    status: "available",
+    computer: { state: "stopped" },
+  });
+  expect(provision).not.toHaveBeenCalled();
+  vi.spyOn(provider, "get").mockRejectedValue(new ComputerError("PROVIDER_UNAVAILABLE"));
+  vi.mocked(f.repository.observe).mockClear();
+  expect(await service.get(scope)).toMatchObject({
+    status: "available",
+    computer: { state: "running" },
+  });
+  expect(f.repository.observe).not.toHaveBeenCalled();
 });

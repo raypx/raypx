@@ -55,3 +55,13 @@ it("accepts only a public IPv4 DNS upstream", () => {
       "SANDBOX_DNS_RESOLVER",
     );
 });
+it("keeps guest and bounded runsc runtime PID budgets distinct", () => {
+  expect(sandboxConfig(base)).toMatchObject({ pids: 128, hostPids: 128 });
+  expect(sandboxConfig({ ...base, SANDBOX_RUNTIME: "runsc" })).toMatchObject({
+    pids: 128,
+    hostPids: 384,
+  });
+  expect(() => sandboxConfig({ ...base, SANDBOX_RUNTIME_PIDS_OVERHEAD: "0" })).toThrow(
+    "SANDBOX_RUNTIME_PIDS_OVERHEAD",
+  );
+});

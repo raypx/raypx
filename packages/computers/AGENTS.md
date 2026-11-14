@@ -45,3 +45,8 @@ Device Computers are separate member-owned machines. `createDeviceComputersServi
 DeviceMemberFilesService uses expiring owner/Space/grant/fence-checked member
 reads, without Run authority or commands. Member file routing is transient
 PostgreSQL state and cleanup is bounded.
+
+Lifecycle start passes trusted Space identity to the provider. Optional provider
+observations reconcile automatic stops with a generation/fence-checked PostgreSQL
+write and the normal state event; reads never provision and transport failure is
+not proof of a stop. Admission refusal reasons are additive lifecycle metadata.

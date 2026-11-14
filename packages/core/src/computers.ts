@@ -42,9 +42,21 @@ export const computerSchema = z
     (computer) => (computer.leaseOwner === null) === (computer.leaseExpiresAt === null),
     "A lease requires an owner and expiry",
   );
+export const computerAvailabilityReasonSchema = z.enum([
+  "SPACE_RUNNING_LIMIT",
+  "DEPLOYMENT_RUNNING_LIMIT",
+  "SPACE_STORAGE_LIMIT",
+  "DEPLOYMENT_STORAGE_LIMIT",
+  "HOME_STORAGE_LIMIT",
+  "CAPACITY_UNAVAILABLE",
+]);
 export const spaceComputerSchema = z.discriminatedUnion("status", [
   z.strictObject({ status: z.literal("not-configured") }),
-  z.strictObject({ status: z.literal("available"), computer: computerSchema.nullable() }),
+  z.strictObject({
+    status: z.literal("available"),
+    computer: computerSchema.nullable(),
+    unavailableReason: computerAvailabilityReasonSchema.optional(),
+  }),
 ]);
 export type Computer = z.infer<typeof computerSchema>;
 export type ComputerId = z.infer<typeof computerIdSchema>;
@@ -100,8 +112,13 @@ function screenBytesWithinLimit(value: string) {
   else if (value.endsWith("=")) padding = 1;
   return (value.length / 4) * 3 - padding <= MAX_COMPUTER_SCREEN_BYTES;
 }
+export const computerScreenUnavailableReasonSchema = z.enum([
+  "GRAPHICAL_IMAGE_NOT_CONFIGURED",
+  "GRAPHICAL_RUNTIME_UNAVAILABLE",
+]);
 export const computerScreenAvailabilitySchema = z.strictObject({
   available: z.boolean(),
+  reason: computerScreenUnavailableReasonSchema.optional(),
   running: z.boolean(),
   width: z.number().int().min(1).max(1920),
   height: z.number().int().min(1).max(1200),
@@ -155,6 +172,7 @@ export const computerScreenStateSchema = z.discriminatedUnion("status", [
   z.strictObject({
     status: z.literal("unavailable"),
     code: z.enum(["SCREEN_UNAVAILABLE", "COMPUTER_UNAVAILABLE"]),
+    reason: computerScreenUnavailableReasonSchema.optional(),
   }),
   z.strictObject({
     status: z.literal("available"),

@@ -67,6 +67,7 @@ export function ComputerIndicator({
   let status =
     statusLabel ??
     (state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status]));
+  if (state.unavailableReason) status = t(`computerAvailability.${state.unavailableReason}`);
   if (deviceName)
     status = `${deviceName} · ${t(deviceConnected ? "devices.connected" : "devices.offline")}`;
   const label = t("computerIndicator", { state: status });
@@ -189,8 +190,13 @@ export function ComputerPanel({
           <h3 className="text-xs font-medium text-muted-foreground">{t("computerStatus")}</h3>
           <p role="status" aria-live="polite" aria-atomic="true" className="text-sm wrap-anywhere">
             {state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status])}
-            {state.failureCode && (
+            {state.failureCode && !state.unavailableReason && (
               <span className="mt-2 block">{t(failureKeys[state.failureCode])}</span>
+            )}
+            {state.unavailableReason && (
+              <span className="mt-2 block">
+                {t(`computerAvailability.${state.unavailableReason}`)}
+              </span>
             )}
           </p>
           {state.error && (

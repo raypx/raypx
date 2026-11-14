@@ -3,7 +3,9 @@
 `infra/sandbox` is the private Bun supervisor for the Docker Computer provider.
 Only it opens an Engine socket. API/worker processes receive its private URL and
 dedicated token, never Docker credentials or a socket mount. The Agent runtime
-stays in the backend. Start with [local setup](getting-started.md).
+stays in the backend. Start with [local setup](getting-started.md). For external
+untrusted users, use [dedicated sandbox hosting](sandbox-hosting.md) with runsc
+and an authenticated encrypted private channel.
 
 ## Engine and image
 
@@ -123,24 +125,39 @@ private ranges and metadata with owned DROP-counter evidence. Public connectivit
 failure in both probe and control is unavailable; IPv6 needs a reachable control.
 
 The gate builds both default and graphical targets and records each image's byte
-size. Graphical conformance starts a session, checks a non-empty PNG's 1024×768
+size. Headless safety acceptance uses the default image. Optional graphical
+acceptance runs separately and explicitly reports unsupported/flaky Screen as
+unavailable. Graphical conformance starts a session, checks a non-empty PNG's 1024×768
 header, sends keyboard input and observes changed pixels, then verifies stopping
 the session closes its frame iterator. Frames are pull-driven, capped at four per
 second and one MiB per PNG. Fixed graphical helpers have intrinsic container-side
 deadlines (three seconds, or ten seconds for start); the backend's longer HTTP
 deadline does not leave input executing after it releases its control gate.
 
-On 2026-11-14 the macOS arm64/Colima Linux arm64 gate passed all 12 provider
-cases, including real graphical start, 1024×768 PNG capture, input-driven pixel
-changes and stream closure after stop. The default image was 128,103,275 bytes;
-the optional graphical image was 280,462,107 bytes (152,358,832 additional bytes).
+On 2026-11-14 the final macOS arm64/Colima Linux arm64 gates passed 12/12 provider
+cases (six live and six reference) and all eleven safety/input probes under both runc and
+runsc release-20261109.0. Separate runc graphical conformance passed both selected
+cases (one live and one reference), including 1024×768 PNG capture, input-driven
+pixel changes and stream closure after stop. The final runsc graphical capability
+probe passed, but its separate member session start failed: one live graphical
+case failed, one reference case passed, and ten cases were filtered. That generation
+reports `GRAPHICAL_RUNTIME_UNAVAILABLE`; no runsc graphical conformance success
+is claimed. The default image was 128,105,239 bytes and the graphical image
+280,464,118 bytes. The new private-input probe verifies UTF-8 stdin/environment
+delivery using hashes, temporary-input cleanup and no inheritance by the next
+command. Inbox acceptance writes and reads one maximum-size 1 MiB attachment
+through the Computer port, including post-write quota measurement.
 IPv4 private/host/metadata/DNS enforcement and public HTTPS/configured DNS passed.
 IPv6 enforcement was unavailable because both host and computer lacked IPv6
-reachability. A separate owned-image active-session probe observed zero TCP
-listeners. These measurements establish this Engine VM only; other platforms
+reachability. These measurements establish this Engine VM only; other platforms
 and packaged client behavior remain separate gates.
 
-Evidence goes to `.artifacts/sandbox/`. See
+Add `--runtime runsc` to run the same gate with the registered gVisor runtime.
+The default is explicit `runc`; runtime fallback is never automatic. The gate also
+probes privilege escalation, mount/proc/sys controls, fork/memory/disk exhaustion
+and cross-sandbox network reachability. Disk overrun must stop the computer.
+
+Evidence goes to `.artifacts/sandbox-hosting/<runtime>/`. See
 [validation details](validation-artifacts.md#owned-sandbox-real-engine-acceptance)
 for prerequisites, cleanup and recorded platform limits. Default source tests
 inject an Engine transport and never mutate firewall rules. A passing VM IPv4 gate

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
-import type { SpaceComputer } from "@raypx/core/computers";
+import { computerAvailabilityReasonSchema, type SpaceComputer } from "@raypx/core/computers";
 import { CapabilitySheet } from "./capability-sheet.js";
 import { ComputerController, type ComputerFilesPort, type ComputerPort } from "../model.js";
 import { ComputerPanel } from "./computer.js";
@@ -54,6 +54,26 @@ function fixture(initial: SpaceComputer = computerResult(), files?: ComputerFile
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose();
 });
+
+it.each(["en", "zh"] as const)(
+  "renders every admission reason without raw codes in %s",
+  async (language) => {
+    for (const unavailableReason of computerAvailabilityReasonSchema.options) {
+      const f = fixture({
+        status: "available",
+        computer: computerRecord("failed"),
+        unavailableReason,
+      });
+      await f.controller.refresh();
+      const view = f.mount(language);
+      expect(
+        screen.getByText({ en, zh }[language].agents.computerAvailability[unavailableReason]),
+      ).toBeVisible();
+      expect(view.container).not.toHaveTextContent(unavailableReason);
+      view.unmount();
+    }
+  },
+);
 
 const cases = [
   { result: computerResult("stopped"), status: "computerStopped", action: "computerStart" },

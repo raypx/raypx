@@ -1,5 +1,6 @@
 import {
   ComputerError,
+  computerAdmissionReasonSchema,
   MAX_HOME_BYTES,
   bound,
   commandSchema,
@@ -20,6 +21,7 @@ import {
   MAX_COMPUTER_FILE_BYTES,
   MAX_COMPUTER_SCREEN_BYTES,
   computerScreenAvailabilitySchema,
+  computerScreenUnavailableReasonSchema,
   computerScreenFrameSchema,
   computerScreenInputSchema,
   type ComputerScreenFrame,
@@ -34,6 +36,7 @@ const descriptionSchema = z.strictObject({
   egress: z.enum(["restricted", "unrestricted"]),
   unenforced: z.array(z.string().max(500)).max(20),
   screen: z.boolean().optional(),
+  screenUnavailableReason: computerScreenUnavailableReasonSchema.optional(),
 });
 const revisionSchema = z.strictObject({ revision: homeRevisionSchema });
 const errorCodes = new Set([
@@ -44,6 +47,7 @@ const errorCodes = new Set([
   "LIMIT_EXCEEDED",
   "RESTORE_FAILED",
   "SCREEN_UNAVAILABLE",
+  ...computerAdmissionReasonSchema.options,
 ]);
 async function checked(response: Response) {
   if (response.ok) return response;
@@ -128,10 +132,16 @@ export function createDockerComputerProvider(options: {
         ),
       );
       const description = descriptionSchema.parse(await json(response));
-      return { ...description, screen: description.screen ?? false };
+      const { screenUnavailableReason, ...capabilities } = description;
+      return {
+        ...capabilities,
+        screen: description.screen ?? false,
+        ...(screenUnavailableReason ? { screenUnavailableReason } : {}),
+      };
     },
     get: (ref) => view(ref, "get"),
-    provision: (ref) => view(ref, "create"),
+    provision: async (ref, context) =>
+      providerComputerSchema.parse(await json(await call(ref, "create", context ?? {}))),
     stop: (ref) => view(ref, "stop"),
     destroy: (ref) => view(ref, "destroy"),
     async execute(ref, input) {

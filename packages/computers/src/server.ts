@@ -1,4 +1,5 @@
 import {
+  computerAvailabilityReasonSchema,
   MAX_COMPUTER_DIRECTORY_ENTRIES,
   MAX_COMPUTER_FILE_BYTES,
   type Computer,
@@ -41,6 +42,12 @@ export interface ComputersRepository {
     scope: SpaceScope,
     operation: "start" | "stop",
     provider: Computer["provider"],
+  ): Promise<Computer>;
+  observe?(
+    this: void,
+    scope: SpaceScope,
+    expected: Computer,
+    result: Pick<Computer, "state" | "homeRevision" | "failureCode">,
   ): Promise<Computer>;
   complete(
     this: void,
@@ -93,7 +100,23 @@ export function createComputersService(
 ): ComputersService {
   async function get(scope: SpaceScope): Promise<SpaceComputer> {
     if (!provider) return { status: "not-configured" };
-    return { status: "available", computer: await repository.get(scope) };
+    let computer = await repository.get(scope);
+    if (computer?.state === "running" && !computer.leaseOwner && repository.observe) {
+      try {
+        const live = await provider.get({ id: computer.id, generation: computer.generation });
+        if (live.state !== "running")
+          computer = await repository.observe(scope, computer, {
+            state: live.state,
+            homeRevision: live.homeRevision,
+            failureCode: null,
+          });
+      } catch {
+        // A transport failure is not proof that compute stopped; a competing claim
+        // may also have replaced the generation while observation was in flight.
+        computer = await repository.get(scope);
+      }
+    }
+    return { status: "available", computer };
   }
   async function fileAccess(
     scope: SpaceScope,
@@ -106,7 +129,8 @@ export function createComputersService(
   }
   async function lifecycle(scope: SpaceScope, operation: "start" | "stop"): Promise<SpaceComputer> {
     if (!provider) return { status: "not-configured" };
-    const existing = await repository.get(scope);
+    const view = await get(scope);
+    const existing = view.status === "available" ? view.computer : null;
     if (operation === "stop" && (!existing || existing.state === "stopped"))
       return { status: "available", computer: existing };
     if (operation === "start" && existing?.state === "running" && !existing.leaseOwner)
@@ -117,11 +141,18 @@ export function createComputersService(
       return { status: "available", computer: claim };
     const ref = { id: claim.id, generation: claim.generation };
     let result: Pick<Computer, "state" | "homeRevision" | "failureCode">;
+    let unavailableReason: (typeof computerAvailabilityReasonSchema.options)[number] | undefined;
     try {
       const computer =
-        operation === "start" ? await provider.provision(ref) : await provider.stop(ref);
+        operation === "start"
+          ? await provider.provision(ref, { spaceId: scope.spaceId })
+          : await provider.stop(ref);
       result = { state: computer.state, homeRevision: computer.homeRevision, failureCode: null };
     } catch (error) {
+      const reason = computerAvailabilityReasonSchema.safeParse(
+        error instanceof ProviderError ? error.code : undefined,
+      );
+      if (reason.success) unavailableReason = reason.data;
       result = {
         state: "failed",
         homeRevision: claim.homeRevision,
@@ -131,7 +162,11 @@ export function createComputersService(
             : "PROVIDER_UNAVAILABLE",
       };
     }
-    return { status: "available", computer: await repository.complete(scope, claim, result) };
+    return {
+      status: "available",
+      computer: await repository.complete(scope, claim, result),
+      ...(unavailableReason ? { unavailableReason } : {}),
+    };
   }
   return {
     get,

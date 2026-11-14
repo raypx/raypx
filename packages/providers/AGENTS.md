@@ -34,3 +34,8 @@ No local model/session process adapter or public core transport entry remains.
 Run check/test and explicit provider conformance when selected.
 
 Private commands support UTF-8 stdin. Device adapters separate protected values from ordinary command fields; remote adapters scrub call-local overrides before truncation. No protected value joins a catalog or stored credential.
+
+Computer provision accepts optional trusted Space context. The supervisor requires
+it for untrusted tenants and persists immutable ownership for quota admission.
+Quota error codes are additive and preserved by the private HTTP adapter; no
+Engine detail or credential enters lifecycle responses.

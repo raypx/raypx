@@ -24,3 +24,7 @@ and contract consumer tests.
 
 `/conversation` owns attachment limits/metadata/delivery events. `/notifications`
 owns source keys and bounded member-feed projections; neither grants authority.
+
+`/computers` owns additive lifecycle/screen availability reasons for resource
+admission and unsupported graphical runtimes. Frames remain transient untrusted
+content, never authorization; no provider credential enters public records.

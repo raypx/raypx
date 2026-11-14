@@ -1142,9 +1142,11 @@ it.each(["en", "zh"] as const)(
     expect(target).toHaveAttribute("title", name);
     expect(within(target).getByText(name)).toHaveClass("min-w-0", "truncate");
     expect(row.querySelector('[data-icon="inline-start"]')).toHaveAttribute("aria-hidden", "true");
-    expect(
-      screen.getByRole("button", { name: catalogs[language].agents.workspaceHome.modelMenu }),
-    ).toHaveTextContent("Fixture model");
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: catalogs[language].agents.workspaceHome.modelMenu }),
+      ).toHaveTextContent("Fixture model"),
+    );
     expect(screen.queryByRole("menuitem")).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", {
@@ -1763,7 +1765,7 @@ it("clears a home protected value when entering a conversation without duplicati
   const view = test.mount();
   const input = await screen.findByLabelText("Protected input: Access token");
   fireEvent.change(input, { target: { value: crypto.randomUUID() } });
-  fireEvent.click(screen.getByRole("button", { name: agent.name }));
+  fireEvent.click(await screen.findByRole("button", { name: agent.name }));
   await screen.findByRole("log");
   expect(input).toHaveValue("");
   await waitFor(() =>

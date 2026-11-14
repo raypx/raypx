@@ -1,0 +1,37 @@
+[Unit]
+Description=Raypx private sandbox supervisor
+Requires=docker.service wg-quick@raypx-control.service
+After=docker.service wg-quick@raypx-control.service network-online.target
+
+[Service]
+Type=simple
+User=raypx-sandbox
+Group=raypx-sandbox
+SupplementaryGroups=docker
+EnvironmentFile=/etc/raypx-sandbox/supervisor.env
+ExecStartPre=+/opt/raypx-sandbox/current/prepare-host.sh
+ExecStart=/usr/local/bin/bun /opt/raypx-sandbox/current/server.mjs
+ExecStopPost=+/opt/raypx-sandbox/current/stop-owned.sh
+Restart=on-failure
+RestartSec=5
+StateDirectory=raypx-sandbox
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+MemoryMax=512M
+TasksMax=128
+LimitNOFILE=4096
+StandardOutput=journal
+StandardError=journal
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

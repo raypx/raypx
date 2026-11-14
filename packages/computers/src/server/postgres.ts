@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gt, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   computers,
@@ -144,6 +144,28 @@ export function createComputersRepository(
           .where(team(scope))
           .returning();
         const computer = view(claimed!);
+        await emit(tx, scope, computer);
+        return computer;
+      });
+    },
+    async observe(scope, expected, result) {
+      return db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(computers)
+          .set({ ...result, updatedAt: new Date() })
+          .where(
+            and(
+              team(scope),
+              eq(computers.id, expected.id),
+              eq(computers.generation, expected.generation),
+              eq(computers.leaseFence, expected.leaseFence),
+              eq(computers.state, "running"),
+              isNull(computers.leaseOwner),
+            ),
+          )
+          .returning();
+        if (!row) throw new ComputerOperationError("COMPUTER_BUSY");
+        const computer = view(row);
         await emit(tx, scope, computer);
         return computer;
       });

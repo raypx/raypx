@@ -1,4 +1,5 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Evidence, type ValidationProcess } from "./evidence.js";
@@ -9,6 +10,12 @@ import {
   type SandboxPlan,
 } from "./sandbox-plan.js";
 import {
+  sandboxEscapeProbe,
+  sandboxForkProbe,
+  sandboxMemoryProbe,
+  sandboxDiskProbe,
+  sandboxUnlinkedDiskProbe,
+  sandboxCrossNetworkProbe,
   assertSandboxContainer,
   assertSandboxEgress,
   sandboxEgressControl,
@@ -65,7 +72,7 @@ export async function cleanupSandbox(
         ) as SandboxContainer[];
         if (value?.Config.Labels["raypx.supervisor"] !== plan.network)
           throw new Error("Unowned container refused");
-        // --volumes removes anonymous helper volumes, never unrelated named volumes.
+        // Also remove anonymous image volumes; named volumes follow exact labels below.
         await docker(["container", "rm", "--force", "--volumes", id]);
       });
   });
@@ -102,7 +109,7 @@ export async function cleanupSandbox(
       }[];
       if (value?.Config.Labels["raypx.validation"] !== plan.id)
         throw new Error("Unowned image refused");
-      await docker(["image", "rm", id]);
+      await docker(["image", "rm", "--no-prune", id]);
     }
   });
   if (failures.length) throw new Error(`Sandbox cleanup failed: ${failures.join(", ")}`);
@@ -113,7 +120,9 @@ export async function executeSandbox(
   plan: SandboxPlan,
   runtime: SandboxRuntime,
 ): Promise<{
+  runtime: string;
   image: string;
+  graphicalImage: string;
   imageBytes: { default: number; graphical: number };
   graphical: string;
   bases: Record<string, string>;
@@ -156,13 +165,17 @@ export async function executeSandbox(
   let firewall: string[] | undefined;
   let image = "";
   const imageBytes = { default: 0, graphical: 0 };
+  let graphical = "not run";
+  let graphicalImage = "";
   let egress = "not run (requires --with-egress and Linux root or passwordless sudo)";
   const cleanupErrors: unknown[] = [];
   let failed = false;
   let primaryFailure: unknown;
   let outcome:
     | {
+        runtime: string;
         image: string;
+        graphicalImage: string;
         imageBytes: typeof imageBytes;
         graphical: string;
         bases: Record<string, string>;
@@ -202,8 +215,8 @@ export async function executeSandbox(
         `BUN_IMAGE_DIGEST=${bases.bun}`,
         "--build-arg",
         `COMPUTER_BASE_DIGEST=${bases.computer}`,
-        "--label",
-        `raypx.validation=${plan.id}`,
+        "--build-arg",
+        `RAYPX_VALIDATION_ID=${plan.id}`,
         "--tag",
         plan.image,
         ".",
@@ -231,8 +244,8 @@ export async function executeSandbox(
         `BUN_IMAGE_DIGEST=${bases.bun}`,
         "--build-arg",
         `COMPUTER_BASE_DIGEST=${bases.computer}`,
-        "--label",
-        `raypx.validation=${plan.id}`,
+        "--build-arg",
+        `RAYPX_VALIDATION_ID=${plan.id}`,
         "--tag",
         graphicalTag,
         ".",
@@ -248,10 +261,15 @@ export async function executeSandbox(
       return value;
     });
     image = await runtime.step("computer-image-id", async () => {
+      const value = (await docker(["image", "inspect", "--format", "{{.Id}}", plan.image])).trim();
+      if (!/^sha256:[a-f0-9]{64}$/.test(value)) throw new Error("Invalid built image ID");
+      return value;
+    });
+    graphicalImage = await runtime.step("graphical-image-id", async () => {
       const value = (
         await docker(["image", "inspect", "--format", "{{.Id}}", graphicalTag])
       ).trim();
-      if (!/^sha256:[a-f0-9]{64}$/.test(value)) throw new Error("Invalid built image ID");
+      if (!/^sha256:[a-f0-9]{64}$/.test(value)) throw new Error("Invalid graphical image ID");
       return value;
     });
     const port = await runtime.port();
@@ -264,8 +282,11 @@ export async function executeSandbox(
       SANDBOX_ENGINE_SOCKET: plan.socket,
       SANDBOX_STATE_DIRECTORY: directory,
       SANDBOX_COMPUTER_IMAGE: image,
-      SANDBOX_GRAPHICAL: "true",
+      SANDBOX_GRAPHICAL: "false",
       SANDBOX_NAMESPACE: plan.namespace,
+      SANDBOX_RUNTIME: plan.runtime,
+      SANDBOX_HOME_BYTES: "33554432",
+      SANDBOX_REAP_MS: "1000",
       SANDBOX_MEMORY_BYTES: String(plan.memory),
       SANDBOX_NANO_CPUS: "1000000000",
       SANDBOX_PIDS_LIMIT: String(plan.pids),
@@ -273,24 +294,27 @@ export async function executeSandbox(
       SANDBOX_HOST_RULES_APPLIED: "false",
       SANDBOX_DNS_RESOLVER: plan.dnsResolver,
     };
-    await runtime.step("supervisor-ready", async () => {
+    async function ready(settings: NodeJS.ProcessEnv, endpoint = url) {
       supervisor = runtime.start(
         [process.execPath, "--no-env-file", join(root, "infra/sandbox/src/main.ts")],
-        supervisorEnv,
+        settings,
       );
       const deadline = Date.now() + 30_000;
       for (let attempt = 0; attempt < 150 && Date.now() < deadline; attempt++) {
         runtime.check();
         if (!supervisor.alive()) throw new Error("Sandbox supervisor exited before readiness");
         try {
-          await runtime.request(url, token, "description");
-          return;
+          const description = (await runtime.request(endpoint, token, "description")) as {
+            screen?: boolean;
+          };
+          return description;
         } catch {
           await runtime.pause();
         }
       }
       throw new Error("Sandbox supervisor readiness timed out");
-    });
+    }
+    await runtime.step("supervisor-ready", () => ready(supervisorEnv));
     await runtime.command(
       "provider-conformance",
       [
@@ -302,6 +326,8 @@ export async function executeSandbox(
         "test",
         "--",
         "tests/computer/conformance.test.ts",
+        "--testTimeout=30000",
+        "--hookTimeout=30000",
       ],
       {
         ...env,
@@ -313,6 +339,27 @@ export async function executeSandbox(
     const id = crypto.randomUUID();
     const call = (operation: string, generation = 1, body = {}) =>
       runtime.request(url, token, `computers/${id}/${operation}`, { generation, ...body });
+    let probeGeneration = 1;
+    async function probe(
+      script: string,
+      argv: string[] = [],
+      target = id,
+      generation = probeGeneration,
+    ) {
+      const result = (await runtime.request(url, token, `computers/${target}/exec`, {
+        generation,
+        executionId: crypto.randomUUID(),
+        command: {
+          executable: "python3",
+          argv: ["-I", "-c", script, ...argv],
+          cwd: ".",
+          environment: {},
+          outputBudget: 8192,
+        },
+      })) as { status: number; stdout: string };
+      if (result.status !== 0) throw new Error(`Computer probe exited (${result.status})`);
+      return result.stdout;
+    }
     const container = async () => {
       const ids = lines(
         await docker([
@@ -322,6 +369,8 @@ export async function executeSandbox(
           `label=raypx.supervisor=${plan.network}`,
           "--filter",
           `label=raypx.computer=${id}`,
+          "--filter",
+          "label=raypx.role=computer",
         ]),
       );
       if (ids.length !== 1) throw new Error("Expected one owned probe computer");
@@ -349,9 +398,13 @@ export async function executeSandbox(
         network.Labels["raypx.supervisor"] !== plan.network
       )
         throw new Error("Sandbox private bridge assertions failed");
-      const result = JSON.parse(
-        await docker(["exec", value.Id, "python3", "-c", sandboxIsolationProbe]),
-      ) as { memory: number; pids: number; uid: number; capEff: number; noNewPrivileges: boolean };
+      const result = JSON.parse(await probe(sandboxIsolationProbe)) as {
+        memory: number;
+        pids: number;
+        uid: number;
+        capEff: number;
+        noNewPrivileges: boolean;
+      };
       if (
         result.memory !== plan.memory ||
         result.pids !== plan.pids ||
@@ -374,6 +427,56 @@ export async function executeSandbox(
         bytes: string;
       };
       if (result.bytes !== bytes) throw new Error("Home did not persist across replacement");
+    });
+    probeGeneration = 2;
+    await runtime.step("protected-input", async () => {
+      const value = `private-${crypto.randomUUID()}-输入`;
+      const result = (await call("exec", probeGeneration, {
+        executionId: crypto.randomUUID(),
+        command: {
+          executable: "python3",
+          argv: [
+            "-I",
+            "-c",
+            "import hashlib,json,os,sys; print(json.dumps({'stdin':hashlib.sha256(sys.stdin.buffer.read()).hexdigest(),'environment':hashlib.sha256(os.environ['RAYPX_PRIVATE_INPUT'].encode()).hexdigest(),'cleared':not any(n.startswith('rpx-input-') for n in os.listdir('/run/raypx'))}))",
+          ],
+          cwd: ".",
+          environment: { RAYPX_PRIVATE_INPUT: value },
+          stdin: value,
+          outputBudget: 1024,
+        },
+      })) as { status: number; stdout: string };
+      const proof = JSON.parse(result.stdout) as {
+        stdin: string;
+        environment: string;
+        cleared: boolean;
+      };
+      const digest = createHash("sha256").update(value).digest("hex");
+      if (
+        result.status !== 0 ||
+        proof.stdin !== digest ||
+        proof.environment !== digest ||
+        !proof.cleared
+      )
+        throw new Error("Private command input delivery failed");
+      const clean = JSON.parse(
+        await probe(
+          "import json,os,sys; print(json.dumps({'clean':'RAYPX_PRIVATE_INPUT' not in os.environ and sys.stdin.read()==''}))",
+        ),
+      ) as { clean: boolean };
+      if (!clean.clean) throw new Error("Private command input leaked to the next command");
+    });
+    await runtime.step("attachment-inbox", async () => {
+      const path = `inbox/${crypto.randomUUID()}/${crypto.randomUUID()}`;
+      // One maximum-size attachment uses the same bounded Computer write/read port
+      // as fenced backend delivery. Supplied names never become path components.
+      const bytes = Buffer.alloc(1024 * 1024, 97).toString("base64");
+      await call("files/write", probeGeneration, { path, bytes });
+      const delivered = (await call("files/read", probeGeneration, {
+        path,
+        maxBytes: 1024 * 1024,
+      })) as { bytes: string };
+      if (delivered.bytes !== bytes) throw new Error("Computer inbox delivery failed");
     });
     if (plan.withEgress && plan.engineHostCommand) {
       if (
@@ -432,6 +535,14 @@ export async function executeSandbox(
           String(plan.pids),
           "--label",
           `raypx.supervisor=${plan.network}`,
+          "--label",
+          "raypx.role=egress-control",
+          "--log-driver",
+          "json-file",
+          "--log-opt",
+          "max-size=1m",
+          "--log-opt",
+          "max-file=1",
           image,
           "python3",
           "-c",
@@ -475,28 +586,227 @@ export async function executeSandbox(
         };
         const before = await counters();
         const result = JSON.parse(
-          await docker([
-            "exec",
-            value.Id,
-            "python3",
-            "-c",
-            sandboxEgressProbe,
-            gateway,
-            plan.dnsResolver,
-            String(host.port),
-          ]),
+          await probe(sandboxEgressProbe, [gateway, plan.dnsResolver, String(host.port)]),
         ) as SandboxEgressResult;
         const after = await counters();
         runtime.report(`egress-evidence: ${JSON.stringify({ control, result, before, after })}`);
-        return assertSandboxEgress(result, control, before, after);
+        return assertSandboxEgress(
+          result,
+          control,
+          before,
+          after,
+          plan.runtime === "runsc" ? plan.dnsResolver : "127.0.0.11",
+        );
       });
       runtime.report(`egress-probe: ${egress}`);
     } else runtime.report(`egress-probe: ${egress}`);
+    await runtime.step("privilege-and-kernel-escape", async () => {
+      const result = JSON.parse(await probe(sandboxEscapeProbe)) as Record<string, boolean>;
+      if (
+        ["setuid", "mount", "unshare", "proc-sys", "raw-socket"].some((key) => result[key] !== true)
+      )
+        throw new Error("Escape probe incomplete");
+      await probe(`
+import os, site
+path = site.getusersitepackages()
+os.makedirs(path, exist_ok=True)
+open(path + '/usercustomize.py', 'w').write("open('/home/computer/.rpx-startup-hook', 'w').write('loaded')")
+`);
+      await call("files/list", probeGeneration, { path: "", limit: 10 });
+      await probe(`
+import os, site
+assert not os.path.exists('/home/computer/.rpx-startup-hook'), 'tenant startup hook ran in trusted helper'
+os.unlink(site.getusersitepackages() + '/usercustomize.py')
+`);
+    });
+    await runtime.step("fork-exhaustion", async () => {
+      const value = await container();
+      try {
+        const result = JSON.parse(await probe(sandboxForkProbe, [String(plan.pids)])) as {
+          forkLimited: boolean;
+        };
+        if (!result.forkLimited) throw new Error("PID exhaustion probe failed");
+      } catch (error) {
+        if (value) {
+          const state = JSON.parse(
+            await docker(["inspect", "--format", "{{json .State}}", value.Id]),
+          ) as { Running: boolean; OOMKilled: boolean; ExitCode: number };
+          runtime.report(
+            `fork-evidence: ${JSON.stringify({ running: state.Running, oomKilled: state.OOMKilled, exit: state.ExitCode })}`,
+          );
+        }
+        throw error;
+      }
+    });
+    await runtime.step("memory-exhaustion", async () => {
+      const value = await container();
+      try {
+        const result = JSON.parse(await probe(sandboxMemoryProbe, [String(plan.memory)])) as {
+          memoryLimited: boolean;
+        };
+        if (!result.memoryLimited) throw new Error("Memory exhaustion probe failed");
+      } catch {
+        const state = JSON.parse(
+          await docker(["inspect", "--format", "{{json .State}}", value.Id]),
+        ) as { Running: boolean; OOMKilled: boolean };
+        runtime.report(
+          `memory-evidence: ${JSON.stringify({ running: state.Running, oomKilled: state.OOMKilled })}`,
+        );
+        if (!state.OOMKilled) throw new Error("Memory exhaustion was not contained by the cgroup");
+        runtime.report(
+          "memory-evidence: cgroup OOM containment verified; replacing from committed home",
+        );
+        probeGeneration += 1;
+        await call("create", probeGeneration);
+      }
+    });
+    await runtime.step("cross-sandbox-network", async () => {
+      const peerId = crypto.randomUUID();
+      await runtime.request(url, token, `computers/${peerId}/create`, {
+        generation: 1,
+        spaceId: crypto.randomUUID(),
+      });
+      const [peer] = lines(
+        await docker([
+          "ps",
+          "--quiet",
+          "--filter",
+          `label=raypx.supervisor=${plan.network}`,
+          "--filter",
+          `label=raypx.computer=${peerId}`,
+          "--filter",
+          "label=raypx.role=computer",
+        ]),
+      );
+      if (!peer) throw new Error("Owned peer missing");
+      const [inspection] = JSON.parse(
+        await docker(["container", "inspect", peer]),
+      ) as (SandboxContainer & {
+        NetworkSettings: { Networks: Record<string, { IPAddress: string }> };
+      })[];
+      if (inspection?.Config.Labels["raypx.supervisor"] !== plan.network)
+        throw new Error("Unowned peer refused");
+      const address = inspection.NetworkSettings.Networks[plan.network]?.IPAddress;
+      if (!address) throw new Error("Peer address missing");
+      const peerProcess = probe(
+        "import socket,time; s=socket.socket(); s.bind(('0.0.0.0',18080)); s.listen(); time.sleep(30)",
+        [],
+        peerId,
+        1,
+      ).catch(() => {});
+      // Prove the canary is listening inside its own sandbox before testing the boundary.
+      let listening = false;
+      for (let attempt = 0; attempt < 30 && !listening; attempt++) {
+        listening = await probe(
+          "import socket; s=socket.create_connection(('127.0.0.1',18080),1); s.close()",
+          [],
+          peerId,
+          1,
+        ).then(
+          () => true,
+          () => false,
+        );
+        if (!listening) await runtime.pause();
+      }
+      if (!listening) throw new Error("Peer canary unavailable");
+      const result = JSON.parse(await probe(sandboxCrossNetworkProbe, [address, "18080"])) as {
+        crossSandboxBlocked: boolean;
+      };
+      if (!result.crossSandboxBlocked) throw new Error("Cross-sandbox boundary failed");
+      await runtime.request(url, token, `computers/${peerId}/destroy`, { generation: 1 });
+      await peerProcess;
+    });
+    await runtime.step("disk-exhaustion-stop", async () => {
+      const value = await container();
+      await probe(sandboxDiskProbe).catch(() => {});
+      let stopped = false;
+      for (let attempt = 0; attempt < 100 && !stopped; attempt++) {
+        const state = (await call("get", probeGeneration)) as { state: string };
+        stopped = state.state === "stopped";
+        if (!stopped) await runtime.pause();
+      }
+      if (!stopped) throw new Error("Disk overrun did not stop compute");
+      const state = JSON.parse(
+        await docker(["inspect", "--format", "{{json .State}}", value.Id]),
+      ) as { Running: boolean };
+      if (state.Running) throw new Error("Disk overrun left Engine compute running");
+    });
+    await runtime.step("unlinked-disk-exhaustion-stop", async () => {
+      probeGeneration += 1;
+      await call("create", probeGeneration);
+      const value = await container();
+      const writing = probe(sandboxUnlinkedDiskProbe).catch(() => {});
+      let stopped = false;
+      for (let attempt = 0; attempt < 100 && !stopped; attempt++) {
+        const state = (await call("get", probeGeneration)) as { state: string };
+        stopped = state.state === "stopped";
+        if (!stopped) await runtime.pause();
+      }
+      if (!stopped) throw new Error("Open unlinked writes escaped storage containment");
+      const state = JSON.parse(
+        await docker(["inspect", "--format", "{{json .State}}", value.Id]),
+      ) as { Running: boolean };
+      if (state.Running) throw new Error("Open unlinked writes left compute running");
+      await writing;
+    });
+    // Optional Screen acceptance has its own result. Headless safety acceptance
+    // must not claim graphical support or hide its unavailable runtime/image.
+    await supervisor?.stop();
+    const graphicalPort = await runtime.port();
+    const graphicalUrl = `http://127.0.0.1:${graphicalPort}`;
+    try {
+      const description = await runtime.step("graphical-supervisor-ready", () =>
+        ready(
+          {
+            ...supervisorEnv,
+            SANDBOX_PORT: String(graphicalPort),
+            SANDBOX_COMPUTER_IMAGE: graphicalImage,
+            SANDBOX_GRAPHICAL: "true",
+          },
+          graphicalUrl,
+        ),
+      );
+      if (!description.screen)
+        graphical =
+          "unavailable: GRAPHICAL_RUNTIME_UNAVAILABLE (startup image/runtime screen probe failed; capability disabled)";
+      else {
+        await runtime.command(
+          "graphical-conformance",
+          [
+            process.execPath,
+            "--no-env-file",
+            "run",
+            "--cwd",
+            "packages/providers",
+            "test",
+            "--",
+            "tests/computer/conformance.test.ts",
+            "--testNamePattern=gates graphical",
+            "--testTimeout=30000",
+            "--hookTimeout=30000",
+          ],
+          {
+            ...env,
+            RAYPX_TEST_DOCKER: "1",
+            SANDBOX_SUPERVISOR_URL: graphicalUrl,
+            SANDBOX_SUPERVISOR_TOKEN: token,
+          },
+        );
+        graphical =
+          "passed: session start, bounded 1024x768 PNG, input changes pixels, stream closes on stop (graphical conformance)";
+      }
+    } catch {
+      runtime.check();
+      graphical =
+        "unavailable: GRAPHICAL_RUNTIME_UNAVAILABLE (optional graphical conformance failed; see graphical-conformance or supervisor log)";
+    }
+    runtime.report(`graphical: ${graphical}`);
     outcome = {
+      runtime: plan.runtime,
       image,
+      graphicalImage,
       imageBytes,
-      graphical:
-        "passed: session start, bounded 1024x768 PNG, input changes pixels, stream closes on stop (provider conformance)",
+      graphical,
       bases,
       egress,
       engine,
@@ -592,7 +902,7 @@ export async function runSandboxValidation(root: string, args: string[]) {
     crypto.randomUUID().replaceAll("-", ""),
     readBunPin(root),
   );
-  const evidence = new Evidence(root, "sandbox");
+  const evidence = new Evidence(root, `sandbox-hosting/${plan.runtime}`);
   await evidence.run(async () => {
     let result: Awaited<ReturnType<typeof executeSandbox>> | undefined;
     try {
@@ -615,6 +925,32 @@ export async function runSandboxValidation(root: string, args: string[]) {
             throw new Error(
               `Supervisor ${operation.split("/").at(-1)} failed (${response.status})`,
             );
+          if (operation.endsWith("/exec")) {
+            const reader = response.body!.getReader();
+            const chunks: Uint8Array[] = [];
+            let size = 0;
+            try {
+              while (true) {
+                const item = await reader.read();
+                if (item.done) break;
+                size += item.value.byteLength;
+                if (size > 65536) throw new Error("Probe response exceeded its budget");
+                chunks.push(item.value);
+              }
+            } finally {
+              await reader.cancel().catch(() => {});
+            }
+            const stdout: Buffer[] = [];
+            let status: number | undefined;
+            for (const line of Buffer.concat(chunks).toString("utf8").split("\n").filter(Boolean)) {
+              const event = JSON.parse(line) as { kind: string; bytes?: string; status?: number };
+              if (event.kind === "stdout" && event.bytes)
+                stdout.push(Buffer.from(event.bytes, "base64"));
+              if (event.kind === "exit") status = event.status;
+            }
+            if (status === undefined) throw new Error("Computer probe ended without an exit");
+            return { status, stdout: Buffer.concat(stdout).toString("utf8") };
+          }
           return response.json();
         },
         temporary: () => mkdtemp(join(tmpdir(), "raypx-sandbox-")),

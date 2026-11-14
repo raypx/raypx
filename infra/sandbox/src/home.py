@@ -3,6 +3,8 @@ import base64
 import itertools
 import json
 import os
+import resource
+import runpy
 import signal
 import shutil
 import stat
@@ -124,9 +126,12 @@ def export_home():
 
 def run(operation, value):
     if operation.startswith("screen-"):
-        from screen import run as screen_run
+        screen_run = runpy.run_path("/opt/raypx/screen.py")["run"]
         return screen_run(operation[7:], value, Refusal)
     if operation == "exec":
+        # The supervisor holds the computer lock until this trusted ready prefix.
+        # OCI errors before Python starts must never become command output.
+        os.write(1, b"\x1eRAYPX_READY\n")
         execution_id = str(uuid.UUID(value["executionId"]))
         marker = "/tmp/rpx-cancel-" + execution_id
         pidfile = "/tmp/rpx-pid-" + execution_id
@@ -241,6 +246,17 @@ if __name__ == "__main__":
         with open(sys.argv[2]) as stream:
             value = json.load(stream)
         os.unlink(sys.argv[2])
+        # OCI exec may not inherit init-process rlimits under a user-space kernel.
+        # Numeric supervisor arguments stay outside guest-writable input data.
+        files, file_bytes, pids = map(int, sys.argv[3:6])
+        for kind, ceiling in ((resource.RLIMIT_NOFILE, files),
+                              (resource.RLIMIT_FSIZE, file_bytes),
+                              (resource.RLIMIT_NPROC, pids or None)):
+            if ceiling is not None:
+                hard = resource.getrlimit(kind)[1]
+                if hard != resource.RLIM_INFINITY:
+                    ceiling = min(ceiling, hard)
+                resource.setrlimit(kind, (ceiling, ceiling))
         result = run(sys.argv[1], value)
         if sys.argv[1] == "exec":
             sys.exit(result)

@@ -8,6 +8,7 @@ export function sandboxPlan(args: string[], env: NodeJS.ProcessEnv, id: string, 
     args,
     strict: true,
     options: {
+      runtime: { type: "string", default: "runc" },
       "engine-socket": { type: "string" },
       "with-egress": { type: "boolean", default: false },
       "dns-resolver": { type: "string", default: "1.1.1.1" },
@@ -37,6 +38,8 @@ export function sandboxPlan(args: string[], env: NodeJS.ProcessEnv, id: string, 
     (a === 203 && b === 0 && c === 113)
   )
     throw new Error("--dns-resolver must be a public IPv4 address");
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(values.runtime))
+    throw new Error("Invalid --runtime");
   const namespace = `raypx-sandbox-${id}`;
   let engineHostCommand: string[] | undefined;
   if (values["engine-host-command"] !== undefined) {
@@ -58,13 +61,15 @@ export function sandboxPlan(args: string[], env: NodeJS.ProcessEnv, id: string, 
   }
   return {
     id,
+    runtime: values.runtime,
     socket,
     namespace,
     network: `${namespace}-computers`,
     bridge: `rpx${createHash("sha256").update(namespace).digest("hex").slice(0, 10)}`,
     image: `raypx/sandbox-validation:${id}`,
-    memory: 268_435_456,
-    pids: 64,
+    memory: 536_870_912,
+    pids: 128,
+    hostPids: values.runtime === "runsc" ? 384 : 128,
     withEgress: values["with-egress"],
     dnsResolver,
     engineHostCommand,

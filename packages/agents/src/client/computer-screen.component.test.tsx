@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { ComputerScreen, computerScreenPoint } from "./computer-screen.js";
 import { screenFixture } from "../../tests/support/screen-fixture.js";
@@ -21,6 +21,23 @@ function mount(language: "en" | "zh" = "en") {
 afterEach(() => {
   for (const f of fixtures) f.controller.dispose();
   fixtures.length = 0;
+});
+it.each(["en", "zh"] as const)("renders graphical availability reasons in %s", async (language) => {
+  const f = mount(language);
+  await waitFor(() => expect(f.sockets.connect).toHaveBeenCalled());
+  for (const reason of [
+    "GRAPHICAL_IMAGE_NOT_CONFIGURED",
+    "GRAPHICAL_RUNTIME_UNAVAILABLE",
+  ] as const) {
+    vi.mocked(f.port.screenAvailability).mockResolvedValueOnce({
+      status: "unavailable",
+      code: "SCREEN_UNAVAILABLE",
+      reason,
+    });
+    await act(() => f.controller.refresh());
+    expect(await screen.findByText({ en, zh }[language].agents.screen[reason])).toBeVisible();
+    expect(f.container).not.toHaveTextContent(reason);
+  }
 });
 it("maps pointer coordinates to contained pixels rather than letterboxing", () => {
   expect(

@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ConversationClientFrame } from "@raypx/contracts/api";
 import { agentIdSchema, type Conversation } from "@raypx/core/agents";
-import type { Computer, SpaceComputer } from "@raypx/core/computers";
+import {
+  computerAvailabilityReasonSchema,
+  type Computer,
+  type SpaceComputer,
+} from "@raypx/core/computers";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { ComputerController } from "./computer.js";
 import { ConversationController } from "./controller.js";
@@ -35,6 +39,42 @@ afterEach(() => {
 });
 
 describe("ComputerController", () => {
+  it("keeps an admission reason when its state event races the response, then clears it on recovery", async () => {
+    const { controller, port } = fixture();
+    await controller.refresh();
+    const response = deferred<SpaceComputer>();
+    vi.mocked(port.start).mockReturnValueOnce(response.promise);
+    const starting = controller.start();
+    vi.mocked(port.get).mockResolvedValue(computerResult("failed"));
+    controller.applyEvent(computerEvent("failed"));
+    response.resolve({
+      status: "available",
+      computer: computerRecord("failed"),
+      unavailableReason: "SPACE_RUNNING_LIMIT",
+    });
+    expect(await starting).toBe(false);
+    await controller.refresh();
+    expect(controller.getSnapshot().unavailableReason).toBe("SPACE_RUNNING_LIMIT");
+    vi.mocked(port.get).mockResolvedValue(computerResult("running"));
+    await controller.refresh();
+    expect(controller.getSnapshot().unavailableReason).toBeNull();
+  });
+  it.each(computerAvailabilityReasonSchema.options)(
+    "retains %s after refused start and clears it on success",
+    async (unavailableReason) => {
+      const { controller, port } = fixture();
+      await controller.refresh();
+      vi.mocked(port.start).mockResolvedValueOnce({
+        status: "available",
+        computer: computerRecord("failed"),
+        unavailableReason,
+      });
+      expect(await controller.start()).toBe(false);
+      expect(controller.getSnapshot().unavailableReason).toBe(unavailableReason);
+      expect(await controller.start()).toBe(true);
+      expect(controller.getSnapshot().unavailableReason).toBeNull();
+    },
+  );
   it.each(["stopped", "starting", "running", "stopping", "failed"] as const)(
     "reads the Space's authoritative %s state without starting a computer",
     async (status) => {

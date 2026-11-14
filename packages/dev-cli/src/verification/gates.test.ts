@@ -332,7 +332,7 @@ it("registers every CI dependency and passes the authoritative plan to each sour
   ).toBe(true);
   expect(
     sandboxChecks.steps?.find((step) => step.uses === "actions/upload-artifact@v7")?.with?.path,
-  ).toBe(".artifacts/sandbox/**");
+  ).toBe(".artifacts/sandbox-hosting/**");
   expect(workflow.jobs.changes!.outputs?.sandbox).toBe("${{ steps.plan.outputs.sandbox }}");
   expect(workflow.jobs.changes!.outputs?.source_phases).toBe(
     "${{ steps.plan.outputs.source_phases }}",

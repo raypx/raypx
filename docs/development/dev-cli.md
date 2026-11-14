@@ -78,7 +78,7 @@ bun run test sandbox --engine-socket "$HOME/.colima/default/docker.sock"
   `*_test_<lane>` databases without query options; inherited URLs never select a
   target. Explicit PostgreSQL is not created, stopped or dropped. Redis remains
   owned. `--with-e2e` starts the deterministic control API for browser journeys.
-- `test sandbox [--engine-socket /absolute/socket] [--with-egress]
+- `test sandbox [--engine-socket /absolute/socket] [--runtime runc|runsc] [--with-egress]
   [--dns-resolver IPv4] [--engine-host-command JSON]` owns a temporary supervisor,
   immutable computer image, real-Engine conformance, isolation and home replacement.
   Egress needs explicit opt-in and Linux Engine-host root/passwordless sudo. The

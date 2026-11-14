@@ -650,7 +650,9 @@
     "idleTimeout": "屏幕停止发送画面，请重试。",
     "reconnecting": "正在重新连接屏幕…",
     "expand": "放大屏幕",
-    "expandedTitle": "电脑屏幕"
+    "expandedTitle": "电脑屏幕",
+    "GRAPHICAL_IMAGE_NOT_CONFIGURED": "此电脑服务未启用屏幕功能。",
+    "GRAPHICAL_RUNTIME_UNAVAILABLE": "此电脑环境暂不支持屏幕功能。"
   },
   "devices": {
     "title": "设备",
@@ -774,5 +776,13 @@
   },
   "ATTACHMENT_EXPIRED": "附件已过期，请重新添加。",
   "ATTACHMENT_INVALID": "不支持此文件类型",
-  "ATTACHMENT_LIMIT": "最多 4 个文件，每个 1 MiB"
+  "ATTACHMENT_LIMIT": "最多 4 个文件，每个 1 MiB",
+  "computerAvailability": {
+    "SPACE_RUNNING_LIMIT": "此空间已达到运行中电脑数量上限。",
+    "DEPLOYMENT_RUNNING_LIMIT": "电脑服务已达到运行数量上限，请稍后重试。",
+    "SPACE_STORAGE_LIMIT": "此空间已达到电脑存储上限。",
+    "DEPLOYMENT_STORAGE_LIMIT": "电脑服务已达到存储上限。",
+    "HOME_STORAGE_LIMIT": "此电脑已达到文件存储上限。",
+    "CAPACITY_UNAVAILABLE": "电脑资源暂不可用，请稍后重试。"
+  }
 }

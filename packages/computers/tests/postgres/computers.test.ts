@@ -216,3 +216,39 @@ it("keeps a completed lifecycle generation when another service proceeds from a 
   });
   expect(stops).toBe(1);
 });
+
+it("reconciles supervisor stops under the Space/generation/fence and emits normal lifecycle state", async () => {
+  const scope = await fixture();
+  const provider = createMemoryComputerProvider();
+  const repository = createComputersRepository(connection.db);
+  const service = createComputersService(repository, provider);
+  const started = await service.start(scope);
+  if (started.status !== "available" || !started.computer)
+    throw new Error("Missing fixture computer");
+  const original = started.computer;
+  await provider.stop({ id: original.id, generation: original.generation });
+  expect(await service.get(scope)).toMatchObject({
+    status: "available",
+    computer: { state: "stopped" },
+  });
+  const next = await service.start(scope);
+  expect(next).toMatchObject({
+    status: "available",
+    computer: { state: "running", generation: original.generation + 1 },
+  });
+  await expect(
+    repository.observe!(scope, original, {
+      state: "stopped",
+      homeRevision: null,
+      failureCode: null,
+    }),
+  ).rejects.toMatchObject({ code: "COMPUTER_BUSY" });
+  const elsewhere = await fixture();
+  await expect(
+    repository.observe!(elsewhere, original, {
+      state: "stopped",
+      homeRevision: null,
+      failureCode: null,
+    }),
+  ).rejects.toMatchObject({ code: "COMPUTER_BUSY" });
+});
