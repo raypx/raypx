@@ -327,7 +327,7 @@ export async function executeSandbox(
         "test",
         "--",
         "tests/computer/conformance.test.ts",
-        "--testTimeout=30000",
+        "--testTimeout=120000",
         "--hookTimeout=30000",
       ],
       {
@@ -791,6 +791,24 @@ os.unlink(site.getusersitepackages() + '/usercustomize.py')
       if (state.Running) throw new Error("Open unlinked writes left compute running");
       await writing;
     });
+    await supervisor?.stop();
+    await runtime.command(
+      "lifecycle-acceptance",
+      [
+        process.execPath,
+        "--no-env-file",
+        join(root, "packages/dev-cli/src/validation/sandbox-lifecycle.ts"),
+      ],
+      { ...supervisorEnv, SANDBOX_VALIDATION_ROOT: root },
+    );
+    // Lifecycle recovery deliberately reaps the earlier phase's owned resources.
+    // Never reuse that phase's stale volume references: Engine mounts can otherwise
+    // auto-create unlabeled empty volumes while metering a stopped record.
+    await runtime.step("graphical-state-reset", async () => {
+      await runtime.removeTemporary(directory!);
+      directory = await runtime.temporary();
+      supervisorEnv.SANDBOX_STATE_DIRECTORY = directory;
+    });
     // Optional Screen acceptance has its own result. Headless safety acceptance
     // must not claim graphical support or hide its unavailable runtime/image.
     await supervisor?.stop();
@@ -824,7 +842,7 @@ os.unlink(site.getusersitepackages() + '/usercustomize.py')
             "--",
             "tests/computer/conformance.test.ts",
             "--testNamePattern=gates graphical",
-            "--testTimeout=30000",
+            "--testTimeout=120000",
             "--hookTimeout=30000",
           ],
           {

@@ -125,7 +125,7 @@ restrict direct UDP/TCP DNS to it. The real-Engine gate now checks public HTTPS,
 configured/alternate DNS, host-service/gateway isolation, metadata and private
 ranges with network controls and DROP-counter evidence. Offline public reachability
 is explicitly unavailable. On 2026-11-14, the real-Engine gate passed provider
-conformance (10/10), isolation, home replacement and IPv4 egress enforcement on
+conformance (12/12), isolation, home replacement and IPv4 egress enforcement on
 a Linux arm64 Engine VM. IPv6 enforcement was unavailable because the host
 disables IPv6; other platform acceptance remains separate. This adds no Agent browser tool or hosted
 computer capability.
@@ -136,6 +136,14 @@ Space/deployment admission quotas, idle/lifetime stops and orphan recovery.
 A dedicated-host WireGuard/systemd deployment keeps Docker and backend credentials
 apart. Source tests and each runtime's real-Engine acceptance remain separate;
 see [sandbox hosting](development/sandbox-hosting.md).
+On 2026-11-14 a dedicated Ubuntu 26.04.1 amd64 KVM guest with Engine 29.9.3/API 1.56
+passed runc 1.5.3 and runsc release-20261109.0/systrap: 12/12 provider cases,
+24 safety/input/network/lifecycle groups and separate graphical conformance 2/2
+per runtime. Six headless computers and a three-desktop/three-headless mix both
+refused a seventh start under the untrusted systemd profile; crash-hook and
+firewall-loss containment passed. IPv6 was unavailable. The host-side WireGuard
+interface has no backend peer; encrypted-channel/API integration and saturated
+workload acceptance remain unrun.
 
 Acceptance:
 

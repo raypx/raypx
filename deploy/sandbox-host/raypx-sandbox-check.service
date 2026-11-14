@@ -1,0 +1,12 @@
+[Unit]
+Description=Raypx independent host containment check
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/raypx-sandbox/supervisor.env
+ExecStart=/opt/raypx-sandbox/current/check-host.sh
+TimeoutStartSec=60
+UMask=0077
+StandardOutput=journal
+StandardError=journal

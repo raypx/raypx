@@ -402,10 +402,13 @@ try:
             break
         if pid == 0:
             # Keep each retained child small so this proves the PID budget,
-            # independently of the separate memory-exhaustion probe.
-            os.execl('/bin/sleep', 'sleep', '15')
+            # independently of the separate memory-exhaustion probe. Retain children
+            # until cleanup: slower runtimes may need more than 15s to fill the budget.
+            os.execl('/bin/sleep', 'sleep', 'infinity')
         children.append(pid)
-        deadline = time.monotonic() + 2
+        # Trusted metering pauses the whole computer; allow its bounded sweep
+        # before declaring child exec unavailable. The outer probe remains bounded.
+        deadline = time.monotonic() + 10
         while open('/proc/' + str(pid) + '/comm').read().strip() != 'sleep':
             assert time.monotonic() < deadline, 'child exec did not become ready'
             time.sleep(0.005)

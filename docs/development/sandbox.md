@@ -117,14 +117,21 @@ bun run test sandbox \
 ```
 
 Native Linux can omit the VM prefix and use `--with-egress` with root or
-passwordless sudo. The gate builds its own image, owns a temporary supervisor,
+passwordless sudo. For a synced source checkout, run the normal root
+`VP_GIT_HOOKS=0 bun install --frozen-lockfile` first. A workspace-filtered install
+can omit the root test configuration's Vitest/TypeScript dependencies and CLI
+shim; it is insufficient for this gate. The gate builds its own image, owns a temporary supervisor,
 runs provider conformance, isolation and home-replacement probes, and cleans only
 its labeled resources. No operator supervisor or database is needed. The egress
 variant checks public controls, configured/alternate DNS, a host-service canary,
 private ranges and metadata with owned DROP-counter evidence. It also checks the
 host policy socket's peer-UID boundary, transfer rate, per-start and Space/day
 budgets, connection limits, abuse-port denial and pre-conntrack datagram policing.
-Public connectivity
+Five additional lifecycle probes verify startup-policy refusal, all four
+Space/deployment running/storage admission reasons, idle stop despite reads,
+lifetime stop during an active command, and SIGKILL recovery with owned orphan
+container/volume reaping. Their disposable state and resources use the gate's
+exact namespace and cleanup boundary. Public connectivity
 failure in both probe and control is unavailable; IPv6 needs a reachable control.
 
 The gate builds both default and graphical targets and records each image's byte
@@ -156,6 +163,22 @@ and a faster independent Engine-host control; see [production defaults](sandbox-
 IPv6 enforcement was unavailable because both host and computer lacked IPv6
 reachability. These measurements establish this Engine VM only; other platforms
 and packaged client behavior remain separate gates.
+
+On the same date, a dedicated Ubuntu 26.04.1 x86_64 KVM guest (kernel
+7.0.0-43, Docker 29.9.3/API 1.56, Bun 1.4.4) passed the native Linux amd64 gate
+under runc 1.5.3 and runsc release-20261109.0/systrap. Each runtime passed 12/12
+provider cases (six live, six reference), all 24 safety/input/network/lifecycle
+groups, and separate graphical conformance 2/2 (one live, one reference; ten
+filtered). IPv4 HTTPS/DNS and owned DROP-counter enforcement passed; IPv6 was
+unavailable without a host route. On the untrusted runsc systemd profile, six
+headless computers and a mix of three desktops plus three headless sessions both
+refused the seventh start. Idle available memory was 6.67/6.50 GiB and host CPU
+idle was 86.7%/86.2%, respectively. Headless create latency was 2.49–2.70 seconds;
+mixed create latency was 2.45–7.59 seconds, plus 6.64–6.99 seconds for desktop
+startup. These are idle-capacity observations, not saturated-load throughput.
+The real service crash hook and missing-firewall-hook containment also passed.
+The WireGuard host interface has no backend peer; API connection/handshake and
+backend integration remain separate, unrun acceptance.
 
 Add `--runtime runsc` to run the same gate with the registered gVisor runtime.
 The default is explicit `runc`; runtime fallback is never automatic. The gate also

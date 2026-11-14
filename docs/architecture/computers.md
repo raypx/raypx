@@ -273,8 +273,16 @@ conformance passed under both runtimes: one live case and one reference case eac
 covering capture, input-driven pixel changes and stream closure. Waiting for EWMH
 readiness before launching the browser fixed the runsc startup race under the same
 container limits. IPv6 enforcement was unavailable because
-the VM has no usable IPv6 route. Native Linux distributions, amd64,
-other macOS Engine configurations, Windows and rootless engines remain unverified.
+the VM has no usable IPv6 route. A dedicated Ubuntu 26.04.1 amd64 KVM guest also passed on 2026-11-14
+(kernel 7.0.0-43, Engine 29.9.3/API 1.56): runc 1.5.3 and runsc
+release-20261109.0/systrap each passed 12/12 provider cases, 24 safety/input/network/
+lifecycle groups and separate graphical conformance 2/2. IPv6 remained unavailable
+without a route. Its untrusted systemd profile admitted six headless computers and
+three desktops plus three headless sessions, refusing the seventh start; crash-hook
+and firewall-loss containment passed. The host stays disconnected, with no backend
+WireGuard peer. See the hosting guide for the six-headless/three-graphical sizing
+profile and limits of the idle-capacity observations. Other distributions/Engine
+configurations, packaged clients, Windows and rootless engines remain unverified.
 CI wiring is not a passing run.
 
 The `--with-egress` case now probes a started computer and compares its public

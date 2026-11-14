@@ -182,7 +182,13 @@ threading.Thread(target=smtp,daemon=True).start();server.serve_forever()
     await runtime.step("network-public-control", async () => {
       const script = `import socket,sys,time,json
 for port in (25,80):
- s=socket.create_connection((sys.argv[1],port),2);s.close()
+ deadline=time.monotonic()+5
+ while True:
+  try:
+   s=socket.create_connection((sys.argv[1],port),2);s.close();break
+  except ConnectionRefusedError:
+   if time.monotonic()>=deadline:raise
+   time.sleep(.1)
 s=socket.create_connection((sys.argv[1],80),2);t=time.monotonic();s.sendall(b'GET /262144 HTTP/1.0\\r\\nHost: fixture\\r\\n\\r\\n');n=0
 while True:
  d=s.recv(65536)

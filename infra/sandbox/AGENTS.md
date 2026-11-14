@@ -62,3 +62,7 @@ enabling traffic; unknown reservations remain charged. UTC rules fence daily rol
 Read admitted byte counters rather than nft static quota options. Stop on exhaustion
 or unavailable accounting, preserving public reasons. Host-command control is an
 explicit validation adapter. Never log packets, commands or content.
+
+The host check timer independently contains exact-owned tenants and closes the
+supervisor on missing privacy hooks or low disk/inode headroom. It never repairs
+rules during admission; operator review/restart follows a refusal.

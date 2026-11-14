@@ -39,7 +39,12 @@ isolation, private UTF-8 stdin/environment scope, and bounded inbox writes with
 post-write accounting; evidence is under `.artifacts/sandbox-hosting/<runtime>/`.
 Its `--with-egress` case uses Engine-host controls and owned DROP counters, and
 checks network-policy peer credentials, rate/start/Space-day budgets, abuse ports,
-connection limits and pre-conntrack datagram policing;
+connection limits and pre-conntrack datagram policing. Its disposable lifecycle
+child checks unsafe startup refusal, four admission reasons, idle/lifetime stops
+and SIGKILL/orphan recovery. `validation/sandbox-capacity.ts` is an explicit
+standalone-host operator probe: it requires private/local URL, limit, environment
+and output path, reports idle host headroom/start latency and destroys its own
+computers; retained test metadata requires drained operator cleanup afterwards;
 offline public HTTPS is explicitly unavailable. `--dns-resolver` selects the
 public IPv4 DNS upstream shared by the supervisor and firewall probe.
 `--engine-host-command` explicitly selects an argv prefix for root commands on a

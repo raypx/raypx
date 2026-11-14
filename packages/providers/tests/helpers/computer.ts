@@ -98,7 +98,7 @@ export function computerConformance(
       expect((await frames.next()).done).toBe(true);
       expect(await provider.screen!(ref)).toMatchObject({ running: false });
       await expect(provider.screenshot!(ref)).rejects.toMatchObject({ code: "NOT_RUNNING" });
-    }, 20_000);
+    });
     it("streams bytes, status, cwd and command-only environment with a combined output bound", async () => {
       const { provider, ref } = await setup();
       async function execute(

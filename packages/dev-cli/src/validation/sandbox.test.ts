@@ -286,7 +286,7 @@ function fakeRuntime(failure?: string) {
     start(argv, env) {
       calls.push(["start", ...argv]);
       screen = env.SANDBOX_GRAPHICAL === "true";
-      expect(env.SANDBOX_STATE_DIRECTORY).toBe("/tmp/owned-state");
+      expect(env.SANDBOX_STATE_DIRECTORY).toMatch(/^\/tmp\/owned-state(?:-fresh)?$/);
       expect(env.SANDBOX_NAMESPACE).toBe(plan.namespace);
       expect(env.SANDBOX_SUPERVISOR_TOKEN?.length).toBeGreaterThanOrEqual(32);
       return {
@@ -429,12 +429,31 @@ describe("owned sandbox execution", () => {
     expect(calls.some((call) => call.includes("--apply"))).toBe(false);
     expect(JSON.stringify(result)).not.toContain("TOKEN");
   });
+  it("discards stale headless volume references before graphical recovery can mount them", async () => {
+    const { runtime, calls } = fakeRuntime();
+    let allocation = 0;
+    runtime.temporary = async () => (allocation++ ? "/tmp/owned-state-fresh" : "/tmp/owned-state");
+    const start = runtime.start.bind(runtime);
+    const directories: string[] = [];
+    runtime.start = (argv, env) => {
+      directories.push(env.SANDBOX_STATE_DIRECTORY!);
+      return start(argv, env);
+    };
+    await executeSandbox("/repo", plan, runtime);
+    expect(directories.at(-1)).toBe("/tmp/owned-state-fresh");
+    const lifecycle = calls.findIndex((call) => call[0] === "lifecycle-acceptance");
+    const discarded = calls.findIndex((call) => call[0] === "remove-state");
+    expect(discarded).toBeGreaterThan(lifecycle);
+    expect(calls.at(-1)).toEqual(["remove-state", "/tmp/owned-state-fresh"]);
+  });
   it.each([
     "computer-build",
     "graphical-build",
     "provider-conformance",
     "isolation",
     "home-replacement",
+    "lifecycle-acceptance",
+    "fork-exhaustion",
   ])("tears down after %s failure", async (failure) => {
     const { runtime, calls, steps } = fakeRuntime(failure);
     await expect(executeSandbox("/repo", plan, runtime)).rejects.toThrow(`injected ${failure}`);

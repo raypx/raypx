@@ -79,10 +79,17 @@ is recorded explicitly and never counted as a passed Screen test.
 The gate starts the supervisor from source on a free loopback port with a random
 dedicated token and temporary private state. It runs
 `packages/providers/tests/computer/conformance.test.ts` with `RAYPX_TEST_DOCKER=1`,
-then provisions its own probe computer through the supervisor. Engine inspection
+then provisions its own probe computer through the supervisor. The runner allows
+120 seconds per multi-operation conformance case (including the graphical case); individual provider requests,
+helper deadlines and container resource limits retain their existing bounds. Engine inspection
 and in-container probes check UID 1000, absent Docker sockets, read-only root,
 configured memory/PID ceilings, zero effective capabilities, no-new-privileges,
-the owned bridge network rather than host networking, and no bind mounts. A
+the owned bridge network rather than host networking, and no bind mounts.
+Five additional live lifecycle groups verify unsafe startup refusal, the four
+Space/deployment running/storage admission errors, idle stops despite reads,
+lifetime stops during active work, and SIGKILL recovery with orphan container and
+volume cleanup. These child probes use disposable state within the gate's exact
+namespace; their failures remain gate failures. A
 snapshot followed by a greater generation must create a different container and
 preserve a written home file.
 
@@ -136,5 +143,25 @@ datagram policing before conntrack allocation.
 Public HTTPS and configured direct/file-resolver UDP/TCP DNS
 succeeded; private, metadata, gateway, host-service and alternate-DNS probes
 timed out with increasing owned DROP counters. IPv6 enforcement was unavailable
-because the VM has no usable IPv6 route. Native Linux distributions, amd64, Windows, other
-Engine configurations and rootless acceptance remain unverified.
+because the VM has no usable IPv6 route. Other Engine configurations, Windows and rootless acceptance remain unverified.
+
+A dedicated Ubuntu 26.04.1 x86_64 KVM guest passed on 2026-11-14 with kernel
+7.0.0-43, Docker 29.9.3/API 1.56 and Bun 1.4.4. Both runc 1.5.3 and runsc
+release-20261109.0/systrap passed 12/12 provider cases, all 24 safety/input/network/
+lifecycle groups, and separate graphical conformance 2/2 (one live, one reference;
+ten filtered). IPv4 controls passed; IPv6 enforcement was unavailable without a
+route. The untrusted systemd deployment passed six-headless and three-desktop/
+three-headless capacity admission, its crash stop hook and firewall-loss containment.
+The source gate ran directly on that host against `/var/run/docker.sock` after a
+normal frozen dependency install. Encrypted backend transport, API integration,
+saturated load, six active desktops and off-host restores were not run.
+
+The host exposed fixture-listener readiness, pause-sensitive fork readiness and
+conformance runner-budget assumptions. Lifecycle recovery and graphical phases
+now use fresh state at their boundary so reaped volume references cannot cause
+Docker to recreate unlabeled test homes. Final inventory checks require no test
+containers or volumes. Fixes retain individual operation deadlines,
+resource ceilings and positive refusal assertions. Production preparation now
+preserves tenant-hook priority across restarts; installation documents executable
+parent permissions and systrap's `ptrace_scope=1` requirement. Capacity evidence
+and a credential-free operator runbook are generated under `.artifacts/host/`.
