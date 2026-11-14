@@ -8,8 +8,9 @@ explicit unavailable states. Previews cap at 200 entries or 64 KiB of file bytes
 
 Read never provisions. Start lazily claims the unique team row under the Space lock.
 Lifecycle leases serialize backend callers; a start increments the provider generation.
-Completion compares generation and lease fence. These leases do not implement future
-per-Agent Run execution leases. Private scope is constrained but has no writer yet.
+Completion compares generation and lease fence. Computer lifecycle leases are
+independent of Run execution leases and the per-Agent Computer-use gate owned
+by Agents. Private scope is constrained but has no writer yet.
 No configured provider is an explicit state; it does not allocate rows or host processes.
 Never persist vendor names or credentials. Failed operations keep the home revision.
 

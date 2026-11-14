@@ -15,7 +15,7 @@ Waiting and Automations have been removed from this renderer. Do not restore the
   drafts or uncertain-send receipts never sends a message automatically.
   The shared workspace places its Space menu and New Agent action in sidebar slots;
   Space selection has no second page control. Its conversation-header computer
-  indicator opens the shared lifecycle panel through the existing API client.
+  indicator opens the shared lifecycle/files panel through the existing API client.
 - The conversation header opens Space-scoped routines and memory. The earlier
   standalone account Memory route and its navigation have been removed.
 - The `(app)` loader resolves account context through a router-owned QueryClient.
@@ -62,7 +62,7 @@ Hero trails/frame light pause offscreen/in hidden tabs; reduced motion is static
 The public logo palette stays decorative. The workbench remains neutral.
 
 Auth uses one bordered 16px panel, a single column on narrow screens and numbered
-phase-1 product facts alongside it above 1024px. Shared Auth owns fields, errors,
+implemented product facts alongside it above 1024px. Shared Auth owns fields, errors,
 submission state and completion/recovery states. App layouts own gutters. Language
 switching preserves credentials and return destinations. A Space's team computer
 can be started and stopped. Conversation activity and addressed approvals render backend state.

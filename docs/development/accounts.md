@@ -9,17 +9,17 @@ The Web account page supports editing the display name, changing the password an
 reviewing active sign-in sessions. These use the existing Better Auth endpoints; no schema change
 or additional service is required.
 
-Web's shell, guest task editor and device preferences are public. Private account,
-task, computer and approval components mount only after session resolution;
-administrator pages send guests to login. API authentication and authorization remain
-authoritative for every private request. Session/network failures show retry feedback.
+Web's public landing/legal/authentication pages and device preferences remain
+available to guests. Agents, Pages, Space controls and private account settings
+mount only after session resolution; administrator pages send guests to login.
+A failed session check shows retry feedback rather than treating the user as a
+guest. API authentication and fresh Space membership remain authoritative.
 
-Login accepts only allowlisted relative application destinations. Auth links and
-verification/reset callbacks preserve that destination. A guest task's text, provider
-and mode stay in bounded, expiring sessionStorage for that API origin and tab; the URL
-contains only a random handoff ID. Successful login binds the handoff to the account.
-Restoration never executes a task or repeats an approval action, and failed login
-retains the draft. Explicitly saved drafts retain their existing local storage behavior.
+Login accepts allowlisted relative destinations and defaults to `/agents`.
+Verification/reset and supported sign-in callbacks preserve those destinations.
+The former guest task editor and handoff are removed. Agent drafts and uncertain
+send receipts stay scoped to origin, account, Space and conversation; restoration
+never sends or repeats an approval. Mobile restores only validated protected routes.
 
 - Name saves trim whitespace, retain drafts on failure and refresh the cached
   account projection after success.
@@ -62,36 +62,32 @@ memory-adapter integration tests exercise real registration, verification, sign-
 profile updates, ownership checks and revocation through the auth HTTP handler.
 PostgreSQL and mail-provider checks remain separate deployment gates.
 
-Task history also supports search and status, agent and computer filters. Filters
-apply to the current cursor page. The UI states that scope and preserves pagination
-when no tasks match. It does not download the entire history or change task data.
-
 Name creation and updates trim whitespace and enforce 1–80 UTF-16 characters on
 the server. Shared policy also fixes password limits at 8–128 characters. Profile,
 password-change and session-revocation mutations require an exact trusted
 Origin, including the native `views://main` origin; missing/external origins fail.
 
-Desktop local tools require first-time instance enrollment, then remain available
-offline after online logout. Remote pages request contextual login
-and preserve an allowlisted return path. New local tasks use the device-profile owner;
-remote drafts retain server/account ownership. Logout revokes remote authorization
-while device-owned tasks continue. Old account-local workspaces are unsupported.
-Local drafts are not uploaded or reassigned when signing in or changing accounts.
+Desktop uses system-browser sign-in and a private daemon-owned cookie transport;
+Mobile uses the Expo session adapter and origin-scoped SecureStore. Sessions do
+not transfer between origins. New Agent execution stays in the backend. Retained
+CLI local tools still require their own enrolled profile and remain independent
+of online logout; that identity grants no Space permission.
 
 ## Roles and permissions
 
 Raypx extends the Better Auth 1.7 Admin plugin and its access controller. Roles are
 persisted in the foundation user table; no email allowlist overrides authorization.
 
-| Role     | Assignment                                                  | Web navigation                                               |
-| -------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
-| `guest`  | No valid verified account session                           | Projects home and device settings                            |
-| `member` | Default persisted Better Auth role                          | Projects, waiting approvals, automations, memory and account |
-| `admin`  | Assigned through Better Auth or explicit operator bootstrap | Member navigation plus site settings                         |
+| Role     | Assignment                                                  | Web navigation                                        |
+| -------- | ----------------------------------------------------------- | ----------------------------------------------------- |
+| `guest`  | No valid verified account session                           | Public pages and device preferences                   |
+| `member` | Default persisted Better Auth role                          | Agents, Pages, Space controls and account settings    |
+| `admin`  | Assigned through Better Auth or explicit operator bootstrap | Member navigation plus the Web administration console |
 
-Apply the generated foundation migration before deploying this version. It adds
-Admin's role/ban fields and session attribution; existing foundation users become
-members. It never reads or imports the retired product database.
+Apply the current PostgreSQL migrations to the isolated platform database before
+deploying. Admin role/ban fields and session attribution live there; they never
+read or import the retired product database. A deployment role grants no Space
+access without membership.
 
 Register and verify the intended administrators, set explicit `DATABASE_URL` and
 `ADMIN_EMAILS`, then run `bun run --cwd apps/api auth:bootstrap-admins`. This operator
@@ -139,8 +135,9 @@ Configuration reads and writes require separate `configuration.read` and
 never grants access or replaces server checks. Account-scoped reads do not let
 administrators access another person's devices or content.
 
-Desktop local projects, approvals, schedules and memory remain available offline
-after first-time instance enrollment; device preferences need no login. This role policy governs account-owned remote work
+Retained CLI projects, approvals, schedules and memory remain local after
+first-time instance enrollment; current Desktop does not expose their old pages.
+Device preferences need no login. This role policy governs account-owned remote work
 and Web administration, not device ownership or OS command permissions.
 
 When adding a role or permission, update Core's vocabulary and Auth's ACL, the API handler
@@ -174,7 +171,7 @@ reads forward only Better Auth cookies through a per-request client. Live bounda
 continue to refresh grants on focus and every 30 seconds; API checks remain immediate.
 
 Login and signup redirect confirmed accounts to the allowed destination, defaulting
-to `/projects`. Verification, recovery and OAuth callbacks keep their own flows.
+to `/agents`. Verification, recovery and OAuth callbacks keep their own flows.
 A pending guest draft handoff finishes in the browser, never during SSR or preloading.
 The homepage resolves its compact account button after hydration without blocking
 public content. Its menu and the sidebar share Account, Settings, permission-filtered
@@ -286,7 +283,7 @@ linked. Provider names alone never bypass email verification.
 
 Web returns through `/login?oauth=success` to refresh the account, recover any
 visitor draft and resume the validated application destination. It opens
-`/projects` by default. Cancelling authorization returns to login with a translated
+`/agents` by default. Cancelling authorization returns to login with a translated
 error and preserves that destination. Completion failures can retry the session
 refresh without repeating provider authorization. No task or approval executes
 as a result of login.

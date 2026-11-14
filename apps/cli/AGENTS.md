@@ -2,7 +2,11 @@
 
 ## Purpose
 
-The standalone Raypx local execution host. It embeds Bun and requires no global runtime. Execution requires first-time instance enrollment; its signed identity permits offline work after online logout.
+The retained local execution host and Desktop session/transport runtime, pending
+the device connector replacement phase. New Spaces, conversations, durable Runs
+and Agent tools belong to the PostgreSQL backend. Never extend this profile as a
+second authority or import its history. The executable embeds Bun; enrolled local
+work remains independent of online logout.
 
 ## Interface
 

@@ -6,149 +6,126 @@
 
 web
 
-Web and the Desktop renderer share the Agents workspace. Web serves desktop and
-phone browsers. Desktop uses the MyGo host and the bundled Bun CLI/daemon; reducing
-that daemon to a device connector is later roadmap work. Mobile currently provides
-an account and sign-in baseline.
+Web and the MyGo Desktop renderer share the Agents workspace. Mobile is an Expo
+iOS/Android client for Space Agents, direct conversations and account access.
+Client coverage differs as described below; packaged native acceptance is separate.
 
 ## Users
 
-People who want a persistent Agent with one continuing conversation, available
-from every signed-in device. A Space keeps work apart and is the authorization
-boundary. Phase 1 serves an account's private Space and additional Spaces it
-creates; invitations, membership management and shared group conversations come
-later. Existing developer-oriented CLI tools remain during the transition.
+People who want persistent Agents and continuing conversations across signed-in
+devices, and teams that share Agents within a Space. A Space is the authorization
+boundary. Deployment administrators gain no Space access from their operator role.
 
 ## Product Purpose
 
-Raypx is the home for persistent Agents. The target Agent has an identity,
-instructions, a model choice, memory, routines and a computer, and can keep working
-while the person is away. Phase 1 delivers the conversation: sign in, open Agents,
-choose a Space, create or select an Agent, send a message and follow its streamed
-reply in the same conversation on Web or Desktop. Opening a page or restoring a
-draft never sends a message.
+Raypx gives Agents a continuing identity, instructions, model selection, memory,
+routines and a computer. Sign in, select a Space, create or select an Agent and
+send a message. The backend continues accepted work independently of an open
+client. Context and memory never authorize actions.
 
 ## Positioning
 
-PostgreSQL is the one authority for Agents, conversations, Runs and events. Clients
-express intent and render the backend's state. Pi runs inside the backend for
-phase 1 replies; it uses deployment-configured models and credentials. The target
-keeps the Agent runtime and credentials outside computers and uses provider-neutral
-ports for optional services. The Computer port and providers live in
-`@raypx/providers`; `@raypx/computers` owns Space-scoped lifecycle and persistence,
-and `infra/sandbox` owns the private Docker supervisor. See the
-[architecture](docs/architecture/README.md) and [roadmap](docs/roadmap.md).
+PostgreSQL is the authority for Agent state, conversations, Runs, approvals and
+effects. Clients express intent and render results. The backend owns execution,
+recovery and fresh membership checks. The Agent runtime and model credentials
+stay outside computers. A private supervisor alone holds the Docker socket;
+external model and tool credentials stay behind backend adapters.
 
-Conversation content is stored on the server. A self-hosted deployment keeps that
-content under the operator's control. The earlier device-owned runtime remains in
-the repository, but does not own the new conversations and is not an offline mode
-for them. No earlier profile data is imported.
+An operator controls the deployment and stored conversation content. Optional
+services sit behind ports. A missing model or computer configuration appears as
+unavailable rather than fabricated progress. See the
+[architecture](docs/architecture/README.md).
 
 ## Operating Context
 
-Signed-in Web and Desktop open `/agents` by default, retaining validated return
-destinations for account and administration flows. Web keeps the public landing and
-legal pages. Account and security settings, deployment administration and the
-configuration center remain available. Theme and English/Chinese language choices
-are device preferences.
+Web and Desktop open `/agents` after sign-in. Spaces, direct Agents and groups
+share this workspace; `/pages` opens versioned documents, and `/join` handles
+invitations. Account settings include models, approval policy, Skills and Tools.
+Web retains public/legal pages and the separate administration console.
 
-Desktop targets macOS 13.5+ and Windows through WKWebView or WebView2. Linux Desktop
-acceptance remains unverified. The existing native host still launches the bundled
-CLI and handles native session/enrollment boundaries; phase 1 does not replace it.
-Browser renderer checks establish no packaged native-platform result.
+Desktop uses the system browser for sign-in and the existing private daemon
+transport. Its Page preview opens Web because authenticated document embedding
+is disabled in Desktop. The host targets macOS 13.5+ and Windows; Linux Desktop
+acceptance remains unverified. A browser renderer check is not a packaged test.
+
+Mobile provides Agent creation/editing/deletion, Space selection/creation,
+direct conversations, streaming, approval cards, tool activity, computer lifecycle
+and account/sign-out. Page activity opens Web. Full shared-Space/group management,
+routine and memory editors, Page editing, resource settings and push notifications
+are not native Mobile workflows. OTA updates are not configured. iOS/Android
+device acceptance remains unverified.
 
 ## Capabilities and Constraints
 
-Phase 1 provides Space creation/selection, Agent management with one direct
-Conversation per Agent, member messages, ordered conversation events, snapshots,
-acknowledged reconnect/replay, streamed reply text, committed reply segments,
-queued Runs and explicit stop. Models come from the backend's offered catalog;
-an unavailable model or missing configuration is an explicit state.
+| Area                  | Implemented behavior                                                                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Conversations         | One continuing direct conversation per Agent; bounded initial/older history, gap loading, streamed text, committed segments, acknowledged replay and snapshots. Web/Desktop include virtual and full-text reading modes.  |
+| Runs                  | PostgreSQL leases, fenced attempts, checkpoints, steering, explicit stop, worker recovery and graceful handover. Model/connection/resource choices are pinned for resume.                                                 |
+| Computers             | Space team computer lifecycle, bounded file browsing, file/command tools, durable homes and generation checks through the Docker provider and private supervisor. Host egress rules require explicit setup.               |
+| Approvals and effects | Ask and Never ask, exact Allow/Block rules, addressed expiring requests, conversation cards and durable effect intents/outcomes. Unknown effects block automatic replay. Auto review and protected input are unavailable. |
+| Routines              | Cron with time zones, keyed webhooks, authenticated email relay and signed repository events; manual tests, pause/resume, deduplication, coalesced catch-up and linked Run history.                                       |
+| Memory                | Versioned Agent or shared Space documents, editing/removal/restore, bounded recall pinned into Run checkpoints and permission-checked Agent writes.                                                                       |
+| Pages                 | Markdown/HTML documents, immutable versions, conflict checks, restore, sandboxed serving and revocable optional version-pinned share links. Agent writes expose Page links in activity.                                   |
+| Skills and tools      | Account skills and Space-learned text skills, bounded non-executing imports, per-member Agent selection and remote HTTP MCP servers with write-only credentials. Backend command/stdio servers are refused.               |
+| Models                | Member-owned encrypted model connections with all/selected Space availability, offered model choices and bounded connection testing; deployment models remain available when configured.                                  |
+| Shared work           | Owner/member management, single-use invitations, approval overrides, audit history, named groups, explicit Agent mentions, concurrent replies and bounded delegated child Runs with inherited authority.                  |
 
-Replies execute in one API-enabled process. Runs have no tools, attempts, execution
-leases, fencing, steering, automatic retries or crash recovery. A second message
-queues another Run. Closing a client does not own or cancel a backend reply, but
-a backend crash can leave work unfinished. Durable execution is phase 2, not a
-phase 1 claim.
+Web/Desktop expose routines and Space memory from the conversation header,
+Space settings and group controls from the workspace, and Pages from navigation.
+Tool lifecycle belongs in activity; approvals stay actionable without disabling
+the composer. Delegated work stays under its parent activity. Pending requests,
+failures and uncertain outcomes remain explicit.
 
-The initial Computer slice lets members start and stop their Space's team computer
-from the Agent interface. A compact header indicator opens its state and controls;
-stop requires confirmation. State follows backend events and refreshes on reconnect.
-A server without a configured provider shows an explicit unavailable state with
-no controls. Computer lifecycle leases do not make Runs durable, and no Agent tool
-or approval workflow uses the computer yet.
+Transient model text is process-local; committed segments and events are durable.
+A client connected to another API process may receive the committed turn without
+its transient prefix. Recovery uses committed checkpoints and never promises
+exactly-once external effects. Credentials, deleted resources or changed access
+can prevent resume with an explicit failure.
 
-Agent tools, approvals/effects, routines, Agent/Space memory, maintained
-Pages, model/app connections, MCP, skills, invitations, group conversations,
-delegation, the device connector and full Mobile workflows are later phases.
-Their target designs do not make them available in the current Agents workspace.
-Retained Memory screens manage the earlier device/account-owned records; they are
-not Agent or Space memory and are not recalled by phase 1 replies. Automations
-screens that linked to removed sessions are removed rather than left broken.
+Computer isolation depends on the Engine and configured host rules. Public HTTPS
+and the selected DNS upstream remain available under restricted IPv4 egress;
+private/metadata/host destinations and alternate DNS are blocked by that ruleset.
+IPv6 enforcement needs separate host acceptance. A device grant is not sandbox
+isolation. Hosted computers, graphical takeover and the replacement outbound-only
+device connector remain future work. Managed app connectors, generated OpenAPI
+tools and web search/fetch are not implemented Agent capabilities.
 
-Project/session pages, New session, Waiting, the guest task editor and guest draft
-handoff are removed from Web and the Desktop renderer. Desktop's project Files,
-Terminal, onboarding and old execution settings are also removed from the renderer.
-The CLI/daemon, local SQLite stores, native Go functionality, device projection
-APIs and related server contracts remain pending their owning replacement phases.
-Development guides still describe that retained code.
+Project/session editors, Waiting, guest task handoff and device Automations pages
+are removed from Web/Desktop. The CLI/daemon, account/device context APIs, local
+schedules, native enrollment and remote projections remain only for retained
+consumers until their replacement phase. They do not own new Agent state or
+import device history into Spaces.
 
-Accounts retain password sign-in, verification/reset, passkeys, email codes,
-optional Google/GitHub providers, provider linking and authenticator security.
-Desktop signs in through the system browser. Administrators retain site identity,
-registration, email, object storage, cleanup, account roles and audited management.
-A deployment administrator role grants no Space access without membership.
-
-Guests can browse public pages and change device preferences. Conversations require
-a reachable server and an online account session. Unsent drafts and unconfirmed
-send receipts stay on the device, isolated by server origin, account, Space and
-conversation. Restoring text or retrying a failed Run only restores editing state;
-a new Send is explicit. Preferences and retained CLI profiles survive logout.
-Another account or server origin cannot take over an existing device profile.
-
-Bun and TypeScript own the CLI, application features and contracts. MyGo uses Go
-1.27.3; packaged Desktop users do not install Bun. Deterministic tests run offline;
-live model, PostgreSQL, browser and packaged native acceptance are separate gates.
-Never claim an unrun platform passed.
-
-Billing/seats, SCIM/enterprise SSO, a public plugin marketplace, messaging channels,
-voice and a visual workflow builder are not planned. Additional providers and
-other capabilities require a concrete workflow and decision.
-
-Show real execution, permission failures and retry state. Never fabricate data.
+Conversations require a reachable server and valid account session. Drafts and
+uncertain-send receipts stay device-local and scoped by origin, account, Space
+and conversation. Restoration never sends; delivery retry preserves its key,
+and failed-Run retry restores editing for an explicit new Send. Preferences and
+retained CLI profiles survive logout without transferring account/origin identity.
 
 ## Brand Commitments
 
-The product name is Raypx. Keep the original brand mark and the neutral light and
-dark visual system. Public-page decoration may use the scoped logo palette in
-DESIGN.md; the workbench stays neutral.
+The product name is Raypx. Preserve its original artwork and neutral light/dark
+visual system. Public decoration follows the scoped logo palette in `DESIGN.md`;
+the workbench stays neutral. Describe only implemented behavior and real outcomes.
 
 ## Evidence on Hand
 
-The Web and Desktop implementations, their copy and the original logo are in this
-repository. Tests and fixtures are evidence only for the checks actually run.
-There are no testimonials, case studies, press mentions or pricing claims to reuse.
-Do not invent them or present illustrative content as real customer activity.
+The implementation, deterministic fixtures and tests live in this repository.
+PostgreSQL, listener/browser, real Engine, live-model and packaged native results
+are independent gates. Tests prove only what actually ran; unverified platforms
+stay unverified. There are no customer endorsements or pricing claims to reuse.
 
 ## Product Principles
 
-- Organize the signed-in product around Agents and their one continuing conversation.
-- Treat a Space as the authorization boundary. Context is never permission;
-  resources never cross Spaces implicitly.
-- Keep PostgreSQL as the one authority. Clients express intent; the backend owns
-  authorization, validation and execution. Label later capabilities as future work.
-- Keep the Agent runtime and credentials outside computers. A granted device has
-  the user's OS permissions and is not sandbox isolation.
-- Keep drafts scoped to server origin, account, Space and conversation. Restoration
-  never starts work, and an uncertain send retains its idempotency identity.
-- Show real execution, failures and retry state. Never fabricate data or imply
-  exactly-once external effects.
-- Preserve the retained device runtime's security boundaries until its replacement
-  phase. Do not upload or import its history automatically.
-- Add a shared package only when an established responsibility and consumer need it.
+- Organize work around persistent Agents and continuing conversations.
+- Check fresh Space membership for every request; context is never permission.
+- Keep PostgreSQL authoritative and credentials outside clients and computers.
+- Preserve idempotent delivery and checkpoint recovery without replaying unknown effects.
+- Show failures, unavailable states and permission boundaries accurately.
+- Keep retained device data separate until its owning replacement phase.
 
 ## Accessibility & Inclusion
 
-English and Chinese are both first-class. Keep phone browsers, long copy in either
-language, keyboard navigation, visible focus, accessible labels, touch targets and
-reduced motion usable in the shared Web/Desktop interface.
+English and Chinese are first-class. Preserve keyboard focus, accessible labels,
+reduced motion, touch targets, phone layouts and stable reading positions during
+streaming. Native component mocks do not establish device accessibility acceptance.

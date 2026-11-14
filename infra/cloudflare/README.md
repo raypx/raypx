@@ -1,4 +1,7 @@
-# Cloudflare Relay
+# Cloudflare Relay (retained device transport)
+
+This ingress does not serve new Agent `/events` streams or Space APIs. It remains
+for the existing device runtime until its replacement phase.
 
 `relay-cloudflare` adds an optional Workers + Containers deployment for the
 Bun backend relay role. Railway remains available. API/Web
@@ -121,7 +124,7 @@ hostname, complete a real authenticated viewer/device connection, and exercise A
 dispatch, revocation and reconnect. A successful `/health` alone does not establish
 backend readiness. Revert the application route to the previous Relay if acceptance
 fails. Existing WebSockets may disconnect during a rollout; clients reconnect
-through the current v4 protocol without automatic replay of uncertain work.
+through the current v5 protocol without automatic replay of uncertain work.
 Avoid dispatching work during the controlled cutover.
 
 After acceptance, add this second entry to `routes` and deploy to switch traffic:

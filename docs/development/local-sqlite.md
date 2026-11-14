@@ -1,4 +1,8 @@
-# Local SQLite storage
+# Retained local SQLite storage
+
+This guide covers the still-present device runtime until its replacement phase.
+PostgreSQL owns new Spaces, conversations, Runs and capabilities; these profiles
+never act as their authority or upload history automatically.
 
 Each CLI profile has one business database, `<profile>/profile.sqlite`. State,
 Memory, Agent, Terminal, Pi context and credential repositories borrow the profile writer.
@@ -14,7 +18,7 @@ other processes still use separate connections. The database and auxiliaries use
 
 1. The initial migration creates the state, Memory, Agent, Terminal and Pi tables.
 2. The second migration adds the Agent orchestration tables from
-   `schema/orchestration.ts` (ADR 0044):
+   `schema/orchestration.ts`:
    `task_events` (durable non-activity domain events, indexed by binding, task and
    sequence) and `task_effects` (effect intents and their `open`, `done`,
    `failed` or `abandoned` status, indexed by task, status and settle time).
@@ -87,4 +91,4 @@ restart. Unsupported stored versions fail explicitly.
 
 Go retains the independent lifetime `desktop-instance.sqlite` lock and device
 preference file. It never opens the CLI database. The previous Go session store
-and key namespace are never read, imported, rewritten or deleted. See ADR 0052.
+and key namespace are never read, imported, rewritten or deleted. See [Desktop transport](desktop.md#desktop-daemon-channel).

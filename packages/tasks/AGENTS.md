@@ -3,7 +3,7 @@
 Web and Desktop no longer expose project/session or automation pages. This package
 remains with the earlier device-owned runtime; it does not implement Space-owned
 Agents or routines. Orphaned public entries use `raypx.entryConsumers` to name their
-later removal. Do not reconnect them to the phase 1 Agents workspace.
+later removal. Do not reconnect them to the server-owned Agents workspace.
 
 `/server` owns the remote task read projection and stored task/event/request
 schemas. Its injected ports provide account reads and device-authorized transactions;
@@ -11,7 +11,8 @@ it never imports Control, a database adapter or an application. Keep connection
 fencing, snapshot/event commits and frozen-context receipt release atomic. Core
 owns domain rules and CLI owns execution and the durable device journal.
 
-Shared Agent task and approval views for Web and Desktop.
+Retained device-task and approval view helpers, with transition consumers recorded
+in the manifest. Current Web/Desktop compose Agents instead.
 Workspace composition, task details, approvals and device management live in separate
 client modules. Approval reads do not depend on task-list availability. Test fixtures
 implement the independent ports and fail unexpected calls; never cast partial clients.

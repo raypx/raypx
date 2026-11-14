@@ -1,10 +1,18 @@
 # i18n 迁入交付记录
 
+本文的数值、版本和结果是当时的历史记录，不是当前候选的验收结果。
+当前 `@raypx/i18n` 已是仓内私有源包；Dev CLI 拥有静态 catalog/ICU 校验，
+Turbo 拥有任务图和缓存。业务包按命名空间拥有英中文 JSON 和纯语言入口，应用组合目录。
+当前客户端包括 Web/Desktop Agent 工作区与 Mobile 原生对话；翻译更改需同步两种语言，
+执行 `bun run i18n:types`、`bun run i18n:check` 和 `bun run verify`。
+平台验收独立，未运行的原生平台保持未验证。
+详见 [当前国际化说明](../architecture/internationalization.md) 和 [测试指南](testing.md)。
+
 从 Raypx Kit 的发布标签导出 `packages/intl`，源提交为
 `b928c371393a14b5bdf8d6e9a075fef66eff32ce`。迁入后由 `@raypx/i18n` 独占
 `use-intl@4.14.9` 的直接依赖和导入。Tooling 使用开发 catalog 中的
 `@formatjs/icu-messageformat-parser@3.5.22` 做静态比对。八个入口和业务导入保持原样。
-架构决策见 ADR 0055。
+早期决策保留在 Git 历史中；当前约束见上述架构说明。
 
 ## 行数与产物
 

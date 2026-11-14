@@ -16,8 +16,8 @@ server or configuration package.
    for multiple accounts), then run `bun run --cwd apps/api auth:bootstrap-admins`.
    This is an operator command, never a startup action. Database roles remain
    authoritative after it finishes; removing a role is not undone by the email list.
-5. Sign in to Web and open **Configuration center**. Membership is checked from the current
-   stored role on every admin request, including writes. There is no first-user takeover.
+5. Sign in to Web and open **Configuration center**. The administrator role is checked from the current
+   stored user on every admin request, including writes. There is no first-user takeover.
 
 Upgrading an existing deployment: run the migration before deploying this API.
 Sign-up is fail-closed, so until `system_configuration` exists every registration
@@ -42,7 +42,8 @@ See [S3 configuration](object-storage.md).
 | Open registration  | On            | API accepts new email/password accounts; off preserves existing sign-in |
 | Background cleanup | On            | Allows the next cleanup run, provided deployment `JOBS_ENABLED=true`    |
 
-`JOBS_ENABLED` remains false by default and is the deployment kill switch. The
+`JOBS_ENABLED` remains false by default and gates Nitro maintenance/retained
+account jobs. It does not disable durable Run recovery or Space routine worker scans. The
 page can pause and resume cleanup without rebuilding once that gate is enabled.
 It cannot override a disabled deployment. Retention, batch limits and the 15-minute
 schedule remain the [server jobs](server-jobs.md) policy. A run already in progress

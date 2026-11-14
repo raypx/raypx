@@ -1,7 +1,10 @@
 # Contributing
 
 Read [AGENTS.md](AGENTS.md) and the owning workspace instructions. Run narrow tests
-then `bun run verify`. Keep workspace metadata, public exports and dependencies
+then `bun run verify`. New Agent state belongs to the Space-scoped PostgreSQL backend; retained device
+profiles are a separate runtime. See the [setup](docs/development/getting-started.md)
+and [architecture](docs/architecture/README.md) before implementation.
+Keep workspace metadata, public exports and dependencies
 accurate. Use `bun run workspace:new` for new packages and avoid empty abstractions.
 
 Use isolated test databases. Default verification requires no database, GUI or
@@ -20,9 +23,9 @@ Use `!` for a breaking change and explain the impact in a `BREAKING CHANGE:` foo
 Separate any body or footers from the subject with a blank line.
 
 ```text
-feat(cli): add session filters
-docs: explain local profiles
-fix(remote-tasks)!: require device-scoped grants
+feat(agents): add conversation history paging
+docs: explain sandbox development
+fix(runs)!: require fenced effect writes
 ```
 
 The local `commit-msg` hook validates the subject format and accepts Git's default

@@ -1,212 +1,122 @@
 # Dev CLI commands and checks
 
-Reference for `raypx-dev` commands and the rules each check enforces. The package
-guide, [`packages/dev-cli/AGENTS.md`](../../packages/dev-cli/AGENTS.md), keeps the
-boundaries; this page keeps the behavior.
+`@raypx/dev-cli` implements `raypx-dev`, the repository engineering executable.
+It is separate from the retained product/device CLI, `raypx`. Use
+`bun run raypx-dev <command>` from the root without installing a global link.
+Workspace scripts declaring Dev CLI as a direct dependency can invoke it directly.
+Its [workspace instructions](../../packages/dev-cli/AGENTS.md) define boundaries.
 
 ## Commands
 
-- raypx-dev tasks <task> [Turbo options]
-- raypx-dev test [suite] [--package name|path] [Turbo options] [-- runner arguments]
-  Root owns this aggregate; package scripts own actual suites. `test list` discovers
-  capabilities. Dev CLI owns test:inventory/test:backends/test:sandbox; E2E owns browser gates.
-- raypx-dev e2e [--package web|desktop] [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
-- raypx-dev format [--write] [files] defaults to Vite+'s format check and forwards native formatter flags.
-- raypx-dev workspace list | new <name> --kind library --target universal [--write]
-- raypx-dev i18n [types]
-  Discover `locales/<language>/<namespace>.json` from workspace manifests;
-  compare namespace/key, ICU syntax, argument and rich-tag parity without executing
-  entries. Reject TypeScript catalogs, duplicate ownership and missing supported languages.
-  `types` writes the ignored `<namespace>.d.json.ts` literal types beside each
-  reference-language catalog and removes stale ones; `check` tasks depend on it.
-  Language `index.ts` files explicitly assemble owned namespaces; AST checks verify registration.
-  Only apps spread shared public entries from the same language, with no namespace overwrites.
-  TS uses literal objects, JSON nested strings. Include both formats in cache inputs;
-  validate without generating or executing catalogs.
-- raypx-dev policy | verify | doctor | clean | clean:artifacts
-  `policy` also checks public entries (`src/validation/entries.ts`): every exports key
-  of a library or tooling workspace needs an importer in another workspace, found in
-  JS/TS module imports, CSS `@import`/`@source` and tsconfig `extends` (root config
-  included). Suites, `tests/` files and `e2e` are test importers. They can satisfy
-  the consumer requirement for `./testing*` entries, executable tooling and E2E
-  workspaces. Other library entries need production use or a reason in
-  `raypx.entryConsumers`, which policy validates against the exported keys.
-  `policy` also requires one workspace to declare `use-intl`, rejects `next-intl` and keeps
-  FormatJS runtimes out of other product workspaces (`src/validation/intl-engine.ts`).
-- raypx-dev test inventory [--layers] [--baseline file] [--owners file]
-- raypx-dev test backends [--database-url URL] [--with-e2e [-- Playwright flags]]
-  Uses an explicit disposable loopback `*_test` or `*_test_<lane>` database when
-  selected; otherwise starts an owned temporary cluster. Inherited database URLs
-  never select the target. Explicit databases are neither created nor dropped.
-- raypx-dev test sandbox [--engine-socket /absolute/socket] [--with-egress] [--dns-resolver IPv4] [--engine-host-command JSON]
-  Owns a temporary source supervisor, a digest-built computer image, provider
-  conformance, Engine/container isolation and persistent-home replacement probes.
-  Requires a reachable Linux Engine through a Unix socket. Egress rules require
-  the explicit flag plus Linux root or passwordless sudo on that Engine host.
-  For a VM host, `--engine-host-command` accepts a JSON argv prefix for root
-  commands; the checkout must be mounted at the same absolute path. An owned
-  host-network canary verifies loopback/service isolation independently of the
-  supervisor location. IPv6 without a reachable host control is unavailable.
-  Writes `.artifacts/sandbox/`; cleans only run-labeled resources, with no global
-  pruning. See [prerequisites and evidence](validation-artifacts.md#owned-sandbox-real-engine-acceptance).
-- raypx-dev size [--package name|path] [--native] [--browser] [--require]
-  Discovers buildable workspaces, measures existing deployable directories and CLI
-  runtime components, and writes JSON/Markdown under `.artifacts/sizes/`. Native
-  mode adds actual production bundles/installers; browser mode selects Desktop's
-  compiled browser fixture. Missing outputs are unavailable; `--require` rejects them.
-  CI appends tables to its summary after selected builds/cache restoration and uploads
-  reports. Sizes count regular files, excluding symlinks; components/bundles overlap
-  and must not be added together. Measurement never launches a build or smoke task.
-- Package scripts are the leaf commands Turbo runs; `src/turbo.ts` launches every
-  graph invocation with the platform identity and a default concurrency of three.
-- `clean:artifacts` removes reports, coverage, test-report caches and browser results,
-  preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
-- `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
-  all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
-  base. `--dry-run` prints the comparison baseline SHA, local test selection and
-  expanded Turbo plan without running tasks. Regular verification also prints the SHA.
-  `--no-cache` becomes Turbo `--force`: every selected task re-executes.
-  Local tests follow source imports, retaining integration and filesystem/process
-  assertions; indirect consumers and unknown/configuration/deleted inputs use complete
-  suites. CI and `--full` always run complete selected workspace suites. File arguments
-  use the existing per-task argument keys, never aggregate dependency arguments.
-  API relay fixture edits also select the CLI task lifecycle suite. Both fixture
-  files are explicit inputs to the CLI test cache.
-  Dev CLI policy, validation, verification and tests select Dev CLI only; its command,
-  repository and test-runner modules retain all source checks. Tooling tests select
-  Tooling; exported Tooling code follows static entry dependencies and actual import
-  consumers. Task machinery, unknown/deleted inputs and unresolved export graphs
-  retain all source checks.
-- Local verification lives in `verification/index.ts`; `plan.ts` selects tasks and
-  `execution.ts` runs the selected tasks through Turbo, one extra invocation per related-test selection. `verification/ci.ts` adapts GitHub events and dispatches
-  workers. CI, deployment and artifact probes load at their command or selected stage.
-  Go-only inputs select Go checks without renderer suites. Workflow orchestration and
-  `native-checks` action edits select Dev CLI plus relevant acceptance; shared install/cache
-  actions retain all source checks. Mixed source/configuration changes combine their scopes.
-- CI consumes the same planner through private `ci:plan`/`ci:gate` entries. It emits
-  one versioned plan bound to `GITHUB_SHA`; workers consume `RAYPX_CI_PLAN`
-  instead of recomputing scope. `verification/gates.ts` owns CI gate registration and
-  selection. The `source` matrix runs `ci:gate source checks|tests` on parallel runners.
-  Checks owns style, policy/locales, types, selected current-platform Go checks and
-  full-mode builds/probes; tests owns complete selected workspace suites. The planner
-  omits the test runner when no suites are selected. Each phase has a separate Turbo cache;
-  checks retains the `javascript` partition. The final gate rejects unregistered jobs, inconsistent plan outputs,
-  failed/cancelled jobs and unexplained skips. Local evidence records running,
-  passed or failed status so a failed run cannot retain a previous success.
-  Shared or unknown inputs broaden source checks without requesting release builds/audits. Missing Git
-  bases also select native checks conservatively. Source checks follow transitive
-  manifest dependents, including dev dependencies. Backend integration selects API
-  inputs, its PostgreSQL/Redis/cluster suites and shared fixtures, or source changes
-  in a direct API runtime dependency. A root lockfile change retains any backend
-  gate selected by a mixed change. Login, account password and remote approval
-  source inputs select smoke for the Web or Desktop browser projects that use them.
-  Application-owned `e2e/` edits select the complete suite for their own browser
-  project, while shared E2E edits select both complete suites. The CI plan summary
-  shows the comparison SHA and browser trigger paths. Required results
-  distinguish intentional skips from missing/cancelled/failed gates. The `container-smoke`
-  job runs isolated Compose/Railway acceptance for Dockerfiles, deployment adapters and
-  image acceptance inputs and its reusable workflow, plus manual/tag CI runs. Main
-  workflow orchestration edits do not request container builds. Ordinary source, dependency and
-  application build-config changes use source gates; Railway owns production image builds.
-  Source-only verify remains independent of Docker.
-  The separate `sandbox` job uses the same plan for supervisor, Computer provider
-  and sandbox acceptance inputs; it uploads owned real-Engine evidence. Default
-  CI does not opt into host firewall probing.
-- Branch/PR native gates run only for native/IPC/terminal/daemon inputs, CLI runtime
-  packaging helpers and their regressions, and select
-  macOS/Windows by platform-specific filenames; shared native CI inputs default to Windows.
-  Manual `macos` includes macOS; release tags require both platforms. `cold_native` disables
-  native compiler caches for comparisons while retaining Turbo caches for shared JavaScript inputs.
-  JavaScript dependency reach alone does not select native runners. Installers, signing and installed
-  GUI acceptance require a tag push or manual `distribution` request; release gates
-  run in parallel and the final result validates their selection against the event.
-  Routine native acceptance builds the CLI and runs the shared `native-checks` action
-  on one runner, reusing its install and caches without a renderer build or artifact
-  handoff. Distribution alone prepares the renderer and transports the immutable CLI
-  to parallel checks/package/smoke phases. The same action owns process/CLI/Herdr/Go
-  acceptance and evidence in both paths; action changes select native runners.
-  Herdr runs before Go checks, leaving distribution package/smoke independent of terminal-test duration.
-  Native checks also accept process/task runners and the installed CLI against the
-  verified prepared payload, with size and acceptance reports retained for seven days.
-  Changes to those runners, their acceptance tests, or native workflow steps trigger
-  the default Windows gate even when no Desktop source changes. The planner and its
-  tests are covered by Dev CLI source verification.
-- `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
-  it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
-  and persistent user/database data stay intact.
-- raypx-dev env -- <command>. Root database scripts load the development environment
-  through this command and delegate to Database. `package:desktop` selects the
-  existing `desktop#native:build` task.
-- Desktop's default build/check only verifies the renderer and scripts. Explicit
-  `native:build` and native smoke/agents tasks are uncached, depend on the
-  renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
-  before starting Vite and MyGo. Direct Desktop scripts are leaf commands without prerequisites; use the root commands or `raypx-dev tasks desktop#<task>` for the graph.
-  Native CI checks Go on each platform.
-- `raypx-dev deployment:smoke [--platform linux/amd64|linux/arm64]` builds both image
-  profiles with an owned bounded builder, isolated temporary services and a synthetic
-  API-owned account fixture. Share SSR/API assertions with relocated artifact probes.
-  API bundles the fixture without embedded environment values; mount it read-only into
-  the prepared Bun migration image on the owned network. Measure acceptance, teardown
-  and cleanup separately without recording credentials or overlapping stage durations.
-  Always clean only owned resources; retain protected evidence under `.artifacts/deployment/`.
+| Command                                                                                                  | Behavior                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tasks <task> [Turbo options]`                                                                           | Run the sole workspace task graph; `src/turbo.ts` adds platform identity and default concurrency three.                                                   |
+| `test [suite] [--package name\|path] [Turbo options] [-- runner flags]`                                  | Discover and run manifest-owned suites. `test list` shows actual capabilities.                                                                            |
+| `e2e [--web\|--desktop] [--package web\|desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]` | Build selected browser surfaces, then run Playwright independently of build cache keys.                                                                   |
+| `format [--write] [files]`                                                                               | Check formatting by default; forward formatter flags to Vite+.                                                                                            |
+| `workspace list`                                                                                         | Discover members from root workspace patterns and report derived kinds.                                                                                   |
+| `workspace new <name> [--kind library\|app] [--target <target>] [--tests] [--write]`                     | Preview a scaffold; write only with `--write`, never overwrite. Targets select templates, not manifest platform constraints.                              |
+| `i18n [types]`                                                                                           | Check language/namespace/key/ICU parity; `types` writes ignored literal type declarations.                                                                |
+| `policy`                                                                                                 | Validate workspace graph, dependencies, exports/consumers, runtime boundaries, test ownership, toolchain, documentation links and repository conventions. |
+| `verify [--full] [--no-cache] [--base ref] [--dry-run]`                                                  | Select affected source checks/tests and native inputs; full mode adds audits, builds and artifact probes.                                                 |
+| `doctor`                                                                                                 | Check the Bun pin and report native prerequisites.                                                                                                        |
+| `env -- <command>`                                                                                       | Load the development environment, preserving inherited values, and delegate to an external command.                                                       |
+| `size [--package name\|path] [--native] [--browser] [--require]`                                         | Measure existing build outputs; never build implicitly. Missing outputs are unavailable and fail with `--require`.                                        |
+| `smoke`                                                                                                  | Probe prepared production artifacts; this is not a source-only check.                                                                                     |
+| `deployment:smoke [--platform linux/amd64\|linux/arm64]`                                                 | Build/probe isolated deployment images and synthetic accounts, cleaning only owned resources.                                                             |
+| `analytics sourcemaps <web\|desktop>`                                                                    | Upload hidden maps for an existing recorded release before removing maps; never rebuild.                                                                  |
+| `clean:artifacts`                                                                                        | Remove generated reports, coverage, test-report caches and browser results; preserve builds and user data.                                                |
+| `clean`                                                                                                  | Also remove workspace build/cache outputs and staged native resources; preserve dependencies, environment files and persistent user/database data.        |
 
-## Checks, tests and probes
+Use each command's `--help` for its syntax. Package scripts are leaves and never
+re-enter the graph. Root `dev`, `build:*`, `check`, `test`, `package:desktop` and
+database commands delegate through this executable and Turbo where appropriate.
+`env` wraps migration/generation/studio commands; Dev CLI does not import database,
+auth or product client implementations.
 
-Nothing imports this package. Keep the dependency direction Dev CLI → Tooling; use only Tooling's public entries. Do not import database, auth or
-client implementations; delegate database commands to database's scripts. Derive all
-workspace lists from manifests. Scaffolding previews by default and never overwrites.
-Use platform-neutral filesystem/process APIs. Never print loaded secrets.
-Keep reusable mechanics in `src/repo/` free of Raypx package names and paths.
-Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
-Knip configuration lists only what its own analysis cannot find: dynamically
-invoked entries (Native Go-launched TS fixtures, route and
-Vite+ app configs) and the vendored skills it must skip. Remove any entry or ignore Knip
-reports as redundant. Root transitive dependency overrides use Bun's `resolutions`
-field so Knip can track their catalog references directly.
-Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
-evidence only. Inventory compares case multiplicity and checks exact file selection.
-It collects Vitest JSON reports from the selected workspaces.
-Backend validation provisions only owned temporary services, resolves binaries from
-PATH or explicit binary settings, and stops children before deleting their data.
-Read i18n's public static `./config` through workspace discovery for locale policy.
-Dev CLI owns ICU message comparison in `src/validation/catalog-parity.ts` and
-uses the dev catalog's ICU parser. Keep the i18n runtime out of its dependency closure.
-Dev CLI runs standalone Vitest under Bun with four isolated file workers and a 30-second test timeout.
-Its scripts select layers through Vitest filters.
-Root `vitest.config.ts` discovers workspace configs as native Vitest projects from
-package.json workspaces. `test.config.ts` is a plain defaults object;
-workspace configs use native `defineConfig`/`mergeConfig`
-and own their include patterns, projects and overrides. Do not wrap Vitest options
-in another factory or restricted interface. Scaffolded test workspaces include
-source-adjacent tests and `tests/` fixtures in strict checking and merge these defaults in their own config.
-`raypx-dev cli:experiment <prepared CLI directory> [--upx <executable>]` compiles
-isolated size/startup candidates under `.artifacts/cli-size`, preserving the prepared
-production payload. Its manual workflow uses Windows only.
-Full verification builds the API/Web outputs and probes them concurrently under Bun using temporary
-roots and fixture environments. Linux CLI probes use Docker `--network none` with the pinned
-Bun image, read-only sources/payload and a writable report directory; already isolated
-Linux namespaces run directly. Docker failure never falls back to the host.
-`src/validation/toolchain.ts` reads the single Bun pin from
-`packageManager` and rejects Node pins. These config/test entries never enter product runtime code.
-Smoke orchestration and artifact probes live in
-`src/smoke/`. Unit tests live beside source; integration tests stay in `tests/integration/`.
-Keep scaffold and locale policy suites separate; shared temporary workspace fixtures
-live in `tests/helpers/workspace.ts` and register cleanup for each suite.
-The inventory regression requires a focused command for each active test layer,
-rejects empty layer commands and `.only`, and keeps PostgreSQL/Redis and Playwright
-outside ordinary test layers. Scaffolding with tests creates a strict default
-runner; add focused commands when their first real suites exist.
-Workspace scaffolding copies static configuration from `src/templates/workspace/`
-into generated TypeScript paths. Every scaffold registers a lightweight task config.
-Its `agents.ts` renders workspace instructions;
-manifest and TypeScript configuration data use JSON serialization.
+## Source verification
+
+```sh
+bun run verify
+bun run verify --dry-run
+bun run verify --no-cache
+bun run verify --base origin/next
+# Release preparation or an explicit full-validation request:
+bun run verify --full
+```
+
+The plan prints its comparison SHA. The default is the merge-base with
+`origin/canary`; `--base` selects a deliberate alternative. Scope includes committed
+branch changes since that base as well as local edits. Local verification follows changed-source
+imports for meaningful related tests, retaining complete suites for unknown,
+configuration or deleted inputs. Source checks include transitive manifest
+dependents, including development dependencies. CI and full mode run complete
+selected workspace suites. `--no-cache` forces selected tasks to execute.
+
+Documentation-only changes select policy/locales/style without database or browser
+services. Shared JavaScript configuration/dependency changes broaden source checks
+without automatically requesting builds/native platforms. Go-only changes select
+Go tasks; mixed changes combine scopes. Desktop renderer work needs no native
+runner unless native inputs changed. See
+[verification planning and cache](validation-artifacts.md#verification-planning-and-cache).
+
+## Explicit acceptance
+
+```sh
+bun run test inventory --layers
+bun run test backends --database-url postgres://raypx@127.0.0.1:55439/raypx_next_test_b
+bun run test backends \
+  --database-url postgres://raypx@127.0.0.1:55439/raypx_next_test_b --with-e2e -- --workers=1
+bun run test sandbox --engine-socket "$HOME/.colima/default/docker.sock"
+```
+
+- `test inventory [--layers] [--baseline file] [--owners file]` executes fresh
+  suites and checks exact selection, multiplicity and layer ownership.
+- `test backends [--database-url URL] [--with-e2e [-- Playwright flags]]` runs API
+  PostgreSQL, Redis and cluster modes. Without the explicit URL it provisions an
+  owned temporary cluster. URLs must name disposable loopback `*_test` or
+  `*_test_<lane>` databases without query options; inherited URLs never select a
+  target. Explicit PostgreSQL is not created, stopped or dropped. Redis remains
+  owned. `--with-e2e` starts the deterministic control API for browser journeys.
+- `test sandbox [--engine-socket /absolute/socket] [--with-egress]
+  [--dns-resolver IPv4] [--engine-host-command JSON]` owns a temporary supervisor,
+  immutable computer image, real-Engine conformance, isolation and home replacement.
+  Egress needs explicit opt-in and Linux Engine-host root/passwordless sudo. The
+  VM command prefix is an argv array, with the checkout mounted at the same
+  absolute path. Network controls and owned DROP counters establish enforcement;
+  offline public access and missing IPv6 controls are unavailable.
+
+See [testing](testing.md), [sandbox setup](sandbox.md), and
+[validation evidence](validation-artifacts.md) for prerequisites and cleanup.
+Default verification never starts these external services or paid inference.
+
+## CI and evidence
+
+Private `ci:plan` and `ci:gate` entries share the verification planner. One versioned
+plan is bound to `GITHUB_SHA`; jobs consume `RAYPX_CI_PLAN` rather than recomputing
+scope. Separate source checks/tests, backend, browser, sandbox, container and native
+gates run from that plan. The final job rejects failures, cancellation, missing
+required jobs and unexplained skips. Branch gates select only relevant acceptance;
+tag/manual distribution gates include prepared artifacts and platform packaging.
+
+Reusable checks live in `src/validation/`; generic repository mechanics stay in
+`src/repo/`. `.artifacts/` contains generated evidence only. Inventory/backend/
+sandbox/deployment commands own temporary services, label their resources and stop
+only their own children before removing data. Do not run global cleanup or prune.
+Reports distinguish passed, failed and unavailable results and never establish an
+unrun platform. Full verification uses prepared CLI payloads and isolated artifact
+probes; it is broader than ordinary source validation.
+
+`size` writes exact byte/file counts under `.artifacts/sizes/`; overlapping CLI,
+renderer, bundle and installer sizes must not be added together. CI uploads
+selected evidence and summaries independently of task caches. See the
+[Desktop release guide](desktop.md#build-and-release) for immutable payloads,
+Go/MyGo checks, signatures and installed acceptance.
 
 ## Analytics source maps
 
-`analytics sourcemaps <web|desktop>` prepares existing client
-artifacts with the external PostHog CLI. Require release credentials and hidden
-maps, upload before deleting maps, and never rebuild before deployment. The build
-helper exposes only public release metadata and the hidden-map flag. Resolve release
-once (explicit VITE_APP_RELEASE, Railway SHA, Git SHA), write client metadata during
-the build, and upload using that recorded release; never infer upload versions from
-the current checkout. Reject conflicting overrides before modifying assets.
+Upload requires hidden maps and protected release credentials. The build records
+the release identity from its explicit public override, deployment SHA or Git SHA.
+Use that recorded identity at upload time; reject a conflicting override. Do not
+infer a deployed version from a newer checkout or expose upload credentials in
+client variables. `clean:artifacts` removes evidence, not deployment assets.

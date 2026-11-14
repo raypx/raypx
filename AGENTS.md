@@ -8,16 +8,18 @@ Spaces are the authorization boundary; PostgreSQL is the one authority. Follow
 [architecture guides](docs/architecture/README.md) and [roadmap](docs/roadmap.md).
 Read the nearest workspace AGENTS.md, docs/README.md and DESIGN.md before changes.
 
-Phase 1 makes `/agents` the signed-in home in Web and Desktop: Space selection,
-Agent management, messages, streamed replies, committed segments and stop. Its
-backend Runs are process-local: no tools, attempts, leases, steering or recovery.
-The initial Computer slice adds explicit start/stop for a Space's team computer,
-with live state in the Agent interface. Agent tools and approvals remain unimplemented.
-Do not describe later roadmap capabilities as implemented. The earlier CLI/daemon,
-SQLite profiles, native enrollment and remote projections still exist until their
-replacement phases. Do not extend them as a second authority for the new product.
-Desktop still uses MyGo/Go and the bundled Bun CLI. The retired Tauri/Rust host is
-archived in `raypx/raypx-tauri`; do not reintroduce it.
+The implemented platform includes paged conversations, durable Runs with fenced
+leases/checkpoints/recovery, Computer tools, approvals/effects, routines, Agent and
+Space memory, Pages, text skills, remote HTTP MCP servers, model connections,
+shared Spaces, groups and delegation. Web/Desktop compose the shared workspace;
+Mobile supports Space Agents, direct conversations, approvals and computer lifecycle.
+Client coverage and separate acceptance gates are documented in PRODUCT.md.
+Auto review, protected input, hosted computers, graphical takeover and the replacement
+device connector remain unimplemented. Do not describe roadmap targets as delivered.
+The retained CLI/daemon, SQLite profiles, enrollment and remote projections are
+separate from server Agent state until their replacement phase. Desktop still uses
+MyGo/Go and the bundled Bun CLI. The retired native host is archived separately;
+do not reintroduce it.
 
 ## Workspaces and boundaries
 
@@ -140,7 +142,7 @@ archived in `raypx/raypx-tauri`; do not reintroduce it.
 - The new PostgreSQL database is isolated from the retired product database.
   Never run new migrations or destructive commands against an old/operator database.
 - Context is not permission. Memory, prompts and inbound text never authorize an action.
-  Future computer tools use the Computer port; the Agent runtime and credentials
+  Computer tools use the Computer port; the Agent runtime and credentials
   remain outside the computer. Only the supervisor may hold the Docker socket.
 - Existing file grants constrain built-in file operations. External commands retain
   OS permissions; a granted device is not sandbox isolation.
@@ -189,14 +191,19 @@ Keep documentation aligned with the implementation and remove obsolete guides.
 
 New conversations use session-authorized oRPC and the backend event stream, with
 fresh Space membership checks. Apply state and its cursor together before ACK;
-reconnect replays durable events or replaces state from a snapshot. Transient
-reply text is not durable. Phase 1 requires one API-enabled reply process; never
-promise crash recovery, multi-process live replies or exactly-once external effects.
+reconnect replays durable events or replaces state from a snapshot. History paging
+uses its own scoped boundaries, independently of the event cursor. Transient reply
+text stays process-local; committed segments are durable. Runs use PostgreSQL leases,
+fences, attempts and checkpoints. Never replay unknown effects or promise exactly-once
+external outcomes. Worker startup owns scans; runtime construction performs no I/O.
 
-The target backend owns Runs, approvals, events and scheduling. The CLI daemon
-becomes an outbound-only device connector in a later phase, with native-confirmed
-Space directory grants and per-command checks. Do not implement new Agent authority
-in the renderer, Go host or device profile.
+The backend owns Runs, approvals, effects, events, routines and delegation. Child
+Runs inherit the initiating member's authority. Default SERVER_ROLE=all combines
+API, worker and Relay; split API/worker coordination uses PostgreSQL. The retained
+both value also combines those roles. Redis is required only for split retained
+device transport, not new Run coordination. Do not implement new Agent authority
+in the renderer, Go host or device profile. The outbound-only device connector
+with native-confirmed Space grants remains a later phase.
 
 Until replaced, the existing macOS/Windows daemon still owns device execution,
 approval arbitration, replay, restricted credentials and Desktop session transport.
@@ -204,9 +211,8 @@ Native bootstraps over authenticated private IPC (Unix socket or token-guarded
 loopback on Windows); the renderer uses a separate authenticated loopback WebSocket.
 GUI Quit does not stop daemon tasks. Existing Relay routes device messages and API
 stores their read projections; `@raypx/control` owns their authorization rules.
-Current roles remain `SERVER_ROLE=api|relay|both`; `both` uses direct calls and split
-roles require the private Redis broker. These are retained implementation details,
-not the target `api|worker|relay|all` topology.
+Retained device Relay uses direct calls in combined roles and a private Redis
+broker across split processes. This transport does not authorize new Space Runs.
 
 Preserve native opt-in without exposing cookies or host secrets to the renderer.
 Explicit logout/account changes revoke the affected remote binding. Never publish

@@ -1,92 +1,71 @@
 # Raypx
 
-The home for persistent Agents, each with one continuing conversation. Sign in to
-Web or Desktop, choose a Space, create an Agent and follow its streamed replies.
-Spaces are the authorization boundary; PostgreSQL is the one authority.
+Raypx is the home for persistent Agents, each with one continuing conversation.
+People share Spaces to work with the same Agents. PostgreSQL owns conversations,
+Runs and permissions; Web, Desktop and Mobile render server state.
 
-Phase 1 provides conversation and process-local backend replies with queued Runs
-and stop. Members can also start and stop their Space's team computer from the
-Agent interface. It has no Agent tools, approvals or crash recovery. Durable Runs,
-routines, Agent/Space memory and shared Spaces arrive in later phases. The earlier
-CLI/daemon and native device runtime remain in the repository during that
-transition; they do not own the new conversations. See the
-[architecture](docs/architecture/README.md), [roadmap](docs/roadmap.md) and
-[product](PRODUCT.md).
+The implemented platform includes paged conversation history, streamed replies,
+durable Runs with recovery and stop, Computer tools, approvals and effects,
+routines, Agent and Space memory, versioned Pages, text skills, remote HTTP MCP
+servers and member-owned model connections. Shared Spaces support invitations,
+membership management, group conversations and bounded delegation. See the
+[product overview](PRODUCT.md) for client coverage and limits, and the
+[architecture](docs/architecture/README.md) and [roadmap](docs/roadmap.md) for
+technical decisions and separate acceptance gates.
 
-`@raypx/computers` owns Space-scoped computer lifecycle and persistence. The
-Computer port and providers live in `@raypx/providers`; `infra/sandbox` is the
-private Docker supervisor. The Agent runtime and credentials stay outside the
-computer. A server without a configured provider shows `not-configured` and
-allocates nothing. See [computers](docs/architecture/computers.md).
+The Agent runtime and credentials stay outside the computer. A private sandbox
+supervisor alone holds the Docker socket. Without a configured provider,
+computer-dependent actions report unavailable; the rest of the workspace starts.
+The retained CLI/daemon, SQLite profiles and native enrollment are separate from
+server conversations, pending their replacement phase. They are not an offline
+mode for the Agent platform, and no old profile data is imported.
 
-## Requirements
+## Start locally
 
-Bun 1.4.4 and a new isolated PostgreSQL database for accounts and conversations.
-Bun is the only JavaScript runtime; `packageManager` pins it. With
-[mise](https://mise.jdx.dev), run `mise trust && mise install` once; direct installs
-also work. `bun run doctor` confirms the environment.
-
-Native Desktop development and packaging require Go 1.27.3 and MyGo 0.8.3, with
-`CGO_ENABLED=0`. The configured macOS minimum is 13.5; Windows uses WebView2.
-Linux CLI support does not establish Linux Desktop acceptance. Desktop bundles the
-compiled Bun CLI/daemon; users do not install Bun. See the
-[Desktop guide](docs/development/desktop.md#build-and-release).
+Use Bun 1.4.4, pinned in `package.json`, and an isolated PostgreSQL 17 database.
+Desktop additionally uses Go 1.27.3 and MyGo 0.8.3 with `CGO_ENABLED=0`.
 
 ```sh
 bun install
 cp .env.example .env
-# Starts a NEW database on 5433; does not reuse the old volume.
+# Development database on 5433, in the separate foundation volume.
 docker compose up -d postgres
-bun db:migrate
+bun run db:migrate
 bun dev
 ```
 
-Web (TanStack Start SSR) runs on 3000; the combined backend runs on 3002. They
-remain separate Bun services: `bun apps/web/.output/server/index.mjs` and
-`bun apps/api/.output/server/index.mjs`. Web bakes `VITE_API_URL` at build time.
-For server-rendered sign-in, serve both from one origin or set `AUTH_DOMAIN` to
-the parent domain of sibling hosts such as app/api.example.com. Configure offered
-models and credentials as described in the
-[phase 1 reply guide](docs/architecture/execution.md#deployment-model-configuration).
-An empty catalog leaves model replies unavailable rather than inventing a model.
+Web runs on 3000 and the backend on 3002. The default `SERVER_ROLE=all` runs API,
+recovery worker and retained Relay together. Durable Run coordination uses
+PostgreSQL; Redis is optional unless splitting the retained device transport.
+Configure a deployment model catalog or add a model connection in account settings.
+An empty catalog is an explicit unavailable state.
 
-The current backend still defaults to `SERVER_ROLE=both`; split `api` and `relay`
-roles use the same output and a private Redis broker. This differs from the target
-worker topology. Phase 1 live replies require one API-enabled process.
-
-Agents is the signed-in destination. Account/security, administration,
-configuration, device preferences and the earlier standalone Memory views remain.
-Project/session pages, Waiting, New session and the guest editor are removed.
-Conversation use requires a reachable server; local drafts are not offline
-execution. Desktop retains system-browser sign-in and its native transport. The
-CLI still supports the earlier registered device workflows, as documented in the
-[development guides](docs/development/getting-started.md); it becomes a device
-connector in a later phase. No profile import or migration is provided.
+Follow [local setup](docs/development/getting-started.md) for environment variables,
+mail, separate roles and Desktop/Mobile connections. Follow the
+[sandbox guide](docs/development/sandbox.md) to enable computers with Docker or
+Colima, including the separate egress gate. Never reuse a retired/operator database
+for development or tests.
 
 ## Daily commands
 
-| Task              | Command                                |
-| ----------------- | -------------------------------------- |
-| Start Web and API | `bun dev`                              |
-| Start Desktop     | `bun dev:desktop`                      |
-| Test a workspace  | `bun run test --package @raypx/agents` |
-| Run browser E2E   | `bun e2e`                              |
-| Verify changes    | `bun verify`                           |
-| Check formatting  | `bun format`                           |
-| Apply formatting  | `bun format --write`                   |
-| Build             | `bun run build`                        |
+| Task                              | Command                                |
+| --------------------------------- | -------------------------------------- |
+| Start Web and backend             | `bun dev`                              |
+| Start Desktop                     | `bun dev:desktop`                      |
+| Start Mobile                      | `bun dev:mobile`                       |
+| List workspace suites             | `bun run test list`                    |
+| Test the Agent feature            | `bun run test --package @raypx/agents` |
+| Browser acceptance                | `bun e2e`                              |
+| Verify affected sources           | `bun run verify`                       |
+| Apply formatting                  | `bun format --write`                   |
+| Check repository policy and links | `bun run policy`                       |
+| Build                             | `bun run build`                        |
 
-Turbo schedules and caches scripts declared in workspace manifests. Engineering
-commands are exposed as `raypx-dev`; the product executable is `raypx`. Workspace
-discovery reads root `package.json` patterns, including applications, libraries,
-infrastructure and E2E. `verify` selects affected source checks/tests;
-`verify --full` adds repository-wide audits, builds and current-platform artifact
-probes. PostgreSQL, browser, live model and packaged GUI acceptance are separate
-gates. An unrun platform is never a pass. Mobile currently provides an account and
-sign-in baseline, not the full Agent client.
+Turbo schedules manifest-owned tasks. `raypx-dev` is the engineering CLI;
+`raypx` is the retained device executable. `verify --full` adds repository audits,
+builds and current-platform artifact probes. PostgreSQL, owned-backend browser
+journeys, real Docker, live models and packaged native acceptance remain explicit
+gates. Source or browser success establishes no unrun platform result.
 
-Use `bun run test --help` or the
-[test command guide](docs/development/testing.md#test-commands) for suites and
-optional gates. See [documentation](docs/README.md),
-[workspace boundaries](docs/development/workspaces.md) and
-[verification](docs/development/testing.md).
+Start with the [documentation index](docs/README.md),
+[testing guide](docs/development/testing.md), and [contribution rules](CONTRIBUTING.md).

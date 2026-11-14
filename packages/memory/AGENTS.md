@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Versioned user-selected memory and task templates: injected server use cases and browser views.
+Versioned Agent and shared Space memory, bounded checkpoint-pinned recall and
+Web/Desktop editing. Retained account/device references and task templates remain
+separate for their existing consumers until replacement.
 
 ## Interface
 
@@ -31,7 +33,7 @@ never migrate their content into Space memory implicitly.
 
 `@raypx/core/memory` owns document/version schemas and errors shared by transports,
 server use cases, device execution and browser views.
-`/server` owns injected account/device use cases and repository ports for Node hosts;
+`/server` owns injected account/device use cases and repository ports for Bun hosts;
 persistence, identity, project authorization and clocks remain caller-owned. `/client`
 and `/server` import Core and never each other.
 

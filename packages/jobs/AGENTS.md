@@ -1,11 +1,13 @@
 # @raypx/jobs
 
 Web and Desktop expose Space routines alongside Agent conversations. Earlier
-project/session automation views remain separate from these Space-owned routines.
+project/session automation pages are removed; retained job procedures and helpers
+remain separate until their replacement phase.
 
 ## Purpose
 
-Injected cloud use cases and shared browser views for local/cloud jobs.
+Space routines, worker scans and injected Web/Desktop editors, plus retained
+account cloud/device job services and helpers.
 
 ## Interface
 
@@ -30,7 +32,8 @@ Injected cloud use cases and shared browser views for local/cloud jobs.
 entry imports contracts or concrete SDKs. Keep client ports independent of SDK-derived types.
 Private view state remounts and in-flight requests abort on account/client changes.
 Cloud forms retain edits on CAS errors and require explicit device epoch reselection.
-Local automations remain in the Desktop device profile across account changes.
+Retained local schedules remain in CLI device profiles across account changes;
+the current Desktop renderer does not expose their former automation page.
 
 ## Verification
 

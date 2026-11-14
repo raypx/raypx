@@ -8,11 +8,12 @@ conversation cursor. These capabilities add no environment variables.
 
 ## Purpose
 
-The Bun HTTP composition root for authentication, account and administrator RPC,
-remote read projections, memory and cloud scheduling. Feature workspaces own the
-server implementations: Tasks/server owns task projections, Memory/server/postgres
-owns account contexts, and Jobs/server/postgres owns cloud scheduling persistence.
-API injects the owned database and authorization/transport ports.
+Bun composition root for the server-owned Agent platform: session/Space RPC,
+conversation paging/events, durable Runs, approvals/effects, computers, routines,
+memory, Pages, skills, remote MCP, models, membership, groups and delegation.
+Feature packages own use cases and scoped repositories; API injects database,
+configuration, secrets and transports. Retained account/device projections and
+cloud jobs remain separate until their replacement phase.
 
 ## Interface
 
@@ -44,7 +45,8 @@ owner approval overrides/audit and member directory/events. Its required removal
 hook cancels Runs/cards in the membership transaction; postcommit hooks abort local
 execution. A dedicated Space fanout actively closes affected sockets. The worker
 resumes claimed Space deletion in leased durable stages and starts only in worker
-roles, outside construction. No membership UI or group/delegation is implemented.
+roles, outside construction. Web/Desktop compose membership, group and delegation
+controls; Mobile has a narrower direct-Agent surface. UI presence does not replace admission checks.
 `conversations.send/events/snapshot` reuse that scope boundary and delegate to the
 Agents conversation repository. `/events` is a session-authenticated, Origin-checked
 CrossWS route on the same listener in API-enabled roles. It multiplexes bounded

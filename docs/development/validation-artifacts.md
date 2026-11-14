@@ -97,7 +97,7 @@ explicit mapping from a baseline file to its new workspace name:
 
 ```json
 {
-  "apps/web/src/features/example.component.test.tsx": "@raypx/tasks"
+  "apps/web/src/features/example.component.test.tsx": "@raypx/agents"
 }
 ```
 
@@ -114,7 +114,7 @@ bun run test backends --with-e2e
 bun run test backends --with-e2e -- --workers=1
 ```
 
-This explicit POSIX gate promotes the earlier local backend-validation scripts.
+This explicit POSIX gate owns isolated backend services independently of source verification.
 For automatic provisioning, provide PostgreSQL's `initdb`, `postgres`, `pg_isready`
 and `createdb` on PATH, or set
 `TEST_POSTGRES_BIN` to their directory. Redis's `redis-server` comes from PATH or
@@ -312,7 +312,7 @@ conservatively because the native inputs are unknown. `bun run knip` remains an
 explicit maintenance command.
 Go-only changes (Go sources and the Desktop module's `go.mod`/`go.sum`) select host
 checks without selecting renderer type checks or JavaScript suites. Workflow files
-and the `native-checks` action select Tooling's type checks/tests plus any relevant
+and the `native-checks` action select Dev CLI validation and relevant Tooling checks plus any relevant
 native/container acceptance. Shared dependency-install/cache actions still broaden
 all source checks. Mixed changes combine these scopes, and full verification selects
 every workspace as before.

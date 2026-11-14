@@ -19,13 +19,12 @@ Raypx's components wrap Base UI and use the shared control sizes and theme.
   `itemToStringLabel`, `itemToStringValue` and `isItemEqualToValue`. Keep the
   search string separate from the selected value. The caller supplies translated
   labels and owns asynchronous loading, errors and retries.
-- The task model picker uses provider, model ID and connection ID for identity.
-  It groups by provider and includes the connection origin in each option's
-  accessible name. Search matches the provider, model name and displayed origin.
-  The picker and command palette accept full-width and half-width input.
-  Selecting a model changes the current task choice. Saving the
-  device default requires a separate action. The picker is available for local
-  Pi sessions on Desktop. [Model picker](../../../packages/tasks/src/client/model-picker.tsx)
+- Use searchable controls where the feature needs them. The current Agent model
+  picker uses UI Select, groups member/deployment offers and preserves the opaque
+  returned model ID; it is not this Combobox.
+- The retained device-task picker still exercises connection-aware Combobox
+  identity/search in its component tests. Its former Desktop project/session UI
+  is removed; do not describe it as an available Agent workflow.
 
 ## Examples and verification
 
@@ -40,6 +39,6 @@ light and dark. [Story source](../../../apps/storybook/src/stories/combobox.stor
 | [Storybook](../../../apps/storybook/src/stories/combobox.stories.tsx)                                                                                                             | Keyboard opening, labelled groups, disabled items, filtered choices, the active option relationship, Enter selection, and Escape from empty results with focus and selection preserved. |
 | [UI component tests](../../../packages/ui/src/combobox.component.test.tsx) and [model picker component tests](../../../packages/tasks/src/client/model-picker.component.test.tsx) | Controlled selection and focus, connection-aware identity, unavailable selections, and stale catalog handling.                                                                          |
 
-The phase 1 client cleanup removes the project/task browser cases. The retained
+The server-owned client replacement removes the project/task browser cases. The retained
 component tests above cover the device-runtime picker; native WebView and IPC
 acceptance remain separate packaged gates.

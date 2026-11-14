@@ -1,9 +1,14 @@
-# Session attachment storage
+# Retained session attachment storage
 
-Web and Desktop remote session editors can attach UTF-8 text files when object
-storage is configured. Selecting a file uploads it immediately. The editor waits
-for the upload before it can send the session. It can remove a selection or save
-it in a device-local draft. Desktop's offline session path remains device-local.
+Object storage and session attachment RPC remain for retained account/device-task
+consumers until their replacement phase. Current Web/Desktop no longer expose
+the old remote session editors, and new Agent messages do not offer this attachment
+workflow. Pages stores bounded immutable document bodies in PostgreSQL; it does
+not use this bucket or imply a new asset-upload feature.
+
+Administrator Object storage settings remain available. The service below keeps
+its existing ownership, encryption and retention boundaries; no old attachments
+are imported into Spaces.
 
 ## Configure S3
 

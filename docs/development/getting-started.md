@@ -1,200 +1,188 @@
-# Development
+# Local development
 
-Desktop uses the MyGo/Go host; the CLI/daemon remains Bun/TypeScript.
+Raypx runs Web and a server-owned Agent backend as separate Bun services.
+PostgreSQL is the authority for Spaces, conversations, Runs and capabilities.
+The optional supervisor provides computers. Desktop's retained CLI/daemon and its
+SQLite profiles are a different runtime; they are not required for Web Agent work.
 
-Use Bun 1.4.4; it is the only JavaScript runtime. package.json `packageManager`
-pins it; to upgrade, change that, then fix what `bun run policy` reports.
+## Prerequisites
 
-mise is the recommended version manager on macOS, Linux and Windows. The committed
-mise.toml only lets it read that pin and must never list `[tools]`:
-
-```sh
-mise trust && mise install          # once per clone
-eval "$(mise activate zsh)"         # in ~/.zshrc (bash/fish/PowerShell also supported)
-```
-
-Activated shells switch versions on cd; without activation use `mise exec -- <command>`.
-Raypx uses mise for Bun selection and Go 1.27.3 for the native host. The repository does not use a Nix shell.
-Windows Desktop uses WebView2 and the Windows packaging/signing tools. The MyGo
-host builds with `CGO_ENABLED=0`; it does not require a C/C++ compiler for that build.
-The configured macOS package minimum is 13.5.
-Direct Bun installs also work. `bun run doctor` confirms the active runtime. PostgreSQL client tools come from the compose container:
-`docker compose exec postgres psql -U raypx raypx_foundation`.
-
-Repository automation is installed and implemented by `@raypx/dev-cli`, which
-registers `raypx-dev`. Package scripts receive it from their direct
-workspace dependency. For direct terminal use, run `bun link` once in
-`packages/dev-cli` with Bun's global bin directory on `PATH`, then use
-`raypx-dev doctor` or `raypx-dev verify`. The root `bun run raypx-dev <command>`
-entry uses the same executable without requiring a global link.
-
-Desktop's Go module lives in apps/desktop. Daily `bun verify` selects affected
-JavaScript and Go checks. `bun verify --full` checks all current-platform sources
-and artifacts for release preparation or an explicit full-validation request.
-Shared JS configuration/lockfile changes broaden source checks without starting
-native runners. See the [Desktop guide](desktop.md#build-and-release).
-
-`bun install` runs the root `prepare` script, which installs the Vite+ Git hook
-dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp staged`:
-oxfmt and oxlint fixes on staged files only. The `commit-msg` hook checks the
-[commit subject format](../../CONTRIBUTING.md#commit-messages). Check hook installation
-with `bun --bun vp hooks status`.
-`VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun verify`.
-Use `bun lint` for a standalone lint pass and `bun format` to check formatting.
-`bun format --write` applies formatting with the same Vite+ rules and ignore files.
-
-Remote tasks require Redis. `docker compose up -d valkey` starts Valkey on 6380; set
-`REDIS_URL=redis://localhost:6380` to cache sessions and keep rate limits in Redis
-instead of PostgreSQL. API sessions remain persisted in PostgreSQL.
-
-Copy .env.example to .env; .env.local has priority, inherited shell values win.
-Values are literal: `${VAR}` references are not expanded.
-Only development/build/env commands load files; tests provide explicit environment.
-Start `docker compose up -d postgres` (PostgreSQL on 5433, Valkey on 6380),
-then run `bun dev`. API startup applies pending foundation migrations before
-initializing its runtime. Set `DATABASE_MIGRATE_ON_START=false` to skip this step
-when migrations are managed separately; `bun run db:migrate` remains available explicitly.
-Never point API startup or migration commands at the retired database or volume.
-`bun run db:studio` opens Drizzle Studio (read/write) on the `public` schema of `DATABASE_URL`.
-
-`bun dev` starts Web (Start SSR on 3000) and the combined backend (3002).
-Nitro hosts `/relay` alongside HTTP. Redis is optional for this default topology;
-set `SERVER_ROLE=api` and run another copy with `SERVER_ROLE=relay` only when
-using a shared private broker. See backend roles.
-`bun dev:desktop` starts Desktop development.
-`bun package:desktop` packages it with its version-matched CLI. Phones use the Web
-application for the remote workbench. An Expo Mobile account/login baseline is
-also available through `bun dev:mobile`. See the [Mobile guide](mobile.md).
-Desktop reads its connection at runtime from `~/.raypx/config.toml`, defaulting
-to production. To use the local API, set `base_url = "http://localhost:3002"`
-and `web_url = "http://localhost:3000"`, then fully quit and restart Desktop.
-Use a separate absolute `RAYPX_HOME` for isolated development configurations.
-See [Desktop configuration](desktop.md#connection-configuration) for profiles/self-hosting.
-`VITE_API_URL` and `VITE_WEB_URL` still configure ordinary browser previews/Web
-builds; they do not override an installed Desktop's TOML settings.
-`bun dev:storybook` previews `@raypx/ui` components on 6006. `bun build:storybook`
-writes the static site to `apps/storybook/dist`.
-
-Bun catalogs hold third-party versions: the default `catalog:` contains shared
-runtime libraries, `catalog:mobile` contains Mobile-only dependencies, and
-`catalog:dev` contains build, test and development tools. Shared
-libraries keep the same catalog even when a test workspace lists them under
-`devDependencies`. DOM applications share one exact React/React DOM version;
-Mobile pins its Expo-supported React in `catalog:mobile`. Shared peer ranges must
-support both. Environment, TypeScript presets and logging are local `@raypx` workspaces;
-remaining `@raypx-kit/*` dependencies are independently released external libraries.
-Do not add another task runner. Web and API run under Bun in dev, build, preview
-and production: scripts call `bun --bun vp`, and each output starts with
-`bun .output/server/index.mjs`. Nitro's `bun` preset traces Bun export conditions.
-
-Actual verification/reset emails require [Resend setup](configuration.md#resend-email).
-Unconfigured mail actions return `MAIL_NOT_CONFIGURED`. Tests inject an
-in-memory mail transport.
-
-Bun uses the isolated install layout: each workspace resolves only the packages it
-declares, so a missing dependency fails at install or build time instead of
-resolving through another workspace. DOM bundlers deduplicate React; Mobile's
-Metro resolver selects its own React/JSX instance for shared source. Policy still
-checks every declared production import.
-
-## Local CLI
-
-Build with `bun run build:cli`, then use `apps/cli/dist/raypx` (`raypx.exe` on
-Windows), or run the source with `bun run --cwd apps/cli dev --help`.
-The citty command tree provides `raypx --help`, `raypx files --help` and
-`raypx files read --help`. Register the selected profile with `raypx login`
-before using local execution commands; see [registration](#register-local-execution). JSON-parameter commands include:
+Use Bun 1.4.4 from root `package.json`. Direct installs work; mise can read that
+pin through the committed `mise.toml` without a `[tools]` table:
 
 ```sh
-raypx files authorize /absolute/directory --json
-raypx files roots --json --profile work
-raypx jobs list --json
-raypx files read '{"rootId":"grant-id","path":"notes.txt"}' --json
+mise trust
+mise install
+bun install
+bun run doctor
 ```
 
-Global `--profile`, `--data-dir`, `--json` and `--yes` can appear before or after
-command words. Unknown, missing, empty and repeated options fail explicitly.
-String options also accept `--profile=work`. Use `--` to end option parsing;
-all following arguments remain operands, for example
-`raypx --json files authorize -- /absolute/directory`. Tools still take one
-JSON command object; their executable argv belongs in its `args` array.
-`--version`/`-v` print the version, and `--help`/`-h` select help.
-Results retain the current bare JSON shape; errors and diagnostics use stderr.
-On macOS/Windows the independent CLI daemon schedules jobs and survives GUI Quit.
-The private foreground `stdio` runtime can also own scheduling when used directly.
-One-shot commands and TUI keep scheduling disabled and close only their own runtime.
+Desktop native development additionally needs Go 1.27.3 and the pinned MyGo 0.8.3
+host, built with `CGO_ENABLED=0`. macOS packages target 13.5+; Windows uses WebView2.
+Linux Desktop acceptance remains unverified. Mobile uses Expo and native development
+builds; see [Mobile](mobile.md) for SDK alignment and device requirements.
 
-`raypx tui --profile work` opens a lightweight task browser when stdin and stdout
-are both terminals. Enter `t` for tasks, select a number, then `r` to run once
-after typing `yes`, or `h` for history. Results and retained output are paginated.
-Use `b` to return and `q` to quit. While running, `q` asks for confirmation to
-cancel the session's work and quit; Ctrl-C/SIGINT and SIGTERM clean up immediately
-and exit with 130 and 143. It never starts a scheduler or controls another runtime.
-Language follows `LC_ALL`, `LC_MESSAGES`, then `LANG`; `l` switches English/Chinese
-for the session. The menu inherits terminal colors and supports narrow/dumb terminals.
-It rejects redirected input/output and `--json`/`--yes`; `raypx tui --help` works
-without a TTY. Bare `raypx` still prints help.
+`bun install` installs the Vite+ Git hooks. `vp staged` formats/lints staged files;
+the commit hook checks [Conventional Commits](../../CONTRIBUTING.md#commit-messages).
+`bun --bun vp hooks status` checks installation and `VP_GIT_HOOKS=0` skips hooks.
+Tests and type checks run through `verify`, independently of these hooks.
 
-Run `bun run --cwd apps/cli smoke:tui` after building for the explicit POSIX PTY
-gate. It requires system Python 3 only for the test harness and uses temporary
-profiles, an empty PATH and a relocated complete CLI payload. The full host/owner protocol,
-live output and cross-owner controls remain proposed.
+## Database and environment
 
-## Build caches
+```sh
+cp .env.example .env
+docker compose up -d postgres
+bun run db:migrate
+```
 
-`bun run clean:artifacts` removes validation evidence, coverage, test-report caches
-and browser reports while preserving builds and staged native resources. See
-[validation scripts and cleanup](validation-artifacts.md) for the maintained checks
-and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
+Root `compose.yaml` creates PostgreSQL 17 on port 5433 in the separate
+`raypx-foundation-postgres` volume. The example URL selects `raypx_foundation`.
+Never select a retired or operator database for startup, migrations or tests.
+API startup applies pending migrations by default; set
+`DATABASE_MIGRATE_ON_START=false` when managing them separately. Migration failures
+stop startup. `bun run db:generate` generates schema migrations; `bun run db:studio`
+is a read/write console on the configured database, not a test command.
 
-`bun run clean` removes workspace build outputs, coverage, Turbo/Vitest and TanStack caches,
-Desktop's renderer artifacts and MyGo generated/resource directories, root
-`.artifacts`, and browser test results/reports. Removals run in batches of up to eight directories.
-It keeps dependencies, lockfiles,
-Git history, environment files, user profiles and database volumes. Native development,
-Go host checks and packaging prepare generated inputs and the matching CLI again.
+Development/build/env commands read root `.env`, then `.env.local`; inherited
+shell values win. Values are literal: `${VAR}` is not expanded. Tests supply an
+explicit environment. `bun run raypx-dev env -- <command>` loads this same
+configuration for an operator command without printing it.
 
-Turbo owns the task graph and its local cache at `.turbo/cache`; git worktrees share
-the main checkout's cache. Use root build/check/test commands, or `raypx-dev tasks`,
-so the launcher supplies the platform identity and development environment; for
-example `bun run raypx-dev tasks @raypx/core#test`. Workspace scripts are direct
-leaf commands: `bun run --cwd apps/web build` compiles without running prerequisites.
-Root `turbo.json` declares dependencies, inputs, outputs and environment keys;
-application plugins live in `vite.app.config.ts`.
-Language policy lives in i18n's public static `./config` export; repository checks
-read it without importing the i18n runtime.
+| Input                                                          | Local use                                                                                                                     |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                 | New isolated PostgreSQL database.                                                                                             |
+| `AUTH_URL`, `ALLOWED_ORIGINS`                                  | API origin and exact allowed Web/native origins; example ports are 3002 and 3000.                                             |
+| `AUTH_SECRET`, `APP_KEY`                                       | Independent secrets; replace development examples before deployment. API and workers share the encryption key.                |
+| `VITE_API_URL`, `VITE_WEB_URL`                                 | Public Web build inputs; rebuild when changing them. Installed Desktop uses runtime TOML.                                     |
+| `SERVER_ROLE`                                                  | Defaults to `all`: API, worker and retained Relay.                                                                            |
+| `AGENT_MODELS`, `AGENT_MODEL_CREDENTIALS`                      | Optional deployment model directory and protected credential map; empty defaults disable deployment offers.                   |
+| `COMPUTER_PROVIDER`                                            | `none` by default; `docker` requires the private supervisor URL and dedicated token.                                          |
+| `APPROVAL_DEFAULT_MODE`, `APPROVAL_REQUEST_TTL_MS`             | Defaults: `ask` and 600000 ms. Auto review is explicitly unavailable.                                                         |
+| `RUN_RECOVERY_INTERVAL_MS`, `RUN_LEASE_MS`, `RUN_HEARTBEAT_MS` | Defaults: 5000, 15000 and 5000 ms.                                                                                            |
+| `RUN_ATTEMPT_TIMEOUT_MS`, `RUN_BACKUP_MARGIN_MS`               | Defaults: 300000 and 30000 ms.                                                                                                |
+| `JOBS_ENABLED`                                                 | Enables Nitro maintenance and retained account scheduling; false in the development example. Space routines use worker scans. |
+| `ROUTINE_EMAIL_RELAY_TOKEN`, `ROUTINE_EMAIL_DOMAIN`            | Paired configuration for server routine email ingress; Raypx does not run SMTP.                                               |
+| `REDIS_URL`                                                    | Optional cache/broker; required for split retained API/Relay device transport.                                                |
 
-GitHub CI restores Bun downloads before frozen installs outside Windows, then restores
-Turbo's `.turbo/cache`. Only successful tasks become reusable entries, even if a
-later check fails. Cache archives use a fresh key per workflow attempt with a
-compatible fallback; OS, architecture, Bun versions and job partition them.
-Only jobs that added cache entries upload a snapshot. Task hashes choose reusable
-results. CI caches this directory, not dependencies or `node_modules`.
+Configure mail through [administrator settings](configuration.md#resend-email).
+Unconfigured mail actions return `MAIL_NOT_CONFIGURED`; use a real configured mail
+transport to complete ordinary account verification. Tests inject mail delivery.
+After sign-in, add a model connection under account Models or configure the
+[deployment catalog](../architecture/execution.md#deployment-model-configuration).
+Secrets remain backend-only. An empty/unavailable offer does not choose a fallback.
 
-Required release artifacts move between jobs through artifacts rather than an
-optional cache. No external remote-cache service or Turbo credentials are used.
-Inspect reuse in the summary each run writes under `.turbo/runs/`.
-Include transfer time when measuring CI gains. See the [testing guide](testing.md).
+## Web and backend
 
-## Agent skills
+```sh
+bun dev
+# Or select one service through the same graph:
+bun run raypx-dev tasks dev --filter api
+bun run raypx-dev tasks dev --filter web
+```
 
-Vendored skills live in `.agents/skills/` and `skills-lock.json` records their sources and
-hashes; `skills/` and `.claude/skills/` link them for each agent. Run `bun run skills:update`
-to pull upstream versions, review the diff, and never edit them by hand. A skill removed
-upstream stays installed until you remove it explicitly. Keep only skills for
-the current stack and remove retired skills together with both discovery links
-and their `skills-lock.json` entry. Lint skips these upstream bytes.
+Web runs on 3000 and API on 3002. Sign in and open `/agents`. The sidebar selects
+a Space and direct Agent or group; the conversation header opens routines, Space
+memory and the computer panel. Pages has its own navigation entry. Account settings
+hold model connections, approval rules, Skills and Tools.
 
-Project guidance lives in root/workspace `AGENTS.md` and this documentation tree.
-Update the owning document directly instead of maintaining a second project
-manual in a repository-specific skill.
+Bun runs Nitro's `bun` output in production:
 
-## Register local execution
+```sh
+bun run build:api
+bun run build:web
+# In separate terminals:
+bun apps/api/.output/server/index.mjs
+bun apps/web/.output/server/index.mjs
+```
 
-Before using local files, commands, automations or Agent sessions, register the local instance once. Desktop offers registration after sign-in. For the standalone CLI, run `raypx login` and approve the displayed code on the account page. `RAYPX_API_URL` selects a deployment and `RAYPX_WEB_URL` selects a separate Web origin; HTTPS is required outside loopback. CLI `--profile` selects a distinct local profile when needed.
+Use a common origin or `AUTH_DOMAIN` for the parent of sibling Web/API hosts so
+SSR receives the session cookie. `/events` is the authenticated Agent/Space stream;
+`/relay` is retained device transport. Proxies must route both correctly, along with
+`/rpc`, `/api`, `/routines/` and `/page-content/` where those features are used.
 
-The signed identity remains usable offline and after online logout. Registration enables no remote Host grant and uploads no project content. Account/origin changes cannot take over the profile. The account page lists and revokes registered instances; a successfully synced revocation blocks local execution and preserves stored history. See the instance decision.
+`SERVER_ROLE=api` serves requests and starts committed Runs directly;
+`SERVER_ROLE=worker` scans recovery, routines and claimed Space deletion without
+exposing account RPC; `relay` serves retained device connections. `all` combines
+them. The retained `both` value also combines all three. API/worker coordination
+uses PostgreSQL only. To split retained device routing, start a private cache with
+`docker compose up -d valkey` and use `REDIS_URL=redis://localhost:6380` on both sides.
+Do not start extra API processes to obtain crash recovery without running a worker.
 
-See the production CLI packaging decision
-for the payload contract and the [Desktop guide](desktop.md#build-and-release) for
-native preparation and platform acceptance.
+## Computers
+
+Follow [sandbox setup](sandbox.md) to build an immutable computer image, run a
+private supervisor on Docker or Colima and configure the backend's Computer port.
+Only the supervisor opens the Engine socket. Starting Web/API alone allocates no
+computer. Computer file reads do not implicitly start it; explicit Start or an
+executed tool can. Host egress enforcement is separately configured and verified.
+
+## Desktop
+
+```sh
+bun dev:desktop
+```
+
+This stages the matching bundled CLI and starts Vite/MyGo. The API and Web must
+also be running for the local server. Installed/native Desktop reads connection
+settings once from `~/.raypx/config.toml` (or an absolute isolated `RAYPX_HOME`):
+
+```toml
+base_url = "http://localhost:3002"
+web_url = "http://localhost:3000"
+```
+
+Fully quit and restart after editing. Named connection profiles and local CLI
+profiles are distinct; endpoint changes never transfer an enrolled identity.
+[Desktop configuration](desktop.md#connection-configuration) explains origin/session
+isolation. The renderer shares Agent state with Web and keeps cookies private in
+the daemon. Page previews hand off to Web. `bun run package:desktop` is an explicit
+native packaging gate, not necessary for ordinary renderer development.
+
+## Mobile and UI
+
+```sh
+bun dev:mobile
+bun dev:storybook
+```
+
+Mobile's `apps/mobile/.env.local` may set `EXPO_PUBLIC_API_URL` to an HTTPS gateway
+reachable from the phone. It is public bundle configuration, not a secret. A
+loopback URL on the development computer is not the phone's server. Mobile supports
+Agent/direct conversation, approval and computer lifecycle workflows; Page links
+open Web. See [Mobile](mobile.md) for native builds and unverified device gates.
+Storybook previews shared DOM UI on 6006.
+
+## Verify and maintain
+
+```sh
+bun run test --package @raypx/agents
+bun format --write
+bun run policy
+bun run verify
+```
+
+Use `bun run test`, not Bun's built-in `bun test`. [Testing](testing.md) documents
+source layers, PostgreSQL, owned-backend journeys, browser, sandbox and Mobile
+gates. Default verification needs no database or GUI. `verify --full` adds builds
+and artifact probes; it does not substitute for separate platform acceptance.
+
+Turbo is the sole task graph/cache. Workspace scripts are leaf commands, so root
+commands provide prerequisites and platform keys. `bun run workspace:list` derives
+the inventory from root manifest patterns. Catalogs own external versions: shared
+runtime in `catalog:`, Mobile in `catalog:mobile`, tools in `catalog:dev`.
+
+`bun run clean:artifacts` removes generated evidence and test reports while keeping
+builds and user data. `bun run clean` also removes build/cache outputs and staged
+native resources. See [validation evidence](validation-artifacts.md) for retention.
+Neither command should be used to remove another process's active resources.
+
+## Retained device runtime
+
+The [CLI guide](../../apps/cli/README.md), [terminal host](terminal-host.md) and
+[local SQLite](local-sqlite.md) describe still-present device consumers until their
+replacement phase. Enrollment, local grants and profile history never authorize a
+Space. Registering a device is not part of the server Agent setup above.
+
+Vendored repository skills live in `.agents/skills/`; `skills-lock.json` records
+their sources. `bun run skills:update` refreshes upstream bytes for review. Do not
+edit them by hand or confuse them with account/Space text skills in the product.

@@ -1,4 +1,9 @@
-# Raypx CLI
+# Raypx device CLI (retained)
+
+This retained runtime remains until the device connector replacement phase. New
+Spaces, Agent conversations, durable Runs and tools belong to the PostgreSQL
+backend. Local enrollment/profile history does not authorize a Space and is never
+imported into server history.
 
 Raypx's TypeScript CLI and independent daemon run in the compiled `raypx`
 executable, with no installed Node.js or Bun required. Desktop uses a
@@ -58,9 +63,9 @@ Windows x64 archives and SHA-256 files from the prepared payload. Signing and
 notarization are separate distribution steps. Artifact checks and source tests
 do not establish a platform's installer, GUI or release-signing acceptance.
 
-Desktop's Terminal tool can open the daemon's default shell in a selected
-project without an executable or JSON argument list. This uses the private
-`terminal.open` contract; it adds no public CLI command. Custom executables remain
+The retained private `terminal.open` contract can select the daemon's default
+shell without an executable or JSON argument list. The current Desktop renderer
+has no Terminal screen; this adds no public CLI command. Custom executables remain
 absolute paths, and `raypx tools run` still requires its explicit executable.
 Herdr supplies the PTY and terminal state.
 

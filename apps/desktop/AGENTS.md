@@ -23,12 +23,13 @@ Unread terminal results share the eight-stream bound and expire after 20 seconds
 The renderer forwards termination once to the shared socket port, stops polling
 and suppresses late results after local close. Go only bootstraps the channel.
 The shared Space menu and New Agent action occupy sidebar slots. The conversation
-header opens the shared team-computer lifecycle panel; its API reads and commands
+header opens the shared team-computer lifecycle/files panel; its API reads and commands
 use the existing daemon-authenticated client without exposing credentials.
 
-The phase 1 renderer has no project/session editor, Waiting inbox, Automations,
+The current renderer has no project/session editor, Waiting inbox, Automations,
 Files, Terminal or local onboarding screen. Their native/CLI implementations remain
-until later roadmap phases; do not reintroduce them as Agent execution. The conversation header opens Space routines and memory sheets. The earlier
+until later roadmap phases; do not reintroduce them as Agent execution. The
+conversation header opens Space routines and memory sheets. The earlier
 standalone device/account Memory route and navigation are removed.
 Account and security, authentication, appearance, language, analytics and session
 recovery stay available. Desktop has no embedded administration area; deployment

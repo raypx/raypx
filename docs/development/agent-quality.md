@@ -1,4 +1,9 @@
-# Agent quality and performance checks
+# Retained harness quality and performance checks
+
+These checks cover the retained CLI harness and device-task helpers until their
+replacement phase. They do not grade the server ConversationRunner, PostgreSQL
+recovery or current Agent tools. New Agent conversation/history tests live in
+`@raypx/agents` and the shared browser journeys.
 
 `bun run perf:tasks` runs the CLI snapshot/local-read and Tasks conversation performance
 regressions through the existing Turbo task graph. The gates assert bounded work,
@@ -16,12 +21,13 @@ real inference:
 | Indexed, frozen snapshots        | 10,000/100,000 task rows, 10,000 activities plus another binding, old profiles, byte budgets and concurrent writes                                                                        |
 | Conversation state and rendering | Stable references and atomic deltas over 10,000 model rows; browser fixtures cap loaded messages at 200 and check bounded DOM, focus, virtual/full height changes, paging and gap anchors |
 | Connection reliability           | Shared scheduler, deterministic retry/renewal/heartbeat/ACK/drain tests, real loopback transport                                                                                          |
-| Provider lifecycle replay        | Shared Codex/Claude execution scenarios and protocol-specific steer/interrupt cases                                                                                                       |
+| Provider lifecycle replay        | Shared external-provider execution scenarios and protocol-specific steer/interrupt cases                                                                                                  |
 | Performance entry                | `bun run perf:tasks`; Chromium reports DOM counts, timings and available heap separately                                                                                                  |
 | Policy Evals                     | Case validation, simulated effects, grading and injected model turns; paid inference remains opt-in                                                                                       |
 
-Run `bun run test e2e -- tasks/` for all Web/Desktop task browser
-journeys. Conversation acceptance uses at most 200 messages and fourfold Chromium
+Run `bun e2e --web conversation-history.spec.ts` and its `--desktop` equivalent
+for current Agent conversation reading acceptance. Removed task/project browser
+journeys are not part of the current inventory. Conversation acceptance uses at most 200 messages and fourfold Chromium
 CPU throttling to exercise delayed height measurements. This checks compiled renderers; packaged
 native WebView and Windows acceptance remain separate platform gates. For the
 standalone CLI, run `bun run build:cli` then `bun run --cwd apps/cli smoke`.
@@ -74,13 +80,13 @@ CLI's `tests/helpers/provider-replay.ts` validates synthetic NDJSON under
 `tests/fixtures/agents/replay/`. Direction and protocol fields distinguish requests,
 responses, notifications and process exits. Explicit gates pause and release
 events; draining waits for queued and in-flight work. Tests inject only a private
-execution driver factory and provider process port. Codex and Claude share the
+execution driver factory and provider process port. The two retained process adapters share the
 same execution lifecycle scenarios, with separate steer/interrupt assertions.
 These fixtures contain synthetic protocol data, not unreviewed private recordings.
 
 ## Local native Agent acceptance
 
-Run the first-delivery flow on macOS or Windows with an installed, configured Codex
+Run the first-delivery flow on macOS or Windows with an installed, configured external provider
 CLI. This gate consumes real provider inference and uses a separate native test
 application, temporary profile and synthetic project without a Raypx account:
 
@@ -88,7 +94,7 @@ application, temporary profile and synthetic project without a Raypx account:
 RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents
 ```
 
-Codex is the default. `RAYPX_LIVE_AGENT_PROVIDERS=claude,codex` explicitly expands
+The default provider selection is declared by the retained native gate. `RAYPX_LIVE_AGENT_PROVIDERS=claude,codex` explicitly expands
 the gate when both providers are configured. Invalid selections fail before
 packaging or inference. The flow checks a project read, rejected plan with no
 write, approved implementation and generated tests, owner-process restart with
@@ -106,8 +112,8 @@ test or build does not count as a live-provider or unrun-platform result.
 `bun run eval:agents --provider <provider> --model <model>` previews six synthetic,
 policy-derived cases. It imports the real `initialExecutionPrompt`, including
 selected-context boundaries; it does not duplicate the production prompt. These
-cases measure prompt behavior through `@raypx/ai`, rather than the external Codex
-or Claude subprocess lifecycle (covered by protocol replay tests).
+cases measure prompt behavior through `@raypx/ai`, rather than the external provider
+subprocess lifecycle (covered by protocol replay tests).
 
 The model sees only synthetic files and three tools: in-memory read/write and
 simulated Git. No model tool executes a shell, accesses a real project or changes

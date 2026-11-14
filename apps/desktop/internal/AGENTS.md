@@ -5,7 +5,9 @@ device preferences and the stable lifetime SQLite instance lock. Framework APIs
 belong in app/; desktop/ owns framework-independent native capabilities. Launch
 only the absolute version-matched bundled CLI. CGO_ENABLED=0 is required.
 
-ADR 0052 moves session, HTTP/account policy and renderer events to the daemon.
+The retained daemon owns session, HTTP/account policy and renderer transport;
+new Agent execution and recovery stay in the backend. The current renderer has
+no project Terminal or device task pages.
 Go runs finite `daemon desktop` bootstrap and holds a separate narrow native
 capability for visibility, directory picks, notifications and binding release.
 The renderer uses its own first-frame-authenticated loopback WebSocket. Never

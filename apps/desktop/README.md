@@ -1,15 +1,19 @@
 # Raypx Desktop
 
-MyGo v0.8.3 hosts the existing React SPA and launches the standalone Bun CLI.
-Go 1.27.3 builds with CGO_ENABLED=0. The CLI owns execution and the independent
-daemon; Herdr remains the terminal runtime. The UI remains React in WKWebView
-(macOS) or WebView2 (Windows). `mygo.config.ts` targets macOS 13.5+. Linux Desktop
-acceptance remains unverified. The current application uses one main window.
+MyGo v0.8.3 hosts the shared server-owned Agents workspace in a system WebView.
+Go 1.27.3 builds with `CGO_ENABLED=0`. Desktop targets macOS 13.5+ and Windows;
+Linux Desktop acceptance remains unverified.
 
-Packaged routes use hash history. Settings opens as a dialog over the current
-page, preserving its query and drafts. Terminal opens the daemon’s default shell
-in the selected project after an explicit action. Advanced options accept a
-custom executable, arguments and directory.
+Sign in through the system browser to work with Spaces, direct/group conversations,
+durable Runs, approvals, computer files, routines and memory. Pages supports edits,
+versions and sharing, with authenticated previews handed off to Web. Account settings
+compose model connections, Skills and Tools. Packaged routes use hash history;
+Settings preserves the route and drafts beneath its overlay.
+
+The bundled CLI/daemon still owns encrypted native sessions and transport, plus
+retained device execution, enrollment, scheduling and terminal capabilities. Those
+are separate from backend Agent Runs until their replacement phase. The old
+project/session, Files, Terminal and Automations screens are removed.
 
 - `main.go`: embedded frontend/manifests and entry point.
 - `internal/app`: MyGo lifecycle, trusted IPC, windows, tray and native dialogs.

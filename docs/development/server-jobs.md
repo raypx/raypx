@@ -1,152 +1,100 @@
-# Server jobs
+# Routines and server maintenance
 
-The API owns server-side jobs under `apps/api/src/jobs/`. Nitro Tasks supplies
-the named task registry and platform scheduling. `maintenance:cleanup` runs on
-`*/15 * * * *` (every 15 minutes) through the Bun Nitro server. This is independent of device-local CLI schedules and
-Agent execution.
+New Space routines run through the durable Agent backend. Retained account cloud
+jobs and device timers are separate consumers, with different catch-up behavior.
+The removed Automations pages are not part of the current Web/Desktop workspace.
 
-## Account cloud automations
+## Space routines
 
-`@raypx/core/jobs` owns shared local/cloud schemas and pure Cron calendar rules.
-`@raypx/jobs/server` owns injected cloud use cases; `@raypx/jobs/client` owns shared
-browser views. Contracts composes local IPC and account RPC schemas from Core.
-`@raypx/jobs/server/postgres` owns the account repository; API injects its connection
-and Relay executor. CLI owns device-local timers and execution. This keeps one schedule
-model without making HTTP or the browser an execution host.
+Web/Desktop open routines from the Agent conversation header. Members can create
+and edit routines, pause/resume them, test manually and open linked Run history.
+`@raypx/jobs/model` owns editor ports and state; `/client` supplies the panel.
+`@raypx/jobs/routines` owns injected use cases and ingress rules;
+`/routines/postgres` owns Space-scoped persistence. API composes `routines.*` with
+fresh membership, secret storage and normal Run dispatch.
 
-Web `/automations` manages account-owned cloud schedules. Desktop's automation
-page separates **This computer** from **Cloud**. Local schedules remain available
-offline after first-time instance enrollment and survive account changes; cloud reads and writes require login.
-Scheduling does not install or enable a device host automatically.
+Triggers include five-field Cron with an IANA zone, keyed webhooks, authenticated
+email relay and signed repository events. Editing transfers ownership to the
+editor; accepted Runs retain their initiating member. Pausing blocks future
+automatic occurrences and leaves explicit manual tests available. One-time keys
+appear only on creation/rotation, not list/history/event reads.
 
-The first cloud actions are:
+Worker-enabled roles (`worker`, `all`, retained `both`) start routine scans
+explicitly. Runtime construction does no I/O. Space routine scanning is not gated
+by `JOBS_ENABLED`, which controls the Nitro jobs below. PostgreSQL locks and
+occurrence/delivery identities deduplicate concurrent scans and ingress. A schedule
+coalesces missed work into at most one queued catch-up Run and keeps its oldest
+due time; it does not burst all historical ticks. Runs at least 15 minutes late
+receive their due and actual start times. History retains those observations.
 
-| Action        | Behavior                                                                                                                                                   |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `device.sync` | Request a fresh, correlated device snapshot and finish only after it commits to the remote projection. Unrelated local tasks/files are not included.       |
-| `agent.run`   | Create a task in an authorized device project, preserving normal Claude/Codex approvals and project locks. A delivery receipt is not execution completion. |
+A routine uses its owner's current membership, selected model/resources and
+approval rules. Membership removal pauses definitions and clears ingress secrets.
+Untrusted ingress is private Run context, not instructions that authorize writes.
+Ordinary approval policy still applies; unknown effects never resend automatically.
 
-Each plan captures the selected device epoch. Revocation or an epoch change
-requires the user to choose its current connection explicitly. Every execution
-rechecks account ownership, epoch, connection, project and provider availability.
-The backend never stores a browser cookie or runs a local shell action.
+### Ingress configuration
 
-`schedules:tick` runs every minute on Bun, controlled by
-`JOBS_ENABLED` independently of the administrator's maintenance-cleanup switch.
-The existing fifteen-minute cleanup task keeps its own policy. When scheduling is
-disabled, tick performs no business queries; plans can still be saved and edited.
-Apply the generated job/run migrations before deploying the new API.
+`AUTH_URL` supplies the advertised public API origin for webhook/repository URLs;
+missing configuration yields an explicit unavailable reason. The default localhost
+fallback is not advertised. Proxy `/routines/` to API-enabled roles.
 
-PostgreSQL owns occurrence time, row claims, schedule revisions, history and a
-unique scheduled occurrence key. A tick claims up to 25 occurrences and dispatches
-at most five concurrently; active runs are reconciled in bounded, rotating batches.
-Occurrences missed by more than one minute are recorded as skipped and advanced
-to the next future time. There is no catch-up inference. Offline devices and active
-prior runs produce explicit skipped records.
+- Webhooks use `POST /routines/:id/webhook`, `Authorization: Bearer <key>` and
+  `Idempotency-Key`. The server stores a key digest, not the original key.
+- Repository events use `POST /routines/:id/repository`, `X-Delivery-Id`,
+  `X-Event-Kind` and `X-Routine-Signature`. HMAC-SHA-256 signs delivery ID, event
+  kind and raw JSON bytes separated by newlines. The per-routine secret is encrypted.
+- Email requires both `ROUTINE_EMAIL_RELAY_TOKEN` and `ROUTINE_EMAIL_DOMAIN`.
+  A trusted external relay sends normalized authenticated email to the API's
+  email ingress; Raypx runs no SMTP service. It uses an independent credential.
 
-Schedule creation uses a client UUID as the plan ID. A retry with the same content
-returns the saved plan; changed content under that ID conflicts. Manual runs also
-retain their request UUID. For Agent actions, the run, task and command IDs match,
-so the host can reuse durable command receipts instead of starting new reasoning.
+Body limits, replay checks and per-routine admission apply before dispatch.
+See [routines and provenance](../architecture/capabilities.md#phase-4-backend-decisions)
+for the exact wire format. Device-local `[routine_ingress]` is unrelated.
 
-Agent runs remain active while their task is pending, running, waiting or cancelling.
-Each tick reconciles the authoritative task projection before claiming more work.
-An expired/lost acknowledgement or a generic host error after sending is **unknown**,
-not proof that execution never started. The plan is paused and that occurrence is
-never resent. A process restart first checks the persisted task ID; a dispatch still
-unconfirmed after two minutes becomes unknown. A completed projection can resolve
-the run later, but does not automatically re-enable the paused plan.
+## Nitro maintenance and retained scheduling
 
-Relay v5 requires authoritative projection sync with a matching `syncId`. New sync requests are
-queued during an in-progress flush without disconnecting active commands.
+API `src/jobs/` owns maintenance with thin handlers under `src/jobs/runtime/`.
+Nitro schedules `maintenance:cleanup` every 15 minutes and retained
+`schedules:tick` every minute. Both require deployment `JOBS_ENABLED=true` (false
+in the local example). The cleanup also reads the administrator's Background
+cleanup switch before each run. Worker-only roles run their separate Run/routine
+scans rather than exposing a public task runner.
 
-Cloud mutations require a trusted Origin, a current account session and rate limits;
-updates/deletion use revision checks. Deleting a plan removes its execution records
-and stops future occurrences, while already-created Agent tasks remain in task
-history. The browser uses explicit links to inspect those tasks and preserves
-creation/run IDs across uncertain HTTP responses. Only visible, idle cloud views
-refresh their private lists; account/client changes discard that view's state.
+Cleanup uses PostgreSQL time, an advisory transaction lock and bounded row-locked
+batches. Eligible records are OAuth access tokens, sessions and verification records
+expired over 24 hours ago, rate limits idle over one hour, expired retained session
+attachment projections, and retained context command bodies older than 24 hours. Each category handles at most 1,000 rows per invocation. Context
+compaction preserves unknown-delivery digest receipts. Failure rolls back the
+batch; the next scheduled invocation retries. Logs contain safe operation/count
+status, never identifiers, tokens, row content or driver errors.
 
-## Enable cleanup
+Cleanup does not delete Agent conversations, Run history, user accounts or local
+profiles. Device revocation removes its terminal projections immediately rather
+than waiting for maintenance. There is no production HTTP endpoint to invoke tasks.
+Nitro's development-only task endpoint still respects `JOBS_ENABLED`.
 
-1. Apply the foundation database migrations using the normal deployment procedure.
-   The new migration adds expiry indexes to sessions and verification records.
-2. Set `JOBS_ENABLED=true` in the API's runtime environment. It defaults to `false`,
-   including development and artifact probes; disabled runs make no cleanup queries.
-3. Keep **Background cleanup** enabled in [administrator settings](configuration.md).
-   This persisted switch defaults to on and is read again before each enabled run.
-4. Build and deploy the API for the selected platform.
+### Retained account cloud jobs
 
-Bun's Nitro server runs the schedule while the API process is alive, using
-`scheduledTasks` in `apps/api/vite.app.config.ts`.
+`jobs.*`, `@raypx/jobs/server` and `/server/postgres` still support account-owned
+`device.sync` and `agent.run` against an enrolled, authorized device epoch. These
+procedures are not Space routines and have no current Automations navigation.
+They recheck account/device/project authorization and keep their old skip policy:
+missed occurrences, offline devices and overlapping active work are skipped rather
+than caught up. Uncertain delivery pauses a plan without resending. Authoritative
+terminal projections may resolve it later. Device-local timers remain in the CLI.
+Do not import these records or extend them as a second Agent scheduler.
 
-## Cleanup policy
-
-Only the following records in the Raypx database's `public` schema are eligible:
-
-| Records                | Eligibility                         | Maximum per invocation |
-| ---------------------- | ----------------------------------- | ---------------------- |
-| Sessions               | Expired more than 24 hours ago      | 1,000                  |
-| Verification tokens    | Expired more than 24 hours ago      | 1,000                  |
-| Rate limits            | Last request more than one hour ago | 1,000                  |
-| Context command bodies | Accepted at least 24 hours ago      | 1,000 compacted        |
-
-All comparisons use PostgreSQL time. The grace periods preserve recently expired
-records and exceed the shared maximum 60-second rate-limit window. Users, accounts,
-devices, managed Agent tasks, replay history and local profiles have no cleanup
-policy here. Device revocation deletes its terminal projections immediately and
-does not depend on this schedule. No repair or import of retired data is performed.
-
-Context command cleanup removes private request/reference bodies while retaining
-compact digest receipts for unknown delivery. Matching authoritative task
-projections release duplicate commands immediately. New contextual commands also
-enforce the per-account 4,096-body / 8 MiB replay window independently of cleanup
-switches. See [task context](task-context.md) for recovery and retention semantics.
-
-One transaction owns a PostgreSQL advisory lock across API instances and platforms.
-Another concurrent invocation returns `skipped`. Candidate rows use `FOR UPDATE
-SKIP LOCKED`, and eligibility is checked again during deletion. Each statement has
-a five-second timeout and a one-second lock timeout. Any failure rolls back the
-whole batch; remaining records are eligible on the next scheduled invocation.
-
-This maintenance task is idempotent. It has no durable queue, per-run database
-history or immediate retry loop. A failed or missed invocation is retried by the
-next scheduled run; a backlog drains in bounded batches. Logs include operation,
-status and deletion counts, with driver errors reduced to `JOB_FAILED`. They never
-include row identifiers, tokens, query parameters or connection strings.
-
-Tasks reuse the API's process-owned database pool.
-
-## Development and verification
-
-With the API development server running and an intended development database,
-Nitro's development-only task endpoint can invoke the job:
+## Verification
 
 ```sh
-curl -X POST http://localhost:3002/_nitro/tasks/maintenance:cleanup
-```
-
-`JOBS_ENABLED` still applies. The built production API exposes no HTTP task runner;
-`/_nitro/tasks/maintenance:cleanup` returns 404.
-
-```sh
-bun run --cwd apps/api test -- src/jobs
-NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test postgres
+bun run test --package @raypx/jobs
+bun run test --package api -- src/jobs
 bun run verify
 ```
 
-PostgreSQL tests require an isolated database whose name ends in `_test`. They
-cover expiry boundaries, repeat runs, transaction locking, rollback and batch
-limits. The default unit gate requires no database.
-
-## Adding a task
-
-Keep business logic in `src/jobs/`, with thin platform entry modules in
-`src/jobs/runtime/`. Register the handler by absolute path in the API's Nitro
-configuration and its `scheduledTasks` registry. Specify
-the job's idempotency, concurrency and retry policy before enabling it; cleanup's
-transaction lock is specific to this task. Use separate locks for unrelated jobs.
-
-Nitro Tasks is experimental in the pinned Nitro version. The Bun deployment build
-and scheduled-event tests are required when upgrading it. See
-[Nitro Tasks](https://nitro.build/guide/tasks).
+Default suites inject clocks, mail, dispatch and storage. Separate PostgreSQL
+modes cover locks, revisions, occurrence deduplication, coalescing and cleanup
+rollback; [owned-backend browser journeys](testing.md#browser-suites-and-owned-backend-journeys)
+cover routine editing/manual execution/history. Unit success establishes no database
+or live ingress result. New scheduled tasks must state idempotency, concurrency
+and retry policy before being enabled; do not reuse cleanup's lock for unrelated work.

@@ -7,8 +7,9 @@ Agent-message refusal codes. Existing Run states and failures remain unchanged.
 
 ## Purpose
 
-Platform-neutral task and account domain models and pure rules shared by transport
-adapters, execution hosts and product views. Schemas are the single source of inferred types.
+Platform-neutral Space, Agent, conversation, Run, capability and account schemas
+and pure rules shared by contracts, services and clients. Retained device-task
+domains remain explicit independent entries. Schemas are the single source of inferred types.
 
 ## Interface
 
@@ -59,7 +60,7 @@ adapters, execution hosts and product views. Schemas are the single source of in
 - `/task-text` clips UTF-16 budgets without splitting code points and normalizes
   JSON strings for persistence.
 - `/agent-runs` exports the read-only task-to-Run status projection; AgentTask remains
-  the sole persisted lifecycle. Future manifests and transitions belong in design docs.
+  the sole persisted lifecycle for retained device tasks, independently of server Runs. Future manifests and transitions belong in design docs.
 
 ## Constraints
 

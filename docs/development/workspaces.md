@@ -116,62 +116,53 @@ per-icon exports; UI registers its styles without an Icons → UI dependency. Se
 
 ## Agent domain and page boundaries
 
-`@raypx/core` is the universal source of task-domain schemas, inferred types,
-pure activity/decision rules and public account models through `/auth`.
-`@raypx/contracts` adds protocol envelopes. Consumers
-import domain definitions from their owning package; compatibility aliases are not provided. Never define a second copy of a domain
-interface or introduce a core dependency on contracts, React or host implementations.
+`@raypx/core` owns Space, Agent, conversation, Run and capability schemas, pure
+rules and public account models. `@raypx/contracts` composes transport definitions.
+Do not duplicate domain models, add compatibility aliases or make Core depend on
+contracts, React or host implementations.
 
-`@raypx/tasks/model` exposes workspace scopes, draft identities, conversation state
-and task-view ports. Its browser entry adds hooks and DOM views. Applications inject
-remote SDK or local IPC adapters; the page feature does not derive its interface from
-the concrete SDK. Keep route navigation and account-session resolution in the app.
-Conversation coverage distinguishes authoritative pages from live projections.
-The browser adapter reports subscription interruptions before resuming, and aborts
-pending history reads on workspace/task changes; late responses cannot refresh
-another owner. Activity order values are opaque global row IDs, not consecutive
-per-task counters.
+`@raypx/agents/model` owns page selection, bounded conversation history, event/cursor
+application and injected command, stream and draft ports. `/client` adapts those
+ports to React for Web/Desktop. Mobile consumes `/model` with native adapters.
+Applications own auth, routing and platform transports. PostgreSQL state is
+authoritative; only scoped drafts/uncertain-send receipts persist on devices.
+
+`/server` owns services and database-free repository ports; `/server/postgres`
+implements persistence behind fresh `SpaceScope`. API composes configuration,
+credentials, the fenced ConversationRunner and worker lifecycle. Computers owns
+Space computer lifecycle; Providers owns its port/adapters; Sandbox alone holds
+the Engine socket. Feature packages follow the same model/client/server split
+where there are established consumers, without speculative entries.
 
 ```mermaid
 flowchart TD
-  Apps[Web / Desktop composition] --> Views[tasks/client: React views and hooks]
-  Apps --> Adapters[Remote SDK / local IPC adapters]
-  Views --> Model[tasks/model: state and view ports]
-  Model --> Contracts[contracts: wire messages]
-  Model --> Core[core: domain schemas and rules]
-  Adapters --> Contracts
-  CLI[CLI: private execution harness] --> Contracts
+  Apps[Web / Desktop] --> Views[Agents client]
+  Mobile[Mobile] --> Model[Agents model and ports]
+  Views --> Model
+  Apps --> Contracts[Contracts]
+  Mobile --> Contracts
+  API[Backend composition] --> Server[Feature services and scoped repositories]
+  Server --> Core[Core schemas and rules]
+  Model --> Core
   Contracts --> Core
+  API --> PG[(PostgreSQL)]
 ```
 
-Unified diff parsing uses the external `diff` library behind a bounded pure model.
-Provider-specific approval payloads remain in the feature adapter, including Codex's
-unnumbered snippets and Claude writes with unknown original content. Invalid or
-unsupported patches retain the complete original request instead of presenting a
-partially understood change as complete.
-The full request shares a 1200-line, 20-file preview budget. Truncated files remain
-labelled; unknown structures retain the original request rather than disappearing
-behind a partially parsed preview.
-
-The execution harness currently lives in `apps/cli/src/runtime/agents/harness`.
-Its coordinator owns one task lifecycle; provider adapters own private wire formats;
-SQLite and process implementations remain at their existing CLI boundaries. Keep
-page queries, drafts and authentication navigation in tasks/apps. A separate
-`@raypx/harness` workspace is justified when another execution host consumes this
-boundary directly, rather than creating a second owner inside Desktop.
-Managed local Pi is a selectable provider through `@raypx/providers/pi`; the CLI
-private harness owns task policy, persistence, approval and cancellation. See
-[Pi Agent loop and acceptance](ai.md#injected-agent-loop).
+The retained `@raypx/tasks` entries and CLI private harness serve device consumers
+until replacement; they do not own new Runs. Device provider protocols, SQLite,
+project grants and process lifetime remain at their existing boundaries. Keep
+those security checks while removing their obsolete UI/entries with final consumers.
+The [AI guide](ai.md#retained-device-cli) distinguishes local model configuration
+from backend model connections.
 
 ## Scheduled jobs
 
-`@raypx/core/jobs` owns pure job schemas, inferred types and calendar rules.
-`@raypx/jobs/server` owns injected cloud scheduling use cases and ports, and
-`@raypx/jobs/client` owns shared browser views and their ports. Contracts composes
-wire schemas from Core; API supplies SQL/Relay adapters, while CLI supplies local
-scheduling and execution.
-Cloud schedules do not claim local plans or move them between accounts. See
-[server jobs](server-jobs.md).
+`@raypx/core/routines` owns Space routine definitions and pure calendar rules.
+`@raypx/jobs/model` and `/client` expose the current editor; `/routines` and
+`/routines/postgres` own use cases, ingress and durable occurrence persistence.
+API/worker processes inject dispatch and scan lifecycle. Retained `/server` cloud
+jobs and CLI timers remain separate, with their own skip/unknown-delivery policy.
+See [server jobs](server-jobs.md).
 
 ## Provider adapters
 
@@ -182,8 +173,8 @@ service consumes the port and owns the Engine connection. `/testing/computer` is
 the shared runner-injected conformance suite consumed by Sandbox tests. `./core` defines the injected session, execution and process I/O
 ports and normalized conversation events. `./codex` and `./claude` implement native
 protocol adapters; `./pi` and `./pi/context` hold the Node-targeted Pi SDK session and
-transcript schema, the only sources that import `@raypx/ai` or the Pi SDK. CLI supplies
+transcript schema, the session-adapter sources that import the Pi SDK. CLI supplies
 the process transport and owns task policy, approval arbitration, persistence and
 draining. Provider code never imports CLI, auth or database source. Shared conformance
 helpers live in the library's `tests/helpers`. Split an entry into its own workspace
-only when a second execution consumer establishes that boundary (ADR 0040 amendment).
+only when a second execution consumer establishes that boundary.

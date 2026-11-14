@@ -169,6 +169,14 @@ or remember the exact tool (and exact executable for commands). A pending card
 does not block a new message. Unknown effect outcomes remain explicit and do not
 offer an automatic failed-Run retry.
 
+History uses the shared bounded paging controller, including an explicit load-earlier
+action; it is independent of event replay cursors. Tool activity uses the shared
+timeline and tool-call identity rather than a separate Mobile projection. Successful
+Page-tool activity opens Page detail at the configured Web origin, falling back to
+the Pages list when identity is absent. Handoff failures remain visible/retryable.
+Mobile has no native Page editor, group/member management, routine or memory editor,
+or account resource-settings workflow; those use Web/Desktop.
+
 The compact header computer indicator opens a native Modal bottom sheet with
 the team's lifecycle state, failure reasons and guarded start/stop controls.
 Stop requires native confirmation; not configured is explicit and has no
@@ -229,10 +237,10 @@ directory, conversation, approval card and computer sheet using Vitest and
 `react-test-renderer` with native/HeroUI host mocks. Shared model tests remain
 platform-neutral. These mocks do not prove native layout or accessibility.
 
-The new JavaScript dependencies still need a successful Bun install and lockfile
-update. Installation in the implementation sandbox was blocked by cache permissions
-and network DNS restrictions. The mobile type check, native component suites and
-production export therefore remain unverified with those packages installed.
+Use the checked-in manifest and lockfile as the dependency inventory. Record the
+actual source/test/export results for the candidate being delivered; earlier
+implementation-environment restrictions are not current verification evidence.
+Native platform acceptance remains independent of these commands.
 
 ## Device acceptance
 

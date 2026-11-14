@@ -2,22 +2,23 @@
 
 Runtime connection settings, native API transport and release requirements for
 the MyGo web host. [Desktop workspace commands](../../apps/desktop/README.md)
-and ADR 0038 define its entry points
-and architectural boundary.
+and [client boundaries](../architecture/clients.md) define its entry points.
 
 ## Renderer navigation
 
-The packaged MyGo SPA uses hash history. A link such as
-`#/files?rootId=work#settings` opens Settings over the Files page without
-unmounting it or losing its search parameters and drafts. Closing returns to the
-matching background history entry or removes the settings fragment from a direct
-link. Native smoke checks deep-link reload and the mounted background page.
+The packaged SPA uses hash history and opens `/agents` after sign-in. It shares
+Space management, direct/group conversations, history paging, approvals, tool and
+delegated activity, routines and memory with Web. `/pages` supports editing,
+versions, restore and sharing; previews open Web instead of embedding authenticated
+documents. `/join` handles invitation admission. Account settings include Models,
+approval policy, Skills and Tools.
 
-Terminal opens the daemon's default shell in the selected project after an
-explicit click. Advanced options accept a custom executable, JSON arguments and
-a directory. Without a project, enter a directory explicitly. The daemon uses a
-usable absolute `SHELL` or Windows `ComSpec`, with a verified system fallback.
-External commands run with the operating system user's permissions.
+Settings opens over the current route, for example `#/agents#settings`, preserving
+selection, search, mounted drafts and reading position. Close returns through the
+matching history entry or clears only the settings fragment on a direct link.
+Project/session editors, Waiting, Automations, project Files and Terminal are
+removed from this renderer. The CLI/native capabilities behind those old screens
+remain solely for retained consumers until their replacement phase.
 
 ## Connection configuration
 
@@ -33,10 +34,6 @@ origin does not transfer an enrolled instance, saved session or remote grant.
 Use a separate `local_profile` and register it for the new origin when required;
 the previous profile and its local history remain on disk.
 
-This follows the user-level TOML and named-configuration approach described in
-[OpenAI's Codex configuration documentation](https://learn.chatgpt.com/docs/config-file/config-basic).
-Raypx's supported parameters and profile-table syntax are defined below.
-
 ### One server
 
 ```toml
@@ -44,8 +41,8 @@ base_url = "https://beta.raypx.com"
 ```
 
 Use a self-hosted Raypx origin in the same field. When Web and API share an origin,
-this controls authentication, account reads, tasks, device registration, grant
-renewal, relay WebSockets and account email callback links.
+this controls authentication, Agent/Space RPC, `/events`, Page handoff and account
+email callbacks, together with retained device registration and Relay transport.
 
 For a split deployment:
 
@@ -159,9 +156,8 @@ the affected remote binding without transferring the profile.
 
 ## Desktop daemon channel
 
-ADR 0052 defines the boundary;
-ADR 0054 defines execution
-ownership and recovery.
+The private daemon channel remains the native session/transport boundary until
+the device connector replacement phase. It does not own new server Runs.
 Go launches the absolute version-matched CLI with finite `daemon desktop` bootstrap.
 Administrative IPC stays private (Unix socket on POSIX; token-guarded loopback on
 Windows). It returns a distinct narrow native capability; the administrative token
@@ -192,8 +188,8 @@ preserves old processes; switching back restores their control. `execution_list`
 returns summaries, `execution_result` reads a retained tool result, and
 `terminal_restore` sends Herdr's current screen plus bounded history (1,000 lines,
 4 MiB). Completed results retain at most 64 entries / 8 MiB, with explicit errors
-after eviction. The terminal page disables input during disconnect, restores its
-ID on ready and offers existing terminals after reload. Input and execution
+after eviction. Retained terminal clients can restore the current screen through that protocol;
+the current Desktop renderer has no Terminal page. Input and execution
 commands are never automatically resent; daemon restart does not rerun them.
 
 Bootstrap is serialized and validates runtime/session preparation before retiring
@@ -292,7 +288,7 @@ its own update archives/manifests. Configure the public key and HTTPS feed
 together and verify the update with the actual packaged application.
 
 Before a public release, verify installed-app upgrade, SQLite credential/session
-migration, server-isolated WebView storage, sleep/wake reconnect, daemon task
+persistence, server-isolated WebView storage, sleep/wake reconnect, daemon task
 survival after GUI Quit, real account/provider flows, and distribution signatures.
 Local headless results do not count as platform GUI or signing acceptance.
 

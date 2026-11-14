@@ -53,8 +53,8 @@ Any number of API and worker processes can execute Runs using fenced leases.
 Committed reply events reach every API process through PostgreSQL fanout; transient
 prefixes remain local to the executor. A client connected to another process
 receives the committed segment when that model turn finishes.
-`JOBS_ENABLED` enables server
-maintenance and cloud scheduling. Empty optional values disable integrations.
+`JOBS_ENABLED` enables Nitro maintenance and retained account cloud scheduling.
+Space routines and recovery scans run explicitly in worker-enabled roles. Empty optional values disable integrations.
 A configured Redis outage fails readiness and closes cluster peers; it never
 falls back to local routing or queues uncertain execution for retry.
 
@@ -89,7 +89,8 @@ Only Traefik publishes traffic. Keep the management panel behind SSH and block
 public database/application ports. Set APP_HOST, DNS, TLS and the exact project
 TRAEFIK_NETWORK. Attach only this project's containers and Traefik. Trust exact
 proxy /32 or /128 addresses in AUTH_TRUSTED_PROXIES; never trust a shared subnet.
-Traefik sends /api/, /rpc/, /events, /health, /ready and /relay to the backend; other paths
+Traefik sends the configured /api/, /rpc/, /routines/, /events, /health, /ready
+and /relay routes to the backend; other paths
 go to Web. It strips Cookie and Authorization only on the relay route.
 
 Validate without printing resolved secrets:
@@ -97,6 +98,11 @@ Validate without printing resolved secrets:
 ```sh
 docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
 ```
+
+The checked-in Compose and Railway ingress matchers currently omit
+`/page-content/*`. An operator must route that path to API before using member
+Page previews or public shares through a common gateway; direct API serving is
+implemented. Gateway readiness alone does not validate Page document routing.
 
 ## Optional computers
 
@@ -163,7 +169,7 @@ secret and review the rules:
 bridge="$(printf %s "$COMPOSE_PROJECT_NAME" | sha256sum | cut -c1-10)"
 bridge="rpx$bridge"
 sh infra/sandbox/egress.sh --bridge "$bridge" --dry-run
-sudo sh infra/sandbox/egress.sh --bridge "$bridge" --apply
+sudo sh infra/sandbox/egress.sh --bridge "$bridge" --resolver 1.1.1.1 --apply
 # Remove only this bridge's owned rules when retiring it:
 sudo sh infra/sandbox/egress.sh --bridge "$bridge" --remove
 ```
@@ -175,7 +181,10 @@ The script refuses an existing hook displaced behind another rule; review host
 policy and restore its priority explicitly before retrying. It blocks all traffic
 from computers to the host, and private/reserved IPv4 destinations before and after
 DNAT, including LAN, link-local and cloud metadata. Public IPv4 returns to Docker's
-normal forwarding/NAT policy; computer IPv6 egress is denied. Reapply after host
+normal forwarding/NAT policy; direct TCP/UDP DNS is restricted to the selected
+public IPv4 upstream (default 1.1.1.1), and computer IPv6 egress is denied.
+Use the same resolver in the supervisor and rules. The checked-in Compose service
+uses the default; a custom resolver also needs an explicit service environment override. Reapply after host
 firewall resets and verify whenever Docker or firewall configuration changes.
 The rules do not persist across reboot automatically.
 
@@ -215,11 +224,11 @@ Restart the supervisor and Engine, replace a computer, and inject a restore fail
 to verify fencing and preservation of the last committed revision. These real
 Engine and firewall checks are required before describing isolation as accepted.
 
-The only recorded real-Engine acceptance is manual provider conformance on macOS
-arm64 with Docker Engine 29.5 through Colima (`77a9421c`, 10/10). No real run of the
-new gate, Ubuntu/Linux amd64 or arm64, macOS x64/other Engine configurations,
-Windows, rootless engines or restricted egress is recorded. Compose profile
-syntax/property tests do not establish real deployment or firewall acceptance.
+The recorded 2026-11-14 real-Engine gate passed provider conformance (10/10),
+isolation, home replacement and IPv4 egress on macOS arm64 with a Linux arm64
+Engine VM (29.5.2, API 1.54). IPv6 enforcement was unavailable because the VM
+disables it. Other Engine/platform combinations remain unverified. Source or
+Compose-property tests do not establish real deployment/firewall acceptance.
 
 Existing explicit `SERVER_ROLE=both` settings continue to run the combined backend
 with recovery enabled. New environment files use `all`.

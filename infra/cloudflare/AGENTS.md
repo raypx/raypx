@@ -1,5 +1,6 @@
 # Cloudflare Relay ingress
 
+Retained device Relay ingress, separate from server Agent `/events` and Space RPC.
 Cloudflare Workers + Containers adapter for the backend image with SERVER_ROLE=relay. Only
 the managed edge entry runs in workerd with nodejs_compat; Bun owns local tools,
 tests/builds and the container runtime. Do not import another application's source.

@@ -1,6 +1,8 @@
 # @raypx/providers
 
-Private provider source library for the CLI harness and server-owned Computer adapters. CLI owns its execution policy,
+Private ports/adapters for server Computers and remote MCP, plus the retained CLI
+provider harness until replacement. Backend Agent execution owns approval/effect
+policy; adapters never grant authority. CLI owns its execution policy,
 storage, process transport, files, credentials, SQLite and lifecycle. Never import
 applications, authentication or database implementations. Export only explicit entries.
 
@@ -10,7 +12,7 @@ applications, authentication or database implementations. Export only explicit e
 - `./claude`, `./codex`: process adapters for the private stream-json and app-server
   protocols. Raw envelopes stay in these adapters; they depend only on `./core` and Core.
 - `./pi`, `./pi/context`: the injected Pi SDK session, bounded SDK loop and transcript
-  schema. Only `src/pi/**` targets Node and imports `@raypx/ai` or
+  schema. `src/pi/**` uses Bun's Node-compatible surface and imports `@raypx/ai` or
   `@earendil-works/pi-agent-core`. Persist tool intent before effects and results before
   inference. Never replay unresolved effects or expose reasoning, tool arguments or raw
   errors as activity.

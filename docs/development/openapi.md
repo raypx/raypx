@@ -35,7 +35,11 @@ schemas only. Resource responses under `/api/v1/*` use `Cache-Control: no-store`
 `HEAD` returns the status and headers of `GET` without a body. An unsupported
 method on a known resource returns `405` with an `Allow` header.
 
-The versioned adapter covers account, device, task, approval, observed terminal request,
-automation and memory reads. Better Auth, Relay WebSockets, enrollment, credential
+The versioned adapter covers account/configuration and retained device-task,
+approval, observed-request, cloud-job and account-memory reads. It is not the
+complete server Agent API. Current clients use `/rpc` for Space/Agent management,
+history, Runs, approvals/effects, routines, Space memory, Pages and resources, plus
+the acknowledged `/events` stream. Page documents use independent read-only
+`/page-content/*` routes. Better Auth, Relay WebSockets, enrollment, credential
 issuance, writes and local IPC retain their existing interfaces. Relay-only
 instances continue to serve their own health probes.

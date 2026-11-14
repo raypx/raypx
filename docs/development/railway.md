@@ -17,15 +17,15 @@ and `test` for focused validation; root `check`, `test` and `verify` discover it
 through the root manifest's `infra/*` pattern.
 
 Gateway uses the pinned Caddy image and [Caddyfile](../../infra/railway/Caddyfile).
-Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`,
-/health, /ready and /relay to API, and other paths to Web. Caddy proxies WebSocket
+Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`, `/routines/*`, the two configured discovery
+paths, `/events`, `/health`, `/ready` and `/relay` to API, and other paths to Web. Caddy proxies WebSocket
 upgrades and strips Cookie and Authorization headers on `/relay`. API and Web have
 no public domains, and database connections use private
 references. Access logging is
 disabled and the error log removes request details.
 
 API and Web bind to :: for Railway private networking. IaC defaults to one API
-replica. The API process runs HTTP and Relay together and uses the existing
+replica. The default API process runs HTTP, recovery worker and Relay together and uses the existing
 private PostgreSQL and Redis services. All three application services
 stay awake. Forwarded client IP headers remain untrusted until explicit, verified
 proxy CIDRs are configured; the API uses its socket peer by default.
@@ -34,13 +34,13 @@ Runtime variables are deliberately unmanaged by IaC. This preserves secrets and
 operator settings on Railway. Configure references in the dashboard or with
 railway variable set --skip-deploys; never commit decrypted variables.
 
-| Service  | Variables                                                                                                                                                                                                                                               |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                                              |
-| api      | NODE_ENV=production; SERVER_ROLE=both (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET and APP_KEY are distinct private random values of at least 32 characters |
-| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                                                              |
-| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                                       |
-| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                                               |
+| Service  | Variables                                                                                                                                                                                                                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                                             |
+| api      | NODE_ENV=production; SERVER_ROLE=all (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET and APP_KEY are distinct private random values of at least 32 characters |
+| api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                                                                             |
+| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                                      |
+| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                                              |
 
 The managed Railway pre-deploy command currently receives the API service's
 variables. To isolate the migration credential on Railway, run `db:migrate` in
@@ -60,12 +60,18 @@ is generated. Client assets record the resolved version for later SourceMap uplo
 Service ports and health paths come from `@raypx/tooling/build/deployment`; repository
 policy checks Caddy and Compose against the same ingress contract.
 
+The checked-in gateway does not yet match `/page-content/*`; before exposing Page
+previews/shares through it, add that explicit API route in the operator's gateway
+configuration. Direct API document serving and browser fixtures do not establish
+production gateway acceptance. The default combined role includes recovery;
+Redis remains optional for new Runs and required for split retained device routing.
+
 ## Apply and deploy
 
 API, Web and Gateway use the raypx/raypx GitHub repository's canary branch.
 Keep **Wait for CI** enabled and **Watch Paths** empty on all three services.
 Railway considers every canary push for deployment, including a documentation-only
-push. CI checks changes since the latest verified canary ancestor, so a later
+push. CI checks changes since the latest verified ancestor on the selected branch, so a later
 push still checks the changes left by a failed or cancelled run. A green
 documentation-only push can rebuild all three services.
 Ordinary source and dependency changes use the selected source/backend/browser

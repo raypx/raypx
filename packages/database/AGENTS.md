@@ -9,12 +9,15 @@ current execution leases and fences.
 
 ## Purpose
 
-PostgreSQL persistence for the new account foundation.
+PostgreSQL authority for accounts, Spaces, Agents, conversations, durable Runs,
+approvals/effects, computers, routines, memory, Pages, skills, model/MCP resources
+and sharing/delegation. Retained account/device projections stay distinct.
 
 ## Interface
 
 `.`: connectDatabase and migrateDatabase. `/connection`: runtime connection/types without migration imports.
-`/schema`: the Better Auth tables (including the shared `rate_limit` store), control records and relations. `/env`: validated database configuration.
+`/schema`: current domain/auth tables (including `rate_limit`), Space-scoped
+relations and retained control projections. `/env`: validated database configuration.
 
 ## Ownership
 
@@ -30,7 +33,9 @@ Nullable Page ID/version pairs reference body-free `page_identities` with a
 same-Space foreign key. These identities survive Page deletion until Space deletion.
 Finished-event JSON has a generated Page ID with the same composite foreign key.
 
-PostgreSQL persistence for the new account foundation.
+PostgreSQL authority for accounts, Spaces, Agents, conversations, durable Runs,
+approvals/effects, computers, routines, memory, Pages, skills, model/MCP resources
+and sharing/delegation. Retained account/device projections stay distinct.
 
 `spaces`, `space_members`, `agents` and `conversations` add the server-owned domain
 without replacing device records. Space-owned primary keys start with `space_id`;

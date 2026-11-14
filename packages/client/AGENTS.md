@@ -3,7 +3,7 @@
 ## Purpose
 
 The browser/native-safe remote API SDK. New Agents clients consume `/api`; the
-retained device-task `/tasks` entry has only runtime acceptance consumers after phase 1
+retained device-task `/tasks` entry has only runtime acceptance consumers after the device-task
 client removal and records its later removal through `raypx.entryConsumers`.
 
 ## Interface
