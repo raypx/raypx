@@ -1,0 +1,329 @@
+apps/api/tests/helpers/browser-model.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-6,17,45-55,313,348-353,355-358
+apps/api/src/runtime/shared.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 101-103,167-169
+packages/contracts/src/device-connector.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 4,164-195,197-202,229
+packages/agents/src/notifications.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-8
+e2e/tests/journeys/skills-tools.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 131-132
+packages/agents/src/server.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 70-73
+apps/mobile/src/agents/conversation.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,77,94,104,337-342,550-554,808-812,939-945
+packages/agents/tests/postgres/conversation-events.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 14
+apps/cli/src/runtime/device-connector/connection.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 143-148
+package.json
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 90-94
+packages/agents/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 227-230
+  s_48de261a2741d6::t_95303cc06b9b80 226
+apps/mobile/src/agents/computer-files.component.test.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 8-23
+apps/mobile/src/agents/home.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,48,85,107-114,157-162
+docs/development/device-connector.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 150-152
+apps/mobile/src/agents/directory.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 57,84,163-169
+packages/agents/src/client/composer-card.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 9,14,25
+packages/agents/tests/postgres/durable-runs.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 51
+packages/icons/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 31-32
+apps/mobile/package.json
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 33-35,41
+apps/api/src/conversations/connection-transport.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 62,197
+apps/mobile/app/(app)/notifications.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1
+packages/contracts/src/spaces.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 8,99,124,133
+AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 236-240
+packages/agents/src/client/notifications.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-125
+packages/core/src/computers.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 61,66-71
+apps/cli/src/runtime/device-connector/storage.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 126
+packages/computers/src/server/member-files.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-234
+packages/blocks/src/components/shell.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 143,186-192,320,328,336-344,441,506
+apps/api/tests/helpers/workspace-server.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 4,16-17,76-77,133-141,238,279-281,341-345,532-550
+packages/agents/src/client/home.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-2,68,89,135-139,193,198,211,234,265,286,314,347-349,356-362,375-380,475-480,496-501
+apps/desktop/e2e/events-close.spec.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 108-109
+packages/agents/src/model/conversation.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 64,90,554-577
+  s_f9cc0d01f49051::t_4b3c955526e770 578
+apps/api/src/conversations/models.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 32-33
+apps/cli/src/runtime/device-connector/engine.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 10,268-307
+  s_48de261a2741d6::t_95303cc06b9b80 267
+packages/core/src/conversation.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 18-61,67-72,74-77,91,258-264
+packages/agents/src/server/notifications.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-85
+apps/cli/src/runtime/device-connector/storage.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-54
+packages/agents/locales/zh/agents.json
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 279-283,741-777
+packages/agents/src/client/attachments.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-233
+e2e/AGENTS.md
+  s_48de261a2741d6::t_95303cc06b9b80 136
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 137-139
+apps/api/tests/helpers/app.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 7-9
+apps/mobile/src/agents/notifications.component.test.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-38
+apps/api/src/routers/rpc/spaces.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,18-21,86-88,95-97
+apps/cli/src/runtime/device-connector/files.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 152-165
+apps/mobile/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 144-145,158-162
+docs/roadmap.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 305-317
+apps/api/tests/helpers/browser-devices.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 95-120,131-134,216-219
+packages/database/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 207-212
+  s_48de261a2741d6::t_3ec2f69630f6e0 204
+e2e/tests/journeys/attachments-notifications.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-367
+PRODUCT.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 61-62,73,164-171
+  s_f9cc0d01f49051::t_57fa2619e1f9b4 172
+docs/architecture/events.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 24-34,73-76,82,89-91
+docs/architecture/operations.md
+  s_48de261a2741d6::t_3ec2f69630f6e0 48
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 8-16,166-171
+apps/api/src/routers/rpc/message-attachments.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-60
+apps/desktop/e2e/attachments-notifications.spec.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-2
+apps/mobile/src/agents/notifications-route.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-61
+docs/README.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 20-22
+packages/agents/src/runner.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 42-43,59,401,806-823,969-985,987-992
+packages/agents/src/client/workspace.component.test.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 347,364,366-374
+packages/agents/src/server/notice.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-11
+packages/agents/src/model/notifications.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-53
+packages/contracts/src/api.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 15,17
+packages/agents/src/client/conversation.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,97,109-117,140,184-186,212,242,261,298-306,309,325-341,343,597-598,770-771,1050-1057,1079-1086,1391-1395,1399,1585-1591,1614,1616-1622,1633-1654
+apps/mobile/src/agents/workspace.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 43-55,60-63,251,261-267,279,293,299,307
+packages/computers/tests/postgres/devices.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 21,140-181
+packages/contracts/src/api.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,3,50,52
+packages/agents/src/client/workspace.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,21,703-739,1405-1414,1491-1500,1518
+apps/mobile/src/agents/attachments.component.test.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-136
+packages/agents/src/server/approvals.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 36
+packages/core/src/notifications.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-30
+apps/cli/AGENTS.md
+  s_48de261a2741d6::t_3ec2f69630f6e0 32,37
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 34-36
+  s_48de261a2741d6::t_95303cc06b9b80 33
+apps/api/src/runtime/agents.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 12-13,24-25,83-86,90,92,131,189-198,249-251
+apps/api/src/routers/index.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 2,26
+apps/api/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 20-21,43-46
+  s_48de261a2741d6::t_95303cc06b9b80 42
+apps/mobile/app/(app)/index.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 159
+docs/architecture/member-input-and-notifications.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-80,83-115
+  s_48de261a2741d6::t_3ec2f69630f6e0 81-82
+docs/architecture/execution.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 362-366
+apps/mobile/app/(app)/group-conversation/[groupId].tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 4,15-17,50-55
+packages/contracts/src/device-connector.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 33
+apps/cli/src/runtime/device-connector/files.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 18,44,151-157
+apps/mobile/src/agents/computer-files.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 18-31,67,71,80-84,95-96,101
+apps/mobile/app/(app)/conversation/[agentId].tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 40-43
+packages/agents/src/server/fanout.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 3
+packages/computers/src/device-registry.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 63,74,77,172-176,188-211
+docs/architecture/security.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 171-176
+packages/agents/src/client/notifications.component.test.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-49
+packages/computers/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 44-47
+docs/architecture/computers.md
+  s_48de261a2741d6::t_95303cc06b9b80 354
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 355-358
+packages/agents/locales/en/agents.json
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 279-283,741-777
+packages/agents/src/server/conversation-views.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 5-6,11,26-56,58-64
+apps/api/src/conversations/connection-transport.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 95-104,114-122,124
+apps/api/src/conversations/device-tools.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 33,36-39,63-70,145-148,193
+apps/api/src/routers/rpc/notifications.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-41
+packages/contracts/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 9-10,17-19
+  s_48de261a2741d6::t_95303cc06b9b80 16
+packages/icons/package.json
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 73-74
+packages/icons/src/icons/bell.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-3
+packages/agents/src/server/conversations.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,58,1651,1811-1812
+apps/api/src/conversations/attachment-http.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-51
+apps/api/src/conversations/connections.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 213-218
+apps/desktop/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 39-42
+packages/agents/src/model.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 177-184
+packages/agents/src/computer-tools.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 131-139,405-426
+packages/agents/src/server/protected-input.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 28
+packages/agents/src/model/attachments.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-90
+apps/api/src/app/options.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 17-19
+apps/desktop/src/router-settings.component.test.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 146-150
+packages/agents/src/client/attachments.component.test.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-92
+packages/computers/src/server.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 187-188
+packages/core/AGENTS.md
+  s_48de261a2741d6::t_95303cc06b9b80 24
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 25-26
+apps/web/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 122-124
+packages/database/src/schema.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1327,1343-1350,1413-1421,1425,1436,2535-2705,2707-2711
+e2e/tests/helpers/account-fixture.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 48-53
+packages/agents/src/model/drafts.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 2,8,50-55,71-78,86
+apps/api/src/routers/rpc/index.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-2,10,32-33,61-72
+docs/architecture/clients.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 60-61,161-166,190-192
+apps/mobile/src/agents/ports.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 68-69
+apps/api/src/conversations/connections.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 46,139,144-149
+apps/api/src/conversations/attachment-http.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-33
+apps/api/src/conversations/models.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 15-22,51-59,123,153
+packages/agents/src/model/computer-files.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-6,13,17,105-113,162-167,190-195
+packages/agents/src/model/controller.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1,63,71,76,99-101,749-755,761,853,887,900-902
+apps/mobile/src/agents/notifications.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-86
+packages/core/package.json
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 23-24
+packages/contracts/src/message-attachments.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-44
+packages/agents/src/model/port.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 150,157-158
+packages/agents/src/attachments.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-43
+apps/api/tests/postgres/node/device-daemon.test.ts
+  s_48de261a2741d6::t_3ec2f69630f6e0 153
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 215-246,250-254,290-300,413-415
+apps/web/e2e/attachments-notifications.spec.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-2
+packages/agents/src/server/attachments.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-22
+packages/blocks/AGENTS.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 97-99
+packages/computers/src/member-files.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-41
+packages/agents/src/model/attachments.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-146
+docs/architecture/README.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 13-16
+packages/computers/src/server/postgres.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 177-181
+packages/contracts/src/notifications.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-15
+docs/architecture/domain.md
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 73-75,166-170
+packages/agents/src/client/computer-files.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 31-40,78,83,95-99,152
+apps/cli/src/runtime/device-connector/engine.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 7-9,38-91
+  s_f9cc0d01f49051::t_fcf02b106b4df0 92
+packages/agents/src/server/postgres.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 197-200
+packages/agents/tests/postgres/attachments-notifications.test.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-368
+packages/agents/src/server/attachments.ts
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-464
+apps/mobile/src/agents/attachments.tsx
+  s_f9cc0d01f49051::t_0c1e9a2f4f4254 1-204
+bun.lock
+  s_f9cc0d01f49051::t_cda5c812a04a4f 173-175,181,1041-1043,1049,2626-2627,2634-2637,2662-2663
+packages/database/drizzle-foundation/20261114101502_baseline/migration.sql
+  s_48de261a2741d6::t_3d4e4974b187ba 173-209,267-268,274,282,576-589,653-670,1297-1298,1326,1330,1409-1412,1425,1461,1468-1470
+packages/database/drizzle-foundation/20261114101502_baseline/snapshot.json
+  s_48de261a2741d6::t_06eeb9325a8fa9 5,238-276,717-736,854-891,2210-2250,2848-2867,2933-2953,4684-4791,5116-5144,6060-6088,6244,6247-6250,6253,6255,6257-6261,6269,6272-6275,6278,6280,6282-6286,6294,6297-6300,6303,6305,6307-6384,7994-8005,8144-8149,8186-8197,9874,9887,9900-9902,9906,9913-9914,9926-9927,9939-9940,9952-9953,9956,9965-9966,9969,9978-9980,9984,9991-9993,9997,10004-10005,10010,10017-10019,10021,10030-10032,10036,10043-10045,10056-10057,10069-10070,10082-10084,10095-10097,10101,10108-10110,10112,10114,10121-10122,10125,10134-10135,10147-10149,10153,10160-10162,10173-10174,10179,10186-10187,10190,10199-10201,10205,10212-10214,10216,10218,10225,10238,10251-10253,10264-10576,10606-10632,10634,10642,10655-10656,10658,10660,10668,10674-10677,10684,10690-10693,13238-13367,13656-13774,13786-13787,13799-13801,13803,13805,13812-13814,13818,13825-13826,13838-13840,13844,13851-13853,13857,13865-13866,13870,13877-13878,13890-13891,13903-13904,13916-13918,13920,13922,13929-13930,13942-13943,13955-13957,13961,13968-13970,13974,13981-13982,19881-19929,20896-20916,21015-21042,22883-22959,22967-22968,22971,22974,22984-22985,22989,22992,22995,23003-23004,23008,23011,23014,23022-23023,23027-23028,23031,23034-23035,23043-23044,23047-23050,23053,23055-23058,23066-23067,23071,23074,23085-23086,23090-23091,23094,23097-23098,23356-23378,24084-24106,24221-24277,25584-25608,25871-25881,25904-25928,26504-26517,26556-26566,26887-26921,26968,26975,27132-27138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "68bfca3bad138ccd6eb810fbb66b0b52c6ee1ac8",
+  "prompts": {},
+  "sessions": {
+    "s_48de261a2741d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d904-4ba1-72a1-88db-42ea6481660b",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
