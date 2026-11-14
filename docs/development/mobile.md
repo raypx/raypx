@@ -7,6 +7,12 @@ remain reachable. The client renders backend state and expresses intent. It does
 not execute Agent tools or decide Space authorization. Push notifications and OTA
 updates are not configured.
 
+Native Mobile provides team computer lifecycle and stop confirmation, but no
+Screen view, graphical input or takeover controls. Use the phone Web client for
+those workflows. This omission does not remove native groups, Space membership,
+routines, memory, resource availability, activity or approvals; the exact native,
+read-only and Web-handoff coverage is in [Product](../../PRODUCT.md#operating-context).
+
 ## Development
 
 Use the repository-pinned Bun 1.4.4 runtime:

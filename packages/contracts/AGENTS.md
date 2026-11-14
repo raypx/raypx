@@ -31,6 +31,11 @@ share toolCallId with approval cards and contain summaries/outcomes only.
 `computers.get/start/stop` compose Core Computer state. `computers.listDirectory/readFile`
 are bounded read-only workspace access. All use the same session/Space boundary;
 file reads never start compute. Unconfigured, stopped and unavailable states are explicit.
+Screen availability/start/stop and acquire/renew/release/owner-force-release/input
+are additive `computers` procedures. `/events` adds viewer-scoped screen
+subscribe/ACK/unsubscribe and frame/state/closed replies. Pixels cap at one MiB,
+screen envelopes at 1,500,000 bytes; other conversation frames retain their bound.
+No supervisor location, credentials or control authority comes from a selector.
 `spaces.get/rename/delete/leave/members/updateMemberRole/removeMember` add backend
 Space/member management; `spaces.*Invitation*`, `spaces.invitations` and
 `spaces.cancelInvitations` add signed-in single-use invitation flows. Settings,

@@ -108,6 +108,7 @@ export const runSchema = z
     routineDueAt: z.iso.datetime().nullable().optional(),
     routineTimezone: z.string().nullable().optional(),
     untrustedInput: z.boolean().optional(),
+    computerInputPaused: z.boolean().optional(),
     inboundProvenance: z
       .strictObject({
         kind: z.enum(["webhook", "email", "repository"]),
@@ -255,6 +256,7 @@ export const conversationEventSchema = z
       routineId: z.string().min(1).max(128).nullable().optional(),
       provenanceKind: z.enum(["webhook", "email", "repository"]).nullable().optional(),
       untrustedInput: z.boolean().optional(),
+      computerInputPaused: z.boolean().optional(),
     }),
     z.strictObject({
       ...eventFields,

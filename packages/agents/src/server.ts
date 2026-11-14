@@ -56,5 +56,6 @@ export {
   computerToolResult,
   type ComputerTools,
   type PreparedComputerCall,
+  type ComputerScreenInputGate,
 } from "./computer-tools.js";
 export { EFFECT_INTENT_TIMEOUT_MS } from "./tool-limits.js";

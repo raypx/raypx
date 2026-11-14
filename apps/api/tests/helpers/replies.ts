@@ -57,6 +57,19 @@ export function replyFixture(toolRuntime?: RunTools) {
   }
   const toolActivity = new Map<string, ToolActivity>();
   const repository: ConversationsRepository & ConversationRunRepository = {
+    async setComputerInputPaused(_scope, run, paused) {
+      const stored = active(run);
+      stored.computerInputPaused = paused;
+      stored.state = paused ? "waiting" : "running";
+      Object.assign(run, { computerInputPaused: paused, state: stored.state });
+      publish({
+        kind: "run.state",
+        runId: run.id,
+        state: stored.state,
+        failureCode: null,
+        computerInputPaused: paused,
+      });
+    },
     async beginTool(_scope, run, tool) {
       active(run);
       const key = `${run.id}/${tool.toolCallId}`;

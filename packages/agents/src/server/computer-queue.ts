@@ -50,7 +50,7 @@ export function createComputerUseQueue(db: Pick<Database, "transaction">): Compu
                   inArray(runs.state, ["running", "waiting"]),
                   gt(runs.leaseExpiresAt, sql`clock_timestamp()`),
                 ),
-                sql`exists (select 1 from ${effects} where ${effects.spaceId} = ${runs.spaceId} and ${effects.conversationId} = ${runs.conversationId} and ${effects.runId} = ${runs.id} and ${effects.toolName} in ('computer_write_file', 'computer_run_command') and ${effects.state} = 'intent' and ${effects.createdAt} + ${EFFECT_INTENT_TIMEOUT_MS} * interval '1 millisecond' > clock_timestamp())`,
+                sql`exists (select 1 from ${effects} where ${effects.spaceId} = ${runs.spaceId} and ${effects.conversationId} = ${runs.conversationId} and ${effects.runId} = ${runs.id} and ${effects.toolName} in ('computer_write_file', 'computer_run_command', 'computer_pointer', 'computer_keyboard') and ${effects.state} = 'intent' and ${effects.createdAt} + ${EFFECT_INTENT_TIMEOUT_MS} * interval '1 millisecond' > clock_timestamp())`,
               ),
               sql`${runs.id} <> ${run.id}`,
             ),

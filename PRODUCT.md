@@ -7,7 +7,7 @@
 web
 
 Web and the MyGo Desktop renderer share the Agents workspace. Mobile is an Expo
-iOS/Android client for Space Agents, direct conversations and account access.
+iOS/Android client for everyday Space and Agent workflows.
 Client coverage differs as described below; packaged native acceptance is separate.
 
 ## Users
@@ -67,7 +67,7 @@ describes implemented native UI; native platform acceptance remains a separate g
 | Skills              | Per-Agent enablement; account-skill all/selected Space availability                                                                        | Account/Space catalogs and Space-skill availability                                                                          | Definition editing, imports and deletion                            |
 | Remote tool servers | Per-Agent enablement; all/selected Space availability                                                                                      | Server names and endpoints                                                                                                   | Definitions, credentials, discovery/testing and deletion            |
 | HTTP APIs           | Approvals for configured operations                                                                                                        | Owners: definitions, selected operations, read/change labels and Agent availability; all members: conversation calls/effects | Import, credentials, operation selection, availability and deletion |
-| Computers           | Existing team lifecycle and stop confirmation                                                                                              | Lifecycle/failure state                                                                                                      | No new native Screen surface                                        |
+| Computers           | Existing team lifecycle and stop confirmation                                                                                              | Lifecycle/failure state                                                                                                      | Use phone Web for Screen viewing and takeover                       |
 
 Native authenticated Page frames are disabled; Mobile opens the configured Web
 origin without forwarding credentials. Account skill/server availability can be
@@ -82,7 +82,7 @@ acceptance remains unverified.
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Conversations         | One continuing direct conversation per Agent; bounded initial/older history, gap loading, streamed text, committed segments, acknowledged replay and snapshots. Web/Desktop include virtual and full-text reading modes.                                  |
 | Runs                  | PostgreSQL leases, fenced attempts, checkpoints, steering, explicit stop, worker recovery and graceful handover. Model/connection/resource choices are pinned for resume. Active work stays reachable outside loaded history on all clients.              |
-| Computers             | Space team computer lifecycle, bounded file browsing, file/command tools, durable homes and generation checks through the Docker provider and private supervisor. Host egress rules require explicit setup.                                               |
+| Computers             | Space team lifecycle, bounded files/tools, durable homes and generation checks through the private supervisor; optional graphical viewing and exclusive member takeover in Web/Desktop. Host egress rules require explicit setup.                         |
 | Approvals and effects | Ask and Never ask, exact Allow/Block rules, addressed expiring requests, conversation cards and durable effect intents/outcomes. Unknown effects block automatic replay. Auto review and protected input are unavailable.                                 |
 | Routines              | Cron with time zones, keyed webhooks, authenticated email relay and signed repository events; manual tests, pause/resume, deduplication, coalesced catch-up and linked Run history.                                                                       |
 | Memory                | Versioned Agent or shared Space documents, editing/removal/restore, bounded recall pinned into Run checkpoints and permission-checked Agent writes.                                                                                                       |
@@ -121,9 +121,12 @@ Computer isolation depends on the Engine and configured host rules. Public HTTPS
 and the selected DNS upstream remain available under restricted IPv4 egress;
 private/metadata/host destinations and alternate DNS are blocked by that ruleset.
 IPv6 enforcement needs separate host acceptance. A device grant is not sandbox
-isolation. Hosted computers, graphical takeover and the replacement outbound-only
+isolation. Web/Desktop provide optional graphical sessions, shared viewing and
+exclusive expiring member control. Mobile has no Screen surface; use Web for viewing
+and takeover. Hosted computers and the replacement outbound-only
 device connector remain future work. Managed app connectors and web search/fetch
-are not implemented Agent capabilities.
+are not implemented Agent capabilities. Screen can expand into a large dialog;
+the same viewer and control state continue without opening another stream.
 
 Project/session editors, Waiting, guest task handoff and device Automations pages
 are removed from Web/Desktop. The CLI/daemon, account/device context APIs, local

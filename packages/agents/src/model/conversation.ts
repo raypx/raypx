@@ -30,6 +30,7 @@ export interface RunView {
   provenanceKind?: "webhook" | "email" | "repository" | null | undefined;
   routineId?: string | null | undefined;
   untrustedInput?: boolean | undefined;
+  computerInputPaused?: boolean | undefined;
   outsideWindow?: boolean | undefined;
   triggerMessageSequence?: number | undefined;
   latestCommittedSegment?: ActiveRun["latestCommittedSegment"] | undefined;
@@ -368,6 +369,7 @@ export class ConversationState {
           ?.triggerMessage.sequence,
         latestCommittedSegment: snapshot.activeRuns?.find((item) => item.run.id === run.id)
           ?.latestCommittedSegment,
+        computerInputPaused: run.state === "waiting" && run.computerInputPaused === true,
       })),
       liveReplies: [],
       toolActivity: toolActivity.slice(-activityLimit),
@@ -489,6 +491,7 @@ export class ConversationState {
         inboundProvenance: run.inboundProvenance,
         provenanceKind: run.inboundProvenance?.kind,
         untrustedInput: run.untrustedInput,
+        computerInputPaused: run.state === "waiting" && run.computerInputPaused === true,
         outsideWindow: !run.messageId || !visible.has(run.messageId),
       });
     }
@@ -576,6 +579,7 @@ export class ConversationState {
         provenanceKind: event.provenanceKind ?? previous?.provenanceKind,
         routineId: event.routineId ?? previous?.routineId,
         untrustedInput: event.untrustedInput ?? previous?.untrustedInput,
+        computerInputPaused: event.state === "waiting" && event.computerInputPaused === true,
       };
       const runs = previous
         ? this.view.runs.map((item) => (item.id === run.id ? run : item))

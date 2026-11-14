@@ -1,5 +1,9 @@
-import { createComputersService } from "@raypx/computers/server";
-import { createComputersRepository } from "@raypx/computers/server/postgres";
+import { createComputersService, createComputerScreensService } from "@raypx/computers/server";
+import {
+  createComputersRepository,
+  createComputerScreenRepository,
+  revokeComputerScreenControl,
+} from "@raypx/computers/server/postgres";
 import {
   ConversationRunner,
   createComputerTools,
@@ -60,13 +64,16 @@ export async function composeAgents(
   createModels?: () => ConversationModels,
 ) {
   const computerProvider = await configuredComputerProvider(environment);
-  const computers = createComputersService(
-    createComputersRepository(db, {
-      perSpace: environment.COMPUTERS_PER_SPACE,
-      perMember: environment.COMPUTERS_PER_MEMBER,
-    }),
+  const computersRepository = createComputersRepository(db, {
+    perSpace: environment.COMPUTERS_PER_SPACE,
+    perMember: environment.COMPUTERS_PER_MEMBER,
+  });
+  const computerScreens = createComputerScreensService(
+    computersRepository,
+    createComputerScreenRepository(db),
     computerProvider,
   );
+  const computers = createComputersService(computersRepository, computerProvider);
   const modelConnections = createModelConnections(
     createModelConnectionsRepository(db),
     createPostgresSecretStore(db, applicationSecretKeyProvider(environment.APP_KEY)),
@@ -109,6 +116,10 @@ export async function composeAgents(
       protectedValues,
       repository.pinResources,
       createComputerUseQueue(db),
+      {
+        withAgentInput: computerScreens.withAgentInput,
+        setPaused: (scope, run, paused) => repository.setComputerInputPaused!(scope, run, paused),
+      },
     ),
     spaceMemory,
     protectedValues,
@@ -165,7 +176,10 @@ export async function composeAgents(
       .emit({ status: 503, code: "EXECUTION_FAILED" }),
   );
   const spaceManagement = createSpaceManagement(db, {
-    beforeMemberRemoved: cancelSpaceRuns,
+    beforeMemberRemoved: async (tx, spaceId, accountId) => {
+      await revokeComputerScreenControl(tx, spaceId, accountId);
+      await cancelSpaceRuns(tx, spaceId, accountId);
+    },
     afterMemberRemoved: (scope, accountId) => runner.cancelMember(scope.spaceId, accountId),
     afterDeletionClaimed: (spaceId) => runner.cancelMember(spaceId),
   });
@@ -188,6 +202,7 @@ export async function composeAgents(
     routineWorker,
     runner,
     computers,
+    computerScreens,
     computerProvider,
     conversationModels,
     agentApprovals,

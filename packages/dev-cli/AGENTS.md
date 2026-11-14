@@ -30,6 +30,8 @@ Command behavior and the rules each check enforces are documented in
 [Dev CLI commands and checks](../../docs/development/dev-cli.md).
 `test sandbox` owns opt-in real-Engine conformance and isolation acceptance;
 ordinary source verification never starts Docker or changes host firewall rules.
+The gate builds default and optional graphical targets, records their byte sizes
+and includes real graphical start/image/input/stream-stop conformance.
 Its `--with-egress` case uses Engine-host controls and owned DROP counters;
 offline public HTTPS is explicitly unavailable. `--dns-resolver` selects the
 public IPv4 DNS upstream shared by the supervisor and firewall probe.

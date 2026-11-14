@@ -11,6 +11,8 @@ import { computerSchema, type Computer } from "@raypx/core/computers";
 import { SpaceNotFound } from "@raypx/core/spaces";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { ComputerOperationError, type ComputersRepository } from "../server.js";
+import { endComputerScreenControl } from "./screens-postgres.js";
+export { createComputerScreenRepository, revokeComputerScreenControl } from "./screens-postgres.js";
 
 function view(row: typeof computers.$inferSelect): Computer {
   const { createdByAccountId: _, ...rest } = row;
@@ -109,6 +111,10 @@ export function createComputersRepository(
             })
             .returning();
         }
+        // Another caller can complete after the service's read and before this
+        // Space lock. Satisfy the requested target without replacing its generation.
+        const targetState = operation === "start" ? "running" : "stopped";
+        if (!row!.leaseOwner && row!.state === targetState) return view(row!);
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
         const time = new Date(clock!.now);
         if (row!.leaseExpiresAt && row!.leaseExpiresAt > time)
@@ -116,6 +122,7 @@ export function createComputersRepository(
         // Stop never takes over an unfinished start: only a new generation may recover it.
         if (operation === "stop" && row!.state === "starting")
           throw new ComputerOperationError("COMPUTER_BUSY");
+        await endComputerScreenControl(tx, scope.spaceId, row!.id);
         let generation = row!.generation;
         if (operation === "start" && !created) generation += 1;
         const [claimed] = await tx

@@ -18,20 +18,24 @@ comparison and reads i18n's static locale policy through workspace discovery.
 | Agents    | agents                                                |
 | Tasks     | tasks, including terminalApproval (retained runtime)  |
 | Memory    | memory                                                |
-| Jobs      | automations, local and cloud (retained runtime)       |
+| Jobs      | routines; automations (retained runtime)              |
 | Analytics | analytics                                             |
 | Blocks    | settings                                              |
 | Instances | instances                                             |
+| Pages     | pages                                                 |
+| Skills    | skills                                                |
+| Mobile    | mobile, mobile-capabilities, mobile-resources         |
 | API       | api                                                   |
 | Web       | dash, users, site, guest, legal, desktopAuthorization |
 | Desktop   | engine, desktopLogin, localWorkspace                  |
 
 Shared owners expose pure `/messages/en` and `/messages/zh` entries without React,
 UI or execution code. App catalogs remain private. Web and Desktop compose only their consumed
-shared entries and private namespaces through explicit object assembly. Retained Tasks
-and Jobs catalogs are outside renderer composition; native task notifications still
-consume Tasks language entries.
-Mobile uses only common and auth, with a platform-neutral translator. Devtools'
+shared entries and private namespaces through explicit object assembly. The retained
+Tasks catalog is outside Agent renderer composition; native task notifications
+still consume its language entries. Jobs contributes the routines capability copy.
+Mobile composes common, Auth, Agents, Jobs, Memory, Pages and Skills plus its
+private native catalogs through a platform-neutral translator. Devtools'
 private `locales` dictionary loads only with Devtools and never enters app messages.
 UI primitives continue to receive caller-provided labels.
 

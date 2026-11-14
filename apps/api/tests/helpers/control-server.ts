@@ -61,8 +61,12 @@ import {
   sealStoredSecret,
   openStoredSecret,
 } from "../../src/conversations/secrets.js";
-import { createComputersService } from "@raypx/computers/server";
-import { createComputersRepository } from "@raypx/computers/server/postgres";
+import { createComputersService, createComputerScreensService } from "@raypx/computers/server";
+import {
+  createComputersRepository,
+  createComputerScreenRepository,
+  revokeComputerScreenControl,
+} from "@raypx/computers/server/postgres";
 import { createMemoryComputerProvider } from "@raypx/providers/computer";
 import { AuditService } from "../../src/admin/audit.js";
 import { createAdministrationRepository } from "../../src/admin/repository.js";
@@ -102,11 +106,16 @@ const auth = createAuth({
 const control = new ControlService(createControlRepository(connection.db));
 // The in-memory provider lets browser journeys start and stop a computer without an Engine.
 const computerProvider = createMemoryComputerProvider();
-const computers = createComputersService(
-  createComputersRepository(connection.db, { perSpace: 10, perMember: 100 }),
+const computersRepository = createComputersRepository(connection.db, {
+  perSpace: 10,
+  perMember: 100,
+});
+const computerScreens = createComputerScreensService(
+  computersRepository,
+  createComputerScreenRepository(connection.db),
   computerProvider,
-  "memory",
 );
+const computers = createComputersService(computersRepository, computerProvider, "memory");
 // Sign-up reads the registration switch, so the fixture needs the real configuration service.
 const audit = new AuditService(createAdministrationRepository(connection.db));
 const config = createConfigService({
@@ -145,8 +154,9 @@ const protectedValues = () => [
   ...mcpServers.protectedValues(),
   ...openApiServers.protectedValues(),
 ];
+const conversationRepository = createConversationsRepository(connection.db);
 const runner = new ConversationRunner(
-  createConversationsRepository(connection.db),
+  conversationRepository,
   conversationModels,
   undefined,
   undefined,
@@ -156,7 +166,18 @@ const runner = new ConversationRunner(
         withSkillTools(
           withPageTools(
             withMemoryTools(
-              createComputerTools(computers, computerProvider, []),
+              createComputerTools(
+                computers,
+                computerProvider,
+                [],
+                conversationRepository.pinResources,
+                undefined,
+                {
+                  withAgentInput: computerScreens.withAgentInput,
+                  setPaused: (scope, run, paused) =>
+                    conversationRepository.setComputerInputPaused!(scope, run, paused),
+                },
+              ),
               spaceMemory,
               protectedValues,
             ),
@@ -180,7 +201,10 @@ const runner = new ConversationRunner(
   },
 );
 const spaceManagement = createSpaceManagement(connection.db, {
-  beforeMemberRemoved: cancelSpaceRuns,
+  beforeMemberRemoved: async (tx, spaceId, accountId) => {
+    await revokeComputerScreenControl(tx, spaceId, accountId);
+    await cancelSpaceRuns(tx, spaceId, accountId);
+  },
   afterMemberRemoved: (scope, accountId) => runner.cancelMember(scope.spaceId, accountId),
   afterDeletionClaimed: (spaceId) => runner.cancelMember(spaceId),
 });
@@ -204,6 +228,7 @@ const stream = new ConversationStream({
   live: runner.live,
   spaceEvents: spaceManagement,
   spaceFanout,
+  screens: computerScreens,
 });
 await stream.start();
 const hub = new RelayHub(async (run) => {
@@ -235,6 +260,7 @@ const app = createApiApp({
   control,
   config,
   computers,
+  computerScreens,
   modelConnections,
   agentApprovals,
   routines,

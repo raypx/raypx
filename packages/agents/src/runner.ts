@@ -575,16 +575,17 @@ export class ConversationRunner {
             this.toolRuntime!.tools.withDriver
               ? this.toolRuntime!.tools.withDriver(scope, run, prepared, controller.signal, execute)
               : execute();
-          const result = prepared.changes
-            ? this.toolRuntime.approvals.executeEffect(
-                scope,
-                run,
-                prepared,
-                operation,
-                controller.signal,
-                drive,
-              )
-            : drive(operation);
+          const result =
+            prepared.changes || prepared.recordEffect
+              ? this.toolRuntime.approvals.executeEffect(
+                  scope,
+                  run,
+                  prepared,
+                  operation,
+                  controller.signal,
+                  drive,
+                )
+              : drive(operation);
           const active = this.active.get(run.id);
           if (active) active.pendingWork = result;
           void result.then(
@@ -616,7 +617,9 @@ export class ConversationRunner {
       role: "toolResult",
       toolCallId: call.id,
       toolName: call.name,
-      content: [{ type: "text", text: output }],
+      content: this.toolRuntime?.tools.modelContent?.(run, call, output) ?? [
+        { type: "text", text: output },
+      ],
       isError,
       timestamp: Date.now(),
     };
@@ -825,6 +828,7 @@ export class ConversationRunner {
           const call = checkpoint.pendingCalls[0]!;
           const output = await this.toolResult(scope, run, call, controller);
           checkpoint.continuation.push(output);
+          if (run.untrustedInput) checkpoint.untrustedInput = true;
           checkpoint.pendingCalls.shift();
           storing = true;
           const text =

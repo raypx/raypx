@@ -80,6 +80,7 @@ export async function createApiRuntime(
     live: runtime.liveReplies,
     spaceEvents: runtime.spaceManagement,
     spaceFanout,
+    screens: runtime.computerScreens,
   });
   try {
     await events.start();

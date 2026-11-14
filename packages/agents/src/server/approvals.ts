@@ -228,7 +228,7 @@ export function createApprovalsRepository(
       kind: "run.state",
       fence,
       runId: request.runId,
-      data: { state, failureCode: null },
+      data: { state, failureCode: null, computerInputPaused: false },
     });
   }
   async function resolveRequest(
@@ -252,7 +252,7 @@ export function createApprovalsRepository(
     // Stop changes the Run first; this conditional transition cannot revive it.
     const [resumed] = await tx
       .update(runs)
-      .set({ state: "running" })
+      .set({ state: "running", computerInputPaused: false })
       .where(
         and(
           eq(runs.spaceId, scope.spaceId),
@@ -612,7 +612,7 @@ export function createApprovalsRepository(
         const request = requestView(row!);
         await tx
           .update(runs)
-          .set({ state: "waiting" })
+          .set({ state: "waiting", computerInputPaused: false })
           .where(
             and(
               eq(runs.spaceId, scope.spaceId),

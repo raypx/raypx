@@ -1,5 +1,6 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
+import { computerScreenEventSchema } from "@raypx/core/computers";
 import {
   agentIdSchema,
   groupConversationInputSchema,
@@ -115,7 +116,15 @@ export const conversationsContract = {
     .output(conversationHistorySchema),
 };
 const streamSelection = selection.extend({ version: z.literal(1) });
+const screenSelection = z.strictObject({
+  version: z.literal(1),
+  spaceId: spaceIdSchema,
+  viewerId: z.uuid(),
+});
 export const conversationClientFrameSchema = z.discriminatedUnion("type", [
+  screenSelection.extend({ type: z.literal("screen.subscribe") }),
+  screenSelection.extend({ type: z.literal("screen.unsubscribe") }),
+  screenSelection.extend({ type: z.literal("screen.ack"), sequence: cursor }),
   streamSelection.extend({ type: z.literal("subscribe"), after: cursor }),
   streamSelection.extend({ type: z.literal("ack"), sequence: cursor }),
   streamSelection.extend({ type: z.literal("unsubscribe") }),
@@ -140,6 +149,14 @@ export const conversationClientFrameSchema = z.discriminatedUnion("type", [
 export type ConversationClientFrame = z.infer<typeof conversationClientFrameSchema>;
 export const conversationServerFrameSchema = z.discriminatedUnion("type", [
   z.strictObject({
+    type: z.literal("screen.event"),
+    spaceId: spaceIdSchema,
+    viewerId: z.uuid(),
+    sequence: cursor,
+    event: computerScreenEventSchema,
+    conversationId: z.never().optional(),
+  }),
+  z.strictObject({
     type: z.literal("space.event"),
     spaceId: spaceIdSchema,
     conversationId: z.never().optional(),
@@ -156,3 +173,5 @@ export const conversationServerFrameSchema = z.discriminatedUnion("type", [
 ]);
 export type ConversationServerFrame = z.infer<typeof conversationServerFrameSchema>;
 export const MAX_CONVERSATION_FRAME_BYTES = 256_000;
+/** Screens travel one acknowledged frame at a time, including their bounded base64 envelope. */
+export const MAX_SCREEN_STREAM_FRAME_BYTES = 1_500_000;

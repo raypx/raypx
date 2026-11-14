@@ -7,6 +7,7 @@ export interface SandboxConfig {
   socket: string;
   stateDirectory: string;
   image: string;
+  graphical?: boolean;
   memory: number;
   nanoCpus: number;
   pids: number;
@@ -79,6 +80,7 @@ export function sandboxConfig(env: Record<string, string | undefined>): SandboxC
     socket,
     stateDirectory,
     image,
+    graphical: flag("SANDBOX_GRAPHICAL"),
     memory: positive("SANDBOX_MEMORY_BYTES", "536870912", Number.MAX_SAFE_INTEGER),
     nanoCpus: positive("SANDBOX_NANO_CPUS", "1000000000", 256_000_000_000),
     pids: positive("SANDBOX_PIDS_LIMIT", "128", 1_000_000),

@@ -29,6 +29,7 @@ export interface ApiAppOptions {
   modelConnections: import("../conversations/connections.js").ModelConnectionsService;
   agentApprovals: import("@raypx/agents/server").ApprovalsService;
   computers: import("@raypx/computers/server").ComputersService;
+  computerScreens: import("@raypx/computers/server").ComputerScreensService;
   spaces: SpaceAccess;
   spaceManagement: SpaceManagement;
   agents: AgentsRepository;

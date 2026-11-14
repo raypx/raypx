@@ -33,6 +33,7 @@ import {
 } from "@raypx/core/agents";
 import { exposeApiTo } from "./exposure.js";
 import { rpcAccess } from "./policy.js";
+import { computerScreenContract } from "./computer-screen.js";
 
 const session = oc.meta(exposeApiTo("renderer"), rpcAccess("session"));
 const membership = z.strictObject({ space: spaceSchema, member: spaceMemberSchema });
@@ -111,6 +112,7 @@ export const agentsContract = {
 };
 
 export const computersContract = {
+  ...computerScreenContract,
   get: session.input(spaceSelection).output(spaceComputerSchema),
   start: session.input(spaceSelection).output(spaceComputerSchema),
   stop: session.input(spaceSelection).output(spaceComputerSchema),

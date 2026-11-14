@@ -194,6 +194,7 @@ export class AgentInteractionError extends Error {
   }
 }
 export interface ConversationRunRepository {
+  setComputerInputPaused?(scope: SpaceScope, run: ExecutionRun, paused: boolean): Promise<void>;
   sendAgent?(scope: SpaceScope, run: ExecutionRun, input: AgentMessageInput): Promise<Message>;
   delegate?(
     scope: SpaceScope,

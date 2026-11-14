@@ -347,6 +347,7 @@
       "name": "sandbox",
       "version": "0.0.0",
       "dependencies": {
+        "@raypx/core": "workspace:*",
         "@raypx/providers": "workspace:*",
         "zod": "catalog:",
       },

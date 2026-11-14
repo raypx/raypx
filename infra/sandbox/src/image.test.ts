@@ -12,4 +12,7 @@ it("declares digest inputs globally before FROM and keeps the computer runtime p
   expect(image).toContain(`FROM oven/bun:${version}@sha256:`);
   expect(image).toContain("FROM python:3.13-slim-bookworm@sha256:");
   expect(image).toContain("USER 1000:1000");
+  expect(image.trim().endsWith("FROM runtime AS default")).toBe(true);
+  expect(image).toContain("FROM runtime AS graphical");
+  expect(image.slice(0, image.indexOf("FROM runtime AS graphical"))).not.toContain("xvfb");
 });

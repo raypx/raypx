@@ -73,8 +73,43 @@ import { SpaceForm } from "./space-form.js";
 import { AgentConversation } from "./conversation.js";
 import { browserConversationDrafts, browserConversationSocket } from "./browser-ports.js";
 import { useTranslations } from "./i18n.js";
+import type { ComputerScreenPort } from "../model/computer-screen.js";
 import { ActivityTime } from "./activity-time.js";
 import { compareLastActivity } from "../model/activity.js";
+
+function screenMethods(port: ComputerPort): Partial<ComputerScreenPort> {
+  const {
+    screenAvailability,
+    startScreen,
+    stopScreen,
+    acquireControl,
+    renewControl,
+    releaseControl,
+    forceReleaseControl,
+    screenInput,
+  } = port;
+  if (
+    !screenAvailability ||
+    !startScreen ||
+    !stopScreen ||
+    !acquireControl ||
+    !renewControl ||
+    !releaseControl ||
+    !forceReleaseControl ||
+    !screenInput
+  )
+    return {};
+  return {
+    screenAvailability: (input) => screenAvailability(input),
+    startScreen: (input) => startScreen(input),
+    stopScreen: (input) => stopScreen(input),
+    acquireControl: (input) => acquireControl(input),
+    renewControl: (input) => renewControl(input),
+    releaseControl: (input) => releaseControl(input),
+    forceReleaseControl: (input) => forceReleaseControl(input),
+    screenInput: (input) => screenInput(input),
+  };
+}
 
 export interface AgentsWorkspaceProps {
   client: AgentsWorkspacePort;
@@ -220,6 +255,7 @@ function AgentsWorkspaceContents({
   );
   const computerPort = useMemo<ComputerPort>(
     () => ({
+      ...screenMethods(client.computers),
       get: (input) => client.computers.get(input),
       start: (input) => client.computers.start(input),
       stop: (input) => client.computers.stop(input),

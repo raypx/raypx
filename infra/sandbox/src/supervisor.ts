@@ -12,6 +12,14 @@ import {
 } from "@raypx/providers/computer";
 import type { SandboxConfig } from "./config.js";
 import type { Engine } from "./engine.js";
+import {
+  MAX_COMPUTER_SCREEN_BYTES,
+  MAX_COMPUTER_SCREEN_FPS,
+  computerScreenAvailabilitySchema,
+  computerScreenFrameSchema,
+  computerScreenInputSchema,
+  type ComputerScreenFrame,
+} from "@raypx/core/computers";
 import { publicComputer, type ComputerStore, type StoredComputer } from "./store.js";
 
 export function createSupervisor(
@@ -21,6 +29,8 @@ export function createSupervisor(
 ): ComputerProvider {
   const locks = new Map<string, Promise<unknown>>();
   const active = new Map<string, Set<{ cancel(): Promise<void>; done: Promise<void> }>>();
+  const screenEpochs = new Map<string, number>();
+  const frameSequences = new Map<string, number>();
   let network: Promise<void> | undefined;
   function locked<T>(ref: ComputerRef, operation: () => Promise<T>): Promise<T> {
     computerRefSchema.parse(ref);
@@ -143,6 +153,25 @@ export function createSupervisor(
     await Promise.all(processes.map((p) => p.cancel()));
     await Promise.all(processes.map((p) => p.done));
   }
+  function endScreen(id: string) {
+    screenEpochs.set(id, (screenEpochs.get(id) ?? 0) + 1);
+  }
+  async function screenOperation(ref: ComputerRef, operation: string, input = {}) {
+    const c = await current(ref, true);
+    if (!config.graphical) throw new ComputerError("SCREEN_UNAVAILABLE");
+    return engine.helper(
+      c.container!,
+      `screen-${operation}`,
+      input,
+      Math.ceil(MAX_COMPUTER_SCREEN_BYTES / 3) * 4 + 1024,
+    );
+  }
+  async function screenshot(ref: ComputerRef): Promise<ComputerScreenFrame> {
+    const result = (await screenOperation(ref, "screenshot")) as object;
+    const sequence = (frameSequences.get(ref.id) ?? 0) + 1;
+    frameSequences.set(ref.id, sequence);
+    return computerScreenFrameSchema.parse({ ...result, sequence });
+  }
   async function snapshotCurrent(c: StoredComputer) {
     if (!c.container || c.state !== "running") {
       if (c.homeRevision) return { revision: c.homeRevision };
@@ -162,6 +191,7 @@ export function createSupervisor(
         execution: "isolated-process",
         files: true,
         home: true,
+        screen: config.graphical === true,
         egress: restricted ? "restricted" : "unrestricted",
         unenforced: restricted
           ? [
@@ -195,6 +225,7 @@ export function createSupervisor(
           }
         }
         const old = c;
+        endScreen(ref.id);
         c = {
           ...ref,
           state: "stopped",
@@ -232,6 +263,8 @@ export function createSupervisor(
       locked(ref, async () => {
         const c = await current(ref);
         if (c.state !== "running") return publicComputer(c);
+        if (config.graphical) await screenOperation(ref, "stop").catch(() => {});
+        endScreen(ref.id);
         await snapshotCurrent(c);
         await engine.response(`/containers/${c.container}/stop?t=10`, "POST");
         c.state = "stopped";
@@ -242,6 +275,7 @@ export function createSupervisor(
       locked(ref, async () => {
         const c = await current(ref);
         if (c.state === "destroyed") return publicComputer(c);
+        endScreen(ref.id);
         await cancelAll(ref.id);
         await remove(c);
         c.container = null;
@@ -359,6 +393,7 @@ export function createSupervisor(
         const c = await current(ref);
         if (c.state === "destroyed") throw new ComputerError("NOT_RUNNING");
         const validated = await validateHome(input);
+        endScreen(ref.id);
         await cancelAll(ref.id);
         const candidate = await create(c);
         try {
@@ -381,5 +416,56 @@ export function createSupervisor(
         return { revision: validated.revision };
       }),
     snapshot: (ref) => locked(ref, async () => snapshotCurrent(await current(ref))),
+    screen: (ref) =>
+      locked(ref, async () => {
+        await current(ref, true);
+        if (!config.graphical)
+          return { available: false, running: false, width: 1024, height: 768 };
+        return computerScreenAvailabilitySchema.parse(await screenOperation(ref, "get"));
+      }),
+    startScreen: (ref) =>
+      locked(ref, async () =>
+        computerScreenAvailabilitySchema.parse(await screenOperation(ref, "start")),
+      ),
+    stopScreen: (ref) =>
+      locked(ref, async () => {
+        const result = computerScreenAvailabilitySchema.parse(await screenOperation(ref, "stop"));
+        endScreen(ref.id);
+        return result;
+      }),
+    screenshot: (ref) => locked(ref, () => screenshot(ref)),
+    input: (ref, input) =>
+      locked(ref, async () => {
+        await screenOperation(ref, "input", { input: computerScreenInputSchema.parse(input) });
+      }),
+    streamScreen(ref, options) {
+      const epoch = screenEpochs.get(ref.id) ?? 0;
+      return (async function* () {
+        while (!options?.signal?.aborted && (screenEpochs.get(ref.id) ?? 0) === epoch) {
+          try {
+            const frame = await locked(ref, () => screenshot(ref));
+            if (options?.signal?.aborted || (screenEpochs.get(ref.id) ?? 0) !== epoch) return;
+            yield frame;
+          } catch (error) {
+            if (
+              error instanceof ComputerError &&
+              ["NOT_RUNNING", "NOT_FOUND", "STALE_GENERATION"].includes(error.code)
+            )
+              return;
+            throw error;
+          }
+          await new Promise<void>((resolve) => {
+            const finish = () => {
+              clearTimeout(timer);
+              options?.signal?.removeEventListener("abort", finish);
+              resolve();
+            };
+            const timer = setTimeout(finish, 1000 / MAX_COMPUTER_SCREEN_FPS);
+            options?.signal?.addEventListener("abort", finish, { once: true });
+            if (options?.signal?.aborted) finish();
+          });
+        }
+      })();
+    },
   };
 }

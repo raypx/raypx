@@ -103,7 +103,10 @@
     "updatePage": "Update page",
     "readPage": "Read page",
     "loadSkill": "Load skill",
-    "saveSkill": "Save skill"
+    "saveSkill": "Save skill",
+    "screenshot": "Screenshot",
+    "pointer": "Pointer input",
+    "keyboard": "Keyboard input"
   },
   "approval": {
     "answeredBy": "Answered by {member}",
@@ -590,5 +593,50 @@
       "INVALID_ENDPOINT": "This API URL is not allowed."
     }
   },
-  "RUN_NOT_ACTIVE": "This Run has finished. Choose another Run or cancel steering."
+  "RUN_NOT_ACTIVE": "This Run has finished. Choose another Run or cancel steering.",
+  "screen": {
+    "title": "Screen",
+    "start": "Start screen",
+    "stop": "Stop screen",
+    "stopTitle": "Stop the screen?",
+    "stopDescription": "This ends viewing and releases control. Computer commands can continue.",
+    "take": "Take control",
+    "release": "Release control",
+    "forceRelease": "Release member control",
+    "viewOnly": "Viewing only",
+    "youControl": "You control this screen",
+    "controlledBy": "Controlled by {name}",
+    "remaining": "{seconds}s remaining",
+    "agentPaused": "Agent input paused",
+    "pauseView": "Pause view",
+    "resumeView": "Resume view",
+    "viewPaused": "View paused",
+    "helpLabel": "Screen controls",
+    "help": "Members share this screen. Taking control pauses Agent screen input. Escape releases control.",
+    "escape": "Escape releases control. Tab leaves the screen.",
+    "focusHint": "Take control, then focus the screen to send keyboard and pointer input.",
+    "image": "Computer screen",
+    "inputSurface": "Computer screen input",
+    "viewSurface": "Computer screen view",
+    "typeText": "Text to type into the computer",
+    "type": "Type",
+    "unavailable": "Screen is unavailable on this computer.",
+    "computerStopped": "Start the computer to use its screen.",
+    "stopped": "Screen stopped",
+    "connecting": "Connecting to screen…",
+    "error": "Could not load the screen. Try again.",
+    "controlHeld": "Another member controls this screen.",
+    "controlExpired": "Control expired. Take control again.",
+    "inputRefused": "Input was refused. Check who controls the screen.",
+    "ownerRequired": "A Space owner must release another member’s control.",
+    "memberRemoved": "Your Space membership was removed.",
+    "memberLeft": "You left this Space.",
+    "spaceDeleting": "This Space is being deleted.",
+    "sessionExpired": "Your session ended. Sign in again.",
+    "accessDenied": "Screen access ended.",
+    "idleTimeout": "The screen stopped sending frames. Try again.",
+    "reconnecting": "Reconnecting to screen…",
+    "expand": "Expand screen",
+    "expandedTitle": "Computer screen"
+  }
 }

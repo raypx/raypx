@@ -15,7 +15,15 @@ import {
   type ProcessEvent,
 } from "./index.js";
 import { z } from "zod";
-import { homeRevisionSchema, MAX_COMPUTER_FILE_BYTES } from "@raypx/core/computers";
+import {
+  homeRevisionSchema,
+  MAX_COMPUTER_FILE_BYTES,
+  MAX_COMPUTER_SCREEN_BYTES,
+  computerScreenAvailabilitySchema,
+  computerScreenFrameSchema,
+  computerScreenInputSchema,
+  type ComputerScreenFrame,
+} from "@raypx/core/computers";
 import { filePreviewScript } from "./file-preview.js";
 
 type Fetch = (request: Request) => Promise<Response>;
@@ -25,6 +33,7 @@ const descriptionSchema = z.strictObject({
   home: z.literal(true),
   egress: z.enum(["restricted", "unrestricted"]),
   unenforced: z.array(z.string().max(500)).max(20),
+  screen: z.boolean().optional(),
 });
 const revisionSchema = z.strictObject({ revision: homeRevisionSchema });
 const errorCodes = new Set([
@@ -34,6 +43,7 @@ const errorCodes = new Set([
   "INVALID_INPUT",
   "LIMIT_EXCEEDED",
   "RESTORE_FAILED",
+  "SCREEN_UNAVAILABLE",
 ]);
 async function checked(response: Response) {
   if (response.ok) return response;
@@ -42,7 +52,7 @@ async function checked(response: Response) {
     throw new ComputerError(data.code as ComputerError["code"]);
   throw new ComputerError("PROVIDER_UNAVAILABLE");
 }
-async function json(response: Response) {
+async function json(response: Response, maxBytes = MAX_HOME_BYTES * 2) {
   const reader = response.body?.getReader();
   if (!reader) throw new ComputerError("PROVIDER_UNAVAILABLE");
   let size = 0;
@@ -52,7 +62,7 @@ async function json(response: Response) {
       const { value, done } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > MAX_HOME_BYTES * 2) throw new ComputerError("LIMIT_EXCEEDED");
+      if (size > maxBytes) throw new ComputerError("LIMIT_EXCEEDED");
       chunks.push(value);
     }
     return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
@@ -78,7 +88,12 @@ export function createDockerComputerProvider(options: {
   )
     throw new ComputerError("INVALID_INPUT");
   const request = options.fetch ?? fetch;
-  async function call(ref: ComputerRef, operation: string, input: object = {}) {
+  async function call(
+    ref: ComputerRef,
+    operation: string,
+    input: object = {},
+    signal?: AbortSignal,
+  ) {
     computerRefSchema.parse(ref);
     try {
       return await checked(
@@ -90,7 +105,7 @@ export function createDockerComputerProvider(options: {
               "content-type": "application/json",
             },
             body: JSON.stringify({ generation: ref.generation, ...input }),
-            signal: AbortSignal.timeout(120_000),
+            signal: signal ?? AbortSignal.timeout(120_000),
           }),
         ),
       );
@@ -112,7 +127,8 @@ export function createDockerComputerProvider(options: {
           }),
         ),
       );
-      return descriptionSchema.parse(await json(response));
+      const description = descriptionSchema.parse(await json(response));
+      return { ...description, screen: description.screen ?? false };
     },
     get: (ref) => view(ref, "get"),
     provision: (ref) => view(ref, "create"),
@@ -234,6 +250,67 @@ export function createDockerComputerProvider(options: {
     },
     async snapshot(ref) {
       return revisionSchema.parse(await json(await call(ref, "snapshot")));
+    },
+    async screen(ref) {
+      return computerScreenAvailabilitySchema.parse(
+        await json(await call(ref, "screen/get", {}, AbortSignal.timeout(5000)), 1024),
+      );
+    },
+    async startScreen(ref) {
+      return computerScreenAvailabilitySchema.parse(
+        await json(await call(ref, "screen/start", {}, AbortSignal.timeout(12_000)), 1024),
+      );
+    },
+    async stopScreen(ref) {
+      return computerScreenAvailabilitySchema.parse(
+        await json(await call(ref, "screen/stop", {}, AbortSignal.timeout(5000)), 1024),
+      );
+    },
+    async screenshot(ref) {
+      return computerScreenFrameSchema.parse(
+        await json(
+          await call(ref, "screen/screenshot", {}, AbortSignal.timeout(5000)),
+          Math.ceil(MAX_COMPUTER_SCREEN_BYTES / 3) * 4 + 1024,
+        ),
+      );
+    },
+    async input(ref, input) {
+      await call(
+        ref,
+        "screen/input",
+        { input: computerScreenInputSchema.parse(input) },
+        AbortSignal.timeout(5000),
+      );
+    },
+    async *streamScreen(ref, streamOptions): AsyncIterable<ComputerScreenFrame> {
+      const controller = new AbortController();
+      const signal = streamOptions?.signal
+        ? AbortSignal.any([controller.signal, streamOptions.signal])
+        : controller.signal;
+      const response = await call(ref, "screen/stream", {}, signal);
+      const reader = response.body?.getReader();
+      if (!reader) throw new ComputerError("PROVIDER_UNAVAILABLE");
+      const decoder = new TextDecoder();
+      let pending = "";
+      try {
+        while (!signal.aborted) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          pending += decoder.decode(value, { stream: true });
+          if (pending.length > Math.ceil(MAX_COMPUTER_SCREEN_BYTES / 3) * 4 + 1024)
+            throw new ComputerError("LIMIT_EXCEEDED");
+          let end = pending.indexOf("\n");
+          while (end >= 0) {
+            if (end > 0) yield computerScreenFrameSchema.parse(JSON.parse(pending.slice(0, end)));
+            pending = pending.slice(end + 1);
+            end = pending.indexOf("\n");
+          }
+        }
+        if (pending) throw new ComputerError("PROVIDER_UNAVAILABLE");
+      } finally {
+        controller.abort();
+        await reader.cancel().catch(() => {});
+      }
     },
   };
   return provider;

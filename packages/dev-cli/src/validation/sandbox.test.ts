@@ -192,6 +192,8 @@ function fakeRuntime(failure?: string) {
       if (args[0] === "version")
         return JSON.stringify({ Os: "linux", Version: "29.5", Arch: "arm64", ApiVersion: "1.54" });
       if (args[0] === "image" && args[1] === "inspect" && args.includes("--format")) {
+        if (args.includes("{{.Size}}"))
+          return args.at(-1)!.endsWith("-graphical") ? "800000000" : "200000000";
         if (args.includes("{{.Id}}")) return `sha256:${"a".repeat(64)}`;
         const repository = args.at(-1)!.split(":")[0];
         return JSON.stringify([`${repository}@sha256:${"b".repeat(64)}`]);
@@ -304,6 +306,9 @@ describe("owned sandbox execution", () => {
       "tests/computer/conformance.test.ts",
     );
     expect(steps).toContain("home-replacement");
+    expect(result.imageBytes).toEqual({ default: 200000000, graphical: 800000000 });
+    expect(result.graphical).toContain("stream closes on stop");
+    expect(calls.find((call) => call[0] === "graphical-build")).toContain("graphical");
     expect(calls.findIndex((call) => call[0] === "stop")).toBeLessThan(
       calls.findIndex((call) => call.includes("--all")),
     );
@@ -311,18 +316,21 @@ describe("owned sandbox execution", () => {
     expect(calls.some((call) => call.includes("--apply"))).toBe(false);
     expect(JSON.stringify(result)).not.toContain("TOKEN");
   });
-  it.each(["computer-build", "provider-conformance", "isolation", "home-replacement"])(
-    "tears down after %s failure",
-    async (failure) => {
-      const { runtime, calls, steps } = fakeRuntime(failure);
-      await expect(executeSandbox("/repo", plan, runtime)).rejects.toThrow(`injected ${failure}`);
-      expect(steps).toEqual(
-        expect.arrayContaining(["supervisor-stop", "engine-cleanup", "state-remove"]),
-      );
-      expect(calls.at(-1)).toEqual(["remove-state", "/tmp/owned-state"]);
-      expect(calls.some((call) => call.includes("prune"))).toBe(false);
-    },
-  );
+  it.each([
+    "computer-build",
+    "graphical-build",
+    "provider-conformance",
+    "isolation",
+    "home-replacement",
+  ])("tears down after %s failure", async (failure) => {
+    const { runtime, calls, steps } = fakeRuntime(failure);
+    await expect(executeSandbox("/repo", plan, runtime)).rejects.toThrow(`injected ${failure}`);
+    expect(steps).toEqual(
+      expect.arrayContaining(["supervisor-stop", "engine-cleanup", "state-remove"]),
+    );
+    expect(calls.at(-1)).toEqual(["remove-state", "/tmp/owned-state"]);
+    expect(calls.some((call) => call.includes("prune"))).toBe(false);
+  });
   it("removes firewall rules after an explicitly opted-in apply failure", async () => {
     const { runtime, calls } = fakeRuntime("egress-apply");
     await expect(executeSandbox("/repo", { ...plan, withEgress: true }, runtime)).rejects.toThrow(

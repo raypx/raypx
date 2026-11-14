@@ -144,7 +144,7 @@ export function AgentConversation({
     let computer: ComputerController | undefined;
     queueMicrotask(() => {
       if (cancelled) return;
-      computer = new ComputerController(item.agent.spaceId, computerPort);
+      computer = new ComputerController(item.agent.spaceId, computerPort, { accountId, socket });
       next = new ConversationController({
         computer,
         ...(approvalPort ? { approvals: approvalPort } : {}),
@@ -498,7 +498,8 @@ function ConversationContents({
       observed.current.set(run.id, run.state);
       if (previous === run.state) continue;
       if (run.state === "running") next = t("replying");
-      else if (run.state === "waiting") next = t("waiting");
+      else if (run.state === "waiting")
+        next = t(run.computerInputPaused ? "screen.agentPaused" : "waiting");
       else if (previous === "running" || previous === "queued" || previous === "waiting") {
         if (run.state === "succeeded") next = t("replyReady");
         if (run.state === "failed") next = t("failed");
@@ -875,6 +876,7 @@ function ConversationContents({
                 let runStatus = run ? t(run.state) : "";
                 if (run?.state === "running") runStatus = t("replying");
                 if (waitingOnWork) runStatus = t("delegation.waiting");
+                if (run?.computerInputPaused) runStatus = t("screen.agentPaused");
                 const retryMessage = state.messages.find(
                   (message) => message.id === run?.messageId,
                 );
@@ -1057,7 +1059,9 @@ function ConversationContents({
                     <span className="min-w-0 font-medium wrap-anywhere">
                       {agentName(run.agentId)}
                     </span>
-                    <span className="shrink-0 text-muted-foreground">{t(run.state)}</span>
+                    <span className="shrink-0 text-muted-foreground">
+                      {t(run.computerInputPaused ? "screen.agentPaused" : run.state)}
+                    </span>
                   </div>
                   <Button
                     size="xs"

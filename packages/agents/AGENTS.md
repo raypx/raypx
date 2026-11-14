@@ -1,5 +1,14 @@
 # @raypx/agents
 
+Graphical tools (`computer_screenshot`, `computer_pointer`, `computer_keyboard`)
+require advertised provider support. All record effects; screenshot effects hold
+metadata only while a bounded untrusted image enters private model context and
+checkpoints. Images never enter events, activity or logs. Recovery without an
+image requires a new capture. Input waits behind PostgreSQL member control before
+effect intent; fenced `computerInputPaused` uses the existing waiting Run state.
+Commands on screen-capable providers share this gate because commands can inject
+graphical input. Files and screenshots remain readable during member control.
+
 Backend groups use explicit mentions, retained participants and one gapless
 conversation counter across concurrent Agents. Native `agent_send_message`,
 `agent_delegate` and `agent_wait` tools keep the originating member's authority;

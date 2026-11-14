@@ -1,8 +1,9 @@
 import type { Computer, SpaceComputer } from "@raypx/core/computers";
 import type { ConversationEvent } from "@raypx/core/conversation";
 import type { SpaceId } from "@raypx/core/spaces";
-import type { ComputerPort } from "./port.js";
+import type { ComputerPort, ConversationSocketPort } from "./port.js";
 import { ComputerFilesController } from "./computer-files.js";
+import { ComputerScreenController, type ComputerScreenPort } from "./computer-screen.js";
 
 export interface ComputerView {
   status: "loading" | "not-configured" | Computer["state"];
@@ -15,6 +16,7 @@ export interface ComputerView {
 /** A Space-scoped lifecycle projection. Only the server authorizes or performs work. */
 export class ComputerController {
   readonly files: ComputerFilesController | null;
+  readonly screen: ComputerScreenController | null;
   private view: ComputerView = {
     status: "loading",
     failureCode: null,
@@ -32,12 +34,30 @@ export class ComputerController {
   constructor(
     private readonly spaceId: SpaceId,
     private readonly port: ComputerPort,
+    options?: { accountId: string; socket: ConversationSocketPort },
   ) {
     const listDirectory = port.listDirectory;
     const readFile = port.readFile;
     this.files =
       listDirectory && readFile
         ? new ComputerFilesController(spaceId, { listDirectory, readFile })
+        : null;
+    this.screen =
+      options &&
+      port.screenAvailability &&
+      port.startScreen &&
+      port.stopScreen &&
+      port.acquireControl &&
+      port.renewControl &&
+      port.releaseControl &&
+      port.forceReleaseControl &&
+      port.screenInput
+        ? new ComputerScreenController(
+            spaceId,
+            options.accountId,
+            port as ComputerScreenPort,
+            options.socket,
+          )
         : null;
   }
 
@@ -154,6 +174,7 @@ export class ComputerController {
     }
   }
   dispose() {
+    this.screen?.dispose();
     this.files?.dispose();
     this.disposed = true;
     ++this.read;

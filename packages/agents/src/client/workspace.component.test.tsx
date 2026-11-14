@@ -2330,7 +2330,7 @@ it.each(["en", "zh"] as const)(
       text: "Recent message",
     };
     const active = {
-      run: { ...run, state: "waiting" as const, untrustedInput: true },
+      run: { ...run, state: "waiting" as const, untrustedInput: true, computerInputPaused: true },
       triggerMessage: { id: message.id, sequence: 1 },
       pendingApprovals: [
         {
@@ -2367,6 +2367,9 @@ it.each(["en", "zh"] as const)(
       name: language === "en" ? "Still working" : "仍在工作",
     });
     expect(within(strip).getByText(agent.name)).toBeVisible();
+    expect(
+      within(strip).getByText(language === "en" ? "Agent input paused" : "智能体输入已暂停"),
+    ).toBeVisible();
     expect(screen.queryByText(message.text)).not.toBeInTheDocument();
     expect(
       within(strip).getByText(

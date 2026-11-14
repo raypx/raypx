@@ -173,6 +173,7 @@ export function createConversationsRepository(
         routineId: run.routineId ?? null,
         provenanceKind: run.inboundProvenance?.kind ?? null,
         untrustedInput: run.untrustedInput === true,
+        computerInputPaused: run.state === "waiting" && run.computerInputPaused === true,
       },
     });
     await tx.update(counters).set({ sequence }).where(counterSelection(scope, run.conversationId));
@@ -261,6 +262,7 @@ export function createConversationsRepository(
       .update(runs)
       .set({
         state: "cancelled",
+        computerInputPaused: false,
         finishedAt: options.now?.() ?? new Date(),
         leaseOwner: null,
         leaseExpiresAt: null,
@@ -561,6 +563,21 @@ export function createConversationsRepository(
         await assertRunFence(tx, scope, run);
         await beginToolEvent(tx, scope, run, tool, publish);
       });
+    },
+    async setComputerInputPaused(scope, run, paused) {
+      await db.transaction(async (tx) => {
+        const counter = await lock(tx, scope, run.conversationId);
+        const current = await assertRunFence(tx, scope, run);
+        if (current.computerInputPaused === paused) return;
+        const [row] = await tx
+          .update(runs)
+          .set({ computerInputPaused: paused, state: paused ? "waiting" : "running" })
+          .where(runSelection(scope, run.conversationId, run.id))
+          .returning();
+        await appendState(tx, scope, runView(row!), counter.sequence + 1, run.fence);
+      });
+      run.computerInputPaused = paused;
+      run.state = paused ? "waiting" : "running";
     },
     getRun,
     async stop(scope, id, runId) {
@@ -1168,6 +1185,7 @@ export function createConversationsRepository(
           .update(runs)
           .set({
             state: nextState,
+            computerInputPaused: retryAt ? active.computerInputPaused : false,
             failureCode: retryAt ? null : failure,
             finishedAt: retryAt ? null : sql`clock_timestamp()`,
             computerHeld: false,

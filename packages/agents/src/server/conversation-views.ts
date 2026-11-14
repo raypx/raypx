@@ -57,6 +57,7 @@ export function runView(row: typeof runs.$inferSelect) {
     routineTimezone: row.routineTimezone,
     inboundProvenance: row.inboundProvenance,
     untrustedInput: row.untrustedInput || row.inboundProvenance !== null || row.trigger === "agent",
+    computerInputPaused: row.state === "waiting" && row.computerInputPaused,
   });
 }
 export function segmentView(row: typeof segments.$inferSelect) {

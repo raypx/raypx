@@ -5,6 +5,9 @@ import {
   computerStateSchema,
   homeRevisionSchema,
   computerDirectoryEntrySchema,
+  type ComputerScreenAvailability,
+  type ComputerScreenFrame,
+  type ComputerScreenInput,
 } from "@raypx/core/computers";
 
 export const MAX_OUTPUT_BYTES = 1024 * 1024;
@@ -23,6 +26,7 @@ export class ComputerError extends Error {
       | "INVALID_INPUT"
       | "LIMIT_EXCEEDED"
       | "RESTORE_FAILED"
+      | "SCREEN_UNAVAILABLE"
       | "PROVIDER_UNAVAILABLE",
   ) {
     super(code);
@@ -109,6 +113,8 @@ export interface ComputerDescription {
   home: true;
   egress: "restricted" | "unrestricted";
   unenforced: string[];
+  /** True only when this deployment prepared a graphical computer image. */
+  screen?: boolean;
 }
 export interface ComputerProvider {
   describe(): Promise<ComputerDescription>;
@@ -135,6 +141,17 @@ export interface ComputerProvider {
   exportHome(ref: ComputerRef): Promise<HomeArchive>;
   importHome(ref: ComputerRef, archive: HomeArchive): Promise<{ revision: string }>;
   snapshot(ref: ComputerRef): Promise<{ revision: string }>;
+  /** Optional graphical capability. A missing operation never grants screen access. */
+  screen?(this: void, ref: ComputerRef): Promise<ComputerScreenAvailability>;
+  startScreen?(this: void, ref: ComputerRef): Promise<ComputerScreenAvailability>;
+  stopScreen?(this: void, ref: ComputerRef): Promise<ComputerScreenAvailability>;
+  screenshot?(this: void, ref: ComputerRef): Promise<ComputerScreenFrame>;
+  input?(this: void, ref: ComputerRef, input: ComputerScreenInput): Promise<void>;
+  streamScreen?(
+    this: void,
+    ref: ComputerRef,
+    options?: { signal?: AbortSignal },
+  ): AsyncIterable<ComputerScreenFrame>;
 }
 /** Reject all traversal and links, rather than normalizing an unsafe request. */
 export function workspacePath(path: string): string {

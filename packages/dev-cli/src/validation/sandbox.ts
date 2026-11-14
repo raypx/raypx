@@ -114,6 +114,8 @@ export async function executeSandbox(
   runtime: SandboxRuntime,
 ): Promise<{
   image: string;
+  imageBytes: { default: number; graphical: number };
+  graphical: string;
   bases: Record<string, string>;
   egress: string;
   engine: { os: string; version: string; architecture: string; api: string };
@@ -153,12 +155,20 @@ export async function executeSandbox(
   let supervisor: ValidationProcess | undefined;
   let firewall: string[] | undefined;
   let image = "";
+  const imageBytes = { default: 0, graphical: 0 };
   let egress = "not run (requires --with-egress and Linux root or passwordless sudo)";
   const cleanupErrors: unknown[] = [];
   let failed = false;
   let primaryFailure: unknown;
   let outcome:
-    | { image: string; bases: Record<string, string>; egress: string; engine: typeof engine }
+    | {
+        image: string;
+        imageBytes: typeof imageBytes;
+        graphical: string;
+        bases: Record<string, string>;
+        egress: string;
+        engine: typeof engine;
+      }
     | undefined;
   try {
     directory = await runtime.temporary();
@@ -200,8 +210,47 @@ export async function executeSandbox(
       ],
       env,
     );
+    imageBytes.default = await runtime.step("default-image-bytes", async () => {
+      const value = Number(await docker(["image", "inspect", "--format", "{{.Size}}", plan.image]));
+      if (!Number.isSafeInteger(value) || value <= 0) throw new Error("Invalid default image size");
+      return value;
+    });
+    const graphicalTag = `${plan.image}-graphical`;
+    await runtime.command(
+      "graphical-build",
+      [
+        ...dockerArgs,
+        "build",
+        "--platform",
+        imagePlatform,
+        "--file",
+        "infra/sandbox/Computer.Dockerfile",
+        "--target",
+        "graphical",
+        "--build-arg",
+        `BUN_IMAGE_DIGEST=${bases.bun}`,
+        "--build-arg",
+        `COMPUTER_BASE_DIGEST=${bases.computer}`,
+        "--label",
+        `raypx.validation=${plan.id}`,
+        "--tag",
+        graphicalTag,
+        ".",
+      ],
+      env,
+    );
+    imageBytes.graphical = await runtime.step("graphical-image-bytes", async () => {
+      const value = Number(
+        await docker(["image", "inspect", "--format", "{{.Size}}", graphicalTag]),
+      );
+      if (!Number.isSafeInteger(value) || value <= imageBytes.default)
+        throw new Error("Invalid graphical image size");
+      return value;
+    });
     image = await runtime.step("computer-image-id", async () => {
-      const value = (await docker(["image", "inspect", "--format", "{{.Id}}", plan.image])).trim();
+      const value = (
+        await docker(["image", "inspect", "--format", "{{.Id}}", graphicalTag])
+      ).trim();
       if (!/^sha256:[a-f0-9]{64}$/.test(value)) throw new Error("Invalid built image ID");
       return value;
     });
@@ -215,6 +264,7 @@ export async function executeSandbox(
       SANDBOX_ENGINE_SOCKET: plan.socket,
       SANDBOX_STATE_DIRECTORY: directory,
       SANDBOX_COMPUTER_IMAGE: image,
+      SANDBOX_GRAPHICAL: "true",
       SANDBOX_NAMESPACE: plan.namespace,
       SANDBOX_MEMORY_BYTES: String(plan.memory),
       SANDBOX_NANO_CPUS: "1000000000",
@@ -442,7 +492,15 @@ export async function executeSandbox(
       });
       runtime.report(`egress-probe: ${egress}`);
     } else runtime.report(`egress-probe: ${egress}`);
-    outcome = { image, bases, egress, engine };
+    outcome = {
+      image,
+      imageBytes,
+      graphical:
+        "passed: session start, bounded 1024x768 PNG, input changes pixels, stream closes on stop (provider conformance)",
+      bases,
+      egress,
+      engine,
+    };
   } catch (error) {
     failed = true;
     primaryFailure = error;

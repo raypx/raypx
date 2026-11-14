@@ -18,7 +18,9 @@ domains remain explicit independent entries. Schemas are the single source of in
   Secret values and persistence references are absent from public records.
 
 - `/computers` owns vendor-neutral Computer state, generations, revisions, bounded
-  member file previews and Space projections.
+  member file previews and Space projections, optional bounded PNG screen/input
+  schemas, member control-holder state and precise screen-stream close reasons.
+  Screen frames are transient untrusted content, never authorization.
 - `/approvals` owns account modes, revisioned settings and mode availability,
   member-safe effective mode/source projections,
   exact-tool rules, Space approval requests and bounded effect records.

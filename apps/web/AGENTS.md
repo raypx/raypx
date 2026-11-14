@@ -18,6 +18,10 @@ Waiting and Automations have been removed from this renderer. Do not restore the
   indicator opens the shared lifecycle/files panel through the existing API client.
   The shared Still working strip keeps outside-window active Runs reachable with
   Stop, targeted steering, addressed approvals and a bounded trigger-page jump.
+  Its Screen section uses the same authenticated event transport and optional
+  computer methods for graphical viewing/control, with no provider endpoint.
+  Expand reuses the current screen controller/stream in a large dialog. Escape
+  first releases control; a subsequent Escape closes it and restores the opener.
 - The conversation header opens Space-scoped routines and memory. The earlier
   standalone account Memory route and its navigation have been removed.
 - The `(app)` loader resolves account context through a router-owned QueryClient.

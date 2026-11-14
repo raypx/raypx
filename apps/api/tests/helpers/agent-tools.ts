@@ -6,6 +6,7 @@ import {
   createComputerTools,
   EFFECT_INTENT_TIMEOUT_MS,
   type ApprovalsRepository,
+  type ComputerScreenInputGate,
 } from "@raypx/agents/server";
 import { createComputersService, type ComputersRepository } from "@raypx/computers/server";
 import {
@@ -22,7 +23,13 @@ import type { SpaceScope } from "@raypx/spaces/server";
 import { replyFixture } from "./replies.js";
 
 /** Offline fixture: real model loop, policy and Computer port, with repository doubles only. */
-export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRounds?: number } = {}) {
+export function agentToolsFixture(
+  options: {
+    requestTtlMs?: number;
+    maxToolRounds?: number;
+    screenControl?: ComputerScreenInputGate;
+  } = {},
+) {
   let clock = new Date("2026-01-01T00:00:00.000Z");
   const now = () => new Date(clock);
   const requests: ApprovalRequest[] = [];
@@ -294,6 +301,11 @@ export function agentToolsFixture(options: { requestTtlMs?: number; maxToolRound
     ["fixture-known-secret"],
     async (scope, run, pins): Promise<void> => {
       await f.repository.pinResources(scope, run, pins);
+    },
+    undefined,
+    options.screenControl ?? {
+      withAgentInput: async (_scope, _ref, operation) => operation(),
+      setPaused: async () => {},
     },
   );
   const f = replyFixture({

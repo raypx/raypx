@@ -135,3 +135,51 @@ it("adds independently bounded active work without requiring it from existing sn
     ).toBeDefined();
   }
 });
+
+it("binds screen subscriptions to a viewer and keeps their pixels outside conversation events", () => {
+  const viewerId = "b887ca11-696d-4316-a182-94b7bd4da319";
+  expect(
+    conversationClientFrameSchema.safeParse({
+      type: "screen.subscribe",
+      version: 1,
+      spaceId: "space",
+      viewerId,
+    }).success,
+  ).toBe(true);
+  expect(
+    conversationClientFrameSchema.safeParse({
+      type: "screen.ack",
+      version: 1,
+      spaceId: "space",
+      viewerId,
+      sequence: 1,
+    }).success,
+  ).toBe(true);
+  expect(
+    conversationClientFrameSchema.safeParse({
+      type: "screen.subscribe",
+      version: 1,
+      spaceId: "space",
+      viewerId,
+      providerUrl: "http://private",
+    }).success,
+  ).toBe(false);
+  expect(
+    conversationServerFrameSchema.safeParse({
+      type: "screen.event",
+      spaceId: "space",
+      viewerId,
+      sequence: 1,
+      event: { kind: "closed", reason: "SPACE_MEMBER_REMOVED" },
+    }).success,
+  ).toBe(true);
+  expect(
+    conversationServerFrameSchema.safeParse({
+      type: "screen.event",
+      spaceId: "space",
+      viewerId,
+      sequence: 1,
+      event: { kind: "closed", reason: "unbounded-private-diagnostic" },
+    }).success,
+  ).toBe(false);
+});

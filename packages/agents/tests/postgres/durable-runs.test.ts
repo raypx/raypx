@@ -194,6 +194,56 @@ const writeCall: ToolCall = {
   arguments: { path: "note.txt", content: "Fixture body" },
 };
 
+it("persists takeover-paused input as a fenced waiting Run and ordered state event", async () => {
+  await send();
+  const execution = (await writer.claimNext(scope, id, claim))!;
+  try {
+    await writer.setComputerInputPaused!(scope, execution.run, true);
+    expect(await competitor.getRun(scope, id, execution.run.id)).toMatchObject({
+      state: "waiting",
+      computerInputPaused: true,
+    });
+    const snapshot = await competitor.snapshot(scope, id);
+    expect(snapshot.runs.find((run) => run.id === execution.run.id)).toMatchObject({
+      computerInputPaused: true,
+    });
+    const events = await competitor.events(scope, id, 0, 100);
+    expect(events.status).toBe("events");
+    if (events.status !== "events") throw new Error("Expected state events");
+    expect(events.events.at(-1)?.event).toMatchObject({
+      kind: "run.state",
+      state: "waiting",
+      computerInputPaused: true,
+    });
+    await expect(
+      writer.setComputerInputPaused!(foreignScope, execution.run, false),
+    ).rejects.toThrow("Space record not found");
+    await competitor.setComputerInputPaused!(scope, execution.run, false);
+    expect(await writer.getRun(scope, id, execution.run.id)).toMatchObject({
+      state: "running",
+      computerInputPaused: false,
+    });
+    await writer.setComputerInputPaused!(scope, execution.run, true);
+    await expire(execution.run);
+    await expect(writer.setComputerInputPaused!(scope, execution.run, true)).rejects.toThrow(
+      StaleRunFenceError,
+    );
+  } finally {
+    await writer.stop(scope, id, execution.run.id);
+  }
+  expect(await writer.getRun(scope, id, execution.run.id)).toMatchObject({
+    state: "cancelled",
+    computerInputPaused: false,
+  });
+  const terminal = await writer.events(scope, id, 0, 100);
+  if (terminal.status !== "events") throw new Error("Expected terminal state event");
+  expect(terminal.events.at(-1)?.event).toMatchObject({
+    kind: "run.state",
+    state: "cancelled",
+    computerInputPaused: false,
+  });
+});
+
 it.each([false, true])(
   "preserves steering turn order in the next Run's base history (queued before start: %s)",
   async (queuedBeforeStart) => {

@@ -56,6 +56,135 @@ async function startWrite(f: ReturnType<typeof fixture>) {
   f.calls[0]!.toolCalls([write()]);
 }
 
+it("sends a screenshot to the model as bounded untrusted image content with metadata-only effect and activity", async () => {
+  const f = fixture();
+  const state = await f.computers.start(f.scope);
+  if (state.status !== "available" || !state.computer) throw new Error("Missing computer");
+  await f.provider.startScreen!({ id: state.computer.id, generation: state.computer.generation });
+  await f.send();
+  await expect.poll(() => f.calls.length).toBe(1);
+  f.calls[0]!.toolCalls([
+    { type: "toolCall", id: "screen", name: "computer_screenshot", arguments: {} },
+  ]);
+  await expect.poll(() => f.calls.length).toBe(2);
+  const output = result(f);
+  expect(output.value).toMatchObject({ state: "succeeded", trust: "untrusted" });
+  const image = output.message.content.find((part) => part.type === "image");
+  if (image?.type !== "image") throw new Error("Missing screenshot model image");
+  expect(Buffer.from(image.data, "base64").byteLength).toBeLessThanOrEqual(1024 * 1024);
+  expect(f.effects).toMatchObject([{ toolName: "computer_screenshot", state: "succeeded" }]);
+  expect(f.requests).toHaveLength(0);
+  expect(JSON.stringify(f.effects)).not.toContain(image.data);
+  expect(JSON.stringify(f.log)).not.toContain(image.data);
+  expect(JSON.stringify(f.diagnostics)).not.toContain(image.data);
+  expect(f.checkpoints.get(f.runs[0]!.id)?.untrustedInput).toBe(true);
+  await f.rpc.approvals.updateSettings({
+    expectedRevision: 0,
+    mode: "ask",
+    rules: [{ toolName: "computer_keyboard", executable: null, decision: "allow" }],
+  });
+  f.calls[1]!.toolCalls([
+    {
+      type: "toolCall",
+      id: "after-image",
+      name: "computer_keyboard",
+      arguments: { kind: "text", text: "screen instruction" },
+    },
+  ]);
+  await expect.poll(() => f.requests.length).toBe(1);
+  expect(f.requests[0]!.toolName).toBe("computer_keyboard");
+  await f.rpc.approvals.answer({
+    spaceId: f.spaceId,
+    requestId: f.requests[0]!.id,
+    decision: "denied",
+  });
+  await expect.poll(() => f.calls.length).toBe(3);
+  expect(result(f, 2).value).toMatchObject({ state: "denied" });
+  expect(f.effects).toHaveLength(1);
+  f.calls[2]!.complete("Screen inspected");
+});
+
+it.each(["ask", "never"] as const)("honors screenshot Block rules in %s mode", async (mode) => {
+  const f = fixture();
+  const screenshot = vi.spyOn(f.provider, "screenshot");
+  await f.rpc.approvals.updateSettings({
+    expectedRevision: 0,
+    mode,
+    rules: [{ toolName: "computer_screenshot", executable: null, decision: "block" }],
+  });
+  await f.send();
+  await expect.poll(() => f.calls.length).toBe(1);
+  f.calls[0]!.toolCalls([
+    { type: "toolCall", id: "blocked-screen", name: "computer_screenshot", arguments: {} },
+  ]);
+  await expect.poll(() => f.calls.length).toBe(2);
+  expect(result(f).value).toMatchObject({ state: "blocked", refused: true });
+  expect(screenshot).not.toHaveBeenCalled();
+  expect(f.effects).toHaveLength(0);
+  expect(f.requests).toHaveLength(0);
+  f.calls[1]!.complete("Blocked");
+});
+
+it("approves screen input, pauses it during takeover without an effect intent, then records execution after release", async () => {
+  let controlled = true;
+  const f: ReturnType<typeof fixture> = fixture({
+    screenControl: {
+      async withAgentInput(_scope, _ref, operation) {
+        if (controlled)
+          throw Object.assign(new Error("SCREEN_CONTROL_HELD"), { code: "SCREEN_CONTROL_HELD" });
+        return operation();
+      },
+      setPaused: (scope, run, paused) => f.repository.setComputerInputPaused!(scope, run, paused),
+    },
+  });
+  const state = await f.computers.start(f.scope);
+  if (state.status !== "available" || !state.computer) throw new Error("Missing computer");
+  await f.provider.startScreen!({ id: state.computer.id, generation: state.computer.generation });
+  const input = vi.spyOn(f.provider, "input");
+  await f.send();
+  await expect.poll(() => f.calls.length).toBe(1);
+  f.calls[0]!.toolCalls([
+    {
+      type: "toolCall",
+      id: "keyboard",
+      name: "computer_keyboard",
+      arguments: { kind: "text", text: "private screen text" },
+    },
+  ]);
+  await expect.poll(() => f.requests.length).toBe(1);
+  expect(f.requests[0]).toMatchObject({
+    toolName: "computer_keyboard",
+    target: "screen",
+    argumentSummary: "Keyboard input",
+  });
+  expect(input).not.toHaveBeenCalled();
+  await f.rpc.approvals.answer({
+    spaceId: f.spaceId,
+    requestId: f.requests[0]!.id,
+    decision: "approved",
+  });
+  await expect.poll(() => f.runs[0]!.computerInputPaused).toBe(true);
+  expect(f.runs[0]!.state).toBe("waiting");
+  expect(f.log).toContainEqual(
+    expect.objectContaining({
+      event: expect.objectContaining({
+        kind: "run.state",
+        state: "waiting",
+        computerInputPaused: true,
+      }),
+    }),
+  );
+  expect(f.effects).toHaveLength(0);
+  expect(input).not.toHaveBeenCalled();
+  controlled = false;
+  await expect.poll(() => f.calls.length).toBe(2);
+  expect(f.runs[0]!.computerInputPaused).toBe(false);
+  expect(input).toHaveBeenCalledOnce();
+  expect(f.effects).toMatchObject([{ toolName: "computer_keyboard", state: "succeeded" }]);
+  expect(JSON.stringify(f.log)).not.toContain("private screen text");
+  f.calls[1]!.complete("Typed after release");
+});
+
 it("waits for Ask approval, accepts another message, resumes with a tool result and records the effect", async () => {
   const f = fixture();
   const writeFile = vi.spyOn(f.provider, "write");

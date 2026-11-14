@@ -8,6 +8,12 @@ immutable home snapshots in the supervisor's private state volume. Run one super
 per state volume; computer operations serialize there. Never share its socket or state
 with computers. Provision uses existing images only, never pulls or builds.
 
+The optional `graphical` image target adds a Unix-only X display, browser and
+terminal; the final/default target stays headless. `SANDBOX_GRAPHICAL` defaults
+false. Fixed display helpers run inside the computer with intrinsic deadlines;
+private authenticated HTTP carries bounded PNG/input frames, never a published
+display port. Stop/replacement close frame iterators. No framebuffer is logged.
+
 `src/home.py` is baked into the computer image; file operations walk directory FDs
 with O_NOFOLLOW. Home archives preserve links without following them and reject special files.
 Run `check` and `test` without Docker; tests inject a fake Engine HTTP transport.

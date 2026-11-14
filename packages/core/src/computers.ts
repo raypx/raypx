@@ -85,3 +85,98 @@ export const computerFileSchema = z.union([
 ]);
 export type ComputerDirectory = z.infer<typeof computerDirectorySchema>;
 export type ComputerFile = z.infer<typeof computerFileSchema>;
+
+export const MAX_COMPUTER_SCREEN_BYTES = 1024 * 1024;
+export const MAX_COMPUTER_SCREEN_FPS = 4;
+function screenBytesWithinLimit(value: string) {
+  let padding = 0;
+  if (value.endsWith("==")) padding = 2;
+  else if (value.endsWith("=")) padding = 1;
+  return (value.length / 4) * 3 - padding <= MAX_COMPUTER_SCREEN_BYTES;
+}
+export const computerScreenAvailabilitySchema = z.strictObject({
+  available: z.boolean(),
+  running: z.boolean(),
+  width: z.number().int().min(1).max(1920),
+  height: z.number().int().min(1).max(1200),
+});
+export const computerScreenFrameSchema = z.strictObject({
+  sequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  width: z.number().int().min(1).max(1920),
+  height: z.number().int().min(1).max(1200),
+  mimeType: z.literal("image/png"),
+  bytes: z
+    .base64()
+    .min(4)
+    .max(Math.ceil(MAX_COMPUTER_SCREEN_BYTES / 3) * 4)
+    .refine(screenBytesWithinLimit),
+});
+export const computerScreenInputSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("pointer"),
+    x: z.number().int().min(0).max(1919),
+    y: z.number().int().min(0).max(1199),
+    action: z.enum(["move", "down", "up"]),
+    button: z.enum(["left", "middle", "right"]).default("left"),
+  }),
+  z.strictObject({
+    kind: z.literal("key"),
+    key: z.string().regex(/^[A-Za-z0-9_][A-Za-z0-9_+-]{0,39}$/),
+    action: z.enum(["down", "up", "press"]),
+  }),
+  z.strictObject({
+    kind: z.literal("text"),
+    text: z
+      .string()
+      .min(1)
+      .max(4096)
+      .refine((value) => !value.includes("\0")),
+  }),
+]);
+export type ComputerScreenAvailability = z.infer<typeof computerScreenAvailabilitySchema>;
+export type ComputerScreenFrame = z.infer<typeof computerScreenFrameSchema>;
+export type ComputerScreenInput = z.infer<typeof computerScreenInputSchema>;
+
+export const computerScreenControlSchema = z.strictObject({
+  id: z.string().uuid(),
+  accountId: z.string().min(1),
+  displayName: z.string().max(200),
+  expiresAt: z.iso.datetime(),
+});
+export const computerScreenStateSchema = z.discriminatedUnion("status", [
+  z.strictObject({ status: z.literal("not-configured") }),
+  z.strictObject({ status: z.literal("not-running"), state: computerStateSchema.nullable() }),
+  z.strictObject({
+    status: z.literal("unavailable"),
+    code: z.enum(["SCREEN_UNAVAILABLE", "COMPUTER_UNAVAILABLE"]),
+  }),
+  z.strictObject({
+    status: z.literal("available"),
+    running: z.boolean(),
+    width: z.number().int().min(1).max(1920),
+    height: z.number().int().min(1).max(1200),
+    control: computerScreenControlSchema.nullable(),
+    agentInputPaused: z.boolean(),
+    canForceRelease: z.boolean(),
+  }),
+]);
+export const computerScreenCloseReasonSchema = z.enum([
+  "SCREEN_STOPPED",
+  "SPACE_MEMBER_REMOVED",
+  "SPACE_MEMBER_LEFT",
+  "SPACE_DELETING",
+  "SESSION_EXPIRED",
+  "ACCESS_DENIED",
+  "SCREEN_UNAVAILABLE",
+  "SCREEN_IDLE_TIMEOUT",
+  "SCREEN_STREAM_EXPIRED",
+]);
+export const computerScreenEventSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("frame"), frame: computerScreenFrameSchema }),
+  z.strictObject({ kind: z.literal("state"), state: computerScreenStateSchema }),
+  z.strictObject({ kind: z.literal("closed"), reason: computerScreenCloseReasonSchema }),
+]);
+export type ComputerScreenControl = z.infer<typeof computerScreenControlSchema>;
+export type ComputerScreenState = z.infer<typeof computerScreenStateSchema>;
+export type ComputerScreenCloseReason = z.infer<typeof computerScreenCloseReasonSchema>;
+export type ComputerScreenEvent = z.infer<typeof computerScreenEventSchema>;

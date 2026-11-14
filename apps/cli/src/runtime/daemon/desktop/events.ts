@@ -1,6 +1,7 @@
 import {
   conversationServerFrameSchema,
   MAX_CONVERSATION_FRAME_BYTES,
+  MAX_SCREEN_STREAM_FRAME_BYTES,
   type ConversationClientFrame,
   type ConversationServerFrame,
 } from "@raypx/contracts/api";
@@ -20,7 +21,7 @@ export type EventsSocketFactory = (
 ) => EventsSocket;
 
 const unavailable = () => new LocalError("EVENTS_UNAVAILABLE", "Conversation stream unavailable");
-const queueLimit = 1024 * 1024;
+const queueLimit = 2 * 1024 * 1024;
 // Remote diagnostics are not renderer copy. Forward only the stable public endings,
 // paired with their expected code, after validating the WebSocket UTF-8 byte budget.
 function closeResult(code = 1006, reason = ""): DesktopEventsClose {
@@ -101,13 +102,16 @@ export class DesktopEvents {
       try {
         if (typeof data !== "string") throw unavailable();
         const bytes = Buffer.byteLength(data);
-        if (bytes > MAX_CONVERSATION_FRAME_BYTES) throw unavailable();
+        if (bytes > MAX_SCREEN_STREAM_FRAME_BYTES) throw unavailable();
         const frame = conversationServerFrameSchema.parse(JSON.parse(data));
+        if (frame.type !== "screen.event" && bytes > MAX_CONVERSATION_FRAME_BYTES)
+          throw unavailable();
         if (stream.waiter) {
           stream.waiter.resolve(frame);
           return;
         }
-        if (stream.queue.length >= 64 || stream.bytes + bytes > queueLimit) throw unavailable();
+        const byteLimit = frame.type === "screen.event" ? queueLimit : 1024 * 1024;
+        if (stream.queue.length >= 64 || stream.bytes + bytes > byteLimit) throw unavailable();
         stream.queue.push({ frame, bytes });
         stream.bytes += bytes;
       } catch {

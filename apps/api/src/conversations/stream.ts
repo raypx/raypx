@@ -2,6 +2,7 @@ import { AcknowledgedStream } from "@raypx/client/relay";
 import {
   conversationClientFrameSchema,
   MAX_CONVERSATION_FRAME_BYTES,
+  MAX_SCREEN_STREAM_FRAME_BYTES,
   type ConversationServerFrame,
 } from "@raypx/contracts/api";
 import { InvalidConversationCursor } from "@raypx/core/conversation";
@@ -14,6 +15,7 @@ import type {
   LiveReplies,
 } from "@raypx/agents/server";
 import type { SpaceAccess, SpaceFanout, SpaceScope } from "@raypx/spaces/server";
+import type { ComputerScreensService } from "@raypx/computers/server";
 
 interface AuthorizedSubscription {
   spaceId: SpaceId;
@@ -23,6 +25,10 @@ interface SpaceSubscription extends AuthorizedSubscription {
   stream: AcknowledgedStream;
   running: boolean;
   dirty: boolean;
+}
+interface ScreenSubscription extends AuthorizedSubscription {
+  viewerId: string;
+  stream: AcknowledgedStream;
 }
 
 interface Subscription {
@@ -42,6 +48,7 @@ interface Connection {
   close(code: number, reason: string): void;
   subscriptions: Map<string, Subscription>;
   spaceSubscriptions: Map<string, SpaceSubscription>;
+  screenSubscription?: ScreenSubscription;
   checking: boolean;
 }
 const streamId = (spaceId: string, conversationId: string) =>
@@ -63,6 +70,7 @@ export class ConversationStream {
       pollMs?: number;
       live?: LiveReplies;
       spaceFanout?: SpaceFanout;
+      screens?: ComputerScreensService;
       spaceEvents?: {
         events(scope: SpaceScope, after: number, limit: number): Promise<SpaceEvent[]>;
       };
@@ -83,6 +91,7 @@ export class ConversationStream {
       for (const peer of this.peers.values()) {
         const subscribed =
           peer.spaceSubscriptions.has(notice.spaceId) ||
+          peer.screenSubscription?.spaceId === notice.spaceId ||
           [...peer.subscriptions.values()].some((item) => item.spaceId === notice.spaceId);
         if (!subscribed) continue;
         if (
@@ -129,6 +138,8 @@ export class ConversationStream {
     peer.subscriptions.clear();
     for (const subscription of peer.spaceSubscriptions.values()) subscription.controller.abort();
     peer.spaceSubscriptions.clear();
+    peer.screenSubscription?.controller.abort();
+    delete peer.screenSubscription;
   }
   private fail(peer: Connection, code: number, reason: string) {
     for (const [id, candidate] of this.peers) if (candidate === peer) this.close(id);
@@ -141,6 +152,47 @@ export class ConversationStream {
       if (new TextEncoder().encode(value).byteLength > MAX_CONVERSATION_FRAME_BYTES)
         throw new Error("Frame limit");
       const frame = conversationClientFrameSchema.parse(JSON.parse(value));
+      if (
+        frame.type === "screen.subscribe" ||
+        frame.type === "screen.ack" ||
+        frame.type === "screen.unsubscribe"
+      ) {
+        if (!this.options.screens) throw new Error("Screen unavailable");
+        const previous = peer.screenSubscription;
+        const key = JSON.stringify(["screen", frame.spaceId, frame.viewerId]);
+        if (frame.type === "screen.ack") {
+          if (
+            previous?.spaceId !== frame.spaceId ||
+            previous.viewerId !== frame.viewerId ||
+            !previous.stream.acknowledge({ streamId: key, sequence: frame.sequence })
+          )
+            throw new Error("Unexpected ACK");
+          return;
+        }
+        if (frame.type === "screen.unsubscribe") {
+          if (previous?.spaceId === frame.spaceId && previous.viewerId === frame.viewerId) {
+            previous.controller.abort();
+            delete peer.screenSubscription;
+          }
+          return;
+        }
+        if (previous) throw new Error("Screen subscription limit");
+        const subscription: ScreenSubscription = {
+          spaceId: frame.spaceId,
+          viewerId: frame.viewerId,
+          controller: new AbortController(),
+          stream: new AcknowledgedStream(),
+        };
+        subscription.stream.reset({ streamId: key, sequence: 0 });
+        peer.screenSubscription = subscription;
+        void this.drainScreen(peer, subscription)
+          .catch((error: unknown) => this.rejected(peer, subscription, error))
+          .finally(() => {
+            subscription.controller.abort();
+            if (peer.screenSubscription === subscription) delete peer.screenSubscription;
+          });
+        return;
+      }
       if (
         frame.type === "space.subscribe" ||
         frame.type === "space.ack" ||
@@ -252,8 +304,50 @@ export class ConversationStream {
           await this.rejected(peer, subscription, error);
         }
       }
+      if (peer.screenSubscription) {
+        try {
+          await this.authorize(peer, peer.screenSubscription);
+        } catch (error) {
+          if (peer.screenSubscription) await this.rejected(peer, peer.screenSubscription, error);
+        }
+      }
     } finally {
       peer.checking = false;
+    }
+  }
+  private async drainScreen(peer: Connection, subscription: ScreenSubscription) {
+    const scope = await this.authorize(peer, subscription);
+    if (!scope || !this.options.screens) return;
+    const key = JSON.stringify(["screen", subscription.spaceId, subscription.viewerId]);
+    let sequence = 0;
+    for await (const event of this.options.screens.stream(scope, {
+      viewerId: subscription.viewerId,
+      signal: subscription.controller.signal,
+      recheck: async () => {
+        const current = await this.authorize(peer, subscription);
+        if (!current) throw new Error("SESSION_EXPIRED");
+        return current;
+      },
+    })) {
+      if (subscription.controller.signal.aborted || !(await this.authorize(peer, subscription)))
+        return;
+      const frame: ConversationServerFrame = {
+        type: "screen.event",
+        spaceId: subscription.spaceId,
+        viewerId: subscription.viewerId,
+        sequence: ++sequence,
+        event,
+      };
+      if (
+        new TextEncoder().encode(JSON.stringify(frame)).byteLength > MAX_SCREEN_STREAM_FRAME_BYTES
+      )
+        throw new Error("Screen frame limit");
+      await subscription.stream.wait(
+        { streamId: key, sequence },
+        subscription.controller.signal,
+        () => peer.send(frame),
+      );
+      if (event.kind === "closed") return;
     }
   }
   private wakeSpace(peer: Connection, subscription: SpaceSubscription) {

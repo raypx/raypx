@@ -41,6 +41,42 @@ function fixture() {
 }
 const signal = () => new AbortController().signal;
 
+it("forwards one bounded screen frame through the private bridge and retains renderer ACK ownership", async () => {
+  const f = fixture();
+  const viewerId = crypto.randomUUID();
+  f.receive({
+    type: "screen.event",
+    spaceId: "space",
+    viewerId,
+    sequence: 1,
+    event: {
+      kind: "frame",
+      frame: {
+        sequence: 1,
+        width: 1024,
+        height: 768,
+        mimeType: "image/png",
+        bytes: Buffer.alloc(220_000).toString("base64"),
+      },
+    },
+  });
+  const frame = await f.events.read("page", f.id, signal());
+  expect(frame?.type).toBe("screen.event");
+  if (frame?.type !== "screen.event" || frame.event.kind !== "frame")
+    throw new Error("Expected a screen frame");
+  expect(frame.event.frame.bytes.length).toBeGreaterThan(256_000);
+  expect(f.sent).toEqual([]);
+  f.events.send("page", f.id, {
+    type: "screen.ack",
+    version: 1,
+    spaceId: frame.spaceId,
+    viewerId,
+    sequence: 1,
+  });
+  expect(JSON.parse(f.sent[0]!)).toMatchObject({ type: "screen.ack", viewerId, sequence: 1 });
+  f.events.closeAll();
+});
+
 it("opens only the selected-origin stream with private session headers, and never ACKs for the renderer", async () => {
   const f = fixture();
   expect(f.connect.mock.calls[0]![0].href).toBe("wss://api.example.test/events");

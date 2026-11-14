@@ -71,6 +71,26 @@ it("commits a safe failure while preserving the known revision", async () => {
     leaseOwner: null,
   });
 });
+it("accepts an already completed locked claim without repeating provider lifecycle work", async () => {
+  const f = fixture();
+  const provider = createMemoryComputerProvider();
+  const service = createComputersService(f.repository, provider, "memory");
+  await service.start(scope);
+  const provision = vi.spyOn(provider, "provision");
+  const stop = vi.spyOn(provider, "stop");
+  const complete = vi.mocked(f.repository.complete);
+  const original = f.row()!;
+  vi.mocked(f.repository.get).mockResolvedValue({ ...original, state: "stopped" });
+  vi.mocked(f.repository.claim).mockResolvedValue(original);
+  expect(await service.start(scope)).toEqual({ status: "available", computer: original });
+  expect(provision).not.toHaveBeenCalled();
+  const stopped = { ...original, state: "stopped" as const };
+  vi.mocked(f.repository.get).mockResolvedValue(original);
+  vi.mocked(f.repository.claim).mockResolvedValue(stopped);
+  expect(await service.stop(scope)).toEqual({ status: "available", computer: stopped });
+  expect(stop).not.toHaveBeenCalled();
+  expect(complete).toHaveBeenCalledTimes(1);
+});
 
 it("does not allocate or start compute for file reads in unavailable states", async () => {
   const f = fixture();

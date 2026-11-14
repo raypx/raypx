@@ -40,8 +40,10 @@ conversations; there is no guest task editor or draft handoff. Preserve validate
 return destinations for account and administration flows. Conversations need a
 reachable server. The earlier CLI/native runtime remains during the transition,
 but the renderer does not restore a local project as its home. Web layouts serve
-phone browsers. Mobile provides account/sign-in and native Agent conversations,
-activity and approvals; push notifications remain later work.
+phone browsers. Mobile provides native Space Agents/groups, membership and
+invitations, routines, memory, resource catalogs, activity, approvals and computer
+lifecycle. Full Page/resource management uses Web. Native Mobile omits Screen;
+the phone Web client provides viewing and takeover. Push notifications remain later work.
 
 Public pages (landing, authentication, privacy) share one header, which gains a surface
 only after scrolling. The landing header adds a compact account avatar with the same
@@ -139,11 +141,18 @@ accurately, with explicit stop and retry editing. Announce Run lifecycle changes
 without announcing every streamed token. A failed-Run retry restores text for a
 new explicit Send; an uncertain delivery retains its receipt identity.
 
-The initial Computer slice adds a compact conversation-header state indicator,
+The Computer surface adds a compact conversation-header state indicator,
 opening a sheet on narrow screens and a side panel on wide screens. Show lifecycle
 state, failure reasons and guarded start/stop controls; confirm Stop. An
-unconfigured server shows one quiet explicit state with no controls. Keep future
-files, output and approvals out of the panel until implemented.
+unconfigured server shows one quiet explicit state with no controls. Screen is a
+separate section with explicit graphical start/stop, a fitted live image, view pause
+and exclusive Take/Release control. Show the control holder, remaining lease and
+Agent input pause. Forward keys only from the focused controlled screen; Tab keeps
+normal navigation and Escape releases control without closing the panel. Keep file
+previews and tool activity bounded. Screen frames have no entrance or transition.
+Expand opens a large dialog with the same live view and controls, using the existing
+controller and stream. While controlling, Escape releases control and keeps the
+dialog open; the next Escape closes it and restores focus to Expand.
 Phase 1 replies have no tools, approval cards or recovery. Do not add ornamental
 activity, fake progress or controls for later capabilities. When those phases
 arrive, chat keeps useful progress and results while tool lifecycle belongs in the

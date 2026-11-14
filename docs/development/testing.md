@@ -182,6 +182,15 @@ only after the surface is at rest. Light strip/API-management screenshots cover
 Conversation reading acceptance uses bounded history (at most 200 messages),
 explicit older/gap loads, revisions, virtual/full-text switching, focus and reading
 position under CPU throttling. It tests actual paging without a huge fixture.
+The owned `computer-screen.spec.ts` journey runs on Web and Desktop with a
+deterministic provider PNG: it starts Screen, observes frames, takes control,
+types, observes another member's control state, releases with Escape, forces
+release as owner and stops the session. Its explicit review screenshots are under
+`.artifacts/screen/` at 1440×860 and 375×812. Invitation values stay in memory;
+trace/video recording is disabled. Ordinary runs skip it without the owned API.
+Expansion checks preserve the existing viewer/grant without another stream,
+release control on the first Escape, then close the dialog and restore focus on
+the next Escape. Native Mobile has no Screen UI; these cases cover both DOM clients.
 Page-share journeys disable traces/screenshots while displaying one-time tokens.
 Desktop checks the Web handoff and absence of authenticated document frames.
 

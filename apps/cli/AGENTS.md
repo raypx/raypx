@@ -31,6 +31,9 @@ authenticated `/events` socket without exporting session headers. Reads and
 queues are bounded, peer/session replacement closes streams, and the renderer
 alone applies and acknowledges durable conversation events. This does not start
 model execution locally or expose another remote endpoint.
+The same bridge carries bounded screen events. Screen envelopes cap at
+1,500,000 bytes and the unread queue at two MiB; other frames retain their
+256,000-byte bound. Pixels remain transient and never enter profile storage.
 Administrative IPC issues a separate native capability and a one-use renderer
 WebSocket capability; neither grants the other's methods. `daemon/desktop` owns
 the selected-origin API policy, account verification, encrypted session table and

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
+import type { ToolCall } from "@raypx/ai";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import {
@@ -9,6 +10,7 @@ import {
   conversationEffects,
   conversationRuns,
   conversationToolCalls,
+  computers as computerRows,
   pageIdentities,
   pages,
   spaceMembers,
@@ -18,6 +20,13 @@ import {
   user,
 } from "@raypx/database/schema";
 import type { Effect } from "@raypx/core/approvals";
+import { createMemoryComputerProvider } from "@raypx/providers/computer";
+import { createComputersService } from "@raypx/computers/server";
+import {
+  createComputersRepository,
+  createComputerScreenRepository,
+} from "@raypx/computers/server/postgres";
+import { createComputerTools, type PreparedComputerCall } from "../../src/computer-tools.js";
 import {
   StaleRunFenceError,
   type ExecutionRun,
@@ -107,6 +116,186 @@ beforeEach(async () => {
   run = (await conversations.claimNext(scope, conversation.id, claimOptions))!.run;
   const settings = await approvals.getSettings(owner, "ask");
   await approvals.updateSettings(owner, { mode: "ask", rules: [] }, settings.revision, "ask");
+});
+
+it("persists graphical rules, Ask cards and metadata-only effects while delivering bounded untrusted model images", async () => {
+  const provider = createMemoryComputerProvider();
+  const computers = createComputersService(createComputersRepository(first.db), provider, "memory");
+  const controls = createComputerScreenRepository(first.db);
+  const tools = createComputerTools(
+    computers,
+    provider,
+    [],
+    conversations.pinResources,
+    undefined,
+    {
+      withAgentInput: controls.withAgentInput,
+      setPaused: (selected, execution, paused) =>
+        conversations.setComputerInputPaused!(selected, execution, paused),
+    },
+  );
+  const requests: string[] = [];
+  const policy = createApprovalsService({
+    ...approvals,
+    async createRequest(selected, execution, action, until, at) {
+      const requested = await approvals.createRequest(selected, execution, action, until, at);
+      requests.push(requested.toolName);
+      return approvals.answer(scope, requested.id, { decision: "approved" }, at);
+    },
+  });
+  const controller = new AbortController();
+  const viewerId = crypto.randomUUID();
+  let pending: Promise<string> | undefined;
+  function prepare(name: string, args: ToolCall["arguments"]) {
+    return tools.prepare({ type: "toolCall", id: name, name, arguments: args });
+  }
+  async function begin(prepared: PreparedComputerCall) {
+    await conversations.beginTool(scope, run, {
+      toolCallId: prepared.id,
+      toolName: prepared.name,
+      argumentSummary: prepared.argumentSummary,
+      target: prepared.target,
+    });
+    expect(await policy.authorize(scope, run, prepared, controller.signal)).toBe("approved");
+  }
+  function effect(prepared: PreparedComputerCall) {
+    return policy.executeEffect(
+      scope,
+      run,
+      prepared,
+      () => tools.execute(scope, run, prepared, controller.signal),
+      controller.signal,
+      (operation) => tools.withDriver!(scope, run, prepared, controller.signal, operation),
+    );
+  }
+  try {
+    await tools.initialize!(scope, run, controller.signal);
+    const ref = { id: run.computerId!, generation: run.computerGeneration! };
+    await provider.startScreen!(ref);
+    const initial = await policy.getSettings(owner);
+    await policy.updateSettings(owner, {
+      mode: "ask",
+      expectedRevision: initial.revision,
+      rules: [
+        { toolName: "computer_screenshot", executable: null, decision: "block" },
+        { toolName: "computer_pointer", executable: null, decision: "allow" },
+        { toolName: "computer_keyboard", executable: null, decision: "allow" },
+      ],
+    });
+    const settings = await policy.getSettings(owner);
+    expect(settings.rules.map((rule) => rule.toolName).sort()).toEqual([
+      "computer_keyboard",
+      "computer_pointer",
+      "computer_screenshot",
+    ]);
+    const screenshot = prepare("computer_screenshot", {});
+    expect(await policy.authorize(scope, run, screenshot, controller.signal)).toBe("blocked");
+    await policy.updateSettings(owner, {
+      mode: "ask",
+      expectedRevision: settings.revision,
+      rules: settings.rules.filter((rule) => rule.toolName !== "computer_screenshot"),
+    });
+    await begin(screenshot);
+    const screenshotResult = await effect(screenshot);
+    const rawCall: ToolCall = {
+      type: "toolCall",
+      id: screenshot.id,
+      name: screenshot.name,
+      arguments: {},
+    };
+    const content = tools.modelContent!(run, rawCall, screenshotResult);
+    const image = content.find((part) => part.type === "image");
+    if (image?.type !== "image") throw new Error("Missing private model image");
+    const bytes = Buffer.from(image.data, "base64");
+    expect(bytes.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    expect(bytes.byteLength).toBeGreaterThan(0);
+    expect(bytes.byteLength).toBeLessThanOrEqual(1024 * 1024);
+    expect(bytes.readUInt32BE(16)).toBe(1024);
+    expect(bytes.readUInt32BE(20)).toBe(768);
+    expect(run.untrustedInput).toBe(true);
+    await conversations.saveCheckpoint(scope, run, {
+      continuation: [
+        {
+          role: "toolResult",
+          toolCallId: screenshot.id,
+          toolName: screenshot.name,
+          content,
+          isError: false,
+          timestamp: Date.now(),
+        },
+      ],
+      pendingCalls: [],
+      rounds: 1,
+      completed: false,
+      untrustedInput: true,
+    });
+    await controls.openViewer(other, ref, viewerId);
+    const control = await controls.acquire(other, ref, viewerId);
+    const keyboard = prepare("computer_keyboard", {
+      kind: "text",
+      text: "private keyboard content",
+    });
+    await begin(keyboard);
+    pending = effect(keyboard);
+    void pending.catch(() => undefined);
+    await expect
+      .poll(
+        async () =>
+          (await conversations.getRun(scope, run.conversationId, run.id)).computerInputPaused,
+      )
+      .toBe(true);
+    expect((await policy.listEffects(scope, run.id)).map((value) => value.toolName)).toEqual([
+      "computer_screenshot",
+    ]);
+    await controls.release(other, ref, control.id);
+    expect(JSON.parse(await pending)).toMatchObject({ state: "succeeded" });
+    expect(await conversations.getRun(scope, run.conversationId, run.id)).toMatchObject({
+      state: "running",
+      computerInputPaused: false,
+    });
+    const pointer = prepare("computer_pointer", { x: 20, y: 30, action: "move" });
+    await begin(pointer);
+    expect(JSON.parse(await effect(pointer))).toMatchObject({ state: "succeeded" });
+    // The screenshot marked the Run untrusted: exact Allow rules still require
+    // real addressed Ask cards before either input operation can execute.
+    expect(requests.sort()).toEqual(["computer_keyboard", "computer_pointer"]);
+    const effects = await policy.listEffects(scope, run.id);
+    expect(effects.map((value) => value.toolName).sort()).toEqual([
+      "computer_keyboard",
+      "computer_pointer",
+      "computer_screenshot",
+    ]);
+    expect(effects.every((value) => value.state === "succeeded")).toBe(true);
+    const snapshot = await conversations.snapshot(scope, run.conversationId);
+    expect(snapshot.toolActivity).toHaveLength(3);
+    expect(snapshot.toolActivity?.every((value) => value.outcome === "succeeded")).toBe(true);
+    const storedEvents = await first.db
+      .select()
+      .from(conversationEvents)
+      .where(
+        and(
+          eq(conversationEvents.spaceId, scope.spaceId),
+          eq(conversationEvents.conversationId, run.conversationId),
+        ),
+      );
+    expect(JSON.stringify([effects, snapshot.toolActivity, storedEvents])).not.toContain(
+      image.data,
+    );
+    expect(JSON.stringify([snapshot.toolActivity, storedEvents])).not.toContain(
+      "private keyboard content",
+    );
+  } finally {
+    if (run.computerId && run.computerGeneration)
+      await controls.releaseViewer(
+        other,
+        { id: run.computerId, generation: run.computerGeneration },
+        viewerId,
+      );
+    if (pending) await pending.catch(() => undefined);
+    tools.release(run);
+    await conversations.stop(scope, run.conversationId, run.id);
+    await first.db.delete(computerRows).where(eq(computerRows.spaceId, scope.spaceId));
+  }
 });
 
 it("changes a Run's approval policy through the Space exception and restores its actor's default", async () => {

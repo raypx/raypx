@@ -17,6 +17,7 @@ import type {
 } from "../model.js";
 import { ComputerActivity } from "./tool-activity.js";
 import { ComputerFiles } from "./computer-files.js";
+import { ComputerScreen } from "./computer-screen.js";
 import { useTranslations } from "./i18n.js";
 
 const statusKeys = {
@@ -176,6 +177,9 @@ export function ComputerPanel({
           </Button>
         )}
       </section>
+      {controller.screen && state.status !== "not-configured" && (
+        <ComputerScreen controller={controller.screen} status={state.status} />
+      )}
       {controller.files && (
         <ComputerFiles
           controller={controller.files}

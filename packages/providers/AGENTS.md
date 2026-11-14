@@ -35,6 +35,12 @@ Run this workspace's check and tests, CLI adapter/replay/provider tests, then re
   execution transport in the prepared computer image, never a shell or backend process.
 - `./computer/docker` is the lazily selected supervisor HTTP adapter, consumed by
   API. Only Sandbox opens the Engine socket. Vendor details stay inside adapters.
+- The optional `screen/startScreen/stopScreen/screenshot/input/streamScreen`
+  Computer operations require the declared `screen` capability. Frames are bounded
+  PNGs with dimensions and a sequence, at most four per second; iterators close on
+  stop/replacement and observe cancellation. The memory adapter produces real
+  deterministic PNG bytes and never invokes a host renderer or command. The
+  Docker adapter uses only the private supervisor interface.
 - `./testing/computer` is the runner-injected conformance suite consumed by Sandbox
   tests; it imports no test runner at runtime. Live conformance requires the explicit
   RAYPX_TEST_DOCKER=1 flag and a prepared supervisor/image; tests never build or pull.

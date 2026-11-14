@@ -29,6 +29,10 @@ Still working keeps outside-window active Runs reachable with Stop, targeted
 steering, addressed approvals and a bounded trigger-page jump. Tools settings
 compose Web's Space-owner OpenAPI management, write-only credentials and explicit
 operation/Agent availability through the existing API client.
+Screen uses that shared panel and the bounded authenticated `/events` bridge;
+control and pixels remain server-authorized and never enter native profile history.
+Its expanded dialog reuses the same controller/stream. Escape releases control
+first; once view-only, Escape closes the dialog and restores its opener.
 
 The current renderer has no project/session editor, Waiting inbox, Automations,
 Files, Terminal or local onboarding screen. Their native/CLI implementations remain

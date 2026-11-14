@@ -27,6 +27,27 @@ function fixture(overrides: Record<string, string> = {}) {
   return { provider, client, config, fake, handler, store, engine };
 }
 computerConformance("HTTP provider / supervisor / fake Engine", () => fixture().client, runner);
+computerConformance(
+  "graphical HTTP provider / supervisor / fake Engine",
+  () => fixture({ SANDBOX_GRAPHICAL: "true" }).client,
+  runner,
+);
+it("keeps graphical framebuffer and input off every container network interface", async () => {
+  const f = fixture({ SANDBOX_GRAPHICAL: "true" });
+  const ref = { id: crypto.randomUUID(), generation: 1 };
+  await f.client.provision(ref);
+  await f.client.startScreen!(ref);
+  const create = f.fake.calls.find((call) => call.path === "/containers/create")!.body;
+  expect(create).not.toHaveProperty("ExposedPorts");
+  expect(create).not.toHaveProperty("HostConfig.PortBindings");
+  expect(await f.client.screen!(ref)).toMatchObject({ available: true, running: true });
+  const controller = new AbortController();
+  const stream = f.client.streamScreen!(ref, { signal: controller.signal })[Symbol.asyncIterator]();
+  expect((await stream.next()).done).toBe(false);
+  controller.abort();
+  await stream.return?.();
+  await f.client.stop(ref);
+});
 it("applies ceilings, a non-root user, only the owned home and a deterministic private bridge", async () => {
   const f = fixture();
   await f.provider.provision({ id: crypto.randomUUID(), generation: 1 });

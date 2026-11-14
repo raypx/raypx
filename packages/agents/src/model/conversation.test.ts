@@ -736,6 +736,75 @@ it("retains additive inbound origin metadata through state events and scopes det
   expect(state.getSnapshot().cursor).toBe(3);
 });
 
+it("keeps takeover pause state with snapshots and ordered Run state events", () => {
+  const state = new ConversationState(selection);
+  expect(
+    state.applySnapshot(
+      snapshot({ runs: [{ ...run("waiting"), computerInputPaused: true }], cursor: 2 }),
+    ),
+  ).toBe(true);
+  expect(state.getSnapshot().runs[0]).toMatchObject({
+    state: "waiting",
+    computerInputPaused: true,
+  });
+  const frame = runEvent("running", 3);
+  if (frame.entry.event.kind !== "run.state") throw new Error("Expected Run state");
+  expect(state.applyEvent({ event: { ...frame.entry.event, computerInputPaused: false } })).toBe(
+    "applied",
+  );
+  expect(state.getSnapshot().runs[0]).toMatchObject({
+    state: "running",
+    computerInputPaused: false,
+  });
+  expect(state.getSnapshot().cursor).toBe(3);
+});
+
+it.each(["queued", "running", "succeeded", "failed", "cancelled"] as const)(
+  "clears a stale computer pause on %s snapshots and events",
+  (status) => {
+    const state = new ConversationState(selection);
+    expect(
+      state.applySnapshot(
+        snapshot({
+          messages: [message()],
+          runs: [{ ...run(status), computerInputPaused: true }],
+          cursor: 1,
+        }),
+      ),
+    ).toBe(true);
+    expect(state.getSnapshot().runs[0]!.computerInputPaused).toBe(false);
+    expect(
+      state.applySnapshot(
+        snapshot({
+          messages: [message()],
+          runs: [{ ...run("waiting"), computerInputPaused: true }],
+          cursor: 2,
+        }),
+      ),
+    ).toBe(true);
+    const frame = runEvent(status, 3);
+    if (frame.entry.event.kind !== "run.state") throw new Error("Expected Run state");
+    expect(state.applyEvent({ event: { ...frame.entry.event, computerInputPaused: true } })).toBe(
+      "applied",
+    );
+    expect(state.getSnapshot().runs[0]).toMatchObject({
+      state: status,
+      computerInputPaused: false,
+    });
+  },
+);
+
+it("clears computer pause when a later waiting event names no takeover pause", () => {
+  const state = new ConversationState(selection);
+  expect(
+    state.applySnapshot(
+      snapshot({ runs: [{ ...run("waiting"), computerInputPaused: true }], cursor: 2 }),
+    ),
+  ).toBe(true);
+  expect(state.applyEvent(runEvent("waiting", 3).entry)).toBe("applied");
+  expect(state.getSnapshot().runs[0]!.computerInputPaused).toBe(false);
+});
+
 it("hydrates live Run origins without rolling back state, cursor or streaming text", async () => {
   const test = harness();
   await test.controller.start();

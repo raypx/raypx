@@ -101,3 +101,12 @@ acceptance imports the fixture document once, enables one read and one mutating
 operation, answers the change approval and inspects committed activity/effects.
 Both journeys use isolated Spaces and the same owned API in both renderers.
 Opt-in light screenshots at 1440×860 and 375×812 live under `.artifacts/`.
+
+`computer-screen` is a shared owned-backend journey using deterministic PNG
+frames, two actual member sessions, exclusive/forced control, keyboard release
+and stop. It writes explicit review screenshots under `.artifacts/screen/`; no
+invitation or credentials appear in those captures. Ordinary runs skip it.
+Expansion must reuse the viewer stream and grant. Verify the first Escape
+releases control while the dialog remains open and the next Escape closes it
+with focus restored to its opener. These renderer checks establish no native
+Mobile Screen support or packaged WebView result.

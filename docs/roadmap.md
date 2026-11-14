@@ -238,6 +238,15 @@ Acceptance:
 
 ## 7. Devices and reach
 
+Implemented graphical slice: optional graphical computer image, private bounded
+screen capture/input/streaming, member viewing and PostgreSQL exclusive expiring
+takeover with audit and Agent-input pause. Web/Desktop share Screen; native Mobile
+currently omits it. The default image stays non-graphical. On 2026-11-14 the Colima
+Linux arm64 gate passed 12/12 provider conformance cases, including real 1024×768
+PNG capture, input-driven pixel changes and stream closure on stop. Isolation,
+home replacement and IPv4 egress passed; IPv6 was unavailable on the VM. Browser,
+PostgreSQL and packaged platform acceptance remain independent gates.
+
 The device connector as a computer, the full mobile client, one hosted sandbox
 provider, and graphical desktops with takeover. See
 [computers](architecture/computers.md#device-connectors) and

@@ -30,6 +30,7 @@ import type {
 import type { RoutinesPort } from "@raypx/jobs/model";
 import type { SpaceMemoryClientPort } from "@raypx/memory/model";
 import type { ComputerFilesPort } from "./computer-files.js";
+import type { ComputerScreenPort } from "./computer-screen.js";
 import type { AgentSkillsPort, AgentMcpPort } from "./agent-capabilities.js";
 import type { SpaceManagementPort } from "./space-management.js";
 
@@ -48,7 +49,7 @@ export interface ApprovalPort {
   effects(this: void, input: { spaceId: SpaceId; runId: RunId }): Promise<Effect[]>;
 }
 
-export interface ComputerPort extends Partial<ComputerFilesPort> {
+export interface ComputerPort extends Partial<ComputerFilesPort>, Partial<ComputerScreenPort> {
   get(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
   start(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
   stop(this: void, input: { spaceId: SpaceId }): Promise<SpaceComputer>;
@@ -99,11 +100,14 @@ export interface ConversationSocket {
   close(): void;
 }
 export interface ConversationSocketPort {
-  connect(callbacks: {
-    onFrame(frame: ConversationServerFrame): void;
-    onClose(code?: number, reason?: string): void;
-    onError(): void;
-  }): ConversationSocket;
+  connect(
+    this: void,
+    callbacks: {
+      onFrame(frame: ConversationServerFrame): void;
+      onClose(code?: number, reason?: string): void;
+      onError(): void;
+    },
+  ): ConversationSocket;
 }
 /** Device storage adapter. No browser or platform implementation enters the model. */
 export interface ConversationDraftStore {

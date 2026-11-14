@@ -6,14 +6,10 @@ import { SpaceMutationError, SpaceNotFound, type SpaceId } from "@raypx/core/spa
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { AccountContext } from "../../middleware/rpc.js";
 import type { RpcSetup } from "./setup.js";
+import { createComputerScreenHandlers } from "./computer-screen.js";
 
-export function createSpaceHandlers({
-  os,
-  options,
-  withRpcPermission,
-  requireTrustedOrigin,
-  limitAccount,
-}: RpcSetup) {
+export function createSpaceHandlers(setup: RpcSetup) {
+  const { os, options, withRpcPermission, requireTrustedOrigin, limitAccount } = setup;
   async function call<T>(context: AccountContext, run: () => Promise<T>) {
     try {
       return await run();
@@ -72,6 +68,7 @@ export function createSpaceHandlers({
   const invitationAcceptQuota = limitAccount({ window: 60, max: 20 });
   return {
     computers: {
+      ...createComputerScreenHandlers(setup),
       get: os.computers.get
         .use(read)
         .handler(({ context, input }) =>

@@ -4,6 +4,11 @@ const base = {
   SANDBOX_SUPERVISOR_TOKEN: "fixture-dedicated-token-with-32-characters",
   SANDBOX_COMPUTER_IMAGE: `fixture@sha256:${"a".repeat(64)}`,
 };
+it("keeps graphics opt-in and rejects a malformed graphical assertion", () => {
+  expect(sandboxConfig(base).graphical).toBe(false);
+  expect(sandboxConfig({ ...base, SANDBOX_GRAPHICAL: "true" }).graphical).toBe(true);
+  expect(() => sandboxConfig({ ...base, SANDBOX_GRAPHICAL: "yes" })).toThrow("SANDBOX_GRAPHICAL");
+});
 it.each(["SANDBOX_MEMORY_BYTES", "SANDBOX_NANO_CPUS", "SANDBOX_PIDS_LIMIT"])(
   "rejects malformed %s and names it",
   (key) => {

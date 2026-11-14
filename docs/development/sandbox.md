@@ -36,6 +36,17 @@ returned immutable `sha256:…` image ID or a preloaded repository digest for
 `SANDBOX_COMPUTER_IMAGE`; mutable tags are rejected. Provisioning never builds or
 pulls an image. The computer includes Bun, Python, git, coreutils and a shell.
 
+Graphical computers are an explicit image choice. The default target contains no
+display server, window manager or browser. To prepare the optional image, add
+`--target graphical` to that build command, select its immutable image ID and set
+`SANDBOX_GRAPHICAL=true` on the supervisor. This supplies a local X display,
+lightweight browser and terminal at 1024×768. Sessions start only on request;
+stopping a session terminates its processes without deleting the home.
+The display listens on a Unix socket inside that computer only. Screenshot and
+input helpers run through the supervisor's existing Engine transport; no display
+or remote-input port is exposed, bound to the host or shared between computers.
+The existing bridge and egress policy apply to the browser as to other commands.
+
 ## Run the source supervisor
 
 Copy `infra/sandbox/.env.example` to `infra/sandbox/.env.local`, keep it private,
@@ -48,6 +59,7 @@ and supply these settings:
 | `SANDBOX_ENGINE_SOCKET`                                           | Absolute Unix socket; for Colima, the expanded path under the user's home.                     |
 | `SANDBOX_STATE_DIRECTORY`                                         | Absolute private writable directory, unique to this supervisor.                                |
 | `SANDBOX_COMPUTER_IMAGE`                                          | Immutable image ID/digest prepared above.                                                      |
+| `SANDBOX_GRAPHICAL`                                               | `false` by default; `true` requires the optional graphical image.                              |
 | `SANDBOX_NAMESPACE`                                               | Stable namespace for this environment's network/volumes.                                       |
 | `SANDBOX_MEMORY_BYTES`, `SANDBOX_NANO_CPUS`, `SANDBOX_PIDS_LIMIT` | Defaults: 536870912, 1000000000 and 128.                                                       |
 | `SANDBOX_DNS_RESOLVER`                                            | Public IPv4 upstream, default `1.1.1.1`.                                                       |
@@ -109,6 +121,24 @@ its labeled resources. No operator supervisor or database is needed. The egress
 variant checks public controls, configured/alternate DNS, a host-service canary,
 private ranges and metadata with owned DROP-counter evidence. Public connectivity
 failure in both probe and control is unavailable; IPv6 needs a reachable control.
+
+The gate builds both default and graphical targets and records each image's byte
+size. Graphical conformance starts a session, checks a non-empty PNG's 1024×768
+header, sends keyboard input and observes changed pixels, then verifies stopping
+the session closes its frame iterator. Frames are pull-driven, capped at four per
+second and one MiB per PNG. Fixed graphical helpers have intrinsic container-side
+deadlines (three seconds, or ten seconds for start); the backend's longer HTTP
+deadline does not leave input executing after it releases its control gate.
+
+On 2026-11-14 the macOS arm64/Colima Linux arm64 gate passed all 12 provider
+cases, including real graphical start, 1024×768 PNG capture, input-driven pixel
+changes and stream closure after stop. The default image was 128,103,275 bytes;
+the optional graphical image was 280,462,107 bytes (152,358,832 additional bytes).
+IPv4 private/host/metadata/DNS enforcement and public HTTPS/configured DNS passed.
+IPv6 enforcement was unavailable because both host and computer lacked IPv6
+reachability. A separate owned-image active-session probe observed zero TCP
+listeners. These measurements establish this Engine VM only; other platforms
+and packaged client behavior remain separate gates.
 
 Evidence goes to `.artifacts/sandbox/`. See
 [validation details](validation-artifacts.md#owned-sandbox-real-engine-acceptance)

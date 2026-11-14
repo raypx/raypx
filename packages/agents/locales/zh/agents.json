@@ -103,7 +103,10 @@
     "updatePage": "更新页面",
     "readPage": "读取页面",
     "loadSkill": "加载技能",
-    "saveSkill": "保存技能"
+    "saveSkill": "保存技能",
+    "screenshot": "屏幕截图",
+    "pointer": "指针输入",
+    "keyboard": "键盘输入"
   },
   "approval": {
     "answeredBy": "由{member}处理",
@@ -590,5 +593,50 @@
       "INVALID_ENDPOINT": "不允许使用此 API 地址。"
     }
   },
-  "RUN_NOT_ACTIVE": "此运行已结束。请选择其他运行或取消补充指示。"
+  "RUN_NOT_ACTIVE": "此运行已结束。请选择其他运行或取消补充指示。",
+  "screen": {
+    "title": "屏幕",
+    "start": "启动屏幕",
+    "stop": "停止屏幕",
+    "stopTitle": "停止屏幕？",
+    "stopDescription": "这将结束查看并释放控制权。电脑命令仍可继续。",
+    "take": "接管控制",
+    "release": "释放控制",
+    "forceRelease": "释放成员控制权",
+    "viewOnly": "仅查看",
+    "youControl": "你正在控制此屏幕",
+    "controlledBy": "由 {name} 控制",
+    "remaining": "剩余 {seconds} 秒",
+    "agentPaused": "智能体输入已暂停",
+    "pauseView": "暂停查看",
+    "resumeView": "继续查看",
+    "viewPaused": "查看已暂停",
+    "helpLabel": "屏幕控制说明",
+    "help": "成员共用此屏幕。接管后，智能体的屏幕输入暂停。按 Escape 释放控制。",
+    "escape": "按 Escape 释放控制，按 Tab 离开屏幕。",
+    "focusHint": "接管控制后，聚焦屏幕即可发送键盘和指针输入。",
+    "image": "电脑屏幕",
+    "inputSurface": "电脑屏幕输入",
+    "viewSurface": "电脑屏幕查看",
+    "typeText": "向电脑输入的文本",
+    "type": "输入",
+    "unavailable": "此电脑暂不支持屏幕。",
+    "computerStopped": "启动电脑后即可使用屏幕。",
+    "stopped": "屏幕已停止",
+    "connecting": "正在连接屏幕…",
+    "error": "无法加载屏幕，请重试。",
+    "controlHeld": "另一位成员正在控制此屏幕。",
+    "controlExpired": "控制权已到期，请重新接管。",
+    "inputRefused": "输入被拒绝，请检查屏幕控制权。",
+    "ownerRequired": "只有空间所有者可释放其他成员的控制权。",
+    "memberRemoved": "你已被移出此空间。",
+    "memberLeft": "你已离开此空间。",
+    "spaceDeleting": "此空间正在删除。",
+    "sessionExpired": "登录已结束，请重新登录。",
+    "accessDenied": "屏幕访问已结束。",
+    "idleTimeout": "屏幕停止发送画面，请重试。",
+    "reconnecting": "正在重新连接屏幕…",
+    "expand": "放大屏幕",
+    "expandedTitle": "电脑屏幕"
+  }
 }

@@ -85,7 +85,7 @@ CREATE TABLE "approval_requests" (
 	"resolved_at" timestamp with time zone,
 	"answered_by_account_id" text,
 	CONSTRAINT "approval_requests_pkey" PRIMARY KEY("space_id","conversation_id","id"),
-	CONSTRAINT "approval_requests_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
+	CONSTRAINT "approval_requests_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
 	CONSTRAINT "approval_requests_state_check" CHECK ("state" in ('pending', 'approved', 'denied', 'expired', 'cancelled')),
 	CONSTRAINT "approval_requests_resolution_check" CHECK (("state" = 'pending' and "resolved_at" is null and "answered_by_account_id" is null) or ("state" in ('approved', 'denied') and "resolved_at" is not null and "answered_by_account_id" is not null and "answered_by_account_id" = "member_account_id") or ("state" in ('expired', 'cancelled') and "resolved_at" is not null and "answered_by_account_id" is null)),
 	CONSTRAINT "approval_requests_bounds_check" CHECK (length("argument_summary") <= 1024 and length("target") between 1 and 1024 and jsonb_typeof("arguments") = 'object' and length("arguments"::text) <= 262144 and "expires_at" > "created_at")
@@ -99,7 +99,7 @@ CREATE TABLE "approval_rules" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "approval_rules_action_idx" UNIQUE NULLS NOT DISTINCT("account_id","tool_name","executable"),
 	CONSTRAINT "approval_rules_decision_check" CHECK ("decision" in ('allow', 'block')),
-	CONSTRAINT "approval_rules_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
+	CONSTRAINT "approval_rules_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
 	CONSTRAINT "approval_rules_executable_check" CHECK (("tool_name" = 'computer_run_command' and "executable" is not null and length("executable") between 1 and 1024) or ("tool_name" <> 'computer_run_command' and "executable" is null))
 );
 --> statement-breakpoint
@@ -140,6 +140,32 @@ CREATE TABLE "cloud_job_run" (
 	"task_id" text,
 	"code" text,
 	"sync" jsonb
+);
+--> statement-breakpoint
+CREATE TABLE "computer_screen_controls" (
+	"space_id" text,
+	"computer_id" text,
+	"generation" bigint NOT NULL,
+	"id" text NOT NULL,
+	"account_id" text NOT NULL,
+	"viewer_id" text NOT NULL,
+	"display_name" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "computer_screen_controls_pkey" PRIMARY KEY("space_id","computer_id"),
+	CONSTRAINT "computer_screen_controls_generation_check" CHECK ("generation" > 0 and "generation" <= 9007199254740991),
+	CONSTRAINT "computer_screen_controls_expiry_check" CHECK ("expires_at" > "created_at")
+);
+--> statement-breakpoint
+CREATE TABLE "computer_screen_viewers" (
+	"space_id" text,
+	"computer_id" text,
+	"generation" bigint NOT NULL,
+	"viewer_id" text,
+	"account_id" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "computer_screen_viewers_pkey" PRIMARY KEY("space_id","computer_id","viewer_id"),
+	CONSTRAINT "computer_screen_viewers_generation_check" CHECK ("generation" > 0 and "generation" <= 9007199254740991)
 );
 --> statement-breakpoint
 CREATE TABLE "computers" (
@@ -322,7 +348,7 @@ CREATE TABLE "conversation_effects" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"completed_at" timestamp with time zone,
 	CONSTRAINT "conversation_effects_pkey" PRIMARY KEY("space_id","key"),
-	CONSTRAINT "conversation_effects_tool_check" CHECK (("tool_name" in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
+	CONSTRAINT "conversation_effects_tool_check" CHECK (("tool_name" in ('computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128)),
 	CONSTRAINT "conversation_effects_state_check" CHECK ("state" in ('intent', 'succeeded', 'failed', 'unknown')),
 	CONSTRAINT "conversation_effects_key_check" CHECK ("key" ~ '^[a-f0-9]{64}$' and "argument_hash" ~ '^[a-f0-9]{64}$'),
 	CONSTRAINT "conversation_effects_outcome_check" CHECK (("state" in ('intent', 'unknown') and "result" is null and "completed_at" is null) or ("state" in ('succeeded', 'failed') and "result" is not null and length("result") <= 16384 and "completed_at" is not null))
@@ -489,6 +515,7 @@ CREATE TABLE "conversation_runs" (
 	"delegated_allow_shared_memory" boolean,
 	"instruction_revision" integer DEFAULT 0 NOT NULL,
 	"computer_held" boolean DEFAULT false NOT NULL,
+	"computer_input_paused" boolean DEFAULT false NOT NULL,
 	"origin_message_id" text,
 	"agent_chain_depth" integer DEFAULT 0 NOT NULL,
 	"untrusted_input" boolean DEFAULT false NOT NULL,
@@ -1233,6 +1260,9 @@ CREATE INDEX "cloud_job_due_idx" ON "cloud_job" ("next_run_at","id") WHERE "enab
 CREATE UNIQUE INDEX "cloud_job_run_schedule_idx" ON "cloud_job_run" ("job_id","scheduled_for") WHERE "trigger"='schedule';--> statement-breakpoint
 CREATE INDEX "cloud_job_run_history_idx" ON "cloud_job_run" ("user_id","job_id","started_at","id");--> statement-breakpoint
 CREATE INDEX "cloud_job_run_active_idx" ON "cloud_job_run" ("checked_at","id") WHERE "status" in ('dispatching','running','waiting','unknown');--> statement-breakpoint
+CREATE UNIQUE INDEX "computer_screen_controls_id_idx" ON "computer_screen_controls" ("space_id","id");--> statement-breakpoint
+CREATE INDEX "computer_screen_controls_member_idx" ON "computer_screen_controls" ("space_id","account_id");--> statement-breakpoint
+CREATE INDEX "computer_screen_viewers_member_idx" ON "computer_screen_viewers" ("space_id","account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "computers_team_idx" ON "computers" ("space_id") WHERE "scope" = 'team';--> statement-breakpoint
 CREATE UNIQUE INDEX "computers_private_agent_idx" ON "computers" ("space_id","agent_id") WHERE "scope" = 'private';--> statement-breakpoint
 CREATE INDEX "computers_creator_idx" ON "computers" ("created_by_account_id");--> statement-breakpoint
@@ -1361,6 +1391,10 @@ ALTER TABLE "approval_settings" ADD CONSTRAINT "approval_settings_account_id_use
 ALTER TABLE "cloud_job" ADD CONSTRAINT "cloud_job_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "cloud_job_run" ADD CONSTRAINT "cloud_job_run_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "cloud_job_run" ADD CONSTRAINT "cloud_job_run_job_id_cloud_job_id_fkey" FOREIGN KEY ("job_id") REFERENCES "cloud_job"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "computer_screen_controls" ADD CONSTRAINT "computer_screen_controls_uqO47s9zW1Mc_fkey" FOREIGN KEY ("space_id","computer_id") REFERENCES "computers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "computer_screen_controls" ADD CONSTRAINT "computer_screen_controls_KHbUT1oCzHV4_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "computer_screen_viewers" ADD CONSTRAINT "computer_screen_viewers_6MCQUVXEIQoF_fkey" FOREIGN KEY ("space_id","computer_id") REFERENCES "computers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "computer_screen_viewers" ADD CONSTRAINT "computer_screen_viewers_YTXbNDUqJAOz_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computers" ADD CONSTRAINT "computers_space_id_spaces_id_fkey" FOREIGN KEY ("space_id") REFERENCES "spaces"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computers" ADD CONSTRAINT "computers_space_id_agent_id_agents_space_id_id_fkey" FOREIGN KEY ("space_id","agent_id") REFERENCES "agents"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computers" ADD CONSTRAINT "computers_ml9XhGwYtCtS_fkey" FOREIGN KEY ("space_id","created_by_account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint

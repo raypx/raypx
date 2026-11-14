@@ -12,7 +12,9 @@ import {
   type ProviderComputer,
   type ProcessEvent,
 } from "./port.js";
-import { MAX_COMPUTER_FILE_BYTES } from "@raypx/core/computers";
+import { MAX_COMPUTER_FILE_BYTES, computerScreenInputSchema } from "@raypx/core/computers";
+import { fakeScreen } from "./fake-screen.js";
+import { screenFrames } from "./screen-stream.js";
 
 type Entry =
   | { kind: "file"; bytes: string; mode: number }
@@ -23,6 +25,10 @@ interface MemoryComputer {
   files: Map<string, Entry>;
   committed: HomeArchive | undefined;
   cancel: Set<() => void>;
+  screenRunning: boolean;
+  screenEpoch: number;
+  screenRevision: number;
+  frameSequence: number;
 }
 function printfBytes(format: string): Buffer {
   const chunks: Buffer[] = [];
@@ -76,13 +82,14 @@ export function createMemoryComputerProvider(): ComputerProvider {
     c.view.homeRevision = validated.revision;
     return { revision: validated.revision };
   }
-  return {
+  const provider: ComputerProvider = {
     async describe() {
       return {
         execution: "virtual",
         files: true,
         home: true,
         egress: "unrestricted",
+        screen: true,
         unenforced: [
           "Virtual commands only: printf, pwd, printenv, sleep, true, false, ln, sh (printf/exit statements only); no OS isolation or network enforcement",
         ],
@@ -103,10 +110,16 @@ export function createMemoryComputerProvider(): ComputerProvider {
           files: new Map([["workspace", { kind: "directory", mode: 0o755 }]]),
           committed: undefined,
           cancel: new Set(),
+          screenRunning: false,
+          screenEpoch: 0,
+          screenRevision: 0,
+          frameSequence: 0,
         };
         computers.set(ref.id, c);
       }
       if (ref.generation > c.view.generation) {
+        c.screenRunning = false;
+        c.screenEpoch += 1;
         for (const cancel of c.cancel) cancel();
         c.files = new Map(
           c.committed?.entries.map(({ path, ...entry }) => [path, entry]) ?? [
@@ -125,12 +138,16 @@ export function createMemoryComputerProvider(): ComputerProvider {
       await snapshot(ref);
       if (current(ref).view.state === "destroyed") return { ...c.view };
       c.view.state = "stopped";
+      c.screenRunning = false;
+      c.screenEpoch += 1;
       return { ...c.view };
     },
     async destroy(ref) {
       const c = current(ref);
       for (const cancel of c.cancel) cancel();
       c.view.state = "destroyed";
+      c.screenRunning = false;
+      c.screenEpoch += 1;
       c.files.clear();
       return { ...c.view };
     },
@@ -286,6 +303,8 @@ export function createMemoryComputerProvider(): ComputerProvider {
       if (c.view.state === "destroyed") throw new ComputerError("NOT_RUNNING");
       const validated = await validateHome(input);
       if (current(ref).view.state === "destroyed") throw new ComputerError("NOT_RUNNING");
+      c.screenRunning = false;
+      c.screenEpoch += 1;
       for (const cancel of c.cancel) cancel();
       c.files = new Map(validated.archive.entries.map(({ path, ...entry }) => [path, entry]));
       c.committed = validated.archive;
@@ -293,5 +312,42 @@ export function createMemoryComputerProvider(): ComputerProvider {
       return { revision: validated.revision };
     },
     snapshot,
+    async screen(ref) {
+      const c = current(ref, true);
+      return { available: true, running: c.screenRunning, width: 1024, height: 768 };
+    },
+    async startScreen(ref) {
+      const c = current(ref, true);
+      c.screenRunning = true;
+      return { available: true, running: true, width: 1024, height: 768 };
+    },
+    async stopScreen(ref) {
+      const c = current(ref, true);
+      c.screenRunning = false;
+      c.screenEpoch += 1;
+      return { available: true, running: false, width: 1024, height: 768 };
+    },
+    async screenshot(ref) {
+      const c = current(ref, true);
+      if (!c.screenRunning) throw new ComputerError("NOT_RUNNING");
+      return fakeScreen(++c.frameSequence, c.screenRevision);
+    },
+    async input(ref, input) {
+      const c = current(ref, true);
+      if (!c.screenRunning) throw new ComputerError("NOT_RUNNING");
+      const value = computerScreenInputSchema.parse(input);
+      if (value.kind === "pointer" && (value.x >= 1024 || value.y >= 768))
+        throw new ComputerError("INVALID_INPUT");
+      c.screenRevision += 1;
+    },
+    streamScreen(ref, options) {
+      const c = current(ref, true);
+      const epoch = c.screenEpoch;
+      return screenFrames(async () => {
+        if (current(ref, true).screenEpoch !== epoch) return null;
+        return provider.screenshot!(ref);
+      }, options?.signal);
+    },
   };
+  return provider;
 }

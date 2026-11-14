@@ -9,6 +9,7 @@ import {
 } from "@raypx/providers/computer";
 import type { EngineFetch } from "../src/engine.js";
 import type { ComputerStore, StoredComputer } from "../src/store.js";
+import type { ComputerScreenInput } from "@raypx/core/computers";
 
 export function memoryStore(): ComputerStore {
   const rows = new Map<string, StoredComputer>();
@@ -109,11 +110,12 @@ export function fakeEngine() {
       }
       if (suffix === "/exec") {
         const argv = body.Cmd as string[];
+        const helper = argv.indexOf("/opt/raypx/home.py");
         const id = crypto.randomUUID();
         execs.set(id, {
           container: c,
-          operation: argv[2]!,
-          input: inputs.get(argv[3]!)!,
+          operation: argv[helper + 1]!,
+          input: inputs.get(argv[helper + 2]!)!,
           status: 0,
         });
         return Response.json({ Id: id });
@@ -150,6 +152,24 @@ export function fakeEngine() {
       try {
         const { path: selected, limit, maxBytes, bytes, archive, executionId } = e.input;
         switch (e.operation) {
+          case "screen-get":
+            value = await provider.screen!(ref);
+            break;
+          case "screen-start":
+            value = await provider.startScreen!(ref);
+            break;
+          case "screen-stop":
+            value = await provider.stopScreen!(ref);
+            break;
+          case "screen-screenshot": {
+            const { sequence: _, ...image } = await provider.screenshot!(ref);
+            value = image;
+            break;
+          }
+          case "screen-input":
+            await provider.input!(ref, e.input.input as ComputerScreenInput);
+            value = {};
+            break;
           case "cancel":
             await processes.get(String(executionId))?.cancel();
             value = {};

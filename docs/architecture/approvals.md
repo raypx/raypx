@@ -73,13 +73,22 @@ Account settings persist `ask` or `never`; `auto` is explicitly unavailable.
 `APPROVAL_DEFAULT_MODE` selects the first persisted account default (`ask` when
 unset). A Space owner can set or clear an approval-mode exception; policy resolution
 uses that override before the executing member's default. Rules always belong to
-the executing member. There are no site rules in this slice. Rules name one
-of `computer_list_files`, `computer_read_file`, `computer_write_file` and
-`computer_run_command`. A command rule also names its exact executable; it does
+the executing member. There are no site rules in this slice. Exact built-in rules
+include `computer_list_files`, `computer_read_file`, `computer_write_file`,
+`computer_run_command`, `computer_screenshot`, `computer_pointer` and
+`computer_keyboard`. A command rule also names its exact executable; it does
 not match argv, prefixes or a category. Block takes precedence, including over
 Never ask and an Allow added from an older pending request. Lists apply to reads
 as well as changes; unlisted list/read calls need no approval. Write and command
 calls are changes.
+
+Screenshots are bounded reads but also record effects. Effects and activity retain
+only image metadata; the bounded PNG enters private model context with an untrusted
+label. Recovery without a committed image result reports its absence rather than
+recapturing the effect. Pointer and keyboard calls are changes with the same
+Block/Allow, Ask/Never ask, fence and unknown-outcome checks. Member takeover pauses
+screen input and commands on screen-capable providers before effect admission,
+records `computerInputPaused` on the waiting Run and resumes after release/expiry.
 
 `approvals.settings/updateSettings` use the session account. Their responses add
 `revision` and `availableModes`, containing `{ mode, available, reasonCode }` for

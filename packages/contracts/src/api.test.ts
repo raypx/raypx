@@ -38,6 +38,14 @@ describe("foundation contract", () => {
       "account",
     ]);
     expect(Object.keys(apiContract.computers)).toEqual([
+      "screenAvailability",
+      "startScreen",
+      "stopScreen",
+      "acquireControl",
+      "renewControl",
+      "releaseControl",
+      "forceReleaseControl",
+      "screenInput",
       "get",
       "start",
       "stop",

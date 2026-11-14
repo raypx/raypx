@@ -67,6 +67,16 @@ revision and lifecycle lease/fence. One partial unique index permits one team
 computer per Space; private Agent, creator member and event references include
 space_id. Restrictive owner foreign keys prevent silent resource orphaning.
 `computer.state` joins the existing conversation event counter/payload convention.
+`computer_screen_controls` records one expiring control grant for each Space
+computer, including its generation, member and viewer identity. Same-Space
+foreign keys bind the computer and retained member. Takeover audit boundaries
+commit with acquisition/release; frames and input content are never stored.
+`computer_screen_viewers` holds only Space/computer/generation/member/viewer
+registrations and ten-second heartbeat expiries. Grant admission requires a live
+registration; disconnect deletes it under the same lock as control release.
+`conversation_runs.computer_input_paused` is the server-owned pointer/keyboard
+wait projection. The shared input/control advisory lock prevents an acquisition
+from interleaving with an admitted provider input.
 
 `approval_settings` and exact-tool/executable `approval_rules` are account-owned.
 `approval_requests` references its Run and binds addressed/answering account IDs to

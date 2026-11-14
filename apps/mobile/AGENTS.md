@@ -27,6 +27,9 @@ OTA updates are not configured; keep updates.enabled false until an update servi
 
 Import `@raypx/agents/model` for page state, conversation/event projections,
 idempotent sends, approvals and computer lifecycle. Never import its DOM client.
+Native Mobile has no Screen UI, graphical input or takeover; use the phone Web
+client for those workflows. Keep existing native groups, Spaces, routines, memory,
+resource availability, activity and approvals intact.
 Mobile injects authenticated RPC, `/events`, device storage and AppState ports.
 The foreground Space live controller reconciles membership even outside chat;
 known Space close reasons route to the directory, session expiry to login.
@@ -110,8 +113,9 @@ projects to run Metro with Bun. Keep native projects ignored.
 
 ## Catalog composition
 
-Statically compose common, Auth and Agents' pure English/Chinese catalogs in
-private language entries; mobile-only copy belongs in `locales/{en,zh}/mobile.json`.
+Statically compose common, Auth, Agents, Jobs, Memory, Pages and Skills' pure
+English/Chinese catalogs in private language entries. Mobile-only copy belongs in
+its `mobile`, `mobile-capabilities` and `mobile-resources` JSON namespaces.
 Never import DOM i18n adapters.
 
 - Expo password login handles Better Auth TOTP and backup-code challenges.

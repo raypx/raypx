@@ -1,6 +1,6 @@
 import { setWebSocketHooks, type Hooks } from "crossws";
 import { Hono } from "hono";
-import { MAX_CONVERSATION_FRAME_BYTES } from "@raypx/contracts/api";
+import { MAX_CONVERSATION_FRAME_BYTES, MAX_SCREEN_STREAM_FRAME_BYTES } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/core/auth";
 import type { ConversationStream } from "./stream.js";
 
@@ -28,7 +28,10 @@ export function createConversationSocketRoutes(options: {
         options.stream.open(peer.id, auth.user.id, request.headers, {
           send(frame) {
             if (
-              peer.bufferedAmount > MAX_CONVERSATION_FRAME_BYTES ||
+              peer.bufferedAmount >
+                (frame.type === "screen.event"
+                  ? MAX_SCREEN_STREAM_FRAME_BYTES
+                  : MAX_CONVERSATION_FRAME_BYTES) ||
               peer.send(JSON.stringify(frame)) === 0
             )
               throw new Error("Stream backpressure");

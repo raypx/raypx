@@ -31,7 +31,10 @@ Agent forms and direct conversations in Web and Desktop. Member messages and the
 stream are described in [the conversation guide](events.md#implemented-conversation-slice).
 Phase 6's backend membership slice adds the member directory, invitations, owner
 settings, audit and claimed Space deletion. The backend also supports group
-conversations, Agent messages and child Runs; membership/group UI is separate work.
+conversations, Agent messages and child Runs. Web/Desktop expose membership and
+group management; Mobile provides native groups, members and invitations, with
+the remaining owner settings using Web handoff. See
+[client coverage](../../PRODUCT.md#operating-context) for the exact split.
 
 ## Spaces
 

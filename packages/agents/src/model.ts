@@ -61,6 +61,11 @@ export type {
 } from "./model/port.js";
 export { ComputerController, type ComputerView } from "./model/computer.js";
 export {
+  ComputerScreenController,
+  type ComputerScreenPort,
+  type ComputerScreenView,
+} from "./model/computer-screen.js";
+export {
   ComputerFilesController,
   computerFileRows,
   computerFileDestination,

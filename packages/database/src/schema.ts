@@ -292,6 +292,67 @@ export const computers = pgTable(
     ),
   ],
 );
+/** A short-lived, cross-process registration for an authenticated screen stream. */
+export const computerScreenViewers = pgTable(
+  "computer_screen_viewers",
+  {
+    spaceId: text("space_id").notNull(),
+    computerId: text("computer_id").notNull(),
+    generation: bigint("generation", { mode: "number" }).notNull(),
+    viewerId: text("viewer_id").notNull(),
+    accountId: text("account_id").notNull(),
+    expiresAt: date("expires_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.computerId, table.viewerId] }),
+    index("computer_screen_viewers_member_idx").on(table.spaceId, table.accountId),
+    foreignKey({
+      columns: [table.spaceId, table.computerId],
+      foreignColumns: [computers.spaceId, computers.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    check(
+      "computer_screen_viewers_generation_check",
+      sql`${table.generation} > 0 and ${table.generation} <= 9007199254740991`,
+    ),
+  ],
+);
+/** One expiring input owner per Space computer; no input or screen bytes persist here. */
+export const computerScreenControls = pgTable(
+  "computer_screen_controls",
+  {
+    spaceId: text("space_id").notNull(),
+    computerId: text("computer_id").notNull(),
+    generation: bigint("generation", { mode: "number" }).notNull(),
+    id: text("id").notNull(),
+    accountId: text("account_id").notNull(),
+    viewerId: text("viewer_id").notNull(),
+    displayName: text("display_name").notNull(),
+    createdAt: date("created_at").notNull().defaultNow(),
+    expiresAt: date("expires_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.computerId] }),
+    uniqueIndex("computer_screen_controls_id_idx").on(table.spaceId, table.id),
+    index("computer_screen_controls_member_idx").on(table.spaceId, table.accountId),
+    foreignKey({
+      columns: [table.spaceId, table.computerId],
+      foreignColumns: [computers.spaceId, computers.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    check(
+      "computer_screen_controls_generation_check",
+      sql`${table.generation} > 0 and ${table.generation} <= 9007199254740991`,
+    ),
+    check("computer_screen_controls_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
+  ],
+);
 export const conversations = pgTable(
   "conversations",
   {
@@ -474,6 +535,7 @@ export const conversationRuns = pgTable(
     delegatedAllowSharedMemory: boolean("delegated_allow_shared_memory"),
     instructionRevision: integer("instruction_revision").notNull().default(0),
     computerHeld: boolean("computer_held").notNull().default(false),
+    computerInputPaused: boolean("computer_input_paused").notNull().default(false),
     originMessageId: text("origin_message_id"),
     agentChainDepth: integer("agent_chain_depth").notNull().default(0),
     untrustedInput: boolean("untrusted_input").notNull().default(false),
@@ -1001,7 +1063,7 @@ export const approvalRules = pgTable(
     check("approval_rules_decision_check", sql`${table.decision} in ('allow', 'block')`),
     check(
       "approval_rules_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_rules_executable_check",
@@ -1080,7 +1142,7 @@ export const approvalRequests = pgTable(
     }).onDelete("cascade"),
     check(
       "approval_requests_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_requests_state_check",
@@ -1127,7 +1189,7 @@ export const conversationEffects = pgTable(
     }).onDelete("cascade"),
     check(
       "conversation_effects_tool_check",
-      sql`(${table.toolName} in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "conversation_effects_state_check",
@@ -2422,6 +2484,8 @@ export const schema = {
   modelConnectionSpaces,
   conversationToolCalls,
   computers,
+  computerScreenControls,
+  computerScreenViewers,
   conversationRuns,
   conversationRunAttempts,
   conversationRunCheckpoints,

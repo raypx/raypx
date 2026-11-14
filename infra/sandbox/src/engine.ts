@@ -101,7 +101,10 @@ export class Engine {
       body: tar,
     });
     if (!response.ok) throw new ComputerError("PROVIDER_UNAVAILABLE");
-    return this.exec(container, ["python3", "/opt/raypx/home.py", operation, `/run/raypx/${name}`]);
+    let argv = ["python3", "/opt/raypx/home.py", operation, `/run/raypx/${name}`];
+    if (operation.startsWith("screen-"))
+      argv = ["timeout", operation === "screen-start" ? "10" : "3", ...argv];
+    return this.exec(container, argv);
   }
   async helper<T>(
     container: string,

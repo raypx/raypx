@@ -580,6 +580,7 @@ export class ConversationController {
     }
   }
   private receiveFrame(frame: ConversationServerFrame) {
+    if (frame.type === "screen.event") return;
     if (frame.type === "ready") {
       this.cancelTimer();
       const subscribed = this.sendFrame({

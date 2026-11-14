@@ -149,6 +149,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       runner,
       computerProvider,
       computers,
+      computerScreens,
       conversationModels,
       agentApprovals,
       modelConnections,
@@ -185,6 +186,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         runner.stopClaiming();
       },
       computers,
+      computerScreens,
       spaces,
       liveReplies: runner.live,
       conversations,
@@ -219,6 +221,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         modelConnections,
         agentApprovals,
         computers,
+        computerScreens,
         spaces,
         spaceManagement,
         conversations,

@@ -4,6 +4,7 @@ import {
   type ComputerRef,
   type ProcessEvent,
 } from "../../src/computer/index.js";
+import { createHash } from "node:crypto";
 
 /** Shared offline contract. Factories own their transport; this suite never builds images. */
 type TestRunner = Pick<typeof import("vitest"), "afterEach" | "describe" | "expect" | "it">;
@@ -45,6 +46,59 @@ export function computerConformance(
       expect((await provider.destroy(ref)).state).toBe("destroyed");
       expect((await provider.get(ref)).state).toBe("destroyed");
     });
+    it("gates graphical sessions and streams bounded images until stop", async () => {
+      const { provider, ref } = await setup();
+      const description = await provider.describe();
+      if (!description.screen) {
+        if (provider.screen) expect((await provider.screen(ref)).available).toBe(false);
+        if (provider.startScreen)
+          await expect(provider.startScreen(ref)).rejects.toMatchObject({
+            code: "SCREEN_UNAVAILABLE",
+          });
+        return;
+      }
+      expect(provider.screen).toBeTypeOf("function");
+      expect(provider.startScreen).toBeTypeOf("function");
+      expect(provider.stopScreen).toBeTypeOf("function");
+      expect(provider.screenshot).toBeTypeOf("function");
+      expect(provider.input).toBeTypeOf("function");
+      expect(provider.streamScreen).toBeTypeOf("function");
+      expect(await provider.screen!(ref)).toMatchObject({ available: true, running: false });
+      expect(await provider.startScreen!(ref)).toMatchObject({
+        available: true,
+        running: true,
+        width: 1024,
+        height: 768,
+      });
+      const before = await provider.screenshot!(ref);
+      const png = Buffer.from(before.bytes, "base64");
+      expect(png.length).toBeGreaterThan(64);
+      expect(png.length).toBeLessThanOrEqual(1024 * 1024);
+      expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+      expect(png.readUInt32BE(16)).toBe(1024);
+      expect(png.readUInt32BE(20)).toBe(768);
+      await provider.input!(ref, { kind: "text", text: "screen-probe" });
+      let after = await provider.screenshot!(ref);
+      for (let attempt = 0; after.bytes === before.bytes && attempt < 20; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        after = await provider.screenshot!(ref);
+      }
+      // Compare digests so an assertion failure cannot print a private framebuffer.
+      const beforeDigest = createHash("sha256").update(before.bytes).digest("hex");
+      const afterDigest = createHash("sha256").update(after.bytes).digest("hex");
+      expect(afterDigest).not.toBe(beforeDigest);
+      expect(after.sequence).toBeGreaterThan(before.sequence);
+      const frames = provider.streamScreen!(ref)[Symbol.asyncIterator]();
+      expect((await frames.next()).value).toMatchObject({
+        mimeType: "image/png",
+        width: 1024,
+        height: 768,
+      });
+      await provider.stopScreen!(ref);
+      expect((await frames.next()).done).toBe(true);
+      expect(await provider.screen!(ref)).toMatchObject({ running: false });
+      await expect(provider.screenshot!(ref)).rejects.toMatchObject({ code: "NOT_RUNNING" });
+    }, 20_000);
     it("streams bytes, status, cwd and command-only environment with a combined output bound", async () => {
       const { provider, ref } = await setup();
       async function execute(

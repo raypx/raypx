@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "163cbd4e-84d4-4bf8-b4fd-060eb341981e",
+  "id": "ae8992f1-aee1-498e-bd72-e69831dc683f",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -211,6 +211,44 @@
         "n|rel|public.cloud_job_run",
         "n|type|public.cloud_job_run",
         "n|rel|public.cloud_job_run_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_screen_controls"
+      ],
+      "writes": [
+        "s|tbl|public.computer_screen_controls",
+        "n|tbl|public.computer_screen_controls",
+        "e|tbl|public.computer_screen_controls",
+        "n|rel|public.computer_screen_controls",
+        "n|type|public.computer_screen_controls",
+        "n|rel|public.computer_screen_controls_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_screen_viewers"
+      ],
+      "writes": [
+        "s|tbl|public.computer_screen_viewers",
+        "n|tbl|public.computer_screen_viewers",
+        "e|tbl|public.computer_screen_viewers",
+        "n|rel|public.computer_screen_viewers",
+        "n|type|public.computer_screen_viewers",
+        "n|rel|public.computer_screen_viewers_pkey"
       ],
       "reads": [
         "n|sch|public"
@@ -2215,6 +2253,69 @@
         "n|sch|public",
         "n|col|public.cloud_job_run.checked_at",
         "n|col|public.cloud_job_run.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "computer_screen_controls",
+        "computer_screen_controls_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.computer_screen_controls_id_idx",
+        "n|idx|public.computer_screen_controls_id_idx",
+        "e|idx|public.computer_screen_controls_id_idx",
+        "n|rel|public.computer_screen_controls_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.computer_screen_controls",
+        "n|sch|public",
+        "n|col|public.computer_screen_controls.space_id",
+        "n|col|public.computer_screen_controls.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "computer_screen_controls",
+        "computer_screen_controls_member_idx"
+      ],
+      "writes": [
+        "s|idx|public.computer_screen_controls_member_idx",
+        "n|idx|public.computer_screen_controls_member_idx",
+        "e|idx|public.computer_screen_controls_member_idx",
+        "n|rel|public.computer_screen_controls_member_idx"
+      ],
+      "reads": [
+        "n|tbl|public.computer_screen_controls",
+        "n|sch|public",
+        "n|col|public.computer_screen_controls.space_id",
+        "n|col|public.computer_screen_controls.account_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "computer_screen_viewers",
+        "computer_screen_viewers_member_idx"
+      ],
+      "writes": [
+        "s|idx|public.computer_screen_viewers_member_idx",
+        "n|idx|public.computer_screen_viewers_member_idx",
+        "e|idx|public.computer_screen_viewers_member_idx",
+        "n|rel|public.computer_screen_viewers_member_idx"
+      ],
+      "reads": [
+        "n|tbl|public.computer_screen_viewers",
+        "n|sch|public",
+        "n|col|public.computer_screen_viewers.space_id",
+        "n|col|public.computer_screen_viewers.account_id"
       ]
     },
     {
@@ -4999,6 +5100,106 @@
         "n|col|public.cloud_job_run.job_id",
         "n|col|public.cloud_job.id",
         "e|uniqueness|public.cloud_job.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_screen_controls"
+      ],
+      "writes": [
+        "s|fk|public.computer_screen_controls.computer_screen_controls_uqO47s9zW1Mc_fkey",
+        "n|fk|public.computer_screen_controls.computer_screen_controls_uqO47s9zW1Mc_fkey",
+        "e|fk|public.computer_screen_controls.computer_screen_controls_uqO47s9zW1Mc_fkey",
+        "n|con|public.computer_screen_controls.computer_screen_controls_uqO47s9zW1Mc_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computer_screen_controls",
+        "n|sch|public",
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computer_screen_controls.space_id",
+        "n|col|public.computer_screen_controls.computer_id",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.id",
+        "e|uniqueness|public.computers.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_screen_controls"
+      ],
+      "writes": [
+        "s|fk|public.computer_screen_controls.computer_screen_controls_KHbUT1oCzHV4_fkey",
+        "n|fk|public.computer_screen_controls.computer_screen_controls_KHbUT1oCzHV4_fkey",
+        "e|fk|public.computer_screen_controls.computer_screen_controls_KHbUT1oCzHV4_fkey",
+        "n|con|public.computer_screen_controls.computer_screen_controls_KHbUT1oCzHV4_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computer_screen_controls",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.computer_screen_controls.space_id",
+        "n|col|public.computer_screen_controls.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_screen_viewers"
+      ],
+      "writes": [
+        "s|fk|public.computer_screen_viewers.computer_screen_viewers_6MCQUVXEIQoF_fkey",
+        "n|fk|public.computer_screen_viewers.computer_screen_viewers_6MCQUVXEIQoF_fkey",
+        "e|fk|public.computer_screen_viewers.computer_screen_viewers_6MCQUVXEIQoF_fkey",
+        "n|con|public.computer_screen_viewers.computer_screen_viewers_6MCQUVXEIQoF_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computer_screen_viewers",
+        "n|sch|public",
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computer_screen_viewers.space_id",
+        "n|col|public.computer_screen_viewers.computer_id",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.id",
+        "e|uniqueness|public.computers.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_screen_viewers"
+      ],
+      "writes": [
+        "s|fk|public.computer_screen_viewers.computer_screen_viewers_YTXbNDUqJAOz_fkey",
+        "n|fk|public.computer_screen_viewers.computer_screen_viewers_YTXbNDUqJAOz_fkey",
+        "e|fk|public.computer_screen_viewers.computer_screen_viewers_YTXbNDUqJAOz_fkey",
+        "n|con|public.computer_screen_viewers.computer_screen_viewers_YTXbNDUqJAOz_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computer_screen_viewers",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.computer_screen_viewers.space_id",
+        "n|col|public.computer_screen_viewers.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
       ]
     },
     {
@@ -8185,6 +8386,18 @@
     },
     {
       "schema": "public",
+      "name": "computer_screen_controls",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "computer_screen_viewers",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "computers",
       "isRlsEnabled": false,
       "entityType": "tables"
@@ -9942,6 +10155,201 @@
       "type": "jsonb",
       "typeSchema": null,
       "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "generation",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "viewer_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "display_name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "computer_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "generation",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "viewer_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "account_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
@@ -12568,6 +12976,19 @@
       "schema": "public",
       "table": "conversation_runs",
       "name": "computer_held",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conversation_runs",
+      "name": "computer_input_paused",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -19441,6 +19862,90 @@
     },
     {
       "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_screen_controls_id_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_screen_controls_member_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "account_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "computer_screen_viewers_member_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "space_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "account_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
       "table": "computers",
       "name": "computers_team_idx",
       "nameExplicit": true,
@@ -23095,6 +23600,82 @@
     },
     {
       "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_screen_controls_uqO47s9zW1Mc_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "computer_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "computers",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_screen_controls_KHbUT1oCzHV4_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "space_members",
+      "columnsTo": [
+        "space_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "computer_screen_viewers_6MCQUVXEIQoF_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "computer_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "computers",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "computer_screen_viewers_YTXbNDUqJAOz_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "account_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "space_members",
+      "columnsTo": [
+        "space_id",
+        "account_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
       "table": "computers",
       "name": "computers_space_id_spaces_id_fkey",
       "nameExplicit": false,
@@ -25515,6 +26096,29 @@
     },
     {
       "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_screen_controls_pkey",
+      "columns": [
+        "space_id",
+        "computer_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "computer_screen_viewers_pkey",
+      "columns": [
+        "space_id",
+        "computer_id",
+        "viewer_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "computers",
       "name": "computers_pkey",
       "columns": [
@@ -26685,7 +27289,7 @@
       "schema": "public",
       "table": "approval_requests",
       "name": "approval_requests_tool_check",
-      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
+      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
       "entityType": "checks"
     },
     {
@@ -26720,7 +27324,7 @@
       "schema": "public",
       "table": "approval_rules",
       "name": "approval_rules_tool_check",
-      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
+      "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
       "entityType": "checks"
     },
     {
@@ -26735,6 +27339,27 @@
       "table": "approval_settings",
       "name": "approval_settings_mode_check",
       "value": "\"mode\" in ('ask', 'never')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_screen_controls_generation_check",
+      "value": "\"generation\" > 0 and \"generation\" <= 9007199254740991",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_controls",
+      "name": "computer_screen_controls_expiry_check",
+      "value": "\"expires_at\" > \"created_at\"",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_screen_viewers",
+      "name": "computer_screen_viewers_generation_check",
+      "value": "\"generation\" > 0 and \"generation\" <= 9007199254740991",
       "entityType": "checks"
     },
     {
@@ -26804,7 +27429,7 @@
       "schema": "public",
       "table": "conversation_effects",
       "name": "conversation_effects_tool_check",
-      "value": "(\"tool_name\" in ('computer_write_file', 'computer_run_command', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
+      "value": "(\"tool_name\" in ('computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)",
       "entityType": "checks"
     },
     {

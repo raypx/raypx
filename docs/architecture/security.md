@@ -21,6 +21,17 @@ boundary and what enforces it.
 Members who share a team computer share one trust boundary. Raypx does not promise
 isolation between them there.
 
+Graphical sessions use Unix-only display/input helpers inside that same computer.
+The supervisor exposes bounded frames/input only on its private authenticated
+interface; no display port is published or reachable from another computer. API
+screen subscriptions re-read sessions and membership on connect, before delivery
+and during idle polling. Public closure reasons distinguish removal, voluntary
+leave, Space deletion and session end. PostgreSQL serializes member control and
+Agent input admission, with generation-bound, expiring control grants. Only the
+holder can renew/input/release; a current Space owner can force release. Start/end
+audit and grant changes commit together. Pixels and typed input never enter logs;
+screenshots supplied to models are bounded untrusted content, never authority.
+
 The member-readable effective approval-mode projection selects only the current
 caller's account default or the Space override. It returns mode availability and
 safe reason codes without private rules or other members' defaults. Stream

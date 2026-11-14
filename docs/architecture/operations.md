@@ -48,7 +48,7 @@ starts. Each missing capability is an explicit state in the product.
 ## Deploys
 
 - The unreleased `next` database is disposable. Its migration payload now contains
-  one generated baseline, `20261114004139_baseline`, rather than the earlier chain.
+  one generated baseline, `20261114031842_baseline`, rather than the earlier chain.
   Use a fresh, isolated database for this baseline; an existing disposable `next`
   database must be recreated explicitly by its operator. This is not an upgrade
   procedure and imports no earlier schema, ledger or data. Never reset or migrate
@@ -100,6 +100,16 @@ starts. Each missing capability is an explicit state in the product.
   setting appears in domain records.
 
 ## Sandbox egress acceptance
+
+The optional graphical image is selected by its immutable image ID and
+`SANDBOX_GRAPHICAL=true` in the supervisor. The default image remains non-graphical.
+No display port or provider endpoint is exposed to clients. Screen streams expire
+after five minutes, require ACKs within ten seconds and periodically recheck
+sessions/membership. Control grants expire after thirty seconds without renewal;
+view disconnect, stop, replacement and membership revocation release them with
+Space audit evidence. PostgreSQL is the authority across API/worker processes.
+See [sandbox setup](../development/sandbox.md) for measured image sizes and the
+real-Engine graphical probe. Native Mobile has no Screen surface.
 
 Run `bun run raypx-dev test sandbox --with-egress --dns-resolver 1.1.1.1` on the
 Linux Engine host, with root or passwordless sudo, Docker's iptables backend and

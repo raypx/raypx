@@ -50,6 +50,21 @@ previews are bounded read-only access and do not start compute. No configured
 provider means an unavailable state without lifecycle controls. Computer tools
 still require backend admission and approval/effect policy.
 
+Screen is a separate computer section. Its optional port mounts only while the
+computer panel is open. Pixel state is disposable and never enters draft storage.
+Test control-holder changes, view-only input refusal, focused keyboard input,
+composed text, Escape release/return focus, owner forced release and disconnect
+cleanup. Frames have no CSS animation; Pause view stops delivery and releases
+control. Responsive screenshots use 1440×860 and 375×812. Mobile currently omits
+Screen; the phone Web layout provides it.
+
+Expand opens a large Screen dialog with the same live view and controls. Reuse
+the existing controller, viewer identity and stream; moving between compact and
+expanded views must preserve its grant and avoid duplicate subscriptions. While
+controlling, Escape releases input and leaves the dialog open. A subsequent
+Escape closes it and returns focus to Expand. Keep this behavior for the screen
+surface and composed-text field, and retain the explicit Release control action.
+
 Routines and Space memory open header sheets, or the compact overflow menu at
 narrow widths. Pages mounts at `/pages` with versions, restore and sharing. Web
 can embed sandboxed authenticated documents; Desktop always opens Web preview.

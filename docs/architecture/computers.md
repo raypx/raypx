@@ -20,8 +20,8 @@ A provider implements:
 - **Description**: the capabilities it has and the limits it cannot enforce.
 
 The port and its adapters live in `@raypx/providers`. A vendor SDK loads only when
-its provider is configured. Graphical desktops, browser tools, screen streaming
-and user takeover extend the same port in a later phase.
+its provider is configured. Optional graphical operations extend this same port;
+capability checks make an image without a graphical stack explicit.
 
 ## Providers
 
@@ -33,7 +33,9 @@ and user takeover extend the same port in a later phase.
 
 One conformance suite runs against an in-memory provider and every real provider.
 It covers lifecycle, execution, cancellation, bounded files and home persistence
-across a replacement.
+across a replacement. Graphical-capable providers additionally start a session,
+capture its bounded PNG, change the screen through input and close a frame stream
+when the session stops.
 
 ## Team and private computers
 
@@ -255,3 +257,61 @@ A valid embedded-DNS SERVFAIL counts as unavailable only when the corresponding
 host UDP/TCP upstream control independently fails for a network reason. Direct
 upstream SERVFAIL and malformed replies still fail; a working public HTTPS path
 with unavailable configured DNS also fails.
+
+## Graphical screen and member takeover
+
+The optional graphical computer image provides a local-only X session and a
+browser. The ordinary computer image remains the default. The supervisor reaches
+its fixed helpers over private Engine execution; the computer publishes no screen
+or input listener. Provider methods `screen`, `startScreen`, `stopScreen`,
+`screenshot`, `input` and `streamScreen` are optional capabilities. The memory
+provider supplies a deterministic 1024×768 PNG surface and never opens host apps.
+Neither browser software nor a graphical session changes the existing container
+or egress boundaries.
+
+`ComputerScreensService` separates screen viewing and takeover from computer
+lifecycle. Reads never provision compute. A member explicitly starts the graphical
+session on a running computer. The API resolves the session and fresh Space
+membership for commands and subscribes the same member to a bounded screen stream;
+it never returns a supervisor address or provider credential. Stream state is
+refreshed at least once per five seconds so another viewer observes the control
+holder even when the screen is static. Departure closes with
+`SPACE_MEMBER_REMOVED` or `SPACE_MEMBER_LEFT`; a deleting Space and an expired
+session have their own reasons. Frames cap at one MiB and four per second. An
+inactive provider closes after ten seconds; a view stream expires after five
+minutes and a client can explicitly reconnect.
+
+One PostgreSQL control grant per Space/computer records an unpredictable grant ID,
+computer generation, member, display name, viewer identity and a thirty-second
+expiry. A PostgreSQL viewer registration has a ten-second heartbeat expiry;
+acquisition and renewal require that live viewer. Disconnect deletes it under the
+same control lock, so a delayed acquire cannot resurrect a closed view. Only the
+grant’s member can renew it or submit input; a current Space owner can
+force release it. Other members can still view. Disconnect releases only the
+bound account/viewer/generation, so closing a second viewer cannot release the
+controller. Membership removal releases the grant inside its Space transaction.
+The stream also registers its viewer in PostgreSQL with a ten-second heartbeat
+expiry. Acquisition, renewal and input require that live registration. Closing
+deletes it under the same lock as release; a delayed acquire cannot recreate a
+grant after disconnect, and a delayed heartbeat never recreates a viewer.
+Viewing and viewer heartbeats do not wait for the input gate held by Agent work.
+An expired grant never authorizes input. If that gate is busy, a view reports no
+control holder immediately and defers the existing transactional audit cleanup
+until the holder completes or the next grant admission.
+Expiry is enforced by every admission, independently of client clocks. Stop,
+replacement, explicit release, forced release and disconnect also end the grant.
+
+Control acquisition and all pointer/keyboard input use the same PostgreSQL
+transaction advisory lock. Acquisition waits for an already admitted Agent input
+to finish; subsequent Agent input waits for release or expiry. Provider input has
+an intrinsic execution deadline, and the lock stays held until the operation
+settles. Screenshots remain available during takeover. The Run records its input
+pause so clients show the actual wait rather than simulated progress. Starting
+and ending every takeover appends Space audit intent/outcome evidence in the
+same transaction as the grant change; missing audit storage refuses the change.
+Frames and typed input are never part of logs or grant rows.
+
+Web and Desktop share the Screen capability surface. Mobile does not yet provide
+screen viewing or takeover; its computer lifecycle and approval UI remain
+available. Browser and source tests establish their own layers; packaged desktop,
+mobile-device and real-Engine results remain independent acceptance gates.

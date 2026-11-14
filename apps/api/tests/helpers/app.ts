@@ -13,6 +13,7 @@ const services = [
   "modelConnections",
   "agentApprovals",
   "computers",
+  "computerScreens",
   "spaces",
   "spaceManagement",
   "agents",

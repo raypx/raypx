@@ -1,8 +1,9 @@
 # Clients
 
 Web and Desktop show the same Agents and state through shared contracts. Mobile
-shares Core, contracts and the conversation model. An implemented
-workflow works on each client or degrades for a stated reason.
+shares Core, contracts and feature models for its native Space and Agent workflows.
+Native Screen viewing/input remains unavailable; the phone Web client provides it.
+An implemented workflow works on each client or degrades for a stated reason.
 
 ## Shared layers
 
@@ -47,9 +48,26 @@ Computer reads and commands use `computers.get/start/stop`. The model applies
 reconnect; changing Space discards
 the previous Space's state. The backend resolves current membership for every
 request. No provider credentials or execution port enter either renderer.
-The panel shows bounded computer files and tool activity. Agent tool approvals
-render as addressed conversation cards, including active work outside the loaded
+The panel shows bounded computer files, tool activity and the optional Screen.
+Agent tool approvals render as addressed conversation cards, including active work outside the loaded
 history window.
+
+The Screen section uses optional graphical provider capabilities. Web and Desktop
+share start/stop, a fitted image, view pause and exclusive control. The existing
+authenticated `/events` bridge carries `screen.subscribe`, `screen.ack`,
+`screen.unsubscribe` and `screen.event`; no new native credentials or supervisor
+endpoint enters the renderer. One frame is outstanding per viewer, with a
+ten-second ACK deadline and a 1,500,000-byte envelope limit. Closing a panel,
+changing Space/account or losing the session drops pixels and releases its bound
+control. A five-minute stream reconnects with a new viewer identity. The control
+holder, thirty-second renewable expiry and Agent input wait are visible to viewers.
+Tab leaves the focused screen; Escape releases control and focuses Take control.
+Expand opens a large dialog with the same view, controls, controller and viewer
+stream; it creates no second subscription. While controlling, Escape releases
+control and keeps the dialog open. Once view-only, Escape closes it and returns
+focus to Expand. The text field supports composed input. Native Mobile has no
+Screen view or input; use the phone Web client. Packaged Desktop acceptance
+remains a separate gate.
 
 Conversation history and its cursor live together in component memory. Reload
 starts from an authoritative snapshot; reconnect resumes the existing projection.
@@ -111,6 +129,8 @@ from packaged WKWebView/WebView2 acceptance.
   active work outside the loaded history window, tool activity/effects and approvals.
   Push notifications remain roadmap work. OpenAPI management stays in
   Web/Desktop; Mobile can approve and inspect calls to configured operations.
+- Team computer lifecycle and stop confirmation are native. Screen viewing and
+  takeover use the phone Web client; Mobile has no Screen UI or input forwarding.
 - Mobile uses native controls for navigation, pickers and alerts.
 
 All three clients show active Runs outside their bounded conversation window in

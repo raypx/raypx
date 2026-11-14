@@ -14,6 +14,8 @@ Web, Desktop and Mobile. Space owners register bounded OpenAPI tools alongside
 remote MCP servers in Web/Desktop; all three clients show activity and addressed
 approvals. See [capabilities](architecture/capabilities.md) and
 [UI workflows](development/ui.md).
+Web/Desktop also provide optional computer Screen viewing and takeover; native
+Mobile uses the phone Web client for Screen. See [clients](architecture/clients.md).
 
 ## Architecture and decisions
 

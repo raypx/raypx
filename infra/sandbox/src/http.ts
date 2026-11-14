@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import { computerScreenInputSchema } from "@raypx/core/computers";
 import {
   ComputerError,
   MAX_HOME_BYTES,
@@ -21,7 +22,7 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
       if (url.pathname === "/description" && request.method === "GET")
         return Response.json(await provider.describe());
       const match =
-        /^\/computers\/([^/]+)\/(create|get|exec|cancel|files\/list|files\/read|files\/write|stop|destroy|snapshot|home\/export|home\/import)$/.exec(
+        /^\/computers\/([^/]+)\/(create|get|exec|cancel|files\/list|files\/read|files\/write|stop|destroy|snapshot|home\/export|home\/import|screen\/(?:get|start|stop|screenshot|input|stream))$/.exec(
           url.pathname,
         );
       if (!match || request.method !== "POST")
@@ -35,7 +36,8 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
           const { value, done } = await reader.read();
           if (done) break;
           size += value.byteLength;
-          if (size > MAX_HOME_BYTES * 2) throw new ComputerError("LIMIT_EXCEEDED");
+          if (size > (match[2]?.startsWith("screen/") ? 32 * 1024 : MAX_HOME_BYTES * 2))
+            throw new ComputerError("LIMIT_EXCEEDED");
           chunks.push(value);
         }
       } finally {
@@ -50,6 +52,56 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
       const operation = match[2];
       if (operation === undefined) throw new ComputerError("INVALID_INPUT");
       switch (operation) {
+        case "screen/get":
+          if (!provider.screen) throw new ComputerError("SCREEN_UNAVAILABLE");
+          return Response.json(await provider.screen(ref));
+        case "screen/start":
+          if (!provider.startScreen) throw new ComputerError("SCREEN_UNAVAILABLE");
+          return Response.json(await provider.startScreen(ref));
+        case "screen/stop":
+          if (!provider.stopScreen) throw new ComputerError("SCREEN_UNAVAILABLE");
+          return Response.json(await provider.stopScreen(ref));
+        case "screen/screenshot":
+          if (!provider.screenshot) throw new ComputerError("SCREEN_UNAVAILABLE");
+          return Response.json(await provider.screenshot(ref));
+        case "screen/input":
+          if (!provider.input) throw new ComputerError("SCREEN_UNAVAILABLE");
+          await provider.input(ref, computerScreenInputSchema.parse(body.input));
+          return Response.json({});
+        case "screen/stream": {
+          if (!provider.streamScreen || !provider.screen)
+            throw new ComputerError("SCREEN_UNAVAILABLE");
+          if (!(await provider.screen(ref)).running) throw new ComputerError("NOT_RUNNING");
+          const controller = new AbortController();
+          const signal = AbortSignal.any([
+            request.signal,
+            controller.signal,
+            AbortSignal.timeout(5 * 60_000),
+          ]);
+          const iterator = provider.streamScreen(ref, { signal })[Symbol.asyncIterator]();
+          const encoder = new TextEncoder();
+          return new Response(
+            new ReadableStream<Uint8Array>({
+              start(stream) {
+                stream.enqueue(encoder.encode("\n"));
+              },
+              async pull(stream) {
+                try {
+                  const item = await iterator.next();
+                  if (item.done) stream.close();
+                  else stream.enqueue(encoder.encode(`${JSON.stringify(item.value)}\n`));
+                } catch {
+                  stream.error(new ComputerError("PROVIDER_UNAVAILABLE"));
+                }
+              },
+              async cancel() {
+                controller.abort();
+                await iterator.return?.();
+              },
+            }),
+            { headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } },
+          );
+        }
         case "create":
           return Response.json(await provider.provision(ref));
         case "get":
@@ -142,6 +194,7 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
         INVALID_INPUT: 400,
         LIMIT_EXCEEDED: 413,
         RESTORE_FAILED: 422,
+        SCREEN_UNAVAILABLE: 409,
       };
       return Response.json({ code }, { status: statuses[code] ?? 503 });
     }

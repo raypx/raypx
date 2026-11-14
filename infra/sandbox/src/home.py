@@ -123,6 +123,9 @@ def export_home():
 
 
 def run(operation, value):
+    if operation.startswith("screen-"):
+        from screen import run as screen_run
+        return screen_run(operation[7:], value, Refusal)
     if operation == "exec":
         execution_id = str(uuid.UUID(value["executionId"]))
         marker = "/tmp/rpx-cancel-" + execution_id

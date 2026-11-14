@@ -13,6 +13,17 @@ import {
   type ComputerProvider,
   type ComputerRef,
 } from "@raypx/providers/computer";
+export {
+  createComputerScreensService,
+  ComputerScreenError,
+  COMPUTER_SCREEN_CONTROL_TTL_MS,
+} from "./screens.js";
+export type {
+  ComputerScreenRepository,
+  ComputerScreensService,
+  ComputerScreenStreamOptions,
+  ComputerScreenReleaseReason,
+} from "./screens.js";
 export class ComputerOperationError extends Error {
   constructor(readonly code: "COMPUTER_BUSY" | "COMPUTER_LIMIT") {
     super(code);
@@ -101,6 +112,9 @@ export function createComputersService(
     if (operation === "start" && existing?.state === "running" && !existing.leaseOwner)
       return { status: "available", computer: existing };
     const claim = await repository.claim(scope, operation, kind);
+    const targetState = operation === "start" ? "running" : "stopped";
+    if (!claim.leaseOwner && claim.state === targetState)
+      return { status: "available", computer: claim };
     const ref = { id: claim.id, generation: claim.generation };
     let result: Pick<Computer, "state" | "homeRevision" | "failureCode">;
     try {

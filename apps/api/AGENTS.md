@@ -17,6 +17,13 @@ cloud jobs remain separate until their replacement phase.
 
 ## Interface
 
+`computers.screenAvailability/startScreen/stopScreen/acquireControl/renewControl/
+releaseControl/forceReleaseControl/screenInput` resolve fresh session membership;
+mutations require trusted Origin and per-account quotas. `/events` proxies one
+acknowledged screen subscription per connection with bounded frames and repeated
+session/Space admission. Viewer identity binds disconnect cleanup to its control
+grant; provider credentials and private supervisor addresses stay in the backend.
+
 `computers.get/start/stop` uses `@raypx/computers/server` with fresh membership,
 trusted mutation Origin and account quotas. Runtime injects no provider by default;
 `COMPUTER_PROVIDER=docker` lazily loads the private supervisor HTTP adapter and

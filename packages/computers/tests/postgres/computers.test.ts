@@ -156,3 +156,63 @@ it("preserves homes across stop/start and enforces deployment quotas", async () 
     ),
   ).rejects.toThrow("COMPUTER_LIMIT");
 });
+it("keeps a completed lifecycle generation when another service proceeds from a stale read", async () => {
+  const scope = await fixture();
+  const first = createComputersRepository(connection.db);
+  const second = createComputersRepository(other.db);
+  const provider = createMemoryComputerProvider();
+  let provisions = 0;
+  let stops = 0;
+  const originalProvision = provider.provision.bind(provider);
+  const originalStop = provider.stop.bind(provider);
+  provider.provision = async (ref) => {
+    provisions += 1;
+    return originalProvision(ref);
+  };
+  provider.stop = async (ref) => {
+    stops += 1;
+    return originalStop(ref);
+  };
+  const a = createComputersService(first, provider, "memory");
+  async function staleCaller(operation: "start" | "stop") {
+    let read!: () => void;
+    let complete!: () => void;
+    const reading = new Promise<void>((resolve) => {
+      read = resolve;
+    });
+    const completed = new Promise<void>((resolve) => {
+      complete = resolve;
+    });
+    const delayed = createComputersService(
+      {
+        ...second,
+        async get(current) {
+          const stale = await second.get(current);
+          read();
+          await completed;
+          return stale;
+        },
+      },
+      provider,
+      "memory",
+    );
+    const pending = delayed[operation](scope);
+    await reading;
+    const result = await a[operation](scope);
+    complete();
+    expect(await pending).toEqual(result);
+    return result;
+  }
+  const started = await staleCaller("start");
+  expect(started).toMatchObject({
+    status: "available",
+    computer: { state: "running", generation: 1 },
+  });
+  expect(provisions).toBe(1);
+  const stopped = await staleCaller("stop");
+  expect(stopped).toMatchObject({
+    status: "available",
+    computer: { state: "stopped", generation: 1 },
+  });
+  expect(stops).toBe(1);
+});

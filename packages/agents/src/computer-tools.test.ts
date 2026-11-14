@@ -42,6 +42,9 @@ function fixture(knownSecrets: string[] | (() => readonly string[]) = []) {
   run.computerId = null;
   run.computerGeneration = null;
   run.startedAt = null;
+  run.untrustedInput = false;
+  run.computerInputPaused = false;
+  run.state = "running";
   let row: Computer | null = null;
   const repository: ComputersRepository = {
     get: vi.fn(async () => row),
@@ -88,6 +91,162 @@ function fixture(knownSecrets: string[] | (() => readonly string[]) = []) {
   }
   return { tools, provider, service, repository, prepare, execute, row: () => row };
 }
+
+it("exposes graphical tools only after capability admission and keeps image bytes out of results", async () => {
+  const f = fixture();
+  const signal = new AbortController().signal;
+  expect(f.tools.definitions().some((tool) => tool.name === "computer_screenshot")).toBe(false);
+  await f.tools.initialize!(scope, run, signal);
+  expect(f.tools.definitions().map((tool) => tool.name)).toEqual(
+    expect.arrayContaining(["computer_screenshot", "computer_pointer", "computer_keyboard"]),
+  );
+  const ref = { id: f.row()!.id, generation: f.row()!.generation };
+  await f.provider.startScreen!(ref);
+  const call = {
+    type: "toolCall" as const,
+    id: "capture",
+    name: "computer_screenshot",
+    arguments: {},
+  };
+  const prepared = f.tools.prepare(call);
+  expect(prepared).toMatchObject({ changes: false, recordEffect: true, target: "screen" });
+  const output = await f.tools.execute(scope, run, prepared, signal);
+  expect(JSON.parse(output)).toMatchObject({ state: "succeeded", trust: "untrusted" });
+  const content = f.tools.modelContent!(run, call, output);
+  const image = content.find((part) => part.type === "image");
+  expect(image).toMatchObject({ type: "image", mimeType: "image/png" });
+  if (image?.type !== "image") throw new Error("Missing model screenshot");
+  expect(Buffer.from(image.data, "base64").subarray(0, 8)).toEqual(
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+  );
+  expect(output).not.toContain(image.data);
+  expect(run.untrustedInput).toBe(true);
+  expect(f.tools.modelContent!(run, call, output)).toEqual([
+    { type: "text", text: output },
+    { type: "text", text: expect.stringContaining("no image available") },
+  ]);
+});
+
+it("refuses graphical tools when the provider does not advertise screen capability", async () => {
+  const f = fixture();
+  const description = await f.provider.describe();
+  vi.spyOn(f.provider, "describe").mockResolvedValue({ ...description, screen: false });
+  await f.tools.initialize!(scope, run, new AbortController().signal);
+  expect(f.tools.definitions().some((tool) => tool.name === "computer_screenshot")).toBe(false);
+  expect(() => f.prepare("computer_screenshot", {})).toThrow("INVALID_TOOL");
+});
+
+it.each(["computer_keyboard", "computer_run_command"] as const)(
+  "pauses %s during takeover before effects or provider dispatch and resumes on release",
+  async (name) => {
+    const f = fixture();
+    let controlled = true;
+    const states: boolean[] = [];
+    const tools = createComputerTools(f.service, f.provider, [], undefined, undefined, {
+      async withAgentInput(_scope, _ref, operation) {
+        if (controlled)
+          throw Object.assign(new Error("SCREEN_CONTROL_HELD"), { code: "SCREEN_CONTROL_HELD" });
+        return operation();
+      },
+      async setPaused(_scope, selected, paused) {
+        states.push(paused);
+        selected.computerInputPaused = paused;
+        selected.state = paused ? "waiting" : "running";
+      },
+    });
+    const signal = new AbortController().signal;
+    await tools.initialize!(scope, run, signal);
+    await f.provider.startScreen!({ id: f.row()!.id, generation: f.row()!.generation });
+    const input = vi.spyOn(f.provider, "input");
+    const command = vi.spyOn(f.provider, "execute");
+    const args =
+      name === "computer_keyboard"
+        ? { kind: "text", text: "private typed content" }
+        : { executable: "printf", argv: ["private typed content"], cwd: "." };
+    const call = tools.prepare({
+      type: "toolCall",
+      id: "type",
+      name,
+      arguments: args,
+    });
+    expect(call.argumentSummary).not.toContain("private typed content");
+    expect(call).toMatchObject({ changes: true });
+    let effects = 0;
+    const result = tools.withDriver!(scope, run, call, signal, async () => {
+      effects++;
+      return tools.execute(scope, run, call, signal);
+    });
+    await vi.waitFor(() => expect(states).toEqual([true]));
+    expect(run.state).toBe("waiting");
+    expect(input).not.toHaveBeenCalled();
+    expect(command).not.toHaveBeenCalled();
+    expect(effects).toBe(0);
+    const sibling = { ...run, id: "reading-child" as ExecutionRun["id"], parentRunId: run.id };
+    const read = tools.prepare({
+      type: "toolCall",
+      id: "read",
+      name: "computer_list_files",
+      arguments: { path: "." },
+    });
+    expect(JSON.parse(await tools.execute(scope, sibling, read, signal))).toMatchObject({
+      state: "succeeded",
+    });
+    expect(effects).toBe(0);
+    controlled = false;
+    expect(JSON.parse(await result)).toMatchObject({ state: "succeeded" });
+    expect(states).toEqual([true, false]);
+    expect(run.state).toBe("running");
+    expect(input).toHaveBeenCalledTimes(name === "computer_keyboard" ? 1 : 0);
+    expect(command).toHaveBeenCalledTimes(name === "computer_run_command" ? 1 : 0);
+    expect(effects).toBe(1);
+  },
+);
+
+it("cancels takeover-paused screen input without dispatch and rejects oversized screenshots", async () => {
+  const f = fixture();
+  const paused = vi.fn(async () => {});
+  const tools = createComputerTools(f.service, f.provider, [], undefined, undefined, {
+    async withAgentInput() {
+      throw Object.assign(new Error("SCREEN_CONTROL_HELD"), { code: "SCREEN_CONTROL_HELD" });
+    },
+    setPaused: paused,
+  });
+  const controller = new AbortController();
+  await tools.initialize!(scope, run, controller.signal);
+  const input = vi.spyOn(f.provider, "input");
+  const call = tools.prepare({
+    type: "toolCall",
+    id: "point",
+    name: "computer_pointer",
+    arguments: { x: 2, y: 4, action: "move" },
+  });
+  const result = tools.execute(scope, run, call, controller.signal);
+  await vi.waitFor(() => expect(paused).toHaveBeenCalledWith(scope, run, true));
+  controller.abort("cancelled");
+  expect(JSON.parse(await result).state).toBe("cancelled");
+  expect(input).not.toHaveBeenCalled();
+  await f.provider.startScreen!({ id: f.row()!.id, generation: f.row()!.generation });
+  vi.spyOn(f.provider, "screenshot").mockResolvedValue({
+    sequence: 0,
+    width: 1024,
+    height: 768,
+    mimeType: "image/png",
+    bytes: Buffer.alloc(1024 * 1024 + 1).toString("base64"),
+  });
+  await expect(
+    tools.execute(
+      scope,
+      run,
+      tools.prepare({
+        type: "toolCall",
+        id: "oversized",
+        name: "computer_screenshot",
+        arguments: {},
+      }),
+      new AbortController().signal,
+    ),
+  ).rejects.toThrow("COMPUTER_UNAVAILABLE");
+});
 
 it("queues children's computer calls across executor ports while other Agents proceed", async () => {
   const f = fixture();
