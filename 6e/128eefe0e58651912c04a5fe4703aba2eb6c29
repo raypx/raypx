@@ -1,0 +1,226 @@
+apps/mobile/app/(app)/agent.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 45,58
+DESIGN.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 3-42,59-60,62-63,152-153,264
+apps/mobile/app/(app)/conversation/[agentId].tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 85
+apps/mobile/src/agents/markdown.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 89,162,184,243
+apps/mobile/src/agents/protected-input.tsx
+  s_ab4eb433bfa825::t_a1ef69343bca61 80-82
+  s_ab4eb433bfa825::t_cb442a1b400c1c 78,131,161,218
+  s_ab4eb433bfa825::t_9b012e33b93eb3 217
+apps/mobile/src/capabilities/routines-screen.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 52,144
+docs/development/ui.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 3,28-29,68,139-141
+apps/mobile/src/resources/screens.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 75,167,360
+packages/agents/src/client/identity.ts
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1-10
+packages/agents/src/client/computer-screen.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 285
+packages/ui/src/components/ui/textarea.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 9
+packages/agents/src/client/conversation.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1-2,904,945,1040-1043,1045-1049,1141,1146-1150,1168,1173-1175,1381,1478,1871,1888-1889
+packages/ui/src/components/ui/input.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 18
+packages/ui/src/components/ui/badge.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 8,12
+apps/mobile/app/_layout.tsx
+  s_ab4eb433bfa825::t_a1ef69343bca61 78-81
+apps/mobile/src/agents/computer-sheet.tsx
+  s_ab4eb433bfa825::t_a1ef69343bca61 70-74,184-187
+  s_ab4eb433bfa825::t_cb442a1b400c1c 1,161,191,202,227
+apps/mobile/src/global.css
+  s_ab4eb433bfa825::t_cb442a1b400c1c 8,23,25,39,42-43,55,57,71,74-75,84-121
+  s_ab4eb433bfa825::t_a1ef69343bca61 83
+packages/agents/src/client/delegated-work.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1,66-68,70
+apps/mobile/src/agents/tool-activity.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 1,76,105,162-165,180
+docs/architecture/clients.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 173
+packages/ui/src/themes/tokens.ts
+  s_ab4eb433bfa825::t_18704efc33b81c 1,4-8,12,14,16,18,20,22,27-33,35-36,41-45,53-66,68-101,105-109,113,115,117,119,121,123,128-134,136-137,142-167,169-202
+  s_ab4eb433bfa825::t_a1ef69343bca61 9-11,13,15,17,19,21,23-26,34,38-40,67,102,110-112,114,116,118,120,122,124-127,135,139-141,168,203
+  s_ab4eb433bfa825::t_8602821ff0b578 46-52
+packages/account/src/client/setup-checklist.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1,83,95-103
+packages/blocks/src/components/markdown.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 49
+packages/agents/src/client/join-space.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 35
+packages/agents/src/client/home.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 551,556
+packages/agents/src/client/space-routine.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 54-59
+packages/agents/src/client/computer.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1-2,80,92-99,200-205,217,242
+packages/ui/src/components/ui/input-group.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 22
+packages/blocks/src/components/shell.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 99,260
+apps/mobile/src/agents/conversation.tsx
+  s_ab4eb433bfa825::t_a1ef69343bca61 327-333,359-363,516-520
+  s_ab4eb433bfa825::t_cb442a1b400c1c 1,339,454,525,541,547,613,695,787,840,882,902,924
+packages/ui/src/components/ui/radio-group.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 22
+apps/mobile/app/(app)/space-memory.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 56
+packages/agents/src/client/computer-files.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 77
+e2e/AGENTS.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 166-170
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 165
+packages/ui/src/components/ui/toast.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 35
+packages/blocks/src/components/settings.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 70
+packages/agents/src/client/composer-card.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 21
+apps/mobile/app/(app)/account.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 36
+apps/mobile/src/agents/directory.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 1,134,214,363,444,556,571,578
+  s_ab4eb433bfa825::t_a1ef69343bca61 437-443
+packages/agents/src/client/tool-activity.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1-2,99-101,189-192,209
+apps/mobile/src/agents/effects.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 60
+apps/mobile/src/resources/routes.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 90
+apps/mobile/src/spaces/screens.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 79,112,220,284
+packages/agents/src/model.ts
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 146-147
+packages/agents/src/client/approval-card.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 122,124-127,207,217
+PRODUCT.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 193-196
+apps/mobile/app/(app)/routines.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 64
+apps/desktop/AGENTS.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 38-39
+packages/ui/src/components/ui/combobox.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 22,45
+apps/mobile/app/login.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 143,201
+apps/mobile/src/capabilities/agent-chooser.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 32
+docs/development/mobile.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 292
+  s_ab4eb433bfa825::t_46c8f7244a45cd 317,319-321
+apps/mobile/src/agents/computer-files.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 173,214
+apps/mobile/src/agents/home.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 106,125,141,187
+apps/web/src/features/config/components/settings.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 20,138,144
+apps/mobile/src/agents/approval-settings.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 112
+packages/agents/src/client/approval-settings.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 278
+packages/ui/src/components/ui/field.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 51
+packages/ui/src/styles/native.css
+  s_ab4eb433bfa825::t_18704efc33b81c 10-37,39-46,54-103,111-138,140-204
+  s_ab4eb433bfa825::t_3d4b3401e81a0f 47-53
+apps/mobile/src/agents/attachments.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 122,135,215,252
+apps/mobile/app/(app)/space.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 52
+apps/mobile/src/agents/device-computers.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 110,116,191
+apps/mobile/src/ui.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 50,57,59-65,72
+  s_ab4eb433bfa825::t_a1ef69343bca61 74-78,88-92
+AGENTS.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 167-171
+apps/mobile/src/agents/approval-card.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 1,80,86,118,171,181
+apps/web/AGENTS.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 60,67-68
+packages/agents/src/client/status-style.ts
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1-20
+packages/agents/src/model/identity.ts
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1-9
+packages/ui/src/components/ui/select.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 42
+packages/ui/src/components/ui/tabs.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 54-55
+  s_ab4eb433bfa825::t_0aee642883fc55 52
+apps/mobile/src/agents/appearance.ts
+  s_ab4eb433bfa825::t_cb442a1b400c1c 1-3,12-13,22-31,35,39,44,47-51
+  s_ab4eb433bfa825::t_a1ef69343bca61 4-11,14-21,32-34,36-38,40-43,45-46
+packages/ui/src/components/ui/native-select.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 22
+apps/mobile/src/email-verification.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 35
+packages/agents/src/client/workspace.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1,1240,1250,1256-1261,1306-1307,1350,1432
+packages/ui/src/components/ui/switch.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 15
+packages/agents/src/model/identity.test.ts
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 1-9
+packages/ui/src/styles/theme.css
+  s_ab4eb433bfa825::t_18704efc33b81c 8-14,16-27,29-32,35,40-41,43-44,52-54,58-60,62-65,72-73,86-101,112,114,116-117,120-121,124,127-128,135-137,139-144,154-166,168-170,174-175,179-181,188-203
+  s_ab4eb433bfa825::t_24760af5113e37 15,28,33-34,37-39,42,66,69-71,74-85,110-111,113,115,118-119,122-123,125-126,129-134,145-148,167,171-173,176-178,182-187
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 55-57,61,67-68,149-153
+  s_ab4eb433bfa825::t_58abff6ac9c878 45-51
+packages/ui/src/status-badge.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 29-36,42
+packages/ui/src/components/ui/checkbox.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 10
+packages/ui/src/components/ui/button.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 9,13
+packages/ui/AGENTS.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 5,83-85,93-97
+apps/mobile/src/agents/notifications.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 62
+packages/agents/src/client/protected-input.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 70,89,155,227
+apps/mobile/src/capabilities/memory-screen.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 33
+apps/mobile/app/(app)/index.tsx
+  s_ab4eb433bfa825::t_cb442a1b400c1c 154
+apps/mobile/src/groups/screens.tsx
+  s_ab4eb433bfa825::t_a1ef69343bca61 195-199
+  s_ab4eb433bfa825::t_cb442a1b400c1c 53,154,201
+packages/agents/src/client/attachments.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 165-169
+apps/mobile/AGENTS.md
+  s_ab4eb433bfa825::t_a1ef69343bca61 91-96
+packages/ui/src/themes/picker.tsx
+  s_ab4eb433bfa825::t_a3e0e02b7e229a 11-13,15,56,58
+packages/ui/src/styles/globals.css
+  s_ab4eb433bfa825::t_24760af5113e37 38-77,161-162
+  s_ab4eb433bfa825::t_8e8c775107a694 26-37
+apps/web/e2e/theme-contrast.ts
+  s_ab4eb433bfa825::t_c942f2baf78ae0 1-104
+apps/web/e2e/theme-final.spec.ts
+  s_ab4eb433bfa825::t_49bca966146e78 1-447
+apps/web/src/components/brand-accent.ts
+  s_ab4eb433bfa825::t_ecea21937ea53c 4-5
+apps/web/src/routes/(legal)/privacy.tsx
+  s_ab4eb433bfa825::t_6dea42a6f929f6 61
+packages/ui/src/themes/tokens.test.ts
+  s_ab4eb433bfa825::t_63bfc9938617b8 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6e128eefe0e58651912c04a5fe4703aba2eb6c29",
+  "prompts": {},
+  "sessions": {
+    "s_ab4eb433bfa825": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1df32-1786-76c3-805c-07ec8e269006",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
