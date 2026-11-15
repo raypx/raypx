@@ -71,7 +71,6 @@ export function AdminShell() {
       brand={{
         to: "/admin",
         label: site.data?.siteName ?? "Raypx",
-        description: t("dash.nav.console"),
       }}
       navigation={[
         navigation.filter((item) =>
