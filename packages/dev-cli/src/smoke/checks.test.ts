@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { checkWeb } from "./checks.js";
+import { checkApi, checkWeb } from "./checks.js";
 
 function fixture(home: string) {
   vi.stubGlobal(
@@ -33,5 +33,77 @@ it.each([
   fixture(home);
   await expect(checkWeb("https://fixture.example")).rejects.toThrow(
     /Web did not render its public guest page/,
+  );
+});
+
+function apiFixture(
+  options: {
+    status?: number;
+    emailVerified?: boolean;
+    emailVerificationSkipped?: boolean;
+    session?: boolean;
+  } = {},
+) {
+  let email = "";
+  const emails: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: unknown, init?: RequestInit) => {
+      const path = new URL(String(input)).pathname;
+      if (path === "/api/docs")
+        return new Response('<script src="/api/docs/assets/swagger-ui-bundle.js"></script>');
+      if (path === "/api/docs/assets/swagger-ui-bundle.js")
+        return new Response("export {}", { headers: { "content-type": "text/javascript" } });
+      if (path === "/api/auth/sign-up/email") {
+        if (typeof init?.body !== "string") throw new Error("Expected a JSON signup body");
+        email = (JSON.parse(init.body) as { email: string }).email;
+        emails.push(email);
+        return Response.json(
+          {
+            user: {
+              email,
+              emailVerified: options.emailVerified ?? false,
+              emailVerificationSkipped: options.emailVerificationSkipped ?? true,
+            },
+          },
+          { status: options.status ?? 200, headers: { "set-cookie": "fixture-session=value" } },
+        );
+      }
+      if (path === "/api/auth/get-session") {
+        const cookie = new Headers(init?.headers).get("cookie");
+        return Response.json(
+          options.session === false || cookie !== "fixture-session=value"
+            ? null
+            : { user: { email } },
+        );
+      }
+      if (path === "/device/connect") return new Response(null, { status: 426 });
+      return new Response(null, { status: 404 });
+    }),
+  );
+  return emails;
+}
+
+it("accepts usable unverified no-mail signups and uses distinct accounts for repeated probes", async () => {
+  const emails = apiFixture();
+  await checkApi("https://fixture.example", { gateway: true });
+  await checkApi("https://fixture.example", { gateway: true });
+  expect(new Set(emails).size).toBe(2);
+});
+
+it.each([{ status: 503 }, { emailVerified: true }, { emailVerificationSkipped: false }])(
+  "rejects incorrect no-mail admission: %j",
+  async (options) => {
+    apiFixture(options);
+    await expect(checkApi("https://fixture.example", { gateway: true })).rejects.toThrow(
+      "No-mail signup must create an unverified account with verification skipped",
+    );
+  },
+);
+
+it("rejects a no-mail signup whose cookie does not establish an admitted session", async () => {
+  apiFixture({ session: false });
+  await expect(checkApi("https://fixture.example", { gateway: true })).rejects.toThrow(
+    "No-mail signup must issue an immediately usable session",
   );
 });

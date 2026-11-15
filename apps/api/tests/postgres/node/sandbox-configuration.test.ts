@@ -22,11 +22,15 @@ import { databaseComputerProvider } from "../../../src/runtime/sandbox.js";
 const url = process.env.TEST_DATABASE_URL;
 if (
   !url ||
-  new URL(url).hostname !== "127.0.0.1" ||
-  new URL(url).port !== "55439" ||
-  new URL(url).pathname !== "/raypx_next_test_b"
+  !["postgres:", "postgresql:"].includes(new URL(url).protocol) ||
+  !["127.0.0.1", "localhost", "[::1]"].includes(new URL(url).hostname) ||
+  !/^\/[a-z0-9_]+_test(?:_[a-z0-9]+)?$/.test(new URL(url).pathname) ||
+  new URL(url).search ||
+  new URL(url).hash
 )
-  throw new Error("Sandbox configuration acceptance requires 127.0.0.1:55439/raypx_next_test_b");
+  throw new Error(
+    "Sandbox configuration acceptance requires an explicit disposable loopback test database without query options",
+  );
 const connection = connectDatabase(url);
 const other = connectDatabase(url);
 const secret = "fake-configuration-encryption-key-32-characters";

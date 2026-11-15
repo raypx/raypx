@@ -34,18 +34,39 @@ export async function checkApi(base: string, options: { origin?: string; gateway
     if (rejected.status !== 403)
       throw new Error("Connector must enforce role and native-only Origin before upgrading");
   }
+  const email = `artifact-${crypto.randomUUID()}@example.invalid`;
   const signup = await fetch(`${base}/api/auth/sign-up/email`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: options.origin ?? base },
     body: JSON.stringify({
       name: "Artifact",
-      email: "artifact@example.invalid",
+      email,
       password: "artifact-password-123",
     }),
   });
-  const unavailable = (await signup.json()) as { code?: string };
-  if (signup.status !== 503 || unavailable.code !== "MAIL_NOT_CONFIGURED")
-    throw new Error("Unavailable mail must reject signup before account creation");
+  const registered = (await signup.json()) as {
+    user?: { email?: string; emailVerified?: boolean; emailVerificationSkipped?: boolean };
+  };
+  if (
+    signup.status !== 200 ||
+    registered.user?.email !== email ||
+    registered.user.emailVerified !== false ||
+    registered.user.emailVerificationSkipped !== true
+  )
+    throw new Error("No-mail signup must create an unverified account with verification skipped");
+  const session = await fetch(`${base}/api/auth/get-session`, {
+    headers: {
+      cookie: signup.headers
+        .getSetCookie()
+        .map((value) => value.split(";")[0])
+        .join("; "),
+    },
+  });
+  if (
+    !session.ok ||
+    ((await session.json()) as { user?: { email?: string } } | null)?.user?.email !== email
+  )
+    throw new Error("No-mail signup must issue an immediately usable session");
   if ((await fetch(`${base}/device/connect`)).status !== 426)
     throw new Error("Connector transport must follow the selected role");
 }
