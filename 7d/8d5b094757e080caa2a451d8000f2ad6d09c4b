@@ -1,0 +1,54 @@
+AGENTS.md
+  h_f0766e80fd3864 176-178
+DESIGN.md
+  h_f0766e80fd3864 161-165
+apps/web/e2e/datepicker.spec.ts
+  h_f0766e80fd3864 1-131
+apps/web/locales/en/dash.json
+  h_f0766e80fd3864 43-44
+apps/web/locales/zh/dash.json
+  h_f0766e80fd3864 43-44
+apps/web/src/features/admin/components/admin.component.test.tsx
+  h_f0766e80fd3864 124-127,142,146-148,151-152,158-175
+apps/web/src/features/admin/components/audit-log.tsx
+  h_f0766e80fd3864 1,92,187,206-210,213-214
+bun.lock
+  h_f0766e80fd3864 913,987,1298-1299,2508-2509,3252-3253
+docs/development/dev-cli.md
+  h_f0766e80fd3864 123-129
+docs/development/ui.md
+  h_f0766e80fd3864 8-15
+package.json
+  h_f0766e80fd3864 60-61
+packages/account/package.json
+  h_f0766e80fd3864 19-20
+packages/dev-cli/src/policy.ts
+  h_f0766e80fd3864 12-13,54
+packages/dev-cli/src/validation/dom-date-inputs.test.ts
+  h_f0766e80fd3864 1-71
+packages/dev-cli/src/validation/dom-date-inputs.ts
+  h_f0766e80fd3864 1-116
+packages/ui/AGENTS.md
+  h_f0766e80fd3864 67-71
+packages/ui/package.json
+  h_f0766e80fd3864 41-42,58
+packages/ui/shadcn-components.json
+  h_f0766e80fd3864 7
+packages/ui/src/components/ui/calendar.tsx
+  h_f0766e80fd3864 1-203
+packages/ui/src/date-picker.component.test.tsx
+  h_f0766e80fd3864 1-127
+packages/ui/src/date-picker.tsx
+  h_f0766e80fd3864 1-194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7d8d5b094757e080caa2a451d8000f2ad6d09c4b",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
