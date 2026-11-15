@@ -1,0 +1,165 @@
+packages/database/src/schema.ts
+  s_a99184986684a4::t_9716dc5b806d72 262,1588-1597,2808
+deploy/.env.example
+  s_a99184986684a4::t_b8df15e73f5d80 107-108,112
+apps/web/src/features/config/components/sandbox.tsx
+  s_a99184986684a4::t_b8df15e73f5d80 258-264
+  s_a99184986684a4::t_08a674b00938e8 1-13,15-31,33-34,36-39,41-47,49,51-56,58-59,61-77,79-130,132,134-161,163-165,167-241,244-248,250-252,254-255,257,266-268,270,272,274
+  s_a99184986684a4::t_e5c08fdd6825af 14,32,35,40,48,50,57,60,78,131,133,162,166,242-243,249,253,256,265,269,271,273
+apps/api/tests/postgres/node/sandbox-configuration.test.ts
+  s_a99184986684a4::t_dad283019c2dea 1,39,128-129,133,145,165-166,170,175,179,187,200,208,215,234,252,254-257,259-262,264-269,271-274,276-288,290-297
+  s_a99184986684a4::t_f7d3514eeee242 73-76,78
+  s_a99184986684a4::t_ef2ec696e5e329 2-38,40-72,77,79-127,130-132,134-144,146-164,167-169,171-174,176-178,180-186,188-199,201-207,209-214,216-233,235-251,253,258,263,270,275,289
+apps/api/src/config/types.ts
+  s_a99184986684a4::t_9716dc5b806d72 9-11,49-53
+  s_a99184986684a4::t_5162db3b55ee66 54
+docs/architecture/README.md
+  s_a99184986684a4::t_66496ce5ca74a6 160-164
+docs/architecture/operations.md
+  s_a99184986684a4::t_39c71bcdde2172 105
+  s_a99184986684a4::t_7268cf2d5348e1 94,96-99
+apps/api/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 49-50
+docs/development/sandbox-hosting.md
+  s_a99184986684a4::t_66496ce5ca74a6 36-42,53-54,62-96,124-126,580
+deploy/compose.yaml
+  s_a99184986684a4::t_b8df15e73f5d80 38-41
+packages/contracts/src/config.ts
+  s_a99184986684a4::t_9716dc5b806d72 98-104,107-127,134,136-140,178-189
+  s_a99184986684a4::t_e49db48ebbcf71 128-131,133
+  s_a99184986684a4::t_e4dab8184b6d1d 105-106,132,135
+docs/development/deployment.md
+  s_a99184986684a4::t_66496ce5ca74a6 113,132-134,143
+packages/providers/src/computer/docker.test.ts
+  s_a99184986684a4::t_453ce72f5dc4e8 1-5,7-14,16-23,25-30,32-36,38-39,41-48,51-55,58-62,64-65,67-68
+  s_a99184986684a4::t_e49db48ebbcf71 69-76,80-81
+  s_a99184986684a4::t_e31d57955d4172 6,15,24,31,37,40,49-50,56-57,63,66,77-79
+apps/api/src/routers/rpc/config.ts
+  s_a99184986684a4::t_313b25d3d5ce62 103-123
+apps/web/src/features/config/components/settings.tsx
+  s_a99184986684a4::t_08a674b00938e8 28,133-135,148-149
+  s_a99184986684a4::t_266add3dd08576 150
+apps/api/src/config/sandbox.ts
+  s_a99184986684a4::t_9b955473cbda2d 1-6,8-30,32-36,38,40-45,47-52,54-58,60-70,78-94,97-108,110-116,118-130,133-145,147-153
+  s_a99184986684a4::t_dad283019c2dea 71-75,77,95-96
+  s_a99184986684a4::t_465fbe41c21970 7,31,37,39,46,53,59,76,109,117,131-132,146
+apps/api/src/runtime/agents.ts
+  s_a99184986684a4::t_313b25d3d5ce62 7-8,68,76,93-94,146
+apps/api/src/app/options.ts
+  s_a99184986684a4::t_313b25d3d5ce62 4,54
+apps/api/src/runtime/computers.test.ts
+  s_a99184986684a4::t_08a674b00938e8 4-5,9,11-14,17
+  s_a99184986684a4::t_8a68a1b6638956 10,15-16
+packages/contracts/src/admin.ts
+  s_a99184986684a4::t_08a674b00938e8 14
+packages/computers/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 56-57
+apps/web/locales/zh/site.json
+  s_a99184986684a4::t_08a674b00938e8 29-54
+packages/contracts/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 22-23
+  s_a99184986684a4::t_39c71bcdde2172 10-11
+packages/providers/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 44-45
+PRODUCT.md
+  s_a99184986684a4::t_66496ce5ca74a6 245-254
+apps/api/src/runtime/sandbox.ts
+  s_a99184986684a4::t_313b25d3d5ce62 1-23,25-32,34-60,62-72,74-145,148,150-182
+  s_a99184986684a4::t_d00135918f92ca 24,33,61,73,146-147,149
+packages/providers/src/computer/port.ts
+  s_a99184986684a4::t_9b955473cbda2d 135,146-147
+apps/web/locales/en/site.json
+  s_a99184986684a4::t_08a674b00938e8 29-54
+packages/agents/src/computer-tools.test.ts
+  s_a99184986684a4::t_e49db48ebbcf71 644-657
+docs/development/getting-started.md
+  s_a99184986684a4::t_66496ce5ca74a6 193-196
+infra/sandbox/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 69-70
+packages/agents/locales/en/agents.json
+  s_a99184986684a4::t_1a53287e795636 797
+docs/development/railway.md
+  s_a99184986684a4::t_66496ce5ca74a6 52,254-270
+infra/sandbox/src/supervisor.ts
+  s_a99184986684a4::t_9b955473cbda2d 582
+infra/railway/README.md
+  s_a99184986684a4::t_66496ce5ca74a6 40-46
+packages/agents/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 249-250
+packages/agents/locales/zh/agents.json
+  s_a99184986684a4::t_1a53287e795636 797
+packages/agents/src/computer-tools.ts
+  s_a99184986684a4::t_e49db48ebbcf71 440-443
+apps/api/src/runtime/shared.ts
+  s_a99184986684a4::t_313b25d3d5ce62 13,131,235-237
+  s_a99184986684a4::t_dad283019c2dea 1,209-213,215
+  s_a99184986684a4::t_fd934dc939e408 214
+packages/core/src/computers.ts
+  s_a99184986684a4::t_313b25d3d5ce62 46
+docs/development/configuration.md
+  s_a99184986684a4::t_66496ce5ca74a6 64-65,140-205,225
+  s_a99184986684a4::t_39c71bcdde2172 135-136
+apps/api/src/config/reads.ts
+  s_a99184986684a4::t_9716dc5b806d72 1
+apps/web/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 141-142
+docs/development/sandbox.md
+  s_a99184986684a4::t_66496ce5ca74a6 77-82
+packages/computers/src/server/postgres.ts
+  s_a99184986684a4::t_9716dc5b806d72 18
+infra/sandbox/src/http.test.ts
+  s_a99184986684a4::t_453ce72f5dc4e8 1-12,14-28,31-34,36-38
+  s_a99184986684a4::t_d9cdad0b3a9f90 13,29-30,35
+apps/api/tests/helpers/app.ts
+  s_a99184986684a4::t_313b25d3d5ce62 32
+packages/database/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 215-216
+packages/computers/src/screens.ts
+  s_a99184986684a4::t_313b25d3d5ce62 185
+packages/computers/src/server.ts
+  s_a99184986684a4::t_313b25d3d5ce62 102,115,119-126,134,141,143-144
+packages/providers/src/computer/docker.ts
+  s_a99184986684a4::t_9b955473cbda2d 33-39,41-42,64,136,155,159,357-362,364,371-374,379-381,385-392,394,402-404
+  s_a99184986684a4::t_dad283019c2dea 365-368,370
+  s_a99184986684a4::t_e49db48ebbcf71 395-399,401
+  s_a99184986684a4::t_453ce72f5dc4e8 69-82,89,375-378,384,393,405
+  s_a99184986684a4::t_08a674b00938e8 160,163
+  s_a99184986684a4::t_0ed7b32c4f9b5a 40,180-183,363,369,382-383,400
+docs/architecture/computers.md
+  s_a99184986684a4::t_66496ce5ca74a6 85-87,97-119,200
+packages/core/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 33-34
+apps/api/src/runtime/sandbox.test.ts
+  s_a99184986684a4::t_f7d3514eeee242 1-10,12-24,26-27,29-43,45-69,71-76,78-80,84-87,89-100,102-109,111-112,114-116
+  s_a99184986684a4::t_8cd22e7518e48a 11,25,28,44,70,77,81-83,88,101,110,113
+infra/railway/AGENTS.md
+  s_a99184986684a4::t_66496ce5ca74a6 24-25
+apps/api/src/config/migrate.ts
+  s_a99184986684a4::t_8ca234ec6311b7 4-5,56-91,130,136
+apps/api/src/config/reads.test.ts
+  s_a99184986684a4::t_4ce3022f870ff7 48-69
+apps/web/src/features/config/config.component.test.tsx
+  s_a99184986684a4::t_fbe3c3feb43a5a 31-33,190-233
+infra/sandbox/src/http.ts
+  s_a99184986684a4::t_edb2190648c919 14-18,37-43,48,56
+packages/contracts/src/api.test.ts
+  s_a99184986684a4::t_dfbb33ef9ea341 129
+packages/contracts/src/config.test.ts
+  s_a99184986684a4::t_8d12884378b01b 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f62b6e5fa8d72f5af074f09bbb66c5bdf2e5870f",
+  "prompts": {},
+  "sessions": {
+    "s_a99184986684a4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dca3-c599-76f2-912f-fe7af8a65948",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
