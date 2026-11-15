@@ -1,0 +1,69 @@
+apps/api/AGENTS.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 23-28
+docs/development/railway.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 20-24,81-85
+  s_9b8a3ffcc4d240::t_604cfb16806d2a 25-26,86-87
+infra/railway/stack.test.ts
+  s_9b8a3ffcc4d240::t_92ed0e48b97cf9 11-14
+  s_9b8a3ffcc4d240::t_86fa0f403a307c 2,4,9-10,15-17,20-26
+  s_9b8a3ffcc4d240::t_8ef1b5b115719e 18-19
+  s_f9cc0d01f49051::t_2cd9d4ece01f23 27
+packages/tooling/AGENTS.md
+  s_9b8a3ffcc4d240::t_604cfb16806d2a 11-12
+  s_9b8a3ffcc4d240::t_e937817a9322c3 9-10
+infra/railway/Caddyfile
+  s_9b8a3ffcc4d240::t_c2493b6d455bce 22
+docs/development/mobile.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 81-85
+infra/railway/AGENTS.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 15-17
+deploy/compose.yaml
+  s_9b8a3ffcc4d240::t_c2493b6d455bce 121
+docs/development/getting-started.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 104-108
+docs/architecture/capabilities.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 207-210
+apps/api/tests/integration/gateway-ingress.test.ts
+  s_9b8a3ffcc4d240::t_604cfb16806d2a 3,35
+  s_9b8a3ffcc4d240::t_86fa0f403a307c 1-2,4-34,36
+packages/tooling/src/build/deployment.ts
+  s_9b8a3ffcc4d240::t_c2493b6d455bce 9,11
+deploy/AGENTS.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 21-23
+apps/api/src/pages/http.test.ts
+  s_9b8a3ffcc4d240::t_c2493b6d455bce 8,115-117,144-145
+  s_9b8a3ffcc4d240::t_92ed0e48b97cf9 118-143
+docs/development/deployment.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 92-95,103-109
+docs/architecture/operations.md
+  s_9b8a3ffcc4d240::t_e937817a9322c3 157-166
+packages/dev-cli/src/validation/deployment.test.ts
+  s_9b8a3ffcc4d240::t_92ed0e48b97cf9 55-63
+  s_9b8a3ffcc4d240::t_c2493b6d455bce 52-54,64-65
+docs/development/desktop.md
+  s_9b8a3ffcc4d240::t_3f87737b71cde3 58-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "dbd8aa331ee2c15bc0d9be373ba993f13f4e2151",
+  "prompts": {},
+  "sessions": {
+    "s_9b8a3ffcc4d240": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dfb8-2112-7e01-b88e-23e6afe05273",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
