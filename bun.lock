@@ -338,9 +338,12 @@
       },
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",
+        "@testing-library/react": "catalog:dev",
         "@types/react": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
+        "happy-dom": "catalog:dev",
         "react": "catalog:",
+        "react-dom": "catalog:",
         "vitest": "catalog:dev",
       },
       "peerDependencies": {

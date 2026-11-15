@@ -36,21 +36,27 @@ it.each(["en", "zh"] as const)(
     ).toBeInTheDocument();
   },
 );
-it("links the empty catalog to model settings without inventing a choice", () => {
-  const open = vi.fn();
-  render(
-    <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
-      <ModelPicker
-        id="model"
-        models={[]}
-        value=""
-        disabled={false}
-        onValueChange={vi.fn()}
-        onOpenModels={open}
-      />
-    </BrowserLanguageProvider>,
-  );
-  expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Manage model connections" }));
-  expect(open).toHaveBeenCalledOnce();
-});
+it.each(["en", "zh"] as const)(
+  "explains an empty member catalog and links model settings in %s",
+  (language) => {
+    const open = vi.fn();
+    render(
+      <BrowserLanguageProvider initialPreference={language} restorePreference={false}>
+        <ModelPicker
+          id="model"
+          models={[]}
+          value=""
+          disabled={false}
+          onValueChange={vi.fn()}
+          onOpenModels={open}
+        />
+      </BrowserLanguageProvider>,
+    );
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent({ en, zh }[language].agents.noModels);
+    fireEvent.click(
+      screen.getByRole("button", { name: { en, zh }[language].agents.connections.manage }),
+    );
+    expect(open).toHaveBeenCalledOnce();
+  },
+);

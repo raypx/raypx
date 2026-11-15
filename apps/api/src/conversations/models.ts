@@ -9,6 +9,8 @@ import type { SpaceScope } from "@raypx/spaces/server";
 
 export interface ConversationModels extends ModelAccess {
   reviewModel?: ApprovalReviewModels;
+  /** Account-scoped configuration presence; never creates or resolves a Space. */
+  configured(this: void, accountId: string): Promise<boolean>;
   list(
     this: void,
     scope: SpaceScope,
@@ -48,6 +50,16 @@ export function createDeploymentModels(
     throw new Error("Invalid deployment model configuration");
   }
   const client = createAiClient();
+  function usable(entry: (typeof catalog)[number]) {
+    if (!Object.hasOwn(credentials, entry.credentialId) || !credentials[entry.credentialId])
+      return false;
+    try {
+      client.resolveModel({ provider: entry.provider, model: entry.model });
+      return true;
+    } catch {
+      return false;
+    }
+  }
   function supportsImages(entry: (typeof catalog)[number]) {
     try {
       return client
@@ -113,15 +125,16 @@ export function createDeploymentModels(
   };
   return {
     reviewModel,
+    async configured() {
+      return catalog.some(usable);
+    },
     async list() {
-      return catalog
-        .filter((entry) => Object.hasOwn(credentials, entry.credentialId))
-        .map((entry) => ({
-          modelId: entry.modelId,
-          name: entry.name ?? entry.modelId,
-          source: "deployment" as const,
-          supportsImages: supportsImages(entry),
-        }));
+      return catalog.filter(usable).map((entry) => ({
+        modelId: entry.modelId,
+        name: entry.name ?? entry.modelId,
+        source: "deployment" as const,
+        supportsImages: supportsImages(entry),
+      }));
     },
     async resolve(run) {
       const entry = catalog.find((item) => item.modelId === run.model.modelId);

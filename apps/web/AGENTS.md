@@ -127,10 +127,14 @@ Space settings shares the wide category rows/narrow Select pattern with Desktop.
 Safe renderer review points are registered through page-review; the screenshot matrix
 never captures issued links, pairing codes or supplied protected input.
 
-Fresh signup opens skippable Email setup for the initial administrator. Setup and
+Fresh signup identifies initial administrator creation and returns to the workspace.
+The shell notice slot composes Account's administrator-only setup checklist with
+Models and direct Sandbox/Email settings actions. Current access is checked before
+status reads; dismissal stays device-local under API origin/account. Configuration
+hashes select ordinary Email/Sandbox categories without a separate setup flow. Setup and
 invitation fields are masked, labelled and described; keep their values out of storage.
 No-mail signup establishes a session immediately; mail-required signup keeps verification.
-No-mail accounts retain access with a dismissible verification reminder. Onboarding
+No-mail accounts retain access with a dismissible verification reminder. Configuration
 uses one PageHeader; test email uses saved settings, visible disabled reasons and safe
 result/retry feedback. Users holds recovery links only in dialog memory, with a masked
 field, explicit Copy and localized expiry. Never capture an issued recovery link.

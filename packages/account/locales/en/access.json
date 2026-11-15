@@ -1,4 +1,20 @@
 {
   "forbidden": "You do not have permission to access this page.",
-  "unavailable": "Unable to verify permissions. Please try again."
+  "unavailable": "Unable to verify permissions. Please try again.",
+  "setup": {
+    "title": "Deployment setup",
+    "dismiss": "Dismiss setup checklist",
+    "model": "Model connection",
+    "sandbox": "Sandbox",
+    "mail": "Mail",
+    "required": "Required",
+    "optional": "Optional",
+    "configured": "Configured",
+    "notConfigured": "Not configured",
+    "modelHint": "Agents need a usable model to reply.",
+    "sandboxHint": "Without a sandbox, Agents have no team computer.",
+    "mailHint": "Without mail, email verification and emailed recovery are unavailable.",
+    "unavailable": "Setup status is unavailable.",
+    "retry": "Retry"
+  }
 }

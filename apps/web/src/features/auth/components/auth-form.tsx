@@ -17,7 +17,6 @@ import { apiUrl, authClient, webUrl } from "../client.js";
 import { useQuery } from "@tanstack/react-query";
 import type { SocialProvider } from "@raypx/core/auth";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
-import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { MailIcon } from "@raypx/icons/mail";
 
 function authLinkLocation(to: AuthFormLinkProps["to"], returnTo: string) {
@@ -90,13 +89,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     if (session.error || !session.data) throw new Error("Session refresh failed");
     router.options.context.queryClient.clear();
     await navigate({
-      to:
-        mode === "signup" && session.data.user.role?.split(",").includes("admin")
-          ? "/admin/settings"
-          : signedInDestination,
-      ...(mode === "signup" && session.data.user.role?.split(",").includes("admin")
-        ? { hash: "setup" }
-        : {}),
+      to: signedInDestination,
     });
   }
   if (
@@ -110,14 +103,16 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <SharedAuthForm
       key={mode}
-      setupTokenRequired={configuration.data?.setupTokenRequired ?? false}
+      bootstrap={configuration.data?.bootstrap === true}
+      setupTokenRequired={
+        configuration.data?.bootstrap === true && configuration.data.setupTokenRequired
+      }
       invitationRequired={
         configuration.data?.registrationEnabled === false && !configuration.data.bootstrap
       }
       invitationToken={/^[a-f0-9]{64}$/.test(hash) ? hash : ""}
       registrationNotice={
         <RegistrationNotice
-          bootstrap={configuration.data?.bootstrap === true}
           invitationRequired={
             configuration.data?.registrationEnabled === false && !configuration.data.bootstrap
           }
@@ -160,22 +155,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   );
 }
 
-function RegistrationNotice({
-  bootstrap,
-  invitationRequired,
-}: {
-  bootstrap: boolean;
-  invitationRequired: boolean;
-}) {
+function RegistrationNotice({ invitationRequired }: { invitationRequired: boolean }) {
   const t = useTranslations("auth");
-  if (!bootstrap && !invitationRequired) return null;
-  const Icon = bootstrap ? ShieldCheckIcon : MailIcon;
+  if (!invitationRequired) return null;
   return (
     <Alert role="status" className="rounded-xl bg-muted/30 p-4">
-      <Icon aria-hidden="true" />
-      <AlertDescription className="leading-6">
-        {t(bootstrap ? "firstAdministrator" : "invitationRequiredNotice")}
-      </AlertDescription>
+      <MailIcon aria-hidden="true" />
+      <AlertDescription className="leading-6">{t("invitationRequiredNotice")}</AlertDescription>
     </Alert>
   );
 }

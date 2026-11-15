@@ -12,7 +12,7 @@ test.describe("fresh deployment bootstrap", () => {
   }) => {
     await page.goto("/signup");
     await expect(
-      page.getByText("This creates the deployment administrator account.", { exact: true }),
+      page.getByText("Create the administrator account for this deployment.", { exact: true }),
     ).toBeVisible();
     await page.getByLabel("Your name", { exact: true }).fill("Deployment Owner");
     await page
@@ -20,17 +20,15 @@ test.describe("fresh deployment bootstrap", () => {
       .fill("bootstrap-browser-owner@example.test");
     await page.getByLabel("Password", { exact: true }).fill("bootstrap-browser-password-123");
     await page.getByRole("button", { name: "Create account", exact: true }).click();
-    await expect(page).toHaveURL(/\/admin\/settings#setup$/);
-    await expect(page.getByRole("heading", { name: "Set up your deployment" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Skip for now" })).toBeVisible();
-    await page.getByRole("link", { name: "Skip for now" }).click();
+    await expect(page.getByRole("region", { name: "Deployment setup" })).toBeVisible();
+    await expect(page.getByText("Required", { exact: true })).toBeVisible();
     await expect(page).toHaveURL(/\/agents$/);
     await expect(
       page.getByText(
         "Your email address is unverified. You can keep using your account or verify it now.",
       ),
     ).toBeHidden();
-    await page.goto("/admin/settings#setup");
+    await page.goto("/admin/settings#email");
     // A copied Space bearer link admits a member without mail; membership still needs acceptance.
     const memberships = await page.request.post(`${api}/rpc/spaces/list`, {
       headers: { origin: base },
@@ -73,7 +71,7 @@ test.describe("fresh deployment bootstrap", () => {
     await invited.getByRole("button", { name: "Reset password", exact: true }).click();
     await expect(invited.getByText("Password updated. You can sign in now.")).toBeVisible();
     await invitedContext.close();
-    await page.goto("/admin/settings#setup");
+    await page.goto("/admin/settings#email");
     await page.getByLabel("Sender", { exact: true }).fill("Raypx <mail@example.test>");
     await page.locator("#resend-key").fill("fixture-only-key");
     await page.getByRole("button", { name: "Save changes", exact: true }).click();
@@ -109,7 +107,7 @@ test.describe("fresh deployment bootstrap", () => {
     await member.getByLabel("Password", { exact: true }).fill("bootstrap-browser-password-123");
     await member.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(member).toHaveURL(/\/agents$/);
-    await page.getByRole("link", { name: "Skip for now" }).click();
+    await page.goto("/agents");
     await expect(page).toHaveURL(/\/agents$/);
     await expect(
       page.getByText(

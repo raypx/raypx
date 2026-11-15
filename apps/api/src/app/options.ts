@@ -44,7 +44,7 @@ export interface ApiAppOptions {
   spaceManagement: SpaceManagement;
   agents: AgentsRepository;
   conversations: ConversationsRepository;
-  conversationModels: Pick<ConversationModels, "list">;
+  conversationModels: Pick<ConversationModels, "list" | "configured">;
   audit?: AuditService;
   administration: AdministrationQueries;
   access?: AccessPolicy;

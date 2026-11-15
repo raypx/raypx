@@ -1,8 +1,9 @@
 import { useTranslations } from "../i18n.js";
 import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
-import { AccountMenu } from "@raypx/account/client";
-import { authClient } from "../features/auth/client.js";
+import { AccountMenu, SetupChecklist } from "@raypx/account/client";
+import { setupChecklistPort } from "../features/agents/client.js";
+import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import { desktopReturnTo } from "../features/auth/return-to.js";
@@ -26,7 +27,7 @@ import { DesktopCommandMenu } from "./command-menu.js";
 import { EngineNotice } from "../features/engine/notice.js";
 import { desktopStorageKey } from "../lib/storage.js";
 
-import { isDesktop } from "../lib/desktop.js";
+import { isDesktop, getBridge } from "../lib/desktop.js";
 import { useDesktopEngine } from "../features/engine/provider.js";
 import { WindowDragRegion } from "./window-drag-region.js";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -118,6 +119,30 @@ export function DesktopShell() {
           LinkComponent={ShellLink}
           notice={
             <>
+              {accountId && (
+                <SetupChecklist
+                  destinations={{
+                    model: router.history.createHref(
+                      router.buildLocation({ hash: "settings/models", search: true }).href,
+                    ),
+                    sandbox: `${webUrl}/admin/settings#sandbox`,
+                    mail: `${webUrl}/admin/settings#email`,
+                  }}
+                  port={setupChecklistPort}
+                  origin={apiUrl}
+                  accountId={accountId}
+                  onConfigure={(item) => {
+                    if (item === "model") {
+                      void settings.open("models");
+                      return;
+                    }
+                    const url = `${webUrl}/admin/settings#${item === "mail" ? "email" : "sandbox"}`;
+                    if (isDesktop())
+                      void getBridge().then((bridge) => bridge.request.openExternal({ url }));
+                    else window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                />
+              )}
               {engine.status === "error" && isDesktop() && (
                 <EngineNotice code={engine.code} restart={restart} />
               )}

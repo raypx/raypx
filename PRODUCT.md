@@ -81,8 +81,14 @@ acceptance remains unverified.
 
 Fresh deployments let the first signup create the deployment administrator through
 a transaction-protected, permanent bootstrap claim. Optional API-only `SETUP_TOKEN`
-protects that claim. Setup points to Email settings, offers a test email and can be
-skipped. Signups are open by default, with an administrator invitation-only switch.
+protects that claim. Bootstrap signup identifies the deployment administrator and
+explains the token source. Sign-in points to signup until the claim is complete.
+After sign-in, Web/Desktop show administrators a compact, dismissible workspace
+checklist for a required usable model, optional sandbox and optional mail. Current
+server configuration determines its states; it hides when all are configured.
+Dismissal is a device preference scoped by API origin and account. Model settings
+open locally; Desktop opens existing Web administration for sandbox and mail.
+There is no separate installation flow or automatic configuration-page redirect. Signups are open by default, with an administrator invitation-only switch.
 Without mail, verification is skipped and accounts work immediately while remaining
 unverified. Enabling mail requires verification for new signups, while earlier
 accounts retain access and see a dismissible prompt. Web and native Mobile Account

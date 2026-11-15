@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
+import { agentsClient } from "../../agents/client.js";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import type { DesktopBridge } from "../../../../bridge.js";
 import { useTranslations } from "../../../i18n.js";
@@ -140,6 +142,14 @@ export function BrowserAuthorization({
 
 export function BrowserLogin({ returnTo }: { returnTo: string }) {
   const c = useTranslations("common");
+  const t = useTranslations("auth");
+  const configuration = useQuery({
+    queryKey: ["configuration", "public"],
+    queryFn: ({ signal }) => agentsClient.configuration.public({}, { signal }),
+    retry: false,
+    staleTime: 0,
+    refetchInterval: 30_000,
+  });
   const navigate = useNavigate();
   const router = useRouter();
   return (
@@ -147,6 +157,15 @@ export function BrowserLogin({ returnTo }: { returnTo: string }) {
       <h1 id="auth-title" className="text-xl font-semibold">
         {c("signIn")}
       </h1>
+      {configuration.data?.bootstrap && (
+        <Link
+          to="/signup"
+          search={{ returnTo }}
+          className="rounded-sm text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          {t("firstAdministratorAction")}
+        </Link>
+      )}
       <BrowserAuthorization
         onAuthorized={async () => {
           await router.invalidate();

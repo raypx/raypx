@@ -50,7 +50,7 @@ function fixture(rateLimit?: RateLimiter, spaceManagement?: SpaceManagement) {
     computers,
     spaces: { resolve, list, create },
     ...(spaceManagement ? { spaceManagement } : {}),
-    conversationModels: { list: models },
+    conversationModels: { list: models, configured: async () => true },
     readSession,
     allowedOrigins: ["https://web.example.test"],
     ...(rateLimit ? { rateLimit } : {}),

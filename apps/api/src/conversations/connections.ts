@@ -129,6 +129,25 @@ export function createModelConnections(
     models(deployment: ConversationModels): ConversationModels {
       return {
         ...(deployment.reviewModel ? { reviewModel: deployment.reviewModel } : {}),
+        async configured(accountId: string) {
+          if (await deployment.configured(accountId)) return true;
+          const connections = await repository.list(accountId);
+          for (const connection of connections) {
+            if (
+              !connection.models.length ||
+              (connection.availability.mode === "selected" &&
+                !connection.availability.spaceIds.length)
+            )
+              continue;
+            try {
+              transport.validate(connection);
+              if (await secrets.read(accountId, connection.id, connection.secretId)) return true;
+            } catch {
+              // An unsupported model or unreadable credential cannot serve a reply.
+            }
+          }
+          return false;
+        },
         async list(scope: SpaceScope) {
           const connections = await repository.list(scope.member.accountId, scope.spaceId);
           const memberModels = connections.flatMap((connection) =>

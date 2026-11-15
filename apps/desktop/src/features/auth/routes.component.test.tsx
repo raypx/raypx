@@ -25,6 +25,8 @@ import { routeTree } from "../../routeTree.gen.js";
 expect.extend(matchers);
 
 const mocks = vi.hoisted(() => ({
+  bootstrap: false,
+  setupTokenRequired: false,
   signUp: vi.fn(),
   resend: vi.fn(),
   requestPasswordReset: vi.fn(),
@@ -44,6 +46,19 @@ vi.mock("./client.js", () => ({
     signOut: mocks.signOut,
     useSession: mocks.session,
     getSession: async () => mocks.session(),
+  },
+}));
+vi.mock("../agents/client.js", () => ({
+  agentsClient: {
+    configuration: {
+      public: async () => ({
+        siteName: "Raypx",
+        registrationEnabled: true,
+        bootstrap: mocks.bootstrap,
+        setupTokenRequired: mocks.setupTokenRequired,
+        mailConfigured: false,
+      }),
+    },
   },
 }));
 vi.mock("./account-client.js", () => ({
@@ -77,6 +92,8 @@ afterEach(() => {
 });
 beforeEach(() => {
   vi.resetAllMocks();
+  mocks.bootstrap = false;
+  mocks.setupTokenRequired = false;
   mocks.account.mockRejectedValue({ code: "UNAUTHORIZED" });
   mocks.session.mockReturnValue({
     data: null,
@@ -246,4 +263,27 @@ describe("Desktop authentication routes", () => {
     );
     expect(await screen.findByRole("status")).toBeTruthy();
   });
+});
+
+it("uses the shared first-account state and contextual setup-token help", async () => {
+  mocks.bootstrap = true;
+  mocks.setupTokenRequired = true;
+  await page("/signup");
+  expect(
+    await screen.findByRole("heading", { name: "Create administrator account" }),
+  ).toBeVisible();
+  expect(screen.getByLabelText("Setup token", { exact: true })).toHaveAttribute("type", "password");
+  fireEvent.click(screen.getByRole("button", { name: "Where to find the setup token" }));
+  expect(
+    await screen.findByText(/Use the value of SETUP_TOKEN/, {
+      selector: "[data-slot=popover-description]",
+    }),
+  ).toBeVisible();
+});
+it("points Desktop login to administrator signup during bootstrap", async () => {
+  mocks.bootstrap = true;
+  await page("/login?returnTo=%2Fagents");
+  expect(
+    await screen.findByRole("link", { name: "Create this deployment’s administrator account" }),
+  ).toHaveAttribute("href", "/signup?returnTo=%2Fagents");
 });

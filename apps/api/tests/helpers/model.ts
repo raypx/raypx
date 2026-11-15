@@ -15,6 +15,7 @@ export function modelFixture() {
     fail(): void;
   }> = [];
   const models: ConversationModels = {
+    configured: async () => true,
     list: async () => [{ modelId: "fixture", name: "Deterministic fixture" }],
     resolve: vi.fn(async () => ({
       stream: (input: ModelTurn, signal: AbortSignal) => {

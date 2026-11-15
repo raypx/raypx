@@ -1,4 +1,6 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { agentsClient } from "../../agents/client.js";
+import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   AuthForm as SharedAuthForm,
   type AuthFormLinkProps,
@@ -25,9 +27,22 @@ function AuthLink({ to, children, className }: AuthFormLinkProps) {
 }
 
 export function AuthForm({ mode }: { mode: Exclude<AuthMode, "login"> }) {
+  const router = useRouter();
+  const navigate = useNavigate();
   const search = useLocation({ select: (location) => location.searchStr });
+  const configuration = useQuery({
+    queryKey: ["configuration", "public"],
+    queryFn: ({ signal }) => agentsClient.configuration.public({}, { signal }),
+    retry: false,
+    staleTime: 0,
+    refetchInterval: 30_000,
+  });
   return (
     <SharedAuthForm
+      bootstrap={configuration.data?.bootstrap === true}
+      setupTokenRequired={
+        configuration.data?.bootstrap === true && configuration.data.setupTokenRequired
+      }
       key={mode}
       mode={mode}
       compact
@@ -35,7 +50,10 @@ export function AuthForm({ mode }: { mode: Exclude<AuthMode, "login"> }) {
       client={authClient}
       webUrl={webUrl}
       search={search}
-      onSignedIn={() => {}}
+      onSignedIn={async () => {
+        await router.invalidate();
+        await navigate({ to: desktopReturnTo(new URLSearchParams(search).get("returnTo")) });
+      }}
       LinkComponent={AuthLink}
     />
   );

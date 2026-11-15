@@ -61,6 +61,23 @@ export function createConfigHandlers({
         "configuration.read",
       ),
     })),
+    setupStatus: os.configuration.setupStatus.use(canReadConfiguration).handler(({ context }) =>
+      configurationCall(context, async () => {
+        const [model, sandbox, mail] = await Promise.all([
+          options.conversationModels.configured(context.auth.user.id),
+          options.sandboxSettings.read(),
+          options.mailAvailable?.() ?? false,
+        ]);
+        return {
+          model,
+          sandbox:
+            sandbox.values.provider !== "none" &&
+            Boolean(sandbox.values.url) &&
+            sandbox.hasCredential,
+          mail,
+        };
+      }),
+    ),
     get: os.configuration.get.use(canReadConfiguration).handler(async ({ context }) => {
       return configurationCall(context, async (service) => ({
         ...(await service.read()),

@@ -80,7 +80,13 @@ that closes the durable deployment bootstrap marker. Concurrent signups produce
 exactly one initial administrator. Deleting users never reopens bootstrap; there is
 no reset command. Optional `SETUP_TOKEN` (32–512 printable ASCII characters) protects
 that first signup only. An unprotected production deployment warns at startup and
-signup identifies the administrator creation. Follow [first setup](configuration.md#first-setup).
+signup identifies the administrator creation in its heading and description.
+Only a required setup token renders its masked field, with contextual help naming
+this deployment's `SETUP_TOKEN`. Missing/wrong tokens share a safe translated error.
+Public state refreshes restore ordinary signup after the claim. Sign-in offers
+administrator signup while bootstrap is pending. Administrators enter the ordinary
+workspace with an optional setup checklist; configuration never blocks admission.
+Follow [first setup](configuration.md#first-setup).
 
 Signups are open by default. **Open sign-ups** off means invitation-only, for every
 supported account-creation path. A Space owner's copied bearer link can register

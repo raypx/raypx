@@ -1,6 +1,8 @@
+import { SetupChecklist } from "@raypx/account/client";
+import { useSettingsNavigation } from "../features/settings/navigation.js";
 import { VerificationPrompt } from "../features/auth/components/mail-state.js";
 import { useTranslations } from "../i18n.js";
-import { publicConfigurationQuery } from "../features/config/client.js";
+import { publicConfigurationQuery, setupChecklistPort } from "../features/config/client.js";
 import {
   accountAccessQuery,
   canAccessWebPage,
@@ -12,7 +14,7 @@ import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { useEffect, useRef, useState } from "react";
 import { UserButton } from "./user-button.js";
-import { authClient } from "../features/auth/client.js";
+import { authClient, apiUrl } from "../features/auth/client.js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Link,
@@ -52,6 +54,7 @@ function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath |
 
 export function WebShell() {
   const session = authClient.useSession();
+  const settings = useSettingsNavigation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
@@ -126,6 +129,30 @@ export function WebShell() {
           </IconButton>
         }
         account={<UserButton variant="sidebar" />}
+        notice={
+          accountId ? (
+            <SetupChecklist
+              destinations={{
+                model: "#settings/models",
+                sandbox: "/admin/settings#sandbox",
+                mail: "/admin/settings#email",
+              }}
+              port={setupChecklistPort}
+              origin={apiUrl}
+              accountId={accountId}
+              onConfigure={(item) => {
+                if (item === "model") {
+                  void settings.open("models");
+                  return;
+                }
+                void router.navigate({
+                  to: "/admin/settings",
+                  hash: item === "mail" ? "email" : "sandbox",
+                });
+              }}
+            />
+          ) : undefined
+        }
       >
         {accountId && pagePermission ? (
           <PermissionBoundary key={accountId} accountId={accountId} permission={pagePermission}>

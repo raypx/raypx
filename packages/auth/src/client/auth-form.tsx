@@ -22,6 +22,7 @@ import { useAuthActions, type AuthActionClient, type AuthActionSuccess } from ".
 import type { SocialProvider } from "@raypx/core/auth";
 import { authPolicy } from "../policy.js";
 import { readAuthLink, type AuthMode } from "./auth-link.js";
+import { HelpHint } from "@raypx/ui/help-hint";
 import { PasswordField } from "./password-field.js";
 import { useMailCooldown } from "./use-mail-cooldown.js";
 import { useAuthErrorMessage } from "./use-auth-error-message.js";
@@ -47,6 +48,7 @@ const socialProviders = {
 export interface AuthFormProps {
   mode: AuthMode;
   compact?: boolean;
+  bootstrap?: boolean;
   setupTokenRequired?: boolean;
   invitationRequired?: boolean;
   invitationToken?: string;
@@ -70,6 +72,7 @@ export interface AuthFormProps {
 export function AuthForm({
   mode,
   compact = false,
+  bootstrap = false,
   setupTokenRequired = false,
   invitationRequired = false,
   invitationToken = "",
@@ -179,8 +182,10 @@ export function AuthForm({
         </LinkComponent>
       )}
       <AuthFormHeader
-        title={t(title)}
-        intro={intro && t(intro)}
+        title={t(bootstrap && mode === "signup" && !terminal ? "firstAdministratorTitle" : title)}
+        intro={
+          bootstrap && mode === "signup" && !terminal ? t("firstAdministrator") : intro && t(intro)
+        }
         headingLeading={headingLeading}
         terminal={terminal}
         invalid={link.invalidReset}
@@ -246,13 +251,24 @@ export function AuthForm({
               <Separator />
             </div>
           )}
-        {showForm && mode === "signup" && registrationNotice}
+        {showForm && mode === "login" && bootstrap && (
+          <LinkComponent
+            to="signup"
+            className={cn(buttonVariants({ variant: "outline", size: "xl" }), "whitespace-normal")}
+          >
+            {t("firstAdministratorAction")}
+          </LinkComponent>
+        )}
+        {showForm && mode === "signup" && !bootstrap && registrationNotice}
         {showForm && (
           <form onSubmit={submit} aria-busy={busy}>
             <FieldGroup className={compact ? "gap-4" : undefined}>
-              {mode === "signup" && setupTokenRequired && (
+              {mode === "signup" && bootstrap && setupTokenRequired && (
                 <Field data-disabled={busy}>
-                  <FieldLabel htmlFor="auth-setup-token">{t("setupToken")}</FieldLabel>
+                  <div className="flex items-center gap-1">
+                    <FieldLabel htmlFor="auth-setup-token">{t("setupToken")}</FieldLabel>
+                    <HelpHint label={t("setupTokenHelp")} description={t("setupTokenHint")} />
+                  </div>
                   <Input
                     id="auth-setup-token"
                     aria-describedby="auth-setup-token-hint"
@@ -264,7 +280,7 @@ export function AuthForm({
                     controlSize="xl"
                     maxLength={512}
                   />
-                  <p id="auth-setup-token-hint" className="text-xs leading-5 text-muted-foreground">
+                  <p id="auth-setup-token-hint" className="sr-only">
                     {t("setupTokenHint")}
                   </p>
                 </Field>

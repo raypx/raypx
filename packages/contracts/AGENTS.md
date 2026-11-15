@@ -21,3 +21,7 @@ selector. Connector member-read frames are read-only and independent of Runs.
 Public configuration includes non-secret bootstrap/setupTokenRequired/mailConfigured booleans. Web-only configuration.testMail sends to the acting administrator; admin.issuePasswordReset requires users.password.reset and durable user.password.reset-link audit. The reset response is a one-time bearer secret, never cache or log it.
 
 Administrator-only configuration.sandbox/updateSandbox/testSandbox expose safe settings, a credential-presence boolean and bounded connection/mode classifications. Credentials are write-only; only administrators receive the saved URL. Space lifecycle adds PROVIDER_UNAVAILABLE through the existing availability reason.
+
+configuration.setupStatus adds a renderer-safe administrator-only configuration.read
+with strict empty input and exactly model/sandbox/mail booleans. It grants no Space
+access and changes neither configuration.public nor any database schema.

@@ -138,7 +138,18 @@ const sandboxTestSchema = z.discriminatedUnion("status", [
 export type SandboxSettingsSnapshot = z.infer<typeof sandboxSnapshotSchema>;
 export type SandboxSettingsUpdate = z.infer<typeof sandboxUpdateSchema>;
 export type SandboxConnectionTest = z.infer<typeof sandboxTestSchema>;
+/** Configuration presence only; no addresses, credentials or other accounts' models. */
+export const setupStatusSchema = z.strictObject({
+  model: z.boolean(),
+  sandbox: z.boolean(),
+  mail: z.boolean(),
+});
+export type SetupStatus = z.infer<typeof setupStatusSchema>;
 export const configurationContract = {
+  setupStatus: oc
+    .meta(exposeApiTo("renderer"), rpcAccess("configuration.read"))
+    .input(z.strictObject({}))
+    .output(setupStatusSchema),
   public: httpRead("/configuration", "configuration", "Read public site settings", "public")
     .meta(exposeApiTo("renderer"), rpcAccess("public"))
     .input(z.object({}))

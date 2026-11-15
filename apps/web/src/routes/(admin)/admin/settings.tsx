@@ -11,6 +11,11 @@ export const Route = createFileRoute("/(admin)/admin/settings")({
   staticData: { page: { title: "site.title", layout: "document" } },
   component: Page,
 });
+function configurationTab(hash: string) {
+  if (hash === "email") return "resend";
+  if (hash === "sandbox") return "sandbox";
+  return undefined;
+}
 function Page() {
   const hash = useLocation({ select: (location) => location.hash });
   const g = useTranslations("guest");
@@ -18,12 +23,7 @@ function Page() {
     <SessionBoundary
       guest={<SignInGate title={g("privateTitle")} description={g("privateHint")} />}
     >
-      {() => (
-        <ConfigurationSettings
-          initialTab={hash === "setup" || hash === "email" ? "resend" : "site"}
-          setup={hash === "setup"}
-        />
-      )}
+      {() => <ConfigurationSettings initialTab={configurationTab(hash)} />}
     </SessionBoundary>
   );
 }

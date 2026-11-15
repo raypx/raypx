@@ -12,25 +12,40 @@ const scope = {
   member: { spaceId, accountId: "member", role: "owner", createdAt: new Date().toISOString() },
 } as SpaceScope;
 
-it("projects configured identifiers and display names without provider or credential details", async () => {
+it("projects only usable identifiers and display names without provider or credential details", async () => {
+  const client = createAiClient();
+  const available = client.models("openai")[0]!;
+  client.close();
   const models = createDeploymentModels(
     JSON.stringify([
       {
         modelId: "chat",
         name: "Friendly chat",
-        provider: "private-vendor",
-        model: "private-model",
+        provider: "openai",
+        model: available.id,
         credentialId: "secret-id",
       },
-      { modelId: "plain", provider: "vendor", model: "model", credentialId: "secret-id" },
+      { modelId: "plain", provider: "openai", model: available.id, credentialId: "secret-id" },
+      { modelId: "unsupported", provider: "invalid", model: "invalid", credentialId: "secret-id" },
       { modelId: "unavailable", provider: "vendor", model: "model", credentialId: "missing" },
     ]),
     JSON.stringify({ "secret-id": "private-credential" }),
   );
   try {
+    await expect(models.configured("admin")).resolves.toBe(true);
     await expect(models.list(scope)).resolves.toEqual([
-      { modelId: "chat", name: "Friendly chat", source: "deployment", supportsImages: false },
-      { modelId: "plain", name: "plain", source: "deployment", supportsImages: false },
+      {
+        modelId: "chat",
+        name: "Friendly chat",
+        source: "deployment",
+        supportsImages: available.input.includes("image"),
+      },
+      {
+        modelId: "plain",
+        name: "plain",
+        source: "deployment",
+        supportsImages: available.input.includes("image"),
+      },
     ]);
   } finally {
     models.close();
@@ -41,6 +56,7 @@ it("represents no configured models as an empty offer and sanitizes invalid conf
   const models = createDeploymentModels("[]", "{}");
   try {
     await expect(models.list(scope)).resolves.toEqual([]);
+    await expect(models.configured("admin")).resolves.toBe(false);
   } finally {
     models.close();
   }

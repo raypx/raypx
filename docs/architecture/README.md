@@ -162,3 +162,9 @@ Sandbox connection settings now use the existing PostgreSQL deployment configura
 center, including write-only credentials, administrator connection tests and immediate
 API/worker reads. Private placement prevents an address change from silently replacing
 existing homes. See [Computers](computers.md#deployment-configuration).
+
+Deployment bootstrap remains a transactional first-account claim. Web/Desktop then
+show an optional administrator checklist in the workspace; Account owns the shared
+model/client, API exposes only configuration-presence booleans, and device dismissal
+is scoped by origin/account. No install wizard or new persistence table is involved.
+See [configuration](../development/configuration.md#first-setup).

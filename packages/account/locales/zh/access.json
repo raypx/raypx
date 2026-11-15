@@ -1,4 +1,20 @@
 {
   "forbidden": "你没有访问此页面的权限。",
-  "unavailable": "暂时无法验证权限，请重试。"
+  "unavailable": "暂时无法验证权限，请重试。",
+  "setup": {
+    "title": "部署配置",
+    "dismiss": "关闭配置清单",
+    "model": "模型连接",
+    "sandbox": "沙箱",
+    "mail": "邮件",
+    "required": "必需",
+    "optional": "可选",
+    "configured": "已配置",
+    "notConfigured": "未配置",
+    "modelHint": "Agent 需要可用模型才能回复。",
+    "sandboxHint": "未配置沙箱时，Agent 无法使用团队电脑。",
+    "mailHint": "未配置邮件时，邮箱验证和邮件找回密码不可用。",
+    "unavailable": "暂时无法读取配置状态。",
+    "retry": "重试"
+  }
 }

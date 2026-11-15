@@ -107,6 +107,7 @@ async function fixture() {
   };
   const service = createModelConnections(repository, secrets, transport);
   const deployment: ConversationModels = {
+    configured: async () => true,
     async list() {
       return [{ modelId: "deployment-main", name: "Deployment model", source: "deployment" }];
     },

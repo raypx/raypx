@@ -142,6 +142,7 @@ function fixture() {
     }),
   };
   const deployment: ConversationModels = {
+    configured: async () => true,
     list: vi.fn(async () => [
       { modelId: "deployment-main", name: "Deployment", source: "deployment" as const },
     ]),
@@ -334,4 +335,24 @@ it("retains the deployment reviewer without borrowing a member connection or its
   expect(await models.reviewModel!.resolve(scope())).toBeUndefined();
   expect(f.secrets.read).not.toHaveBeenCalled();
   expect(f.transport.resolve).not.toHaveBeenCalled();
+});
+
+it("observes account model setup without resolving or granting a Space", async () => {
+  const f = fixture();
+  f.deployment.configured = vi.fn(async () => false);
+  const models = f.service.models(f.deployment);
+  expect(await models.configured("owner")).toBe(false);
+  const connection = await f.service.create("owner", configuration, credential);
+  expect(await models.configured("owner")).toBe(true);
+  expect(await models.configured("second")).toBe(false);
+  await f.service.update("owner", connection.id, {
+    ...configuration,
+    availability: { mode: "selected", spaceIds: [] },
+  });
+  expect(await models.configured("owner")).toBe(false);
+  await f.service.update("owner", connection.id, configuration);
+  f.storedSecrets.clear();
+  expect(await models.configured("owner")).toBe(false);
+  expect(f.deployment.list).not.toHaveBeenCalled();
+  expect(f.transport.test).not.toHaveBeenCalled();
 });

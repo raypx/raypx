@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   access: vi.fn(),
   configurationGet: vi.fn(),
   registrationEnabled: true,
+  bootstrap: false,
+  setupTokenRequired: false,
   sessionError: false,
   sessionPending: false,
   refetch: vi.fn(),
@@ -68,10 +70,24 @@ vi.mock("../../src/features/auth/client.js", () => ({
 }));
 vi.mock("../../src/features/config/client.js", () => ({
   configurationClient: { get: mocks.configurationGet },
+  setupChecklistPort: {
+    access: async () => ({ accountId: null, role: "guest", permissions: [] }),
+    status: vi.fn(),
+  },
   publicConfigurationQuery: () => ({
     queryKey: ["configuration", "public"],
-    queryFn: async () => ({ siteName: "Raypx", registrationEnabled: mocks.registrationEnabled }),
-    initialData: { siteName: "Raypx", registrationEnabled: mocks.registrationEnabled },
+    queryFn: async () => ({
+      siteName: "Raypx",
+      registrationEnabled: mocks.registrationEnabled,
+      bootstrap: mocks.bootstrap,
+      setupTokenRequired: mocks.setupTokenRequired,
+    }),
+    initialData: {
+      siteName: "Raypx",
+      registrationEnabled: mocks.registrationEnabled,
+      bootstrap: mocks.bootstrap,
+      setupTokenRequired: mocks.setupTokenRequired,
+    },
     staleTime: Infinity,
   }),
 }));
@@ -132,6 +148,8 @@ afterEach(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.registrationEnabled = true;
+  mocks.bootstrap = false;
+  mocks.setupTokenRequired = false;
   mocks.sessionError = false;
   mocks.sessionPending = false;
   mocks.session = null;

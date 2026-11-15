@@ -1,5 +1,4 @@
 import { useTranslations } from "../../../i18n.js";
-import { BootstrapOnboarding } from "./bootstrap-onboarding.js";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -36,14 +35,18 @@ const tabTrigger =
   "relative z-10 gap-2 px-2 sm:px-3 group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:bg-transparent group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:shadow-none dark:group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:border-transparent dark:group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:bg-transparent";
 
 export function ConfigurationSettings({
-  initialTab = "site",
-  setup = false,
-}: { initialTab?: "site" | "resend"; setup?: boolean } = {}) {
+  initialTab,
+}: { initialTab?: "site" | "resend" | "sandbox" | undefined } = {}) {
   const common = useTranslations("common");
   const t = useTranslations("site");
   const session = authClient.useSession();
   const accountId = session.data?.user.id ?? null;
-  const [tab, setTab] = useState<string>(initialTab);
+  const [tab, setTab] = useState<string>(initialTab ?? "site");
+  const [previousTab, setPreviousTab] = useState(initialTab);
+  if (previousTab !== initialTab) {
+    setPreviousTab(initialTab);
+    if (initialTab) setTab(initialTab);
+  }
   const query = useQuery({
     queryKey: ["configuration", "admin", accountId],
     queryFn: ({ signal }) => configurationClient.get({}, { signal }),
@@ -111,7 +114,7 @@ export function ConfigurationSettings({
   }
   return (
     <section className="flex min-w-0 flex-col gap-6">
-      {setup ? <BootstrapOnboarding /> : <PageHeader title={t("title")} description={t("intro")} />}
+      <PageHeader title={t("title")} description={t("intro")} />
       {accountId && !session.error ? (
         <Tabs value={tab} onValueChange={(value) => setTab(String(value))} className="gap-4">
           <TabsList

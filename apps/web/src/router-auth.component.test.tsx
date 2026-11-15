@@ -1,5 +1,5 @@
 /** @vitest-environment happy-dom */
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { mocks, page, signIn } from "../tests/helpers/router-auth.js";
 
@@ -150,4 +150,81 @@ it.each(["/login", "/signup"])("redirects an existing account from %s to Agents"
   const router = await page(path);
   expect(router.state.location.pathname).toBe("/agents");
   expect(screen.queryByLabelText("Password")).toBeNull();
+});
+
+it.each([false, true])(
+  "explains bootstrap and conditionally requests SETUP_TOKEN (required=%s)",
+  async (required) => {
+    mocks.bootstrap = true;
+    mocks.setupTokenRequired = required;
+    mocks.registrationEnabled = false;
+    await page("/signup");
+    expect(screen.getByRole("heading", { name: "Create administrator account" })).toBeVisible();
+    expect(screen.getByText("Create the administrator account for this deployment.")).toBeVisible();
+    expect(screen.queryByLabelText("Invitation link")).toBeNull();
+    expect(screen.queryAllByLabelText("Setup token", { exact: true })).toHaveLength(
+      Number(required),
+    );
+  },
+);
+it("points sign-in to administrator signup while bootstrap is pending and preserves its destination", async () => {
+  mocks.bootstrap = true;
+  const router = await page("/login?returnTo=%2Fagents");
+  fireEvent.click(
+    screen.getByRole("link", { name: "Create this deployment’s administrator account" }),
+  );
+  await waitFor(() => expect(router.state.location.pathname).toBe("/signup"));
+  expect(router.state.location.search).toMatchObject({ returnTo: "/agents" });
+});
+it("reports wrong or missing setup tokens without rendering provider diagnostics", async () => {
+  mocks.bootstrap = true;
+  mocks.setupTokenRequired = true;
+  mocks.signUp.mockResolvedValue({
+    error: { code: "INVALID_SETUP_TOKEN", message: "private-token-diagnostic" },
+  });
+  await page("/signup");
+  fireEvent.change(screen.getByLabelText("Your name"), { target: { value: "Owner" } });
+  fireEvent.change(screen.getByLabelText("Email address"), {
+    target: { value: "owner@example.test" },
+  });
+  fireEvent.change(screen.getByLabelText("Password", { exact: true }), {
+    target: { value: "fixture-password" },
+  });
+  fireEvent.submit(screen.getByRole("button", { name: "Create account" }).closest("form")!);
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "The setup token is missing or incorrect.",
+  );
+  expect(document.body.textContent).not.toContain("private-token-diagnostic");
+});
+
+it("keeps the required bootstrap token masked and describes its deployment source", async () => {
+  mocks.bootstrap = true;
+  mocks.setupTokenRequired = true;
+  await page("/signup");
+  expect(screen.getByLabelText("Setup token", { exact: true })).toHaveAttribute("type", "password");
+  expect(screen.getByLabelText("Setup token", { exact: true })).toBeRequired();
+  fireEvent.click(screen.getByRole("button", { name: "Where to find the setup token" }));
+  expect(
+    await screen.findByText(/Use the value of SETUP_TOKEN/, {
+      selector: "[data-slot=popover-description]",
+    }),
+  ).toBeVisible();
+});
+
+it("restores ordinary signup and removes the token after another client claims bootstrap", async () => {
+  mocks.bootstrap = true;
+  mocks.setupTokenRequired = true;
+  const router = await page("/signup");
+  expect(screen.getByLabelText("Setup token", { exact: true })).toBeRequired();
+  await act(async () =>
+    router.options.context.queryClient.setQueryData(["configuration", "public"], {
+      siteName: "Raypx",
+      registrationEnabled: true,
+      bootstrap: false,
+      setupTokenRequired: false,
+      mailConfigured: false,
+    }),
+  );
+  expect(await screen.findByRole("heading", { name: "Create your account" })).toBeVisible();
+  expect(screen.queryByLabelText("Setup token", { exact: true })).toBeNull();
 });

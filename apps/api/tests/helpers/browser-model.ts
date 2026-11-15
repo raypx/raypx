@@ -329,6 +329,7 @@ export function browserModelFixture() {
     },
   });
   const models: ConversationModels = {
+    configured: async () => true,
     reviewModel: {
       available: () => true,
       async resolve() {

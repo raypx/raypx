@@ -17,12 +17,20 @@ server or configuration package.
    Never use a `VITE_*` variable, build argument, URL or log for this value.
 3. Open `/signup`. The first account becomes deployment administrator. If a token
    is configured, enter it in the masked setup field. Without mail, this account
-   is immediately signed in and remains **unverified**. The setup screen opens
-   the Email tab and offers **Skip for now**.
-4. Configure the sender, write-only delivery key and language, save, then use
+   is immediately signed in and remains **unverified**. Signup returns to the
+   workspace (or the validated return destination), without an installation flow.
+4. The administrator workspace checklist links to Models in account settings and
+   Sandbox/Email in the existing configuration center. A usable deployment model
+   or the administrator's own usable model connection completes the required model
+   item; it does not make that connection available to other members. Sandbox and
+   mail are optional. The list observes current server state on mount, focus,
+   visibility changes and every 30 seconds while visible. It disappears when all
+   three are configured. Dismissal persists on this device under the API origin and
+   account, survives sign-out, and does not affect another account or origin.
+5. If mail is wanted, configure the sender, write-only delivery key and language, save, then use
    **Send test email**. It sends only to the current administrator's account email.
    An accepted send is not proof of inbox delivery; check the inbox.
-5. Review **Site → Open sign-ups**. It is on by default. Turn it off for
+6. Review **Site → Open sign-ups**. It is on by default. Turn it off for
    invitation-only registration. Owners share existing copied Space invitation links.
 
 `SETUP_TOKEN` is checked with a constant-time digest comparison only while bootstrap
@@ -56,6 +64,16 @@ Deployment administrator status never grants Space membership or content access.
 
 Database/origin/encryption settings remain operator-owned. Storage and configuration
 failures show unavailable states; clients never invent a successful save.
+
+`configuration.setupStatus` is a session-authorized, administrator-only renderer
+read protected by `configuration.read`. It returns only `{ model, sandbox, mail }`
+booleans. It reads account-owned model configuration and current saved sandbox/mail
+settings without resolving Space membership, probing external providers or sending
+mail. A model must resolve locally with a readable credential; sandbox requires an
+enabled supervisor URL and credential; paused mail is unconfigured. These are
+configuration observations, not connectivity guarantees. Failed reads remain
+unavailable rather than reporting three missing settings. Members and guests are
+refused before these reads. Public configuration is unchanged.
 
 ## Settings and precedence
 

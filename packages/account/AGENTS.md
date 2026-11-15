@@ -51,3 +51,10 @@ audited no-mail recovery-link action. Email ownership does not define Space memb
 
 Account menu triggers retain a hover/focus tooltip in header and icon-rail modes;
 the tooltip closes while the menu is open. Preserve its accessible name and avatar.
+
+`/model` owns SetupChecklistController and injected access/status/device-preference
+ports. `/client` exports SetupChecklist for Web/Desktop shell notices. It reads only
+fresh admitted administrator status, hides when complete, and persists only dismissal
+in existing device localStorage with an API-origin/account key. Mount/focus/visible
+polling rechecks authority and status; revoked/failed access hides private content.
+Configuration read failure remains unavailable with Retry. Apps inject destination URLs and navigation callbacks; links retain modifier-key behavior.

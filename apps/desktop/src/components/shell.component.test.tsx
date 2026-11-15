@@ -12,6 +12,8 @@ import { DesktopShell } from "./shell.js";
 import { Route as HomeRoute } from "../routes/index.js";
 
 vi.mock("../features/auth/client.js", () => ({
+  apiUrl: "http://127.0.0.1:56539",
+  webUrl: "http://127.0.0.1:56540",
   authClient: { useSession: () => ({ isPending: false, error: null, data: null }) },
 }));
 vi.mock("../features/auth/sign-out.js", () => ({

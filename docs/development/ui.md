@@ -225,7 +225,12 @@ decode succeeds and keep using the session-authorized attachment port.
 
 Account bootstrap uses the public bootstrap/setup-token/mail flags only to render
 admission controls. Shared Auth keeps setup/invitation inputs masked and described.
-Email onboarding has one header and a Skip action; tests use saved delivery settings
+Administrator signup enters the workspace with a compact dismissible configuration
+checklist in the shell notice slot. Account's `/model` owns its injected access/status
+ports, refresh state and origin/account-scoped device dismissal; `/client` adapts it
+to React. Required model, optional sandbox and optional mail link to existing settings.
+The three states come from `configuration.setupStatus`; members never request it.
+There is no installation page or forced configuration redirect. Mail tests use saved delivery settings
 and show acceptance/failure with retry. Reminders remain optional and dismissible on
 Web and native Mobile. Recovery links stay in dialog memory, masked with explicit Copy;
 only pre-issue confirmation is safe for screenshot review.

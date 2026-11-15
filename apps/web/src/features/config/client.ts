@@ -1,7 +1,7 @@
 import { createApiClient, type ApiClient } from "@raypx/client/api";
 import { apiUrl } from "../auth/client.js";
 
-export const configurationClient = createApiClient({
+const client = createApiClient({
   baseUrl: apiUrl,
   fetch: (input, init) =>
     globalThis.fetch(input, {
@@ -11,7 +11,12 @@ export const configurationClient = createApiClient({
         AbortSignal.timeout(10_000),
       ]),
     }),
-}).configuration;
+});
+export const configurationClient = client.configuration;
+export const setupChecklistPort: import("@raypx/account/model").SetupChecklistPort = {
+  access: (options) => client.account.access({}, options),
+  status: (options) => configurationClient.setupStatus({}, options),
+};
 export type Configuration = Awaited<ReturnType<ApiClient["configuration"]["get"]>>;
 
 export function publicConfigurationQuery() {
@@ -19,7 +24,8 @@ export function publicConfigurationQuery() {
     queryKey: ["configuration", "public"],
     queryFn: ({ signal }: { signal: AbortSignal }) => configurationClient.public({}, { signal }),
     retry: false,
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: 30_000,
   };
 }
 /** Product copy only consumes known codes, never server diagnostic messages. */

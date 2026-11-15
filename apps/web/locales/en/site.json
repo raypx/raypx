@@ -98,8 +98,5 @@
     "conflict": "The storage settings changed. Load the latest configuration before saving.",
     "reload": "Reload storage settings",
     "enabledSetting": "Enable storage configuration"
-  },
-  "setupTitle": "Set up your deployment",
-  "setupHint": "Configure email for verification and password recovery. You can skip this step; accounts created before mail is configured can keep signing in with their password.",
-  "setupSkip": "Skip for now"
+  }
 }

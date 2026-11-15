@@ -48,3 +48,8 @@ force safe attachment disposition; never inline supplied documents.
 Registration owns a transaction-locked account_bootstrap marker and fresh mail/signup admission through the auth adapter. SETUP_TOKEN is optional, API-only, bounded and rate-limited. No-mail accounts retain an unverified admission exemption. Recovery-link issuance commits with its audit, expires after 15 minutes and is returned once; test mail sends only to the current administrator.
 
 Sandbox settings use the existing revisioned/audited PostgreSQL provider configuration, write-only URL-bound credentials and configuration.testSandbox. API/worker Computer adapters read current settings without startup I/O; revision changes fence results and streams. Runtime env never overrides saved settings. Private supervisor placement prevents empty-home replacement after URL changes.
+
+configuration.setupStatus is an administrator-only configuration.read projection of
+three current booleans: usable deployment/acting-account model, enabled sandbox with
+credential, and active mail. No Space access, provider probe, secret or URL is exposed.
+Deployment model offers exclude unsupported models and missing credentials.

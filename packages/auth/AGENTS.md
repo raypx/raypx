@@ -109,5 +109,9 @@ hooks through type-only catalog imports; applications supply the shared provider
 
 Email ownership and admission differ: emailVerificationSkipped is server-owned and never client-input. API can own transactional registration; Auth skips signup mail without delivery and establishes sessions only for admitted accounts. Mail-configured new password accounts must verify. Safe completion metadata contains no session token. Forms accept masked setup/invitation fields; never persist their values.
 
+`AuthForm.bootstrap` selects deployment-administrator signup title/description and
+an explicit signup action on login. The setup token renders only with bootstrap and
+setupTokenRequired; HelpHint names the deployment's SETUP_TOKEN. Normal public state
+restores ordinary copy and removes the field. Missing/wrong tokens use one safe error.
 Setup and invitation fields retain descriptive labels/hints and password-manager opt-out.
 Their presence is injected by the application; it never grants admission or bootstrap authority.

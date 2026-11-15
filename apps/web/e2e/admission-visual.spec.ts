@@ -20,8 +20,8 @@ const copy = {
   en: {
     setup: "Setup token",
     invitation: "Invitation link",
-    admin: "This creates the deployment administrator account.",
-    onboarding: "Set up your deployment",
+    admin: "Create the administrator account for this deployment.",
+    onboarding: "Configuration center",
     send: "Send test email",
     accepted: "The mail service accepted the test email. Check your inbox.",
     retry: "Try again",
@@ -36,8 +36,8 @@ const copy = {
   zh: {
     setup: "设置令牌",
     invitation: "邀请链接",
-    admin: "此操作将创建部署管理员账号。",
-    onboarding: "设置你的部署",
+    admin: "为此部署创建管理员账号。",
+    onboarding: "配置中心",
     send: "发送测试邮件",
     accepted: "邮件服务已接受测试邮件，请检查收件箱。",
     retry: "重试",
@@ -156,7 +156,7 @@ for (const locale of ["en", "zh"] as const) {
     await page.route("**/rpc/configuration/testMail", (route) =>
       authResponse(route, { json: { sent: accepted } }),
     );
-    await openPrivate(page, `${web}/admin/settings#setup`);
+    await openPrivate(page, `${web}/admin/settings#email`);
     const t = copy[locale];
     await expect(
       page.getByRole("heading", { level: 1, name: t.onboarding, exact: true }),
@@ -165,7 +165,7 @@ for (const locale of ["en", "zh"] as const) {
     await expect(page.getByRole("button", { name: t.send, exact: true })).toBeDisabled();
     await review(page, `email-setup-${locale}`);
     configured = true;
-    await openPrivate(page, `${web}/admin/settings#setup`);
+    await openPrivate(page, `${web}/admin/settings#email`);
     await page.getByRole("button", { name: t.send, exact: true }).click();
     await expect(page.getByText(t.accepted, { exact: true })).toBeVisible();
     await review(page, `email-test-accepted-${locale}`);

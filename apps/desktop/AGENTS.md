@@ -45,3 +45,9 @@ Settings has one category navigation for device preferences, approvals, models, 
 tools and diagnostics. Category hashes preserve the background route; visited ordinary
 panels stay mounted until close. Wide category rows and narrow Select choices use the
 shared Blocks pattern. Account identity remains available at /account.
+
+Existing signup consumes configuration.public for the shared first-account form.
+Login points to signup during bootstrap. The shell composes Account's administrator
+setup checklist through renderer-safe configuration.setupStatus; model settings stay
+local and Sandbox/Email open the existing Web center. No admin router is added.
+Dismissal uses device localStorage scoped by API origin/account and survives logout.

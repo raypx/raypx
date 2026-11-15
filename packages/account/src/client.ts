@@ -6,3 +6,9 @@ export {
   type AccountLinkProps,
 } from "./client/account.js";
 export { AccountMenu, type AccountMenuProps } from "./client/menu.js";
+
+export {
+  SetupChecklist,
+  type SetupChecklistProps,
+  type SetupItem,
+} from "./client/setup-checklist.js";
