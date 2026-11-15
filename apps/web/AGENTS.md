@@ -138,3 +138,5 @@ field, explicit Copy and localized expiry. Never capture an issued recovery link
 Public landing uses a static redesigned composer, six capability specimens, workflow,
 client coverage and deployment boundaries checked against PRODUCT.md/roadmap. Both
 languages and auth side facts must describe current scope; examples perform no private I/O.
+
+Configuration center also owns Sandbox selection, URL, write-only credentials, Screen offering and saved-connection testing. Preserve conflict drafts and clear credentials after saves; never place them in query cache or error output.

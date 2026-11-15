@@ -29,6 +29,7 @@ const services = [
   "config",
   "storageSettings",
   "resendSettings",
+  "sandboxSettings",
 ] as const satisfies readonly (keyof ApiAppOptions)[];
 
 /** A service the test did not supply fails loudly at its first use, not as a 503. */

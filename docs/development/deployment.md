@@ -110,7 +110,7 @@ For external untrusted users, deploy the supervisor on a dedicated host using
 [the sandbox hosting guide](sandbox-hosting.md). Keep this same-host Compose profile
 for development; do not give API/worker a Docker socket.
 
-The default `COMPUTER_PROVIDER=none` keeps every other backend capability available.
+The default disabled Sandbox setting keeps every other backend capability available.
 To enable isolated computers, build the supervisor and computer images separately;
 `build.sh` still builds the three required application images only. Supply verified
 manifest digests for `oven/bun:1.4.4` and `python:3.13-slim-bookworm`; there is no
@@ -129,8 +129,9 @@ raypx/computer:prepared` is also accepted; mutable tags are rejected. Provision 
 The image contains a shell, coreutils, git, Python 3.13 and the repository-pinned Bun.
 Use an Engine supporting API v1.47. Generate a new, dedicated 32+ character
 `SANDBOX_SUPERVISOR_TOKEN`; it must differ from authentication, encryption, model
-and other credentials. Pass it only to the backend and supervisor. Set
-`COMPUTER_PROVIDER=docker` and `SANDBOX_SUPERVISOR_URL=http://sandbox:4020`.
+and other credentials. Pass it to the supervisor host environment and enter it in **Configuration center → Sandbox**
+with provider **Sandbox supervisor** and URL `http://sandbox:4020`. Save and test
+the connection. The optional migration import seeds a missing row only.
 
 Start the opt-in profile explicitly:
 
@@ -139,8 +140,7 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml --profile sandbox c
 docker compose --env-file deploy/.env -f deploy/compose.yaml --profile sandbox up -d sandbox
 ```
 
-Recreate API with the updated protected settings through the usual deployment
-workflow. The supervisor publishes no port. It binds its explicit private IP on
+Saving updates API and workers immediately; no API recreation is required. The supervisor publishes no port. It binds its explicit private IP on
 `sandbox-control`; the API joins that network without receiving a socket mount.
 The default address/subnet are `172.30.40.2` and `172.30.40.0/24`; override both
 for each project if they overlap another network. Keep the configured listener IP

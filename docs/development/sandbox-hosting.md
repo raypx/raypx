@@ -33,13 +33,13 @@ private address lets the supervisor start; no peer can reach it and the public
 WireGuard port remains blocked. Add the exact backend peer and firewall allowance
 only during the later approved connection procedure. Do not publish supervisor port 4020 or Docker's API.
 
-Set only these computer settings on API and worker:
-
-```dotenv
-COMPUTER_PROVIDER=docker
-SANDBOX_SUPERVISOR_URL=http://10.77.0.2:4020
-SANDBOX_SUPERVISOR_TOKEN=<independent random secret, at least 32 characters>
-```
+After deploying API/Web, sign in as a deployment administrator and open
+**Configuration center → Sandbox**. Select **Sandbox supervisor**, enter
+`http://10.77.0.2:4020` and the supervisor's independent random bearer credential
+(at least 32 characters), save, then **Test connection**. Enable **Offer Screen**
+only after the optional graphical image/runtime acceptance. API and workers use
+this PostgreSQL configuration immediately; no environment change or restart is
+needed. See [configuration and optional migration seeding](configuration.md#sandbox-connection).
 
 If API/worker run in containers, route that single destination through their host's
 WireGuard interface and restrict forwarding to their backend network. Do not join
@@ -50,13 +50,49 @@ profile disabled in this topology. Backend containers mount no Docker socket.
 
 Rotate bearer tokens and long-term WireGuard keys at least monthly and after any
 suspected exposure. Drain new Computer starts, stop the supervisor listener, replace
-the dedicated token on both sides and restart backend processes and supervisor.
+the dedicated token on the supervisor and restart that service, then save the
+replacement credential in the configuration center. Backend processes need no restart.
 For WireGuard, generate new keys locally, exchange only public keys, update both
 peer configurations in a maintenance window and use `wg syncconf` with protected
 configuration input. Confirm a new handshake and that the old key cannot connect.
 Never print `wg showconf`, decrypted environments or private keys into evidence.
 Session key rotation does not replace revocation of long-term keys. This procedure
 allows a brief control-plane outage; unknown command effects must not be replayed.
+
+## PaaS reachability without WireGuard
+
+A PaaS-hosted API/worker must have a route to the supervisor. The saved URL alone
+cannot create one. If the PaaS cannot join WireGuard, an operator can place a TLS
+reverse proxy on the dedicated supervisor host (or a trusted connected gateway).
+Expose **only the TLS proxy**, with a valid certificate/hostname and a source-address
+allowlist for the API and worker egress addresses. Keep the supervisor bound to an
+explicit private/loopback address; never publish raw HTTP 4020 or the Engine API.
+If the PaaS has no stable egress, provide a private network or a gateway with
+controlled egress before enabling this configuration. The checked-in WireGuard
+firewall/systemd templates do not install a proxy or authorize its route; adapting
+and accepting those host rules is a separate operator task, not performed by the UI.
+
+Every supervisor route, including description and unknown routes, requires the
+dedicated bearer token before returning information. Equal-length credentials use
+constant-time comparison. The authenticated description reports tenant mode,
+runtime and actual graphical capability without Engine details. Authenticated
+request bodies have a ten-second read deadline and a 64 MiB limit (32 KiB for Screen).
+The backend refuses redirects, validates TLS normally and never disables certificate
+verification. This makes a TLS-fronted, source-restricted endpoint an available
+transport option without weakening untrusted-tenant mode. The bearer token is not
+transport encryption; plain HTTP over the public internet remains unsafe.
+
+Terminate TLS at the trusted proxy and forward Authorization unchanged over a
+private protected hop to the listener. A proxy on another host needs encrypted
+transport for that hop as well. Do not cache, log bodies/Authorization or expose
+unauthenticated health/description routes. Apply request/header/body timeouts,
+connection/rate limits and a matching request-size limit at the proxy. Permit
+streaming responses for bounded commands and Screen (up to five minutes), without
+response buffering. Preserve the supervisor's tenant INPUT DROP priority and
+private control allow/deny rules. Never allow tenant networks to reach the proxy's
+control upstream. A TLS certificate and connection test do not attest host isolation,
+firewall policy, image readiness, restored homes or real graphical acceptance.
+This repository change performs no host/proxy setup or live-host acceptance.
 
 ## Internet-exposed host baseline
 
@@ -85,8 +121,9 @@ backend address after its peer is approved. With no peer, leave that port blocke
 Docker forwarding is separate: preserve its iptables backend and the owned tenant
 rules. Never restore a full stale ruleset over Docker or flush unrelated chains.
 The template inserts its exact WireGuard control allow before its TCP 4020 deny;
-place the general host INPUT policy after these owned hooks. No public supervisor
-or Engine listener is permitted. Check persistence after reboot.
+place the general host INPUT policy after these owned hooks. No public raw supervisor
+or Engine listener is permitted; an explicitly accepted TLS proxy follows the
+separate PaaS topology above. Check persistence after reboot.
 
 Load `br_netfilter`; enable IPv4 forwarding and bridge IPv4/IPv6 filtering for
 Docker. Disable IP source routing, ICMP redirects (including IPv4 send redirects),
@@ -540,7 +577,7 @@ A later member screen-start failure also reports that reason for the affected
 computer generation; it does not disable another Space’s computer.
 The optional graphical image is supported only where its real runtime conformance
 passes. Headless remains the production template's default. Other CPU/platform
-combinations, rootless Engines, encrypted-channel deployment, physical host
+combinations, rootless Engines, live TLS-proxy deployment, physical host
 hardening and restore drills require their own acceptance. gVisor narrows the host
 kernel interface; it is not a VM or a promise against every kernel/runtime exploit.
 Public HTTPS can carry tunnels or abuse; this policy does not inspect content

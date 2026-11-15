@@ -6,6 +6,9 @@ import type {
   ResendSettingsUpdate,
   StorageSettingsSnapshot,
   StorageSettingsUpdate,
+  SandboxSettingsSnapshot,
+  SandboxSettingsUpdate,
+  SandboxConnectionTest,
 } from "@raypx/contracts/api";
 
 export interface StorageSettingsService {
@@ -42,4 +45,10 @@ export interface ConfigRepository extends ConfigReader {
     revision: number,
     actorId: string,
   ): Promise<ConfigurationSnapshot | null>;
+}
+
+export interface SandboxSettingsService {
+  read(): Promise<SandboxSettingsSnapshot>;
+  update(input: SandboxSettingsUpdate): Promise<SandboxSettingsSnapshot>;
+  test(): Promise<SandboxConnectionTest>;
 }

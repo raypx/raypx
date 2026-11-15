@@ -99,7 +99,7 @@ export function createComputersService(
   kind: Computer["provider"] = "sandbox",
 ): ComputersService {
   async function get(scope: SpaceScope): Promise<SpaceComputer> {
-    if (!provider) return { status: "not-configured" };
+    if (!provider || (await provider.configured?.()) === false) return { status: "not-configured" };
     let computer = await repository.get(scope);
     let unavailableReason: Extract<SpaceComputer, { status: "available" }>["unavailableReason"];
     if (computer && computer.state !== "destroyed" && !computer.leaseOwner) {
@@ -112,10 +112,18 @@ export function createComputersService(
             failureCode: null,
           });
         if (computer?.generation === live.generation) unavailableReason = live.unavailableReason;
-      } catch {
+      } catch (error) {
         // A transport failure is not proof that compute stopped; a competing claim
         // may also have replaced the generation while observation was in flight.
         computer = await repository.get(scope);
+        if (
+          !(
+            error instanceof ProviderError &&
+            error.code === "NOT_FOUND" &&
+            computer?.state !== "running"
+          )
+        )
+          unavailableReason = "PROVIDER_UNAVAILABLE";
       }
     }
     return { status: "available", computer, ...(unavailableReason ? { unavailableReason } : {}) };
@@ -123,15 +131,17 @@ export function createComputersService(
   async function fileAccess(
     scope: SpaceScope,
   ): Promise<FilesState | { status: "ready"; ref: ComputerRef }> {
-    if (!provider) return { status: "not-configured" };
+    if (!provider || (await provider.configured?.()) === false) return { status: "not-configured" };
     const computer = await repository.get(scope);
     if (!computer || computer.state !== "running" || computer.leaseOwner)
       return { status: "not-running", state: computer?.state ?? null };
     return { status: "ready", ref: { id: computer.id, generation: computer.generation } };
   }
   async function lifecycle(scope: SpaceScope, operation: "start" | "stop"): Promise<SpaceComputer> {
-    if (!provider) return { status: "not-configured" };
+    if (!provider || (await provider.configured?.()) === false) return { status: "not-configured" };
     const view = await get(scope);
+    if (view.status === "available" && view.unavailableReason === "PROVIDER_UNAVAILABLE")
+      return view;
     const existing = view.status === "available" ? view.computer : null;
     if (operation === "stop" && (!existing || existing.state === "stopped"))
       return { status: "available", computer: existing };

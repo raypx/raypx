@@ -95,6 +95,49 @@ export const resendUpdateSchema = z.strictObject({
 });
 export type ResendSettingsSnapshot = z.infer<typeof resendSnapshotSchema>;
 export type ResendSettingsUpdate = z.infer<typeof resendUpdateSchema>;
+/** Administrator-owned supervisor location. HTTP requires a protected private channel. */
+export const sandboxValuesSchema = z
+  .strictObject({
+    provider: z.enum(["none", "docker"]),
+    url: z
+      .url({ protocol: /^https?$/, normalize: true })
+      .max(2048)
+      .regex(/^https?:\/\/[^/?#@]+\/?$/)
+      .transform((value) => value.replace(/\/$/, ""))
+      .nullable(),
+    screen: z.boolean(),
+  })
+  .refine((value) => value.provider === "none" || value.url !== null);
+const sandboxSnapshotSchema = z.strictObject({
+  values: sandboxValuesSchema,
+  hasCredential: z.boolean(),
+  revision: z.number().int().nonnegative(),
+  updatedAt: z.iso.datetime().nullable(),
+});
+export const sandboxUpdateSchema = z.strictObject({
+  values: sandboxValuesSchema,
+  credential: z
+    .string()
+    .min(32)
+    .max(512)
+    .regex(/^[!-~]+$/)
+    .optional(),
+  revision: z.number().int().nonnegative(),
+});
+const sandboxTestSchema = z.discriminatedUnion("status", [
+  z.strictObject({
+    status: z.literal("connected"),
+    untrustedTenants: z.boolean(),
+    runtime: z.enum(["runc", "runsc", "other"]),
+    screen: z.boolean(),
+  }),
+  z.strictObject({
+    status: z.enum(["not-configured", "authentication-failed", "timeout", "unavailable"]),
+  }),
+]);
+export type SandboxSettingsSnapshot = z.infer<typeof sandboxSnapshotSchema>;
+export type SandboxSettingsUpdate = z.infer<typeof sandboxUpdateSchema>;
+export type SandboxConnectionTest = z.infer<typeof sandboxTestSchema>;
 export const configurationContract = {
   public: httpRead("/configuration", "configuration", "Read public site settings", "public")
     .meta(exposeApiTo("renderer"), rpcAccess("public"))
@@ -132,6 +175,18 @@ export const configurationContract = {
     .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
     .input(z.strictObject({}))
     .output(resendSnapshotSchema),
+  sandbox: oc
+    .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
+    .input(z.strictObject({}))
+    .output(sandboxSnapshotSchema),
+  updateSandbox: oc
+    .meta(exposeApiTo("web"), rpcAccess("configuration.update"), rpcAudit("configuration.update"))
+    .input(sandboxUpdateSchema)
+    .output(sandboxSnapshotSchema),
+  testSandbox: oc
+    .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
+    .input(z.strictObject({}))
+    .output(sandboxTestSchema),
   testMail: oc
     .meta(exposeApiTo("web"), rpcAccess("configuration.read"))
     .input(z.strictObject({ locale: z.enum(["en", "zh"]).optional() }))

@@ -28,6 +28,9 @@ vi.mock("./client.js", async (original) => ({
     storage: vi.fn(),
     updateStorage: vi.fn(),
     testMail: vi.fn(),
+    sandbox: vi.fn(),
+    updateSandbox: vi.fn(),
+    testSandbox: vi.fn(),
   },
 }));
 const config: Configuration = {
@@ -183,4 +186,48 @@ it("tests only saved mail settings and shows a clear delivery result", async () 
     "The mail service accepted the test email. Check your inbox.",
   );
   expect(send).toHaveBeenCalledExactlyOnceWith({ locale: "en" });
+});
+
+it("saves write-only sandbox credentials, tests saved settings, and keeps other drafts", async () => {
+  vi.spyOn(configurationClient, "get").mockResolvedValue(config);
+  const sandbox = {
+    values: { provider: "docker", url: "https://supervisor.example.test", screen: false },
+    hasCredential: true,
+    revision: 1,
+    updatedAt: null,
+  } as const;
+  vi.spyOn(configurationClient, "sandbox").mockResolvedValue(sandbox);
+  const save = vi
+    .spyOn(configurationClient, "updateSandbox")
+    .mockResolvedValue({ ...sandbox, revision: 2 });
+  const test = vi.spyOn(configurationClient, "testSandbox").mockResolvedValue({
+    status: "connected",
+    untrustedTenants: true,
+    runtime: "runsc",
+    screen: true,
+  });
+  page(<ConfigurationSettings />);
+  fireEvent.change(await screen.findByLabelText("Site name"), { target: { value: "Site draft" } });
+  fireEvent.click(screen.getByRole("tab", { name: "Sandbox" }));
+  const credential = await screen.findByLabelText("Supervisor credential");
+  expect(credential).toHaveAttribute("type", "password");
+  expect(credential).toHaveValue("");
+  fireEvent.change(credential, {
+    target: { value: "fake-new-supervisor-credential-32-characters" },
+  });
+  expect(screen.getByRole("button", { name: "Test connection" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(credential).toHaveValue(""));
+  expect(save).toHaveBeenCalledWith({
+    values: sandbox.values,
+    revision: 1,
+    credential: "fake-new-supervisor-credential-32-characters",
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+  expect(
+    await screen.findByText(/Connected · Untrusted tenants · runsc · Screen available/),
+  ).toBeTruthy();
+  expect(test).toHaveBeenCalledExactlyOnceWith({});
+  fireEvent.click(screen.getByRole("tab", { name: "Site" }));
+  expect(screen.getByLabelText("Site name")).toHaveValue("Site draft");
 });

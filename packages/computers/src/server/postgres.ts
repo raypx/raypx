@@ -15,7 +15,7 @@ import { endComputerScreenControl } from "./screens-postgres.js";
 export { createComputerScreenRepository, revokeComputerScreenControl } from "./screens-postgres.js";
 
 function view(row: typeof computers.$inferSelect): Computer {
-  const { createdByAccountId: _, ...rest } = row;
+  const { createdByAccountId: _, supervisorUrl: _supervisorUrl, ...rest } = row;
   return computerSchema.parse({
     ...rest,
     createdAt: row.createdAt.toISOString(),

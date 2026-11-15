@@ -25,6 +25,7 @@ import { authClient } from "../../auth/client.js";
 import { configurationClient, configurationError, type Configuration } from "../client.js";
 import { ConfigurationActions } from "./actions.js";
 import { StorageSettings } from "./storage.js";
+import { SandboxSettings } from "./sandbox.js";
 import { ResendSettings } from "./resend.js";
 
 const row =
@@ -129,6 +130,9 @@ export function ConfigurationSettings({
               <MailIcon aria-hidden="true" className="hidden sm:block" />
               {t("mail.title")}
             </TabsTrigger>
+            <TabsTrigger value="sandbox" className={tabTrigger}>
+              {t("sandbox.title")}
+            </TabsTrigger>
             <TabsIndicator
               aria-hidden="true"
               data-config-indicator=""
@@ -140,6 +144,9 @@ export function ConfigurationSettings({
           </TabsContent>
           <TabsContent value="storage" keepMounted className={panel} hidden={tab !== "storage"}>
             <StorageSettings key={accountId} accountId={accountId} active={tab === "storage"} />
+          </TabsContent>
+          <TabsContent value="sandbox" keepMounted className={panel} hidden={tab !== "sandbox"}>
+            <SandboxSettings key={accountId} accountId={accountId} active={tab === "sandbox"} />
           </TabsContent>
           <TabsContent value="resend" keepMounted className={panel} hidden={tab !== "resend"}>
             <ResendSettings key={accountId} accountId={accountId} active={tab === "resend"} />

@@ -56,7 +56,6 @@ configuration for an operator command without printing it.
 | `VITE_API_URL`, `VITE_WEB_URL`                                 | Public Web build inputs; rebuild when changing them. Installed Desktop uses runtime TOML.                      |
 | `SERVER_ROLE`                                                  | Defaults to `all`: API, worker and device connector.                                                           |
 | `AGENT_MODELS`, `AGENT_MODEL_CREDENTIALS`                      | Optional deployment model directory and protected credential map; empty defaults disable deployment offers.    |
-| `COMPUTER_PROVIDER`                                            | `none` by default; `docker` requires the private supervisor URL and dedicated token.                           |
 | `APPROVAL_DEFAULT_MODE`, `APPROVAL_REQUEST_TTL_MS`             | Defaults: `ask` and 600000 ms. Auto review is explicitly unavailable.                                          |
 | `RUN_RECOVERY_INTERVAL_MS`, `RUN_LEASE_MS`, `RUN_HEARTBEAT_MS` | Defaults: 5000, 15000 and 5000 ms.                                                                             |
 | `RUN_ATTEMPT_TIMEOUT_MS`, `RUN_BACKUP_MARGIN_MS`               | Defaults: 300000 and 30000 ms.                                                                                 |
@@ -191,3 +190,7 @@ Space. Registering a device is not part of the server Agent setup above.
 Vendored repository skills live in `.agents/skills/`; `skills-lock.json` records
 their sources. `bun run skills:update` refreshes upstream bytes for review. Do not
 edit them by hand or confuse them with account/Space text skills in the product.
+
+Configure optional sandbox Computers after signup in **Configuration center → Sandbox**.
+Save the supervisor URL and write-only credential, then test the connection. Changes
+apply to API and worker roles without restart. See [configuration](configuration.md#sandbox-connection).

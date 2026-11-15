@@ -641,3 +641,17 @@ it("releasing an older attempt preserves a newer attempt's validated computer ca
   expect(JSON.parse(result)).toMatchObject({ state: "succeeded" });
   expect(get).not.toHaveBeenCalled();
 });
+
+it("keeps a new Run conversational when the deployment dynamically disables the sandbox", async () => {
+  const f = fixture();
+  f.provider.configured = async () => false;
+  const provision = vi.spyOn(f.provider, "provision");
+  await f.tools.initialize!(scope, run, new AbortController().signal);
+  expect(f.tools.definitions(run)).toEqual([]);
+  expect(provision).not.toHaveBeenCalled();
+  expect(f.row()).toBeNull();
+  f.provider.configured = async () => true;
+  run.startedAt = new Date().toISOString();
+  await f.tools.initialize!(scope, run, new AbortController().signal);
+  expect(f.tools.definitions(run)).toEqual([]);
+});

@@ -157,3 +157,8 @@ Account bootstrap and mail-dependent verification are described in
 The durable bootstrap row outlives all accounts; email ownership never grants
 Space admission. No-mail signup stays open unless an administrator chooses
 invitation-only.
+
+Sandbox connection settings now use the existing PostgreSQL deployment configuration
+center, including write-only credentials, administrator connection tests and immediate
+API/worker reads. Private placement prevents an address change from silently replacing
+existing homes. See [Computers](computers.md#deployment-configuration).

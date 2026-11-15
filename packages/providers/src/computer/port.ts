@@ -132,6 +132,7 @@ export const homeArchiveSchema = z.strictObject({
 });
 export type HomeArchive = z.infer<typeof homeArchiveSchema>;
 export interface ComputerDescription {
+  hosting?: { untrustedTenants: boolean; runtime: string };
   execution: "virtual" | "isolated-process" | "device-process";
   files: true;
   home: boolean;
@@ -142,6 +143,8 @@ export interface ComputerDescription {
   screenUnavailableReason?: "GRAPHICAL_IMAGE_NOT_CONFIGURED" | "GRAPHICAL_RUNTIME_UNAVAILABLE";
 }
 export interface ComputerProvider {
+  /** Deployment adapters recheck current policy without retaining a cached authority. */
+  configured?(): Promise<boolean>;
   describe(): Promise<ComputerDescription>;
   get(ref: ComputerRef): Promise<ProviderComputer>;
   /** Same generation reconnects. A greater one fences and replaces the old computer. */

@@ -7,8 +7,8 @@ owns the versioned outbound protocol with strict bounded schemas. Current comman
 and screen effects retain account, Space and fence admission at their service.
 
 No tasks, hosts, observed sessions, instances, account jobs/memory or
-legacy attachment/Relay protocol entries exist. No credential or supervisor address enters renderer
-contracts. Device possession routes reject browser Origin; pairing and grants
+legacy attachment/Relay protocol entries exist. Provider credentials are write-only; supervisor addresses appear only in admitted
+administrator configuration, never member lifecycle/Screen contracts. Device possession routes reject browser Origin; pairing and grants
 require native consent. Selectors never confer Space access. Keep exact optional
 properties, explicit exports and direct consumers. Run check/test and policy.
 
@@ -19,3 +19,5 @@ notifications list/read/viewed. Computer read requests accept an optional device
 selector. Connector member-read frames are read-only and independent of Runs.
 
 Public configuration includes non-secret bootstrap/setupTokenRequired/mailConfigured booleans. Web-only configuration.testMail sends to the acting administrator; admin.issuePasswordReset requires users.password.reset and durable user.password.reset-link audit. The reset response is a one-time bearer secret, never cache or log it.
+
+Administrator-only configuration.sandbox/updateSandbox/testSandbox expose safe settings, a credential-presence boolean and bounded connection/mode classifications. Credentials are write-only; only administrators receive the saved URL. Space lifecycle adds PROVIDER_UNAVAILABLE through the existing availability reason.

@@ -1,4 +1,3 @@
-import type { ComputerProvider } from "@raypx/providers/computer";
 import type { ApiEnvironment, WorkerEnvironment } from "../env.js";
 export type AgentEnvironment = Omit<WorkerEnvironment, "_schema" | "REDIS_URL"> & {
   REDIS_URL?: string | undefined;
@@ -30,7 +29,6 @@ export function knownComputerSecrets(environment: AgentEnvironment): string[] {
     environment.AUTH_SECRET,
     environment.APP_KEY,
     environment.ROUTINE_EMAIL_RELAY_TOKEN,
-    environment.SANDBOX_SUPERVISOR_TOKEN,
     environment.GOOGLE_CLIENT_SECRET,
     environment.GITHUB_CLIENT_SECRET,
     environment.AUTH_TURNSTILE_SECRET_KEY,
@@ -38,18 +36,4 @@ export function knownComputerSecrets(environment: AgentEnvironment): string[] {
     environment.DATABASE_URL,
     environment.REDIS_URL,
   ].filter((value): value is string => typeof value === "string" && value.length > 0);
-}
-/** Only this configured branch loads the HTTP adapter; no Engine transport enters API. */
-export async function configuredComputerProvider(
-  environment: Pick<
-    WorkerEnvironment,
-    "COMPUTER_PROVIDER" | "SANDBOX_SUPERVISOR_URL" | "SANDBOX_SUPERVISOR_TOKEN"
-  >,
-): Promise<ComputerProvider | null> {
-  if (environment.COMPUTER_PROVIDER === "none") return null;
-  const { createDockerComputerProvider } = await import("@raypx/providers/computer/docker");
-  return createDockerComputerProvider({
-    url: environment.SANDBOX_SUPERVISOR_URL!,
-    token: environment.SANDBOX_SUPERVISOR_TOKEN!,
-  });
 }

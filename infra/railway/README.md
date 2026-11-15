@@ -37,3 +37,10 @@ apply configuration changes; runtime variables remain operator-managed. Gateway
 must build from the repository root using `infra/railway/Dockerfile`. For stale
 paths, missing upstreams or failed healthchecks, follow the
 [Gateway recovery checklist](../../docs/development/railway.md#recover-gateway-after-a-configuration-move).
+
+Sandbox connection settings belong to the PostgreSQL configuration center, not
+managed runtime variables. Administrators save/test the URL and write-only token
+without redeploying API. The partial creates no supervisor or network route; a
+PaaS without WireGuard needs the accepted TLS proxy/source-allowlist topology in
+[the host guide](../../docs/development/sandbox-hosting.md#paas-reachability-without-wireguard).
+Optional pre-deploy imports seed missing settings only.

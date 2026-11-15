@@ -4,6 +4,8 @@ import {
   createComputersService,
   createComputerScreensService,
 } from "@raypx/computers/server";
+import { createConfigReads, type ConfigReads } from "../config/reads.js";
+import { databaseComputerProvider } from "./sandbox.js";
 import { createDeviceBroker } from "./device-broker.js";
 import { withDeviceComputerTools } from "../conversations/device-tools.js";
 import {
@@ -63,11 +65,7 @@ import {
   sealStoredSecret,
   openStoredSecret,
 } from "../conversations/secrets.js";
-import {
-  configuredComputerProvider,
-  knownComputerSecrets,
-  type AgentEnvironment,
-} from "./computers.js";
+import { knownComputerSecrets, type AgentEnvironment } from "./computers.js";
 
 /** Shared by API direct dispatch and worker recovery. Composition performs no database I/O. */
 export async function composeAgents(
@@ -75,6 +73,7 @@ export async function composeAgents(
   environment: AgentEnvironment,
   logger: ApiLogging,
   createModels?: () => ConversationModels,
+  reads: ConfigReads = createConfigReads(),
 ) {
   const deviceComputersRepository = createDeviceComputersRepository(
     db,
@@ -91,7 +90,8 @@ export async function composeAgents(
   );
   const deviceFiles = createDeviceMemberFilesService(deviceConnector);
   const deviceComputers = createDeviceComputersService(deviceComputersRepository, deviceConnector);
-  const computerProvider = await configuredComputerProvider(environment);
+  const sandbox = databaseComputerProvider(db, environment.APP_KEY, reads);
+  const computerProvider = sandbox.provider;
   const computersRepository = createComputersRepository(db, {
     perSpace: environment.COMPUTERS_PER_SPACE,
     perMember: environment.COMPUTERS_PER_MEMBER,
@@ -143,6 +143,7 @@ export async function composeAgents(
   );
   const protectedValues = () => [
     ...deploymentSecrets,
+    ...sandbox.protectedValues(),
     ...modelConnections.protectedValues(),
     ...mcpServers.protectedValues(),
     ...openApiServers.protectedValues(),

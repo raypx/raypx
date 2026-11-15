@@ -91,16 +91,18 @@ starts. Each missing capability is an explicit state in the product.
 ## Configuration
 
 - Database, origins, secrets and roles are environment configuration.
-- Site identity, registration, email and object storage are managed in the
+- Site identity, registration, email, object storage and sandbox connections are managed in the
   configuration center by a deployment administrator.
-- A provider is configured once and used through its port. No provider-specific
-  setting appears in domain records.
+- Provider settings use PostgreSQL revisions, encrypted write-only credentials and
+  the existing invalidation path. Computer operations read current policy in API and
+  worker roles without restart. Private supervisor placement is excluded from domain
+  records/events; see [Computers](computers.md#deployment-configuration).
 
 ## Sandbox egress acceptance
 
 The optional graphical image is selected by its immutable image ID and
 `SANDBOX_GRAPHICAL=true` in the supervisor. The default image remains non-graphical.
-No display port or provider endpoint is exposed to clients. Screen streams expire
+No display port or provider endpoint is exposed through member Computer contracts. Screen streams expire
 after five minutes, require ACKs within ten seconds and periodically recheck
 sessions/membership. Control grants expire after thirty seconds without renewal;
 view disconnect, stop, replacement and membership revocation release them with

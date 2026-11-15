@@ -26,13 +26,6 @@ const server = {
     })
     .transform((value) => new URL(value).origin)
     .optional(),
-  COMPUTER_PROVIDER: z.enum(["none", "docker"]).default("none"),
-  SANDBOX_SUPERVISOR_URL: z.url().optional(),
-  SANDBOX_SUPERVISOR_TOKEN: z
-    .string()
-    .min(32)
-    .regex(/^[^\r\n]+$/)
-    .optional(),
   COMPUTERS_PER_MEMBER: computerLimit("10"),
   COMPUTERS_PER_SPACE: computerLimit("1"),
   SERVER_ROLE: z.enum(["api", "all"]).default("all"),
@@ -119,34 +112,6 @@ const list = (value: string | undefined) =>
 
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
   const env = defineEnv({ extends: [apiServerEnv], runtimeEnv, isServer: true });
-  if (env.SANDBOX_SUPERVISOR_URL) {
-    const url = new URL(env.SANDBOX_SUPERVISOR_URL);
-    if (
-      !/^https?:$/.test(url.protocol) ||
-      url.username ||
-      url.password ||
-      url.pathname !== "/" ||
-      url.search ||
-      url.hash
-    )
-      throw new Error("Invalid SANDBOX_SUPERVISOR_URL");
-  }
-  if (env.COMPUTER_PROVIDER === "docker") {
-    if (!env.SANDBOX_SUPERVISOR_URL || !env.SANDBOX_SUPERVISOR_TOKEN)
-      throw new Error(
-        "COMPUTER_PROVIDER=docker requires SANDBOX_SUPERVISOR_URL and SANDBOX_SUPERVISOR_TOKEN",
-      );
-    for (const [key, value] of Object.entries(runtimeEnv)) {
-      if (
-        key !== "SANDBOX_SUPERVISOR_TOKEN" &&
-        (value === env.SANDBOX_SUPERVISOR_TOKEN ||
-          value?.includes(JSON.stringify(env.SANDBOX_SUPERVISOR_TOKEN)))
-      )
-        throw new Error("SANDBOX_SUPERVISOR_TOKEN must be dedicated");
-    }
-    if ([env.AUTH_SECRET, env.APP_KEY].includes(env.SANDBOX_SUPERVISOR_TOKEN))
-      throw new Error("SANDBOX_SUPERVISOR_TOKEN must be dedicated");
-  }
   validateRunTiming(env);
   if (Boolean(env.ROUTINE_EMAIL_RELAY_TOKEN) !== Boolean(env.ROUTINE_EMAIL_DOMAIN))
     throw new Error("Routine email requires ROUTINE_EMAIL_RELAY_TOKEN and ROUTINE_EMAIL_DOMAIN");
@@ -224,9 +189,6 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
       DEVICE_CONNECTOR_ORIGIN: server.DEVICE_CONNECTOR_ORIGIN,
       DATABASE_URL: server.DATABASE_URL,
       DATABASE_MIGRATE_ON_START: server.DATABASE_MIGRATE_ON_START,
-      COMPUTER_PROVIDER: server.COMPUTER_PROVIDER,
-      SANDBOX_SUPERVISOR_URL: server.SANDBOX_SUPERVISOR_URL,
-      SANDBOX_SUPERVISOR_TOKEN: server.SANDBOX_SUPERVISOR_TOKEN,
       COMPUTERS_PER_MEMBER: server.COMPUTERS_PER_MEMBER,
       COMPUTERS_PER_SPACE: server.COMPUTERS_PER_SPACE,
       AGENT_MODELS: server.AGENT_MODELS,
@@ -254,13 +216,6 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
     throw new Error("Production worker requires APP_KEY");
   if (!/^postgres(?:ql)?:$/.test(new URL(environment.DATABASE_URL).protocol))
     throw new Error("Invalid worker database protocol");
-  if (
-    environment.COMPUTER_PROVIDER === "docker" &&
-    (!environment.SANDBOX_SUPERVISOR_URL || !environment.SANDBOX_SUPERVISOR_TOKEN)
-  )
-    throw new Error(
-      "COMPUTER_PROVIDER=docker requires SANDBOX_SUPERVISOR_URL and SANDBOX_SUPERVISOR_TOKEN",
-    );
   const { REDIS_URL, ...worker } = environment;
   return { ...worker, ...(REDIS_URL ? { REDIS_URL } : {}) };
 }

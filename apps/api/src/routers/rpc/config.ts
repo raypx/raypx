@@ -100,6 +100,27 @@ export function createConfigHandlers({
         return configurationFailure(error, context);
       }
     }),
+    sandbox: os.configuration.sandbox.use(canReadConfiguration).handler(async ({ context }) => {
+      try {
+        return await options.sandboxSettings.read();
+      } catch (error) {
+        return configurationFailure(error, context);
+      }
+    }),
+    updateSandbox: os.configuration.updateSandbox
+      .use(withRpcPermission({ window: 60, max: 10 }))
+      .use(requireTrustedOrigin)
+      .handler(async ({ context, input }) => {
+        try {
+          return await options.sandboxSettings.update(input);
+        } catch (error) {
+          return configurationFailure(error, context);
+        }
+      }),
+    testSandbox: os.configuration.testSandbox
+      .use(withRpcPermission({ window: 60, max: 3 }))
+      .use(requireTrustedOrigin)
+      .handler(() => options.sandboxSettings.test()),
     testMail: os.configuration.testMail
       .use(withRpcPermission({ window: 60, max: 3 }))
       .use(requireTrustedOrigin)

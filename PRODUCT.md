@@ -242,3 +242,13 @@ Public UI illustrations are labelled static examples and issue no private reads.
 Public product copy does not promise verification for every signup. Client notices
 reflect deployment bootstrap, invitation-only registration and configured mail;
 optional verification reminders do not change server-owned account admission.
+
+Deployment administrators manage sandbox provider selection, supervisor connection
+and write-only credentials, connection testing and Screen offering in the existing
+Web/Desktop configuration center. Saved PostgreSQL changes apply to API/worker
+roles without restarting. Disabled/unreachable/changed connections retain explicit
+member availability reasons on Web, Desktop and Mobile; Mobile adds no admin UI.
+Existing computers stay bound to their original supervisor, and unknown remote
+outcomes never become a stopped/success claim. Network routes, supervisor image,
+host isolation and quotas remain operator responsibilities. A PaaS without WireGuard
+requires a separately accepted TLS proxy with source restrictions or a private route.

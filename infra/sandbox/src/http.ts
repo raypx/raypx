@@ -11,7 +11,11 @@ import {
   type ComputerProcess,
   type ComputerProvider,
 } from "@raypx/providers/computer";
-export function supervisorHandler(provider: ComputerProvider, token: string) {
+export function supervisorHandler(
+  provider: ComputerProvider,
+  token: string,
+  options: { bodyTimeoutMs?: number } = {},
+) {
   const processes = new Map<string, { ref: string; process: ComputerProcess }>();
   return async function handle(request: Request): Promise<Response> {
     const supplied = Buffer.from(request.headers.get("authorization") ?? "");
@@ -30,11 +34,18 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
         return Response.json({ code: "NOT_FOUND" }, { status: 404 });
       const reader = request.body?.getReader();
       if (!reader) throw new ComputerError("INVALID_INPUT");
+      let bodyTimer: ReturnType<typeof setTimeout> | undefined;
+      const bodyDeadline = new Promise<never>((_, reject) => {
+        bodyTimer = setTimeout(
+          () => reject(new ComputerError("INVALID_INPUT")),
+          Math.min(options.bodyTimeoutMs ?? 10_000, 10_000),
+        );
+      });
       let size = 0;
       const chunks: Uint8Array[] = [];
       try {
         while (true) {
-          const { value, done } = await reader.read();
+          const { value, done } = await Promise.race([reader.read(), bodyDeadline]);
           if (done) break;
           size += value.byteLength;
           if (size > (match[2]?.startsWith("screen/") ? 32 * 1024 : MAX_HOME_BYTES * 2))
@@ -42,6 +53,7 @@ export function supervisorHandler(provider: ComputerProvider, token: string) {
           chunks.push(value);
         }
       } finally {
+        clearTimeout(bodyTimer);
         await reader.cancel();
       }
       const body = z

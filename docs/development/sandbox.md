@@ -74,15 +74,12 @@ and immutable home snapshots live there and must survive restarts.
 bun --env-file=infra/sandbox/.env.local infra/sandbox/src/main.ts
 ```
 
-In the backend's protected root environment, set:
-
-```dotenv
-COMPUTER_PROVIDER=docker
-SANDBOX_SUPERVISOR_URL=http://127.0.0.1:4020
-SANDBOX_SUPERVISOR_TOKEN=<the same dedicated secret>
-```
-
-Restart backend processes after changing their configuration. `COMPUTERS_PER_SPACE`
+In **Configuration center → Sandbox**, choose **Sandbox supervisor**, enter
+`http://127.0.0.1:4020` and the same dedicated credential, save, and test the
+connection. Enable **Offer Screen** only with the accepted graphical image.
+API/worker processes read these PostgreSQL settings without restarting. Optional
+`db:migrate --import-config` seeds missing settings only; see
+[configuration](configuration.md#sandbox-connection). `COMPUTERS_PER_SPACE`
 and `COMPUTERS_PER_MEMBER` default to 1 and 10; stopped homes still count. Open an
 Agent's computer panel and Start, or let an approved tool lazily start compute.
 File browsing is bounded and never starts a stopped computer. Containers run as

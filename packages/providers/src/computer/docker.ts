@@ -30,6 +30,16 @@ import { filePreviewScript } from "./file-preview.js";
 
 type Fetch = (request: Request) => Promise<Response>;
 const descriptionSchema = z.strictObject({
+  hosting: z
+    .strictObject({
+      untrustedTenants: z.boolean(),
+      runtime: z
+        .string()
+        .min(1)
+        .max(64)
+        .regex(/^[a-zA-Z0-9_.-]+$/),
+    })
+    .optional(),
   execution: z.literal("isolated-process"),
   files: z.literal(true),
   home: z.literal(true),
@@ -51,19 +61,32 @@ const errorCodes = new Set([
 ]);
 async function checked(response: Response) {
   if (response.ok) return response;
-  const data = (await response.json().catch(() => null)) as { code?: string } | null;
+  const data = (await json(response, 1024).catch(() => null)) as { code?: string } | null;
   if (data?.code && errorCodes.has(data.code))
     throw new ComputerError(data.code as ComputerError["code"]);
   throw new ComputerError("PROVIDER_UNAVAILABLE");
 }
-async function json(response: Response, maxBytes = MAX_HOME_BYTES * 2) {
+async function bounded<T>(signal: AbortSignal, work: Promise<T>): Promise<T> {
+  signal.throwIfAborted();
+  let abort: () => void = () => {};
+  const deadline = new Promise<never>((_, reject) => {
+    abort = () => reject(new ComputerError("PROVIDER_UNAVAILABLE"));
+    signal.addEventListener("abort", abort, { once: true });
+  });
+  try {
+    return await Promise.race([work, deadline]);
+  } finally {
+    signal.removeEventListener("abort", abort);
+  }
+}
+async function json(response: Response, maxBytes = MAX_HOME_BYTES * 2, signal?: AbortSignal) {
   const reader = response.body?.getReader();
   if (!reader) throw new ComputerError("PROVIDER_UNAVAILABLE");
   let size = 0;
   const chunks: Uint8Array[] = [];
   try {
     while (true) {
-      const { value, done } = await reader.read();
+      const { value, done } = await (signal ? bounded(signal, reader.read()) : reader.read());
       if (done) break;
       size += value.byteLength;
       if (size > maxBytes) throw new ComputerError("LIMIT_EXCEEDED");
@@ -110,6 +133,7 @@ export function createDockerComputerProvider(options: {
             },
             body: JSON.stringify({ generation: ref.generation, ...input }),
             signal: signal ?? AbortSignal.timeout(120_000),
+            redirect: "error",
           }),
         ),
       );
@@ -128,13 +152,15 @@ export function createDockerComputerProvider(options: {
           new Request(new URL("/description", url).toString(), {
             headers: { authorization: `Bearer ${options.token}` },
             signal: AbortSignal.timeout(5000),
+            redirect: "error",
           }),
         ),
       );
-      const description = descriptionSchema.parse(await json(response));
-      const { screenUnavailableReason, ...capabilities } = description;
+      const description = descriptionSchema.parse(await json(response, 16 * 1024));
+      const { hosting, screenUnavailableReason, ...capabilities } = description;
       return {
         ...capabilities,
+        ...(hosting ? { hosting } : {}),
         screen: description.screen ?? false,
         ...(screenUnavailableReason ? { screenUnavailableReason } : {}),
       };
@@ -151,7 +177,10 @@ export function createDockerComputerProvider(options: {
       const reader = response.body?.getReader();
       if (!reader) throw new ComputerError("PROVIDER_UNAVAILABLE");
       let cancelling: Promise<void> | undefined;
-      const cancel = () => (cancelling ??= call(ref, "cancel", { executionId }).then(() => {}));
+      const cancel = () =>
+        (cancelling ??= call(ref, "cancel", { executionId }, AbortSignal.timeout(5000)).then(
+          () => {},
+        ));
       async function* events(): AsyncIterable<ProcessEvent> {
         const decoder = new TextDecoder();
         let pending = "";
@@ -324,4 +353,53 @@ export function createDockerComputerProvider(options: {
     },
   };
   return provider;
+}
+
+/** Saved administrator location only; no redirects, body echoes or provider diagnostics. */
+export async function testDockerComputerConnection(options: {
+  url: string;
+  token: string;
+  fetch?: Fetch;
+  timeoutMs?: number;
+}): Promise<
+  | {
+      status: "connected";
+      untrustedTenants: boolean;
+      runtime: "runc" | "runsc" | "other";
+      screen: boolean;
+    }
+  | { status: "not-configured" | "authentication-failed" | "timeout" | "unavailable" }
+> {
+  const signal = AbortSignal.timeout(Math.min(options.timeoutMs ?? 5000, 5000));
+  try {
+    const response = await bounded(
+      signal,
+      (options.fetch ?? fetch)(
+        new Request(new URL("/description", options.url).toString(), {
+          headers: { authorization: `Bearer ${options.token}` },
+          redirect: "error",
+          signal,
+        }),
+      ),
+    );
+    if (response.status === 401 || response.status === 403) {
+      await response.body?.cancel();
+      return { status: "authentication-failed" };
+    }
+    if (!response.ok) {
+      await response.body?.cancel();
+      return { status: "unavailable" };
+    }
+    const description = descriptionSchema.parse(await json(response, 16 * 1024, signal));
+    if (!description.hosting) return { status: "unavailable" };
+    const { untrustedTenants, runtime } = description.hosting;
+    return {
+      status: "connected",
+      untrustedTenants,
+      runtime: runtime === "runsc" || runtime === "runc" ? runtime : "other",
+      screen: description.screen === true,
+    };
+  } catch {
+    return { status: signal.aborted ? "timeout" : "unavailable" };
+  }
 }

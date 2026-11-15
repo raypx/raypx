@@ -61,7 +61,8 @@ failures show unavailable states; clients never invent a successful save.
 
 The **Site** tab manages the settings below. The **Object storage** tab manages
 attachment upload availability, the S3 location and write-only credentials.
-The **Email** tab manages Resend. Each tab has its own revision and saves
+The **Email** tab manages Resend. The **Sandbox** tab manages the deployment Computer
+provider. Each tab has its own revision and saves
 independently. Provider changes record only the enabled state in the audit.
 See [S3 configuration](object-storage.md).
 
@@ -131,10 +132,76 @@ Without mail, recovery requires an administrator who can still sign in. Configur
 mail and keep another trusted administrator before losing the only administrator
 session or password; no unauthenticated recovery bypass is added.
 
-The existing optional `db:migrate --import-config` can seed missing delivery/storage
-settings from explicit operator environment inputs. It is not needed to bootstrap,
+The existing optional `db:migrate --import-config` can seed missing mail, storage
+and sandbox settings from explicit operator environment inputs. It is not needed to bootstrap,
 and never replaces settings already saved in the center. Keep `APP_KEY` stable
 and shared across API replicas. No earlier product database is imported.
+
+## Sandbox connection
+
+Open **Configuration center → Sandbox** as a deployment administrator. Select
+**Sandbox supervisor**, enter its root base URL and dedicated bearer credential,
+choose whether to offer Screen, and save. **Test connection** then tests the saved
+configuration. No API/worker restart or redeploy is required. Disabled is the
+default, and ordinary conversations and device computers remain available.
+Deployment administration grants no Space access.
+
+The URL accepts HTTPS or HTTP with no embedded credentials, path, query or fragment.
+Use HTTP only within an authenticated encrypted private tunnel (loopback is suitable
+for local development). See [host reachability](sandbox-hosting.md#paas-reachability-without-wireguard)
+for a PaaS API without WireGuard. A changed URL requires an explicitly supplied
+credential so a retained secret cannot be sent to another origin. A blank credential
+keeps the existing value at the same URL. It is encrypted with `APP_KEY`, bound to
+that URL, and never returned in configuration responses, events or audits. Reads
+return only `hasCredential`; audits contain only `sandboxEnabled`.
+
+`configuration.sandbox`, `configuration.updateSandbox` and
+`configuration.testSandbox` reuse the existing session/administrator permissions,
+trusted-Origin mutation boundary, strict DTOs, CAS revisions, atomic success audit
+and per-administrator limits. Testing accepts no destination or credential input,
+allows three requests/minute, rejects redirects, caps the authenticated description
+at 16 KiB and bounds headers and body to five seconds. Only connection status,
+untrusted-tenant mode, `runc`/`runsc`/`other` runtime classification and actual Screen
+availability are returned; arbitrary response text and diagnostics are discarded.
+This is a connection check, not host isolation or graphical acceptance.
+
+PostgreSQL is read freshly at operation admission and completion in both API and
+worker roles; only the adapter for the exact saved revision is reused. The existing
+`sandbox` configuration reader scope and optional Redis invalidation follow the
+mail/storage path. Fresh PostgreSQL reads also work across processes without Redis
+or during missed notifications. Construction performs no database/network I/O.
+Commands and Screen streams recheck revisions at least every second while waiting
+for data. A change closes their old stream, cancels known commands best effort and
+refuses to publish success from the retired revision. New Runs without a configured
+sandbox continue without Computer tools; pinned Runs never switch computers.
+
+A private `computers.supervisor_url` binds a computer before its first remote
+provision. Changing the destination leaves existing computers unavailable, with
+`PROVIDER_UNAVAILABLE`, rather than provisioning an empty replacement home. New
+Spaces use the new destination. Restore the original URL/credential to regain
+access to retained computers. Stop/drain them before moving hosts, and preserve
+supervisor state through an operator-reviewed move. Disabling refuses new operations;
+it cannot prove that an unreachable host stopped compute. An admitted provision
+finishing after a change is stopped at its original destination best effort and
+recorded as failed. Unknown remote outcomes stay unknown. Supervisor idle/lifetime
+containment remains necessary; disabling is not a host drain or migration.
+Screen is offered only when both the saved switch and supervisor capability permit
+it. Image/runtime, egress, quotas and all host limits remain supervisor-owned.
+
+Only explicit `db:migrate --import-config` (or `DB_MIGRATE_IMPORT_CONFIG=true`) reads
+`COMPUTER_PROVIDER=none|docker`, `SANDBOX_SUPERVISOR_URL`,
+`SANDBOX_SUPERVISOR_TOKEN` and `COMPUTER_SCREEN_ENABLED=true|false`. It seeds a missing
+row inside the migration transaction and never replaces a saved row. These inputs
+are absent from the API/worker runtime environment contract; changing them does
+nothing to an existing deployment setting. Compose forwards them to `migrate`,
+while the supervisor separately needs its own host token and image configuration.
+Backend `COMPUTERS_PER_SPACE`/`COMPUTERS_PER_MEMBER` remain record-quota deployment
+inputs, independent of supervisor enforcement. Keep `APP_KEY` stable across roles.
+
+The unreleased foundation now includes `sandbox_configuration` and the private
+computer placement column. Exactly one baseline was regenerated, with no incremental
+migration or backfill. An already deployed test database must be wiped before
+applying this baseline; never apply it over an operator or retired database.
 
 ## Server-side injection (IoC)
 
@@ -155,7 +222,7 @@ invitation-only registration. Runtime composition injects the fresh mail reader;
 Auth owns session establishment and safe client feedback.
 
 The cleanup job receives the site reader via `createCleanupJob`. API composition
-registers the site snapshot, S3 provider and Resend client with one
+registers the site snapshot, S3 provider, Resend client and sandbox adapter with one
 `createConfigReads` per runtime. For a new configuration scope, register
 its typed PostgreSQL loader in `source()`, use `read()` where policy requires
 fresh values, and call `committed(scope, revision)` after the settings and audit

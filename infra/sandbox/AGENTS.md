@@ -66,3 +66,5 @@ explicit validation adapter. Never log packets, commands or content.
 The host check timer independently contains exact-owned tenants and closes the
 supervisor on missing privacy hooks or low disk/inode headroom. It never repairs
 rules during admission; operator review/restart follows a refusal.
+
+All routes authenticate before disclosing state. Authenticated description includes tenant mode/runtime; body reads have a ten-second deadline plus existing byte bounds. An operator-accepted TLS proxy with source allowlisting may front the private listener for a PaaS; do not publish raw HTTP or weaken untrusted mode.

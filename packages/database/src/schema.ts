@@ -259,6 +259,7 @@ export const computers = pgTable(
     leaseOwner: text("lease_owner"),
     leaseExpiresAt: date("lease_expires_at"),
     leaseFence: bigint("lease_fence", { mode: "number" }).notNull().default(0),
+    supervisorUrl: text("supervisor_url"), // Private placement; never part of the Computer projection.
     failureCode: text("failure_code", { enum: ["PROVIDER_UNAVAILABLE", "RESTORE_FAILED"] }),
     ...timestamps(),
   },
@@ -1584,6 +1585,16 @@ export const mailConfiguration = pgTable("mail_configuration", {
   updatedAt: date("updated_at").notNull().defaultNow(),
 });
 
+export const sandboxConfiguration = pgTable("sandbox_configuration", {
+  id: text("id").primaryKey(),
+  provider: text("provider", { enum: ["none", "docker"] }).notNull(),
+  url: text("url"),
+  screen: boolean("screen").notNull(),
+  credentials: text("credentials"),
+  revision: integer("revision").notNull(),
+  updatedAt: date("updated_at").notNull().defaultNow(),
+});
+
 // Independent of account lifetimes: immutable terminal management history.
 export const adminAudit = pgTable(
   "admin_audit",
@@ -2794,6 +2805,7 @@ export const schema = {
   systemConfiguration,
   storageConfiguration,
   mailConfiguration,
+  sandboxConfiguration,
   user,
   session,
   account,

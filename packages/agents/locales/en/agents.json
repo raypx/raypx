@@ -794,6 +794,7 @@
     "HOME_STORAGE_LIMIT": "This computer has reached its file storage limit.",
     "CAPACITY_UNAVAILABLE": "Computer capacity is temporarily unavailable. Try again later.",
     "COMPUTER_TRANSFER_LIMIT": "This computer reached its transfer limit and was stopped.",
+    "PROVIDER_UNAVAILABLE": "The sandbox supervisor is unavailable or its deployment connection changed.",
     "SPACE_DAILY_TRANSFER_LIMIT": "This Space reached its daily transfer limit. Try again after midnight UTC."
   }
 }

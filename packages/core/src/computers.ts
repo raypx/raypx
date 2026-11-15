@@ -43,6 +43,7 @@ export const computerSchema = z
     "A lease requires an owner and expiry",
   );
 export const computerAvailabilityReasonSchema = z.enum([
+  "PROVIDER_UNAVAILABLE",
   "SPACE_RUNNING_LIMIT",
   "DEPLOYMENT_RUNNING_LIMIT",
   "SPACE_STORAGE_LIMIT",

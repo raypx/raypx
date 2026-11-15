@@ -162,6 +162,7 @@ CREATE TABLE "computers" (
 	"lease_owner" text,
 	"lease_expires_at" timestamp with time zone,
 	"lease_fence" bigint DEFAULT 0 NOT NULL,
+	"supervisor_url" text,
 	"failure_code" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -1065,6 +1066,16 @@ CREATE TABLE "routines" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "routines_pkey" PRIMARY KEY("space_id","id"),
 	CONSTRAINT "routines_rate_count_check" CHECK ("rate_count" >= 0)
+);
+--> statement-breakpoint
+CREATE TABLE "sandbox_configuration" (
+	"id" text PRIMARY KEY,
+	"provider" text NOT NULL,
+	"url" text,
+	"screen" boolean NOT NULL,
+	"credentials" text,
+	"revision" integer NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "session" (

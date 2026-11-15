@@ -437,7 +437,10 @@ export function createComputerTools(
     async initialize(scope, run, signal) {
       // startedAt is committed only after resource initialization. A started Run
       // with no computer pinned chose no computer; a new provider cannot change it.
-      if (run.computerId === null && (run.startedAt !== null || !provider)) {
+      if (
+        run.computerId === null &&
+        (run.startedAt !== null || !provider || (await provider.configured?.()) === false)
+      ) {
         withoutComputer.add(attemptKey(run));
         return;
       }

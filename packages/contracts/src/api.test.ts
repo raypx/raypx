@@ -126,6 +126,7 @@ it("audits configuration mutations and administrator reset-link issuance", () =>
     ["admin.issuePasswordReset", "user.password.reset-link"],
     ["configuration.update", "configuration.update"],
     ["configuration.updateStorage", "configuration.update"],
+    ["configuration.updateSandbox", "configuration.update"],
     ["configuration.updateResend", "configuration.update"],
   ]);
   for (const procedures of Object.values(apiContract))

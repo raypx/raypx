@@ -1,7 +1,8 @@
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 import { migrateDatabase } from "@raypx/database";
-import { resendUpdateSchema } from "@raypx/contracts/api";
+import { initializeSandbox } from "./sandbox.js";
+import { sandboxUpdateSchema, resendUpdateSchema } from "@raypx/contracts/api";
 import { configureRuntimeRole } from "./migration-runtime-role.js";
 import { initializeResend } from "./resend.js";
 import { saveStorageConfiguration, storageConfigSchema } from "../storage/config.js";
@@ -52,6 +53,42 @@ async function migrate() {
   const storagePresent =
     importConfig &&
     Boolean(env.S3_ENDPOINT || env.S3_BUCKET || env.S3_ACCESS_KEY_ID || env.S3_SECRET_ACCESS_KEY);
+  const sandboxPresent =
+    importConfig &&
+    Boolean(
+      env.COMPUTER_PROVIDER ||
+      env.SANDBOX_SUPERVISOR_URL ||
+      env.SANDBOX_SUPERVISOR_TOKEN ||
+      env.COMPUTER_SCREEN_ENABLED,
+    );
+  const sandbox = sandboxPresent
+    ? sandboxUpdateSchema.safeParse({
+        values: {
+          provider: env.COMPUTER_PROVIDER || "none",
+          url: env.SANDBOX_SUPERVISOR_URL || null,
+          screen: env.COMPUTER_SCREEN_ENABLED === "true",
+        },
+        ...(env.SANDBOX_SUPERVISOR_TOKEN ? { credential: env.SANDBOX_SUPERVISOR_TOKEN } : {}),
+        revision: 0,
+      })
+    : undefined;
+  if (
+    sandbox &&
+    (!sandbox.success ||
+      (sandbox.data.values.provider === "docker" && !sandbox.data.credential) ||
+      (env.COMPUTER_SCREEN_ENABLED && !["true", "false"].includes(env.COMPUTER_SCREEN_ENABLED)) ||
+      (sandbox.data.credential &&
+        Object.entries(env).some(
+          ([key, value]) =>
+            key !== "SANDBOX_SUPERVISOR_TOKEN" &&
+            value &&
+            (value === sandbox.data.credential ||
+              value.includes(JSON.stringify(sandbox.data.credential))),
+        )))
+  )
+    throw new MigrationInputError(
+      "Provide a supervisor URL and dedicated credential to import sandbox configuration.",
+    );
   const storageStdin = values["storage-stdin"];
   const mail = mailPresent
     ? resendUpdateSchema.safeParse({
@@ -90,12 +127,13 @@ async function migrate() {
     throw new MigrationInputError(
       "Provide an S3 endpoint, bucket, and both keys to import storage.",
     );
-  if ((mail || storage) && (!secret || secret.length < 32))
+  if ((mail || storage || sandbox) && (!secret || secret.length < 32))
     throw new MigrationInputError("Set the API deployment's APP_KEY to import configuration.");
 
   await migrateDatabase(url, migrations, async (tx) => {
     if (runtimeUser && runtimePassword)
       await configureRuntimeRole(tx, runtimeUser, runtimePassword);
+    if (sandbox?.success) await initializeSandbox(tx, secret!, sandbox.data);
     if (mail?.success && mail.data.apiKey)
       await initializeResend(tx, secret!, mail.data.values, mail.data.apiKey);
     if (storage?.success)

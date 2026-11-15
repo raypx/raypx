@@ -45,3 +45,25 @@ it("invalidates all scopes on resubscription and unsubscribes when the runtime c
   reads.close();
   expect(unsubscribe).toHaveBeenCalledOnce();
 });
+
+it("uses the existing notification invalidation for sandbox settings and reconnects", async () => {
+  let receive: Parameters<ConfigNotifications["subscribe"]>[0] = () => {};
+  let reconnected = () => {};
+  const reads = createConfigReads({
+    publish: () => {},
+    subscribe: (next, ready) => {
+      receive = next;
+      reconnected = ready;
+      return () => {};
+    },
+  });
+  const load = vi.fn(async () => 1);
+  const sandbox = reads.source("sandbox", load);
+  await sandbox.readCached();
+  receive({ scope: "sandbox", revision: 2 });
+  await sandbox.readCached();
+  reconnected();
+  await sandbox.readCached();
+  expect(load).toHaveBeenCalledTimes(3);
+  reads.close();
+});

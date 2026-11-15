@@ -246,3 +246,5 @@ hide self-management and disable known last-owner actions with a reason. Short l
 dates retain exact tooltips. The conversation header uses an explicit narrow two-row
 grid; feature-owned rail buttons use hover/focus tooltips. Attachment fallback stays
 visible until the authenticated raster finishes decoding, and returns on failure.
+
+A new Run with a dynamically disabled sandbox retains conversation-only execution and no Computer tools. Pinned Runs never switch computers after a deployment configuration change. Shared availability copy includes PROVIDER_UNAVAILABLE for all clients.

@@ -1,4 +1,4 @@
-export const configScopes = ["site", "storage", "resend"] as const;
+export const configScopes = ["site", "storage", "resend", "sandbox"] as const;
 export type ConfigScope = (typeof configScopes)[number];
 type ConfigChange = { scope: ConfigScope; revision: number };
 

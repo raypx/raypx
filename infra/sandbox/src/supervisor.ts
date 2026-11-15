@@ -579,6 +579,7 @@ export function createSupervisor(
     async describe() {
       const restricted = config.restrictedEgress && config.hostRulesApplied;
       return {
+        hosting: { untrustedTenants: config.untrustedTenants, runtime: config.runtime },
         execution: "isolated-process",
         files: true,
         home: true,

@@ -1,9 +1,6 @@
 /** Static deployment inputs; the runtime schema must declare exactly these keys. */
 export default {
-  COMPUTER_PROVIDER: "input",
   DEVICE_CONNECTOR_ORIGIN: "input",
-  SANDBOX_SUPERVISOR_URL: "input",
-  SANDBOX_SUPERVISOR_TOKEN: "input",
   COMPUTERS_PER_MEMBER: "input",
   COMPUTERS_PER_SPACE: "input",
   SERVER_ROLE: "input",

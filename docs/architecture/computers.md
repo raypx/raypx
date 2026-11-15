@@ -82,8 +82,9 @@ The supervisor is a separate service under `infra/sandbox`.
 
 - It alone holds the Docker socket. Access to the socket is control of the Docker
   host, so the backend never mounts it.
-- It listens on the private network only. The backend calls it with a dedicated
-  token that is distinct from every other secret.
+- It listens on a private/loopback address. The backend calls it with a dedicated
+  token over an authenticated encrypted private tunnel or an accepted, source-restricted
+  TLS reverse proxy. Every route requires authentication.
 - It applies memory, CPU and process ceilings to each container. A malformed limit
   fails the supervisor at startup and names the setting.
 - Deployment settings cap computers per member and per Space.
@@ -92,6 +93,29 @@ The supervisor is a separate service under `infra/sandbox`.
   ruleset. Where it is not applied, the supervisor reports egress as unrestricted.
 - The computer image is built from this repository and pinned by repository digest
   or immutable local Engine image ID. Mutable tags are rejected.
+
+## Deployment configuration
+
+The administrator configures provider (`none`/`docker`), supervisor root URL,
+write-only encrypted credential and Screen offering through the existing
+configuration center. `sandbox_configuration` uses the same revisioned,
+audited provider-setting transaction and configuration reader/optional Redis
+invalidation as mail/storage. Fresh PostgreSQL reads admit every operation in API
+and worker roles without startup I/O or restart; no environment value overrides
+saved settings. Optional migration imports seed missing rows only.
+
+`computers.supervisor_url` is private placement metadata excluded from Computer
+contracts/events. A different saved URL refuses access to an existing computer;
+it never creates an empty home at another supervisor. A disabled setting refuses
+further calls, and revision changes fence completion/streams from old adapters.
+Known commands are cancelled and an admitted create finishing after a change is
+stopped at its original host best effort. Unreachable/unknown compute is never
+claimed stopped; supervisor containment still applies. Members see the existing
+not-configured state or the translated `PROVIDER_UNAVAILABLE` availability reason.
+Screen requires both the saved offering switch and actual provider support.
+Administrator permissions never confer Space membership. See
+[configuration semantics](../development/configuration.md#sandbox-connection) and
+[PaaS reachability](../development/sandbox-hosting.md#paas-reachability-without-wireguard).
 
 ## Untrusted tenant hosting
 
@@ -173,7 +197,7 @@ there is no cascade that can silently orphan a running computer.
 
 `computers.get/start/stop` resolve current membership, and mutations require a
 trusted Origin. Reads allocate nothing; the first explicit start creates the one
-team record. With `COMPUTER_PROVIDER=none`, all three return `not-configured` and
+team record. With the saved deployment Sandbox provider disabled, all three return `not-configured` and
 allocate nothing. The in-memory provider can be injected into server compositions
 without a sandbox; it runs a documented virtual command set and never executes on
 the backend host. No Run or model receives this port in this slice.

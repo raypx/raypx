@@ -41,3 +41,5 @@ Quota error codes are additive and preserved by the private HTTP adapter; no
 Engine detail or credential enters lifecycle responses.
 Provider lifecycle snapshots may also expose an optional value-free availability
 reason after an automatic transfer-budget stop. This metadata grants no authority.
+
+Deployment adapters may implement configured() for fresh availability admission. The Docker description reports optional hosting metadata; testDockerComputerConnection bounds headers/body to five seconds and 16 KiB, refuses redirects and returns only safe mode/runtime/Screen classifications. No response diagnostics or credentials are returned.

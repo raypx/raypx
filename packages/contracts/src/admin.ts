@@ -11,6 +11,7 @@ const values = z.strictObject({
   registrationEnabled: z.boolean().optional(),
   cleanupEnabled: z.boolean().optional(),
   storageEnabled: z.boolean().optional(),
+  sandboxEnabled: z.boolean().optional(),
   mailEnabled: z.boolean().optional(),
 });
 export const auditEntrySchema = z.strictObject({

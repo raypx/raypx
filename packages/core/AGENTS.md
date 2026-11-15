@@ -30,3 +30,5 @@ admission and unsupported graphical runtimes. Frames remain transient untrusted
 content, never authorization; no provider credential enters public records.
 
 Auth exposes usableEmail for verified accounts or server-recorded no-mail admission exemptions; this is never Space authorization. users.password.reset grants audited no-mail recovery-link issuance only through API.
+
+Computer availability includes PROVIDER_UNAVAILABLE for unreachable or changed deployment connections. Private supervisor placement and credentials never enter the Computer domain projection.

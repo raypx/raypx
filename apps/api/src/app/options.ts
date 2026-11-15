@@ -1,6 +1,7 @@
 import type { AuditService } from "../admin/audit.js";
 import type { AdministrationQueries } from "../admin/types.js";
 import type {
+  SandboxSettingsService,
   ConfigService,
   ResendSettingsService,
   StorageSettingsService,
@@ -50,6 +51,7 @@ export interface ApiAppOptions {
   config: ConfigService;
   storageSettings: StorageSettingsService;
   resendSettings: ResendSettingsService;
+  sandboxSettings: SandboxSettingsService;
   jobsEnabled?: boolean;
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;

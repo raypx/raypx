@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "eed49700-f615-49dc-ac4a-71de75fa6113",
+  "id": "490f2f3f-f490-49fe-9b0e-fc938684a168",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -1445,6 +1445,25 @@
         "n|rel|public.routines",
         "n|type|public.routines",
         "n|rel|public.routines_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "sandbox_configuration"
+      ],
+      "writes": [
+        "s|tbl|public.sandbox_configuration",
+        "n|tbl|public.sandbox_configuration",
+        "e|tbl|public.sandbox_configuration",
+        "n|rel|public.sandbox_configuration",
+        "n|type|public.sandbox_configuration",
+        "n|rel|public.sandbox_configuration_pkey"
       ],
       "reads": [
         "n|sch|public"
@@ -8390,6 +8409,12 @@
     },
     {
       "schema": "public",
+      "name": "sandbox_configuration",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "session",
       "isRlsEnabled": false,
       "entityType": "tables"
@@ -9877,6 +9902,19 @@
       "notNull": true,
       "dimensions": 0,
       "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computers",
+      "name": "supervisor_url",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
       "generated": null,
       "identity": null,
       "entityType": "columns"
@@ -17488,6 +17526,97 @@
     {
       "schema": "public",
       "table": "routines",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
+      "name": "provider",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
+      "name": "url",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
+      "name": "screen",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
+      "name": "credentials",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
+      "name": "revision",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
       "name": "updated_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
@@ -26479,6 +26608,16 @@
       "schema": "public",
       "table": "rate_limit",
       "name": "rate_limit_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
+      "name": "sandbox_configuration_pkey",
       "columns": [
         "id"
       ],

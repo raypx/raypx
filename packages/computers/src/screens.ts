@@ -182,7 +182,7 @@ export function createComputerScreensService(
     );
   }
   async function availability(scope: SpaceScope): Promise<ComputerScreenState> {
-    if (!provider) return { status: "not-configured" };
+    if (!provider || (await provider.configured?.()) === false) return { status: "not-configured" };
     const computer = await computers.get(scope);
     if (!computer || computer.state !== "running" || computer.leaseOwner)
       return { status: "not-running", state: computer?.state ?? null };

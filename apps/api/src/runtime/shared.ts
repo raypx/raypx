@@ -1,3 +1,4 @@
+import { knownComputerSecrets } from "./computers.js";
 import { createRegistration } from "../admin/registration.js";
 import { createPasswordResetLinks } from "../admin/password-reset.js";
 import type { Mailer } from "@raypx/email/server";
@@ -9,6 +10,7 @@ import { createConfigRepository } from "../config/repository.js";
 import { createAccessPolicy } from "../access.js";
 import { createConfigService } from "../config/service.js";
 import { createConfigReads } from "../config/reads.js";
+import { createSandboxSettings } from "../config/sandbox.js";
 import { createResendSettings, databaseMailer } from "../config/resend.js";
 import type { ConfigRepository } from "../config/types.js";
 import { createAuditedAuthAdapter } from "../admin/auth-adapter.js";
@@ -126,7 +128,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       routineWorker,
       spaceManagement,
       spaceDeletionWorker,
-    } = await composeAgents(db, environment, logger, resources.createModels);
+    } = await composeAgents(db, environment, logger, resources.createModels, reads);
     lifecycle.own(() => deviceConnector.shutdown());
     lifecycle.own(() => runner.close());
     lifecycle.own(() => routineWorker.close());
@@ -204,6 +206,13 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         config,
         storageSettings: createStorageSettings(db, environment.APP_KEY, audit, reads),
+        sandboxSettings: createSandboxSettings(
+          db,
+          environment.APP_KEY,
+          audit,
+          reads,
+          knownComputerSecrets(environment),
+        ),
         resendSettings: createResendSettings(db, environment.APP_KEY, audit, reads),
         jobsEnabled: environment.JOBS_ENABLED,
         authHandler: (request) => registration.handle(request, () => auth.handler(request)),
@@ -223,7 +232,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
                 },
               }
             : {}),
-          ...(computerProvider ? { sandbox: () => computerProvider.describe() } : {}),
+          sandbox: async () => {
+            if (await computerProvider.configured?.()) await computerProvider.describe();
+          },
         },
         ...(rateLimit ? { rateLimit } : {}),
       }),

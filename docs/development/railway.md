@@ -49,7 +49,7 @@ a separate one-shot job with the owner URL, `DB_MIGRATE_RUNTIME_USER`, and
 `DATABASE_MIGRATE_ON_START=false`, and remove the shared-environment pre-deploy
 command once the new job gates API deployment.
 
-Mail and storage live in each environment's database. Configure them in the center
+Mail, storage and sandbox connection settings live in each environment's database. Configure them in the center
 after first signup. Optional operator seeding can use `DB_MIGRATE_IMPORT_CONFIG=true`
 with explicit provider inputs during the pre-deploy job; remove those inputs and
 the flag afterwards. Seeding is not required for account bootstrap. See the
@@ -251,3 +251,20 @@ After the domain is ready:
 6. Repeat HTTPS, signed-out redirect, login, cookie and Relay checks on raypx.com.
 
 The DNS change alone does not rebuild Web or change its API origin.
+
+## Sandbox connection from a PaaS
+
+After deploying, use **Configuration center → Sandbox** to save and test the
+supervisor URL/credential and choose Screen offering. No service redeploy is
+needed. API/worker runtime variables do not override PostgreSQL. Optional
+pre-deploy `DB_MIGRATE_IMPORT_CONFIG=true` seeds a missing sandbox row from
+`COMPUTER_PROVIDER`, `SANDBOX_SUPERVISOR_URL`, `SANDBOX_SUPERVISOR_TOKEN` and
+`COMPUTER_SCREEN_ENABLED`; remove import inputs afterwards. Keep the supervisor's
+host token independently configured on that host.
+
+The PaaS needs actual network reachability. Without WireGuard, a trusted TLS proxy
+with valid certificates and a source-address allowlist for fixed API/worker egress
+can front the private authenticated supervisor. Otherwise provide a private route.
+See [required topology and bounds](sandbox-hosting.md#paas-reachability-without-wireguard).
+The IaC partial provisions no supervisor, private route or TLS proxy; live network
+and host acceptance remain separate.

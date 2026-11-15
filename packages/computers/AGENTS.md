@@ -53,3 +53,5 @@ not proof of a stop. Admission refusal reasons are additive lifecycle metadata.
 Provider observations also carry value-free per-start/daily transfer reasons;
 later stopped-state reads retain them without starting compute. Clients translate
 these codes through the shared catalogs.
+
+Lifecycle and Screen admission recheck optional provider.configured(). A transport or placement refusal surfaces PROVIDER_UNAVAILABLE without claiming compute stopped. The PostgreSQL projection excludes private supervisor_url placement.

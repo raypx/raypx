@@ -21,3 +21,5 @@ deploy target includes pre-deploy migration dependencies.
 Keep tests beside the infrastructure entry and independent of credentials or live Railway state.
 Run `bun run --cwd infra/railway check` and `test`, then root `bun run verify`.
 See `docs/development/railway.md` for operator commands.
+
+Sandbox connections are administrator-managed PostgreSQL settings. Optional pre-deploy environment imports seed missing rows only; API/worker runtime variables are not authoritative. This partial creates no supervisor route or TLS proxy.
