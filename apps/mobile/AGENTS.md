@@ -75,7 +75,9 @@ bottom sheet without animation; destructive deletion/stop use native confirmatio
 Conversation, Activity and Files tabs switch the main native column without
 replacing its controller or draft. Files uses the shared bounded read-only
 ComputerFilesController, never starts compute, and clears preview state on exit.
-Member messages use compact right bubbles; Agent replies stay on the canvas with
+Member messages use compact right bubbles. Exact member Page references for the
+configured API origin and conversation Space use a localized Page label; all other
+member text stays literal. Agent replies stay on the canvas with
 native Markdown, code-language/copy controls and quiet copy/retry actions. Retry
 only restores the triggering question for explicit Send. Pending approvals remain
 once above the floating composer in every tab and never disable it. Render replies as native

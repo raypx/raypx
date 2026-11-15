@@ -744,6 +744,12 @@
   "copyReplyError": "Select the reply and copy it manually.",
   "replyActions": "Reply actions",
   "addContext": "Add context",
+  "pageReference": {
+    "page": "Page",
+    "open": "Open Page: {title}",
+    "remove": "Remove Page reference: {title}",
+    "references": "Page references"
+  },
   "pagesContext": "Pages",
   "computerShort": "Computer",
   "composerComputer": "Computer context: {state}",

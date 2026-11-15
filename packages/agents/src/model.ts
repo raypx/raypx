@@ -184,3 +184,4 @@ export {
 } from "./model/attachments.js";
 
 export { NotificationsController, type MemberNotificationsPort } from "./model/notifications.js";
+export { memberTextParts } from "./model/page-reference.js";

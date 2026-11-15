@@ -1019,3 +1019,16 @@ it.each(["cancelled", "waiting"] as const)(
     await h.close();
   },
 );
+
+it("shows a readable Page label only for this origin and Space", async () => {
+  const reference = "[页面](https://app.example.test/page-content/member/space/page-one)";
+  const otherSpace = "[Page](https://app.example.test/page-content/member/other/page-one)";
+  const otherOrigin = "[Page](https://other.example/page-content/member/space/page-one)";
+  const f = await harness({
+    cursor: 1,
+    messages: [message(`Read ${reference} please. ${otherSpace} ${otherOrigin}`)],
+  });
+  expect(textContent(f.view.root)).toContain(`Read Page please. ${otherSpace} ${otherOrigin}`);
+  expect(textContent(f.view.root)).not.toContain(reference);
+  await f.close();
+});

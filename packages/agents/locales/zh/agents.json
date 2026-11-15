@@ -744,6 +744,12 @@
   "copyReplyError": "请选择回复并手动复制。",
   "replyActions": "回复操作",
   "addContext": "添加上下文",
+  "pageReference": {
+    "page": "页面",
+    "open": "打开页面：{title}",
+    "remove": "移除页面引用：{title}",
+    "references": "页面引用"
+  },
   "pagesContext": "页面",
   "computerShort": "计算机",
   "composerComputer": "计算机上下文：{state}",

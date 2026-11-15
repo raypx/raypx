@@ -25,6 +25,7 @@ import { TextArea } from "heroui-native/text-area";
 import { TextField } from "heroui-native/text-field";
 import { Spinner } from "heroui-native/spinner";
 import {
+  memberTextParts,
   conversationMemberLabel,
   delegatedWork,
   activeConversationRun,
@@ -338,7 +339,13 @@ export function AgentConversation({
           )}
           <View className="max-w-[88%] rounded-2xl bg-surface-sunken px-4 py-3">
             <Text selectable className="text-base leading-6 text-foreground">
-              {row.text}
+              {row.agentId
+                ? row.text
+                : memberTextParts(row.text, origin, spaceId)
+                    .map((part) =>
+                      part.kind === "page" ? t("agents.pageReference.page") : part.text,
+                    )
+                    .join("")}
             </Text>
           </View>
           <AttachmentDownloads

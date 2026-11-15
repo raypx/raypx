@@ -227,6 +227,15 @@ link after deletion without retaining the document body or granting access.
 Web opens Page detail, Desktop retains its Web preview handoff, and Mobile hands
 off to Web. Null identity opens the Pages list; stale IDs show a deleted state.
 
+Ask about a Page keeps the member-content Markdown link in the draft and stored
+message for Agent resolution. Web/Desktop recognize only the exact reference at
+the configured API origin in the conversation's own Space, render a focusable Page
+chip and open it through the existing Page navigation. Authorized Page reads supply
+current titles; missing Pages use the localized Page fallback. The composer reuses
+its attachment area for removable references without changing draft/send persistence.
+Other member text remains literal; Mobile replaces only matching references with a
+localized Page label.
+
 Skills use `@raypx/skills/server`. Account skills follow all/selected membership
 availability, including future Spaces in all mode. Learned skills are separate
 Space-local text records. Agent enablement is per member and Agent so sharing an

@@ -1491,6 +1491,7 @@ function AgentsWorkspaceContents({
             onDeleteAgent={selectedGroup ? undefined : () => void removeAgent(selected)}
             onOpenPage={onOpenPage}
             composerReference={composerReference}
+            subscribePages={subscribePages}
             group={selectedGroup}
             agentDirectory={page.agents.map((entry) => entry.agent)}
             onManageParticipants={selectedGroup && groups ? openParticipants : undefined}

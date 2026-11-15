@@ -229,6 +229,14 @@ fenced inbox/image delivery. Notification service queries PostgreSQL sources;
 models expose injected upload/feed ports. Drafts never persist bytes or restart
 uploads. DOM chips, menu/drop/paste and sidebar bell share these models.
 
+Member Page references retain their Markdown text for Agent resolution. `/model`
+recognizes only the exact member Page link for the configured origin and the
+conversation's Space. DOM bubbles open titled reference chips through `onOpenPage`;
+the optional `pages.get` port supplies titles, refreshed by Page events/focus, with
+a localized missing-title fallback. The composer projects the same draft text into
+removable chips in its attachment area; restoration never sends. Other member text
+remains literal. Mobile shares the matcher and shows a localized Page label.
+
 ComputerController retains value-free admission reasons for the failed generation
 through racing events/refreshes. DOM and Mobile render the shared en/zh catalog;
 successful lifecycle state clears the reason. Screen runtime reasons use the same

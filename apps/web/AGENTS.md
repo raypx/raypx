@@ -114,7 +114,9 @@ Web passes `canEmbedAuthenticatedDocuments={true}`. Document frames use the API'
 `/page-content/member` route with an opaque sandbox;
 source drafts and one-time share links stay in component memory. Page invalidations
 arrive through the shared Space stream. Asking about a Page only restores a composer
-reference. Account settings compose Skills and remote Tools; Agent forms enable the
+reference. Shared Agents renders same-origin, same-conversation-Space references as
+titled chips in member bubbles and removable composer chips; activation uses the
+existing Page navigation. The draft/send format stays text. Account settings compose Skills and remote Tools; Agent forms enable the
 member's available resources. Remote credentials remain write-only.
 
 Tools settings also compose Space-owner HTTP API management beside remote servers: one-time OpenAPI imports, explicit operation selection, write-only credentials and all/selected Agent availability. API activity and approvals use the shared conversation views.

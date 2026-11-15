@@ -76,6 +76,17 @@ import { ComputerIndicator, ComputerPanel } from "./computer.js";
 import { DeviceComputersController } from "../model/device-computers.js";
 import { ApprovalCard } from "./approval-card.js";
 import { ProtectedInputs } from "./protected-input.js";
+import {
+  memberTextParts,
+  pageReferenceDraft,
+  withPageReferences,
+} from "../model/page-reference.js";
+import {
+  MemberMessageText,
+  ComposerPageReferences,
+  usePageReferenceTitles,
+  type PageReferenceSubscription,
+} from "./page-reference.js";
 import { ComposerCard } from "./composer-card.js";
 import { ReplyActions } from "./reply-actions.js";
 import { ComputerFiles } from "./computer-files.js";
@@ -102,6 +113,7 @@ interface AgentConversationProps {
   onDeleteAgent?: (() => void) | undefined;
   onLastActivity?: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
+  subscribePages?: PageReferenceSubscription | undefined;
   composerReference?: { id: string; text: string } | undefined;
   runReference?: { id: string; runId: string } | undefined;
   group?: GroupConversationView | undefined;
@@ -116,6 +128,7 @@ interface AgentConversationProps {
         | "protectedInputs"
         | "messageAttachments"
         | "notifications"
+        | "pages"
       >
     | undefined;
   item: AgentConversationView;
@@ -146,6 +159,7 @@ export function AgentConversation({
   onLastActivity,
   onOpenPage,
   composerReference,
+  subscribePages,
   runReference,
   group,
   agentDirectory,
@@ -235,6 +249,7 @@ export function AgentConversation({
       onEditAgent={onEditAgent}
       onDeleteAgent={onDeleteAgent}
       onOpenPage={onOpenPage}
+      subscribePages={subscribePages}
       onLastActivity={onLastActivity}
       runReference={runReference}
       group={group}
@@ -260,6 +275,7 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  subscribePages,
   supportsImages,
   runReference,
   onBack,
@@ -286,6 +302,7 @@ function ConversationContents({
   onActivity,
   onComputerOpen,
 }: {
+  subscribePages: PageReferenceSubscription | undefined;
   runReference: { id: string; runId: string } | undefined;
   onBack: (() => void) | undefined;
   onEditAgent: (() => void) | undefined;
@@ -305,6 +322,7 @@ function ConversationContents({
         | "protectedInputs"
         | "messageAttachments"
         | "notifications"
+        | "pages"
       >
     | undefined;
   origin: string;
@@ -427,6 +445,38 @@ function ConversationContents({
   );
   const { messages, runs, segments, liveReplies, cursor, toolActivity, toolActivityTruncated } =
     state;
+  const draftReferences = pageReferenceDraft(
+    memberTextParts(state.draft, origin, item.conversation.spaceId),
+  );
+  const referenceIds = useMemo(
+    () =>
+      JSON.stringify(
+        [
+          ...new Set(
+            [
+              state.draft,
+              ...state.messages
+                .filter((message) => message.author.kind === "member")
+                .map((message) => message.text),
+            ]
+              .flatMap((text) => memberTextParts(text, origin, item.conversation.spaceId))
+              .filter((part) => part.kind === "page")
+              .map((part) => part.id),
+          ),
+        ].sort(),
+      ),
+    [state.draft, state.messages, origin, item.conversation.spaceId],
+  );
+  const pageTitles = usePageReferenceTitles(
+    capabilities?.pages,
+    item.conversation.spaceId,
+    referenceIds,
+    subscribePages,
+  );
+  function setComposerText(text: string) {
+    controller.setDraft(withPageReferences(text, draftReferences.references));
+  }
+
   const rows = useMemo(
     () =>
       conversationTimelineRows(
@@ -1086,7 +1136,13 @@ function ConversationContents({
                         </h3>
                       )}
                       <p className="max-w-[90%] rounded-2xl bg-muted px-4 py-2.5 text-[15px] leading-6 whitespace-pre-wrap wrap-anywhere">
-                        {row.text}
+                        <MemberMessageText
+                          text={row.text}
+                          origin={origin}
+                          spaceId={item.conversation.spaceId}
+                          titles={pageTitles}
+                          onOpenPage={onOpenPage}
+                        />
                       </p>
                       <MessageAttachments
                         attachments={row.attachments}
@@ -1633,11 +1689,30 @@ function ConversationContents({
 
               <ComposerCard
                 attachments={
-                  <AttachmentDrafts
-                    controller={controller.attachments}
-                    files={attachmentFiles}
-                    disabled={state.sending || state.pending !== null}
-                  />
+                  <>
+                    <ComposerPageReferences
+                      references={draftReferences.references}
+                      titles={pageTitles}
+                      disabled={state.sending || state.pending !== null}
+                      onOpenPage={onOpenPage}
+                      onRemove={(start) => {
+                        controller.setDraft(
+                          withPageReferences(
+                            draftReferences.text,
+                            draftReferences.references.filter(
+                              (reference) => reference.start !== start,
+                            ),
+                          ),
+                        );
+                        editor.current?.focus();
+                      }}
+                    />
+                    <AttachmentDrafts
+                      controller={controller.attachments}
+                      files={attachmentFiles}
+                      disabled={state.sending || state.pending !== null}
+                    />
+                  </>
                 }
                 toolbar={
                   <>
@@ -1807,13 +1882,16 @@ function ConversationContents({
                 <InputGroupTextarea
                   ref={editor}
                   id={id}
-                  value={state.draft}
+                  value={draftReferences.text}
                   rows={1}
-                  maxLength={32_000}
+                  maxLength={Math.max(
+                    0,
+                    32_000 - (state.draft.length - draftReferences.text.length),
+                  )}
                   placeholder={t("message")}
                   className="max-h-48 min-h-20 overflow-y-auto px-4 pt-4 pb-2"
                   onChange={(event) => {
-                    controller.setDraft(event.currentTarget.value);
+                    setComposerText(event.currentTarget.value);
                     updateMentionPicker(event.currentTarget);
                   }}
                   aria-keyshortcuts={group ? "Control+Shift+M Meta+Shift+M" : undefined}
@@ -1824,7 +1902,7 @@ function ConversationContents({
                   }}
                   onCompositionEnd={(event) => {
                     composing.current = false;
-                    controller.setDraft(event.currentTarget.value);
+                    setComposerText(event.currentTarget.value);
                     updateMentionPicker(event.currentTarget);
                   }}
                   onKeyDown={(event) => {

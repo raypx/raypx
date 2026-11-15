@@ -34,6 +34,7 @@ import type { ComputerScreenPort } from "./computer-screen.js";
 import type { AgentSkillsPort, AgentMcpPort } from "./agent-capabilities.js";
 import type { SpaceManagementPort } from "./space-management.js";
 import type { DeviceComputersPort } from "./device-computers.js";
+import type { Page, PageId } from "@raypx/core/pages";
 
 export interface ApprovalPort {
   effectiveMode?(this: void, input: { spaceId: SpaceId }): Promise<EffectiveApprovalMode>;
@@ -154,6 +155,12 @@ export interface OfferedModel {
 }
 /** Resource selectors never grant admission; the backend authorizes every request. */
 export interface AgentsWorkspacePort {
+  pages?: {
+    get(
+      this: void,
+      input: { spaceId: SpaceId; id: PageId },
+    ): Promise<Pick<Page, "id" | "spaceId" | "title">>;
+  };
   notifications?: import("./notifications.js").MemberNotificationsPort;
   messageAttachments?: import("./attachments.js").MessageAttachmentsPort;
   protectedInputs?: import("./protected-input.js").ProtectedInputsPort;

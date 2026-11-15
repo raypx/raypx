@@ -2928,3 +2928,55 @@ it.each(["en", "zh"] as const)(
     await waitFor(() => expect(opener).toHaveFocus());
   },
 );
+
+it("shows a pending Page chip, restores it without sending, and sends its original reference text", async () => {
+  const f = fixture();
+  const reference = {
+    id: "page-one",
+    text: "[Pages](https://example.test/page-content/member/space-one/page-one)",
+  };
+  f.client.pages = {
+    get: vi.fn(async ({ id, spaceId }) => ({ id, spaceId, title: "Project notes" })),
+  };
+  const first = f.mount(true, undefined, undefined, reference);
+  await screen.findByRole("button", { name: "Remove Page reference: Project notes" });
+  const editor = screen.getByRole("textbox", { name: "Message" });
+  expect(editor).toHaveValue("");
+  fireEvent.change(editor, { target: { value: "Please summarize" } });
+  expect(editor).toHaveValue("Please summarize");
+  first.unmount();
+  f.mount(true);
+  await screen.findByRole("button", { name: "Remove Page reference: Project notes" });
+  expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue("Please summarize");
+  expect(f.send).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  await waitFor(() => expect(f.send).toHaveBeenCalledTimes(1));
+  expect(f.send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: expect.objectContaining({ text: `Please summarize\n\n${reference.text}` }),
+    }),
+  );
+});
+
+it("removes a pending Page reference without removing the question or sending", async () => {
+  const f = fixture();
+  f.mount(true, undefined, undefined, {
+    id: "page-one",
+    text: "[Page](https://example.test/page-content/member/space-one/page-one)",
+  });
+  await screen.findByRole("button", { name: "Remove Page reference: Page" });
+  const editor = screen.getByRole("textbox", { name: "Message" });
+  fireEvent.change(editor, { target: { value: "Keep my question" } });
+  fireEvent.click(screen.getByRole("button", { name: "Remove Page reference: Page" }));
+  expect(
+    screen.queryByRole("button", { name: "Remove Page reference: Page" }),
+  ).not.toBeInTheDocument();
+  expect(editor).toHaveValue("Keep my question");
+  expect(editor).toHaveFocus();
+  expect(f.send).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  await waitFor(() => expect(f.send).toHaveBeenCalledTimes(1));
+  expect(f.send).toHaveBeenCalledWith(
+    expect.objectContaining({ message: expect.objectContaining({ text: "Keep my question" }) }),
+  );
+});
