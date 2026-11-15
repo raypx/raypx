@@ -1,0 +1,159 @@
+apps/api/tests/helpers/model.ts
+  s_611be684303439::t_e20fbc64e531d3 18
+packages/account/AGENTS.md
+  s_611be684303439::t_b9b7b9d7eec780 54-59
+  s_611be684303439::t_bd4c432de47fa9 60
+packages/auth/AGENTS.md
+  s_611be684303439::t_b9b7b9d7eec780 112-115
+apps/api/src/app/options.ts
+  s_611be684303439::t_e20fbc64e531d3 47
+packages/account/src/client.ts
+  s_611be684303439::t_83e3b0fe295c77 9
+  s_611be684303439::t_b9b7b9d7eec780 10-14
+apps/api/src/routers/rpc/spaces.test.ts
+  s_611be684303439::t_e20fbc64e531d3 53
+apps/api/tests/helpers/browser-model.ts
+  s_611be684303439::t_e20fbc64e531d3 332
+packages/contracts/src/config.ts
+  s_611be684303439::t_e20fbc64e531d3 141-147,149-152
+apps/desktop/AGENTS.md
+  s_611be684303439::t_b9b7b9d7eec780 48-53
+apps/web/e2e/admission-visual.spec.ts
+  s_611be684303439::t_b9b7b9d7eec780 23-24,39-40,159,168
+packages/account/locales/en/access.json
+  s_611be684303439::t_83e3b0fe295c77 3-19
+docs/architecture/README.md
+  s_611be684303439::t_b9b7b9d7eec780 165-170
+docs/development/ui.md
+  s_611be684303439::t_b9b7b9d7eec780 228-233
+packages/account/locales/zh/access.json
+  s_611be684303439::t_83e3b0fe295c77 3-19
+packages/account/package.json
+  s_611be684303439::t_83e3b0fe295c77 13-14
+  s_611be684303439::t_b9b7b9d7eec780 31,34
+  s_611be684303439::t_fef824bcd4ba69 36
+apps/api/AGENTS.md
+  s_611be684303439::t_b9b7b9d7eec780 51-55
+apps/desktop/src/components/shell.tsx
+  s_611be684303439::t_a5611af2971dca 4-6,30,122-134,139,142-145
+  s_611be684303439::t_b9b7b9d7eec780 135-138,140-141
+apps/desktop/src/features/auth/routes.component.test.tsx
+  s_611be684303439::t_54ff523c6afedc 28-29,51-63,95-96
+  s_611be684303439::t_7b26d1c7be8346 267-289
+apps/api/src/conversations/connections.ts
+  s_611be684303439::t_e20fbc64e531d3 132-135,142-150
+  s_611be684303439::t_b9b7b9d7eec780 136-141
+apps/api/tests/postgres/node/model-connections.test.ts
+  s_611be684303439::t_e20fbc64e531d3 110
+packages/auth/src/client/auth-form.tsx
+  s_611be684303439::t_e20fbc64e531d3 25,51,75,185,254,259-262,266,268-271,283
+  s_611be684303439::t_b9b7b9d7eec780 186-188,255-258
+apps/desktop/src/features/agents/client.ts
+  s_611be684303439::t_a5611af2971dca 4-5,10-14
+apps/api/src/routers/rpc/config.ts
+  s_611be684303439::t_e20fbc64e531d3 64-72,77-80
+  s_611be684303439::t_b9b7b9d7eec780 73-76
+packages/account/src/client/setup-checklist.component.test.tsx
+  s_611be684303439::t_331cc4c9803cd4 12-16,37,55,64,83
+  s_611be684303439::t_8182577d428208 1-11,20,75,91-95
+  s_611be684303439::t_b9b7b9d7eec780 17-19,21-36,38-51,56-63,65-74,76-82,84-90
+  s_611be684303439::t_1ebb2955937bda 52-54
+apps/api/src/conversations/connections.test.ts
+  s_611be684303439::t_e20fbc64e531d3 145
+  s_611be684303439::t_8182577d428208 339-347,352-358
+  s_611be684303439::t_b9b7b9d7eec780 348-351
+apps/web/locales/zh/site.json
+  s_611be684303439::t_e20fbc64e531d3 101
+apps/web/src/router-auth.component.test.tsx
+  s_611be684303439::t_8182577d428208 154,170-172,176-179,185-186,197,203
+  s_611be684303439::t_b9b7b9d7eec780 155-164,167-169,173-175,180-184,187-196,198,201-202,209-230
+  s_611be684303439::t_4859efeebc48fd 2,165-166,199-200,204-208
+docs/development/accounts.md
+  s_611be684303439::t_b9b7b9d7eec780 83-89
+apps/api/src/conversations/models.test.ts
+  s_611be684303439::t_b9b7b9d7eec780 37-48
+  s_611be684303439::t_fef824bcd4ba69 15-18,24-25,28-29,35,59
+apps/api/src/conversations/models.ts
+  s_611be684303439::t_b9b7b9d7eec780 54-55,128-130,132-137
+  s_611be684303439::t_e20fbc64e531d3 12-13,53,56-62
+packages/account/src/model.ts
+  s_611be684303439::t_83e3b0fe295c77 1-7
+apps/desktop/src/features/auth/components/form.tsx
+  s_611be684303439::t_a5611af2971dca 1-2,33-39,42
+  s_611be684303439::t_54ff523c6afedc 3,30-31,53-56
+  s_611be684303439::t_b9b7b9d7eec780 43-45
+apps/web/locales/en/site.json
+  s_611be684303439::t_e20fbc64e531d3 101
+packages/account/src/model/setup-checklist.test.ts
+  s_611be684303439::t_8182577d428208 1-12,16-23,29-36,39-51,59,62-63,66-67,70-73,80-81,89-92,99,105-106
+  s_611be684303439::t_b9b7b9d7eec780 13-15,24-28,37-38,52-58,60-61,64-65,68-69,74-79,82-88,93-98,100-104
+packages/account/src/client/setup-checklist.tsx
+  s_611be684303439::t_83e3b0fe295c77 1-5,7-16,19-24,32-33,47,51-67,71,77-83,87-97,123,127-138
+  s_611be684303439::t_b9b7b9d7eec780 34-46,48-50,68-70,72-76,84-86,117-118,120-122,124-126
+  s_611be684303439::t_331cc4c9803cd4 6,17,25-31,98-116,119
+  s_611be684303439::t_3b44a8e097d597 18
+apps/api/src/routers/rpc/config.test.ts
+  s_611be684303439::t_b9b7b9d7eec780 9-15,17,20-33,35-100
+  s_611be684303439::t_28fb1c3ae0e518 1-8,16,18-19,34,101
+apps/web/tests/helpers/router-auth.tsx
+  s_611be684303439::t_fef824bcd4ba69 23-24,151-152
+  s_611be684303439::t_b9b7b9d7eec780 73-76,79-90
+apps/web/AGENTS.md
+  s_611be684303439::t_b9b7b9d7eec780 130-134,137
+apps/web/src/features/config/client.ts
+  s_611be684303439::t_e20fbc64e531d3 27-28
+  s_611be684303439::t_a5611af2971dca 4,14-19
+apps/web/src/components/shell.tsx
+  s_611be684303439::t_b9b7b9d7eec780 132-134,140-155
+  s_611be684303439::t_a5611af2971dca 1-2,5,17,57
+  s_611be684303439::t_331cc4c9803cd4 135-139
+apps/web/src/features/auth/components/auth-form.tsx
+  s_611be684303439::t_b9b7b9d7eec780 107-109,158,164
+  s_611be684303439::t_e20fbc64e531d3 92,106,160,163
+packages/contracts/AGENTS.md
+  s_611be684303439::t_b9b7b9d7eec780 24-27
+PRODUCT.md
+  s_611be684303439::t_b9b7b9d7eec780 84-91
+packages/auth/locales/zh/auth.json
+  s_611be684303439::t_e20fbc64e531d3 110-111,119,124-127
+docs/development/configuration.md
+  s_611be684303439::t_b9b7b9d7eec780 20-30,33,68-76
+  s_611be684303439::t_d53aa33037a6e9 77
+apps/web/src/features/config/components/settings.tsx
+  s_611be684303439::t_e20fbc64e531d3 117
+  s_611be684303439::t_19d3f2fd8bd0c1 38-39,44-49
+apps/desktop/src/features/auth/components/browser-login.tsx
+  s_611be684303439::t_54ff523c6afedc 1-2,4,145-152,160-168
+packages/auth/locales/en/auth.json
+  s_611be684303439::t_e20fbc64e531d3 110-111,119,124-127
+packages/account/src/model/setup-checklist.ts
+  s_611be684303439::t_b9b7b9d7eec780 39-41,55-61,72-76,87-91,93-95
+  s_611be684303439::t_83e3b0fe295c77 1-38,42-54,62-71,80,82-86,92,96-97
+  s_611be684303439::t_60c1fb763299c3 77-79,81
+apps/desktop/src/components/shell.component.test.tsx
+  s_611be684303439::t_249fe4fca378fb 15-16
+apps/web/e2e/bootstrap.spec.ts
+  s_611be684303439::t_15a7dd278bc1f8 15,23-24,31,74,110
+apps/web/src/routes/(admin)/admin/settings.tsx
+  s_611be684303439::t_f727ba48efab2a 14-18,26
+bun.lock
+  s_611be684303439::t_f9d3bcf0949512 341,344,346
+packages/agents/src/client/model-picker.component.test.tsx
+  s_611be684303439::t_d9ebeffea3358b 39-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fc5e8a45177ade67af960c7bbbe0fc08cbaca143",
+  "prompts": {},
+  "sessions": {
+    "s_611be684303439": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dd62-855d-7ff0-bc5f-d0ab49557582",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
