@@ -26,12 +26,20 @@ const toneConfig: Record<
   danger: { icon: AlertCircleIcon, variant: "destructive" },
 };
 
+const toneClasses: Record<StatusTone, string> = {
+  neutral: "",
+  info: "border-info-border bg-info-bg text-info-text",
+  warning: "border-warning-border bg-warning-bg text-warning-text",
+  success: "border-success-border bg-success-bg text-success-text",
+  danger: "border-danger-border bg-danger-bg text-danger-text",
+};
+
 export function StatusBadge({ label, tone = "neutral", className }: StatusBadgeProps) {
   const config = toneConfig[tone];
   const Icon = config.icon;
 
   return (
-    <Badge className={cn("shrink-0", className)} variant={config.variant}>
+    <Badge className={cn("shrink-0", toneClasses[tone], className)} variant={config.variant}>
       <Icon aria-hidden="true" data-icon="inline-start" strokeWidth={2.5} />
       {label}
     </Badge>

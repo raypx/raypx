@@ -35,7 +35,8 @@ format-2 CLI payload and pass RAYPX_CLI_PAYLOAD; never build implicitly or chang
 sealed bytes. Check/test and mygo:check/mygo:test are source gates. Prepared
 native:smoke and interactive/package/signature acceptance remain separate and
 platform-specific. Use private homes and owned processes; no GUI activation in
-headless checks. Preserve accessible controls, neutral tokens and bilingual copy.
+headless checks. Preserve accessible controls, shared cool tinted tokens, teal action emphasis,
+semantic/identity roles and bilingual copy.
 
 Shared composer attachments use bounded upload chunks within the existing native
 HTTP request envelope. Device-aware Files and notifications use additive renderer

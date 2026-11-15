@@ -59,7 +59,7 @@ export function NotificationsList({
         />
       </View>
       {view.error && (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("agents.notifications.error")}
         </Text>
       )}

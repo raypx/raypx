@@ -1,3 +1,4 @@
+import { agentIdentityStyle } from "./identity.js";
 import { NotificationsBell } from "./notifications.js";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { ProtectedInputs } from "./protected-input.js";
@@ -1236,7 +1237,7 @@ function AgentsWorkspaceContents({
                         key={item.agent.id}
                         className={cn(
                           "group/directory-row flex min-w-0 items-center rounded-lg",
-                          item.agent.id === page.agentId && "bg-sidebar-accent",
+                          item.agent.id === page.agentId && "bg-selected text-selected-text",
                         )}
                       >
                         <WorkspaceNavigationButton
@@ -1246,13 +1247,18 @@ function AgentsWorkspaceContents({
                           }}
                           size="sm"
                           variant="ghost"
-                          className={cn(rowClass, "flex-1")}
+                          className={cn(rowClass, "flex-1 aria-[current=page]:text-selected-text")}
                           aria-label={item.agent.name}
                           title={item.agent.name}
                           aria-current={item.agent.id === page.agentId ? "page" : undefined}
                           onClick={() => chooseAgent(item)}
                         >
-                          <AgentIcon data-icon="inline-start" aria-hidden="true" />
+                          <AgentIcon
+                            data-icon="inline-start"
+                            aria-hidden="true"
+                            className="rounded-md p-0.5"
+                            style={agentIdentityStyle(item.agent.id, true)}
+                          />
                           <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
                             {item.agent.name}
                           </span>
@@ -1297,7 +1303,8 @@ function AgentsWorkspaceContents({
                           variant="ghost"
                           className={cn(
                             rowClass,
-                            item.conversation.id === page.groupId && "bg-sidebar-accent",
+                            item.conversation.id === page.groupId &&
+                              "bg-selected text-selected-text",
                           )}
                           aria-label={item.conversation.name}
                           title={item.conversation.name}
@@ -1340,7 +1347,7 @@ function AgentsWorkspaceContents({
                       <WorkspaceNavigationButton
                         size="sm"
                         variant="ghost"
-                        className={cn(rowClass, "flex-1")}
+                        className={cn(rowClass, "flex-1 aria-[current=page]:text-selected-text")}
                         aria-label={t("workspaceSidebar.openRecent", { name: entry.name })}
                         title={entry.name}
                         onClick={() => {
@@ -1422,7 +1429,7 @@ function AgentsWorkspaceContents({
         </p>
       )}
       {failed && (
-        <Alert>
+        <Alert variant="destructive">
           <AlertDescription>{t("directoryError")}</AlertDescription>
           <AlertAction>
             <Button

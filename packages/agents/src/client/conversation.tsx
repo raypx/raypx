@@ -1,3 +1,5 @@
+import { statusStyle } from "./status-style.js";
+import { agentIdentityStyle } from "./identity.js";
 import { AttachmentDrafts, MessageAttachments, useAttachmentFiles } from "./attachments.js";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- The bounded transcript needs a keyboard scroll target. */
 import {
@@ -899,7 +901,7 @@ function ConversationContents({
           </div>
         )}
         {state.error && (
-          <Alert>
+          <Alert variant="destructive">
             <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
             {state.error === "load" && (
               <AlertAction>
@@ -940,7 +942,7 @@ function ConversationContents({
                 </p>
               )}
               {state.history.error && (
-                <p role="alert" className="text-xs text-muted-foreground">
+                <p role="alert" className="text-xs text-danger-text">
                   {t("history.error")}
                 </p>
               )}
@@ -1035,9 +1037,16 @@ function ConversationContents({
                       className="flex min-w-0 flex-col gap-1"
                     >
                       {showSender && (
-                        <h3 className="flex min-w-0 items-center gap-2 text-xs font-medium">
+                        <h3
+                          style={agentIdentityStyle(row.agentId)}
+                          className="flex min-w-0 items-center gap-2 text-xs font-medium"
+                        >
                           <Avatar size="sm" aria-hidden="true">
-                            <AvatarFallback>{agentName(row.agentId).slice(0, 1)}</AvatarFallback>
+                            <AvatarFallback
+                              style={agentIdentityStyle(row.agentId ?? item.agent.id, true)}
+                            >
+                              {agentName(row.agentId).slice(0, 1)}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="truncate">{agentName(row.agentId)}</span>
                         </h3>
@@ -1129,11 +1138,16 @@ function ConversationContents({
                       )}
                       {showSender && (
                         <h3
+                          style={agentIdentityStyle(row.agentId ?? item.agent.id)}
                           title={agentName(row.agentId)}
                           className="flex min-w-0 items-center gap-2 text-xs font-medium"
                         >
                           <Avatar size="sm" aria-hidden="true">
-                            <AvatarFallback>{agentName(row.agentId).slice(0, 1)}</AvatarFallback>
+                            <AvatarFallback
+                              style={agentIdentityStyle(row.agentId ?? item.agent.id, true)}
+                            >
+                              {agentName(row.agentId).slice(0, 1)}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="min-w-0 truncate">{agentName(row.agentId)}</span>
                         </h3>
@@ -1151,12 +1165,14 @@ function ConversationContents({
                         {run && run.state !== "succeeded" && (!hasSteps || run.failureCode) && (
                           <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
                             {!hasSteps && (
-                              <span className={row.text ? "mt-2" : undefined}>
+                              <span className={cn(statusStyle(run.state), row.text && "mt-2")}>
                                 {statusForRun(run)}
                               </span>
                             )}
                             {run.failureCode && (
-                              <span className="wrap-anywhere">{t(run.failureCode)}</span>
+                              <span className="text-danger-text wrap-anywhere">
+                                {t(run.failureCode)}
+                              </span>
                             )}
                             {run.failureCode === "EFFECT_UNKNOWN" && approvalPort && (
                               <EffectRecords
@@ -1362,7 +1378,7 @@ function ConversationContents({
                       {work.length === 0 && <span>{statusForRun(run) ?? t("replyReady")}</span>}
                     </div>
                     {run.failureCode && (
-                      <p className="text-sm text-muted-foreground">{t(run.failureCode)}</p>
+                      <p className="text-sm text-danger-text">{t(run.failureCode)}</p>
                     )}
                     <ToolActivity
                       runId={run.id}
@@ -1459,7 +1475,7 @@ function ConversationContents({
                       <span className="min-w-0 font-medium wrap-anywhere">
                         {agentName(run.agentId)}
                       </span>
-                      <span className="shrink-0 text-muted-foreground">
+                      <span className={cn("shrink-0", statusStyle(run.state))}>
                         {t(run.computerInputPaused ? "screen.agentPaused" : run.state)}
                       </span>
                     </div>
@@ -1852,7 +1868,7 @@ function ConversationContents({
           aria-label={t("computerTitle")}
           className="flex w-64 min-w-0 shrink-0 flex-col gap-4 overflow-x-hidden overflow-y-auto py-4 pr-2"
         >
-          <div className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border/60 bg-background">
+          <div className="flex min-h-0 min-w-0 flex-col rounded-xl border border-panel-border bg-surface-panel shadow-soft">
             <ComputerPanel
               compact
               focusOnMount={computerOpen}
@@ -1869,8 +1885,8 @@ function ConversationContents({
           </div>
           <div ref={setCapabilityTarget} />
           {pendingCards.length > 0 && (
-            <div className="flex min-w-0 flex-col gap-2 rounded-xl border border-border/60 p-3">
-              <h2 className="text-xs font-medium text-muted-foreground">
+            <div className="flex min-w-0 flex-col gap-2 rounded-xl border border-panel-border bg-surface-panel p-3 shadow-soft">
+              <h2 className="text-xs font-medium text-warning-text">
                 {t("approval.states.pending")}
               </h2>
               <Button

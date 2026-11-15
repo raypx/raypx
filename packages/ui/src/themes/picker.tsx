@@ -8,10 +8,11 @@ import type { UserTheme } from "./config.js";
 import { ThemeContext } from "./provider.js";
 
 const previewClasses: Record<UserTheme, string> = {
-  light: "bg-white before:border-[#e5e5e5] before:bg-[#f5f5f5] [&>span]:bg-[#e5e5e5]",
-  dark: "bg-[#171717] before:border-[#404040] before:bg-[#262626] [&>span]:bg-[#404040]",
+  light:
+    "bg-preview-light-bg before:border-preview-light-line before:bg-preview-light-sidebar [&>span]:bg-preview-light-line",
+  dark: "bg-preview-dark-bg before:border-preview-dark-line before:bg-preview-dark-sidebar [&>span]:bg-preview-dark-line",
   system:
-    "bg-[linear-gradient(90deg,#fff_50%,#171717_50%)] before:border-[#e5e5e5] before:bg-[#f5f5f5] [&>span]:bg-[#a3a3a3]",
+    "bg-[linear-gradient(90deg,var(--preview-light-bg)_50%,var(--preview-dark-bg)_50%)] before:border-preview-light-line before:bg-preview-light-sidebar [&>span]:bg-preview-title",
 };
 
 export interface ThemePickerProps {
@@ -52,9 +53,9 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
           />
           <span
             className={cn(
-              "relative flex h-16 flex-col gap-1.5 overflow-hidden rounded-md border border-border py-2.5 pr-2.5 pl-5 before:absolute before:inset-y-0 before:left-0 before:w-3.5 before:border-r before:content-[''] [&>span]:h-1 [&>span]:w-full [&>span]:rounded-xs [&>span:first-child]:w-3/5 [&>span:first-child]:bg-[#a3a3a3]",
+              "relative flex h-16 flex-col gap-1.5 overflow-hidden rounded-md border border-border py-2.5 pr-2.5 pl-5 before:absolute before:inset-y-0 before:left-0 before:w-3.5 before:border-r before:content-[''] [&>span]:h-1 [&>span]:w-full [&>span]:rounded-xs [&>span:first-child]:w-3/5 [&>span:first-child]:bg-preview-title",
               previewClasses[theme],
-              current === theme && "outline-2 outline-foreground outline-offset-2",
+              current === theme && "outline-2 outline-selected-line outline-offset-2",
             )}
             aria-hidden="true"
           >

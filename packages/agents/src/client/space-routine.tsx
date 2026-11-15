@@ -51,7 +51,12 @@ export function PausedRoutinePanel({
     }),
     [port, id],
   );
-  if (failed) return <p role="alert">{t("directoryError")}</p>;
+  if (failed)
+    return (
+      <p role="alert" className="text-danger-text">
+        {t("directoryError")}
+      </p>
+    );
   if (!routine) return <LoadingState label={t("loading")} />;
   return (
     <RoutinesPanel

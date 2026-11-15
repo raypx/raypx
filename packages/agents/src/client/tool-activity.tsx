@@ -1,3 +1,5 @@
+import { cn } from "@raypx/ui/lib/utils";
+import { statusStyle } from "./status-style.js";
 import { useId, type ReactNode } from "react";
 import type { ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -94,7 +96,9 @@ function ToolActivityRow({
         {call.target.slice(0, 1_024)}
       </span>
       <span className="flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-muted-foreground">
-        <span>{refusal ? t(refusal) : t(`activity.outcomes.${call.outcome ?? "running"}`)}</span>
+        <span className={statusStyle(call.outcome ?? "running")}>
+          {refusal ? t(refusal) : t(`activity.outcomes.${call.outcome ?? "running"}`)}
+        </span>
         {call.durationMs !== null && (
           <span className="tabular-nums">
             {t("activity.duration", { seconds: (call.durationMs / 1_000).toFixed(1) })}
@@ -182,6 +186,10 @@ export function ToolActivity({
   const effectsRun = activity.find(
     (call) => call.outcome === "unknown" || call.toolName.startsWith("openapi_"),
   )?.runId;
+  let role = "succeeded";
+  if (running) role = "running";
+  if (failed || unknown) role = "failed";
+  if (pendingCount) role = "waiting";
   let status = "";
   if (running) status = t("activity.outcomes.running");
   if (failed) status = t("activity.failedCount", { count: failed });
@@ -198,7 +206,7 @@ export function ToolActivity({
         <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
         <span className="min-w-0 truncate">{t("activity.steps", { count })}</span>
         {status && (
-          <span id={statusId} className="min-w-0 truncate text-xs text-muted-foreground">
+          <span id={statusId} className={cn("min-w-0 truncate text-xs", statusStyle(role))}>
             {status}
           </span>
         )}

@@ -86,7 +86,7 @@ class NativeReplyRenderer extends Renderer {
         accessibilityLabel={label}
         accessibilityHint={this.options.openLabel}
         style={styles}
-        className="text-base text-foreground underline"
+        className="text-base text-primary underline"
         onPress={() => this.options.open(target)}
       >
         {children}
@@ -159,7 +159,7 @@ function CodeBlock({ text, language }: { text: string; language?: string | undef
     }
   }
   return (
-    <View className="my-2 gap-1 rounded-xl bg-muted">
+    <View className="my-2 gap-1 rounded-xl bg-surface-sunken">
       <View className="flex-row items-center justify-between gap-2 px-3">
         <Text numberOfLines={1} className="min-w-0 flex-1 font-mono text-xs text-muted-foreground">
           {language?.trim().slice(0, 40) || t("mobile.code")}
@@ -181,7 +181,7 @@ function CodeBlock({ text, language }: { text: string; language?: string | undef
         </Text>
       </ScrollView>
       {failed && (
-        <Text accessibilityRole="alert" className="px-3 pb-3 text-sm text-foreground">
+        <Text accessibilityRole="alert" className="px-3 pb-3 text-sm text-danger-text">
           {t("mobile.copyError")}
         </Text>
       )}
@@ -240,7 +240,7 @@ export function ReplyMarkdown({ text }: { text: string }) {
     <View className="min-w-0 gap-1">
       {elements}
       {linkError ? (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("mobile.linkError")}
         </Text>
       ) : null}

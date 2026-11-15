@@ -1,6 +1,6 @@
 # Frontend components and source adaptation
 
-Web/Desktop compose `@raypx/ui` shadcn/Base UI controls, neutral tokens, Tailwind
+Web/Desktop compose `@raypx/ui` shadcn/Base UI controls, cool tinted tokens, Tailwind
 utilities, translated copy and `@raypx/icons`. Read root `DESIGN.md` for sizes,
 layout density, motion and public decoration. Mobile uses native controls and
 pure shared tokens, not DOM components.
@@ -25,7 +25,8 @@ Plain New opens the centered home composer, whose explicit Agent choice controls
 where Send goes. Agent and group creation remain distinct section actions, with
 one inviting first-Agent action in an empty Space. Account and owner invitations
 stay at the foot. Collapsed/narrow navigation keeps labels, focus and explicit
-Back navigation. The original logo and neutral tokens are unchanged.
+Back navigation. The original logo is unchanged. Cool tinted surfaces, one teal action accent,
+semantic statuses and Agent identity tints come from UI’s shared pure tokens.
 Agent section actions include a local name filter. Opening it expands the section
 and focuses its labelled input; Escape clears a nonempty query, then closes the
 empty filter and returns focus to its opener. Collapsing the sidebar keeps the
@@ -64,7 +65,7 @@ not raw arguments or private output. Unknown effects remain explicit. Delegated
 work appears under the parent activity without fabricating child replies.
 
 Protected-input forms sit with pending approvals above the composer in every
-conversation tab. Use the same rounded neutral cards, a masked uncontrolled
+conversation tab. Use the same rounded warning cards, a masked uncontrolled
 field and the existing independent metadata controller. Normal approval stays
 separate. Values never enter the composer, drafts or caches and clear on submit,
 decline, backgrounding and unmount. Home and the Pages workspace retain addressed
@@ -135,7 +136,9 @@ not animate in. Keep 44px touch targets and long English/Chinese labels usable.
 
 Use Tailwind utilities for feature layout. CSS entry points contain imports,
 source registration, shared tokens and necessary library/global rules only.
-Preserve original logos and neutral light/dark workbench colors. Logo-palette
+Preserve original logos and the shared tinted light/dark system. Teal is limited
+to primary actions, selected states, links and focus; semantic colors identify
+status and muted identity tints identify Agents. Logo-palette
 public decoration pauses offscreen/in hidden tabs and becomes static under reduced
 motion; examples never imply observed private activity.
 

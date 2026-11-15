@@ -289,7 +289,7 @@ also remain Web/Desktop.
 
 Lists and transcripts use native virtualization; forms use keyboard avoidance,
 safe areas, wrapping text and bounded tablet widths. Controls retain native
-Dynamic Type, neutral system light/dark tokens, accessibility labels/roles and
+Dynamic Type, shared cool tinted light/dark tokens and semantic/identity roles, accessibility labels/roles and
 reduced-motion presentation. Errors and reconnect state have explicit refresh
 controls. Source mocks verify state and interaction, not on-device geometry or
 screen-reader behavior.
@@ -314,9 +314,11 @@ bypassing Expo 58's TS/ESM config evaluator, which fails under Bun.
 The root layout imports `src/global.css` once. That entry registers mobile sources,
 imports `heroui-native/styles`, then pure native theme variables from `@raypx/ui/themes/native.css`,
 generated from UI's existing tokens by `bun run --cwd packages/ui generate:theme`.
-Its native-only semantic mappings keep Raypx's neutral appearance: HeroUI's action
+Its native-only semantic mappings preserve the shared color roles: HeroUI's action
 `accent` uses Raypx's `primary`, and HeroUI's text `muted` uses `muted-foreground`.
-Surface, field, focus and danger variables also derive from shared tokens.
+Surface, field, focus, semantic status and eight identity tint roles also derive
+from the same pure tokens. Use `bg-surface-sunken` for neutral fills because the
+native `muted` alias is text. Selection and links use the teal action role.
 Define these mappings in both theme variants; common root variables do not override
 Uniwind's theme-scoped values. Keep color aliases in a static theme block so
 HeroUI's runtime color hooks can resolve them even without a matching utility.

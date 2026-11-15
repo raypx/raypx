@@ -75,9 +75,11 @@ function ProtectedInputForm({
     };
   }, []);
   return (
-    <View className="gap-3 rounded-xl border border-border bg-card p-4">
+    <View className="gap-3 rounded-xl border border-warning-border bg-warning-bg p-4">
       <TextField>
-        <Label>{t("agents.protectedInput.title", { name: request.input.name })}</Label>
+        <Label className="text-warning-text">
+          {t("agents.protectedInput.title", { name: request.input.name })}
+        </Label>
         <Text className="text-sm text-foreground">{request.input.purpose}</Text>
         <Text className="text-xs text-muted-foreground">
           {toolDisplayLabel(request.toolName, (key) => t(`agents.${key}`))} · {request.target}
@@ -126,7 +128,7 @@ function ProtectedInputForm({
         )}
       </TextField>
       {invalidBasic && (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("agents.protectedInput.invalidBasic")}
         </Text>
       )}
@@ -156,7 +158,7 @@ function ProtectedInputForm({
           <Action
             label={t("agents.protectedInput.decline")}
             disabled={busy}
-            secondary
+            danger
             onPress={() => {
               clear();
               void controller.answer(request.id, { decision: "decline" });
@@ -212,8 +214,8 @@ export function ProtectedInputs({
         />
       ))}
       {state.error && (
-        <View className="gap-2 rounded-xl border border-border bg-card p-4">
-          <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <View className="gap-2 rounded-xl border border-danger-border bg-danger-bg p-4">
+          <Text accessibilityRole="alert" className="text-sm text-danger-text">
             {t("agents.protectedInput.error")}
           </Text>
           <Action label={t("agents.refresh")} secondary onPress={() => void controller.refresh()} />

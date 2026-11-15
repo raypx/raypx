@@ -1,3 +1,4 @@
+import { statusClass } from "./appearance.js";
 import { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { Switch } from "heroui-native/switch";
@@ -76,13 +77,13 @@ export function ApprovalCard({
     );
   }
   return (
-    <View className="gap-3 rounded-xl border border-border bg-card p-4">
+    <View className="gap-3 rounded-xl border border-warning-border bg-warning-bg p-4">
       {agentName && (
         <Text className="text-sm text-muted-foreground">
           {t("agents.approval.requestedBy", { name: agentName })}
         </Text>
       )}
-      <Text accessibilityRole="header" className="text-base font-semibold text-foreground">
+      <Text accessibilityRole="header" className="text-base font-semibold text-warning-text">
         {toolOperationLabel(card, (key) => t(`agents.${key}`))}
       </Text>
       {operationKind && (
@@ -114,7 +115,7 @@ export function ApprovalCard({
           {summary}
         </Text>
       ) : null}
-      <Text accessibilityLiveRegion="polite" className="text-sm text-muted-foreground">
+      <Text accessibilityLiveRegion="polite" className={`text-sm ${statusClass(card.state)}`}>
         {automatic
           ? t(`agents.approval.automatic.${automatic}`)
           : t(`agents.approval.states.${card.state}`)}
@@ -167,7 +168,7 @@ export function ApprovalCard({
                 <View className="min-w-32 flex-1">
                   <Action
                     label={t("agents.approval.deny")}
-                    secondary
+                    danger
                     disabled={disabled}
                     onPress={() => onAnswer(card.requestId, "denied")}
                   />
@@ -177,7 +178,7 @@ export function ApprovalCard({
           )}
           {card.error ? (
             <>
-              <Text accessibilityRole="alert" className="text-sm leading-5 text-foreground">
+              <Text accessibilityRole="alert" className="text-sm leading-5 text-danger-text">
                 {t(`agents.approval.${card.error}`)}
               </Text>
               <Action label={t("agents.refresh")} secondary onPress={onRefresh} />

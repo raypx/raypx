@@ -170,7 +170,7 @@ export function ComputerFiles({
       {state.selectedPath && state.preview && (
         <View
           accessibilityLabel={t("agents.files.preview")}
-          className="gap-2 rounded-xl bg-muted p-3"
+          className="gap-2 rounded-xl bg-surface-sunken p-3"
         >
           <Text accessibilityRole="header" className="text-sm font-medium text-foreground">
             {t("agents.files.workspace")} / {state.selectedPath}
@@ -211,7 +211,7 @@ export function ComputerFiles({
                 </Text>
               )}
               {downloadError && (
-                <Text accessibilityRole="alert" className="text-sm text-foreground">
+                <Text accessibilityRole="alert" className="text-sm text-danger-text">
                   {t("agents.attachments.downloadError")}
                 </Text>
               )}

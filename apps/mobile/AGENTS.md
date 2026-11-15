@@ -88,7 +88,12 @@ maps HeroUI's semantic variables to Raypx tokens (accent → primary,
 muted → muted-foreground) in both theme variants. Keep color aliases static so
 HeroUI's runtime color hooks can read them. Do not duplicate tokens or add feature-specific CSS
 selectors. System appearance is Uniwind's default.
-Only pure UI theme tokens and the original logo may cross from UI. Reuse Auth's
+Only pure UI theme tokens and the original logo may cross from UI. The same
+light/dark neutral, teal action, semantic and identity values generate native CSS.
+Use surface-sunken for neutral fills; the native library’s muted alias is text.
+Use selected tokens for selection and semantic tokens for states, approvals and
+errors. Identity slots come from the shared pure Agent model and style only
+avatars/icons or attributed names. Native device acceptance remains separate. Reuse Auth's
 platform-neutral hooks and i18n catalogs. System language and appearance are defaults.
 
 ## Verification

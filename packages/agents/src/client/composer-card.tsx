@@ -18,7 +18,7 @@ export function ComposerCard({
     <InputGroup
       data-composer-card
       className={cn(
-        "overflow-hidden rounded-3xl border-border/70 bg-background shadow-sm",
+        "overflow-hidden rounded-3xl border-panel-border bg-surface-panel shadow-soft",
         className,
       )}
     >

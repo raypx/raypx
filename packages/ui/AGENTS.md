@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Shared visual primitives and Neutral design tokens. Applications and feature
+Shared visual primitives and the cool tinted light/dark design tokens. Applications and feature
 packages own page layout, forms, navigation and product behavior.
 
 ## Interface
@@ -80,7 +80,9 @@ packages own page layout, forms, navigation and product behavior.
 ## Ownership
 
 Own accessibility, semantic color roles, focus, radius and reduced motion.
-Preserve the original brand artwork and Neutral light/dark values.
+Preserve the original brand artwork. Own the single teal action accent, four
+surface levels, semantic status roles and eight muted identity tint slots.
+Only pure tokens/types cross platform boundaries; every appearance uses the same values.
 Destructive text on a `destructive/*` tint uses `text-destructive-text`, a darker light-mode
 red that keeps WCAG AA; `destructive` stays the fill and border color.
 
@@ -88,8 +90,11 @@ red that keeps WCAG AA; `destructive` stays the fill and border color.
 
 - No account, file, task or API behavior in this package.
 - No DOM imports in `themes/config`, `tokens.ts` or `script.ts`.
-- Edit `src/themes/tokens.ts`, then run `generate:theme`; the generated DOM CSS
-  and native CSS must stay identical to that source.
+- Edit the pure `src/themes/tokens.ts`, then run `generate:theme`; generated DOM
+  and native CSS share that one source, including semantic and identity roles.
+  There are no alternate palettes, candidate selectors or palette persistence.
+  DOM `accent` remains a neutral hover role; primary/selected/ring own teal.
+  Native adapters map their action role to primary without replacing neutral fills.
 - Use Base UI and Hugeicons Free through `@raypx/icons`; do not introduce Radix
   or direct vendor icon imports.
 - Generated shadcn primitives live under `src/components/ui`; handwritten patterns

@@ -47,23 +47,35 @@ export function Action({
   busy = false,
   disabled = false,
   secondary = false,
+  danger = false,
 }: {
   label: string;
   onPress: () => void;
   busy?: boolean;
   disabled?: boolean;
   secondary?: boolean;
+  danger?: boolean;
 }) {
-  const spinnerColor = useThemeColor(secondary ? "foreground" : "accent-foreground");
+  let variant: "primary" | "ghost" | "danger-soft" = "primary";
+  if (secondary) variant = "ghost";
+  if (danger) variant = "danger-soft";
+  let spinnerRole: "danger" | "foreground" | "accent-foreground" = "accent-foreground";
+  if (secondary) spinnerRole = "foreground";
+  if (danger) spinnerRole = "danger";
+  const spinnerColor = useThemeColor(spinnerRole);
   return (
     <Button
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: disabled || busy, busy }}
       isDisabled={disabled || busy}
-      variant={secondary ? "ghost" : "primary"}
+      variant={variant}
       onPress={onPress}
-      className="h-auto min-h-12 rounded-lg p-3"
+      className={
+        danger
+          ? "h-auto min-h-12 rounded-lg border border-danger-border bg-danger-bg p-3"
+          : "h-auto min-h-12 rounded-lg p-3"
+      }
     >
       {busy ? (
         <Spinner
@@ -73,7 +85,11 @@ export function Action({
           importantForAccessibility="no-hide-descendants"
         />
       ) : null}
-      <Button.Label className="shrink font-semibold">{label}</Button.Label>
+      <Button.Label
+        className={danger ? "shrink font-semibold text-danger-text" : "shrink font-semibold"}
+      >
+        {label}
+      </Button.Label>
     </Button>
   );
 }

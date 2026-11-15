@@ -67,7 +67,7 @@ function ProtectedInputForm({
   return (
     <form
       data-protected-input
-      className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3 text-sm"
+      className="flex min-w-0 flex-col gap-2 rounded-xl border border-warning-border bg-warning-bg p-3 text-sm shadow-soft"
       onSubmit={(event) => {
         event.preventDefault();
         const password = input.current?.value ?? "";
@@ -86,7 +86,7 @@ function ProtectedInputForm({
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor={id}>
-            <ShieldCheckIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+            <ShieldCheckIcon aria-hidden="true" className="size-4 shrink-0 text-warning-text" />
             {t("protectedInput.title", { name: request.input.name })}
           </FieldLabel>
           <p className="text-xs text-muted-foreground wrap-anywhere" id={`${id}-purpose`}>
@@ -152,7 +152,7 @@ function ProtectedInputForm({
           <Button
             type="button"
             size="sm"
-            variant="outline"
+            variant="destructive"
             disabled={busy}
             onClick={() => {
               if (input.current) input.current.value = "";
@@ -224,7 +224,7 @@ export function ProtectedInputs({
       {state.error && (
         <div
           role="alert"
-          className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3"
+          className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-danger-border bg-danger-bg p-3 text-danger-text"
         >
           <p className="min-w-0 flex-1 text-sm">{t("protectedInput.error")}</p>
           <Button

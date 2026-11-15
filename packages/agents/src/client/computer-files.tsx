@@ -74,7 +74,7 @@ function FileState({ value }: { value: DirectoryView | FilePreviewView }) {
   } as const;
   if (value.status === "error")
     return (
-      <Alert>
+      <Alert variant="destructive">
         <AlertDescription>{t(keys[value.status])}</AlertDescription>
       </Alert>
     );

@@ -548,12 +548,12 @@ function HomeComposerView({
         </p>
       )}
       {state.error && (
-        <p role="alert" className="px-2 text-sm text-muted-foreground">
+        <p role="alert" className="px-2 text-sm text-danger-text">
           {t(state.error === "storage" ? "storageError" : "sendError")}
         </p>
       )}
       {state.sendCode && (
-        <p role="alert" className="px-2 text-sm text-muted-foreground">
+        <p role="alert" className="px-2 text-sm text-danger-text">
           {t(state.sendCode)}
         </p>
       )}

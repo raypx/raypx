@@ -32,7 +32,7 @@ export function EmailVerificationReminder({
   }, [api]);
   if (!available || verified || dismissed) return null;
   return (
-    <View className="gap-3 rounded-xl border border-border bg-muted/20 p-4">
+    <View className="gap-3 rounded-xl border border-border bg-surface-sunken/20 p-4">
       <Text accessibilityRole="header" className="text-base font-semibold text-foreground">
         {t("auth.verify")}
       </Text>

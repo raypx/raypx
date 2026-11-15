@@ -57,7 +57,7 @@ export function EffectRecords({
             {state.loading && <Spinner accessibilityLabel={t("agents.loading")} />}
             {state.error && (
               <View className="gap-2">
-                <Text accessibilityRole="alert" className="text-foreground">
+                <Text accessibilityRole="alert" className="text-danger-text">
                   {t("agents.effects.error")}
                 </Text>
                 <Action

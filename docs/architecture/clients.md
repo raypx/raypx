@@ -170,7 +170,7 @@ See [limits, draft lifecycle and notifications](member-input-and-notifications.m
   lifecycle belongs in the activity view.
 - Prefer icons and affordances over explanatory copy. Show advanced capability
   when it becomes relevant.
-- Use the existing `@raypx/ui` primitives, the neutral light and dark tokens and
+- Use the existing `@raypx/ui` primitives, the shared cool tinted light/dark tokens, teal action accent and semantic roles and
   Tailwind utilities.
 - Keep keyboard focus, accessible labels and reduced motion.
 - English and Chinese are both first-class. See

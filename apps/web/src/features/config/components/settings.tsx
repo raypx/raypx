@@ -17,6 +17,7 @@ import {
 } from "@raypx/ui/components/ui/tabs";
 import { ArchiveIcon } from "@raypx/icons/archive";
 import { InfoIcon } from "@raypx/icons/info";
+import { MonitorIcon } from "@raypx/icons/monitor";
 import { MailIcon } from "@raypx/icons/mail";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { PageHeader } from "@raypx/ui/page-header";
@@ -134,12 +135,13 @@ export function ConfigurationSettings({
               {t("mail.title")}
             </TabsTrigger>
             <TabsTrigger value="sandbox" className={tabTrigger}>
+              <MonitorIcon aria-hidden="true" className="hidden sm:block" />
               {t("sandbox.title")}
             </TabsTrigger>
             <TabsIndicator
               aria-hidden="true"
               data-config-indicator=""
-              className="pointer-events-none absolute top-(--active-tab-top) left-0 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left) rounded-md bg-background shadow-sm motion-safe:transition-[translate,width] motion-safe:duration-150 motion-safe:ease-out group-has-[:focus-visible]/tabs-list:transition-none dark:bg-input/30"
+              className="pointer-events-none absolute top-(--active-tab-top) left-0 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left) rounded-md bg-selected shadow-sm motion-safe:transition-[translate,width] motion-safe:duration-150 motion-safe:ease-out group-has-[:focus-visible]/tabs-list:transition-none dark:bg-selected"
             />
           </TabsList>
           <TabsContent value="site" keepMounted className={panel} hidden={tab !== "site"}>

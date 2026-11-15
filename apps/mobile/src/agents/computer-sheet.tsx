@@ -1,3 +1,4 @@
+import { statusClass } from "./appearance.js";
 import { useSyncExternalStore } from "react";
 import { Alert, Modal, ScrollView, Text, View } from "react-native";
 import { Button } from "heroui-native/button";
@@ -66,7 +67,11 @@ export function ComputerIndicator({
       variant="ghost"
       className="h-auto min-h-11 max-w-48 shrink px-2 py-2"
     >
-      <Button.Label className="shrink text-xs">{status}</Button.Label>
+      <Button.Label
+        className={`shrink text-xs ${statusClass(state.error ? "failed" : state.status)}`}
+      >
+        {status}
+      </Button.Label>
     </Button>
   );
 }
@@ -153,7 +158,7 @@ export function ComputerSheet({
         <View
           accessibilityViewIsModal
           onAccessibilityEscape={onClose}
-          className="max-h-[85%] w-full max-w-xl self-center rounded-t-2xl border border-border bg-background"
+          className="max-h-[85%] w-full max-w-xl self-center rounded-t-2xl border border-border bg-surface-raised"
         >
           <ScrollView
             contentContainerClassName="gap-5 p-6"
@@ -176,11 +181,14 @@ export function ComputerSheet({
             <Text className="text-sm font-semibold text-muted-foreground">
               {t("agents.computerStatus")}
             </Text>
-            <Text accessibilityLiveRegion="polite" className="text-base text-foreground">
+            <Text
+              accessibilityLiveRegion="polite"
+              className={`text-base ${statusClass(state.error ? "failed" : state.status)}`}
+            >
               {displayStatus}
             </Text>
             {!deviceState.selection && state.unavailableReason ? (
-              <Text accessibilityRole="alert" className="text-sm leading-5 text-foreground">
+              <Text accessibilityRole="alert" className="text-sm leading-5 text-danger-text">
                 {t(`agents.computerAvailability.${state.unavailableReason}`)}
               </Text>
             ) : null}
@@ -191,7 +199,7 @@ export function ComputerSheet({
             ) : null}
             {!deviceState.selection && state.error ? (
               <>
-                <Text accessibilityRole="alert" className="text-sm leading-5 text-foreground">
+                <Text accessibilityRole="alert" className="text-sm leading-5 text-danger-text">
                   {t(errorKeys[state.error])}
                 </Text>
                 <Action
@@ -216,7 +224,7 @@ export function ComputerSheet({
               <Action
                 label={t("agents.computerStop")}
                 busy={state.pending === "stop"}
-                secondary
+                danger
                 disabled={disabled}
                 onPress={stop}
               />

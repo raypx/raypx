@@ -282,7 +282,7 @@ export function ComputerScreen({
   const content = (
     <div className="flex min-h-0 min-w-0 flex-col gap-3">
       {view.error && (
-        <Alert>
+        <Alert variant="destructive">
           <AlertDescription>
             {t(errorKeys[view.error as keyof typeof errorKeys] ?? "screen.error")}
           </AlertDescription>

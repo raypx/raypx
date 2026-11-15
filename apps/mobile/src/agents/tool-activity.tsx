@@ -1,3 +1,4 @@
+import { statusClass } from "./appearance.js";
 import { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { Button } from "heroui-native/button";
@@ -72,7 +73,7 @@ function ToolCallRow({
         </Text>
       )}
       {linkError && (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("mobile.linkError")}
         </Text>
       )}
@@ -101,7 +102,7 @@ function ToolCallRow({
         </Text>
       )}
       <View className="flex-row flex-wrap gap-x-3 gap-y-1">
-        <Text className="text-xs text-muted-foreground">
+        <Text className={`text-xs ${statusClass(call.outcome ?? "running")}`}>
           {t(`agents.activity.outcomes.${call.outcome ?? "running"}`)}
         </Text>
         {call.durationMs !== null ? (
@@ -158,6 +159,10 @@ export function ToolActivity({
     const detail = failed || status === t("agents.activity.outcomes.unknown") ? status : "";
     status = [runStatus, detail].filter(Boolean).join(" · ");
   }
+  let tone = "succeeded";
+  if (row.activity.some((call) => call.outcome === null)) tone = "running";
+  if (failed || row.activity.some((call) => call.outcome === "unknown")) tone = "failed";
+  if (row.pendingCount) tone = "waiting";
   const summary = [t("mobile.steps", { count }), status].filter(Boolean).join(" · ");
   if (!count) return null;
   return (
@@ -172,7 +177,7 @@ export function ToolActivity({
         <Button.Label
           numberOfLines={1}
           accessibilityLiveRegion={runStatus ? "polite" : undefined}
-          className="min-w-0 flex-1 text-sm text-muted-foreground"
+          className={`min-w-0 flex-1 text-sm ${statusClass(tone)}`}
         >
           {summary}
         </Button.Label>

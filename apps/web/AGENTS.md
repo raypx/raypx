@@ -57,14 +57,15 @@ Waiting and Automations have been removed from this renderer. Do not restore the
 
 ## Interface
 
-Use `@raypx/blocks/shell`, existing UI primitives, neutral tokens and Tailwind.
+Use `@raypx/blocks/shell`, existing UI primitives, shared tinted tokens and Tailwind.
 The command palette searches available pages and settings, with no background
 project/session reads. Account/admin entries remain permission-filtered.
 The landing and auth layouts share `PublicHeader`, `PublicBackdrop`, original
 logos and theme/language controls. Public examples are labelled and static,
 show current workspace capabilities and never mount execution clients or private queries.
 Hero trails/frame light pause offscreen/in hidden tabs; reduced motion is static.
-The public logo palette stays decorative. The workbench remains neutral.
+The public logo palette stays decorative. The workbench uses cool tinted neutrals,
+one teal action accent, semantic statuses and muted Agent identity tints.
 
 Auth uses one bordered 16px panel, a single column on narrow screens and numbered
 implemented product facts alongside it above 1024px. Shared Auth owns fields, errors,

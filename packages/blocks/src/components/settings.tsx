@@ -67,7 +67,7 @@ export function SettingsNavigation({
             <Button
               variant="ghost"
               data-value={item.value}
-              className="min-h-9 w-full min-w-0 justify-start px-3 text-left aria-[current=page]:bg-muted aria-[current=page]:font-medium"
+              className="min-h-9 w-full min-w-0 justify-start px-3 text-left aria-[current=page]:bg-selected aria-[current=page]:text-selected-text aria-[current=page]:font-medium"
               aria-current={item.value === value ? "page" : undefined}
               title={item.label}
               onClick={() => onValueChange(item.value)}

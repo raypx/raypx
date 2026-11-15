@@ -87,7 +87,7 @@ function ResourceUnavailable({ loading, onBack }: { loading: boolean; onBack(thi
       {loading ? (
         <Spinner accessibilityLabel={t("common.loading")} />
       ) : (
-        <Text accessibilityRole="alert" className="text-foreground">
+        <Text accessibilityRole="alert" className="text-danger-text">
           {t("mobile-resources.unavailable")}
         </Text>
       )}

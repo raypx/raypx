@@ -275,7 +275,7 @@ export function ApprovalSettingsEditor({
       </h2>
       {!draft && !state.error && <LoadingState label={t("loading")} />}
       {state.error && (
-        <Alert>
+        <Alert variant="destructive">
           <AlertDescription>{t(`approvalSettings.${state.error}`)}</AlertDescription>
           {state.conflict && <SettingsChanges {...state.conflict} />}
           {state.conflict && (

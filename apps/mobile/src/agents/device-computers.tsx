@@ -107,13 +107,13 @@ export function DeviceComputerSelector({ controller }: { controller: DeviceCompu
         <Text className="text-sm text-foreground">{t("agents.devices.warning")}</Text>
       ) : null}
       {state.selection && (!selected || !selected.device.connected) ? (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("agents.devices.unavailable")}
         </Text>
       ) : null}
       <Text className="text-xs text-muted-foreground">{t("agents.devices.nextRun")}</Text>
       {state.error ? (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("agents.devices.error")}
         </Text>
       ) : null}
@@ -188,7 +188,7 @@ export function DeviceSettings({ controller }: { controller: DeviceComputersCont
         </View>
       ) : null}
       {state.error ? (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("agents.devices.error")}
         </Text>
       ) : null}

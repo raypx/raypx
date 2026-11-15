@@ -1,12 +1,45 @@
 # Raypx visual system
 
-Keep original logos and brand artwork. Use neutral light/dark semantic tokens, Base UI
-for DOM primitives, Tailwind v4, Hugeicons Free through `@raypx/icons` and the existing
-system font stack. The only color beyond the neutral palette is the logo accent that
-public pages may use as decoration, scoped in the public-page rules below.
-Primary actions are dark on light backgrounds and light on dark backgrounds.
-Express feature styles and responsive states with Tailwind utilities in components.
-CSS entry points register sources and shared styles; avoid feature-specific selectors.
+Keep original logos and brand artwork. Use shared light/dark semantic tokens,
+Base UI for DOM primitives, Tailwind v4, the existing icon system and system font
+stack. Express feature styles and responsive states with Tailwind utilities in
+components. CSS entry points register sources and shared styles; avoid
+feature-specific selectors.
+
+## Color and surfaces
+
+One shared pure token source in `@raypx/ui` owns Web, Desktop and Mobile color.
+The fixed action accent is teal; appearance may be light, dark or system, with no
+palette preference or candidate switch. Light neutrals are near-white with a faint
+cool cast. Dark neutrals are tinted deep grays rather than near-black. Keep
+backgrounds, borders and muted text in this neutral family.
+
+Use four surface levels: app canvas, sidebar, panel/card and raised menu/dialog.
+Distinguish them with fill, lightness and subtle shadows, reducing decorative
+hairlines. Ordinary list rows remain flat; borders still identify editable areas,
+tables and meaningful groups. Settings retain labelled rows instead of nested cards.
+
+Use the teal accent only for primary buttons, selected navigation/tabs/choices,
+links and keyboard focus. Ordinary hover, message bubbles, code, metadata and
+other decoration remain neutral. Text and active accent controls meet WCAG AA in
+both appearances; visible focus indicators have at least 3:1 contrast. Do not use
+a blue or violet action accent.
+
+Success, warning, danger and info each have background, border and text tokens.
+Running/starting/queued work uses info; waiting approvals and protected-input
+cards use warning; completed work and configured checklist items use success;
+failures, errors and destructive actions use danger. Stopped/cancelled work stays
+neutral. Deny/Decline uses danger styling. Keep explicit labels and recognizable
+affordances so color never carries status or permission alone.
+
+Agent identity uses eight muted hue slots, derived stably from the Agent id by
+the owning model's pure function. Apply the slot only to an icon/avatar tint or
+group speaker name, never a status chip. Avoid hues close to the teal action
+accent or semantic colors; names remain visible when slots repeat.
+
+Keep the original logo gradient confined to the existing public/auth decorative
+scope. It never becomes a workbench gradient or a control/text palette. Preserve
+accessible labels, keyboard focus, reduced motion and concise English/Chinese copy.
 
 Keep Web and Desktop compact with one control scale: 24px `xs` for inline buttons,
 28px `sm` for dense actions and filters, 32px default for ordinary controls, 36px
@@ -23,10 +56,11 @@ and 16px by default; navigation icons stay 20px. Controls use the shared radius
 scale: `md` for small controls and `lg` for default and larger controls.
 Use Tailwind's spacing scale, preferring 4px steps, with 2px adjustments inside
 compact controls. Related controls use 8px gaps, groups 16px and sections 24px.
-Keep workbench surfaces flat: use the background for the main canvas, muted surfaces
-to separate regions, and a single border for grouped controls or editable areas.
+Use the shared surface levels for the canvas, sidebar, panels and raised content,
+with a single border where grouped controls or editable areas need one.
 Settings and data lists use labelled rows and separators rather than nested cards.
-Reserve `shadow-popover` for floating menus, search results and popovers; static rows
+Use `shadow-soft` for panels/composers and `shadow-popover` for floating menus,
+search results and popovers; static rows
 do not lift on hover. Use tabular numerals for counts, dates and table measurements.
 The shell owns page widths and gutters: document pages cap at 48rem, workbenches
 at 100rem, and tools fill the content region. Pages do not add outer widths or
@@ -115,8 +149,8 @@ composer and clear when leaving the surface. Keep history paging, reading anchor
 streaming, draft isolation and every existing lifecycle control.
 
 Chrome uses 13–14px text, small line icons and hairline separators only where they
-help reading. Cards use rounded-xl corners. Soft shadows belong to floating
-composers and overlays; ordinary rows remain flat. Icon buttons gain a surface on
+help reading. Cards use rounded-xl corners. Soft shadows distinguish panels,
+floating composers and overlays; ordinary rows remain flat. Icon buttons gain a surface on
 hover/focus. Long English/Chinese labels truncate or wrap without covering
 controls, and coarse pointers retain 44px targets. At 375px keep explicit labelled
 navigation and a reachable composer without horizontal page overflow. Theme and
@@ -227,7 +261,7 @@ Attachments use a bounded image thumbnail or file icon, filename, type and size.
 Withheld reasons stay beside their file. Thumbnail bytes come only from the
 session-authorized attachment port and remain disposable client state.
 
-Approval and protected-input cards share a rounded neutral surface, compact header,
+Approval and protected-input cards share a rounded warning surface, compact header,
 bounded target, privacy/destination details and one primary action. Automatic review
 results have a distinct text label in Activity. Device offline/revoked selections
 remain explicit. Files keeps keyboard tree navigation, breadcrumbs, bounded preview

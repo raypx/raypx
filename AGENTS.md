@@ -164,9 +164,11 @@ enrollment, local tasks and remote projections are removed without importing dat
 - Existing file grants constrain built-in file operations. External commands retain
   OS permissions; a granted device is not sandbox isolation.
 - Local protocol dates are ISO strings; terminal bytes use base64.
-- Preserve original logos and neutral light/dark visual tokens. The logo-palette accent
-  is limited to public-page decoration as scoped in DESIGN.md; the workbench stays
-  neutral. Keep keyboard focus, accessible labels, reduced motion and Chinese/English copy.
+- Preserve original logos and the shared cool tinted light/dark tokens. Teal is
+  the one action accent, limited to primary buttons, selected states, links and
+  focus. Use semantic status colors and stable Agent identity tints as scoped in
+  DESIGN.md. The logo gradient remains public/auth decoration. Keep keyboard
+  focus, accessible labels, reduced motion and Chinese/English copy.
 - Use existing shadcn/Base UI primitives from `@raypx/ui` for DOM controls.
   Compose product-specific controls in Blocks or the owning feature package.
   Use Select, RadioGroup and Collapsible for feature interaction instead of

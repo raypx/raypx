@@ -72,7 +72,7 @@ export function PagesDirectory({
             onPress={() => void controller.open()}
           />
           {view.error ? (
-            <Text accessibilityRole="alert" className="text-sm text-foreground">
+            <Text accessibilityRole="alert" className="text-sm text-danger-text">
               {t("mobile-resources.error")}
             </Text>
           ) : null}
@@ -164,7 +164,7 @@ export function ResourcesDirectory({
             <Text className="text-sm text-muted-foreground">{t("mobile-resources.apiOwner")}</Text>
           ) : null}
           {view.error ? (
-            <Text accessibilityRole="alert" className="text-sm text-foreground">
+            <Text accessibilityRole="alert" className="text-sm text-danger-text">
               {t("mobile-resources.error")}
             </Text>
           ) : null}
@@ -357,7 +357,7 @@ function WebManagement({ onOpen }: { onOpen(this: void): Promise<unknown> }) {
         onPress={() => void open()}
       />
       {error ? (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("mobile-resources.error")}
         </Text>
       ) : null}

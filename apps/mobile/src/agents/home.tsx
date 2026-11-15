@@ -103,7 +103,7 @@ export function AgentHome({
               {t("mobile.homeQuestion")}
             </Text>
           </View>
-          <View className="gap-3 rounded-3xl border border-border bg-background p-3 shadow-sm">
+          <View className="gap-3 rounded-3xl border border-panel-border bg-surface-panel p-3 shadow-sm">
             <AttachmentPicker
               controller={controller.attachments}
               supportsImages={
@@ -122,7 +122,7 @@ export function AgentHome({
               multiline
               editable={!state.pending && !state.sending}
               textAlignVertical="top"
-              className="max-h-52 min-h-28 rounded-xl border-0 bg-background px-2 py-2 text-base"
+              className="max-h-52 min-h-28 rounded-xl border-0 bg-surface-panel px-2 py-2 text-base"
             />
             <View className="flex-row flex-wrap items-center gap-1">
               <Button
@@ -138,7 +138,7 @@ export function AgentHome({
                 variant="ghost"
                 isDisabled={!!state.pending || state.sending}
                 onPress={() => setTargetOpen(true)}
-                className="h-auto min-h-11 max-w-[45%] rounded-full bg-muted px-3 py-2"
+                className="h-auto min-h-11 max-w-[45%] rounded-full bg-surface-sunken px-3 py-2"
               >
                 <Button.Label numberOfLines={1} className="shrink text-sm">
                   {item.agent.name}
@@ -184,7 +184,7 @@ export function AgentHome({
               </Text>
             )}
             {state.error && (
-              <Text accessibilityRole="alert" className="px-2 text-sm text-foreground">
+              <Text accessibilityRole="alert" className="px-2 text-sm text-danger-text">
                 {t(errorKeys[state.error])}
               </Text>
             )}

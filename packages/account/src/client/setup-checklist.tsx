@@ -1,3 +1,4 @@
+import { cn } from "@raypx/ui/lib/utils";
 import { useEffect, useId, useMemo, useSyncExternalStore } from "react";
 import { SetupChecklistController, type SetupChecklistPort } from "../model.js";
 import { useTranslations } from "./i18n.js";
@@ -79,7 +80,7 @@ function ScopedChecklist({
         </AlertAction>
         <AlertDescription>
           {state.status === "unavailable" ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-danger-text">
               <span>{t("setup.unavailable")}</span>
               <Button size="sm" variant="outline" onClick={() => void controller.refresh()}>
                 {t("setup.retry")}
@@ -91,7 +92,15 @@ function ScopedChecklist({
                 const configured = state.configuration[item];
                 const Icon = configured ? CheckCircleIcon : CircleIcon;
                 return (
-                  <li key={item} className="flex min-w-0 items-start gap-2">
+                  <li
+                    key={item}
+                    className={cn(
+                      "flex min-w-0 items-start gap-2 rounded-lg border p-2",
+                      configured
+                        ? "border-success-border bg-success-bg text-success-text"
+                        : "border-warning-border bg-warning-bg text-warning-text",
+                    )}
+                  >
                     <Icon aria-hidden="true" className="mt-1 size-4 shrink-0" />
                     <div className="flex min-w-0 flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

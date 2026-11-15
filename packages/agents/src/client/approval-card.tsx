@@ -119,9 +119,12 @@ export function ApprovalCard({
       aria-labelledby={id}
       aria-busy={card.answering}
       tabIndex={-1}
-      className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex min-w-0 flex-col gap-2 rounded-xl border border-warning-border bg-warning-bg p-3 shadow-soft text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <h3 id={id} className="flex min-w-0 items-start gap-2 font-medium wrap-anywhere">
+      <h3
+        id={id}
+        className="flex min-w-0 items-start gap-2 font-medium text-warning-text wrap-anywhere"
+      >
         <ShieldCheckIcon
           aria-hidden="true"
           className="mt-0.5 size-4 shrink-0 text-muted-foreground"
@@ -201,7 +204,7 @@ export function ApprovalCard({
             </Button>
             <Button
               size="sm"
-              variant="outline"
+              variant="destructive"
               disabled={disabled}
               onClick={() => void answer("denied")}
             >
@@ -211,7 +214,7 @@ export function ApprovalCard({
         </>
       )}
       {card.error && (
-        <p className="text-xs text-muted-foreground wrap-anywhere">{t(errorKeys[card.error])}</p>
+        <p className="text-xs text-danger-text wrap-anywhere">{t(errorKeys[card.error])}</p>
       )}
     </article>
   );

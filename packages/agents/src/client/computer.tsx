@@ -1,3 +1,5 @@
+import { statusStyle } from "./status-style.js";
+import { cn } from "@raypx/ui/lib/utils";
 import { useLayoutEffect, useRef, useSyncExternalStore, type Ref } from "react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
@@ -75,7 +77,7 @@ export function ComputerIndicator({
     <Button
       ref={ref}
       size="sm"
-      variant={compact ? "default" : "ghost"}
+      variant="ghost"
       className="shrink-0 flex-nowrap whitespace-nowrap"
       aria-label={label}
       title={label}
@@ -87,7 +89,14 @@ export function ComputerIndicator({
       {compact ? (
         <span className="shrink-0 text-xs whitespace-nowrap">{t("computerShort")}</span>
       ) : (
-        <span className="shrink-0 text-xs whitespace-nowrap">{status}</span>
+        <span
+          className={cn(
+            "shrink-0 text-xs whitespace-nowrap",
+            statusStyle(state.error ? "failed" : state.status),
+          )}
+        >
+          {status}
+        </span>
       )}
     </Button>
   );
@@ -188,7 +197,12 @@ export function ComputerPanel({
       {showSandbox && (
         <section aria-label={t("computerStatus")} className="flex min-w-0 flex-col gap-3">
           <h3 className="text-xs font-medium text-muted-foreground">{t("computerStatus")}</h3>
-          <p role="status" aria-live="polite" aria-atomic="true" className="text-sm wrap-anywhere">
+          <p
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className={cn("self-start text-sm wrap-anywhere", statusStyle(state.status))}
+          >
             {state.error === "load" ? t("computerUnavailable") : t(statusKeys[state.status])}
             {state.failureCode && !state.unavailableReason && (
               <span className="mt-2 block">{t(failureKeys[state.failureCode])}</span>
@@ -200,7 +214,7 @@ export function ComputerPanel({
             )}
           </p>
           {state.error && (
-            <Alert>
+            <Alert variant="destructive">
               <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
               <AlertAction>
                 <IconButton
@@ -225,7 +239,7 @@ export function ComputerPanel({
             </Button>
           )}
           {(state.status === "running" || state.status === "stopping") && (
-            <Button variant="outline" className="self-start" disabled={disabled} onClick={stop}>
+            <Button variant="destructive" className="self-start" disabled={disabled} onClick={stop}>
               <StopIcon data-icon="inline-start" aria-hidden="true" />
               {t("computerStop")}
             </Button>

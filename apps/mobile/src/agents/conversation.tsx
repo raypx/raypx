@@ -1,3 +1,4 @@
+import { agentIdentityClass, statusClass } from "./appearance.js";
 import { AttachmentPicker, AttachmentDownloads, useAttachmentDrafts } from "./attachments.js";
 import {
   type ComponentRef,
@@ -323,13 +324,19 @@ export function AgentConversation({
       return (
         <View className="items-end">
           {(shared || group || row.agentId) && (
-            <Text className="text-xs text-muted-foreground">
+            <Text
+              className={
+                row.agentId
+                  ? `text-xs ${agentIdentityClass(row.agentId)}`
+                  : "text-xs text-muted-foreground"
+              }
+            >
               {row.agentId
                 ? agentName(row.agentId)
                 : memberName(row.sender.slice("member:".length))}
             </Text>
           )}
-          <View className="max-w-[88%] rounded-2xl bg-muted px-4 py-3">
+          <View className="max-w-[88%] rounded-2xl bg-surface-sunken px-4 py-3">
             <Text selectable className="text-base leading-6 text-foreground">
               {row.text}
             </Text>
@@ -349,7 +356,11 @@ export function AgentConversation({
     return (
       <View className="gap-3 py-3">
         {group && (
-          <Text className="text-sm font-semibold text-foreground">{agentName(row.agentId)}</Text>
+          <Text
+            className={`text-sm font-semibold ${agentIdentityClass(row.agentId ?? group.conversation.agentId)}`}
+          >
+            {agentName(row.agentId)}
+          </Text>
         )}
         {run && ["queued", "running", "waiting"].includes(run.state) && (
           <View className="flex-row flex-wrap gap-2">
@@ -440,7 +451,7 @@ export function AgentConversation({
             </View>
           )}
         {run && !hasSteps(run.id) ? (
-          <Text accessibilityLiveRegion="polite" className="text-sm text-muted-foreground">
+          <Text accessibilityLiveRegion="polite" className={`text-sm ${statusClass(run.state)}`}>
             {runStatus(run)}
           </Text>
         ) : null}
@@ -502,12 +513,16 @@ export function AgentConversation({
                   accessibilityLabel={t("mobile.tabLabel", { name: t(`mobile.tabs.${value}`) })}
                   accessibilityState={{ selected: tab === value }}
                   onPress={() => setTab(value)}
-                  className="h-auto min-h-11 min-w-0 flex-1 rounded-lg px-2 py-2"
+                  className={
+                    tab === value
+                      ? "h-auto min-h-11 min-w-0 flex-1 rounded-lg bg-selected px-2 py-2"
+                      : "h-auto min-h-11 min-w-0 flex-1 rounded-lg px-2 py-2"
+                  }
                 >
                   <Button.Label
                     className={
                       tab === value
-                        ? "text-sm font-semibold text-foreground"
+                        ? "text-sm font-semibold text-selected-text"
                         : "text-sm text-muted-foreground"
                     }
                   >
@@ -523,13 +538,13 @@ export function AgentConversation({
             )}
           </View>
           {copyError && (
-            <Text accessibilityRole="alert" className="px-4 py-2 text-sm text-foreground">
+            <Text accessibilityRole="alert" className="px-4 py-2 text-sm text-danger-text">
               {t("mobile.copyError")}
             </Text>
           )}
           {state.error ? (
             <View className="gap-1 px-4 py-2">
-              <Text accessibilityRole="alert" className="text-sm text-foreground">
+              <Text accessibilityRole="alert" className="text-sm text-danger-text">
                 {t(errorKeys[state.error])}
               </Text>
               {state.error === "load" ? (
@@ -595,7 +610,7 @@ export function AgentConversation({
                       </Text>
                     )}
                     {state.history.error && (
-                      <Text accessibilityRole="alert" className="text-sm text-muted-foreground">
+                      <Text accessibilityRole="alert" className="text-sm text-danger-text">
                         {t("agents.history.error")}
                       </Text>
                     )}
@@ -677,7 +692,7 @@ export function AgentConversation({
                 {outsideRuns.map((run) => (
                   <View key={run.id} className="gap-2">
                     <View className="flex-row flex-wrap items-center gap-2">
-                      <Text className="min-w-0 flex-1 text-sm text-foreground">
+                      <Text className={`min-w-0 flex-1 text-sm ${statusClass(run.state)}`}>
                         {title} · {t(`agents.${run.state}`)}
                       </Text>
                       <Action
@@ -769,7 +784,7 @@ export function AgentConversation({
             ) : null}
             {state.approvalsError ? (
               <>
-                <Text accessibilityRole="alert" className="text-sm text-foreground">
+                <Text accessibilityRole="alert" className="text-sm text-danger-text">
                   {t("agents.approval.loadError")}
                 </Text>
                 <Action
@@ -822,7 +837,7 @@ export function AgentConversation({
               </Text>
             )}
             {state.sendCode && (
-              <Text accessibilityRole="alert" className="text-sm text-foreground">
+              <Text accessibilityRole="alert" className="text-sm text-danger-text">
                 {t(`agents.${state.sendCode}`)}
               </Text>
             )}
@@ -864,7 +879,7 @@ export function AgentConversation({
                 onClose={() => setMentionRange(null)}
               />
             )}
-            <View className="gap-2 rounded-3xl border border-border bg-background p-3 shadow-sm">
+            <View className="gap-2 rounded-3xl border border-panel-border bg-surface-panel p-3 shadow-sm">
               <TextField className="gap-1">
                 <TextArea
                   ref={editor}
@@ -884,7 +899,7 @@ export function AgentConversation({
                   multiline
                   textAlignVertical="top"
                   placeholder={t("agents.message")}
-                  className="max-h-36 min-h-20 rounded-xl border-0 bg-background px-2 py-2 text-base"
+                  className="max-h-36 min-h-20 rounded-xl border-0 bg-surface-panel px-2 py-2 text-base"
                 />
               </TextField>
               {group &&
@@ -906,7 +921,7 @@ export function AgentConversation({
                 </Button>
                 <Text
                   numberOfLines={1}
-                  className="max-w-[35%] rounded-full bg-muted px-3 py-2 text-xs text-foreground"
+                  className="max-w-[35%] rounded-full bg-surface-sunken px-3 py-2 text-xs text-foreground"
                 >
                   {title}
                 </Text>

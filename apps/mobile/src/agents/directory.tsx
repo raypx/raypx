@@ -1,3 +1,4 @@
+import { agentIdentityClass, agentAvatarClass } from "./appearance.js";
 import logoMark from "@raypx/ui/logo-mark.webp";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Avatar } from "heroui-native/avatar";
@@ -130,7 +131,7 @@ export function AgentDirectory({
     action?.();
   }
   const content = (
-    <View className="w-full max-w-[800px] flex-1 self-center bg-muted/30">
+    <View className="w-full max-w-[800px] flex-1 self-center bg-surface-sunken/30">
       <View className="flex-row items-center justify-between gap-2 px-4 py-2">
         <Text accessibilityRole="header" className="text-base font-semibold text-foreground">
           {t("mobile.workspace")}
@@ -210,7 +211,7 @@ export function AgentDirectory({
             </DirectorySection>
             {error && (
               <View className="gap-2 px-3">
-                <Text accessibilityRole="alert" className="text-sm text-foreground">
+                <Text accessibilityRole="alert" className="text-sm text-danger-text">
                   {t("agents.directoryError")}
                 </Text>
                 <Action
@@ -359,7 +360,7 @@ export function AgentDirectory({
         onRequestClose={() => setDirectoryOpen(false)}
       >
         <StyledSafeAreaView
-          className="flex-1 bg-muted/30"
+          className="flex-1 bg-surface-sunken/30"
           accessibilityViewIsModal
           onAccessibilityEscape={() => setDirectoryOpen(false)}
         >
@@ -433,6 +434,14 @@ function AgentRow({
         onPress={() => onOpen(item)}
         className="h-auto min-h-11 min-w-0 flex-1 justify-start rounded-lg px-3 py-2"
       >
+        <View
+          accessible={false}
+          className={`size-8 items-center justify-center rounded-full ${agentAvatarClass(item.agent.id)}`}
+        >
+          <Text className={`text-sm font-medium ${agentIdentityClass(item.agent.id)}`}>
+            {item.agent.name.slice(0, 1)}
+          </Text>
+        </View>
         <View className="min-w-0 flex-1 gap-1">
           <Text numberOfLines={1} className="text-sm text-foreground">
             {item.agent.name}
@@ -544,7 +553,7 @@ export function AgentEditor({
               />
             </TextField>
             {models.length === 0 ? (
-              <Text accessibilityRole="alert" className="text-base text-muted-foreground">
+              <Text accessibilityRole="alert" className="text-base text-danger-text">
                 {t("agents.noModels")}
               </Text>
             ) : (
@@ -559,14 +568,14 @@ export function AgentEditor({
                   disabled={busy}
                 />
                 {!modelOffered && modelId ? (
-                  <Text accessibilityRole="alert" className="text-sm text-muted-foreground">
+                  <Text accessibilityRole="alert" className="text-sm text-danger-text">
                     {t("agents.unavailableModel", { model: modelId })}
                   </Text>
                 ) : null}
               </>
             )}
             {error ? (
-              <Text accessibilityRole="alert" className="text-base text-foreground">
+              <Text accessibilityRole="alert" className="text-base text-danger-text">
                 {t("agents.saveError")}
               </Text>
             ) : null}

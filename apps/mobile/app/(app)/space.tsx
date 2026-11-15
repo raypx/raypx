@@ -49,7 +49,7 @@ export default function SpaceScreen() {
         />
       </TextField>
       {error ? (
-        <Text accessibilityRole="alert" className="text-foreground">
+        <Text accessibilityRole="alert" className="text-danger-text">
           {t("agents.saveError")}
         </Text>
       ) : null}

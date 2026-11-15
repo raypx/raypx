@@ -30,7 +30,7 @@ export function MobileMemoryScreen({
     <>
       {state.loading ? <Spinner accessibilityLabel={t("memory.space.loading")} /> : null}
       {state.error ? (
-        <Text accessibilityRole="alert" className="text-base text-foreground">
+        <Text accessibilityRole="alert" className="text-base text-danger-text">
           {t(state.editor?.conflict ? "memory.space.MEMORY_CONFLICT" : "memory.space.UNAVAILABLE")}
         </Text>
       ) : null}

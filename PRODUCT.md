@@ -190,9 +190,10 @@ have no recipient identity. Push remains unconfigured. See
 
 ## Brand Commitments
 
-The product name is Raypx. Preserve its original artwork and neutral light/dark
-visual system. Public decoration follows the scoped logo palette in `DESIGN.md`;
-the workbench stays neutral. Describe only implemented behavior and real outcomes.
+The product name is Raypx. Preserve its original artwork and shared cool tinted light/dark
+visual system. The workbench uses one teal action accent, semantic statuses and
+muted Agent identity tints. Logo-palette decoration stays within the public/auth
+scope in `DESIGN.md`. Describe only implemented behavior and real outcomes.
 
 ## Evidence on Hand
 

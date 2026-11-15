@@ -75,7 +75,10 @@ export default function RootLayout() {
                   <Spinner accessibilityLabel={t("common.loading")} className="self-center" />
                 ) : (
                   <>
-                    <Text accessibilityRole="alert" className="text-base leading-6 text-foreground">
+                    <Text
+                      accessibilityRole="alert"
+                      className="text-base leading-6 text-danger-text"
+                    >
                       {t("common.networkError")}
                     </Text>
                     <Action label={t("common.retry")} onPress={() => void session.refetch()} />

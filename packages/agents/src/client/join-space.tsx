@@ -32,7 +32,7 @@ export function JoinSpaceView({
     return (
       <section className="flex min-w-0 flex-col gap-4">
         <h1 className="text-2xl font-medium">{t("spaceSettings.joinTitle")}</h1>
-        <p role="alert" className="text-sm">
+        <p role="alert" className="text-sm text-danger-text">
           {t(`spaceSettings.errors.${state.error ?? "REQUEST_FAILED"}`)}
         </p>
       </section>

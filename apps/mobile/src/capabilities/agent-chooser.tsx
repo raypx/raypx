@@ -29,7 +29,7 @@ export function CapabilityAgentChooser({
         {t("mobile-capabilities.chooseAgent")}
       </Text>
       {error ? (
-        <Text accessibilityRole="alert" className="text-base text-foreground">
+        <Text accessibilityRole="alert" className="text-base text-danger-text">
           {t("agents.directoryError")}
         </Text>
       ) : null}

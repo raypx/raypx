@@ -1,3 +1,4 @@
+import { statusStyle } from "./status-style.js";
 import type { ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -62,9 +63,11 @@ export function DelegatedWork({
                   {task.slice(0, 240) || t("delegation.task")}
                 </span>
                 {name && <span className="min-w-0 wrap-anywhere">{name}</span>}
-                <span className="text-muted-foreground">{t(`delegation.states.${run.state}`)}</span>
+                <span className={statusStyle(run.state)}>
+                  {t(`delegation.states.${run.state}`)}
+                </span>
                 {run.failureCode && (
-                  <span className="text-muted-foreground wrap-anywhere">{t(run.failureCode)}</span>
+                  <span className="text-danger-text wrap-anywhere">{t(run.failureCode)}</span>
                 )}
                 <ToolActivity
                   runId={run.id}

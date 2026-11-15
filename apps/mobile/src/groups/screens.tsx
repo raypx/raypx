@@ -50,7 +50,7 @@ export function GroupsScreen({
         </View>
         <Action label={t("agents.groups.new")} onPress={() => controller.edit()} />
         {state.error && (
-          <Text accessibilityRole="alert" className="text-foreground">
+          <Text accessibilityRole="alert" className="text-danger-text">
             {t("agents.directoryError")}
           </Text>
         )}
@@ -151,7 +151,7 @@ function GroupEditor({
               />
             ))}
             {state.error && (
-              <Text accessibilityRole="alert" className="text-foreground">
+              <Text accessibilityRole="alert" className="text-danger-text">
                 {t("agents.saveError")}
               </Text>
             )}
@@ -192,9 +192,13 @@ function AgentChoice({
       accessibilityState={{ checked, disabled }}
       isDisabled={disabled}
       onPress={() => onSelect(agent.id)}
-      className="h-auto min-h-12 justify-start gap-3 p-3"
+      className={
+        checked
+          ? "h-auto min-h-12 justify-start gap-3 rounded-lg bg-selected p-3"
+          : "h-auto min-h-12 justify-start gap-3 p-3"
+      }
     >
-      <Button.Label className="shrink text-foreground">
+      <Button.Label className={checked ? "shrink text-selected-text" : "shrink text-foreground"}>
         {checked ? "✓ " : ""}
         {agent.name}
       </Button.Label>

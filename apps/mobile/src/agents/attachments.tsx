@@ -119,7 +119,7 @@ export function AttachmentPicker({
             </Text>
           )}
           {item.error && (
-            <Text accessibilityRole="alert" className="text-xs text-foreground">
+            <Text accessibilityRole="alert" className="text-xs text-danger-text">
               {t(`agents.attachments.${item.error}`)}
             </Text>
           )}
@@ -132,7 +132,7 @@ export function AttachmentPicker({
         </View>
       ))}
       {error && (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("agents.attachments.upload")}
         </Text>
       )}
@@ -212,7 +212,7 @@ export function AttachmentDownloads({
         </View>
       ))}
       {error && (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t("agents.attachments.downloadError")}
         </Text>
       )}
@@ -249,7 +249,7 @@ function AttachmentThumbnail({
   }, [port, spaceId, conversationId, attachment.id, attachment.mediaType]);
   if (!attachment.mediaType.startsWith("image/")) return null;
   return (
-    <View className="relative size-20 items-center justify-center overflow-hidden rounded-xl bg-muted">
+    <View className="relative size-20 items-center justify-center overflow-hidden rounded-xl bg-surface-sunken">
       <Text
         accessibilityLabel={t("agents.attachments.image")}
         className="text-2xl text-muted-foreground"

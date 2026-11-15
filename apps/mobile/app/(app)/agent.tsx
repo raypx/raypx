@@ -42,7 +42,7 @@ export default function AgentFormScreen() {
       <Screen>
         {view.error || !selected.spaceId || (!current && !view.loading && !view.refreshing) ? (
           <>
-            <Text accessibilityRole="alert" className="text-foreground">
+            <Text accessibilityRole="alert" className="text-danger-text">
               {t("agents.directoryError")}
             </Text>
             <Action label={t("agents.back")} onPress={() => router.replace("/")} />
@@ -55,7 +55,7 @@ export default function AgentFormScreen() {
   if (selected.agentId && !item)
     return (
       <Screen>
-        <Text accessibilityRole="alert" className="text-foreground">
+        <Text accessibilityRole="alert" className="text-danger-text">
           {t("agents.directoryError")}
         </Text>
         <Action label={t("agents.back")} onPress={() => router.replace("/")} />

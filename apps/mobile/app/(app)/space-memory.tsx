@@ -53,7 +53,7 @@ export default function SpaceMemoryRoute() {
   )
     return (
       <Screen>
-        <Text accessibilityRole="alert" className="text-foreground">
+        <Text accessibilityRole="alert" className="text-danger-text">
           {t("mobile-capabilities.unavailable")}
         </Text>
         <Action

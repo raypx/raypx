@@ -109,7 +109,7 @@ export function ApprovalModeSettings({ controller }: { controller: ApprovalSetti
         {t("agents.approvalSettings.blockHint")}
       </Text>
       {state.error ? (
-        <Text accessibilityRole="alert" className="text-sm text-foreground">
+        <Text accessibilityRole="alert" className="text-sm text-danger-text">
           {t(`agents.approvalSettings.${state.error}`)}
         </Text>
       ) : null}

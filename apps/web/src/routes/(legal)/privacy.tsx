@@ -58,7 +58,7 @@ function PrivacyPage() {
                 >
                   <span
                     aria-hidden="true"
-                    className="font-mono text-xs text-muted-foreground/70 tabular-nums motion-safe:transition-transform motion-safe:duration-150 group-hover/toc:translate-x-0.5"
+                    className="font-mono text-xs text-muted-foreground tabular-nums motion-safe:transition-transform motion-safe:duration-150 group-hover/toc:translate-x-0.5"
                   >
                     {String(index + 1).padStart(2, "0")}
                   </span>

@@ -5,7 +5,7 @@
 
 @source "../app";
 @source "./";
-@source not "./**/*.test.ts";
+@source not "./**/*.test.{ts,tsx}";
 
 /* HeroUI uses accent for actions and muted for text; Raypx's source tokens
    use primary and muted-foreground for those roles. Keep the mapping native-only. */
@@ -20,9 +20,9 @@
       --default-foreground: var(--secondary-foreground);
       --surface: var(--card);
       --surface-foreground: var(--card-foreground);
-      --surface-secondary: var(--secondary);
+      --surface-secondary: var(--surface-panel);
       --surface-secondary-foreground: var(--secondary-foreground);
-      --surface-tertiary: var(--secondary);
+      --surface-tertiary: var(--surface-raised);
       --surface-tertiary-foreground: var(--secondary-foreground);
       --surface-sunken: var(--secondary);
       --overlay: var(--popover);
@@ -36,11 +36,11 @@
       --field-shadow: none;
       --focus: var(--ring);
       --separator: var(--border);
-      --link: var(--foreground);
+      --link: var(--primary);
       --danger: var(--destructive);
       --danger-foreground: var(--destructive-foreground);
-      --segment: var(--card);
-      --segment-foreground: var(--card-foreground);
+      --segment: var(--selected);
+      --segment-foreground: var(--selected-text);
       --surface-shadow: var(--shadow-soft-value);
       --overlay-shadow: var(--shadow-popover-value);
     }
@@ -52,9 +52,9 @@
       --default-foreground: var(--secondary-foreground);
       --surface: var(--card);
       --surface-foreground: var(--card-foreground);
-      --surface-secondary: var(--secondary);
+      --surface-secondary: var(--surface-panel);
       --surface-secondary-foreground: var(--secondary-foreground);
-      --surface-tertiary: var(--secondary);
+      --surface-tertiary: var(--surface-raised);
       --surface-tertiary-foreground: var(--secondary-foreground);
       --surface-sunken: var(--secondary);
       --overlay: var(--popover);
@@ -68,11 +68,11 @@
       --field-shadow: none;
       --focus: var(--ring);
       --separator: var(--border);
-      --link: var(--foreground);
+      --link: var(--primary);
       --danger: var(--destructive);
       --danger-foreground: var(--destructive-foreground);
-      --segment: var(--card);
-      --segment-foreground: var(--card-foreground);
+      --segment: var(--selected);
+      --segment-foreground: var(--selected-text);
       --surface-shadow: var(--shadow-soft-value);
       --overlay-shadow: var(--shadow-popover-value);
     }
@@ -80,6 +80,45 @@
 }
 
 @theme inline static {
+  --color-panel-border: var(--panel-border);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-selected: var(--selected);
+  --color-selected-text: var(--selected-text);
+  --color-selected-line: var(--selected-line);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-success-text: var(--success-text);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-warning-text: var(--warning-text);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
+  --color-danger-text: var(--danger-text);
+  --color-info-bg: var(--info-bg);
+  --color-info-border: var(--info-border);
+  --color-info-text: var(--info-text);
+  --color-identity-1: var(--identity-1);
+  --color-identity-1-bg: var(--identity-1-bg);
+  --color-identity-2: var(--identity-2);
+  --color-identity-2-bg: var(--identity-2-bg);
+  --color-identity-3: var(--identity-3);
+  --color-identity-3-bg: var(--identity-3-bg);
+  --color-identity-4: var(--identity-4);
+  --color-identity-4-bg: var(--identity-4-bg);
+  --color-identity-5: var(--identity-5);
+  --color-identity-5-bg: var(--identity-5-bg);
+  --color-identity-6: var(--identity-6);
+  --color-identity-6-bg: var(--identity-6-bg);
+  --color-identity-7: var(--identity-7);
+  --color-identity-7-bg: var(--identity-7-bg);
+  --color-identity-8: var(--identity-8);
+  --color-identity-8-bg: var(--identity-8-bg);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);

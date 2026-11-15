@@ -49,7 +49,7 @@ export function MobileRoutinesScreen({
     <>
       {state.loading ? <Spinner accessibilityLabel={t("routines.loading")} /> : null}
       {state.error ? (
-        <Text accessibilityRole="alert" className="text-base text-foreground">
+        <Text accessibilityRole="alert" className="text-base text-danger-text">
           {t(`routines.${state.error}`)}
         </Text>
       ) : null}
@@ -141,7 +141,7 @@ export function MobileRoutinesScreen({
                 ))}
               </View>
             ) : (
-              <Text accessibilityRole="alert" className="text-sm text-foreground">
+              <Text accessibilityRole="alert" className="text-sm text-danger-text">
                 {t("routines.invalidCron")}
               </Text>
             )}

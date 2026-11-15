@@ -162,7 +162,11 @@ export function AttachmentDrafts({
             <span role="status">
               {item.state === "uploading" ? t("attachments.uploading") : null}
             </span>
-            {item.error && <span role="alert">{t(`attachments.${item.error}`)}</span>}
+            {item.error && (
+              <span role="alert" className="text-danger-text">
+                {t(`attachments.${item.error}`)}
+              </span>
+            )}
             <IconButton
               size="icon-xs"
               label={t("attachments.remove", { name: item.name })}

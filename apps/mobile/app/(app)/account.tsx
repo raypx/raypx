@@ -33,7 +33,7 @@ export default function AccountScreen() {
       )}
       {workspace.api?.approvals ? <AccountApprovalSettings port={workspace.api.approvals} /> : null}
       {actions.error ? (
-        <Text accessibilityRole="alert" className="text-base leading-6 text-foreground">
+        <Text accessibilityRole="alert" className="text-base leading-6 text-danger-text">
           {t(actionErrorKey(actions.error))}
         </Text>
       ) : null}

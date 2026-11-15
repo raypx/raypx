@@ -140,7 +140,7 @@ export default function LoginScreen() {
         {t("auth.login")}
       </Text>
       {expired ? (
-        <Text accessibilityRole="alert" className="text-base text-foreground">
+        <Text accessibilityRole="alert" className="text-base text-danger-text">
           {t("mobile.sessionExpired")}
         </Text>
       ) : null}
@@ -198,7 +198,7 @@ export default function LoginScreen() {
         <Text
           accessibilityRole="alert"
           accessibilityLiveRegion="polite"
-          className="text-base leading-6 text-foreground"
+          className="text-base leading-6 text-danger-text"
         >
           {actions.error ? t(actionErrorKey(actions.error)) : t("common.error")}
         </Text>

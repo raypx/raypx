@@ -82,7 +82,7 @@ export default function ConversationScreen() {
     <Screen>
       {failed ? (
         <>
-          <Text accessibilityRole="alert" className="text-foreground">
+          <Text accessibilityRole="alert" className="text-danger-text">
             {t("agents.directoryError")}
           </Text>
           <Action

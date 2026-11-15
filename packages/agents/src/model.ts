@@ -143,6 +143,8 @@ export {
   type AgentCapabilitySelection,
 } from "./model/agent-capabilities.js";
 
+export { agentIdentityIndex } from "./model/identity.js";
+
 export { compareLastActivity, relativeActivityTime } from "./model/activity.js";
 
 export { conversationMemberLabel } from "./model/participant-display.js";

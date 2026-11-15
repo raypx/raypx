@@ -151,7 +151,7 @@ export default function AgentsScreen() {
   return (
     <>
       {deleteError ? (
-        <Text accessibilityRole="alert" className="bg-background px-4 py-2 text-foreground">
+        <Text accessibilityRole="alert" className="bg-background px-4 py-2 text-danger-text">
           {t("agents.saveError")}
         </Text>
       ) : null}

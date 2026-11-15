@@ -76,7 +76,7 @@ export function SpaceSettingsScreen({
           </Text>
           {state.loading && <Spinner accessibilityLabel={t("agents.loading")} />}
           {state.error && (
-            <Text accessibilityRole="alert" className="text-foreground">
+            <Text accessibilityRole="alert" className="text-danger-text">
               {t(`agents.spaceSettings.errors.${state.error}`)}
             </Text>
           )}
@@ -109,7 +109,7 @@ export function SpaceSettingsScreen({
           {state.members.map((member) => (
             <View key={member.accountId} className="gap-2 border-b border-border py-2">
               <Text className="text-base text-foreground">{member.name || t("agents.member")}</Text>
-              <View className="self-start rounded-full bg-muted px-2 py-1">
+              <View className="self-start rounded-full bg-surface-sunken px-2 py-1">
                 <Text className="text-xs text-foreground">
                   {t(`agents.spaceSettings.roles.${member.role}`)}
                 </Text>
@@ -217,7 +217,7 @@ export function SpaceSettingsScreen({
                 </Text>
               )}
               {copyError && (
-                <Text accessibilityRole="alert" className="text-sm text-foreground">
+                <Text accessibilityRole="alert" className="text-sm text-danger-text">
                   {t("agents.spaceSettings.copyFailed")}
                 </Text>
               )}
@@ -281,7 +281,7 @@ export function JoinSpaceScreen({
           {busy && <Spinner accessibilityLabel={t("agents.loading")} />}
           {state.error && (
             <>
-              <Text accessibilityRole="alert" className="text-foreground">
+              <Text accessibilityRole="alert" className="text-danger-text">
                 {t(`agents.spaceSettings.errors.${state.error}`)}
               </Text>
               <Action
