@@ -1,3 +1,4 @@
+import { DateRangePicker } from "@raypx/ui/date-picker";
 import { useLocale } from "@raypx/i18n/browser";
 import { useTranslations } from "../../../i18n.js";
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Read-only audit snapshots need keyboard scrolling. */
@@ -88,8 +89,7 @@ export function AuditLog() {
       to: new Date(now).toISOString().slice(0, 10),
     };
   });
-  const [from, setFrom] = useState(initialRange.from);
-  const [to, setTo] = useState(initialRange.to);
+  const [rangeDraft, setRangeDraft] = useState(initialRange);
   const [actor, setActor] = useState("");
   const [target, setTarget] = useState("");
   const [action, setAction] = useState<"" | AuditEntry["action"]>("");
@@ -184,7 +184,7 @@ export function AuditLog() {
         className="rounded-xl border border-border bg-sidebar p-4"
         onSubmit={(event) => {
           event.preventDefault();
-          const range = dateRange(from, to);
+          const range = dateRange(rangeDraft.from, rangeDraft.to);
           if (!range) {
             setInvalid(true);
             return;
@@ -203,27 +203,15 @@ export function AuditLog() {
       >
         <FieldGroup className="grid gap-3 sm:grid-cols-2 @3xl/main:grid-cols-3">
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor="audit-from">{t("from")} (UTC)</FieldLabel>
-            <Input
-              id="audit-from"
+            <FieldLabel htmlFor="audit-range">{t("dateRange")} (UTC)</FieldLabel>
+            <DateRangePicker
+              id="audit-range"
+              locale={locale}
+              placeholder={t("dateRange")}
               aria-invalid={invalid}
               aria-describedby={invalid ? "audit-range-error" : undefined}
-              type="date"
-              required
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field>
-          <Field data-invalid={invalid}>
-            <FieldLabel htmlFor="audit-to">{t("to")} (UTC)</FieldLabel>
-            <Input
-              id="audit-to"
-              aria-invalid={invalid}
-              aria-describedby={invalid ? "audit-range-error" : undefined}
-              type="date"
-              required
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
+              value={rangeDraft}
+              onValueChange={setRangeDraft}
             />
           </Field>
           <Field>

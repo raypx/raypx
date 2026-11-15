@@ -9,6 +9,8 @@ import { checkDeployment } from "./validation/deployment.js";
 import { checkEntryConsumers } from "./validation/entries.js";
 import { checkIntlEngine } from "./validation/intl-engine.js";
 
+import { checkDomDateInputs } from "./validation/dom-date-inputs.js";
+
 const MAX_MARKDOWN_LINES = 1000;
 
 export function checkMarkdownLength(root: string): string[] {
@@ -49,6 +51,7 @@ export function policy(root: string): string[] {
   const index = discover(root);
   const findings = checkArchitecture(index);
   findings.push(...checkSourceLayers(root, index));
+  findings.push(...checkDomDateInputs(root, index));
   findings.push(...checkEntryConsumers(root, index));
   findings.push(...checkIntlEngine(index));
   findings.push(...checkDeployment(root));

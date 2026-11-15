@@ -5,6 +5,14 @@ utilities, translated copy and `@raypx/icons`. Read root `DESIGN.md` for sizes,
 layout density, motion and public decoration. Mobile uses native controls and
 pure shared tokens, not DOM components.
 
+DOM date selection always uses `@raypx/ui/date-picker`: the shared shadcn Calendar
+(`react-day-picker`) in a Base UI Popover with a Button trigger. Pass the app locale
+explicitly; single values and inclusive range endpoints are ISO civil dates
+(`YYYY-MM-DD`). Features convert these to protocol instants using their existing
+time zone. Audit filters use UTC midnights and an exclusive day-after end bound.
+Do not use native date/time-type inputs or alternate date-picker libraries; compose
+a separate time-of-day with UI Input/Select. Native Mobile remains independent.
+
 ## Ownership
 
 - UI owns accessible primitives, tokens, common patterns and overlay behavior.

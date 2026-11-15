@@ -64,6 +64,11 @@ packages own page layout, forms, navigation and product behavior.
 - `select-field` composes the shadcn Select for labelled string options, including
   disabled options, placeholders and named form values. Prefer it to NativeSelect
   in feature UI so popup appearance and keyboard behavior are shared.
+- `date-picker` exposes DatePicker and DateRangePicker: ISO civil-date strings,
+  inclusive endpoints/limits and explicit app locale (`en`/`zh`). They compose the
+  shadcn Calendar (`react-day-picker`) in the Base UI Popover with Button triggers.
+  Every DOM date picker uses this composition; no native date/time-type inputs
+  or alternate picker libraries. Time-of-day stays in UI Input/Select.
 - `data-table` renders a caller-owned TanStack Table instance with the existing
   semantic Table primitives. Callers choose features, translated labels and column
   presentation and own data loading, empty states and server pagination/sorting.

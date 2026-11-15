@@ -173,6 +173,9 @@ enrollment, local tasks and remote projections are removed without importing dat
   Compose product-specific controls in Blocks or the owning feature package.
   Use Select, RadioGroup and Collapsible for feature interaction instead of
   native select/radio/details controls; keep semantic form grouping and labels.
+  All DOM date selection uses UI’s shadcn Calendar inside a Popover triggered by
+  a Button (DatePicker/DateRangePicker); never use native date/time-type inputs
+  or another picker. Compose time-of-day fields with UI Input/Select.
 - Prefer icons and UI affordances over explanatory copy: `IconButton` and `HelpHint`
   from `@raypx/ui`, empty states and disabled reasons. Follow the copy rules in DESIGN.md.
 - Use Tailwind utilities for feature layout and styling. Keep CSS entry points for

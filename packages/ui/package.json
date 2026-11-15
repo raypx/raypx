@@ -38,7 +38,8 @@
     "./icon-button": "./src/icon-button.tsx",
     "./help-hint": "./src/help-hint.tsx",
     "./styles/app.css": "./src/styles/app.css",
-    "./themes/native.css": "./src/styles/native.css"
+    "./themes/native.css": "./src/styles/native.css",
+    "./date-picker": "./src/date-picker.tsx"
   },
   "scripts": {
     "check": "bun run scripts/generate-theme.ts --check && tsc --noEmit --project tsconfig.json && tsc --noEmit --project scripts/tsconfig.json",
@@ -54,6 +55,7 @@
     "@tanstack/react-table": "catalog:",
     "class-variance-authority": "catalog:",
     "cn": "catalog:",
+    "react-day-picker": "catalog:",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:"
   },

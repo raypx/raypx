@@ -20,8 +20,6 @@
   "instanceHealth": "当前 API 实例观测到的依赖状态。",
   "ok": "可用",
   "unavailable": "不可用",
-  "from": "开始日期",
-  "to": "结束日期",
   "actor": "操作人 ID",
   "target": "操作对象 ID",
   "roleUpdate": "修改用户角色",
@@ -42,5 +40,6 @@
   "errorCode": "错误码",
   "before": "变更前",
   "after": "变更后",
-  "passwordResetLink": "签发密码重置链接"
+  "passwordResetLink": "签发密码重置链接",
+  "dateRange": "日期范围"
 }

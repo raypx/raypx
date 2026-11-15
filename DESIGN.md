@@ -158,6 +158,11 @@ language remain reachable at every width. Mobile follows the same directory,
 home and Conversation/Activity/Files hierarchy using native controls, keyboard
 avoidance and safe areas; Screen still uses the phone Web client.
 
+DOM date selection uses the shared `@raypx/ui` shadcn Calendar in a Button-triggered
+Popover (DatePicker/DateRangePicker), with app-locale labels and ISO boundary values;
+never use native date/time-type inputs or another picker. Compose any time-of-day
+part with UI Input/Select while preserving the feature’s time-zone semantics.
+
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.
 Theme and language follow the device by default and retain explicit local choices.

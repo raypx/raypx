@@ -16,7 +16,8 @@
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
     "test": "bun --bun vitest run",
-    "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\""
+    "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
+    "test:component": "bun --bun vitest run .component.test."
   },
   "dependencies": {
     "@raypx/auth": "workspace:*",

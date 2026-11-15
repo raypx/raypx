@@ -121,7 +121,10 @@ it("uses the displayed UTC days on initial load, apply and refresh while keeping
     fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     await waitFor(() => expect(mocks.audit).toHaveBeenLastCalledWith(initial, expect.anything()));
-    fireEvent.change(screen.getByLabelText("From (UTC)"), { target: { value: "2026-11-01" } });
+    await userEvent.click(screen.getByRole("button", { name: "Date range (UTC)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Go to the Next Month" }));
+    await userEvent.click(document.querySelector('button[data-day="2026-11-01"]')!);
+    await userEvent.click(document.querySelector('button[data-day="2026-11-04"]')!);
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     await waitFor(() => expect(mocks.audit).toHaveBeenLastCalledWith(initial, expect.anything()));
     fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
@@ -136,18 +139,37 @@ it("uses the displayed UTC days on initial load, apply and refresh while keeping
   }
 });
 
-it("labels an invalid audit date range without issuing another search", async () => {
+it("labels an incomplete audit date range without issuing another search", async () => {
   page(<AuditLog />);
   await screen.findByText("Unconfirmed");
   const calls = mocks.audit.mock.calls.length;
-  fireEvent.change(screen.getByLabelText("From (UTC)"), { target: { value: "2020-01-01" } });
-  fireEvent.change(screen.getByLabelText("Through (UTC)"), { target: { value: "2026-11-01" } });
+  await userEvent.click(screen.getByRole("button", { name: "Date range (UTC)" }));
+  await userEvent.click(document.querySelector("button[data-day]")!);
+  await userEvent.keyboard("[Escape]");
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
   expect(screen.getByRole("alert")).toHaveTextContent("up to 366 days");
-  expect(screen.getByLabelText("From (UTC)")).toHaveAttribute("aria-invalid", "true");
-  expect(screen.getByLabelText("Through (UTC)")).toHaveAccessibleDescription(
+  expect(screen.getByLabelText("Date range (UTC)")).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByLabelText("Date range (UTC)")).toHaveAccessibleDescription(
     "Choose a valid date range of up to 366 days.",
   );
   expect(mocks.audit).toHaveBeenCalledTimes(calls);
   expect(screen.getByText("Unconfirmed")).toBeTruthy();
+});
+
+it("retains the 366-day audit limit after keyboard date selection", async () => {
+  const clock = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-04T23:59:59.999Z"));
+  try {
+    page(<AuditLog />);
+    await screen.findByText("Unconfirmed");
+    const calls = mocks.audit.mock.calls.length;
+    await userEvent.click(screen.getByRole("button", { name: "Date range (UTC)" }));
+    await userEvent.keyboard(
+      "{Shift>}[PageUp]{/Shift}[Enter]{Shift>}[PageDown]{/Shift}[ArrowRight][Enter]",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("up to 366 days");
+    expect(mocks.audit).toHaveBeenCalledTimes(calls);
+  } finally {
+    clock.mockRestore();
+  }
 });

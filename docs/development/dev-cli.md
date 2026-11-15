@@ -120,3 +120,10 @@ the release identity from its explicit public override, deployment SHA or Git SH
 Use that recorded identity at upload time; reject a conflicting override. Do not
 infer a deployed version from a newer checkout or expose upload credentials in
 client variables. `clean:artifacts` removes evidence, not deployment assets.
+
+DOM source policy rejects native `date`, `datetime-local`, `month`, `week` and `time`
+input types, including JSX literal/constant/spread props and static createElement
+props, plus static type assignments and setAttribute calls. It discovers workspaces from manifests, excludes native applications via
+their React Native dependency and leaves test fixtures out of production scanning.
+Use `@raypx/ui/date-picker`; time-of-day uses UI Input/Select. Dynamic runtime
+prop construction still requires review.

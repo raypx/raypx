@@ -20,8 +20,6 @@
   "instanceHealth": "Dependencies observed by this API instance.",
   "ok": "Available",
   "unavailable": "Unavailable",
-  "from": "From",
-  "to": "Through",
   "actor": "Actor ID",
   "target": "Target ID",
   "roleUpdate": "Change user role",
@@ -42,5 +40,6 @@
   "errorCode": "Error code",
   "before": "Before",
   "after": "After",
-  "passwordResetLink": "Issue password reset link"
+  "passwordResetLink": "Issue password reset link",
+  "dateRange": "Date range"
 }
