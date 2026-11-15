@@ -149,6 +149,23 @@ afterAll(async () => {
     if (directory) await rm(directory, { recursive: true, force: true });
   }
 }, 30_000);
+it("accepts the native Desktop origin for fixture sign-in and session RPC", async () => {
+  const response = await fetch(`${serverOrigin}/api/auth/sign-in/email`, {
+    method: "POST",
+    headers: { origin: "views://main", "content-type": "application/json" },
+    body: JSON.stringify({ email: "control-e2e@example.com", password: "Raypx-control-test-123" }),
+  });
+  expect(response.status).toBe(200);
+  const cookie = response.headers
+    .getSetCookie()
+    .map((value) => value.split(";", 1)[0])
+    .join("; ");
+  const nativeClient = createApiClient({
+    baseUrl: serverOrigin,
+    headers: { origin: "views://main", cookie },
+  });
+  expect(await nativeClient.account.get({})).toMatchObject({ email: "control-e2e@example.com" });
+});
 it.skipIf(process.platform === "win32")(
   "pairs the actual outbound CLI daemon, reads device Files, stages member attachments, supplies protected command input and executes tools only after approvals",
   async () => {

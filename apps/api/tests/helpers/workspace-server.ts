@@ -103,13 +103,14 @@ const accounts = [
   { email: "control-member-desktop@example.com", name: "Desktop Space Member" },
 ];
 const accountEmails = accounts.map((account) => account.email);
+const allowedOrigins = ["http://127.0.0.1:4173", "http://127.0.0.1:4174", "views://main"];
 await connection.db.delete(user).where(inArray(user.email, accountEmails));
 const auth = createAuth({
   database: drizzleAdapter(connection.db, { provider: "pg", schema }),
   config: {
     baseURL: `http://127.0.0.1:${port}`,
     secret: "raypx-browser-fixture-secret-32-characters",
-    trustedOrigins: ["http://127.0.0.1:4173", "http://127.0.0.1:4174"],
+    trustedOrigins: allowedOrigins,
     production: false,
   },
   mailer: { async sendVerification() {}, async sendPasswordReset() {} },
@@ -281,7 +282,7 @@ const app = createApiApp({
   notifications,
   authHandler: (request) => auth.handler(request),
   readSession,
-  allowedOrigins: ["http://127.0.0.1:4173", "http://127.0.0.1:4174"],
+  allowedOrigins,
   config,
   computers,
   computerScreens,
@@ -378,8 +379,7 @@ const server = serve<SocketData>({
       path === "/fixture/conversation/transcript"
     ) {
       const origin = request.headers.get("origin");
-      if (origin && !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
-        return new Response(null, { status: 403 });
+      if (origin && !allowedOrigins.includes(origin)) return new Response(null, { status: 403 });
       const session = await readSession(request.headers);
       if (!session) return new Response(null, { status: 401 });
       if (path === "/fixture/conversation/transcript") {
