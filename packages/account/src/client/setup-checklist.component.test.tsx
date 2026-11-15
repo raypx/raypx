@@ -93,3 +93,35 @@ it("removes the checklist when a focused refresh finds every item configured", a
   fireEvent(window, new Event("focus"));
   await waitFor(() => expect(screen.queryByRole("region")).toBeNull());
 });
+
+it.each(["en", "zh"] as const)(
+  "shows consequences only for unconfigured items as status changes in %s",
+  async (locale) => {
+    const copy = { en, zh }[locale].access.setup;
+    const port = {
+      access: async () => accessForRole("admin", "admin"),
+      status: vi.fn(async () => ({ model: true, sandbox: false, mail: false })),
+    };
+    render(
+      <BrowserLanguageProvider initialPreference={locale} restorePreference={false}>
+        <SetupChecklist
+          destinations={destinations}
+          port={port}
+          origin="https://a.example.test"
+          accountId="admin"
+          onConfigure={() => {}}
+        />
+      </BrowserLanguageProvider>,
+    );
+    await screen.findByRole("region", { name: copy.title });
+    expect(screen.queryByText(copy.modelHint)).toBeNull();
+    expect(screen.getByText(copy.sandboxHint)).toBeDefined();
+    expect(screen.getByText(copy.mailHint)).toBeDefined();
+    port.status.mockResolvedValue({ model: false, sandbox: true, mail: true });
+    fireEvent(window, new Event("focus"));
+    await screen.findByText(copy.modelHint);
+    expect(screen.queryByText(copy.sandboxHint)).toBeNull();
+    expect(screen.queryByText(copy.mailHint)).toBeNull();
+    expect(screen.getAllByText(copy.configured)).toHaveLength(2);
+  },
+);

@@ -88,5 +88,9 @@
   "authFactAgents": "通过持久智能体、记忆和版本化页面继续工作。",
   "authFactControl": "使用已配置的计算机与工具，明确控制操作。",
   "authFactTogether": "在空间中协作，让例程持续处理重复工作。",
-  "hostingSetupHint": "首个账号将成为部署管理员。邮件可稍后配置。"
+  "hostingSetupHint": "首个账号将成为部署管理员。邮件可稍后配置。",
+  "bootstrapTitle": "配置你的新部署。",
+  "bootstrapFactModel": "连接模型，让智能体可以回复。",
+  "bootstrapFactSandbox": "按需配置沙箱，提供团队电脑。",
+  "bootstrapFactMail": "按需配置邮件，启用邮箱验证和密码找回；通过空间邀请链接邀请成员。"
 }

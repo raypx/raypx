@@ -160,6 +160,8 @@ it.each([false, true])(
     mocks.registrationEnabled = false;
     await page("/signup");
     expect(screen.getByRole("heading", { name: "Create administrator account" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Set up your deployment." })).toBeVisible();
+    expect(screen.queryByText("Come back to work that remembers.")).toBeNull();
     expect(screen.getByText("Create the administrator account for this deployment.")).toBeVisible();
     expect(screen.queryByLabelText("Invitation link")).toBeNull();
     expect(screen.queryAllByLabelText("Setup token", { exact: true })).toHaveLength(
@@ -170,6 +172,8 @@ it.each([false, true])(
 it("points sign-in to administrator signup while bootstrap is pending and preserves its destination", async () => {
   mocks.bootstrap = true;
   const router = await page("/login?returnTo=%2Fagents");
+  expect(screen.getByRole("heading", { name: "Come back to work that remembers." })).toBeVisible();
+  expect(screen.queryByText("Set up your deployment.")).toBeNull();
   fireEvent.click(
     screen.getByRole("link", { name: "Create this deployment’s administrator account" }),
   );
@@ -226,5 +230,7 @@ it("restores ordinary signup and removes the token after another client claims b
     }),
   );
   expect(await screen.findByRole("heading", { name: "Create your account" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Come back to work that remembers." })).toBeVisible();
+  expect(screen.queryByText("Set up your deployment.")).toBeNull();
   expect(screen.queryByLabelText("Setup token", { exact: true })).toBeNull();
 });

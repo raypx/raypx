@@ -12,12 +12,12 @@ import { accentGradient } from "../../../components/brand-accent.js";
  * Product facts beside the authentication form. No email-admission promise, animation
  * or private account read belongs in this static panel.
  */
-export function AuthBrandSection() {
+export function AuthBrandSection({ bootstrap = false }: { bootstrap?: boolean }) {
   const t = useTranslations("guest");
   const features = [
-    { icon: MonitorIcon, text: t("authFactAgents") },
-    { icon: ShieldCheckIcon, text: t("authFactControl") },
-    { icon: CodeFolderIcon, text: t("authFactTogether") },
+    { icon: MonitorIcon, text: t(bootstrap ? "bootstrapFactModel" : "authFactAgents") },
+    { icon: ShieldCheckIcon, text: t(bootstrap ? "bootstrapFactSandbox" : "authFactControl") },
+    { icon: CodeFolderIcon, text: t(bootstrap ? "bootstrapFactMail" : "authFactTogether") },
   ] as const;
   return (
     <aside className="relative isolate hidden min-w-0 flex-col justify-center gap-9 overflow-hidden border-l border-border bg-muted/30 p-10 lg:flex">
@@ -33,11 +33,13 @@ export function AuthBrandSection() {
       <div className="flex flex-col gap-3">
         <span aria-hidden="true" className={cn("h-1 w-10 rounded-full", accentGradient)} />
         <h2 className="text-2xl leading-tight font-semibold tracking-tight text-balance">
-          {t("authTitle")}
+          {t(bootstrap ? "bootstrapTitle" : "authTitle")}
         </h2>
-        <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
-          {t("authSummary")}
-        </p>
+        {!bootstrap && (
+          <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+            {t("authSummary")}
+          </p>
+        )}
       </div>
       <ol className="relative flex flex-col gap-3.5">
         <span

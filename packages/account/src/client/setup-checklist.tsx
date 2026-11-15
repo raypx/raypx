@@ -124,7 +124,7 @@ function ScopedChecklist({
                       <span className="text-xs">
                         {t(configured ? "setup.configured" : "setup.notConfigured")}
                       </span>
-                      <span className="text-xs">{t(`setup.${item}Hint`)}</span>
+                      {!configured && <span className="text-xs">{t(`setup.${item}Hint`)}</span>}
                     </div>
                   </li>
                 );

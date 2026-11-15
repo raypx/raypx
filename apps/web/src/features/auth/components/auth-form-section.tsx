@@ -8,11 +8,12 @@ import { AuthBrandSection } from "./auth-brand-section.js";
 
 interface AuthFormSectionProps {
   siteName: string;
+  bootstrap?: boolean;
   children: ReactNode;
 }
 
 /** The panel renders on first paint: visitors arrive here to act, not to watch. */
-export function AuthFormSection({ siteName, children }: AuthFormSectionProps) {
+export function AuthFormSection({ siteName, bootstrap = false, children }: AuthFormSectionProps) {
   return (
     <div
       className={cn(
@@ -36,7 +37,7 @@ export function AuthFormSection({ siteName, children }: AuthFormSectionProps) {
           <div className="flex min-w-0 items-center justify-center p-6 sm:p-8 lg:p-10">
             {children}
           </div>
-          <AuthBrandSection />
+          <AuthBrandSection bootstrap={bootstrap} />
         </div>
       </main>
       <LegalFooter className="mx-auto w-full max-w-6xl px-5 py-5 text-center text-xs sm:px-8" />

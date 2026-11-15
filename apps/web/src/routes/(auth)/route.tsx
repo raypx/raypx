@@ -1,5 +1,5 @@
 import { authPageGuard } from "../../features/auth/auth-guard.js";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { safeReturnTo } from "../../features/auth/return-to.js";
 import { useQuery } from "@tanstack/react-query";
 import { publicConfigurationQuery } from "../../features/config/client.js";
@@ -13,10 +13,14 @@ export const Route = createFileRoute("/(auth)")({
 });
 
 function AuthLayout() {
-  const siteName = useQuery(publicConfigurationQuery()).data?.siteName ?? "Raypx";
+  const configuration = useQuery(publicConfigurationQuery()).data;
+  const pathname = useLocation({ select: (location) => location.pathname });
 
   return (
-    <AuthFormSection siteName={siteName}>
+    <AuthFormSection
+      siteName={configuration?.siteName ?? "Raypx"}
+      bootstrap={pathname === "/signup" && configuration?.bootstrap === true}
+    >
       <Outlet />
     </AuthFormSection>
   );

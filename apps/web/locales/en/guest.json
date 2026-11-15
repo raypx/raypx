@@ -88,5 +88,9 @@
   "authFactAgents": "Continue with persistent Agents, memory and versioned Pages.",
   "authFactControl": "Use configured computers and tools with explicit action controls.",
   "authFactTogether": "Share a Space and let routines carry recurring work forward.",
-  "hostingSetupHint": "The first account becomes the deployment administrator. Email setup can wait."
+  "hostingSetupHint": "The first account becomes the deployment administrator. Email setup can wait.",
+  "bootstrapTitle": "Set up your deployment.",
+  "bootstrapFactModel": "Connect a model so Agents can reply.",
+  "bootstrapFactSandbox": "Add an optional sandbox for a team computer.",
+  "bootstrapFactMail": "Set up optional mail for verification and recovery; invite members with Space links."
 }
