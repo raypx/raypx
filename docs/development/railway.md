@@ -17,9 +17,13 @@ and `test` for focused validation; root `check`, `test` and `verify` discover it
 through the root manifest's `infra/*` pattern.
 
 Gateway uses the pinned Caddy image and [Caddyfile](../../infra/railway/Caddyfile).
-Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`, `/routines/*`, the two configured discovery
-paths, `/events`, `/health`, `/ready` and `/device/connect` to API, and other paths to Web. Caddy proxies WebSocket
-upgrades and strips Cookie and preserves the connector Authorization header on `/device/connect`. API and Web have
+Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`,
+`/routines/*`, `/device/*`, `/page-content/*`, `/message-attachments/*`, the two
+configured discovery paths, `/events`, `/health` and `/ready` to API; other paths
+go to Web. This includes member Page previews, public shares and attachment
+downloads; `/pages` remains Web-owned. Caddy proxies WebSocket upgrades, strips
+Cookie and preserves the connector Authorization header on `/device/connect`.
+API and Web have
 no public domains, and database connections use private
 references. Access logging is
 disabled and the error log removes request details.
@@ -74,10 +78,13 @@ is generated. Client assets record the resolved version for later SourceMap uplo
 Service ports and health paths come from `@raypx/tooling/build/deployment`; repository
 policy checks Caddy and Compose against the same ingress contract.
 
-The checked-in gateway does not yet match `/page-content/*`; before exposing Page
-previews/shares through it, add that explicit API route in the operator's gateway
-configuration. Direct API document serving and browser fixtures do not establish
-production gateway acceptance. The default combined role includes recovery;
+`apiIngress` in [the deployment contract](../../packages/tooling/src/build/deployment.ts)
+is the authoritative path list. API route-coverage and Railway matcher tests guard
+it alongside Compose policy. Keep the public Web origin in `ALLOWED_ORIGINS`:
+Page `frame-ancestors` uses its HTTP(S) origins. Gateway preserves API response
+headers; Web's Nitro framing denial applies only to Web responses. Direct API
+tests do not establish deployed gateway acceptance. The default combined role
+includes recovery;
 Redis remains optional for new Runs and required for split device routing.
 
 ## Apply and deploy

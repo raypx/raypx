@@ -55,3 +55,9 @@ at startup. Configure `base_url` and `web_url` for the API and Web origins and
 restart after changing them. Origins isolate sessions and connector credentials;
 changing an endpoint transfers no identity or history. Named native connection
 profiles remain separate from the CLI's private local state directories.
+
+A shared API/Web origin must follow the
+[API ingress contract](../../packages/tooling/src/build/deployment.ts).
+Desktop opens authenticated Page previews at the Web `/pages` destination;
+its document frames load API `/page-content/*`. Attachment downloads also reach
+API through `/message-attachments/*`.

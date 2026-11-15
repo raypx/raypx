@@ -154,6 +154,16 @@ from `AGENT_MODELS` using `AGENT_MODEL_CREDENTIALS`. Configure API and worker
 roles alike. Without a resolvable selection, Auto is unavailable; persisted Auto
 settings ask the member. Review never falls back to Never ask or ambient keys.
 
+## Shared-origin routing
+
+`apiIngress` in [the deployment contract](../../packages/tooling/src/build/deployment.ts)
+owns the API prefixes and exact paths used by Railway and Compose. API tests
+check mounted routes against it; proxy tests/policy check exact matcher parity.
+`/page-content/*` and `/message-attachments/*` reach API, while `/pages` and other
+Web destinations remain on Web. Page `frame-ancestors` comes from HTTP(S)
+`ALLOWED_ORIGINS`, including the common public origin. Proxies preserve API
+response headers; Web's Nitro framing denial never wraps API responses.
+
 ## Device connector routing
 
 `/device/*` is API ingress alongside `/rpc/*` and `/events`; Authorization must

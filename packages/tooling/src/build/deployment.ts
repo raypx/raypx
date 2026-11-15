@@ -6,8 +6,9 @@ export const deploymentServices = {
   gateway: { port: 8080, ready: "/ready" },
 } as const;
 
+/** API-owned paths on a shared Web/API origin; static proxies must match exactly. */
 export const apiIngress = {
-  prefixes: ["/api/", "/rpc/", "/routines/", "/device/"],
+  prefixes: ["/api/", "/rpc/", "/routines/", "/device/", "/page-content/", "/message-attachments/"],
   paths: [
     "/.well-known/openid-configuration",
     "/.well-known/oauth-authorization-server",

@@ -5,6 +5,7 @@ import type { PagesService } from "@raypx/pages/server";
 import { resolveSpaceScope, type SpaceAccess } from "@raypx/spaces/server";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { createApiApp } from "../../tests/helpers/app.js";
+import { getApiEnvironment } from "../env.js";
 
 const token = "a".repeat(64);
 const at = "2026-01-01T00:00:00.000Z";
@@ -111,27 +112,37 @@ it("rate-limits a token and a platform-owned address independently", async () =>
     (await fresh.app.request(path, { headers: { "x-raypx-client-ip": "192.0.2.2" } })).status,
   ).toBe(200);
 });
-it("resolves fresh membership for member rendering and returns the same sandboxed response without cookies", async () => {
-  const f = fixture("html");
-  const scope = resolveSpaceScope(
-    { spaceId: spaceIdSchema.parse("space"), accountId: "member", role: "member", createdAt: at },
-    "member",
-    spaceIdSchema.parse("space"),
-  );
-  const resolve = vi.fn(async () => scope);
-  const app = createApiApp({
-    pages: f.pages,
-    spaces: { resolve } as unknown as SpaceAccess,
-    allowedOrigins: ["https://app.example"],
-    readSession: async () => ({ user: { id: "member" } }) as never,
-  });
-  const response = await app.request("/page-content/member/space/page?version=1");
-  expect(response.status).toBe(200);
-  safeHeaders(response, "html");
-  expect(resolve).toHaveBeenCalledExactlyOnceWith("member", "space");
-  expect(f.get).toHaveBeenCalledWith(scope, "page", 1);
-  expect((await f.app.request("/page-content/member/space/page")).status).toBe(404);
-});
+it.each(["document", "html"] as const)(
+  "allows a same-origin member %s frame using ALLOWED_ORIGINS through all API middleware",
+  async (kind) => {
+    const f = fixture(kind);
+    const origin = "https://app.example";
+    const environment = getApiEnvironment({ ALLOWED_ORIGINS: `${origin},views://main,raypx://` });
+    const scope = resolveSpaceScope(
+      { spaceId: spaceIdSchema.parse("space"), accountId: "member", role: "member", createdAt: at },
+      "member",
+      spaceIdSchema.parse("space"),
+    );
+    const resolve = vi.fn(async () => scope);
+    const app = createApiApp({
+      pages: f.pages,
+      spaces: { resolve } as unknown as SpaceAccess,
+      allowedOrigins: environment.allowedOrigins,
+      readSession: async () => ({ user: { id: "member" } }) as never,
+    });
+    const response = await app.request(`${origin}/page-content/member/space/page?version=1`, {
+      headers: { origin, "sec-fetch-site": "same-origin" },
+    });
+    expect(response.status).toBe(200);
+    safeHeaders(response, kind);
+    expect(response.headers.get("content-security-policy")!.split("; ")).toContain(
+      `frame-ancestors ${origin}`,
+    );
+    expect(resolve).toHaveBeenCalledExactlyOnceWith("member", "space");
+    expect(f.get).toHaveBeenCalledWith(scope, "page", 1);
+    expect((await f.app.request("/page-content/member/space/page")).status).toBe(404);
+  },
+);
 
 function stylesheetCoveredByPolicy(body: string, response: Response) {
   const styles = [...body.matchAll(/<style>([\s\S]*?)<\/style>/g)];

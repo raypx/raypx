@@ -6,7 +6,9 @@ Dev CLI consumers. No product runtime imports this package. Turbo owns schedulin
 Dev CLI owns commands and reusable validation. No browser-server or performance
 entry exists. E2E owns its compiled Desktop fixture server.
 
-Deployment definitions include /device routes and /events. Static adapters must
-match without importing application runtime or loading environment files. CLI
+Deployment apiIngress is the authoritative API gateway path list, including
+/device, /page-content, /message-attachments and /events. API tests check mounted
+routes; static adapters must match without importing application runtime or
+loading environment files. CLI
 payload format 2 is immutable, version-pinned and has no terminal helper. Verify
 prepared inventories before use; never build implicitly. Run check/test/policy.

@@ -78,9 +78,11 @@ Copy `apps/mobile/.env.example` to `.env.local` in that workspace to override
 `EXPO_PUBLIC_API_URL`. The default is `https://raypx.com`. Supply an HTTPS gateway
 origin without a path, query or credentials; a development device must be able to
 reach it. Expo embeds this public value at bundle time. Never put secrets in
-`EXPO_PUBLIC_*`. The gateway must route `/api/auth/*`, `/rpc` and the authenticated
-`/events` WebSocket to the API and serve the existing `/signup` and
-`/forgot-password` Web pages.
+`EXPO_PUBLIC_*`. The gateway must follow the shared
+[API ingress contract](../../packages/tooling/src/build/deployment.ts), including
+attachment downloads and the authenticated `/events` WebSocket. `/pages`,
+`/signup` and `/forgot-password` stay on Web; Page handoff opens `/pages`, whose
+preview loads `/page-content/*` from API.
 
 ## Build verification
 

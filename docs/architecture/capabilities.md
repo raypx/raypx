@@ -204,7 +204,10 @@ headers after fresh membership admission. Both are read-only, no-store and cooki
 Markdown uses CommonMark/GFM with raw HTML disabled and allowlisted tags/protocols.
 HTML keeps inline scripts/styles and data images under an opaque sandbox origin:
 no same-origin, forms, frames, objects, external images/scripts or network access.
-CSP frame ancestors are the configured application origins. Public admission is
+CSP frame ancestors are the HTTP(S) origins from `ALLOWED_ORIGINS`, including the
+public Web origin for a shared-origin deployment. Gateways forward `/page-content/*`
+to API and preserve its response headers; `/pages` stays on Web. See
+[shared-origin routing](operations.md#shared-origin-routing). Public admission is
 120 requests per address/minute and 60 per token/minute; only digests enter limits.
 
 Markdown documents include one self-contained neutral stylesheet for both member

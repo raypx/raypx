@@ -101,8 +101,11 @@ bun apps/web/.output/server/index.mjs
 
 Use a common origin or `AUTH_DOMAIN` for the parent of sibling Web/API hosts so
 SSR receives the session cookie. `/events` is the authenticated Agent/Space stream;
-`/device/connect` is outbound device connector transport. Proxies must route both correctly, along with
-`/rpc`, `/api`, `/routines/` and `/page-content/` where those features are used.
+`/device/connect` is outbound device connector transport. Shared-origin proxies
+must match `apiIngress` in [the deployment contract](../../packages/tooling/src/build/deployment.ts),
+including `/page-content/*` and `/message-attachments/*`; `/pages` stays on Web.
+Include the Web origin in `ALLOWED_ORIGINS` for Page framing. Local Web development
+uses `VITE_API_URL` directly, with no path proxy in the Vite configuration.
 
 `SERVER_ROLE=api` serves requests and starts committed Runs directly;
 `SERVER_ROLE=worker` scans recovery, routines and claimed Space deletion without

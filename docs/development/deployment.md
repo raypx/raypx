@@ -89,9 +89,10 @@ Only Traefik publishes traffic. Keep the management panel behind SSH and block
 public database/application ports. Set APP_HOST, DNS, TLS and the exact project
 TRAEFIK_NETWORK. Attach only this project's containers and Traefik. Trust exact
 proxy /32 or /128 addresses in AUTH_TRUSTED_PROXIES; never trust a shared subnet.
-Traefik sends the configured /api/, /rpc/, /routines/, /events, /health, /ready
-and /device/connect routes to the backend; other paths
-go to Web. It strips Cookie and Authorization only on the relay route.
+Traefik sends `/api/*`, `/rpc/*`, `/routines/*`, `/device/*`, `/page-content/*`,
+`/message-attachments/*`, the two configured discovery paths, `/events`, `/health`
+and `/ready` to the backend; other paths go to Web. `/pages` remains a Web route.
+Only `/device/connect` strips Cookie; Authorization reaches the connector intact.
 
 Validate without printing resolved secrets:
 
@@ -99,10 +100,13 @@ Validate without printing resolved secrets:
 docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
 ```
 
-The checked-in Compose and Railway ingress matchers currently omit
-`/page-content/*`. An operator must route that path to API before using member
-Page previews or public shares through a common gateway; direct API serving is
-implemented. Gateway readiness alone does not validate Page document routing.
+Compose and Railway match `apiIngress` in
+[the deployment contract](../../packages/tooling/src/build/deployment.ts).
+Member/public Page documents and attachment downloads must reach API. Include
+the public Web origin in `ALLOWED_ORIGINS` for Page `frame-ancestors`, and preserve
+API response headers without adding a proxy-wide framing denial. Web's Nitro
+security headers stay on Web responses. Gateway readiness alone does not validate
+Page document routing.
 
 ## Optional computers
 

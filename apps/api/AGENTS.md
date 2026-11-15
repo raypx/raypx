@@ -20,6 +20,12 @@ session/Origin-authorized conversation/screen stream. No /relay, device task
 projection, enrollment or account scheduler exists. Message uploads use the
 Space-scoped messageAttachments procedures.
 
+Top-level HTTP mounts must fit apiIngress in @raypx/tooling/build/deployment;
+tests import that build-only contract and check the composed route table. Update
+both static proxies when adding paths. /page-content owns its sandbox/CSP with
+frame-ancestors from HTTP(S) ALLOWED_ORIGINS, including the public Web origin;
+Nitro must not add outer response header rules.
+
 The connector registry revalidates current account/Space grants and fences per
 operation. Split-process device routing requires the lazy private Redis broker;
 combined deployments need no broker. Redis also supports optional caches,
