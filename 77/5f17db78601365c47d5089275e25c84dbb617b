@@ -1,0 +1,25 @@
+apps/api/tests/postgres/node/sandbox-configuration.test.ts
+  s_aabc72019de719::t_6d69c32244521b 25-29,31-33
+packages/dev-cli/src/smoke/checks.ts
+  s_aabc72019de719::t_e0fac9f8679eec 37,43,47-69
+packages/dev-cli/src/smoke/checks.test.ts
+  s_aabc72019de719::t_3d08df64c6afeb 58-59
+  s_aabc72019de719::t_1377496ed5eb52 75-77
+  s_aabc72019de719::t_0c46499ee40b56 2,38-57,60-74,78-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "775f17db78601365c47d5089275e25c84dbb617b",
+  "prompts": {},
+  "sessions": {
+    "s_aabc72019de719": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dcb9-6903-7681-b8d4-ecb8fe379f3e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
