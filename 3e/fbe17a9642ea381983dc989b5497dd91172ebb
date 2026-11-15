@@ -1,0 +1,35 @@
+apps/web/src/features/auth/components/auth-form-section.tsx
+  s_611be684303439::t_1fc728fec9573e 11,16,40
+packages/account/src/client/setup-checklist.tsx
+  s_611be684303439::t_1fc728fec9573e 127
+apps/web/src/routes/(auth)/route.tsx
+  s_611be684303439::t_1fc728fec9573e 2,16-17,20-23
+packages/account/src/client/setup-checklist.component.test.tsx
+  s_611be684303439::t_3cb576786818c2 96-127
+apps/web/src/features/auth/components/auth-brand-section.component.test.tsx
+  s_611be684303439::t_3cb576786818c2 1-45
+apps/web/src/router-auth.component.test.tsx
+  s_611be684303439::t_3cb576786818c2 163-164,175-176,233-234
+apps/web/src/features/auth/components/auth-brand-section.tsx
+  s_611be684303439::t_1fc728fec9573e 15,18-20,36,38-42
+apps/web/locales/en/guest.json
+  s_611be684303439::t_1fc728fec9573e 91-95
+apps/web/locales/zh/guest.json
+  s_611be684303439::t_1fc728fec9573e 91-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3efbe17a9642ea381983dc989b5497dd91172ebb",
+  "prompts": {},
+  "sessions": {
+    "s_611be684303439": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dd62-855d-7ff0-bc5f-d0ab49557582",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
