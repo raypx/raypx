@@ -1,0 +1,67 @@
+apps/mobile/AGENTS.md
+  s_3c49018b7047c4::t_0e8ec2542d022c 78-80
+packages/agents/locales/en/agents.json
+  s_3c49018b7047c4::t_c7f3b29b5fd0e7 747-752
+packages/agents/src/model/page-reference.ts
+  s_3c49018b7047c4::t_278a3c952dbc3b 1-11,15-23,30-35,38-57
+  s_3c49018b7047c4::t_a498d77849dcc2 13-14
+  s_3c49018b7047c4::t_fcac2753dd0012 24-29,36-37
+  s_3c49018b7047c4::t_c7f3b29b5fd0e7 12
+packages/agents/src/client/page-reference.component.test.tsx
+  s_3c49018b7047c4::t_fb0d6518b9e9a5 1-16,25-26,30-34,38-40,44-59,63-80,92-96,101-103,113,119-121,125-128
+  s_3c49018b7047c4::t_fcac2753dd0012 17-24,27-29,35-37,41-43,81-91,97-100,104-112,114-118,122-124
+  s_3c49018b7047c4::t_a498d77849dcc2 60-62
+packages/agents/src/client/workspace.tsx
+  s_3c49018b7047c4::t_3149dd13584d06 1494
+packages/agents/AGENTS.md
+  s_3c49018b7047c4::t_0e8ec2542d022c 232-239
+docs/architecture/capabilities.md
+  s_3c49018b7047c4::t_de701eee747f09 230-238
+packages/agents/locales/zh/agents.json
+  s_3c49018b7047c4::t_c7f3b29b5fd0e7 747-752
+packages/agents/src/client/conversation.tsx
+  s_3c49018b7047c4::t_fcac2753dd0012 79-89,448-475,1139-1145,1693-1714,1887-1890
+  s_3c49018b7047c4::t_3149dd13584d06 116,131,162,252,278,305,325,476-479,1692,1715,1885,1894,1905
+apps/web/AGENTS.md
+  s_3c49018b7047c4::t_0e8ec2542d022c 117-119
+packages/agents/src/client/workspace.component.test.tsx
+  s_3c49018b7047c4::t_de701eee747f09 2970
+  s_3c49018b7047c4::t_fcac2753dd0012 2934-2940,2954-2958,2963-2966,2971-2973,2979-2981
+  s_3c49018b7047c4::t_4cf6aad5e2ba95 2931-2933,2941-2953,2959-2962,2967-2969,2974-2978,2982
+apps/mobile/src/agents/conversation.tsx
+  s_3c49018b7047c4::t_fcac2753dd0012 342-348
+  s_3c49018b7047c4::t_3149dd13584d06 28
+packages/agents/src/client/page-reference.tsx
+  s_3c49018b7047c4::t_fcac2753dd0012 7,17,21,26-29,34-43,45,58,62-66,87-93,103-110,114-120,137-142
+  s_3c49018b7047c4::t_a498d77849dcc2 76
+  s_3c49018b7047c4::t_c3d8235ef28348 8
+  s_3c49018b7047c4::t_1b6bfde2aa59ad 1-6,9-16,18-20,22-25,30-33,44,46-57,59-61,67-75,77-86,94-102,111-113,121-136,143-151
+apps/mobile/src/agents/conversation.component.test.tsx
+  s_3c49018b7047c4::t_4cf6aad5e2ba95 1022-1023,1026,1034
+  s_3c49018b7047c4::t_fcac2753dd0012 1024-1025,1027,1029-1030,1033
+  s_3c49018b7047c4::t_8b0b720bd98f15 1028
+  s_3c49018b7047c4::t_b63cd60ce8c2bb 1031-1032
+packages/pages/AGENTS.md
+  s_3c49018b7047c4::t_0e8ec2542d022c 41-44
+packages/agents/src/model.ts
+  s_3c49018b7047c4::t_c3d8235ef28348 187
+packages/agents/src/model/port.ts
+  s_3c49018b7047c4::t_fcac2753dd0012 37,159-162
+  s_3c49018b7047c4::t_c3d8235ef28348 158,163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e6107d7a5e441b38e81355f533a9d003abed63d9",
+  "prompts": {},
+  "sessions": {
+    "s_3c49018b7047c4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dfd2-326f-7003-b47b-8b010ee9574d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
