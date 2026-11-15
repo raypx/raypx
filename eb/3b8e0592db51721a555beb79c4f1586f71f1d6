@@ -1,0 +1,16 @@
+apps/api/tests/helpers/workspace-server.ts
+  h_f0766e80fd3864 106,113,285,382
+apps/api/tests/postgres/node/device-daemon.test.ts
+  h_f0766e80fd3864 152-168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "eb3b8e0592db51721a555beb79c4f1586f71f1d6",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
