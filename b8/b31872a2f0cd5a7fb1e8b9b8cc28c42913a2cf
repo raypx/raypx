@@ -1,0 +1,82 @@
+packages/blocks/src/components/shell.tsx
+  s_7f9362525d805b::t_41b1c14f24c5e3 434,467-468
+e2e/tests/helpers/account-fixture.ts
+  s_7f9362525d805b::t_fbb06f1793232e 15
+e2e/playwright.config.ts
+  s_7f9362525d805b::t_44b9258b6d1f4b 16
+e2e/tests/helpers/conversation-header.ts
+  s_7f9362525d805b::t_41b1c14f24c5e3 33-36
+docs/development/testing.md
+  s_7f9362525d805b::t_44b9258b6d1f4b 53-60
+e2e/AGENTS.md
+  s_7f9362525d805b::t_44b9258b6d1f4b 44-45
+packages/dev-cli/AGENTS.md
+  s_7f9362525d805b::t_44b9258b6d1f4b 59-60
+.github/workflows/ci.yml
+  s_7f9362525d805b::t_c3f410ed0a7177 124-126
+packages/dev-cli/src/validation/backends.ts
+  s_7f9362525d805b::t_02ca5eda6a92ec 230,238-309
+packages/dev-cli/src/verification/ci.ts
+  s_7f9362525d805b::t_0342287dfec31f 133-134
+apps/web/locales/en/site.json
+  s_7f9362525d805b::t_72d5ce915f121c 3
+apps/web/locales/zh/site.json
+  s_7f9362525d805b::t_546ec42ab46a33 3
+apps/desktop/locales/en/localWorkspace.json
+  s_7f9362525d805b::t_8fa57fe4b5732b 3
+apps/desktop/locales/zh/localWorkspace.json
+  s_7f9362525d805b::t_a4b0737fec30a3 3
+packages/agents/src/model/controller.ts
+  s_7f9362525d805b::t_b5ae68845467cc 5,151,156-164,166
+  s_7f9362525d805b::t_4cd44596113aed 656
+  s_7f9362525d805b::t_ef2ace1d858e55 290-298
+packages/agents/src/model/history.test.ts
+  s_7f9362525d805b::t_e72f7dd97abb7b 846-877
+apps/web/e2e/theme-focus.ts
+  s_7f9362525d805b::t_fe40352bd0a4df 74-75,87
+  s_7f9362525d805b::t_008871715f9887 68,73,76-86,99-103
+  s_7f9362525d805b::t_05ef0ca6355265 104-106
+  s_7f9362525d805b::t_862536c74e1ab6 63,70
+apps/web/e2e/theme-final.spec.ts
+  s_7f9362525d805b::t_862536c74e1ab6 425-441
+  s_7f9362525d805b::t_fc830ea7ad38cb 442,452-455,490-492,494-495
+packages/blocks/AGENTS.md
+  s_7f9362525d805b::t_35196826c195cf 20-21
+docs/development/railway.md
+  s_7f9362525d805b::t_3d06feae25dc67 311-315
+  s_7f9362525d805b::t_bf70359ae5b675 40-46,81
+e2e/tests/helpers/browser-fixture.ts
+  s_7f9362525d805b::t_b23a9340841e31 22-27
+  s_7f9362525d805b::t_2493f37fe9c9cc 28-30
+  s_7f9362525d805b::t_be6e52861675f7 31-48
+apps/desktop/src/lib/connection.ts
+  s_7f9362525d805b::t_b23a9340841e31 1,7
+packages/database/src/connection.ts
+  s_7f9362525d805b::t_9f5aeb66602e9c 18-19,40-43,45,47
+  s_7f9362525d805b::t_ab2df9e6791e05 44,46
+packages/database/src/migrate.ts
+  s_7f9362525d805b::t_9f5aeb66602e9c 1,23,62,65,118-122,127-140,155-156,158,165,169
+  s_7f9362525d805b::t_4e764de167bd00 157
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_7f9362525d805b::t_a760e95fa4f1a2 129-148
+apps/desktop/scripts/host/task.ts
+  s_7f9362525d805b::t_12a7c0f50d42d9 46
+apps/web/e2e/production-restart.spec.ts
+  s_7f9362525d805b::t_be5b10458f858c 63-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b8b31872a2f0cd5a7fb1e8b9b8cc28c42913a2cf",
+  "prompts": {},
+  "sessions": {
+    "s_7f9362525d805b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e2-b18c-79c0-acca-50ae949d3042",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
