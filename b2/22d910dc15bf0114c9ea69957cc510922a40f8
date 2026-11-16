@@ -1,0 +1,37 @@
+apps/api/src/runtime/agents.ts
+  s_ddbd52580b902f::t_2544d059a38673 172-179
+packages/pages/AGENTS.md
+  s_ddbd52580b902f::t_2544d059a38673 44-45
+docs/architecture/capabilities.md
+  s_ddbd52580b902f::t_e73d1076b00c52 232-236
+packages/pages/src/server/tools.ts
+  s_ddbd52580b902f::t_bf3e7ced2ad06f 42
+  s_ddbd52580b902f::t_fc0ae092e682fb 2-8
+  s_ddbd52580b902f::t_2544d059a38673 39-41,43-50,68,72-73,91,101,144
+apps/api/src/conversations/page-tools.ts
+  s_ddbd52580b902f::t_2544d059a38673 13,15
+packages/pages/src/server/tools.test.ts
+  s_ddbd52580b902f::t_e73d1076b00c52 25,37-40,54,59-61,82-85
+apps/api/tests/helpers/workspace-server.ts
+  s_ddbd52580b902f::t_2544d059a38673 234
+apps/api/src/conversations/page-tools.test.ts
+  s_ddbd52580b902f::t_bf3e7ced2ad06f 118,123,146
+  s_ddbd52580b902f::t_fc0ae092e682fb 72,165,194
+  s_ddbd52580b902f::t_e73d1076b00c52 8-11,51-56,85,88-94,117,119-122,124-125,142-145,147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b222d910dc15bf0114c9ea69957cc510922a40f8",
+  "prompts": {},
+  "sessions": {
+    "s_ddbd52580b902f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e35b-a3ed-7d82-bc13-b90662a0bc24",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
