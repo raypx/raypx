@@ -14,6 +14,16 @@ export function modelFixture() {
     toolCalls(calls: ToolCall[]): void;
     fail(): void;
   }> = [];
+  const waiters = new Map<number, Set<(call: (typeof calls)[number]) => void>>();
+  function waitForCall(index: number): Promise<(typeof calls)[number]> {
+    const call = calls[index];
+    if (call) return Promise.resolve(call);
+    return new Promise((resolve) => {
+      const pending = waiters.get(index) ?? new Set();
+      pending.add(resolve);
+      waiters.set(index, pending);
+    });
+  }
   const models: ConversationModels = {
     configured: async () => true,
     list: async () => [{ modelId: "fixture", name: "Deterministic fixture" }],
@@ -85,10 +95,13 @@ export function modelFixture() {
             stream.end(message("error"));
           },
         });
+        const index = calls.length - 1;
+        for (const resolve of waiters.get(index) ?? []) resolve(calls[index]!);
+        waiters.delete(index);
         return stream;
       },
     })),
     close: vi.fn(),
   };
-  return { models, calls };
+  return { models, calls, waitForCall };
 }

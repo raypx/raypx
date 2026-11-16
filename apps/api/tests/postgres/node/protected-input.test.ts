@@ -19,6 +19,7 @@ import {
   conversationEffects,
   conversationToolCalls,
   conversationRuns,
+  conversationCounters,
 } from "@raypx/database/schema";
 import {
   ConversationRunner,
@@ -627,9 +628,9 @@ it.each(["environment", "stdin", "bearer", "header", "query", "basic", "mcp"] as
     runner = executor();
     await repository.release(scope, run);
     const index = model.calls.length;
+    const firstCall = model.waitForCall(index);
     runner.dispatch(scope, conversationId);
-    await expect.poll(() => model.calls.length).toBe(index + 1);
-    model.calls[index]!.toolCalls([
+    (await firstCall).toolCalls([
       {
         type: "toolCall",
         id: selectedCall.id,
@@ -664,15 +665,42 @@ it.each(["environment", "stdin", "bearer", "header", "query", "basic", "mcp"] as
       answer: { decision: "answer", value: secret },
     });
     const before = dispatched;
+    let recoveryLock: Promise<void> | undefined;
+    if (kind === "stdin") {
+      let locked!: () => void;
+      const ready = new Promise<void>((resolve) => {
+        locked = resolve;
+      });
+      // Recovery serializes on this counter. A bounded busy database used to
+      // outlive expect.poll's one-second default while the Run was still healthy.
+      recoveryLock = connection.db.transaction(async (tx) => {
+        await tx
+          .select()
+          .from(conversationCounters)
+          .where(
+            and(
+              eq(conversationCounters.spaceId, scope.spaceId),
+              eq(conversationCounters.conversationId, conversationId),
+            ),
+          )
+          .for("update");
+        locked();
+        await new Promise((resolve) => setTimeout(resolve, 1250));
+      });
+      await ready;
+    }
     runner = executor();
+    const nextCall = model.waitForCall(index + 1);
     runner.dispatch(scope, conversationId);
-    await expect.poll(() => model.calls.length).toBe(index + 2);
+    const resumed = await nextCall;
+    await recoveryLock;
+    expect(model.calls.length).toBe(index + 2);
     expect(dispatched - before).toBe(1);
     expect(["environment", "stdin"].includes(kind) || received === secret).toBe(true);
-    const transcript = JSON.stringify(model.calls[index + 1]!.input);
+    const transcript = JSON.stringify(resumed.input);
     expect(transcript.includes(secret)).toBe(false);
     expect(transcript).toContain("[protected]");
-    model.calls[index + 1]!.complete("Operation complete");
+    resumed.complete("Operation complete");
     await expect
       .poll(async () => (await repository.getRun(scope, conversationId, run.id)).state)
       .toBe("succeeded");
