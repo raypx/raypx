@@ -9,6 +9,9 @@ test(
     for (const width of [1440, 1024, 768, 390]) {
       await page.setViewportSize({ width, height: 844 });
       await page.goto(web + "/");
+      // Landing copy is server-rendered. The client-only account control confirms
+      // hydration before we operate the language menu.
+      await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
       await expect(
         page.getByRole("figure", { name: "Workspace example", exact: true }),
       ).toBeVisible();

@@ -50,6 +50,14 @@ PostgreSQL. The fixture model and computer are deterministic; they establish no
 live model or Engine result. Devices use a non-executing connector fixture;
 protected-input traces/screenshots stay disabled around generated values.
 
+CI's backend gate runs both service suites and the complete owned-backend browser
+journeys on Web and Desktop using the CI disposable database and broker. It prepares
+the headless browser and reuses the same fixture launcher as `test backends --with-e2e`.
+The separate browser gate retains ordinary compiled rendering acceptance. CI retries
+once to collect a trace, but a retry-only pass fails the gate (`failOnFlakyTests`).
+Bootstrap, visual review, prepared production restart smoke and packaged native
+acceptance remain explicit separate gates; skipped cases never count as passed.
+
 The shared journeys cover public/authentication flows, workspace navigation,
 conversations and streaming, active Runs, approvals, Auto review, Space routines,
 memory, Pages, skills, HTTP tools, member management, delegation and computers.

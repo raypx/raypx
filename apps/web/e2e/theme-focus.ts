@@ -60,15 +60,31 @@ export async function expectInvalidBorder(
   control: Locator,
   surface = control,
   onState?: (focused: boolean) => Promise<void>,
+  focusStates: readonly boolean[] = [false, true],
 ) {
   const previous = await control.getAttribute("aria-invalid");
   await control.evaluate((element) => element.setAttribute("aria-invalid", "true"));
   const states = [];
+  let scopeTabIndex: string | null | undefined;
   try {
-    for (const focused of [false, true]) {
+    for (const focused of focusStates) {
       if (focused) await keyboardFocus(control);
       else {
-        await control.blur();
+        scopeTabIndex = await control.evaluate((element) => {
+          // A modal restores focus when blur leaves it on the document body.
+          // Keep the unfocused measurement inside the existing focus boundary.
+          const scope = element.closest<HTMLElement>(
+            '[role="dialog"], [data-slot="combobox-content"]',
+          );
+          if (scope) {
+            const previousTabIndex = scope.getAttribute("tabindex");
+            scope.tabIndex = -1;
+            scope.focus({ preventScroll: true });
+            return previousTabIndex;
+          }
+          (element as HTMLElement).blur();
+          return undefined;
+        });
         await expect(control).not.toBeFocused();
       }
       const { tokens } = await controlStyle(surface);
@@ -80,6 +96,14 @@ export async function expectInvalidBorder(
     }
     return states;
   } finally {
+    if (scopeTabIndex !== undefined)
+      await control.evaluate((element, value) => {
+        const scope = element.closest<HTMLElement>(
+          '[role="dialog"], [data-slot="combobox-content"]',
+        );
+        if (value === null) scope?.removeAttribute("tabindex");
+        else scope?.setAttribute("tabindex", value);
+      }, scopeTabIndex);
     await control.evaluate((element, value) => {
       if (value === null) element.removeAttribute("aria-invalid");
       else element.setAttribute("aria-invalid", value);

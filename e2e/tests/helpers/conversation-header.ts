@@ -30,7 +30,10 @@ export async function expectConversationHeaderControls(page: Page) {
             });
             const failures: string[] = [];
             for (const [index, control] of controls.entries()) {
-              const label = control.getAttribute("aria-label") ?? "Header control";
+              const label =
+                control.getAttribute("aria-label") ??
+                control.textContent?.trim() ??
+                "Header control";
               const box = control.getBoundingClientRect();
               if (box.width <= 0 || box.height <= 0) failures.push(`${label} has no hit area`);
               for (const bound of bounds) {

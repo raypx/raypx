@@ -74,12 +74,13 @@ export function WebWorkspace({
       onOpenTools={() => void settings.open("tools")}
       onNavigate={(next, replace) => {
         const nextSearch = parseAgentSelection(next);
+        const hash = replace ? settingsHash : "";
         if (next.agentId || next.groupId || pathname === "/agents") {
-          void navigate({ to: "/agents", search: nextSearch, replace: replace ?? false });
+          void navigate({ to: "/agents", search: nextSearch, hash, replace: replace ?? false });
         } else if (pathname === "/pages") {
-          void navigate({ to: "/pages", search: nextSearch, replace: replace ?? false });
+          void navigate({ to: "/pages", search: nextSearch, hash, replace: replace ?? false });
         } else if (pathname === "/settings") {
-          void navigate({ to: "/settings", search: nextSearch, replace: replace ?? false });
+          void navigate({ to: "/settings", search: nextSearch, hash, replace: replace ?? false });
         } else {
           void navigate({ to: "/agents", search: nextSearch });
         }

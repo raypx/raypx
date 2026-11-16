@@ -23,12 +23,32 @@ export const test = base.extend<{
         const host = new URL(route.request().url()).hostname;
         return ["localhost", "127.0.0.1", "[::1]"].includes(host)
           ? route.fallback()
-          : route.abort();
+          : route.abort("blockedbyclient");
+      });
+      await page.route("**/api/rpc/**", (route) => {
+        if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
+        const path = new URL(route.request().url()).pathname;
+        if (path === "/api/rpc/configuration/public" || path === "/api/rpc/configuration/access")
+          return route.fallback();
+        return authResponse(
+          route,
+          {
+            json: { defined: false, code: "NOT_FOUND", message: "Unconfigured fixture operation" },
+          },
+          404,
+        );
       });
       await page.routeWebSocket("**/*", (socket) => {
-        const host = new URL(socket.url()).hostname;
-        if (["localhost", "127.0.0.1", "[::1]"].includes(host)) socket.connectToServer();
-        else void socket.close();
+        const url = new URL(socket.url());
+        if (!["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)) {
+          void socket.close();
+          return;
+        }
+        // Synthetic workspace reads need a matching stream so an unmocked socket
+        // failure cannot race healthy HTTP fixtures during navigation.
+        if (url.pathname === "/api/events")
+          socket.send(JSON.stringify({ type: "ready", version: 1 }));
+        else socket.connectToServer();
       });
       await accountAccessFixture(page, null);
       await page.route("**/api/rpc/configuration/public", (route) =>

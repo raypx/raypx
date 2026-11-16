@@ -13,6 +13,7 @@ import {
   useSyncExternalStore,
   type FormEvent,
   type MouseEvent,
+  type Ref,
 } from "react";
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { cn } from "@raypx/ui/lib/utils";
@@ -142,6 +143,7 @@ interface AgentConversationProps {
   group?: GroupConversationView | undefined;
   agentDirectory?: readonly Agent[] | undefined;
   onManageParticipants?: (() => void) | undefined;
+  participantsTrigger?: Ref<HTMLButtonElement> | undefined;
   capabilities?:
     | Pick<
         AgentsWorkspacePort,
@@ -191,6 +193,7 @@ export function AgentConversation({
   group,
   agentDirectory,
   onManageParticipants,
+  participantsTrigger,
   capabilities,
   item,
   port,
@@ -282,6 +285,7 @@ export function AgentConversation({
       group={group}
       agentDirectory={agentDirectory}
       onManageParticipants={onManageParticipants}
+      participantsTrigger={participantsTrigger}
       capabilities={capabilities}
       supportsImages={supportsImages}
       origin={origin}
@@ -316,6 +320,7 @@ function ConversationContents({
   group,
   agentDirectory,
   onManageParticipants,
+  participantsTrigger,
   capabilities,
   origin,
   item,
@@ -346,6 +351,7 @@ function ConversationContents({
   group: GroupConversationView | undefined;
   agentDirectory: readonly Agent[] | undefined;
   onManageParticipants: (() => void) | undefined;
+  participantsTrigger: Ref<HTMLButtonElement> | undefined;
   capabilities:
     | Pick<
         AgentsWorkspacePort,
@@ -991,6 +997,7 @@ function ConversationContents({
                 <Button
                   size="sm"
                   variant="ghost"
+                  ref={participantsTrigger}
                   aria-label={t("groups.participants")}
                   onClick={onManageParticipants}
                 >

@@ -130,6 +130,8 @@ export async function ciGate(root: string, args: string[]) {
     await runSandboxValidation(root, []);
   } else if (gate === "backend") {
     for (const task of ["test:postgres", "test:redis"]) await runTasks(root, `api#${task}`);
+    const { validateBackendBrowser } = await import("../validation/backends.js");
+    await validateBackendBrowser(root);
   } else if (gate === "browser") {
     const { reportBuildSizes } = await import("../validation/build-size.js");
     const { web, desktop } = plan.browser;

@@ -12,6 +12,7 @@ export async function authResponse(route: Route, body: unknown, status = 200) {
     status,
     contentType: "application/json",
     headers: {
+      "x-raypx-service": "api",
       "access-control-allow-origin": route.request().headers().origin ?? web,
       "access-control-allow-credentials": "true",
       "access-control-allow-methods": "GET,POST,OPTIONS",

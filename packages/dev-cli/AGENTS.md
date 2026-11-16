@@ -56,6 +56,8 @@ Without that option it provisions its own temporary cluster; inherited URLs neve
 select a database.
 With `--with-e2e`, `--visual` after the separator belongs to the browser wrapper;
 remaining journey arguments pass through to Playwright.
+CI backend acceptance also runs the complete owned-backend browser journeys with
+its explicitly supplied disposable database/broker, using the same fixture launcher.
 
 ## Constraints
 

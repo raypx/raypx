@@ -17,7 +17,8 @@ Code outside `src/components/` stays private.
   main independently of navigation and the top bar. `frame="document"` uses browser
   spacing; `frame="window"` uses a full-width draggable title bar with MyGo's insets
   for the native window buttons. Logo, search and sidebar toggle share that strip;
-  the sidebar omits its duplicate brand row and starts below it. Applications register
+  the sidebar omits its duplicate brand row and starts below it. Narrow window
+  frames place claimed toolbar content on a full-width row beneath those controls. Applications register
   `#main` with their router's scroll restoration/reset behavior.
   Applications pass a `LinkComponent` adapting their router to `ShellLinkProps`;
   it sets `aria-current="page"` on active entries when `markActive` is true.

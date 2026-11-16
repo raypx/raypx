@@ -41,6 +41,8 @@ artifacts. Reports live in ignored `test-results/<all|web|desktop>/` directories
 `browser-settings.ts` owns filter composition and Playwright defaults.
 CI defaults to two workers; local 12+ CPU/32+ GiB hosts use eight, 8+ CPU/16+ GiB
 hosts four, and smaller hosts one or two. Explicit `--workers` overrides this.
+CI retains one retry for diagnosis but fails on retry-only passes. The backend CI
+gate supplies its owned fixture to the complete Web/Desktop journey suite.
 
 Surface, smoke and user grep filters intersect. Full `bun e2e` retains every
 ordinary case; focused runs do not replace release acceptance. Each case gets a

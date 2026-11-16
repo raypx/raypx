@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { createBrowserI18n } from "@raypx/i18n/browser";
@@ -240,6 +241,50 @@ function fixture({
     },
   };
 }
+
+it("retains a deep-linked Agent while membership reconciliation precedes its directory", async () => {
+  const context = fixture();
+  const directory = deferred<AgentConversationView[]>();
+  context.client.agents.list = () => directory.promise;
+  const unused = async () => {
+    throw new Error("Unexpected Space operation");
+  };
+  context.client.spaceManagement = {
+    get: async () => membership.space,
+    members: async () => [{ ...membership.member, name: "Viewer", image: null }],
+    settings: async ({ spaceId }) => ({ spaceId, approvalMode: null, updatedAt: null }),
+    invitations: async () => [],
+    events: async () => [],
+    rename: unused,
+    delete: unused,
+    leave: unused,
+    updateMemberRole: unused,
+    removeMember: unused,
+    createInvitation: unused,
+    cancelInvitation: unused,
+    cancelInvitations: unused,
+    previewInvitation: unused,
+    acceptInvitation: unused,
+    setApprovalOverride: unused,
+    clearApprovalOverride: unused,
+    audit: unused,
+  };
+  const send = vi.fn();
+  context.socket.connect = (callbacks) => {
+    queueMicrotask(() => callbacks.onFrame({ type: "ready", version: 1 }));
+    return { send, close() {} };
+  };
+  context.mount(true);
+  await waitFor(() =>
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ type: "space.subscribe" })),
+  );
+  await act(async () => directory.resolve([{ agent, conversation }]));
+  expect(await screen.findByRole("log", { name: "Conversation" })).toBeVisible();
+  expect(context.readSnapshot).toHaveBeenCalledWith({
+    spaceId: membership.space.id,
+    conversationId: conversation.id,
+  });
+});
 
 function enableDeviceComputer(client: AgentsWorkspacePort) {
   const device: DeviceComputer = {
@@ -602,6 +647,59 @@ it("uses one Space menu to create and switch Spaces", async () => {
     expect(screen.getByRole("button", { name: "Space" })).toHaveTextContent("Private Space"),
   );
 });
+
+it.each([false, true])(
+  "selects a routed Space after membership discovery (newly joined: %s)",
+  async (newlyJoined) => {
+    const context = fixture();
+    const shared = {
+      space: {
+        ...membership.space,
+        id: spaceSchema.shape.id.parse("space-two"),
+        name: "Team Space",
+      },
+      member: { ...membership.member, spaceId: spaceSchema.shape.id.parse("space-two") },
+    };
+    let memberships = newlyJoined ? [membership] : [membership, shared];
+    context.client.spaces.list = vi.fn(async () => memberships);
+    context.client.agents.list = async ({ spaceId }) =>
+      spaceId === membership.space.id ? [{ agent, conversation }] : [];
+    function RoutedWorkspace() {
+      const [spaceId, setSpaceId] = useState(membership.space.id);
+      return (
+        <>
+          <button
+            onClick={() => {
+              memberships = [membership, shared];
+              setSpaceId(shared.space.id);
+            }}
+          >
+            Open shared Space
+          </button>
+          <AgentsWorkspace
+            client={context.client}
+            accountId="account"
+            origin="https://example.test"
+            socket={context.socket}
+            feed={context.feed}
+            drafts={context.drafts}
+            spaceId={spaceId}
+          />
+        </>
+      );
+    }
+    render(
+      <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+        <RoutedWorkspace />
+      </BrowserLanguageProvider>,
+    );
+    await screen.findByRole("button", { name: "Writing Agent" });
+    fireEvent.click(screen.getByRole("button", { name: "Open shared Space" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Space" })).toHaveTextContent("Team Space"),
+    );
+  },
+);
 
 it("shows the backend's empty model state without an empty picker", async () => {
   const test = fixture({ models: [] });

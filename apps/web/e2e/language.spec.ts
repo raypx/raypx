@@ -145,6 +145,11 @@ test("Web retries the server language preload before hydrating", async ({ page, 
   if (!response) throw new Error("Missing privacy document response");
   expect(await response.text()).toMatch(/<html\b[^>]*\blang="zh"/);
   await expectLanguage(page, "zh");
+  // The same text exists in SSR. Preference restoration confirms the provider
+  // has hydrated after the retried catalog before interacting with its menu.
+  await expect
+    .poll(() => page.evaluate((key) => localStorage.getItem(key), localeStorageKey))
+    .toBe("zh");
   await page.getByRole("button", { name: "语言", exact: true }).click();
   await expect(page.getByRole("menuitemradio", { name: "简体中文", exact: true })).toHaveAttribute(
     "aria-checked",

@@ -285,6 +285,8 @@ routine summaries and notifications remain in the shared QueryClient, never zust
 member pages and `renderWorkspace` supplies the Space context for Pages. The layout
 keeps this workspace mounted across navigation. Agent rows use narrow subscriptions
 and a memoized list; bounded section surfaces reserve geometry and retain scroll.
+Successful Space, membership and routine writes cancel older scoped reads and
+invalidate their Query projections; write results never enter the read cache.
 
 Member message projections include the existing idempotency key only for the
 originating member. Exact member/key matches clear uncertain local sends during

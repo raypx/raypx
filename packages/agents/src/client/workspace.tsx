@@ -288,6 +288,7 @@ function AgentsWorkspaceContents({
       accountId,
       "spaces",
       ["list"],
+      ["create"],
     );
     const notifications = sourceClient.notifications
       ? cachedSidebarReads(
@@ -300,9 +301,15 @@ function AgentsWorkspaceContents({
         )
       : undefined;
     const routines = sourceClient.routines
-      ? cachedSidebarReads(sourceClient.routines, queryClient, origin, accountId, "routines", [
-          "list",
-        ])
+      ? cachedSidebarReads(
+          sourceClient.routines,
+          queryClient,
+          origin,
+          accountId,
+          "routines",
+          ["list"],
+          ["create", "update", "pause", "resume", "delete", "test", "rotateWebhookKey"],
+        )
       : undefined;
     return new Proxy(sourceClient, {
       get(target, key, receiver) {
@@ -317,11 +324,24 @@ function AgentsWorkspaceContents({
   const spaceManagement = useMemo(
     () =>
       rawManagement
-        ? cachedSidebarReads(rawManagement, queryClient, origin, accountId, "membership", [
-            "get",
-            "members",
-            "settings",
-          ])
+        ? cachedSidebarReads(
+            rawManagement,
+            queryClient,
+            origin,
+            accountId,
+            "membership",
+            ["get", "members", "settings"],
+            [
+              "rename",
+              "delete",
+              "leave",
+              "updateMemberRole",
+              "removeMember",
+              "acceptInvitation",
+              "setApprovalOverride",
+              "clearApprovalOverride",
+            ],
+          )
         : undefined,
     [rawManagement, queryClient, origin, accountId],
   );
@@ -479,9 +499,16 @@ function AgentsWorkspaceContents({
         if (previous.models !== next.models)
           queryClient.setQueryData(cacheKey("models", next.spaceId), next.models);
       }
-      store
-        .getState()
-        .select({ spaceId: next.spaceId, agentId: next.agentId, groupId: next.groupId ?? null });
+      // An unrelated read can finish before the selected Agent/group directory.
+      // Keep the route's pending selection until an update actually changes it.
+      if (
+        previous.spaceId !== next.spaceId ||
+        previous.agentId !== next.agentId ||
+        previous.groupId !== next.groupId
+      )
+        store
+          .getState()
+          .select({ spaceId: next.spaceId, agentId: next.agentId, groupId: next.groupId ?? null });
     },
     [cacheKey, queryClient, store],
   );
@@ -495,9 +522,40 @@ function AgentsWorkspaceContents({
   }, [store, spaceId, agentId, groupId, route]);
   useLayoutEffect(() => {
     const state = store.getState();
-    if (spacesQuery.data && state.spaceId !== resolvedSpaceId)
+    // Route synchronization above may have changed the store after this render.
+    // Only initialize an unselected workspace from the discovered membership list.
+    if (spacesQuery.data && state.spaceId === sidebarSpaceId && !state.spaceId)
       state.select({ spaceId: resolvedSpaceId, agentId: state.agentId, groupId: state.groupId });
-  }, [store, spacesQuery.data, resolvedSpaceId]);
+  }, [store, spacesQuery.data, resolvedSpaceId, sidebarSpaceId]);
+  useEffect(() => {
+    if (!ready || !accountId || !spaceId) return;
+    const cached = queryClient.getQueryData<Awaited<ReturnType<typeof sourceClient.spaces.list>>>(
+      cacheKey("spaces"),
+    );
+    if (!cached || cached.some((entry) => entry.space.id === spaceId)) return;
+    // Invitation acceptance can navigate into a Space absent from the retained
+    // directory. Confirm fresh membership before replacing that route selection.
+    let active = true;
+    void queryClient
+      .fetchQuery({
+        queryKey: cacheKey("spaces"),
+        queryFn: () => sourceClient.spaces.list({}),
+        staleTime: 0,
+      })
+      .then((spaces) => {
+        if (
+          !active ||
+          store.getState().spaceId !== spaceId ||
+          spaces.some((entry) => entry.space.id === spaceId)
+        )
+          return;
+        store.getState().select({ spaceId: spaces[0]?.space.id ?? null });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [ready, accountId, spaceId, queryClient, cacheKey, sourceClient.spaces, store]);
 
   const agentsByActivity = useMemo(
     () => [...page.agents].sort((left, right) => compareLastActivity(left.agent, right.agent)),
@@ -591,7 +649,7 @@ function AgentsWorkspaceContents({
   const newGroupTrigger = useRef<HTMLButtonElement>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [participantsLoading, setParticipantsLoading] = useState(false);
-  const participantsTrigger = useRef<HTMLElement | null>(null);
+  const participantsTrigger = useRef<HTMLButtonElement | null>(null);
   const participantsRequest = useRef(0);
   const [deleting, setDeleting] = useState<string | null>(null);
   const deletingRef = useRef<string | null>(null);
@@ -1066,8 +1124,6 @@ function AgentsWorkspaceContents({
   function openParticipants() {
     if (!selectedGroup || !groups) return;
     const request = ++participantsRequest.current;
-    participantsTrigger.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setParticipantsOpen(true);
     setParticipantsLoading(true);
     void groups
@@ -1850,6 +1906,7 @@ function AgentsWorkspaceContents({
                 group={selectedGroup}
                 agentDirectory={page.agents.map((entry) => entry.agent)}
                 onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
+                participantsTrigger={participantsTrigger}
                 capabilities={client}
                 supportsImages={
                   selectedGroup

@@ -17,6 +17,9 @@ test(
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page).toHaveURL(/\/agents(?:\?|$)/);
     await page.goto(`${web}/agents#settings/models`);
+    await expect(page).toHaveURL(
+      (url) => url.searchParams.has("spaceId") && url.hash === "#settings/models",
+    );
     const settings = page.getByRole("dialog", { name: "Settings", exact: true });
     await settings.getByRole("button", { name: "Add model connection", exact: true }).click();
     const form = page.getByRole("dialog", { name: "Add model connection", exact: true });

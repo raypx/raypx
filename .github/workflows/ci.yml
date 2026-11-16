@@ -121,6 +121,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
+      - name: Prepare backend browser acceptance
+        working-directory: e2e
+        run: bun --bun playwright install --with-deps --only-shell chromium
       - run: bun run raypx-dev ci:gate backend
   browser:
     name: Browser acceptance

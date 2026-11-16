@@ -423,13 +423,24 @@ test("verifies the shared color system and compiled focus treatments", async ({
       focusMeasurements.push({ theme, name, styles });
       await capture(target, { path: `${focusDirectory}/after-${theme}-${name}.png` });
     }
-    async function invalidShots(name: string, control: Locator, surface = control, target = page) {
-      const styles = await expectInvalidBorder(control, surface, async (focused) => {
-        const suffix = focused ? "" : "-unfocused";
-        await capture(target, {
-          path: `${focusDirectory}/after-${theme}-invalid-${name}${suffix}.png`,
-        });
-      });
+    async function invalidShots(
+      name: string,
+      control: Locator,
+      surface = control,
+      target = page,
+      focusStates: readonly boolean[] = [false, true],
+    ) {
+      const styles = await expectInvalidBorder(
+        control,
+        surface,
+        async (focused) => {
+          const suffix = focused ? "" : "-unfocused";
+          await capture(target, {
+            path: `${focusDirectory}/after-${theme}-invalid-${name}${suffix}.png`,
+          });
+        },
+        focusStates,
+      );
       focusMeasurements.push({ theme, name: `invalid-${name}`, styles });
     }
     const composer = page.getByRole("textbox", { name: "Message", exact: true });
@@ -438,6 +449,10 @@ test("verifies the shared color system and compiled focus treatments", async ({
     await focusShot(
       "select",
       await expectEntryFocus(page.getByRole("combobox", { name: "Choose an Agent", exact: true })),
+    );
+    await invalidShots(
+      "select",
+      page.getByRole("combobox", { name: "Choose an Agent", exact: true }),
     );
     await focusShot(
       "icon-button",
@@ -473,8 +488,12 @@ test("verifies the shared color system and compiled focus treatments", async ({
     await page.getByRole("textbox", { name: "Message", exact: true }).fill("@");
     const mentionSearch = page.locator('[data-slot="combobox-input"]');
     await focusShot("combobox", await expectEntryFocus(mentionSearch));
-    await invalidShots("combobox", mentionSearch);
+    // The transient picker retains input focus while open; closing removes it.
+    // Persistent Select above covers both focused and unfocused invalid controls.
+    await invalidShots("combobox", mentionSearch, mentionSearch, page, [true]);
     await page.keyboard.press("Escape");
+    await expect(mentionSearch).toBeHidden();
+    await expect(page.getByRole("textbox", { name: "Message", exact: true })).toBeFocused();
     await page.getByRole("textbox", { name: "Message", exact: true }).fill("");
     await page.getByRole("button", { name: "Settings", exact: true }).click();
     await expect(page.getByRole("dialog", { name: "Settings", exact: true })).toBeVisible();

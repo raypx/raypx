@@ -227,58 +227,83 @@ export async function validateBackends(root: string, args: string[]) {
           join(evidence.directory, `${label}.json`),
         );
       }
-      if (plan.withE2E) {
-        const apiPort = await freePort(),
-          apiUrl = `http://127.0.0.1:${apiPort}`;
-        const api = evidence.start(
-          "workspace-api",
-          [
-            process.execPath,
-            "--no-env-file",
-            join(root, "apps/api/tests/helpers/workspace-server.ts"),
-          ],
-          {
-            ...env,
-            RAYPX_VALIDATION: "1",
-            CONTROL_E2E_PORT: String(apiPort),
-            PUBLIC_URL: "http://127.0.0.1:4173",
-            API_PUBLIC_URL: apiUrl,
-            EXTRA_ALLOWED_ORIGINS: "http://127.0.0.1:4174",
-          },
-        );
-        await ready(evidence, api, async () => {
-          try {
-            return (await fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(300) })).ok;
-          } catch {
-            return false;
-          }
-        });
-        await evidence.command(
-          "e2e",
-          [
-            process.execPath,
-            "--no-env-file",
-            cli,
-            "e2e",
-            ...(plan.visual ? ["--visual"] : []),
-            "--",
-            "--reporter=list,json",
-            ...plan.browserArgs,
-          ],
-          {
-            ...env,
-            API_PUBLIC_URL: apiUrl,
-            VITE_DESKTOP_PREVIEW_API_URL: apiUrl,
-            VITE_WEB_URL: "http://127.0.0.1:4173",
-            CONTROL_E2E_API_URL: apiUrl,
-            PLAYWRIGHT_JSON_OUTPUT_FILE: join(evidence.directory, "e2e.json"),
-          },
-        );
-      }
+      if (plan.withE2E) await workspaceBrowser(root, evidence, env, plan.browserArgs, plan.visual);
     } finally {
       // Stop every owned process even after one gate fails. Never remove live server data.
       await evidence.stopAll();
       await rm(directory, { recursive: true, force: true });
+    }
+  });
+}
+
+async function workspaceBrowser(
+  root: string,
+  evidence: Evidence,
+  env: NodeJS.ProcessEnv,
+  browserArgs: string[],
+  visual: boolean,
+) {
+  const apiPort = await freePort(),
+    apiUrl = `http://127.0.0.1:${apiPort}`;
+  const api = evidence.start(
+    "workspace-api",
+    [process.execPath, "--no-env-file", join(root, "apps/api/tests/helpers/workspace-server.ts")],
+    {
+      ...env,
+      RAYPX_VALIDATION: "1",
+      CONTROL_E2E_PORT: String(apiPort),
+      PUBLIC_URL: "http://127.0.0.1:4173",
+      API_PUBLIC_URL: apiUrl,
+      EXTRA_ALLOWED_ORIGINS: "http://127.0.0.1:4174",
+    },
+  );
+  await ready(evidence, api, async () => {
+    try {
+      return (await fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(300) })).ok;
+    } catch {
+      return false;
+    }
+  });
+  await evidence.command(
+    "e2e",
+    [
+      process.execPath,
+      "--no-env-file",
+      join(root, "packages/dev-cli/src/cli.ts"),
+      "e2e",
+      ...(visual ? ["--visual"] : []),
+      "--",
+      "--reporter=list,json",
+      ...browserArgs,
+    ],
+    {
+      ...env,
+      API_PUBLIC_URL: apiUrl,
+      VITE_DESKTOP_PREVIEW_API_URL: apiUrl,
+      VITE_WEB_URL: "http://127.0.0.1:4173",
+      CONTROL_E2E_API_URL: apiUrl,
+      PLAYWRIGHT_JSON_OUTPUT_FILE: join(evidence.directory, "e2e.json"),
+    },
+  );
+}
+
+/** CI reuses its explicitly supplied disposable services, without provisioning PostgreSQL. */
+export async function validateBackendBrowser(root: string, browserArgs: string[] = []) {
+  const selected = process.env.TEST_DATABASE_URL;
+  if (!selected) throw new Error("Backend browser gate requires TEST_DATABASE_URL");
+  const { databaseURL } = backendPlan(["--database-url", selected]);
+  const evidence = new Evidence(root, "backend-browser");
+  await evidence.run(async () => {
+    try {
+      await workspaceBrowser(
+        root,
+        evidence,
+        backendEnvironment(process.env, databaseURL!, process.env.TEST_REDIS_URL),
+        browserArgs,
+        false,
+      );
+    } finally {
+      await evidence.stopAll();
     }
   });
 }

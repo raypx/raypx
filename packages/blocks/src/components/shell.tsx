@@ -476,7 +476,7 @@ function ShellContents<To extends string>({
       className={cn(
         "@container/project-tools flex shrink-0 items-center gap-2 bg-background text-sm text-muted-foreground",
         windowed
-          ? "min-h-[max(3rem,var(--mygo-titlebar-height,0px))] h-auto pr-[max(0.75rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] pl-[max(0.75rem,calc(var(--mygo-titlebar-inset-left,0px)+0.5rem))] [--app-region:drag]"
+          ? "min-h-[max(3rem,var(--mygo-titlebar-height,0px))] h-auto max-sm:flex-wrap max-sm:gap-y-0 pr-[max(0.75rem,calc(var(--mygo-titlebar-inset-right,0px)+0.5rem))] pl-[max(0.75rem,calc(var(--mygo-titlebar-inset-left,0px)+0.5rem))] [--app-region:drag]"
           : "min-h-13 h-auto px-4 max-[760px]:px-3 max-[540px]:has-[[data-project-links]]:grid max-[540px]:has-[[data-project-links]]:h-auto max-[540px]:has-[[data-project-links]]:grid-cols-[minmax(0,1fr)_auto] max-[540px]:has-[[data-project-links]]:gap-y-1 max-[540px]:has-[[data-project-links]]:py-1.5",
       )}
     >
@@ -518,7 +518,8 @@ function ShellContents<To extends string>({
       <div
         ref={setToolbarStart}
         className={cn(
-          "flex h-full min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag] in-data-[frame=document]:max-[540px]:has-[[data-project-links]]:contents",
+          "flex min-w-0 items-center gap-3 empty:hidden [--app-region:no-drag] in-data-[frame=document]:max-[540px]:has-[[data-project-links]]:contents",
+          windowed && "max-sm:order-last max-sm:basis-full",
           claims > 0 && "flex-1",
         )}
       />

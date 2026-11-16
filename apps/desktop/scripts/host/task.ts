@@ -43,6 +43,7 @@ if (task === "native:build") {
 } else if (task === "build:renderer") {
   // Start's prerender preview reloads Vite config without forwarding --mode.
   env.RAYPX_DESKTOP_BROWSER_BUILD = "1";
+  env.VITE_DESKTOP_PREVIEW_API_URL ||= "http://127.0.0.1:3002";
   commands = [
     [bun, "--bun", "vp", "build", "--config", "vite.app.config.ts", ...args, "--mode", "e2e"],
     [bun, "run", "native:csp", "artifacts/browser/client"],

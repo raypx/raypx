@@ -429,6 +429,20 @@ it.each(["agent", "space"] as const)(
     expect(screen.queryByRole("button", { name: "Participants" })).not.toBeInTheDocument();
   },
 );
+it("returns Participants focus when pointer activation did not focus the opener", async () => {
+  await pendingGroupFixture();
+  const user = userEvent.setup();
+  const opener = await screen.findByRole("button", { name: "Participants" });
+  // Pointer activation can leave focus on the previous control or the document.
+  expect(opener).not.toHaveFocus();
+  fireEvent.click(opener);
+  await screen.findByRole("dialog", { name: "Participants" });
+  await screen.findByLabelText("Group name");
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  await waitFor(() => expect(opener).toHaveFocus());
+});
+
 it("returns Participants focus after one Escape and ignores deletion completion in a different Space", async () => {
   const fixture = await pendingGroupFixture();
   const user = userEvent.setup();
