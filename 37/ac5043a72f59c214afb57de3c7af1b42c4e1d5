@@ -1,0 +1,98 @@
+docs/architecture/member-input-and-notifications.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 44
+docs/development/device-connector.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 90
+apps/api/tests/integration/api-ingress.test.ts
+  s_4c0659ff3d8309::t_497b68932bcda1 15-22,25-26,37-38
+  s_4c0659ff3d8309::t_9459a9f810708c 7-11,13-14,24,27-33,36,39-41,61
+  s_4c0659ff3d8309::t_ef91e7f4142722 4,44-60
+  s_4c0659ff3d8309::t_bfa337b1a4565b 6
+apps/api/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 18,23-27,33,58
+docs/architecture/spaces.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 173
+packages/dev-cli/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 82-83
+e2e/tests/journeys/conversation-history.ts
+  s_4c0659ff3d8309::t_8583595ab9b8a3 211-212,221
+docs/architecture/events.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 109,113,167,248
+docs/development/deployment.md
+  s_4c0659ff3d8309::t_05e3e86c786ac9 448-450
+  s_4c0659ff3d8309::t_be30c4b4b658bd 5,93-96,134-135,182-211,443,456,460,470,474,556
+docs/development/openapi.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 18
+  s_4c0659ff3d8309::t_39665965c2b7fa 21
+packages/agents/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 261-262
+packages/agents/src/client/page-reference.component.test.tsx
+  s_4c0659ff3d8309::t_6ee1e8865e0e6c 50
+docs/development/railway.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 20-24,88-90,97-98,112-113
+  s_4c0659ff3d8309::t_497b68932bcda1 178
+infra/railway/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 20
+  s_4c0659ff3d8309::t_39665965c2b7fa 17-19
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_4c0659ff3d8309::t_05e3e86c786ac9 547-548,596-606
+packages/contracts/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 30-31
+docs/architecture/security.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 190-194
+apps/web/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 117
+packages/tooling/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 9-12
+apps/cli/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 41-42
+apps/api/src/runtime/backend.ts
+  s_4c0659ff3d8309::t_c31165d6797ceb 11,42-50
+docs/development/getting-started.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 103-106
+apps/api/src/routers/ingress.ts
+  s_4c0659ff3d8309::t_c31165d6797ceb 1-17
+docs/development/mobile.md
+  s_4c0659ff3d8309::t_6ee1e8865e0e6c 399-402
+  s_4c0659ff3d8309::t_be30c4b4b658bd 83,85
+docs/architecture/clients.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 81
+apps/mobile/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 186-187
+packages/pages/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 49-50
+docs/development/desktop.md
+  s_4c0659ff3d8309::t_6ee1e8865e0e6c 62-65
+infra/railway/README.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 4
+docs/architecture/README.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 171-174
+docs/roadmap.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 84
+apps/desktop/AGENTS.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 56-57
+docs/architecture/capabilities.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 138-139,202-203,210
+packages/dev-cli/src/validation/deployment-public.test.ts
+  s_4c0659ff3d8309::t_05e3e86c786ac9 4,27-31,56-58,66
+docs/architecture/operations.md
+  s_4c0659ff3d8309::t_be30c4b4b658bd 160-164,192
+deploy/AGENTS.md
+  s_4c0659ff3d8309::t_39665965c2b7fa 21-23
+  s_4c0659ff3d8309::t_be30c4b4b658bd 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "37ac5043a72f59c214afb57de3c7af1b42c4e1d5",
+  "prompts": {},
+  "sessions": {
+    "s_4c0659ff3d8309": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e3b0-1aa4-7a40-b4ee-98ee2d44992b",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
