@@ -288,6 +288,7 @@ function AgentsWorkspaceContents({
   const loading = spacesLoading || agentsLoading;
   const [failed, setFailed] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [protectedInputKey, setProtectedInputKey] = useState("");
   const [activity, setActivity] = useState<Record<string, readonly ToolActivity[]>>({});
   const rememberActivity = useCallback(
     (selectedSpaceId: string, calls: readonly ToolActivity[]) => {
@@ -709,6 +710,8 @@ function AgentsWorkspaceContents({
       : page.agents.find((item) => item.agent.id === page.agentId);
   const loadingConversation =
     !renderWorkspace && loading && !failed && Boolean(agentId || groupId || selected);
+  const workspaceInputs =
+    !loading && !failed && (renderWorkspace || (!selected && !agentId && !groupId));
   const rowButtons = useRef(new Map<string, HTMLElement>());
   const previousSelection = useRef<string | null>(null);
   const selectedRowId = selectedGroup?.conversation.id ?? selected?.agent.id ?? null;
@@ -1463,6 +1466,8 @@ function AgentsWorkspaceContents({
         <ShellSidebarActions>
           <NotificationsBell
             port={client.notifications}
+            protectedInputSpaceId={workspaceInputs ? page.spaceId : undefined}
+            onProtectedInputsChange={setProtectedInputKey}
             onOpen={(item) =>
               void openNotification(item).catch(() => setSpaceNotice("unavailable"))
             }
@@ -1499,11 +1504,12 @@ function AgentsWorkspaceContents({
               <LoadingState label={t("loading")} />
             </div>
           )))}
-      {client.protectedInputs && page.spaceId && (renderWorkspace || !selected) && (
+      {client.protectedInputs && page.spaceId && workspaceInputs && (
         <ProtectedInputs
           key={page.spaceId}
           port={client.protectedInputs}
           spaceId={page.spaceId}
+          refreshKey={protectedInputKey}
           className="mx-auto w-full max-w-[44rem] px-3 pt-3 sm:px-5"
         />
       )}

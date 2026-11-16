@@ -19,9 +19,13 @@ import { useTranslations } from "./i18n.js";
 export function NotificationsBell({
   port,
   onOpen,
+  protectedInputSpaceId,
+  onProtectedInputsChange,
 }: {
   port: MemberNotificationsPort;
   onOpen: (item: MemberNotification) => void;
+  protectedInputSpaceId?: string | null | undefined;
+  onProtectedInputsChange?: ((key: string) => void) | undefined;
 }) {
   const t = useTranslations("agents");
   const locale = useLocale();
@@ -46,6 +50,16 @@ export function NotificationsBell({
       controller.dispose();
     };
   }, [controller]);
+  const protectedInputKey = protectedInputSpaceId
+    ? view.items
+        .filter((item) => item.kind === "protected-input" && item.spaceId === protectedInputSpaceId)
+        .map((item) => item.sourceId)
+        .sort()
+        .join(",")
+    : "";
+  useEffect(() => {
+    if (!view.error && protectedInputSpaceId) onProtectedInputsChange?.(protectedInputKey);
+  }, [onProtectedInputsChange, protectedInputSpaceId, protectedInputKey, view.error]);
   const unread = view.items.filter((item) => item.unread).length;
   const groups = new Map<string, MemberNotification[]>();
   for (const item of view.items) {

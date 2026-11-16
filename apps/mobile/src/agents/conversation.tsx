@@ -823,6 +823,8 @@ export function AgentConversation({
               <ProtectedInputs
                 key={spaceId}
                 port={protectedInputsPort}
+                refreshKey={state.protectedInputsRevision}
+                completionKey={state.protectedInputsCompletionRevision}
                 spaceId={spaceId}
                 conversationId={conversationId}
               />

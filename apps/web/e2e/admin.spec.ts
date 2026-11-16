@@ -19,7 +19,8 @@ test(
     await accountAccessFixture(page, account.id, "admin");
     let privateReads = 0;
     page.on("request", (request) => {
-      if (/\/rpc\/(devices|tasks|approvals|observed)\//.test(request.url())) privateReads++;
+      if (/\/rpc\/(devices|tasks|approvals|protectedInputs|observed)\//.test(request.url()))
+        privateReads++;
     });
     const overviewPeriods: number[] = [];
     await page.route("**/rpc/admin/overview", (route) => {

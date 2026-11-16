@@ -1690,6 +1690,8 @@ function ConversationContents({
           {capabilities?.protectedInputs && (
             <ProtectedInputs
               port={capabilities.protectedInputs}
+              refreshKey={state.protectedInputsRevision}
+              completionKey={state.protectedInputsCompletionRevision}
               spaceId={item.agent.spaceId}
               conversationId={item.conversation.id}
             />

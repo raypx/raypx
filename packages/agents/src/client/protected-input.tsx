@@ -173,11 +173,15 @@ export function ProtectedInputs({
   port,
   spaceId,
   conversationId,
+  refreshKey,
+  completionKey,
   className,
 }: {
   port: ProtectedInputsPort;
   spaceId: SpaceId;
   conversationId?: string | undefined;
+  refreshKey?: string | number | undefined;
+  completionKey?: number | undefined;
   className?: string | undefined;
 }) {
   const t = useTranslations("agents");
@@ -189,20 +193,21 @@ export function ProtectedInputs({
   );
   useEffect(() => {
     controller.activate();
-    void controller.refresh();
-    const timer = setInterval(() => {
-      if (!document.hidden) void controller.refresh();
-    }, 2000);
     const refresh = () => {
       if (!document.hidden) void controller.refresh();
     };
     document.addEventListener("visibilitychange", refresh);
     return () => {
-      clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
       controller.dispose();
     };
   }, [controller]);
+  useEffect(() => {
+    if (!document.hidden) void controller.invalidate();
+  }, [controller, refreshKey]);
+  useEffect(() => {
+    if (completionKey && !document.hidden) void controller.reconcileCompletion(conversationId);
+  }, [controller, completionKey, conversationId]);
   return (
     <div
       className={cn(

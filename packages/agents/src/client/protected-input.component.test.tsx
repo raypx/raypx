@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { createBrowserI18n } from "@raypx/i18n/browser";
 import { protectedInputRequestSchema } from "@raypx/core/protected-input";
@@ -126,4 +126,40 @@ it("keeps both basic credential fields masked and clears both on handoff and sub
     answer: { decision: "answer", value: "member-two:password-two" },
   });
   expect(view.container.innerHTML.includes("password-two")).toBe(false);
+});
+
+it("stops idle polling and respects the quota window across refresh signals", async () => {
+  vi.useFakeTimers();
+  try {
+    const port = {
+      pending: vi.fn(async () => [request]).mockRejectedValueOnce({ code: "TOO_MANY_REQUESTS" }),
+      answer: vi.fn(),
+    };
+    const surface = (key: number) => (
+      <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
+        <ProtectedInputs port={port} spaceId={request.spaceId} refreshKey={key} />
+      </BrowserLanguageProvider>
+    );
+    const view = render(surface(0));
+    await act(async () => {});
+    expect(port.pending).toHaveBeenCalledOnce();
+
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    view.rerender(surface(1));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(port.pending).toHaveBeenCalledOnce();
+
+    await act(async () => vi.advanceTimersByTimeAsync(110_000));
+    expect(port.pending).toHaveBeenCalledOnce();
+    view.rerender(surface(2));
+    await act(async () => {});
+    expect(port.pending).toHaveBeenCalledTimes(2);
+    expect(screen.getByLabelText("Protected input: Access token")).toBeInTheDocument();
+
+    await act(async () => vi.advanceTimersByTimeAsync(120_000));
+    expect(port.pending).toHaveBeenCalledTimes(2);
+    view.unmount();
+  } finally {
+    vi.useRealTimers();
+  }
 });

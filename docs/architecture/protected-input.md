@@ -80,6 +80,14 @@ submissions require refreshing authoritative state. They never enter drafts,
 storage, query caches or clipboard controls. English and Chinese labels include
 the destination, expiry, privacy disclosure and untrusted provenance.
 
+Pending input reads run on entry and foreground return. An open conversation
+also refreshes on Run waiting transitions and feed recovery. Tool and Run
+completion reconcile any input already shown for that conversation. The workspace home
+and Pages reuse changes in the selected Space's protected-input notifications
+from the existing notification bell. A rate-limited pending read observes a
+one-minute cooldown. The administration routes do not mount workspace input
+surfaces.
+
 Scrubbing also covers common UTF-8 base64/base64url (padded and unpadded),
 lower/uppercase hex, percent encoding and form URL encoding, plus up to five JSON
 escaping layers. This is best effort, not information-flow isolation. Arbitrary

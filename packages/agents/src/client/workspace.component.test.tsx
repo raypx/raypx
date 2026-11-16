@@ -1707,6 +1707,84 @@ function pendingProtectedInput(conversationId: string = conversation.id) {
   });
 }
 
+it("discovers protected input on waiting and clears an answered request when the Run finishes", async () => {
+  const request = pendingProtectedInput();
+  const test = fixture({
+    snapshot: { conversation, messages: [message], runs: [run], segments: [], cursor: 1 },
+  });
+  const pending = vi.fn(async () => [] as (typeof request)[]);
+  test.client.protectedInputs = { pending, answer: vi.fn() };
+  test.mount(true);
+  await screen.findByRole("textbox", { name: catalogs.en.agents.message });
+  expect(pending).toHaveBeenCalledOnce();
+
+  function transition(state: "waiting" | "running" | "succeeded", sequence: number) {
+    return test.emit({
+      type: "event",
+      entry: {
+        event: {
+          kind: "run.state",
+          runId: run.id,
+          spaceId: agent.spaceId,
+          conversationId: conversation.id,
+          sequence,
+          state,
+          failureCode: null,
+          createdAt: time,
+        },
+      },
+    });
+  }
+
+  pending.mockResolvedValueOnce([request]);
+  await transition("waiting", 2);
+  expect(await screen.findByLabelText("Protected input: Access token")).toBeVisible();
+  pending.mockResolvedValueOnce([{ ...request, state: "answered", resolvedAt: time }]);
+  await transition("running", 3);
+  expect(await screen.findByText("Supplied. Waiting for the operation.")).toBeVisible();
+
+  await transition("succeeded", 4);
+  await waitFor(() =>
+    expect(screen.queryByText("Supplied. Waiting for the operation.")).not.toBeInTheDocument(),
+  );
+  expect(pending).toHaveBeenCalledTimes(4);
+});
+
+it("discovers protected input on Pages via the existing notification feed", async () => {
+  const request = pendingProtectedInput();
+  const test = fixture();
+  const pending = vi.fn(async () => [] as (typeof request)[]);
+  const list = vi
+    .fn<NonNullable<AgentsWorkspacePort["notifications"]>["list"]>()
+    .mockResolvedValue({ items: [], truncated: false });
+  test.client.protectedInputs = { pending, answer: vi.fn() };
+  test.client.notifications = { list, read: vi.fn(), viewed: vi.fn() };
+  test.mount(false, "document", undefined, undefined, () => <p>Pages surface</p>);
+  await screen.findByText("Pages surface");
+  expect(pending).toHaveBeenCalledOnce();
+
+  pending.mockResolvedValueOnce([request]);
+  list.mockResolvedValueOnce({
+    items: [
+      {
+        kind: "protected-input",
+        sourceId: request.id,
+        spaceId: request.spaceId,
+        spaceName: membership.space.name,
+        conversationId: request.conversationId,
+        agentId: agent.id,
+        runId: request.runId,
+        createdAt: request.createdAt,
+        unread: true,
+      },
+    ],
+    truncated: false,
+  });
+  fireEvent.click(screen.getByRole("button", { name: /^Notifications$/ }));
+  expect(await screen.findByLabelText("Protected input: Access token")).toBeVisible();
+  expect(pending).toHaveBeenCalledTimes(2);
+});
+
 it.each(["en", "zh"] as const)(
   "keeps a single masked request beside the composer across reading tabs and scoped to its conversation in %s",
   async (language) => {

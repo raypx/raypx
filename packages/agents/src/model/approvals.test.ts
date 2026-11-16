@@ -229,6 +229,35 @@ describe("approval controller", () => {
     h.controller.dispose();
     expect(vi.getTimerCount()).toBe(0);
   });
+  it("coalesces pending approval reads and stops retrying while rate limited", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    const h = harness();
+    let fail!: (reason: unknown) => void;
+    vi.mocked(h.approvals.pending).mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          fail = reject;
+        }),
+    );
+    await h.controller.start();
+    h.connections[0]!.onFrame({ type: "ready", version: 1 });
+    await h.controller.refreshApprovals();
+    expect(h.approvals.pending).toHaveBeenCalledOnce();
+
+    fail({ code: "TOO_MANY_REQUESTS" });
+    await Promise.resolve();
+    expect(h.controller.getSnapshot().approvalsError).toBe(true);
+    await h.controller.refreshApprovals();
+    expect(h.approvals.pending).toHaveBeenCalledOnce();
+
+    vi.setSystemTime(now + 60_000);
+    await h.controller.refreshApprovals();
+    expect(h.approvals.pending).toHaveBeenCalledTimes(2);
+    expect(h.controller.getSnapshot().cards).toHaveLength(1);
+    h.controller.dispose();
+  });
+
   it("guards an in-flight answer and accepts the authoritative result only once", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(now);

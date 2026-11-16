@@ -6,6 +6,7 @@ import type { ConversationHistoryCursor, RunId } from "@raypx/core/conversation"
 import type { ApprovalRequest, EffectiveApprovalMode } from "@raypx/core/approvals";
 import { ApprovalProjection, type ApprovalCardView } from "./approvals.js";
 import { ConversationState, type ConversationView } from "./conversation.js";
+import { isRpcRateLimited, PENDING_READ_COOLDOWN_MS } from "./rpc-rate-limit.js";
 import { StreamRetry } from "./stream-retry.js";
 import type { ComputerController } from "./computer.js";
 import {
@@ -49,6 +50,8 @@ export interface ConversationControllerView extends ConversationView {
   cards: ApprovalCardView[];
   approvalsLoading: boolean;
   approvalsError: boolean;
+  protectedInputsRevision: number;
+  protectedInputsCompletionRevision: number;
   connection: ConversationConnection;
   loading: boolean;
   error: ConversationError | null;
@@ -89,6 +92,7 @@ export class ConversationController {
   private hasSnapshot = false;
   private storageUnavailable = false;
   private approvalsGeneration = 0;
+  private approvalsRetryAt = 0;
   private runDetailsLoading = false;
   private historyGeneration = 0;
   private snapshotRequest = 0;
@@ -125,6 +129,8 @@ export class ConversationController {
       cards: [],
       approvalsLoading: false,
       approvalsError: false,
+      protectedInputsRevision: 0,
+      protectedInputsCompletionRevision: 0,
       connection: "connecting",
       loading: true,
       error,
@@ -313,8 +319,12 @@ export class ConversationController {
         if (!this.state.applySnapshot(snapshot)) throw new Error("Invalid conversation snapshot");
         this.hydrateActiveApprovals(snapshot);
       }
+      const replacingSnapshot = this.hasSnapshot;
       this.hasSnapshot = true;
-      this.update({ loading: false });
+      this.update({
+        loading: false,
+        protectedInputsRevision: this.view.protectedInputsRevision + Number(replacingSnapshot),
+      });
       void this.refreshApprovals();
       this.openFeed();
     } catch {
@@ -584,25 +594,46 @@ export class ConversationController {
     if (frame.type === "ready") {
       this.cancelTimer();
       this.streamRetry.ready();
-      this.update({ connection: "live", error: null });
+      const reconcileInputs =
+        this.view.connection === "reconnecting" ||
+        this.view.runs.some((run) => run.state === "waiting");
+      this.update({
+        connection: "live",
+        error: null,
+        protectedInputsRevision: this.view.protectedInputsRevision + Number(reconcileInputs),
+      });
       void this.options.computer?.refresh();
       void this.refreshApprovals();
       return;
     }
     if (frame.type === "event") {
+      const event = frame.entry.event;
+      const reconcileInputs =
+        event.kind === "run.state" &&
+        (event.state === "waiting" ||
+          this.view.runs.some((run) => run.id === event.runId && run.state === "waiting"));
+      const completedInput =
+        event.kind === "tool.finished" ||
+        (event.kind === "run.state" &&
+          (event.state === "succeeded" || event.state === "failed" || event.state === "cancelled"));
       const applied = this.state.applyEvent(frame.entry, !this.view.history.hasNewer);
       if (applied === "snapshot-required") {
         void this.refreshSnapshot("snapshot-required");
         return;
       }
       if (applied === "ignored") return;
-      if (applied === "applied" && frame.entry.event.kind === "computer.state")
-        this.options.computer?.applyEvent(frame.entry.event);
-      if (applied === "applied") this.approvals.applyEvent(frame.entry.event);
+      if (applied === "applied" && event.kind === "computer.state")
+        this.options.computer?.applyEvent(event);
+      if (applied === "applied") this.approvals.applyEvent(event);
       if (applied === "applied" && !this.view.history.hasNewer) this.releaseHistory("later");
-      this.update();
-      if (applied === "applied" && frame.entry.event.kind === "run.state")
-        void this.refreshRunDetails();
+      this.update({
+        protectedInputsRevision:
+          this.view.protectedInputsRevision + Number(applied === "applied" && reconcileInputs),
+        protectedInputsCompletionRevision:
+          this.view.protectedInputsCompletionRevision +
+          Number(applied === "applied" && completedInput && !reconcileInputs),
+      });
+      if (applied === "applied" && event.kind === "run.state") void this.refreshRunDetails();
       return;
     }
     if (
@@ -753,7 +784,14 @@ export class ConversationController {
   }
   async refreshApprovals(): Promise<void> {
     const port = this.options.approvals;
-    if (!port || this.disposed || this.suspended) return;
+    if (
+      !port ||
+      this.disposed ||
+      this.suspended ||
+      this.view.approvalsLoading ||
+      Date.now() < this.approvalsRetryAt
+    )
+      return;
     const generation = ++this.approvalsGeneration;
     if (port.effectiveMode) {
       void port
@@ -776,9 +814,10 @@ export class ConversationController {
       });
       this.approvals.reconcileMissing(requests, known, this.options.owner.accountId);
       this.update({ approvalsLoading: false });
-    } catch {
-      if (!this.disposed && generation === this.approvalsGeneration)
-        this.update({ approvalsLoading: false, approvalsError: true });
+    } catch (error) {
+      if (this.disposed || generation !== this.approvalsGeneration) return;
+      if (isRpcRateLimited(error)) this.approvalsRetryAt = Date.now() + PENDING_READ_COOLDOWN_MS;
+      this.update({ approvalsLoading: false, approvalsError: true });
     }
   }
   async answerApproval(

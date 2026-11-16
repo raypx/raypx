@@ -174,10 +174,14 @@ export function ProtectedInputs({
   port,
   spaceId,
   conversationId,
+  refreshKey,
+  completionKey,
 }: {
   port: ProtectedInputsPort;
   spaceId: SpaceId;
   conversationId: string;
+  refreshKey?: string | number | undefined;
+  completionKey?: number | undefined;
 }) {
   const { t } = useCopy();
   const controller = useMemo(() => new ProtectedInputsController(port, spaceId), [port, spaceId]);
@@ -188,19 +192,21 @@ export function ProtectedInputs({
   );
   useEffect(() => {
     controller.activate();
-    void controller.refresh();
-    const timer = setInterval(() => {
-      if (AppState.currentState === "active") void controller.refresh();
-    }, 2000);
     const listener = AppState.addEventListener("change", (next) => {
       if (next === "active") void controller.refresh();
     });
     return () => {
-      clearInterval(timer);
       listener.remove();
       controller.dispose();
     };
   }, [controller]);
+  useEffect(() => {
+    if (AppState.currentState === "active") void controller.invalidate();
+  }, [controller, refreshKey]);
+  useEffect(() => {
+    if (completionKey && AppState.currentState === "active")
+      void controller.reconcileCompletion(conversationId);
+  }, [controller, completionKey, conversationId]);
   const requests = state.requests.filter((r) => r.conversationId === conversationId);
   if (!requests.length && !state.error) return null;
   return (

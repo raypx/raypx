@@ -51,6 +51,7 @@ import type { ConversationId } from "@raypx/core/agents";
 import { conversationIdSchema } from "@raypx/core/agents";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { ConversationStream } from "../../src/conversations/stream.js";
+import { createConversationSocketRoutes } from "../../src/conversations/socket.js";
 import { browserModelFixture } from "./browser-model.js";
 import { seedBrowserHistory } from "./browser-history.js";
 import { createModelConnections } from "../../src/conversations/connections.js";
@@ -310,6 +311,7 @@ const app = createApiApp({
   conversationModels,
   conversations: runner.conversations,
 });
+app.route("/events", createConversationSocketRoutes({ stream, allowedOrigins, readSession }));
 for (const account of accounts) {
   const signup = await app.fetch(
     new Request(`http://127.0.0.1:${port}/api/auth/sign-up/email`, {
@@ -378,6 +380,9 @@ const server = serve<SocketData>({
         return;
       return new Response(null, { status: 426 });
     }
+    // Use the production HTTP feed. This Bun fixture still owns native WebSocket upgrades.
+    if (path === "/events" && request.headers.get("upgrade")?.toLowerCase() !== "websocket")
+      return app.fetch(request);
     if (
       path === "/events" ||
       path === "/fixture/conversation/complete" ||
