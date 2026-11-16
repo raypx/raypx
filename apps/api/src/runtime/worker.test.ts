@@ -22,7 +22,7 @@ it("constructs without database writes or API configuration and exposes only hea
       status: "ok",
       service: "worker",
     });
-    for (const path of ["/rpc/account.get", "/api/auth/get-session", "/events", "/relay"])
+    for (const path of ["/api/rpc/account.get", "/api/auth/get-session", "/api/events", "/relay"])
       expect((await runtime.app.request(path)).status).toBe(404);
   } finally {
     await runtime.close();

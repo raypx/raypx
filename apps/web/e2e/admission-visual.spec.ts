@@ -52,7 +52,7 @@ const copy = {
 } as const;
 
 async function publicFlags(page: Page, overrides: Partial<typeof configuration>) {
-  await page.route("**/rpc/configuration/public", (route) =>
+  await page.route("**/api/rpc/configuration/public", (route) =>
     authResponse(route, { json: { ...configuration, ...overrides } }),
   );
 }
@@ -89,10 +89,10 @@ async function admin(page: Page) {
   await webShellFixture(page);
   const account = await signedInAccount(page);
   await accountAccessFixture(page, account.id, "admin");
-  await page.route("**/rpc/configuration/access", (route) =>
+  await page.route("**/api/rpc/configuration/access", (route) =>
     authResponse(route, { json: { allowed: true } }),
   );
-  await page.route("**/rpc/configuration/get", (route) =>
+  await page.route("**/api/rpc/configuration/get", (route) =>
     authResponse(route, {
       json: {
         values: { siteName: "Raypx", registrationEnabled: false, cleanupEnabled: true },
@@ -150,10 +150,10 @@ for (const locale of ["en", "zh"] as const) {
       revision: configured ? 1 : 0,
       updatedAt: null,
     });
-    await page.route("**/rpc/configuration/resend", (route) =>
+    await page.route("**/api/rpc/configuration/resend", (route) =>
       authResponse(route, { json: snapshot() }),
     );
-    await page.route("**/rpc/configuration/testMail", (route) =>
+    await page.route("**/api/rpc/configuration/testMail", (route) =>
       authResponse(route, { json: { sent: accepted } }),
     );
     await openPrivate(page, `${web}/admin/settings#email`);

@@ -64,7 +64,7 @@ it("recovers a lost direct start with the API role absent and no auth or broker 
   try {
     expect(model.calls).toHaveLength(0);
     expect((await repository.snapshot(scope, conversation.id)).runs[0]!.state).toBe("queued");
-    expect((await worker.app.request("/rpc/conversations.send")).status).toBe(404);
+    expect((await worker.app.request("/api/rpc/conversations.send")).status).toBe(404);
     await worker.start();
     await expect.poll(() => model.calls.length).toBe(1);
     model.calls[0]!.complete("Recovered by worker");

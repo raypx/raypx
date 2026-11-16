@@ -8,7 +8,7 @@ import { getBackendRuntime } from "../runtime/backend.js";
 export default defineMiddleware(async (event, _next) => {
   const request = event.req as Request & { ip?: string };
   const upgrade = request.headers.get("upgrade")?.toLowerCase() === "websocket";
-  if (upgrade && !["/events", "/device/connect"].includes(new URL(request.url).pathname)) {
+  if (upgrade && !["/api/events", "/api/device/connect"].includes(new URL(request.url).pathname)) {
     const response = new Response(null, { status: 404, headers: { "x-raypx-service": "api" } });
     setWebSocketHooks(request, { upgrade: () => response });
     return response;

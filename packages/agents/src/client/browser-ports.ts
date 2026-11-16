@@ -8,7 +8,7 @@ import type { ConversationDraftStore, ConversationSocketPort } from "../model.js
 export function browserConversationSocket(origin: string): ConversationSocketPort {
   return {
     connect(callbacks) {
-      const url = new URL("/events", origin);
+      const url = new URL("/api/events", origin);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
       const socket = new WebSocket(url);
       socket.addEventListener("message", (event: MessageEvent<unknown>) => {

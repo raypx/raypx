@@ -17,7 +17,7 @@ function fixture() {
   };
   const token = "loopback-email-relay-credential-32-chars";
   const app = new Hono().route(
-    "/routines",
+    "/api/routines",
     createRoutineIngressRoutes({ routines, emailRelayToken: token }),
   );
   const server = serveBackend({ app });
@@ -36,16 +36,16 @@ function fixture() {
 it("admits keyed webhook JSON through the production loopback listener and returns duplicate outcomes", async () => {
   const f = fixture();
   const headers = { authorization: "Bearer webhook-key", "idempotency-key": "delivery" };
-  const first = await f.post("/routines/routine/webhook", { event: "value" }, headers);
+  const first = await f.post("/api/routines/routine/webhook", { event: "value" }, headers);
   expect(first.status).toBe(200);
   expect(await first.json()).toEqual(f.outcome);
   f.routines.webhook.mockResolvedValueOnce({ ...f.outcome, status: "fired" });
-  const repeated = await f.post("/routines/routine/webhook", { event: "value" }, headers);
+  const repeated = await f.post("/api/routines/routine/webhook", { event: "value" }, headers);
   expect(await repeated.json()).toEqual({ ...f.outcome, status: "fired" });
   f.routines.webhook.mockRejectedValueOnce(new RoutineError("BODY_MISMATCH"));
-  expect((await f.post("/routines/routine/webhook", { event: "different" }, headers)).status).toBe(
-    409,
-  );
+  expect(
+    (await f.post("/api/routines/routine/webhook", { event: "different" }, headers)).status,
+  ).toBe(409);
 });
 it("admits normalized inbound email only with its independent relay credential over loopback", async () => {
   const f = fixture();
@@ -55,10 +55,12 @@ it("admits normalized inbound email only with its independent relay credential o
     messageId: "message-id",
     text: "untrusted inbound text",
   };
-  expect((await f.post("/routines/email", message, { authorization: "Bearer wrong" })).status).toBe(
-    401,
-  );
-  const response = await f.post("/routines/email", message, { authorization: `Bearer ${f.token}` });
+  expect(
+    (await f.post("/api/routines/email", message, { authorization: "Bearer wrong" })).status,
+  ).toBe(401);
+  const response = await f.post("/api/routines/email", message, {
+    authorization: `Bearer ${f.token}`,
+  });
   expect(response.status).toBe(200);
   expect(f.routines.email).toHaveBeenCalledExactlyOnceWith(message);
 });
@@ -66,7 +68,7 @@ it("passes repository signature and delivery identity unchanged through loopback
   const f = fixture();
   const signature = `sha256=${"b".repeat(64)}`;
   const response = await f.post(
-    "/routines/routine/repository",
+    "/api/routines/routine/repository",
     { reference: "branch" },
     { "x-routine-signature": signature, "x-delivery-id": "delivery-id", "x-event-kind": "push" },
   );
@@ -82,7 +84,7 @@ it("passes repository signature and delivery identity unchanged through loopback
   expect(
     (
       await f.post(
-        "/routines/routine/repository",
+        "/api/routines/routine/repository",
         {},
         {
           "x-routine-signature": "invalid",

@@ -12,7 +12,7 @@ const { BrowserLanguageProvider } = createBrowserI18n<typeof en>({ en, zh });
 const origin = "https://api.example.test";
 const spaceId = spaceIdSchema.parse("space-one");
 const id = pageIdSchema.parse("page-one");
-const reference = `[Pages](${origin}/page-content/member/${spaceId}/${id})`;
+const reference = `[Pages](${origin}/api/pages/member/${spaceId}/${id})`;
 
 function mount(
   text: string,
@@ -46,21 +46,21 @@ it("renders the Page icon and current title while preserving surrounding plain t
 });
 
 it.each([
-  `[Page](https://other.test/page-content/member/${spaceId}/${id})`,
+  `[Page](https://other.test/api/pages/member/${spaceId}/${id})`,
   `[Page](${origin}.other.test/page-content/member/${spaceId}/${id})`,
-  `[Page](${origin}/page-content/member/space-two/${id})`,
-  `[Page](${origin}/page-content/member/${spaceId}/)`,
-  `[Page](${origin}/page-content/member/${spaceId}/%ZZ)`,
-  `[Page](${origin}/page-content/member/${spaceId}/%70age-one)`,
-  `[Page](${origin}/page-content/member/${spaceId}/${id}?version=1)`,
-  `[Page](${origin}/page-content/member/${spaceId}/${id}#fragment)`,
-  `[Page](${origin}/page-content/member/${spaceId}/../${id})`,
-  `[Page](${origin}/page-content/member/${spaceId}/${id}`,
-  `[Other](${origin}/page-content/member/${spaceId}/${id})`,
-  `![Page](${origin}/page-content/member/${spaceId}/${id})`,
-  `\\[Page](${origin}/page-content/member/${spaceId}/${id})`,
-  `[[Page](${origin}/page-content/member/${spaceId}/${id})]`,
-  `${origin}/page-content/member/${spaceId}/${id}`,
+  `[Page](${origin}/api/pages/member/space-two/${id})`,
+  `[Page](${origin}/api/pages/member/${spaceId}/)`,
+  `[Page](${origin}/api/pages/member/${spaceId}/%ZZ)`,
+  `[Page](${origin}/api/pages/member/${spaceId}/%70age-one)`,
+  `[Page](${origin}/api/pages/member/${spaceId}/${id}?version=1)`,
+  `[Page](${origin}/api/pages/member/${spaceId}/${id}#fragment)`,
+  `[Page](${origin}/api/pages/member/${spaceId}/../${id})`,
+  `[Page](${origin}/api/pages/member/${spaceId}/${id}`,
+  `[Other](${origin}/api/pages/member/${spaceId}/${id})`,
+  `![Page](${origin}/api/pages/member/${spaceId}/${id})`,
+  `\\[Page](${origin}/api/pages/member/${spaceId}/${id})`,
+  `[[Page](${origin}/api/pages/member/${spaceId}/${id})]`,
+  `${origin}/api/pages/member/${spaceId}/${id}`,
 ])("keeps a non-matching reference literal: %s", (text) => {
   mount(text);
   expect(screen.getByTestId("message").textContent).toBe(text);
@@ -81,7 +81,7 @@ it("opens the referenced Page with keyboard activation", async () => {
 it.each(["en", "zh"] as const)(
   "uses a localized fallback for unknown or untitled Pages (%s)",
   (language) => {
-    mount(`[页面](${origin}/page-content/member/${spaceId}/${id}) ${reference}`, {
+    mount(`[页面](${origin}/api/pages/member/${spaceId}/${id}) ${reference}`, {
       language,
       titles: new Map([[id, " "]]),
     });

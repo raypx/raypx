@@ -93,7 +93,7 @@ it("SpaceMember: never projects another Space's member or accepts forged member 
     ),
   ).toBe(true);
   for (const method of ["get", "update", "delete"]) {
-    const response = await app.request(`/rpc/spaceMembers/${method}`, {
+    const response = await app.request(`/api/rpc/spaceMembers/${method}`, {
       method: "POST",
       headers: { "content-type": "application/json", origin: "https://web.example.test" },
       body: JSON.stringify({

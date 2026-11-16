@@ -12,8 +12,7 @@ export const apiContentSecurityPolicy = "default-src 'none'; frame-ancestors 'no
 /** Only the two document routes may provide their own sandbox policy. */
 function pageDocumentPath(path: string): boolean {
   return (
-    /^\/page-content\/public\/[^/]+$/.test(path) ||
-    /^\/page-content\/member\/[^/]+\/[^/]+$/.test(path)
+    /^\/api\/pages\/public\/[^/]+$/.test(path) || /^\/api\/pages\/member\/[^/]+\/[^/]+$/.test(path)
   );
 }
 

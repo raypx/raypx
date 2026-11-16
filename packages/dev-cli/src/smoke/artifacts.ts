@@ -97,9 +97,13 @@ async function probeRelay(root: string, databaseUrl?: string): Promise<void> {
       const ready = await fetch(`${base}/ready`);
       if (ready.status !== 503 || (await ready.text()).includes("postgres://"))
         throw new Error("Relay artifact must report dependency unavailability safely");
-      if ((await fetch(`${base}/device/connect`)).status !== 426)
+      if ((await fetch(`${base}/api/device/connect`)).status !== 426)
         throw new Error("Connector endpoint must require an authenticated upgrade");
-      for (const path of ["/rpc/__missing", "/api/docs", "/api/docs/assets/swagger-ui-bundle.js"]) {
+      for (const path of [
+        "/api/rpc/__missing",
+        "/api/docs",
+        "/api/docs/assets/swagger-ui-bundle.js",
+      ]) {
         if ((await fetch(`${base}${path}`)).status !== 404)
           throw new Error(`Relay artifact must not expose ${path}`);
       }

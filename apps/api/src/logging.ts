@@ -69,7 +69,7 @@ export function diagnosticRoute(path: string): DiagnosticRoute {
     return path;
   if (path.startsWith("/api/auth/")) return "/api/auth/*";
   if (path.startsWith(`${httpApiPrefix}/`)) return `${httpApiPrefix}/*`;
-  if (path.startsWith("/rpc/")) return "/rpc/*";
+  if (path.startsWith("/api/rpc/")) return "/api/rpc/*";
   return "unmatched";
 }
 
@@ -79,7 +79,7 @@ export function createRpcLoggingPlugin(logging: ApiLogging) {
     drain: (context) => logging.drain(context),
     enrich: ({ event }) => {
       event.operation = "rpc.request";
-      event.route = "/rpc/*";
+      event.route = "/api/rpc/*";
       // Unmatched RPC requests have no response in the handler plugin. Hono
       // supplies the 404; unexpected handler failures have an error instead.
       if (event.status === undefined) event.status = event.error ? 500 : 404;

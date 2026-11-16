@@ -190,7 +190,7 @@ it("takes account identity only from the session and protects creation with trus
     f.client("https://untrusted.example.test").agents.create({ spaceId: f.spaceId, agent }),
   ).rejects.toMatchObject({ code: "FORBIDDEN" });
   expect(f.resolve).not.toHaveBeenCalled();
-  const forged = await f.app.request("/rpc/agents/create", {
+  const forged = await f.app.request("/api/rpc/agents/create", {
     method: "POST",
     headers: { "content-type": "application/json", origin: "https://web.example.test" },
     body: JSON.stringify({

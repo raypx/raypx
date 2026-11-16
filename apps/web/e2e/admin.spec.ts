@@ -19,11 +19,11 @@ test(
     await accountAccessFixture(page, account.id, "admin");
     let privateReads = 0;
     page.on("request", (request) => {
-      if (/\/rpc\/(devices|tasks|approvals|protectedInputs|observed)\//.test(request.url()))
+      if (/\/api\/rpc\/(devices|tasks|approvals|protectedInputs|observed)\//.test(request.url()))
         privateReads++;
     });
     const overviewPeriods: number[] = [];
-    await page.route("**/rpc/admin/overview", (route) => {
+    await page.route("**/api/rpc/admin/overview", (route) => {
       if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
       const days = route.request().postDataJSON()?.json?.days ?? 30;
       overviewPeriods.push(days);
@@ -41,7 +41,7 @@ test(
         },
       });
     });
-    await page.route("**/rpc/admin/health", (route) =>
+    await page.route("**/api/rpc/admin/health", (route) =>
       route.request().method() === "OPTIONS"
         ? authResponse(route, null, 204)
         : authResponse(route, {
@@ -51,7 +51,7 @@ test(
             },
           }),
     );
-    await page.route("**/rpc/configuration/get", (route) =>
+    await page.route("**/api/rpc/configuration/get", (route) =>
       route.request().method() === "OPTIONS"
         ? authResponse(route, null, 204)
         : authResponse(route, {
@@ -78,12 +78,12 @@ test(
       updatedAt: null,
     };
     const storageWrites: unknown[] = [];
-    await page.route("**/rpc/configuration/storage", (route) =>
+    await page.route("**/api/rpc/configuration/storage", (route) =>
       route.request().method() === "OPTIONS"
         ? authResponse(route, null, 204)
         : authResponse(route, { json: storage }),
     );
-    await page.route("**/rpc/configuration/updateStorage", (route) => {
+    await page.route("**/api/rpc/configuration/updateStorage", (route) => {
       if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
       const input = route.request().postDataJSON()?.json;
       storageWrites.push(input);
@@ -95,12 +95,12 @@ test(
       updatedAt: null,
     };
     const mailWrites: unknown[] = [];
-    await page.route("**/rpc/configuration/resend", (route) =>
+    await page.route("**/api/rpc/configuration/resend", (route) =>
       route.request().method() === "OPTIONS"
         ? authResponse(route, null, 204)
         : authResponse(route, { json: mail }),
     );
-    await page.route("**/rpc/configuration/updateResend", (route) => {
+    await page.route("**/api/rpc/configuration/updateResend", (route) => {
       if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
       const input = route.request().postDataJSON()?.json;
       mailWrites.push(input);
@@ -121,7 +121,7 @@ test(
       after: null,
     };
     const filteredActors: string[] = [];
-    await page.route("**/rpc/admin/audit", (route) => {
+    await page.route("**/api/rpc/admin/audit", (route) => {
       if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
       const actor = route.request().postDataJSON()?.json?.actorId;
       if (typeof actor === "string") filteredActors.push(actor);
@@ -232,7 +232,7 @@ test(
   async ({ page }) => {
     const privateReads: string[] = [];
     page.on("request", (request) => {
-      if (/\/rpc\/(account|admin|devices|tasks|approvals|observed)\//.test(request.url()))
+      if (/\/api\/rpc\/(account|admin|devices|tasks|approvals|observed)\//.test(request.url()))
         privateReads.push(request.url());
     });
     await page.goto(web);

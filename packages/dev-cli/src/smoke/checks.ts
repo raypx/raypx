@@ -1,7 +1,7 @@
 /** Shared acceptance behavior for relocated outputs and real deployment images. */
 export async function checkApi(base: string, options: { origin?: string; gateway?: boolean } = {}) {
   for (const path of [
-    "/rpc/__missing",
+    "/api/rpc/__missing",
     "/api/__missing",
     ...(options.gateway ? [] : ["/settings", "/assets/__missing.js"]),
   ]) {
@@ -28,7 +28,7 @@ export async function checkApi(base: string, options: { origin?: string; gateway
       if ((await fetch(`${base}${path}`, { headers: upgrade })).status !== 404)
         throw new Error(`API ${path} must reject WebSocket upgrades`);
     }
-    const rejected = await fetch(`${base}/device/connect`, {
+    const rejected = await fetch(`${base}/api/device/connect`, {
       headers: { ...upgrade, origin: "https://disallowed.example.invalid" },
     });
     if (rejected.status !== 403)
@@ -67,7 +67,7 @@ export async function checkApi(base: string, options: { origin?: string; gateway
     ((await session.json()) as { user?: { email?: string } } | null)?.user?.email !== email
   )
     throw new Error("No-mail signup must issue an immediately usable session");
-  if ((await fetch(`${base}/device/connect`)).status !== 426)
+  if ((await fetch(`${base}/api/device/connect`)).status !== 426)
     throw new Error("Connector transport must follow the selected role");
 }
 

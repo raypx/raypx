@@ -119,7 +119,7 @@ it.each(["en", "zh"] as const)(
     expect(frame).not.toHaveAttribute("srcdoc");
     expect(frame).toHaveAttribute(
       "src",
-      "https://api.test/page-content/member/space-a/page-a?version=1",
+      "https://api.test/api/pages/member/space-a/page-a?version=1",
     );
     fireEvent.click(screen.getByRole("button", { name: strings.edit }));
     fireEvent.change(screen.getByRole("textbox", { name: strings.source }), {
@@ -129,7 +129,7 @@ it.each(["en", "zh"] as const)(
     await waitFor(() =>
       expect(screen.getByTitle(page.title)).toHaveAttribute(
         "src",
-        "https://api.test/page-content/member/space-a/page-a?version=2",
+        "https://api.test/api/pages/member/space-a/page-a?version=2",
       ),
     );
     expect(port.update).toHaveBeenCalledWith({
@@ -179,14 +179,14 @@ it("clears the one-time link on Escape and returns focus to Share", async () => 
   opener.focus();
   fireEvent.click(opener);
   fireEvent.click(await screen.findByRole("button", { name: en.pages.createLink }));
-  await screen.findByDisplayValue("https://api.test/page-content/public/one-time-secret");
+  await screen.findByDisplayValue("https://api.test/api/pages/public/one-time-secret");
   fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   await waitFor(() => expect(opener).toHaveFocus());
   fireEvent.click(opener);
   await screen.findByRole("dialog");
   expect(
-    screen.queryByDisplayValue("https://api.test/page-content/public/one-time-secret"),
+    screen.queryByDisplayValue("https://api.test/api/pages/public/one-time-secret"),
   ).not.toBeInTheDocument();
 });
 it("restores a selected version only after confirmation", async () => {
@@ -206,7 +206,7 @@ it("restores a selected version only after confirmation", async () => {
   await waitFor(() =>
     expect(screen.getByTitle(page.title)).toHaveAttribute(
       "src",
-      "https://api.test/page-content/member/space-a/page-a?version=3",
+      "https://api.test/api/pages/member/space-a/page-a?version=3",
     ),
   );
   expect(port.restore).toHaveBeenCalledWith({
@@ -279,7 +279,7 @@ it("previews a historical version through its sandboxed authenticated document r
   const frame = await within(history).findByTitle("Notes · Version 1");
   expect(frame).toHaveAttribute(
     "src",
-    "https://api.test/page-content/member/space-a/page-a?version=1",
+    "https://api.test/api/pages/member/space-a/page-a?version=1",
   );
   expect(frame).toHaveAttribute("sandbox", "allow-scripts");
   expect(frame).not.toHaveAttribute("srcdoc");
@@ -359,7 +359,7 @@ it("saves, restores and shares versions with authenticated document embedding di
   fireEvent.click(screen.getByRole("button", { name: en.pages.share }));
   const sharing = await screen.findByRole("dialog");
   fireEvent.click(await within(sharing).findByRole("button", { name: en.pages.createLink }));
-  await within(sharing).findByDisplayValue("https://api.test/page-content/public/one-time-secret");
+  await within(sharing).findByDisplayValue("https://api.test/api/pages/public/one-time-secret");
   expect(port.createShareLink).toHaveBeenCalledWith({
     spaceId: page.spaceId,
     id: page.id,

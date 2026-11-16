@@ -23,7 +23,7 @@ export const routine = routineSchema.parse({
   createdAt: date,
   updatedAt: date,
   ingress: {
-    webhook: { url: "https://api.example.test/routines/incoming", unavailableReason: null },
+    webhook: { url: "https://api.example.test/api/routines/incoming", unavailableReason: null },
     repository: { url: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" },
     email: { address: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" },
   },

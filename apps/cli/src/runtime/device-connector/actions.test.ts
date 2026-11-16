@@ -129,7 +129,7 @@ it("uses the final rotated credential when revoking a grant after the owner stop
   await expect(revoking).resolves.toEqual({ revoked: true });
   expect(fetch).toHaveBeenCalledOnce();
   expect(fetch.mock.calls[0]).toEqual([
-    new URL("https://device.example.test/device/grants/revoke"),
+    new URL("https://device.example.test/api/device/grants/revoke"),
     expect.objectContaining({
       headers: expect.objectContaining({ Authorization: "Bearer " + "rotated".repeat(12) }),
     }),

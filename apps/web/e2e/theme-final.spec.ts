@@ -161,7 +161,7 @@ async function fixture(page: Page) {
       activeRunsTruncated: false,
     };
   }
-  await page.routeWebSocket("**/events", (socket) => {
+  await page.routeWebSocket("**/api/events", (socket) => {
     socket.send(JSON.stringify({ type: "ready", version: 1 }));
     socket.onMessage(() => {});
   });
@@ -170,7 +170,7 @@ async function fixture(page: Page) {
     Object.assign(window, {
       fetch(input: RequestInfo | URL, init?: RequestInit) {
         const url = new URL(input instanceof Request ? input.url : String(input), location.origin);
-        if (url.pathname !== "/events" || !url.searchParams.has("conversationId"))
+        if (url.pathname !== "/api/events" || !url.searchParams.has("conversationId"))
           return fetch(input, init);
         const stream = new ReadableStream({
           start(controller) {
@@ -186,9 +186,9 @@ async function fixture(page: Page) {
     });
   });
   const unexpected = new Set<string>();
-  await page.route("**/rpc/**", async (route: Route) => {
+  await page.route("**/api/rpc/**", async (route: Route) => {
     if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
-    const method = new URL(route.request().url()).pathname.split("/rpc/")[1]!;
+    const method = new URL(route.request().url()).pathname.split("/api/rpc/")[1]!;
     const raw = route.request().postDataJSON() as { json?: { conversationId?: string } } | null;
     const input = raw?.json ?? {};
     const values: Record<string, unknown> = {
@@ -391,7 +391,7 @@ test("verifies the shared color system and compiled focus treatments", async ({
   });
   await accountAccessFixture(publicPage, null);
   await publicPage.route("**/api/auth/**", (route) => authResponse(route, null));
-  await publicPage.route("**/rpc/configuration/public", (route) =>
+  await publicPage.route("**/api/rpc/configuration/public", (route) =>
     authResponse(route, {
       json: {
         siteName: "Raypx",
@@ -402,7 +402,7 @@ test("verifies the shared color system and compiled focus treatments", async ({
       },
     }),
   );
-  await publicPage.route("**/rpc/configuration/access", (route) =>
+  await publicPage.route("**/api/rpc/configuration/access", (route) =>
     authResponse(route, { json: { allowed: false } }),
   );
   for (const theme of ["light", "dark"] as const) {

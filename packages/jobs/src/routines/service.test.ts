@@ -213,7 +213,7 @@ it("distinguishes missing triggers from unavailable email deployment configurati
   const result = await withoutEmail.get(scope, f.routine.id);
   expect(result.ingress).toEqual({
     webhook: {
-      url: `https://api.example.test/routines/${f.routine.id}/webhook`,
+      url: `https://api.example.test/api/routines/${f.routine.id}/webhook`,
       unavailableReason: null,
     },
     repository: { url: null, unavailableReason: "TRIGGER_NOT_CONFIGURED" },

@@ -136,7 +136,7 @@ export function registerTests() {
     await capture(page, { path: info.outputPath("routines-list.png") });
     const tested = page.waitForResponse(
       (response) =>
-        new URL(response.url()).pathname.endsWith("/rpc/routines/test") &&
+        new URL(response.url()).pathname.endsWith("/api/rpc/routines/test") &&
         response.request().method() === "POST",
     );
     await routine.getByRole("button", { name: "Run now", exact: true }).click();

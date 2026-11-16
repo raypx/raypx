@@ -23,7 +23,7 @@ export async function accountAccessFixture(
   accountId: string | null,
   role: AccountRole = accountId ? "member" : "guest",
 ) {
-  await page.route("**/rpc/account/access", (route) =>
+  await page.route("**/api/rpc/account/access", (route) =>
     route.request().method() === "OPTIONS"
       ? authResponse(route, null, 204)
       : authResponse(route, { json: accessForRole(role, accountId) }),
@@ -45,10 +45,10 @@ export async function webShellFixture(page: Page) {
 }
 
 export async function signedInAccount(page: Page) {
-  await page.route("**/rpc/notifications/list", (route) =>
+  await page.route("**/api/rpc/notifications/list", (route) =>
     authResponse(route, { json: { items: [], truncated: false } }),
   );
-  await page.route("**/rpc/notifications/viewed", (route) =>
+  await page.route("**/api/rpc/notifications/viewed", (route) =>
     authResponse(route, { json: { ok: true } }),
   );
   const user = {
@@ -71,9 +71,9 @@ export async function signedInAccount(page: Page) {
       },
     }),
   );
-  await page.route("**/rpc/account/get", (route) =>
+  await page.route("**/api/rpc/account/get", (route) =>
     authResponse(route, { json: { id: user.id, name: user.name, email: user.email } }),
   );
-  await page.route("**/rpc/spaces/list", (route) => authResponse(route, { json: [] }));
+  await page.route("**/api/rpc/spaces/list", (route) => authResponse(route, { json: [] }));
   return user;
 }

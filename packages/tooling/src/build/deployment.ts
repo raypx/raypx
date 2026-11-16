@@ -6,16 +6,15 @@ export const deploymentServices = {
   gateway: { port: 8080, ready: "/ready" },
 } as const;
 
-/** API-owned paths on a shared Web/API origin; static proxies must match exactly. */
+/** One API namespace and a closed set of protocol/probe root exceptions (ADR 0068). */
 export const apiIngress = {
-  prefixes: ["/api/", "/rpc/", "/routines/", "/device/", "/page-content/", "/message-attachments/"],
-  paths: [
+  prefix: "/api/",
+  exceptions: [
     "/.well-known/openid-configuration",
     "/.well-known/oauth-authorization-server",
-    "/events",
     deploymentServices.api.health,
     deploymentServices.api.ready,
   ],
 } as const;
 
-export const relayIngress = { paths: ["/device/connect"] } as const;
+export const relayIngress = { paths: ["/api/device/connect"] } as const;

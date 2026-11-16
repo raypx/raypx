@@ -10,7 +10,7 @@
   },
   {
     "input": {
-      "path": "/rpc/memory/create",
+      "path": "/api/rpc/memory/create",
       "method": "POST",
       "headers": {}
     },
@@ -19,7 +19,7 @@
   },
   {
     "input": {
-      "path": "/rpc/memory/internal",
+      "path": "/api/rpc/memory/internal",
       "method": "POST",
       "headers": {}
     },
@@ -28,7 +28,7 @@
   },
   {
     "input": {
-      "path": "/rpc/hosts/authorize",
+      "path": "/api/rpc/hosts/authorize",
       "method": "POST",
       "headers": {}
     },
@@ -37,7 +37,7 @@
   },
   {
     "input": {
-      "path": "/rpc/hosts/authorize",
+      "path": "/api/rpc/hosts/authorize",
       "method": "POST",
       "headers": {}
     },
@@ -46,7 +46,7 @@
   },
   {
     "input": {
-      "path": "/rpc/hosts/revoke",
+      "path": "/api/rpc/hosts/revoke",
       "method": "POST",
       "headers": {}
     },
@@ -55,7 +55,7 @@
   },
   {
     "input": {
-      "path": "/rpc/tasks/list",
+      "path": "/api/rpc/tasks/list",
       "method": "GET",
       "headers": {}
     },
@@ -162,7 +162,7 @@
   },
   {
     "input": {
-      "path": "/rpc/configuration/update",
+      "path": "/api/rpc/configuration/update",
       "method": "POST",
       "headers": {}
     },
@@ -171,7 +171,7 @@
   },
   {
     "input": {
-      "path": "/rpc/hosts/grant",
+      "path": "/api/rpc/hosts/grant",
       "method": "POST",
       "headers": {}
     },
@@ -180,7 +180,7 @@
   },
   {
     "input": {
-      "path": "/rpc/hosts/grant",
+      "path": "/api/rpc/hosts/grant",
       "method": "POST",
       "headers": {}
     },

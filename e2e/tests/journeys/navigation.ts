@@ -13,7 +13,7 @@ import {
 async function emptyAgentsSpace(page: Page, accountId: string) {
   const spaceId = "11111111-1111-4111-8111-111111111111";
   const createdAt = "2026-11-13T00:00:00.000Z";
-  await page.route("**/rpc/spaces/list", (route) =>
+  await page.route("**/api/rpc/spaces/list", (route) =>
     authResponse(route, {
       json: [
         {
@@ -23,12 +23,14 @@ async function emptyAgentsSpace(page: Page, accountId: string) {
       ],
     }),
   );
-  await page.route("**/rpc/conversations/listGroups", (route) => authResponse(route, { json: [] }));
-  await page.route("**/rpc/agents/list", (route) => authResponse(route, { json: [] }));
-  await page.route("**/rpc/agents/models", (route) =>
+  await page.route("**/api/rpc/conversations/listGroups", (route) =>
+    authResponse(route, { json: [] }),
+  );
+  await page.route("**/api/rpc/agents/list", (route) => authResponse(route, { json: [] }));
+  await page.route("**/api/rpc/agents/models", (route) =>
     authResponse(route, { json: [{ modelId: "fixture", name: "Fixture model" }] }),
   );
-  await page.route("**/rpc/computers/get", (route) =>
+  await page.route("**/api/rpc/computers/get", (route) =>
     authResponse(route, { json: { status: "not-configured" } }),
   );
 }
@@ -214,7 +216,7 @@ export function registerTests() {
       updatedAt: new Date().toISOString(),
     };
     await accountAccessFixture(page, user.id);
-    await page.route("**/rpc/spaces/list", (route) => authResponse(route, { json: [] }));
+    await page.route("**/api/rpc/spaces/list", (route) => authResponse(route, { json: [] }));
     await page.route("**/api/auth/get-session**", (route) =>
       authResponse(
         route,
@@ -233,7 +235,7 @@ export function registerTests() {
           : null,
       ),
     );
-    await page.route("**/rpc/account/get", (route) =>
+    await page.route("**/api/rpc/account/get", (route) =>
       signedIn
         ? authResponse(route, { json: { id: user.id, name: user.name, email: user.email } })
         : authResponse(

@@ -63,7 +63,7 @@ interface Stream {
   waiter?: { resolve(frame: Exclude<DesktopEventsRead, null>): void; reject(): void };
 }
 
-/** A bounded private bridge to /events. The renderer owns applied cursors and WebSocket ACKs. */
+/** A bounded private bridge to /api/events. The renderer owns applied cursors and WebSocket ACKs. */
 export class DesktopEvents {
   private readonly streams = new Map<string, Stream>();
   constructor(
@@ -87,7 +87,7 @@ export class DesktopEvents {
     this.cookies.assertAvailable();
     const key = this.key(client, id);
     if (this.streams.size >= 8 || this.streams.has(key)) throw unavailable();
-    const resource = new URL("/events", this.cookies.origin);
+    const resource = new URL("/api/events", this.cookies.origin);
     const cookie = this.cookies.header(resource);
     if (!cookie) throw new LocalError("AUTH_REQUIRED", "AUTH_REQUIRED");
     const stream: Stream = { scope: new AbortController(), queue: [], bytes: 0 };

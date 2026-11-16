@@ -72,7 +72,7 @@ export async function createApiRuntime(
   return {
     ...runtime,
     app: runtime.app.route(
-      "/events",
+      "/api/events",
       createConversationSocketRoutes({
         stream: events,
         allowedOrigins: environment.allowedOrigins,

@@ -71,7 +71,7 @@ it("reveals a link only in memory and refuses a late completion after close", ()
   };
   const generation = memory.begin();
   expect(memory.reveal(generation, "https://api.test/", link)).toEqual({
-    url: "https://api.test/page-content/public/private-token",
+    url: "https://api.test/api/pages/public/private-token",
     version: null,
   });
   memory.clear();
@@ -81,6 +81,6 @@ it("reveals a link only in memory and refuses a late completion after close", ()
 });
 it("uses the backend document route with the exact saved version", () => {
   expect(pageDocumentUrl("https://api.test/", page)).toBe(
-    "https://api.test/page-content/member/space-a/page-a?version=1",
+    "https://api.test/api/pages/member/space-a/page-a?version=1",
   );
 });

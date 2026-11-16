@@ -149,7 +149,7 @@ it("keeps writes, enrollment and private transports outside the OpenAPI adapter"
     "/api/v1/instances/begin",
     "/api/v1/attachments/upload",
   ];
-  for (const path of [...excluded, "/rpc/account/get", "/api/auth/get-session", "/relay"])
+  for (const path of [...excluded, "/api/rpc/account/get", "/api/auth/get-session", "/relay"])
     expect(spec.paths).not.toHaveProperty([path]);
   for (const path of excluded)
     expect((await app.request(path, { method: "POST" })).status).toBe(404);

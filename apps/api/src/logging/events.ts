@@ -7,7 +7,7 @@ export type DiagnosticRoute =
   | "/api/docs"
   | "/api/openapi.json"
   | `${typeof httpApiPrefix}/*`
-  | "/rpc/*"
+  | "/api/rpc/*"
   | "unmatched";
 
 interface RequestFields {

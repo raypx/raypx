@@ -54,7 +54,7 @@ it("projects fresh guest/member/admin grants without exposing session fields", a
 it("rejects forged role inputs and grants nothing for unverified, expired or mismatched sessions", async () => {
   const f = fixture();
   f.setSession(admin);
-  const forged = await f.app.request("/rpc/account/access", {
+  const forged = await f.app.request("/api/rpc/account/access", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ json: { role: "admin" } }),

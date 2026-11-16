@@ -42,7 +42,7 @@ it("reads complete UTF-8 events across chunks and ignores heartbeats and partial
     frames.push(frame);
   expect(frames).toEqual([reply]);
   expect(fetch).toHaveBeenCalledExactlyOnceWith(
-    `${origin}/events?spaceId=space&conversationId=conversation&after=8`,
+    `${origin}/api/events?spaceId=space&conversationId=conversation&after=8`,
     expect.objectContaining({ credentials: "include", redirect: "error" }),
   );
 });

@@ -6,8 +6,7 @@ export const sessionLimit = 256 * 1024;
 const authName = /^(?:__Secure-)?better-auth\.[a-zA-Z0-9_.-]+$/;
 const cookieValue = /^[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]*$/;
 const cookiePath = (value: string) =>
-  (value === "/" || value.startsWith("/api/") || value.startsWith("/rpc/")) &&
-  !/[\s?#\\]/.test(value);
+  (value === "/" || value.startsWith("/api/")) && !/[\s?#\\]/.test(value);
 const cookieSchema = z.strictObject({
   name: z.string().max(16384).regex(authName),
   value: z.string().max(16384).regex(cookieValue),

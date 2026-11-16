@@ -6,7 +6,7 @@ export type MemberTextPart =
 
 /** Recognize only the member reference emitted by Ask about this Page, never Markdown. */
 export function memberTextParts(text: string, origin: string, spaceId: string): MemberTextPart[] {
-  const prefix = `${origin.replace(/\/$/, "")}/page-content/member/${encodeURIComponent(spaceId)}/`;
+  const prefix = `${origin.replace(/\/$/, "")}/api/pages/member/${encodeURIComponent(spaceId)}/`;
   const parts: MemberTextPart[] = [];
   let start = 0;
   for (const match of text.matchAll(/\[(?:Pages?|页面)\]\((https?:\/\/[^\s<>()[\]]+)\)/g)) {

@@ -91,7 +91,7 @@ export function checkDeployment(root: string): string[] {
         .match(/@api path ([^\n]+)/)?.[1]
         ?.trim()
         .split(/\s+/) ?? [];
-    if (!same(caddy, [...apiIngress.prefixes.map((path) => `${path}*`), ...apiIngress.paths]))
+    if (!same(caddy, [`${apiIngress.prefix}*`, ...apiIngress.exceptions]))
       findings.push(
         "infra/railway/Caddyfile: API ingress routes differ from the deployment contract",
       );
@@ -101,8 +101,8 @@ export function checkDeployment(root: string): string[] {
     );
     if (
       !same(traefik, [
-        ...apiIngress.prefixes.map((path) => `PathPrefix:${path}`),
-        ...apiIngress.paths.map((path) => `Path:${path}`),
+        `PathPrefix:${apiIngress.prefix}`,
+        ...apiIngress.exceptions.map((path) => `Path:${path}`),
       ])
     )
       findings.push("deploy/compose.yaml: API ingress routes differ from the deployment contract");

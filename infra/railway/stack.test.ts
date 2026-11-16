@@ -12,9 +12,7 @@ it("matches exactly the shared API ingress and preserves upstream response heade
     .match(/@api path ([^\n]+)/)?.[1]
     ?.trim()
     .split(/\s+/);
-  expect(matcher?.sort()).toEqual(
-    [...apiIngress.prefixes.map((prefix) => `${prefix}*`), ...apiIngress.paths].sort(),
-  );
+  expect(matcher?.sort()).toEqual([`${apiIngress.prefix}*`, ...apiIngress.exceptions].sort());
   expect(caddy).toMatch(/handle @api\s*\{\s*reverse_proxy \{\$API_UPSTREAM\}/);
   expect(caddy).toMatch(/handle\s*\{\s*reverse_proxy \{\$WEB_UPSTREAM\}/);
   // Response headers, including the Page sandbox/CSP, belong to the upstream.

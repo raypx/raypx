@@ -31,7 +31,7 @@ const authPaths = new Set([
 const rendererPaths = new Set<string>();
 for (const [group, methods] of Object.entries(apiExposure))
   for (const [method, exposure] of Object.entries(methods)) {
-    const path = `/rpc/${group}/${method}`;
+    const path = `/api/rpc/${group}/${method}`;
     if (exposure === "renderer") rendererPaths.add(path);
   }
 const permittedHeaders = new Set(["accept", "accept-language", "content-type"]);
@@ -284,7 +284,7 @@ export class DesktopApi {
   async rpc(procedure: string, input: unknown, signal: AbortSignal): Promise<unknown> {
     const response = await this.request(
       {
-        path: `/rpc/${procedure.replaceAll(".", "/")}`,
+        path: `/api/rpc/${procedure.replaceAll(".", "/")}`,
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ json: input }),

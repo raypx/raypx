@@ -49,20 +49,17 @@ function replace(root: string, file: string, from: string, to: string) {
 it("keeps Compose environment inputs, runtime ports and both proxy route maps aligned", () => {
   expect(checkDeployment(fixture())).toEqual([]);
 });
-it.each(["/routines/", "/page-content/", "/message-attachments/"])(
-  "rejects a proxy that sends API prefix %s to the Web application",
-  (prefix) => {
-    const root = fixture();
-    replace(root, "deploy/compose.yaml", ` || PathPrefix(\`${prefix}\`)`, "");
-    replace(root, "infra/railway/Caddyfile", ` ${prefix}*`, "");
-    expect(checkDeployment(root)).toEqual(
-      expect.arrayContaining([
-        "deploy/compose.yaml: API ingress routes differ from the deployment contract",
-        "infra/railway/Caddyfile: API ingress routes differ from the deployment contract",
-      ]),
-    );
-  },
-);
+it("rejects a proxy that loses the single API namespace", () => {
+  const root = fixture();
+  replace(root, "deploy/compose.yaml", "PathPrefix(`/api/`)", "PathPrefix(`/wrong/`)");
+  replace(root, "infra/railway/Caddyfile", " /api/*", " /wrong/*");
+  expect(checkDeployment(root)).toEqual(
+    expect.arrayContaining([
+      "deploy/compose.yaml: API ingress routes differ from the deployment contract",
+      "infra/railway/Caddyfile: API ingress routes differ from the deployment contract",
+    ]),
+  );
+});
 it("detects newly declared API settings missing from deployment adapters", () => {
   const root = fixture();
   replace(

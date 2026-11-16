@@ -13,11 +13,11 @@
     }
   },
   {
-    "raw": "__Secure-better-auth.session_token=x; Domain=.example.test; Path=/rpc/; Secure; HttpOnly",
+    "raw": "__Secure-better-auth.session_token=x; Domain=.example.test; Path=/api/rpc/; Secure; HttpOnly",
     "outcome": "set",
     "expected": {
       "name": "__Secure-better-auth.session_token",
-      "path": "/rpc/",
+      "path": "/api/rpc/",
       "domain": "api.example.test"
     }
   },

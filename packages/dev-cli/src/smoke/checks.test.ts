@@ -77,7 +77,7 @@ function apiFixture(
             : { user: { email } },
         );
       }
-      if (path === "/device/connect") return new Response(null, { status: 426 });
+      if (path === "/api/device/connect") return new Response(null, { status: 426 });
       return new Response(null, { status: 404 });
     }),
   );

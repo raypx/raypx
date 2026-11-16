@@ -80,7 +80,7 @@ it("streams the selected conversation over authenticated HTTP and cancels the bo
   try {
     expect(await events.read("page", id, signal())).toEqual({ type: "ready", version: 1 });
     expect(fetch).toHaveBeenCalledExactlyOnceWith(
-      "https://api.example.test/events?spaceId=space&conversationId=conversation&after=17",
+      "https://api.example.test/api/events?spaceId=space&conversationId=conversation&after=17",
       expect.objectContaining({ headers: expect.any(Headers), redirect: "error" }),
     );
     expect(new Headers(fetch.mock.calls[0]![1]?.headers).get("cookie")).toBe(
@@ -131,7 +131,7 @@ it("forwards one bounded screen frame through the private bridge and retains ren
 
 it("opens only the selected-origin stream with private session headers, and never ACKs for the renderer", async () => {
   const f = fixture();
-  expect(f.connect.mock.calls[0]![0].href).toBe("wss://api.example.test/events");
+  expect(f.connect.mock.calls[0]![0].href).toBe("wss://api.example.test/api/events");
   expect(f.connect.mock.calls[0]![1]).toEqual({
     cookie: "__Secure-better-auth.session_token=private",
     origin: nativeClientOrigins.desktop,

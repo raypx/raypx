@@ -9,7 +9,7 @@ test(
     await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
     page.on("request", (request) => {
       if (
-        /\/rpc\/(spaces|agents|conversations|tasks|approvals|devices|account|memory|jobs)\//.test(
+        /\/api\/rpc\/(spaces|agents|conversations|tasks|approvals|devices|account|memory|jobs)\//.test(
           request.url(),
         )
       )

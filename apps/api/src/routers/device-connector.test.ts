@@ -46,14 +46,16 @@ it("denies browser Origins and unsupported pairing versions before credential po
     deviceName: "My machine",
     platform: "darwin",
   };
-  const browser = await f.post("/device/pairing/claim", body, { origin: "http://127.0.0.1:3000" });
+  const browser = await f.post("/api/device/pairing/claim", body, {
+    origin: "http://127.0.0.1:3000",
+  });
   expect(browser.status).toBe(403);
   expect(browser.headers.get("cache-control")).toBe("no-store");
   expect(f.claim).not.toHaveBeenCalled();
-  const unsupported = await f.post("/device/pairing/claim", { ...body, protocolVersion: 1 });
+  const unsupported = await f.post("/api/device/pairing/claim", { ...body, protocolVersion: 1 });
   expect(unsupported.status).toBe(400);
   expect(f.claim).not.toHaveBeenCalled();
-  const accepted = await f.post("/device/pairing/claim", body);
+  const accepted = await f.post("/api/device/pairing/claim", body);
   expect(accepted.status).toBe(200);
   expect(f.claim).toHaveBeenCalledExactlyOnceWith(body);
 });
@@ -65,15 +67,18 @@ it("requires credential possession and rejects a caller-selected different devic
     spaceId: "space",
     directory: "/granted",
   };
-  expect((await f.post("/device/grants/confirm", body)).status).toBe(403);
+  expect((await f.post("/api/device/grants/confirm", body)).status).toBe(403);
   expect(f.authenticate).not.toHaveBeenCalled();
   expect(
-    (await f.post("/device/grants/confirm", body, { authorization: "Bearer " + "b".repeat(64) }))
-      .status,
+    (
+      await f.post("/api/device/grants/confirm", body, {
+        authorization: "Bearer " + "b".repeat(64),
+      })
+    ).status,
   ).toBe(400);
   expect(f.grant).not.toHaveBeenCalled();
   const response = await f.post(
-    "/device/grants/confirm",
+    "/api/device/grants/confirm",
     { ...body, deviceId: "device" },
     { authorization: "Bearer " + "b".repeat(64) },
   );
@@ -83,7 +88,7 @@ it("requires credential possession and rejects a caller-selected different devic
 });
 it("bounds malformed and streamed oversized bodies and returns safe errors", async () => {
   const f = fixture();
-  const invalid = await f.app.request("/device/pairing/claim", { method: "POST", body: "{" });
+  const invalid = await f.app.request("/api/device/pairing/claim", { method: "POST", body: "{" });
   expect(invalid.status).toBe(400);
   const stream = new ReadableStream({
     start(controller) {
@@ -91,11 +96,14 @@ it("bounds malformed and streamed oversized bodies and returns safe errors", asy
       controller.close();
     },
   });
-  const oversized = await f.app.request("/device/pairing/claim", { method: "POST", body: stream });
+  const oversized = await f.app.request("/api/device/pairing/claim", {
+    method: "POST",
+    body: stream,
+  });
   expect(oversized.status).toBe(413);
   expect(f.claim).not.toHaveBeenCalled();
   f.claim.mockRejectedValueOnce(new Error("private-credential"));
-  const failed = await f.post("/device/pairing/claim", {
+  const failed = await f.post("/api/device/pairing/claim", {
     protocolVersion: 2,
     code: "paircode1234",
     deviceName: "My machine",
@@ -115,20 +123,20 @@ it("keeps the pairing IP quota when an attacker rotates unrelated bearer headers
   for (let index = 0; index < 20; index++)
     expect(
       (
-        await f.post("/device/pairing/claim", body, {
+        await f.post("/api/device/pairing/claim", body, {
           authorization: `Bearer ${crypto.randomUUID()}`,
           "x-owned-client-ip": "127.0.0.1",
         })
       ).status,
     ).toBe(200);
-  const blocked = await f.post("/device/pairing/claim", body, {
+  const blocked = await f.post("/api/device/pairing/claim", body, {
     authorization: `Bearer ${crypto.randomUUID()}`,
     "x-owned-client-ip": "127.0.0.1",
   });
   expect(blocked.status).toBe(429);
   expect(f.claim).toHaveBeenCalledTimes(20);
   expect(counts.size).toBe(1);
-  const oversized = await f.post("/device/pairing/claim", body, {
+  const oversized = await f.post("/api/device/pairing/claim", body, {
     authorization: "Bearer " + "x".repeat(521),
   });
   expect(oversized.status).toBe(403);
@@ -139,8 +147,11 @@ it("counts authenticated possession requests against both IP and credential quot
   const f = fixture({ rateLimit });
   const body = { protocolVersion: 2, deviceId: "device", spaceId: "space", directory: "/granted" };
   expect(
-    (await f.post("/device/grants/confirm", body, { authorization: "Bearer " + "a".repeat(64) }))
-      .status,
+    (
+      await f.post("/api/device/grants/confirm", body, {
+        authorization: "Bearer " + "a".repeat(64),
+      })
+    ).status,
   ).toBe(200);
   expect(rateLimit).toHaveBeenCalledTimes(2);
   expect(rateLimit.mock.calls[0]?.[0]).toContain("device-connector:ip:");
@@ -148,7 +159,7 @@ it("counts authenticated possession requests against both IP and credential quot
 });
 it("refuses Cookie headers at the connector upgrade boundary before possession", async () => {
   const f = fixture();
-  const response = await f.app.request("/device/connect", {
+  const response = await f.app.request("/api/device/connect", {
     headers: { upgrade: "websocket", cookie: "synthetic=must-be-stripped" },
   });
   expect(response.status).toBe(403);

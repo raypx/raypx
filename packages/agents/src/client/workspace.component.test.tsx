@@ -3021,7 +3021,7 @@ it("shows a pending Page chip, restores it without sending, and sends its origin
   const f = fixture();
   const reference = {
     id: "page-one",
-    text: "[Pages](https://example.test/page-content/member/space-one/page-one)",
+    text: "[Pages](https://example.test/api/pages/member/space-one/page-one)",
   };
   f.client.pages = {
     get: vi.fn(async ({ id, spaceId }) => ({ id, spaceId, title: "Project notes" })),
@@ -3050,7 +3050,7 @@ it("removes a pending Page reference without removing the question or sending", 
   const f = fixture();
   f.mount(true, undefined, undefined, {
     id: "page-one",
-    text: "[Page](https://example.test/page-content/member/space-one/page-one)",
+    text: "[Page](https://example.test/api/pages/member/space-one/page-one)",
   });
   await screen.findByRole("button", { name: "Remove Page reference: Page" });
   const editor = screen.getByRole("textbox", { name: "Message" });

@@ -37,7 +37,7 @@ for (const locale of ["en", "zh"] as const) {
       const account = await signedInAccount(page);
       await accountAccessFixture(page, account.id, "admin");
       const reads: { from: string; to: string }[] = [];
-      await page.route("**/rpc/admin/audit", (route) => {
+      await page.route("**/api/rpc/admin/audit", (route) => {
         if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
         reads.push(route.request().postDataJSON().json);
         return authResponse(route, {

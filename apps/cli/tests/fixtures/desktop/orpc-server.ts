@@ -64,7 +64,7 @@ export function startOrpcFixture() {
     async fetch(request) {
       if (request.headers.get("origin") !== nativeClientOrigins.desktop)
         return new Response("Unexpected native Origin", { status: 400 });
-      if (new URL(request.url).pathname === "/rpc/hosts/authorize") {
+      if (new URL(request.url).pathname === "/api/rpc/hosts/authorize") {
         const wire: unknown = await request.clone().json();
         const deviceId = field(field(wire, "json"), "deviceId");
         if (deviceId === "legacy") return new Response("Not found", { status: 404 });
@@ -74,10 +74,10 @@ export function startOrpcFixture() {
             { status: 302, headers: { location: "https://external.example.test" } },
           );
       }
-      const result = await handler.handle(request, { prefix: "/rpc", context: { request } });
+      const result = await handler.handle(request, { prefix: "/api/rpc", context: { request } });
       if (!result.matched) return new Response("Not found", { status: 404 });
       const headers = new Headers(result.response.headers);
-      if (new URL(request.url).pathname === "/rpc/account/get")
+      if (new URL(request.url).pathname === "/api/rpc/account/get")
         headers.set("set-cookie", `better-auth.fixture=${secret}; Path=/; HttpOnly; Max-Age=3600`);
       return new Response(result.response.body, { status: result.response.status, headers });
     },

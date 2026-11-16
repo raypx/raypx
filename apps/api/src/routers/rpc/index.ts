@@ -24,7 +24,7 @@ import { createModelConnectionsHandlers } from "./model-connections.js";
 import { createRoutineHandlers } from "./routines.js";
 import { createSpaceMemoryHandlers } from "./space-memory.js";
 
-export const rpcPrefix = "/rpc";
+export const rpcPrefix = "/api/rpc";
 
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
   const setup = createRpcSetup(options);

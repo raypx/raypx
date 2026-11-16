@@ -122,7 +122,7 @@ export function registerTests() {
       expect(history.messages[0]?.attachments).toHaveLength(2);
       const attachment = history.messages[0]!.attachments![0]!;
       const raw = await page.request.get(
-        `${endpoint}/message-attachments/${space.id}/${conversation.id}/${attachment.id}`,
+        `${endpoint}/api/attachments/${space.id}/${conversation.id}/${attachment.id}`,
       );
       expect(raw.status()).toBe(200);
       expect(raw.headers()["content-disposition"]).toContain("attachment;");

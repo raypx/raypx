@@ -212,7 +212,7 @@ describe("API diagnostic events", () => {
     });
     await expectCompletion(onlyResponse(responses), {
       operation: "rpc.request",
-      route: "/rpc/*",
+      route: "/api/rpc/*",
       status: 200,
     });
   });
@@ -220,19 +220,22 @@ describe("API diagnostic events", () => {
   it("accepts a Request-compatible wrapper and preserves its streamed RPC input", async () => {
     const controller = new AbortController();
     const body = new TextEncoder().encode(JSON.stringify({ json: { password: secret.body } }));
-    const source = new Request(`https://api.example.com/rpc/account/get?token=${secret.query}`, {
-      method: "POST",
-      headers: { ...sensitiveHeaders, "content-type": "application/json" },
-      body: new ReadableStream<Uint8Array>({
-        start(stream) {
-          stream.enqueue(body.subarray(0, 8));
-          stream.enqueue(body.subarray(8));
-          stream.close();
-        },
-      }),
-      signal: controller.signal,
-      duplex: "half",
-    });
+    const source = new Request(
+      `https://api.example.com/api/rpc/account/get?token=${secret.query}`,
+      {
+        method: "POST",
+        headers: { ...sensitiveHeaders, "content-type": "application/json" },
+        body: new ReadableStream<Uint8Array>({
+          start(stream) {
+            stream.enqueue(body.subarray(0, 8));
+            stream.enqueue(body.subarray(8));
+            stream.close();
+          },
+        }),
+        signal: controller.signal,
+        duplex: "half",
+      },
+    );
     let signalReads = 0;
     // Nitro's Node wrapper shares Request.prototype but has no native private state.
     const wrapped: Request = Object.create(Request.prototype, {
@@ -254,7 +257,11 @@ describe("API diagnostic events", () => {
     expect(source.bodyUsed).toBe(true);
     expect(signalReads).toBeGreaterThan(0);
     expect(source.headers.get("x-request-id")).toBe(secret.forgedId);
-    await expectCompletion(response, { operation: "rpc.request", route: "/rpc/*", status: 200 });
+    await expectCompletion(response, {
+      operation: "rpc.request",
+      route: "/api/rpc/*",
+      status: 200,
+    });
   });
 
   it("preserves the expected RPC error and correlates its request ID with one event", async () => {
@@ -265,7 +272,11 @@ describe("API diagnostic events", () => {
       code: "UNAUTHORIZED",
       data: { error: { code: "AUTH_REQUIRED" }, requestId: responseId(response) },
     });
-    await expectCompletion(response, { operation: "rpc.request", route: "/rpc/*", status: 401 });
+    await expectCompletion(response, {
+      operation: "rpc.request",
+      route: "/api/rpc/*",
+      status: 401,
+    });
   });
 
   it("logs an unexpected RPC failure once and excludes the underlying error text", async () => {
@@ -279,14 +290,14 @@ describe("API diagnostic events", () => {
     await expect(client.account.get({})).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
     const event = await expectCompletion(onlyResponse(responses), {
       operation: "rpc.request",
-      route: "/rpc/*",
+      route: "/api/rpc/*",
       status: 500,
     });
     expect(event?.error).toBeDefined();
   });
 
   it("logs an unmatched RPC as one 404 event without leaking its request body", async () => {
-    const response = await app().request(`/rpc/unknown/method?token=${secret.query}`, {
+    const response = await app().request(`/api/rpc/unknown/method?token=${secret.query}`, {
       method: "POST",
       headers: { ...sensitiveHeaders, "content-type": "application/json" },
       body: JSON.stringify({ json: { password: secret.body } }),
@@ -295,7 +306,11 @@ describe("API diagnostic events", () => {
       error: { code: "NOT_FOUND" },
       requestId: responseId(response),
     });
-    await expectCompletion(response, { operation: "rpc.request", route: "/rpc/*", status: 404 });
+    await expectCompletion(response, {
+      operation: "rpc.request",
+      route: "/api/rpc/*",
+      status: 404,
+    });
   });
 
   it("logs a CORS preflight once without dispatching the RPC handler", async () => {
@@ -306,7 +321,7 @@ describe("API diagnostic events", () => {
         return session;
       },
     });
-    const response = await api.request(`/rpc/account/get?token=${secret.query}`, {
+    const response = await api.request(`/api/rpc/account/get?token=${secret.query}`, {
       method: "OPTIONS",
       headers: {
         ...sensitiveHeaders,
@@ -317,7 +332,11 @@ describe("API diagnostic events", () => {
     });
     expect(response.headers.get("access-control-allow-origin")).toBe("https://web.example.com");
     expect(sessionReads).toBe(0);
-    await expectCompletion(response, { operation: "http.request", route: "/rpc/*", status: 204 });
+    await expectCompletion(response, {
+      operation: "http.request",
+      route: "/api/rpc/*",
+      status: 204,
+    });
   });
 
   it("returns an RPC response before a delayed sink while flush and close wait for delivery", async () => {
@@ -400,7 +419,7 @@ describe("API diagnostic events", () => {
     expect(events).toHaveLength(2);
     expect(events.map((event) => event.requestId)).toEqual(expect.arrayContaining(ids));
     for (const event of events) {
-      expect(event).toMatchObject({ operation: "rpc.request", route: "/rpc/*", status: 200 });
+      expect(event).toMatchObject({ operation: "rpc.request", route: "/api/rpc/*", status: 200 });
     }
     expectPrivateDataAbsent();
   });

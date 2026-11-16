@@ -53,7 +53,7 @@ function AgentsPage() {
             selection.pageRef && selection.spaceId
               ? {
                   id: selection.pageRef,
-                  text: `[${pageCopy("title")}](${apiOrigin()}/page-content/member/${encodeURIComponent(selection.spaceId)}/${encodeURIComponent(selection.pageRef)})`,
+                  text: `[${pageCopy("title")}](${apiOrigin()}/api/pages/member/${encodeURIComponent(selection.spaceId)}/${encodeURIComponent(selection.pageRef)})`,
                 }
               : undefined
           }

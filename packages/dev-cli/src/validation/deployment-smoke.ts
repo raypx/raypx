@@ -566,19 +566,13 @@ export async function smokePublicDeployment(
         "Web API_PUBLIC_URL disagrees with --api-public-url; configure the same API_PUBLIC_URL on both services",
       );
   });
-  for (const prefix of apiIngress.prefixes) {
-    await check(`api-ingress:${prefix}`, async () => {
-      const path =
-        prefix === "/page-content/"
-          ? `${prefix}public/deployment-smoke-missing`
-          : `${prefix}deployment-smoke-missing`;
-      const response = await read(api + path);
-      identity(response, "api");
-      if (response.status >= 500) throw new Error(`API returned HTTP ${response.status}`);
-      await response.body?.cancel();
-    });
-  }
-  for (const path of apiIngress.paths) {
+  await check(`api-ingress:${apiIngress.prefix}`, async () => {
+    const response = await read(api + apiIngress.prefix + "deployment-smoke-missing");
+    identity(response, "api");
+    status(response.status, 404);
+    await response.body?.cancel();
+  });
+  for (const path of apiIngress.exceptions) {
     await check(`api-ingress:${path}`, async () => {
       const response = await read(api + path);
       identity(response, "api");
@@ -588,19 +582,19 @@ export async function smokePublicDeployment(
     });
   }
   await check("events-public-origin", async () => {
-    const response = await deploymentUpgrade(api + "/events", { origin: web });
+    const response = await deploymentUpgrade(api + "/api/events", { origin: web });
     identity(response, "api");
     status(response.status, 401);
   });
   await check("events-foreign-origin", async () => {
-    const response = await deploymentUpgrade(api + "/events", {
+    const response = await deploymentUpgrade(api + "/api/events", {
       origin: "https://deployment-smoke-foreign.invalid",
     });
     identity(response, "api");
     status(response.status, 403);
   });
   await check("page-embedding", async () => {
-    const response = await read(api + "/page-content/public/deployment-smoke-missing");
+    const response = await read(api + "/api/pages/public/deployment-smoke-missing");
     identity(response, "api");
     status(response.status, 404);
     const policy = response.headers.get("content-security-policy") ?? "";
@@ -612,12 +606,12 @@ export async function smokePublicDeployment(
     await response.body?.cancel();
   });
   await check("device-connect", async () => {
-    const response = await deploymentUpgrade(api + "/device/connect");
+    const response = await deploymentUpgrade(api + "/api/device/connect");
     identity(response, "api");
     status(response.status, 401);
   });
   await check("device-cookie-stripping", async () => {
-    const response = await deploymentUpgrade(api + "/device/connect", {
+    const response = await deploymentUpgrade(api + "/api/device/connect", {
       cookie: "raypx-smoke=synthetic",
     });
     identity(response, "api");

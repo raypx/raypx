@@ -104,7 +104,7 @@ export function registerTests() {
     const opening = page.waitForRequest(
       (request) =>
         request.method() === "POST" &&
-        new URL(request.url()).pathname.endsWith("/rpc/conversations/history"),
+        new URL(request.url()).pathname.endsWith("/api/rpc/conversations/history"),
       { timeout },
     );
     await agent.getByRole("button", { name: "Create Agent", exact: true }).click({ timeout });
@@ -140,7 +140,7 @@ export function registerTests() {
 
     let nextRequest: (() => void) | undefined;
     let releaseRequest: (() => void) | undefined;
-    await page.route("**/rpc/conversations/history", async (route) => {
+    await page.route("**/api/rpc/conversations/history", async (route) => {
       if (route.request().method() !== "POST") return route.continue();
       const input = route.request().postDataJSON() as {
         json: { before?: { beforeSequence: number } };
@@ -182,7 +182,7 @@ export function registerTests() {
       const response = page.waitForResponse(
         (value) =>
           value.request().method() === "POST" &&
-          new URL(value.url()).pathname.endsWith("/rpc/conversations/history"),
+          new URL(value.url()).pathname.endsWith("/api/rpc/conversations/history"),
         { timeout },
       );
       releaseRequest?.();
@@ -201,7 +201,7 @@ export function registerTests() {
     const anchor = await firstVisibleMessage(log);
     const livePrompt = `A live message while reading history ${suffix}`;
     const firstFrame = frames.length;
-    const sent = await page.request.post(`${apiUrl}/rpc/conversations/send`, {
+    const sent = await page.request.post(`${apiUrl}/api/rpc/conversations/send`, {
       headers: { origin },
       timeout,
       data: {
@@ -247,7 +247,7 @@ export function registerTests() {
       )
       .toBe(true);
     await expectAnchor(log, anchor);
-    await page.unroute("**/rpc/conversations/history");
+    await page.unroute("**/api/rpc/conversations/history");
     // Traverse beyond the retained window, then reload released rows in both directions.
     for (let index = 0; index < 2; index++) {
       await page

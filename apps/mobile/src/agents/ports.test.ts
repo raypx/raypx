@@ -91,8 +91,8 @@ describe("mobile authenticated transports", () => {
     cookie = "session=second";
     await client.spaces.list({});
     expect(seen.map((request) => request.url)).toEqual([
-      "https://api.example.test/rpc/spaces/list",
-      "https://api.example.test/rpc/spaces/list",
+      "https://api.example.test/api/rpc/spaces/list",
+      "https://api.example.test/api/rpc/spaces/list",
     ]);
     expect(seen.map((request) => request.headers.get("Cookie"))).toEqual([
       "session=first",
@@ -126,7 +126,7 @@ describe("mobile authenticated transports", () => {
   it("authenticates the native event socket in headers and forwards validated frames", async () => {
     const h = socketHarness();
     await Promise.resolve();
-    expect(h.open).toHaveBeenCalledWith("wss://api.example.test/events", {
+    expect(h.open).toHaveBeenCalledWith("wss://api.example.test/api/events", {
       Cookie: "session=device-cookie",
       Origin: "https://api.example.test",
     });

@@ -34,7 +34,7 @@ export async function* readConversationFeed(
   selection: ConversationFeedSelection,
   { fetch = globalThis.fetch, headers, signal }: FeedOptions & { signal: AbortSignal },
 ): AsyncGenerator<ConversationFeedFrame | FeedClose> {
-  const url = new URL("/events", origin);
+  const url = new URL("/api/events", origin);
   url.searchParams.set("spaceId", selection.spaceId);
   url.searchParams.set("conversationId", selection.conversationId);
   url.searchParams.set("after", String(selection.after));

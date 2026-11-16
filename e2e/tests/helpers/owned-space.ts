@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 
 /** Give each backend journey its own authorization and data boundary. */
 export async function createOwnedSpace(page: Page, apiUrl: string, origin: string, name: string) {
-  const response = await page.request.post(`${apiUrl}/rpc/spaces/create`, {
+  const response = await page.request.post(`${apiUrl}/api/rpc/spaces/create`, {
     headers: { origin },
     timeout: 5_000,
     data: { json: { name } },

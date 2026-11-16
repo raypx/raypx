@@ -17,7 +17,7 @@ export interface CreateApiClientOptions {
 /** Credential providers are evaluated for each call, including native cookies. */
 export function createApiClient(options: CreateApiClientOptions = {}): ApiClient {
   const link = new RPCLink({
-    url: "/rpc",
+    url: "/api/rpc",
     ...(options.baseUrl ? { origin: options.baseUrl.replace(/\/$/, "") } : {}),
     method: "POST",
     headers: async () => {

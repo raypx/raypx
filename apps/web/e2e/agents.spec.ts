@@ -194,7 +194,7 @@ test(
     const sending = page.waitForRequest(
       (request) =>
         request.method() === "POST" &&
-        new URL(request.url()).pathname.endsWith("/rpc/conversations/send"),
+        new URL(request.url()).pathname.endsWith("/api/rpc/conversations/send"),
       { timeout: actionTimeout },
     );
     await page.getByRole("button", { name: "Send", exact: true }).click({ timeout: actionTimeout });

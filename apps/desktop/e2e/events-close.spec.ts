@@ -86,7 +86,7 @@ async function nativeEventsFixture(page: Page) {
       };
     // Login reads public first-account metadata through the selected API. Keep
     // rejecting it before session termination or for Space-only close reasons.
-    if (path === "/rpc/configuration/public" && terminal?.reason === "SESSION_ENDED") {
+    if (path === "/api/rpc/configuration/public" && terminal?.reason === "SESSION_ENDED") {
       publicConfigurationReads.push(path);
       return {
         json: {
@@ -99,15 +99,15 @@ async function nativeEventsFixture(page: Page) {
       };
     }
     const reads: Record<string, unknown> = {
-      "/rpc/account/access": accessForRole("member", accountId),
-      "/rpc/account/get": { id: accountId, name: user.name, email: user.email },
-      "/rpc/spaces/list": departed ? [] : [{ space, member }],
-      "/rpc/spaces/get": space,
-      "/rpc/spaces/members": [{ ...member, name: user.name, image: null }],
-      "/rpc/agents/list": [{ agent, conversation }],
-      "/rpc/agents/models": [{ modelId: "fixture", name: "Fixture model" }],
-      "/rpc/conversations/listGroups": [],
-      "/rpc/conversations/history": {
+      "/api/rpc/account/access": accessForRole("member", accountId),
+      "/api/rpc/account/get": { id: accountId, name: user.name, email: user.email },
+      "/api/rpc/spaces/list": departed ? [] : [{ space, member }],
+      "/api/rpc/spaces/get": space,
+      "/api/rpc/spaces/members": [{ ...member, name: user.name, image: null }],
+      "/api/rpc/agents/list": [{ agent, conversation }],
+      "/api/rpc/agents/models": [{ modelId: "fixture", name: "Fixture model" }],
+      "/api/rpc/conversations/listGroups": [],
+      "/api/rpc/conversations/history": {
         conversation,
         messages: [],
         runs: [],
@@ -117,15 +117,15 @@ async function nativeEventsFixture(page: Page) {
         runsTruncated: false,
         segmentsTruncated: false,
       },
-      "/rpc/computers/get": { status: "not-configured" },
-      "/rpc/deviceComputers/list": { devices: [] },
-      "/rpc/deviceComputers/getSelection": { selection: null },
-      "/rpc/notifications/list": { items: [], truncated: false },
-      "/rpc/notifications/viewed": { ok: true },
-      "/rpc/approvals/pending": [],
-      "/rpc/protectedInputs/pending": [],
-      "/rpc/approvals/settings": { revision: 0, mode: "ask", rules: [], availableModes },
-      "/rpc/approvals/effectiveMode": {
+      "/api/rpc/computers/get": { status: "not-configured" },
+      "/api/rpc/deviceComputers/list": { devices: [] },
+      "/api/rpc/deviceComputers/getSelection": { selection: null },
+      "/api/rpc/notifications/list": { items: [], truncated: false },
+      "/api/rpc/notifications/viewed": { ok: true },
+      "/api/rpc/approvals/pending": [],
+      "/api/rpc/protectedInputs/pending": [],
+      "/api/rpc/approvals/settings": { revision: 0, mode: "ask", rules: [], availableModes },
+      "/api/rpc/approvals/effectiveMode": {
         spaceId,
         mode: "ask",
         source: "account_default",
@@ -138,8 +138,8 @@ async function nativeEventsFixture(page: Page) {
     }
     return { json: reads[path] };
   }
-  await page.routeWebSocket("**/events", () => unexpected.push("browser /events"));
-  await page.route("**/events?**", (route) => {
+  await page.routeWebSocket("**/api/events", () => unexpected.push("browser /api/events"));
+  await page.route("**/api/events?**", (route) => {
     unexpected.push("browser SSE");
     return route.abort();
   });
@@ -243,7 +243,7 @@ for (const [code, reason, notice] of [
       await expect(page.getByRole("button", { name: "Sign in with browser" })).toBeVisible();
       await expect
         .poll(() => fixture.publicConfigurationReads)
-        .toEqual(["/rpc/configuration/public"]);
+        .toEqual(["/api/rpc/configuration/public"]);
     }
     await expect(composer).toBeHidden();
     expect(fixture.unexpected).toEqual([]);

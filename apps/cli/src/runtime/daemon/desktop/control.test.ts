@@ -57,7 +57,8 @@ it("opens conversation events only after verifying the requested account through
       f.control.request("events_open", { id, accountId: "owner" }, "page", signal()),
     ).resolves.toBe(true);
     expect(fetch).toHaveBeenCalledTimes(2);
-    for (const [request] of fetch.mock.calls) expect(request.url).toBe(`${origin}/rpc/account/get`);
+    for (const [request] of fetch.mock.calls)
+      expect(request.url).toBe(`${origin}/api/rpc/account/get`);
     expect(f.connect.mock.calls[0]![1]).toEqual({
       cookie: "__Secure-better-auth.session_token=private",
       origin: nativeClientOrigins.desktop,

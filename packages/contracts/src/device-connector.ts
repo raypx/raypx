@@ -6,13 +6,13 @@ export const DEVICE_CONNECTOR_VERSION = 2;
 export const DEVICE_CONNECTOR_MAX_FRAME_BYTES = 1_500_000;
 export const DEVICE_CONNECTOR_MAX_OUTPUT_BYTES = 1024 * 1024;
 export const DEVICE_CONNECTOR_PATHS = {
-  connect: "/device/connect",
-  claim: "/device/pairing/claim",
-  confirm: "/device/pairing/confirm",
-  grant: "/device/grants/confirm",
-  prepareGrant: "/device/grants/prepare",
-  revokeGrant: "/device/grants/revoke",
-  revoke: "/device/revoke",
+  connect: "/api/device/connect",
+  claim: "/api/device/pairing/claim",
+  confirm: "/api/device/pairing/confirm",
+  grant: "/api/device/grants/confirm",
+  prepareGrant: "/api/device/grants/prepare",
+  revokeGrant: "/api/device/grants/revoke",
+  revoke: "/api/device/revoke",
 } as const;
 const id = z.string().min(1).max(200);
 const revision = z.number().int().positive();

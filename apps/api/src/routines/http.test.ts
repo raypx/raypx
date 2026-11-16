@@ -155,11 +155,11 @@ it("keeps every ingress credential and payload out of response errors and diagno
   });
   const app = new Hono<ApiRouterEnv>();
   registerApiMiddleware(app, testAppOptions({ logger }));
-  app.route("/routines", f.app);
+  app.route("/api/routines", f.app);
   const key = "private-webhook-credential-for-logging";
   const payload = "private-payload-for-logging";
   f.routines.webhook.mockRejectedValueOnce(new Error(`${key} ${payload}`));
-  const response = await app.request("/routines/routine/webhook?secret=private-query", {
+  const response = await app.request("/api/routines/routine/webhook?secret=private-query", {
     method: "POST",
     body: JSON.stringify({ payload }),
     headers: {
@@ -172,7 +172,7 @@ it("keeps every ingress credential and payload out of response errors and diagno
   const text = await response.text();
   const emailText = "private-email-text-for-logging";
   const signature = `sha256=${"a".repeat(64)}`;
-  await app.request("/routines/email", {
+  await app.request("/api/routines/email", {
     method: "POST",
     body: JSON.stringify({
       address: "routine@mail.example.test",
@@ -182,7 +182,7 @@ it("keeps every ingress credential and payload out of response errors and diagno
     }),
     headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
   });
-  await app.request("/routines/routine/repository", {
+  await app.request("/api/routines/routine/repository", {
     method: "POST",
     body: JSON.stringify({ payload }),
     headers: {

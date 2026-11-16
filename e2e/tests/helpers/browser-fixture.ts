@@ -20,7 +20,7 @@ export const test = base.extend<{
   publicApi: [
     async ({ page }, use) => {
       await accountAccessFixture(page, null);
-      await page.route("**/rpc/configuration/public", (route) =>
+      await page.route("**/api/rpc/configuration/public", (route) =>
         authResponse(route, {
           json: {
             siteName: "Raypx",
@@ -31,10 +31,10 @@ export const test = base.extend<{
           },
         }),
       );
-      await page.route("**/rpc/configuration/access", (route) =>
+      await page.route("**/api/rpc/configuration/access", (route) =>
         authResponse(route, { json: { allowed: false } }),
       );
-      await page.route("**/rpc/account/get", async (route) => {
+      await page.route("**/api/rpc/account/get", async (route) => {
         if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
         return authResponse(
           route,

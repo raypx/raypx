@@ -19,7 +19,7 @@ async function fixture() {
   await stream.start();
   cleanups.push(() => stream.shutdown());
   const app = new Hono().route(
-    "/events",
+    "/api/events",
     createConversationSocketRoutes({
       stream,
       readSession: state.readSession,
@@ -57,7 +57,7 @@ async function fixture() {
   return { ...state, append, connect };
 }
 
-it("replays interleaved group replies and child activity over SSE on loopback /events", async () => {
+it("replays interleaved group replies and child activity over SSE on loopback /api/events", async () => {
   const f = await fixture();
   f.append({
     kind: "run.state",

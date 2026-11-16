@@ -30,12 +30,12 @@ test.describe("fresh deployment bootstrap", () => {
     ).toBeHidden();
     await page.goto("/admin/settings#email");
     // A copied Space bearer link admits a member without mail; membership still needs acceptance.
-    const memberships = await page.request.post(`${api}/rpc/spaces/list`, {
+    const memberships = await page.request.post(`${api}/api/rpc/spaces/list`, {
       headers: { origin: base },
       data: { json: {} },
     });
     const spaceId = (await memberships.json()).json[0].space.id;
-    const issued = await page.request.post(`${api}/rpc/spaces/createInvitation`, {
+    const issued = await page.request.post(`${api}/api/rpc/spaces/createInvitation`, {
       headers: { origin: base },
       data: { json: { spaceId } },
     });

@@ -19,15 +19,15 @@ export function createDeviceConnectorRoutes(
   const app = new Hono();
   const openings = new Map<string, Promise<void>>();
   app.use(
-    "/device/*",
+    "/api/device/*",
     bodyLimit({ maxSize: 16_384, onError: (c) => c.json({ error: "PAYLOAD_TOO_LARGE" }, 413) }),
   );
-  app.use("/device/*", async (c, next) => {
+  app.use("/api/device/*", async (c, next) => {
     c.header("cache-control", "no-store");
     if (c.req.header("origin")) return c.json({ error: "ACCESS_DENIED" }, 403);
     return next();
   });
-  app.use("/device/*", async (c, next) => {
+  app.use("/api/device/*", async (c, next) => {
     const authorization = c.req.header("authorization");
     if (authorization && authorization.length > 520) return c.json({ error: "ACCESS_DENIED" }, 403);
     if (options.rateLimit) {
@@ -74,7 +74,7 @@ export function createDeviceConnectorRoutes(
   app.onError((error, c) =>
     c.json({ error: error instanceof DeviceComputerError ? error.code : "ACCESS_DENIED" }, 403),
   );
-  app.post("/device/*", async (c) => {
+  app.post("/api/device/*", async (c) => {
     const body = await c.req.text();
     if (Buffer.byteLength(body) > 16_384) return c.json({ error: "INVALID_INPUT" }, 400);
     let input: unknown;
@@ -95,11 +95,11 @@ export function createDeviceConnectorRoutes(
       return c.json(await registry.repository.confirm(parsed.data));
     }
     const identity = await registry.repository.authenticate(bearer(c.req.raw.headers));
-    if (path === DEVICE_CONNECTOR_PATHS.grant || path === "/device/grants/prepare") {
+    if (path === DEVICE_CONNECTOR_PATHS.grant || path === "/api/device/grants/prepare") {
       const parsed = deviceGrantConfirmSchema.safeParse(input);
       if (!parsed.success || parsed.data.deviceId !== identity.deviceId)
         return c.json({ error: "INVALID_INPUT" }, 400);
-      if (path === "/device/grants/prepare")
+      if (path === "/api/device/grants/prepare")
         return c.json(
           await registry.repository.prepareGrant(
             identity,

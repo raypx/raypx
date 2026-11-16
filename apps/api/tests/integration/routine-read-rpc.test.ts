@@ -92,11 +92,11 @@ it.each(["https://shared.example.test", "https://ingress.example.test"])(
     const f = fixture(publicUrl);
     const expected = {
       webhook: {
-        url: `${publicUrl}/routines/${f.id}/webhook`,
+        url: `${publicUrl}/api/routines/${f.id}/webhook`,
         unavailableReason: null,
       },
       repository: {
-        url: `${publicUrl}/routines/${f.id}/repository`,
+        url: `${publicUrl}/api/routines/${f.id}/repository`,
         unavailableReason: null,
       },
       email: { address: f.routine.emailAddress, unavailableReason: null },

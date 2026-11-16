@@ -70,14 +70,14 @@ export function registerTests() {
       await review("search");
       await page.keyboard.press("Escape");
       // The feed is cross-Space; isolate its empty presentation from other journeys' Runs.
-      await page.route("**/rpc/notifications/list", (route) =>
+      await page.route("**/api/rpc/notifications/list", (route) =>
         authResponse(route, { json: { items: [], truncated: false } }),
       );
       await page.getByRole("button", { name: "Notifications", exact: true }).click();
       await expect(page.getByText("You’re all caught up.", { exact: true })).toBeVisible();
       await review("notifications-empty");
       await page.keyboard.press("Escape");
-      await page.unroute("**/rpc/notifications/list");
+      await page.unroute("**/api/rpc/notifications/list");
       await page.getByRole("button", { name: "New Agent", exact: true }).click();
       await expect(page.getByRole("dialog", { name: "New Agent", exact: true })).toBeVisible();
       await review("agent-create");
@@ -174,7 +174,7 @@ export function registerTests() {
       await review("memory-directory");
       await page.keyboard.press("Escape");
       for (const reason of ["SPACE_RUNNING_LIMIT", "SPACE_DAILY_TRANSFER_LIMIT"]) {
-        await page.route("**/rpc/computers/get", (route) =>
+        await page.route("**/api/rpc/computers/get", (route) =>
           authResponse(route, {
             json: { status: "available", computer: null, unavailableReason: reason },
           }),
@@ -183,14 +183,14 @@ export function registerTests() {
         await page.goto(conversation);
         await page.getByRole("button", { name: /^Computer:/ }).click();
         await review(`computer-${reason.toLowerCase()}`);
-        await page.unroute("**/rpc/computers/get");
+        await page.unroute("**/api/rpc/computers/get");
       }
       await page.setViewportSize({ width: 1440, height: 900 });
       let release = () => {};
       const waiting = new Promise<void>((resolve) => {
         release = resolve;
       });
-      await page.route("**/rpc/spaces/list", async (route) => {
+      await page.route("**/api/rpc/spaces/list", async (route) => {
         await waiting;
         await authResponse(route, { json: [] });
       });
@@ -202,8 +202,8 @@ export function registerTests() {
         page.getByRole("heading", { name: "Create a Space to get started.", exact: true }),
       ).toBeVisible();
       await review("workspace-no-space");
-      await page.unroute("**/rpc/spaces/list");
-      await page.route("**/rpc/spaces/list", (route) =>
+      await page.unroute("**/api/rpc/spaces/list");
+      await page.route("**/api/rpc/spaces/list", (route) =>
         authResponse(
           route,
           { json: { defined: false, code: "INTERNAL_SERVER_ERROR", message: "Unavailable" } },
@@ -213,7 +213,7 @@ export function registerTests() {
       await page.goto(home);
       await expect(page.locator("#main").getByRole("alert").first()).toBeVisible();
       await review("workspace-error-retry");
-      await page.unroute("**/rpc/spaces/list");
+      await page.unroute("**/api/rpc/spaces/list");
       await page.goto(`${baseURL}/join`);
       await expect(page.getByRole("main")).toBeVisible();
       await review("invitation-invalid");

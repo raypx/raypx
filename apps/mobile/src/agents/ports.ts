@@ -116,7 +116,7 @@ export function mobileConversationSocket(
     connect(callbacks) {
       let closed = false;
       let socket: NativeEventSocket | undefined;
-      const url = new URL("/events", options.origin);
+      const url = new URL("/api/events", options.origin);
       url.protocol = "wss:";
       void options.cookie().then(
         (cookie) => {

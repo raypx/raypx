@@ -1015,9 +1015,9 @@ it.each(["cancelled", "waiting"] as const)(
 );
 
 it("shows a readable Page label only for this origin and Space", async () => {
-  const reference = "[页面](https://app.example.test/page-content/member/space/page-one)";
-  const otherSpace = "[Page](https://app.example.test/page-content/member/other/page-one)";
-  const otherOrigin = "[Page](https://other.example/page-content/member/space/page-one)";
+  const reference = "[页面](https://app.example.test/api/pages/member/space/page-one)";
+  const otherSpace = "[Page](https://app.example.test/api/pages/member/other/page-one)";
+  const otherOrigin = "[Page](https://other.example/api/pages/member/space/page-one)";
   const f = await harness({
     cursor: 1,
     messages: [message(`Read ${reference} please. ${otherSpace} ${otherOrigin}`)],

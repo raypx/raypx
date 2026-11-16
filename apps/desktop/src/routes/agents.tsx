@@ -79,7 +79,7 @@ function SignedInAgents({ accountId }: { accountId: string }) {
         selection.pageRef && selection.spaceId
           ? {
               id: selection.pageRef,
-              text: `[${pageCopy("title")}](${apiUrl}/page-content/member/${encodeURIComponent(selection.spaceId)}/${encodeURIComponent(selection.pageRef)})`,
+              text: `[${pageCopy("title")}](${apiUrl}/api/pages/member/${encodeURIComponent(selection.spaceId)}/${encodeURIComponent(selection.pageRef)})`,
             }
           : undefined
       }

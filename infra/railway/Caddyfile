@@ -13,13 +13,13 @@
 }
 
 :{$PORT:8080} {
-  @relay path /device/connect
+  @relay path /api/device/connect
   handle @relay {
     reverse_proxy {$API_UPSTREAM} {
       header_up -Cookie
     }
   }
-  @api path /api/* /rpc/* /routines/* /device/* /page-content/* /message-attachments/* /.well-known/openid-configuration /.well-known/oauth-authorization-server /events /health /ready
+  @api path /api/* /.well-known/openid-configuration /.well-known/oauth-authorization-server /health /ready
 	handle @api {
 		reverse_proxy {$API_UPSTREAM} {
 			header_up X-Forwarded-Proto https

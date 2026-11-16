@@ -35,7 +35,7 @@ export function registerTests() {
     });
     expect(signedIn.status()).toBe(200);
     async function rpc<T = { space: { id: string } }>(path: string, input: unknown): Promise<T> {
-      const response = await page.request.post(`${apiUrl}/rpc/${path}`, {
+      const response = await page.request.post(`${apiUrl}/api/rpc/${path}`, {
         headers: { origin },
         timeout,
         data: { json: input },
@@ -156,7 +156,7 @@ export function registerTests() {
       await expectSurfaceAtRest(page, sharing);
       await sharing.getByRole("button", { name: "Create link", exact: true }).click({ timeout });
       const shown = sharing.getByRole("textbox", { name: "Share", exact: true });
-      await expect(shown).toHaveValue(/\/page-content\/public\/[a-f0-9]+/);
+      await expect(shown).toHaveValue(/\/api\/pages\/public\/[a-f0-9]+/);
       const publicUrl = await shown.inputValue({ timeout });
       const publicContext = await browser.newContext();
       try {

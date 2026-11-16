@@ -23,7 +23,7 @@ export function createApiApp(options: ApiAppOptions) {
   const router = createRpcRouter(options, readReadiness);
   const timeout = options.rpcTimeoutMs ?? 15_000;
   app
-    .route("/message-attachments", createAttachmentDownloadRoutes(options))
+    .route("/api/attachments", createAttachmentDownloadRoutes(options))
     .route(
       "/",
       createDeviceConnectorRoutes(options.deviceConnector, {
@@ -32,7 +32,7 @@ export function createApiApp(options: ApiAppOptions) {
       }),
     )
     .route(
-      "/page-content",
+      "/api/pages",
       createPagesRoutes({
         pages: options.pages,
         spaces: options.spaces,
@@ -43,7 +43,7 @@ export function createApiApp(options: ApiAppOptions) {
       }),
     )
     .route(
-      "/routines",
+      "/api/routines",
       createRoutineIngressRoutes({
         routines: options.routines,
         ...(options.routineEmailRelayToken

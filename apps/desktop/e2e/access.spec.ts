@@ -8,7 +8,7 @@ test(
     const privateReads: string[] = [];
     await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
     page.on("request", (request) => {
-      if (/\/rpc\/(spaces|agents|conversations)\//.test(request.url()))
+      if (/\/api\/rpc\/(spaces|agents|conversations)\//.test(request.url()))
         privateReads.push(request.url());
     });
     await page.goto(`${desktop}/`);

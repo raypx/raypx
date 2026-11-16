@@ -18,7 +18,7 @@ afterEach(() => {
 it("cancels an owned native request and rejects promptly without exposing auth headers", async () => {
   mocks.request.mockImplementation(async () => new Promise(() => {}));
   const controller = new AbortController();
-  const pending = createDesktopFetch("https://api.test")("https://api.test/rpc/account/get", {
+  const pending = createDesktopFetch("https://api.test")("https://api.test/api/rpc/account/get", {
     method: "POST",
     headers: { cookie: "private", authorization: "private", "content-type": "application/json" },
     body: "{}",
@@ -37,6 +37,6 @@ it("rejects a pre-aborted request and an unconfigured origin without starting na
   await expect(
     send("https://api.test/api/auth/get-session", { signal: controller.signal }),
   ).rejects.toMatchObject({ name: "AbortError" });
-  await expect(send("https://evil.test/rpc/account/get")).rejects.toThrow("origin");
+  await expect(send("https://evil.test/api/rpc/account/get")).rejects.toThrow("origin");
   expect(mocks.request).not.toHaveBeenCalled();
 });

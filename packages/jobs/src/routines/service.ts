@@ -84,10 +84,13 @@ export function createRoutinesService(
     return {
       ...routine,
       ingress: {
-        webhook: httpIngress(Boolean(routine.triggers.webhook), `/routines/${routine.id}/webhook`),
+        webhook: httpIngress(
+          Boolean(routine.triggers.webhook),
+          `/api/routines/${routine.id}/webhook`,
+        ),
         repository: httpIngress(
           Boolean(routine.triggers.repository),
-          `/routines/${routine.id}/repository`,
+          `/api/routines/${routine.id}/repository`,
         ),
         email: emailIngress(routine),
       },

@@ -142,7 +142,7 @@ describe("HTTP foundation", () => {
     expect(await (await app.request("/health")).json()).toEqual({ status: "ok" });
     expect(await (await app.request("/api/auth/get-session")).json()).toEqual({ auth: true });
     for (const path of [
-      "/rpc/cloud/list",
+      "/api/rpc/cloud/list",
       "/api/unknown",
       "/assets/missing.js",
       "/assets/missing",
@@ -166,7 +166,7 @@ describe("HTTP foundation", () => {
 
   it("answers preflights only for allowed origins and lets browsers cache them", async () => {
     const preflight = (origin: string) =>
-      app.request("/rpc/account/get", {
+      app.request("/api/rpc/account/get", {
         method: "OPTIONS",
         headers: {
           origin,

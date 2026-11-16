@@ -81,7 +81,7 @@ it("enables only the sandboxed authenticated document route in Web", async () =>
   );
   const frame = await screen.findByTitle("Notes");
   expect(frame.getAttribute("src")).toBe(
-    "https://api.example.test/page-content/member/team-one/page-one?version=1",
+    "https://api.example.test/api/pages/member/team-one/page-one?version=1",
   );
   expect(frame.getAttribute("sandbox")).toBe("allow-scripts");
   expect(frame.hasAttribute("srcdoc")).toBe(false);

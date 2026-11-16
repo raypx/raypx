@@ -311,7 +311,7 @@ const app = createApiApp({
   conversationModels,
   conversations: runner.conversations,
 });
-app.route("/events", createConversationSocketRoutes({ stream, allowedOrigins, readSession }));
+app.route("/api/events", createConversationSocketRoutes({ stream, allowedOrigins, readSession }));
 for (const account of accounts) {
   const signup = await app.fetch(
     new Request(`http://127.0.0.1:${port}/api/auth/sign-up/email`, {
@@ -338,7 +338,7 @@ const server = serve<SocketData>({
     // account data, then hydrate from their own HTTP fixtures. Keep that explicit
     // failure injection deterministic when this owned API is also reachable.
     if (
-      path === "/rpc/account/get" &&
+      path === "/api/rpc/account/get" &&
       request.headers
         .get("cookie")
         ?.split(";")
@@ -360,7 +360,7 @@ const server = serve<SocketData>({
         return new Response(null, { status: 401 });
       return browserDevices.handle(request, session.user.id);
     }
-    if (path === "/device/connect") {
+    if (path === "/api/device/connect") {
       // The test listener owns Bun upgrades; production owns the same registry
       // through its CrossWS adapter. Possession headers never enter public output.
       const authorization = request.headers.get("authorization");
@@ -381,10 +381,10 @@ const server = serve<SocketData>({
       return new Response(null, { status: 426 });
     }
     // Use the production HTTP feed. This Bun fixture still owns native WebSocket upgrades.
-    if (path === "/events" && request.headers.get("upgrade")?.toLowerCase() !== "websocket")
+    if (path === "/api/events" && request.headers.get("upgrade")?.toLowerCase() !== "websocket")
       return app.fetch(request);
     if (
-      path === "/events" ||
+      path === "/api/events" ||
       path === "/fixture/conversation/complete" ||
       path === "/fixture/conversation/history" ||
       path === "/fixture/conversation/transcript"

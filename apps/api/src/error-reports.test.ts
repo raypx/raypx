@@ -26,7 +26,7 @@ describe("API error reports", () => {
         level: "error",
         status: 500,
         operation: "rpc.request",
-        route: "/rpc/*",
+        route: "/api/rpc/*",
         requestId: "req_abc",
         error: { name: "TypeError", code: "UNEXPECTED" },
       }),
@@ -40,7 +40,7 @@ describe("API error reports", () => {
       event: "$exception",
       properties: {
         $exception_list: [{ type: "TypeError", value: "UNEXPECTED" }],
-        route: "/rpc/*",
+        route: "/api/rpc/*",
         status: 500,
         requestId: "req_abc",
         environment: "production",

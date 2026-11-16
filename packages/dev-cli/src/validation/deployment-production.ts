@@ -39,14 +39,14 @@ export async function smokeLocalProduction(root: string, args: string[]) {
   function target(request: IncomingMessage) {
     const path = new URL(request.url!, "http://localhost").pathname;
     const api =
-      apiIngress.prefixes.some((prefix) => path.startsWith(prefix)) ||
-      apiIngress.paths.some((candidate) => candidate === path);
+      path.startsWith(apiIngress.prefix) ||
+      apiIngress.exceptions.some((candidate) => candidate === path);
     const headers = {
       ...request.headers,
       "x-forwarded-host": request.headers.host!,
       "x-forwarded-proto": "http",
     };
-    if (path === "/device/connect") delete headers.cookie;
+    if (path === "/api/device/connect") delete headers.cookie;
     return { port: api ? apiPort : webPort, headers };
   }
   await evidence.run(async () => {
@@ -144,7 +144,7 @@ export async function smokeLocalProduction(root: string, args: string[]) {
         const origin = origins[index]!;
         await evidence.measure(`public-smoke-${index + 1}`, () => smokePublicDeployment(origin));
         await evidence.measure(`api-owned-404-${index + 1}`, async () => {
-          for (const path of ["/page-content/public/bad", "/device/x", "/api/x"]) {
+          for (const path of ["/api/pages/public/bad", "/api/device/x", "/api/x"]) {
             const response = await fetch(origin + path);
             const body = await response.text();
             if (

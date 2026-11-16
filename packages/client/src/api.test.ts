@@ -17,7 +17,7 @@ it("reads headers again after a credential change and always uses POST", async (
   await client.account.get({});
   expect(seen.map((r) => r.headers.get("cookie"))).toEqual(["session=first", "session=second"]);
   expect(seen.map((r) => r.method)).toEqual(["POST", "POST"]);
-  expect(seen[0]?.url).toBe("https://api.example.com/rpc/account/get");
+  expect(seen[0]?.url).toBe("https://api.example.com/api/rpc/account/get");
 });
 
 it("recognizes plain 404 responses without hiding authentication/server failures", async () => {

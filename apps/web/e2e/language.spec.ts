@@ -65,7 +65,7 @@ test(
 
     const other = await context.newPage();
     watchErrors(other);
-    await other.route("**/rpc/configuration/public", (route) =>
+    await other.route("**/api/rpc/configuration/public", (route) =>
       authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
     );
 

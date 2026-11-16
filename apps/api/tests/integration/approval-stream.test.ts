@@ -14,7 +14,7 @@ afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();
 });
 
-it("recovers a waiting Run, delivers steering and replays its approval answer on /events after handover", async () => {
+it("recovers a waiting Run, delivers steering and replays its approval answer on /api/events after handover", async () => {
   const f = agentToolsFixture();
   cleanups.push(() => f.runner.close());
   const stream = new ConversationStream({ ...f, pollMs: 10 });
@@ -23,7 +23,7 @@ it("recovers a waiting Run, delivers steering and replays its approval answer on
   const origins = ["https://web.example.test"];
   const app = new Hono()
     .route(
-      "/events",
+      "/api/events",
       createConversationSocketRoutes({
         stream,
         readSession: f.readSession,

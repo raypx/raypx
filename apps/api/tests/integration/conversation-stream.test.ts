@@ -23,7 +23,7 @@ async function fixture(
   await stream.start();
   cleanups.push(() => stream.shutdown());
   const app = new Hono().route(
-    "/events",
+    "/api/events",
     createConversationSocketRoutes({
       stream,
       readSession: f.readSession,
@@ -44,7 +44,7 @@ async function fixture(
     return feed;
   }
   async function connectSpace() {
-    const url = new URL("/events", server.url);
+    const url = new URL("/api/events", server.url);
     url.protocol = "ws:";
     const socket = new WebSocket(url);
     const frames: ConversationServerFrame[] = [];
@@ -112,7 +112,7 @@ it("rejects a non-member and closes an already-open subscription when membership
   expect(f.events).not.toHaveBeenCalled();
 });
 
-it("actively closes an idle loopback /events subscription on removal before its next membership poll", async () => {
+it("actively closes an idle loopback /api/events subscription on removal before its next membership poll", async () => {
   const state = spaceStreamFixture();
   const f = await fixture(state, 60_000);
   const peer = f.connect();
@@ -129,7 +129,7 @@ it.each([
   { reason: "SPACE_DELETING", code: 4003, change: "deleting" },
   { reason: "SESSION_ENDED", code: 4001, change: "session" },
 ] as const)(
-  "closes loopback /events with $reason and its existing code",
+  "closes loopback /api/events with $reason and its existing code",
   async ({ reason, code, change }) => {
     const state = spaceStreamFixture();
     state.appendSpace({ kind: "space.renamed", payload: { name: "Before close" } });
@@ -174,14 +174,15 @@ it("requires a live session and checks Origin before upgrading on the existing l
   const f = await fixture();
   expect(
     (
-      await fetch(new URL("/events", f.server.url), {
+      await fetch(new URL("/api/events", f.server.url), {
         headers: { upgrade: "websocket", origin: "https://evil.example.test" },
       })
     ).status,
   ).toBe(403);
   f.signOut();
   expect(
-    (await fetch(new URL("/events", f.server.url), { headers: { upgrade: "websocket" } })).status,
+    (await fetch(new URL("/api/events", f.server.url), { headers: { upgrade: "websocket" } }))
+      .status,
   ).toBe(401);
 });
 
@@ -283,7 +284,7 @@ it("replays committed output once after a worker resumes a handed-over Run with 
   expect(reply.runs).toHaveLength(1);
 });
 
-it("replays tool lifecycle and related approval cards over /events without tool contents", async () => {
+it("replays tool lifecycle and related approval cards over /api/events without tool contents", async () => {
   const reply = agentToolsFixture();
   cleanups.push(() => reply.runner.close());
   const f = await fixture(reply);

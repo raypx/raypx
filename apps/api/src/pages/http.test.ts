@@ -66,7 +66,7 @@ function safeHeaders(response: Response, kind: "html" | "document" = "document")
 it("keeps sandbox headers through the complete API middleware and never resolves or sets a public session", async () => {
   for (const kind of ["document", "html"] as const) {
     const f = fixture(kind);
-    const response = await f.app.request(`/page-content/public/${token}`, {
+    const response = await f.app.request(`/api/pages/public/${token}`, {
       headers: { cookie: "session=private" },
     });
     expect(response.status).toBe(200);
@@ -80,12 +80,12 @@ it("keeps sandbox headers through the complete API middleware and never resolves
 });
 it("returns the identical not-found response for invalid, expired, revoked or unknown tokens and revokes on the next request", async () => {
   const f = fixture();
-  const path = `/page-content/public/${token}`;
+  const path = `/api/pages/public/${token}`;
   expect((await f.app.request(path)).status).toBe(200);
   f.revoke();
   const results = await Promise.all(
-    [path, "/page-content/public/invalid", `/page-content/public/${"b".repeat(64)}`].map(
-      async (value) => f.app.request(value),
+    [path, "/api/pages/public/invalid", `/api/pages/public/${"b".repeat(64)}`].map(async (value) =>
+      f.app.request(value),
     ),
   );
   const bodies = [];
@@ -98,7 +98,7 @@ it("returns the identical not-found response for invalid, expired, revoked or un
 });
 it("rate-limits a token and a platform-owned address independently", async () => {
   const f = fixture();
-  const path = `/page-content/public/${token}`;
+  const path = `/api/pages/public/${token}`;
   for (let i = 0; i < 60; i++) expect((await f.app.request(path)).status).toBe(200);
   const tokenLimit = await f.app.request(path);
   expect(tokenLimit.status).toBe(429);
@@ -106,7 +106,7 @@ it("rate-limits a token and a platform-owned address independently", async () =>
   safeHeaders(tokenLimit);
   const fresh = fixture();
   for (let i = 0; i < 120; i++)
-    await fresh.app.request(`/page-content/public/${i.toString(16).padStart(64, "0")}`, {
+    await fresh.app.request(`/api/pages/public/${i.toString(16).padStart(64, "0")}`, {
       headers: { "x-raypx-client-ip": "192.0.2.1" },
     });
   expect(
@@ -134,7 +134,7 @@ it.each(["document", "html"] as const)(
       allowedOrigins: environment.allowedOrigins,
       readSession: async () => ({ user: { id: "member" } }) as never,
     });
-    const response = await app.request(`${origin}/page-content/member/space/page?version=1`, {
+    const response = await app.request(`${origin}/api/pages/member/space/page?version=1`, {
       headers: { origin, "sec-fetch-site": "same-origin" },
     });
     expect(response.status).toBe(200);
@@ -144,7 +144,7 @@ it.each(["document", "html"] as const)(
     );
     expect(resolve).toHaveBeenCalledExactlyOnceWith("member", "space");
     expect(f.get).toHaveBeenCalledWith(scope, "page", 1);
-    expect((await f.app.request("/page-content/member/space/page")).status).toBe(404);
+    expect((await f.app.request("/api/pages/member/space/page")).status).toBe(404);
   },
 );
 
@@ -170,8 +170,8 @@ it("serves the same hash-authorized Markdown styling for member frames and publi
     allowedOrigins: ["https://app.example"],
     readSession: async () => ({ user: { id: "member" } }) as never,
   });
-  const member = await app.request("/page-content/member/space/page");
-  const publicShare = await f.app.request(`/page-content/public/${token}`);
+  const member = await app.request("/api/pages/member/space/page");
+  const publicShare = await f.app.request(`/api/pages/public/${token}`);
   expect(member.status).toBe(200);
   expect(publicShare.status).toBe(200);
   safeHeaders(member);
@@ -207,14 +207,14 @@ it.each(["document", "html"] as const)(
           pages: page.pages,
           allowedOrigins: environment.allowedOrigins,
         }).route(
-          "/events",
+          "/api/events",
           createConversationSocketRoutes({
             stream,
             allowedOrigins: environment.allowedOrigins,
             readSession: session.readSession,
           }),
         );
-        const response = await app.request(`/page-content/public/${token}`);
+        const response = await app.request(`/api/pages/public/${token}`);
         expect(response.status).toBe(200);
         const ancestors = response.headers
           .get("content-security-policy")!
@@ -222,7 +222,7 @@ it.each(["document", "html"] as const)(
           .find((directive) => directive.startsWith("frame-ancestors "));
         expect(ancestors).toBe(`frame-ancestors ${origin}${apiOrigin ? ` ${apiOrigin}` : ""}`);
         for (const browserOrigin of [oldOrigin, "https://new.example.test"]) {
-          const request = new Request(`${environment.publicApiOrigin}/events`, {
+          const request = new Request(`${environment.publicApiOrigin}/api/events`, {
             headers: { origin: browserOrigin, upgrade: "websocket" },
           });
           expect((await app.fetch(request)).status).toBe(browserOrigin === origin ? 426 : 403);
