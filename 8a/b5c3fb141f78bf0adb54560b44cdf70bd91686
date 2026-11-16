@@ -1,43 +1,85 @@
-apps/api/AGENTS.md
-  s_806aecb5bbed19::t_01f16bdb6985a7 13-15
-apps/api/package.json
-  s_806aecb5bbed19::t_92459ec0df8d80 12
-apps/api/src/conversations/history-compaction.ts
-  s_806aecb5bbed19::t_987bb3cf756702 1-81
-apps/api/src/conversations/models.ts
-  s_806aecb5bbed19::t_554af47e652e3a 2-10,15,18,38-48,50-78,84,96,211-228,230-234
-apps/api/tests/fixtures/history-context.ts
-  s_806aecb5bbed19::t_d7efd9bf833670 1-354
-docs/development/ai.md
-  s_806aecb5bbed19::t_432f3ceacb0338 14-53
-packages/agents/AGENTS.md
-  s_806aecb5bbed19::t_f3ccbbb936fe25 85-90
-packages/agents/locales/en/agents.json
-  s_806aecb5bbed19::t_d8a2ca621bc281 101
-packages/agents/locales/zh/agents.json
-  s_806aecb5bbed19::t_342fcf2bbf4f6d 101
-packages/agents/src/conversations.ts
-  s_806aecb5bbed19::t_7e27732aa5a87a 133-135
-packages/agents/src/history-search.test.ts
-  s_806aecb5bbed19::t_e6fe3415fc4188 1-31
-packages/agents/src/history-search.ts
-  s_806aecb5bbed19::t_489798d8d538f5 1-108
-packages/agents/src/model/approvals.ts
-  s_806aecb5bbed19::t_e0b04e5599b7b0 103
-packages/agents/src/model/tool-label.ts
-  s_806aecb5bbed19::t_507d5bfd6bdf1f 17
-packages/agents/src/runner.test.ts
-  s_806aecb5bbed19::t_341aba6862b48a 80,197,467-509,716-802
-packages/agents/src/runner.ts
-  s_806aecb5bbed19::t_5b63b9eea3bddd 35-41,67-72,561,564-568,590-595,627,647,650,675-676,976-978,993-1009,1012,1044,1104-1148
-packages/agents/src/server.ts
-  s_806aecb5bbed19::t_c8bb15c4e7d567 32-38
-packages/ai/src/context.ts
-  s_806aecb5bbed19::t_7e6d687b45bfb1 2,4-28
 packages/ai/src/index.ts
-  s_806aecb5bbed19::t_8313161179fb34 30
+  s_806aecb5bbed19::t_e9b614868784c1 30
+docs/development/ai.md
+  s_806aecb5bbed19::t_484693d8a75309 32-33
+  s_806aecb5bbed19::t_f8aabf351c36ca 44-45
+  s_806aecb5bbed19::t_7a848d1bc45766 46-49,52
+  s_806aecb5bbed19::t_cf89dfd46b2b92 14-15,18-27,36,51,53
+  s_806aecb5bbed19::t_e9b614868784c1 16-17
+  s_806aecb5bbed19::t_76d85bf7582488 28-31,34-35,37-43,50
+packages/agents/src/server.ts
+  s_806aecb5bbed19::t_8583a11b03abd1 32,34-38
+  s_806aecb5bbed19::t_7e4b5ec06ad0e2 33
+packages/agents/locales/zh/agents.json
+  s_806aecb5bbed19::t_72cbcc8ca3e611 101
+packages/ai/src/context.ts
+  s_806aecb5bbed19::t_e9b614868784c1 2,10-12,18-19
+  s_806aecb5bbed19::t_66200d7839569a 4-8,20-28
+  s_806aecb5bbed19::t_0bc3a893bf7b79 9,13-17
+packages/agents/src/model/approvals.ts
+  s_806aecb5bbed19::t_72cbcc8ca3e611 103
 packages/core/src/approvals.ts
-  s_806aecb5bbed19::t_8bd697a54e4d1f 19
+  s_806aecb5bbed19::t_72cbcc8ca3e611 19
+packages/agents/src/conversations.ts
+  s_806aecb5bbed19::t_72cbcc8ca3e611 134-135
+  s_806aecb5bbed19::t_bf1b88ef937502 133
+apps/api/tests/fixtures/history-context.ts
+  s_806aecb5bbed19::t_f4a580e5566932 17-21,23-26,28-32,34-107,114-117,121,123-138,140,149,155-160,162-193,200-218,221-228,234,236-245,256,284-286,291-293,296-330,332-350,352-354
+  s_806aecb5bbed19::t_7e4b5ec06ad0e2 10,120,235
+  s_806aecb5bbed19::t_3d4b47970face4 2-5,7-9,194-199,262-277
+  s_806aecb5bbed19::t_45e8895a03a663 6,246
+  s_806aecb5bbed19::t_3ca768e0568b1a 220
+  s_9982c8d14794fa::t_d2426a603879da 1,11-16,141-148,219,229-233,287-290
+  s_806aecb5bbed19::t_f8aabf351c36ca 22,139,150-154,351
+  s_806aecb5bbed19::t_7a848d1bc45766 27,33,161,247-255,257-261,278-283,294-295,331
+  s_806aecb5bbed19::t_484693d8a75309 108-113,118-119,122
+apps/api/src/conversations/history-compaction.ts
+  s_806aecb5bbed19::t_66200d7839569a 8-10,13-24,27-29,41-47,50-81
+  s_806aecb5bbed19::t_881ace53ace3d8 38-40
+  s_9982c8d14794fa::t_452044ae0a887e 30-37
+  s_806aecb5bbed19::t_4a37dafbb8a4d4 11-12
+  s_806aecb5bbed19::t_e9b614868784c1 1-7,25-26,48-49
+packages/agents/src/runner.ts
+  s_806aecb5bbed19::t_bf1b88ef937502 68-72,976,978,1104-1109,1122-1148
+  s_806aecb5bbed19::t_8583a11b03abd1 35,37-41,591-592,994-998,1006-1009,1112-1115
+  s_806aecb5bbed19::t_434b62dd6acada 1117-1121
+  s_806aecb5bbed19::t_72cbcc8ca3e611 67,561,564-568,590,593-595,627,647,650,675-676,977,993,999-1005,1012,1044,1110,1116
+  s_806aecb5bbed19::t_7e4b5ec06ad0e2 36,1111
+packages/agents/locales/en/agents.json
+  s_806aecb5bbed19::t_72cbcc8ca3e611 101
+apps/api/AGENTS.md
+  s_806aecb5bbed19::t_8202f991bd90a0 13
+  s_806aecb5bbed19::t_76d85bf7582488 14-15
+apps/api/package.json
+  s_806aecb5bbed19::t_f4a580e5566932 12
+packages/agents/AGENTS.md
+  s_806aecb5bbed19::t_8202f991bd90a0 85-86,90
+  s_806aecb5bbed19::t_76d85bf7582488 87-89
+packages/agents/src/runner.test.ts
+  s_806aecb5bbed19::t_434b62dd6acada 476-480
+  s_806aecb5bbed19::t_c6f4dd113a76e0 508,716-736,744,748-750,754-777,781,789,792-802
+  s_806aecb5bbed19::t_4d7e9033a875b7 80,197,467-475,481-507
+  s_806aecb5bbed19::t_5fbf9483c8e970 737-743,746,751-753,778-780,782-788,791
+  s_806aecb5bbed19::t_4ef03834564c0c 745,747,790
+  s_9982c8d14794fa::t_1cc03759598a56 509
+packages/agents/src/history-search.test.ts
+  s_806aecb5bbed19::t_484693d8a75309 1-10,16,21-31
+  s_9982c8d14794fa::t_6fcad5715301b1 11-15,17-20
+packages/agents/src/model/tool-label.ts
+  s_806aecb5bbed19::t_72cbcc8ca3e611 17
+packages/agents/src/history-search.ts
+  s_806aecb5bbed19::t_7e4b5ec06ad0e2 23-27
+  s_806aecb5bbed19::t_53f2de91fd9037 53,74-77
+  s_806aecb5bbed19::t_aea03302f5d1e9 1-6,13-22,28-52,54-57,61-73,78-85,92,100-108
+  s_806aecb5bbed19::t_8583a11b03abd1 7-12,58-60,86-91,93-99
+apps/api/src/conversations/models.ts
+  s_806aecb5bbed19::t_8f9f59e8f8db36 211
+  s_806aecb5bbed19::t_434b62dd6acada 3-10,214-226
+  s_806aecb5bbed19::t_414b986885ad44 15,18,50,52-78,212-213,227-228,230-234
+  s_806aecb5bbed19::t_c30ee2dbe81a75 51
+  s_806aecb5bbed19::t_4d7e9033a875b7 84,96
+  s_806aecb5bbed19::t_8583a11b03abd1 38-48
+  s_806aecb5bbed19::t_7dade079d8e74f 2
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -49,6 +91,14 @@ packages/core/src/approvals.ts
       "agent_id": {
         "tool": "codex",
         "id": "01a1e40b-30be-72f1-aeb9-dc4a9a9de117",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_9982c8d14794fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e405-521b-74e0-8156-fbfa29fb9ed2",
         "model": "gpt-6.1-sol"
       },
       "human_author": "Zack <heyloyep@gmail.com>"
