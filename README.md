@@ -1,6 +1,7 @@
 # Raypx
 
-Raypx is the home for persistent Agents, each with one continuing conversation.
+Raypx (pronounced "ray-pix", /ˈreɪ.pɪks/) is the home for persistent Agents, each
+with one continuing conversation.
 People share Spaces to work with the same Agents. PostgreSQL owns conversations,
 Runs and permissions; Web, Desktop and Mobile render server state.
 
