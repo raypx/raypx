@@ -1,0 +1,57 @@
+apps/api/AGENTS.md
+  s_806aecb5bbed19::t_01f16bdb6985a7 13-15
+apps/api/package.json
+  s_806aecb5bbed19::t_92459ec0df8d80 12
+apps/api/src/conversations/history-compaction.ts
+  s_806aecb5bbed19::t_987bb3cf756702 1-81
+apps/api/src/conversations/models.ts
+  s_806aecb5bbed19::t_554af47e652e3a 2-10,15,18,38-48,50-78,84,96,211-228,230-234
+apps/api/tests/fixtures/history-context.ts
+  s_806aecb5bbed19::t_d7efd9bf833670 1-354
+docs/development/ai.md
+  s_806aecb5bbed19::t_432f3ceacb0338 14-53
+packages/agents/AGENTS.md
+  s_806aecb5bbed19::t_f3ccbbb936fe25 85-90
+packages/agents/locales/en/agents.json
+  s_806aecb5bbed19::t_d8a2ca621bc281 101
+packages/agents/locales/zh/agents.json
+  s_806aecb5bbed19::t_342fcf2bbf4f6d 101
+packages/agents/src/conversations.ts
+  s_806aecb5bbed19::t_7e27732aa5a87a 133-135
+packages/agents/src/history-search.test.ts
+  s_806aecb5bbed19::t_e6fe3415fc4188 1-31
+packages/agents/src/history-search.ts
+  s_806aecb5bbed19::t_489798d8d538f5 1-108
+packages/agents/src/model/approvals.ts
+  s_806aecb5bbed19::t_e0b04e5599b7b0 103
+packages/agents/src/model/tool-label.ts
+  s_806aecb5bbed19::t_507d5bfd6bdf1f 17
+packages/agents/src/runner.test.ts
+  s_806aecb5bbed19::t_341aba6862b48a 80,197,467-509,716-802
+packages/agents/src/runner.ts
+  s_806aecb5bbed19::t_5b63b9eea3bddd 35-41,67-72,561,564-568,590-595,627,647,650,675-676,976-978,993-1009,1012,1044,1104-1148
+packages/agents/src/server.ts
+  s_806aecb5bbed19::t_c8bb15c4e7d567 32-38
+packages/ai/src/context.ts
+  s_806aecb5bbed19::t_7e6d687b45bfb1 2,4-28
+packages/ai/src/index.ts
+  s_806aecb5bbed19::t_8313161179fb34 30
+packages/core/src/approvals.ts
+  s_806aecb5bbed19::t_8bd697a54e4d1f 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "8ab5c3fb141f78bf0adb54560b44cdf70bd91686",
+  "prompts": {},
+  "sessions": {
+    "s_806aecb5bbed19": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e40b-30be-72f1-aeb9-dc4a9a9de117",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
