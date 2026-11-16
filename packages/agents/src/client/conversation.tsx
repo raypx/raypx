@@ -88,6 +88,11 @@ import {
   type PageReferenceSubscription,
 } from "./page-reference.js";
 import { ComposerCard } from "./composer-card.js";
+import {
+  ConversationLoading,
+  ConversationLoadingRows,
+  conversationColumn,
+} from "./conversation-loading.js";
 import { ReplyActions } from "./reply-actions.js";
 import { ComputerFiles } from "./computer-files.js";
 import { ToolActivity } from "./tool-activity.js";
@@ -236,12 +241,7 @@ export function AgentConversation({
     socket,
     drafts,
   ]);
-  if (!controllers)
-    return (
-      <Empty role="status">
-        <EmptyTitle>{t("loading")}</EmptyTitle>
-      </Empty>
-    );
+  if (!controllers) return <ConversationLoading label={t("loading")} />;
   return (
     <ConversationContents
       item={item}
@@ -936,20 +936,22 @@ function ConversationContents({
             </div>
           </header>
         </ShellToolbar>
-        {state.connection !== "live" && state.error !== "load" && (
-          <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-            <span role="status">{t(connectionKeys[state.connection])}</span>
-            {state.connection === "reconnecting" && (
-              <IconButton
-                size="icon-sm"
-                label={t("refresh")}
-                onClick={() => controller.reconnect()}
-              >
-                <RefreshIcon aria-hidden="true" />
-              </IconButton>
-            )}
-          </div>
-        )}
+        {state.connection !== "live" &&
+          state.error !== "load" &&
+          !(state.loading && state.connection === "connecting") && (
+            <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+              <span role="status">{t(connectionKeys[state.connection])}</span>
+              {state.connection === "reconnecting" && (
+                <IconButton
+                  size="icon-sm"
+                  label={t("refresh")}
+                  onClick={() => controller.reconnect()}
+                >
+                  <RefreshIcon aria-hidden="true" />
+                </IconButton>
+              )}
+            </div>
+          )}
         {state.error && (
           <Alert variant="destructive">
             <AlertDescription>{t(errorKeys[state.error])}</AlertDescription>
@@ -1011,7 +1013,7 @@ function ConversationContents({
           >
             <div
               ref={content}
-              className="mx-auto flex min-h-full w-full min-w-0 max-w-[44rem] flex-col gap-4 px-1 pt-4 pb-6 sm:px-3"
+              className={cn(conversationColumn, "flex min-h-full flex-col gap-4 pt-4 pb-6")}
             >
               {(state.runsTruncated ||
                 state.segmentsTruncated ||
@@ -1022,11 +1024,7 @@ function ConversationContents({
               {state.toolActivityTruncated && (
                 <p className="text-xs text-muted-foreground">{t("activity.truncated")}</p>
               )}
-              {state.loading && (
-                <Empty role="status">
-                  <EmptyTitle>{t("loading")}</EmptyTitle>
-                </Empty>
-              )}
+              {state.loading && <ConversationLoadingRows label={t("loading")} />}
               {rows.length === 0 && !state.loading && state.error !== "load" && (
                 <Empty>
                   <EmptyHeader>
@@ -1487,7 +1485,7 @@ function ConversationContents({
             )}
           </div>
         </TabsContent>
-        <div className="mx-auto flex w-full min-w-0 max-w-[44rem] shrink-0 flex-col gap-2 px-1 pb-3 sm:px-3 sm:pb-4">
+        <div className={cn(conversationColumn, "flex shrink-0 flex-col gap-2 pb-3 sm:pb-4")}>
           <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
             <span key={announcement.revision}>{announcement.text}</span>
           </p>

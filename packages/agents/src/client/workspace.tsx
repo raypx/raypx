@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@raypx/ui/components/ui/select";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { FilterIcon } from "@raypx/icons/filter";
 import { CloseIcon } from "@raypx/icons/close";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
@@ -112,6 +113,7 @@ import { GroupForm, GroupParticipants } from "./group-directory.js";
 import { AgentForm } from "./agent-form.js";
 import { SpaceForm } from "./space-form.js";
 import { AgentConversation } from "./conversation.js";
+import { ConversationLoading, conversationColumn } from "./conversation-loading.js";
 import { browserConversationDrafts, browserConversationSocket } from "./browser-ports.js";
 import { useTranslations } from "./i18n.js";
 import type { ComputerScreenPort } from "../model/computer-screen.js";
@@ -681,6 +683,8 @@ function AgentsWorkspaceContents({
     selectedGroup && groupAgent
       ? { agent: groupAgent, conversation: selectedGroup.conversation }
       : page.agents.find((item) => item.agent.id === page.agentId);
+  const loadingConversation =
+    !renderWorkspace && loading && !failed && Boolean(agentId || groupId || selected);
   const rowButtons = useRef(new Map<string, HTMLElement>());
   const previousSelection = useRef<string | null>(null);
   const selectedRowId = selectedGroup?.conversation.id ?? selected?.agent.id ?? null;
@@ -1072,7 +1076,7 @@ function AgentsWorkspaceContents({
   );
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-clip">
-      {!renderWorkspace && !selected && (
+      {!renderWorkspace && !selected && !loadingConversation && (
         <ShellToolbar>
           <span className="sr-only">{t("title")}</span>
         </ShellToolbar>
@@ -1114,7 +1118,10 @@ function AgentsWorkspaceContents({
           {routinesDisabledReason && (
             <p
               id={routinesReasonId}
-              className="px-2 text-xs text-muted-foreground sidebar-icon:sr-only"
+              className={cn(
+                "px-2 text-xs text-muted-foreground sidebar-icon:sr-only",
+                loading && "sr-only",
+              )}
             >
               {routinesDisabledReason}
             </p>
@@ -1211,6 +1218,15 @@ function AgentsWorkspaceContents({
                       </InputGroupAddon>
                     )}
                   </InputGroup>
+                )}
+                {loading && !failed && page.agents.length === 0 && (
+                  <div
+                    aria-hidden="true"
+                    className="flex h-8 items-center gap-2 px-2 sidebar-icon:justify-center sidebar-icon:px-0"
+                  >
+                    <Skeleton className="size-4 shrink-0" />
+                    <Skeleton className="h-3 w-20 sidebar-icon:hidden" />
+                  </div>
                 )}
                 {!loading && page.agents.length === 0 && !homeCreateAction && (
                   <div className="mx-1 flex flex-col gap-3 rounded-xl border border-border/60 bg-background/70 p-3 sidebar-icon:border-0 sidebar-icon:bg-transparent sidebar-icon:p-0">
@@ -1443,7 +1459,15 @@ function AgentsWorkspaceContents({
           </AlertAction>
         </Alert>
       )}
-      {loading && page.agents.length === 0 && <LoadingState label={t("loading")} />}
+      {loading &&
+        !failed &&
+        (loadingConversation ? (
+          <ConversationLoading label={t("loading")} />
+        ) : (
+          <div className={conversationColumn}>
+            <LoadingState label={t("loading")} />
+          </div>
+        ))}
       {client.protectedInputs && page.spaceId && (renderWorkspace || !selected) && (
         <ProtectedInputs
           key={page.spaceId}

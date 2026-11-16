@@ -1266,6 +1266,11 @@ it("shows no Spaces, loading, and a directory failure with an explicit retry", a
 
 it("loads a conversation with one focus action and keeps failed loads retryable while editing", async () => {
   const test = fixture();
+  let finishDirectory!: (value: AgentConversationView[]) => void;
+  const directory = new Promise<AgentConversationView[]>((resolve) => {
+    finishDirectory = resolve;
+  });
+  test.client.agents.list = () => directory;
   let finish!: (snapshot: ConversationSnapshot) => void;
   test.readSnapshot.mockImplementationOnce(
     () =>
@@ -1274,10 +1279,15 @@ it("loads a conversation with one focus action and keeps failed loads retryable 
       }),
   );
   test.mount(true);
+  await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(en.agents.loading));
+  expect(screen.queryByRole("textbox", { name: "Message" })).not.toBeInTheDocument();
+  await act(async () => finishDirectory([{ agent, conversation }]));
   await screen.findByRole("log");
+  expect(within(screen.getByRole("log")).getByRole("status")).toHaveTextContent(en.agents.loading);
   expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
   await act(async () => finish({ conversation, messages: [], runs: [], segments: [], cursor: 0 }));
   await screen.findByText("Start a conversation");
+  expect(screen.queryByText(en.agents.loading)).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Write a message" }));
   expect(screen.getByRole("textbox", { name: "Message" })).toHaveFocus();
   test.readSnapshot.mockRejectedValueOnce(new Error("private diagnostic"));
