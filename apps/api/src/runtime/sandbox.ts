@@ -4,7 +4,11 @@ import { computers, sandboxConfiguration } from "@raypx/database/schema";
 import { ComputerError, type ComputerProvider, type ComputerRef } from "@raypx/providers/computer";
 import { createDockerComputerProvider } from "@raypx/providers/computer/docker";
 import { createE2bComputerProvider } from "@raypx/providers/computer/e2b";
-import { sandboxCipher, sandboxCredentialTarget } from "../config/sandbox.js";
+import {
+  sandboxCipher,
+  sandboxCredentialTarget,
+  sandboxSettingsId,
+} from "../config/sandbox-initialization.js";
 import type { ConfigReads } from "../config/reads.js";
 import { postgresE2bPlacement } from "./e2b-placement.js";
 
@@ -15,7 +19,7 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
     const [row] = await db
       .select()
       .from(sandboxConfiguration)
-      .where(eq(sandboxConfiguration.id, "sandbox"));
+      .where(eq(sandboxConfiguration.id, sandboxSettingsId));
     return row;
   });
   const protectedValues = new Set<string>();

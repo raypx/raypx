@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 import { migrateDatabase } from "@raypx/database";
-import { initializeSandbox } from "./sandbox.js";
+import { initializeSandbox } from "./sandbox-initialization.js";
 import { sandboxUpdateSchema, resendUpdateSchema } from "@raypx/contracts/api";
 import { configureRuntimeRole } from "./migration-runtime-role.js";
 import { initializeResend } from "./resend.js";

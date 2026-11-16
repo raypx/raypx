@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import type { Database } from "@raypx/database/connection";
 import { createMemoryComputerProvider, type ComputerProvider } from "@raypx/providers/computer";
-import { sandboxCipher } from "../config/sandbox.js";
+import { sandboxCipher } from "../config/sandbox-initialization.js";
 import { createConfigReads } from "../config/reads.js";
 import { databaseComputerProvider } from "./sandbox.js";
 

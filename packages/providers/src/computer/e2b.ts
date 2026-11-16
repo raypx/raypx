@@ -18,8 +18,6 @@ import {
   type ProviderComputer,
 } from "./port.js";
 
-export const e2bBaseTemplate = "base";
-
 const helper = "/opt/raypx/e2b.py";
 const python = ["/usr/bin/env", "python3", "-I"];
 const guestEnvironment = { PATH: "/usr/local/bin:/usr/bin:/bin" };

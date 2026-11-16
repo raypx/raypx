@@ -1,28 +1,21 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import { sandboxConfiguration } from "@raypx/database/schema";
-import {
-  sandboxUpdateSchema,
-  type SandboxSettingsSnapshot,
-  type SandboxSettingsUpdate,
-} from "@raypx/contracts/api";
+import { sandboxUpdateSchema, type SandboxSettingsSnapshot } from "@raypx/contracts/api";
 import { testDockerComputerConnection } from "@raypx/providers/computer/docker";
-import { e2bBaseTemplate, testE2bConnection } from "@raypx/providers/computer/e2b";
+import { testE2bConnection } from "@raypx/providers/computer/e2b";
 import type { AuditService } from "../admin/audit.js";
-import { configurationCipher } from "./credentials.js";
+import {
+  e2bBaseTemplate,
+  sandboxCipher,
+  sandboxCredentialTarget,
+  sandboxSettingsId as id,
+} from "./sandbox-initialization.js";
 import { writeAuditedSetting } from "./audited-write.js";
 import type { ConfigReads } from "./reads.js";
 import { ConfigError } from "./service.js";
 import type { SandboxSettingsService } from "./types.js";
 
-const id = "sandbox";
-export function sandboxCipher(secret: string) {
-  return configurationCipher(secret, "raypx/sandbox-configuration/v1", id);
-}
-export function sandboxCredentialTarget(row: { provider: string; url: string | null }) {
-  if (row.provider === "e2b") return "e2b:https://api.e2b.app";
-  return row.url ?? "";
-}
 const summary = {
   provider: sandboxConfiguration.provider,
   url: sandboxConfiguration.url,
@@ -57,27 +50,6 @@ function snapshot(
     revision,
     updatedAt: updatedAt.toISOString(),
   };
-}
-export async function initializeSandbox(
-  db: Pick<Database, "insert">,
-  secret: string,
-  input: SandboxSettingsUpdate,
-) {
-  const { values, credential } = sandboxUpdateSchema.parse(input);
-  if (values.provider !== "none" && !credential) throw new ConfigError("INVALID_INPUT");
-  const credentials = credential
-    ? await sandboxCipher(secret).seal(credential, sandboxCredentialTarget(values))
-    : null;
-  await db
-    .insert(sandboxConfiguration)
-    .values({
-      id,
-      ...values,
-      credentials,
-      revision: 1,
-      template: values.provider === "e2b" ? e2bBaseTemplate : null,
-    })
-    .onConflictDoNothing();
 }
 export function createSandboxSettings(
   db: Database,

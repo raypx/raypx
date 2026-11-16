@@ -53,3 +53,15 @@ it("runs the images unprivileged and keeps migration inputs separate", () => {
   expect(api.get("deploy")?.from).toBe("runtime");
   expect(api.get("deploy")?.lines.join("\n")).toContain("COPY --from=migration-payload");
 });
+
+it("bundles the API migration entrypoint with Bun for the deployment image", async () => {
+  const bundle = await Bun.build({
+    entrypoints: [join(root, "apps/api/src/config/migrate.ts")],
+    target: "bun",
+    format: "esm",
+    minify: true,
+    packages: "bundle",
+    env: "disable",
+  });
+  expect(bundle.outputs).toHaveLength(1);
+});
