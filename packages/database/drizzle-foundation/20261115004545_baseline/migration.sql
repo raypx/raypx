@@ -123,22 +123,6 @@ CREATE TABLE "approval_settings" (
 	CONSTRAINT "approval_settings_mode_check" CHECK ("mode" in ('ask', 'never', 'auto'))
 );
 --> statement-breakpoint
-CREATE TABLE "computer_e2b_homes" (
-	"space_id" text,
-	"computer_id" text,
-	"template" text NOT NULL,
-	"sandbox_id" text,
-	"sandbox_generation" bigint,
-	"create_key" text,
-	"ready" boolean DEFAULT false NOT NULL,
-	"destroyed" boolean DEFAULT false NOT NULL,
-	"home_revision" text,
-	"archive" jsonb,
-	CONSTRAINT "computer_e2b_homes_pkey" PRIMARY KEY("space_id","computer_id"),
-	CONSTRAINT "computer_e2b_instance_check" CHECK (("create_key" is null or "sandbox_generation" is not null) and ("sandbox_id" is null or "sandbox_generation" is not null) and (not "ready" or "sandbox_id" is not null)),
-	CONSTRAINT "computer_e2b_archive_check" CHECK (("home_revision" is null and "archive" is null) or ("home_revision" is not null and "home_revision" ~ '^[a-f0-9]{64}$' and "archive" is not null and octet_length("archive"::text) <= 71303168))
-);
---> statement-breakpoint
 CREATE TABLE "computer_screen_controls" (
 	"space_id" text,
 	"computer_id" text,
@@ -179,13 +163,11 @@ CREATE TABLE "computers" (
 	"lease_expires_at" timestamp with time zone,
 	"lease_fence" bigint DEFAULT 0 NOT NULL,
 	"supervisor_url" text,
-	"e2b_placed" boolean DEFAULT false NOT NULL,
 	"failure_code" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "computers_pkey" PRIMARY KEY("space_id","id"),
 	CONSTRAINT "computers_scope_check" CHECK (("scope" = 'team' and "agent_id" is null) or ("scope" = 'private' and "agent_id" is not null) or ("scope" = 'device' and "agent_id" is null)),
-	CONSTRAINT "computers_placement_check" CHECK (not "e2b_placed" or ("supervisor_url" is null and "provider" = 'sandbox')),
 	CONSTRAINT "computers_provider_check" CHECK ("provider" in ('memory', 'sandbox', 'device')),
 	CONSTRAINT "computers_state_check" CHECK ("state" in ('stopped', 'starting', 'running', 'stopping', 'failed', 'destroyed')),
 	CONSTRAINT "computers_generation_check" CHECK ("generation" > 0 and "generation" <= 9007199254740991 and "lease_fence" >= 0 and "lease_fence" <= 9007199254740991),
@@ -1090,7 +1072,6 @@ CREATE TABLE "sandbox_configuration" (
 	"id" text PRIMARY KEY,
 	"provider" text NOT NULL,
 	"url" text,
-	"template" text,
 	"screen" boolean NOT NULL,
 	"credentials" text,
 	"revision" integer NOT NULL,
@@ -1436,7 +1417,6 @@ ALTER TABLE "approval_requests" ADD CONSTRAINT "approval_requests_NyTlPyvU1bAr_f
 ALTER TABLE "approval_requests" ADD CONSTRAINT "approval_requests_MO9IML6PoB8W_fkey" FOREIGN KEY ("space_id","conversation_id","run_id","answered_by_account_id") REFERENCES "conversation_runs"("space_id","conversation_id","id","member_account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "approval_rules" ADD CONSTRAINT "approval_rules_account_id_user_id_fkey" FOREIGN KEY ("account_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "approval_settings" ADD CONSTRAINT "approval_settings_account_id_user_id_fkey" FOREIGN KEY ("account_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
-ALTER TABLE "computer_e2b_homes" ADD CONSTRAINT "computer_e2b_homes_qZksMmOBP7yl_fkey" FOREIGN KEY ("space_id","computer_id") REFERENCES "computers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computer_screen_controls" ADD CONSTRAINT "computer_screen_controls_uqO47s9zW1Mc_fkey" FOREIGN KEY ("space_id","computer_id") REFERENCES "computers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computer_screen_controls" ADD CONSTRAINT "computer_screen_controls_KHbUT1oCzHV4_fkey" FOREIGN KEY ("space_id","account_id") REFERENCES "space_members"("space_id","account_id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "computer_screen_viewers" ADD CONSTRAINT "computer_screen_viewers_6MCQUVXEIQoF_fkey" FOREIGN KEY ("space_id","computer_id") REFERENCES "computers"("space_id","id") ON DELETE CASCADE;--> statement-breakpoint

@@ -1,0 +1,381 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "07bc98cd-bcfc-4a38-97fb-e4eff49ef59e",
+  "prevIds": [
+    "490f2f3f-f490-49fe-9b0e-fc938684a168"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_e2b_homes"
+      ],
+      "writes": [
+        "s|tbl|public.computer_e2b_homes",
+        "n|tbl|public.computer_e2b_homes",
+        "e|tbl|public.computer_e2b_homes",
+        "n|rel|public.computer_e2b_homes",
+        "n|type|public.computer_e2b_homes",
+        "n|rel|public.computer_e2b_homes_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "computers",
+        "e2b_placed"
+      ],
+      "writes": [
+        "s|col|public.computers.e2b_placed",
+        "n|col|public.computers.e2b_placed",
+        "e|col|public.computers.e2b_placed"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "sandbox_configuration",
+        "template"
+      ],
+      "writes": [
+        "s|col|public.sandbox_configuration.template",
+        "n|col|public.sandbox_configuration.template",
+        "e|col|public.sandbox_configuration.template"
+      ],
+      "reads": [
+        "n|tbl|public.sandbox_configuration",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_e2b_homes"
+      ],
+      "writes": [
+        "s|fk|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey",
+        "n|fk|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey",
+        "e|fk|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey",
+        "n|con|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computer_e2b_homes",
+        "n|sch|public",
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computer_e2b_homes.space_id",
+        "n|col|public.computer_e2b_homes.computer_id",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.id",
+        "e|uniqueness|public.computers.id.space_id"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "computers"
+      ],
+      "writes": [
+        "s|ck|public.computers.computers_placement_check",
+        "n|ck|public.computers.computers_placement_check",
+        "e|ck|public.computers.computers_placement_check",
+        "n|con|public.computers.computers_placement_check"
+      ],
+      "reads": [
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computers.e2b_placed",
+        "n|col|public.computers.supervisor_url",
+        "n|col|public.computers.provider"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "computer_e2b_homes",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "computer_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "template",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "sandbox_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "sandbox_generation",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "create_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "ready",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "destroyed",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "home_revision",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "archive",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "e2b_placed",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "sandbox_configuration",
+        "name": "template",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "computer_e2b_homes_qZksMmOBP7yl_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "computer_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "computers",
+        "columnsTo": [
+          "space_id",
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "computer_e2b_homes_pkey",
+        "columns": [
+          "space_id",
+          "computer_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "computer_e2b_instance_check",
+        "value": "(\"create_key\" is null or \"sandbox_generation\" is not null) and (\"sandbox_id\" is null or \"sandbox_generation\" is not null) and (not \"ready\" or \"sandbox_id\" is not null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computer_e2b_homes",
+        "name": "computer_e2b_archive_check",
+        "value": "(\"home_revision\" is null and \"archive\" is null) or (\"home_revision\" is not null and \"home_revision\" ~ '^[a-f0-9]{64}$' and \"archive\" is not null and octet_length(\"archive\"::text) <= 71303168)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "computers",
+        "name": "computers_placement_check",
+        "value": "not \"e2b_placed\" or (\"supervisor_url\" is null and \"provider\" = 'sandbox')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

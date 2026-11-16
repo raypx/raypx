@@ -36,8 +36,7 @@ it("serializes independent migration processes and does not reapply committed hi
   const results = await Promise.all([worker(), worker(), worker()]);
   expect(results.map(([code]) => code)).toEqual([0, 0, 0]);
   const expected = (await readdir(migrations)).sort();
-  expect(expected).toHaveLength(1);
-  expect(expected[0]).toMatch(/^\d{14}_baseline$/);
+  expect(expected[0]).toBe("20261115004545_baseline");
   const rows = await connection.db.execute<{ name: string }>(sql`
     select name from public.__drizzle_migrations order by name
   `);

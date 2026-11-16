@@ -40,10 +40,10 @@ Rules for every phase:
 - A phase removes the code and guides it replaces. It adds no compatibility path
   and no import of earlier data.
 
-The disposable, unreleased `next` PostgreSQL schema now has one generated baseline.
-Database-free migration coverage checks its current tables and columns; clean
-PostgreSQL 17 application and concurrent-startup acceptance passed on an empty
-disposable database on 2026-11-14. Released changes will append migrations.
+Railway `next` uses the deployed PostgreSQL foundation baseline. Schema changes
+append migrations to that baseline. Database-free checks cover the migration
+chain, tables and columns. PostgreSQL 17 acceptance covers clean application,
+upgrades and concurrent startup on isolated databases.
 
 ## 1. Conversation
 

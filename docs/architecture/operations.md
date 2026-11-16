@@ -44,12 +44,10 @@ starts. Each missing capability is an explicit state in the product.
 
 ## Deploys
 
-- The unreleased `next` database is disposable. Its migration payload now contains
-  one generated baseline, `20261114101502_baseline`, rather than the earlier chain.
-  Use a fresh, isolated database for this baseline; an existing disposable `next`
-  database must be recreated explicitly by its operator. This is not an upgrade
-  procedure and imports no earlier schema, ledger or data. Never reset or migrate
-  a retired/operator database. Later releases append migrations to this baseline.
+- The Railway `next` database has applied `20261115004545_baseline`. Keep that
+  baseline and its ledger entry intact. E2B and subsequent schema changes append
+  generated migrations. New installations apply the same chain to a fresh,
+  isolated Raypx database.
 - Baseline SQL and its snapshot were generated offline from `src/schema.ts` using
   the repository launcher, from `packages/database`:
   `bun --bun raypx-drizzle-kit generate --dialect postgresql --schema ./src/schema.ts --out /private/tmp/raypx-next-baseline --name baseline`.
@@ -57,9 +55,9 @@ starts. Each missing capability is an explicit state in the product.
   use `bun run db:generate` and retain the committed history. Composite constraints
   remain in the schema; content-free NOTIFY calls remain in feature transactions.
   There are no migration-only triggers or notification functions to relocate.
-- Startup and explicit `bun run db:migrate` still serialize through one transaction
+- Startup and explicit `bun run db:migrate` serialize through one transaction
   advisory lock and commit the public ledger with schema changes. Database-free
-  tests verify the single generated baseline and current table/column coverage;
+  tests verify the deployed baseline, snapshot chain and current table/column coverage.
   `TEST_DATABASE_URL=<disposable-test-url> bun run --cwd apps/api test:postgres`
   verifies clean application, concurrent startup, retries and rollback separately.
   Local PostgreSQL 17 acceptance covers the baseline and startup checks.

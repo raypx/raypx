@@ -79,9 +79,8 @@ recovery fields ship with their writers in later phases.
 ## Migrations
 
 - Drizzle owns the schema and the migration ledger in `public`.
-- The unreleased, disposable `next` database starts from one generated baseline
-  in `packages/database/drizzle-foundation`. It has no upgrade/import path from
-  the earlier migration chain. Subsequent released changes append migrations.
+- The Raypx foundation uses the deployed baseline and additive migrations in
+  `packages/database/drizzle-foundation`. Keep applied migrations in that chain.
 - A deploy keeps the previous release running briefly after migrations apply. Every
   migration must work with the previous release's code. Adding a table or column is
   safe.

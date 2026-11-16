@@ -105,9 +105,9 @@ never replace direct dispatch. Runtime construction does not query these tables.
 ## Constraints
 
 Use postgres.js and Drizzle. Application tables and `public.__drizzle_migrations`
-live in the dedicated Raypx database. `drizzle-foundation` starts with one generated
-baseline for the disposable, unreleased `next` database. Subsequent changes append
-generated migrations; never edit generated SQL or snapshots. No earlier schema or
+live in the dedicated Raypx database. `drizzle-foundation` starts with the
+`20261115004545_baseline` deployed on Railway `next`. Append generated migrations
+after that baseline and preserve applied SQL and snapshots. No retired schema or
 ledger is imported. Composite constraints stay in the Drizzle schema; content-free
 NOTIFY calls stay in feature transactions, rather than migration-only functions.
 No reset/drop command or runtime dependency on auth, tooling or apps.
@@ -201,7 +201,7 @@ resolves current Space membership before exposing metadata or dispatching tools.
 
 Device Computer state uses current connector records: `device_computers` stores account/origin-bound restricted-credential digests and expiring connection fences; `device_computer_pairings` stores one-use five-minute hashes. `device_space_devices`, `device_directory_grants` and `device_computer_selections` use composite same-Space/member ownership keys. Each directory grant references a device Computer. `device_connector_operations/events` retain bounded sequenced outcomes before ACK and cascade with the original Run. Command audit intents and terminal outcomes are append-only Space evidence; credentials and private output are never logs. Approval requests add nullable bounded device presentation metadata. The generated disposable baseline is recorded below.
 
-protected_input_requests binds Space/Conversation/Run/actor and one canonical call hash. Only answered rows may hold the encrypted envelope; consumption, expiry and cancellation clear all envelope columns. Same-Space actor foreign keys cascade with Runs. The regenerated disposable baseline is 20261114143549_baseline.
+protected_input_requests binds Space/Conversation/Run/actor and one canonical call hash. Only answered rows may hold the encrypted envelope; consumption, expiry and cancellation clear all envelope columns. Same-Space actor foreign keys cascade with Runs.
 
 MCP server metadata adds nullable per_call_secret_header; values remain outside that table. Connector protected values and value digests never enter operation/event rows.
 
@@ -211,9 +211,9 @@ identities. `device_member_file_reads` is expiring routing state.
 `member_notification_reads` and `member_conversation_views` store member read/view
 state only; sources remain authoritative. All relationships include Space scope.
 
-account_bootstrap is the permanent deployment-lifetime claim, independent of user deletion. user.email_verification_skipped records no-mail account admission without claiming email ownership. space_invitations.registration_account_id binds one new account before explicit Space acceptance; it is historical attribution, not membership. The current unreleased baseline was regenerated once for these schema changes.
+account_bootstrap is the permanent deployment-lifetime claim, independent of user deletion. user.email_verification_skipped records no-mail account admission without claiming email ownership. space_invitations.registration_account_id binds one new account before explicit Space acceptance; it is historical attribution, not membership.
 
-sandbox_configuration holds revisioned deployment provider/URL/Screen settings and encrypted credentials. computers.supervisor_url is private placement, excluded from domain projections/events. The unreleased foundation remains exactly one regenerated baseline; deployed test databases require a wipe, with no incremental migration/backfill.
+sandbox_configuration holds revisioned deployment provider/URL/Screen settings and encrypted credentials. computers.supervisor_url is private placement, excluded from domain projections/events.
 
 `computer_e2b_homes` retains the private E2B placement, admitted generation,
 creation receipt and bounded last known-good portable home. It cascades with

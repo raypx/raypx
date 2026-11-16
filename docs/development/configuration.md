@@ -8,8 +8,8 @@ server or configuration package.
 
 1. Create a fresh isolated PostgreSQL database. Set `DATABASE_URL`, `PUBLIC_URL`,
    optional `API_PUBLIC_URL` for a separate API origin, and independent `AUTH_SECRET` and `APP_KEY` values.
-   Apply the single current baseline with `bun run --cwd apps/api db:migrate`
-   (or let the documented startup migration apply it). Never apply this baseline
+   Apply the foundation migrations with `bun run --cwd apps/api db:migrate`
+   (or let the documented startup migration apply them). Never apply this chain
    to an earlier/operator database.
 2. Before public exposure, set optional API-only `SETUP_TOKEN` to a private random
    value of 32–512 printable ASCII characters. For example, generate one locally

@@ -40,8 +40,8 @@ sessions and rate limits. Device Auto approval remains forbidden. Browser Origin
 is refused on possession routes. Credentials never enter URLs or diagnostics.
 Authentication security changes revoke account connectors.
 
-Startup applies the single foundation baseline unless explicitly disabled.
-Never apply it to an operator/retired database or import old state. Maintenance
+Startup applies pending foundation migrations unless explicitly disabled.
+Never apply them to an operator/retired database or import old state. Maintenance
 cleanup is Nitro-gated by JOBS_ENABLED and deletes expired auth/rate-limit records
 in bounded locked batches. No production HTTP job runner exists.
 
