@@ -1,0 +1,46 @@
+packages/agents/src/client/browser-ports.ts
+  s_7f9362525d805b::t_fbb06f1793232e 25,46,51,57
+  s_7f9362525d805b::t_dcc16c52a05680 58-60
+apps/api/tests/helpers/production-acceptance.ts
+  s_7f9362525d805b::t_0cf71641811762 1-11,13-16,18-26,28-50
+  s_7f9362525d805b::t_a800c2cc114e90 12,17,27
+apps/api/tests/fixtures/production-acceptance.ts
+  s_7f9362525d805b::t_0cf71641811762 1-3,5-9,11-15,17-21,23-24
+  s_7f9362525d805b::t_93a6d3b01f290b 4,10,16,22
+packages/dev-cli/src/validation/deployment-production.ts
+  s_7f9362525d805b::t_0cf71641811762 58-70,72,74,76,202,224,229-230
+  s_7f9362525d805b::t_8da93293aaaf5d 71,73
+apps/api/tests/production/restart.test.ts
+  s_7f9362525d805b::t_0cf71641811762 7-8,10,51-52,151
+  s_7f9362525d805b::t_a51f160e3bf020 9
+apps/api/src/app/server.ts
+  s_7f9362525d805b::t_e2e224554ad89b 25-33
+  s_7f9362525d805b::t_4be44fc6c58c81 12,14,21
+packages/client/src/origin-recovery.ts
+  s_7f9362525d805b::t_fbb06f1793232e 66-69
+  s_7f9362525d805b::t_c897cc8df40b6e 70-71
+apps/api/src/middleware/http.ts
+  s_7f9362525d805b::t_fbb06f1793232e 93
+apps/web/e2e/production-restart.spec.ts
+  s_7f9362525d805b::t_0cf71641811762 26
+apps/cli/src/runtime/daemon/desktop/api.ts
+  s_7f9362525d805b::t_4be44fc6c58c81 197
+apps/desktop/src/router-settings.component.test.tsx
+  s_7f9362525d805b::t_703d720bf68ce0 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e1b55d13e892cfa77e01c4ff0ec37af7649c438e",
+  "prompts": {},
+  "sessions": {
+    "s_7f9362525d805b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e2-b18c-79c0-acca-50ae949d3042",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
