@@ -1,0 +1,72 @@
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_7f9362525d805b::t_88dacf6a972919 233,556-565,571
+  s_7f9362525d805b::t_2315e849bd5b00 566-570
+apps/api/src/middleware/http.ts
+  s_7f9362525d805b::t_2315e849bd5b00 86-92
+  s_7f9362525d805b::t_88dacf6a972919 46
+apps/api/vite.app.config.ts
+  s_7f9362525d805b::t_2315e849bd5b00 18-20
+  s_7f9362525d805b::t_88dacf6a972919 11
+packages/dev-cli/src/validation/deployment-production.ts
+  s_7f9362525d805b::t_2315e849bd5b00 39-42,69-72
+  s_7f9362525d805b::t_88dacf6a972919 43
+docs/development/deployment.md
+  s_7f9362525d805b::t_2315e849bd5b00 445-449,566-583
+turbo.json
+  s_7f9362525d805b::t_2315e849bd5b00 6-14
+e2e/tests/helpers/account-fixture.ts
+  s_7f9362525d805b::t_898831140a74cc 7-10
+apps/web/e2e/deployment.spec.ts
+  s_7f9362525d805b::t_33cc938f175d91 3,8-9,25,29-30,34-35
+  s_7f9362525d805b::t_2315e849bd5b00 4-7,10-24,26-28,31-33
+  s_7f9362525d805b::t_bc86d6e30cf069 1-2
+packages/contracts/src/config.ts
+  s_7f9362525d805b::t_88dacf6a972919 29-30,37
+apps/api/src/middleware/relay-headers.ts
+  s_7f9362525d805b::t_88dacf6a972919 6
+apps/web/locales/zh/site.json
+  s_7f9362525d805b::t_898831140a74cc 2-3
+apps/api/src/routers/rpc/config.ts
+  s_7f9362525d805b::t_88dacf6a972919 2,54
+packages/dev-cli/src/validation/deployment-public.test.ts
+  s_7f9362525d805b::t_898831140a74cc 28,65,76
+  s_7f9362525d805b::t_2315e849bd5b00 4-6,17-21
+docs/development/railway.md
+  s_7f9362525d805b::t_2315e849bd5b00 289-305
+infra/railway/Dockerfile
+  s_7f9362525d805b::t_88dacf6a972919 2-6
+apps/web/src/features/config/deployment-boundary.tsx
+  s_7f9362525d805b::t_2315e849bd5b00 27-31
+  s_7f9362525d805b::t_898831140a74cc 1-26,32-37
+infra/railway/Caddyfile
+  s_7f9362525d805b::t_88dacf6a972919 16
+apps/web/locales/en/site.json
+  s_7f9362525d805b::t_898831140a74cc 2-3
+infra/railway/stack.test.ts
+  s_7f9362525d805b::t_33cc938f175d91 19
+  s_7f9362525d805b::t_2315e849bd5b00 20-22
+apps/web/vite.app.config.ts
+  s_7f9362525d805b::t_88dacf6a972919 8,31,51
+apps/web/src/routes/__root.tsx
+  s_7f9362525d805b::t_898831140a74cc 23,111
+apps/api/tests/integration/config.test.ts
+  s_7f9362525d805b::t_d9a3811ec9be67 100,283
+docs/architecture/operations.md
+  s_7f9362525d805b::t_0739fa19b294b1 223-227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0f8ae3f1b81496922e4519f9af41c08a806e253b",
+  "prompts": {},
+  "sessions": {
+    "s_7f9362525d805b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e2-b18c-79c0-acca-50ae949d3042",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
