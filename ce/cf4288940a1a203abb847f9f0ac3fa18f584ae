@@ -1,0 +1,47 @@
+apps/web/e2e/sidebar.spec.ts
+  s_de5c5bfaaee2d9::t_0c7552c0ec257c 1-2
+apps/desktop/e2e/sidebar.spec.ts
+  s_de5c5bfaaee2d9::t_0c7552c0ec257c 1-2
+e2e/tests/journeys/sidebar.ts
+  s_de5c5bfaaee2d9::t_0c7552c0ec257c 1-36,39-40,44-45,68-167,172-188,194-199,203-310,321,325,332,336,340,344,411-416
+  s_de5c5bfaaee2d9::t_2074564f812d3f 37-38,47-67,168-171,189-193,202,351-410
+  s_de5c5bfaaee2d9::t_548680049df337 41-43,46,200-201,311-320,322-324,326-331,333-335,337-339,341-343,345-350
+apps/desktop/e2e/events-close.spec.ts
+  s_de5c5bfaaee2d9::t_3c0ff910cf060e 123
+apps/web/e2e/agents.spec.ts
+  s_de5c5bfaaee2d9::t_4c91117fd422e1 3,119,209,315
+apps/web/e2e/model-connections.spec.ts
+  s_de5c5bfaaee2d9::t_98186b2f717e02 1,14,19,61
+apps/web/e2e/theme-final.spec.ts
+  s_de5c5bfaaee2d9::t_512f812918df87 278
+e2e/AGENTS.md
+  s_de5c5bfaaee2d9::t_8348c4badead67 177-184
+e2e/playwright.config.ts
+  s_de5c5bfaaee2d9::t_2dfe84cd89a375 40,50
+e2e/tests/helpers/account-fixture.ts
+  s_de5c5bfaaee2d9::t_dbdf8d1c1f26fb 4
+e2e/tests/helpers/browser-fixture.ts
+  s_de5c5bfaaee2d9::t_c67e7623ae39b6 22-32
+e2e/tests/helpers/serve-desktop.ts
+  s_de5c5bfaaee2d9::t_b3bc1e049256db 1,7
+e2e/tests/helpers/serve-web.ts
+  s_de5c5bfaaee2d9::t_8842b06321f39b 1,7
+e2e/tests/helpers/surfaces.ts
+  s_de5c5bfaaee2d9::t_e4d7906d38960d 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "cecf4288940a1a203abb847f9f0ac3fa18f584ae",
+  "prompts": {},
+  "sessions": {
+    "s_de5c5bfaaee2d9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e8-47cf-7651-994f-ba1c53ca3e94",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
