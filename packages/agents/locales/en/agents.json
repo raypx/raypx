@@ -144,6 +144,16 @@
     "duration": "{seconds} s",
     "exitStatus": "Exit status {status}",
     "truncated": "Showing the latest 100 tool calls.",
+    "refusal": {
+      "tool": "Tool call",
+      "generic": "The tool call was rejected before it ran.",
+      "unavailable": "This tool is unavailable to the Run.",
+      "invalidArguments": "The tool call has missing or invalid arguments.",
+      "truncatedArguments": "The model reached its output limit before completing this tool call.",
+      "secretInput": "The tool call contains protected information.",
+      "secretOutput": "This tool call could expose protected information.",
+      "computerUnavailable": "The computer needed for this tool is unavailable."
+    },
     "outcomes": {
       "running": "In progress",
       "succeeded": "Succeeded",

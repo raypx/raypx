@@ -144,6 +144,16 @@
     "duration": "{seconds}秒",
     "exitStatus": "退出状态{status}",
     "truncated": "显示最近100次工具调用。",
+    "refusal": {
+      "tool": "工具调用",
+      "generic": "工具调用在执行前被拦下。",
+      "unavailable": "本次运行无法使用该工具。",
+      "invalidArguments": "工具调用缺少参数，或参数格式无效。",
+      "truncatedArguments": "模型达到输出上限，未能生成完整的工具调用。",
+      "secretInput": "工具调用包含受保护的信息。",
+      "secretOutput": "此工具调用可能暴露受保护的信息。",
+      "computerUnavailable": "此工具所需的计算机不可用。"
+    },
     "outcomes": {
       "running": "进行中",
       "succeeded": "已成功",

@@ -336,7 +336,7 @@ function model() {
     input: ModelTurn;
     run: Run;
     signal: AbortSignal;
-    complete(text?: string, tools?: ToolCall[]): void;
+    complete(text?: string, tools?: ToolCall[], stopReason?: AssistantMessage["stopReason"]): void;
     fail(error: AiError): void;
   }> = [];
   let missing = false;
@@ -369,8 +369,9 @@ function model() {
             run: structuredClone(run),
             input: structuredClone(input),
             signal,
-            complete(text = "", tools = []) {
-              stream.end(result(text, tools));
+            complete(text = "", tools = [], stopReason) {
+              const message = result(text, tools);
+              stream.end(stopReason === undefined ? message : { ...message, stopReason });
             },
             fail(error) {
               rejected = error;
@@ -794,6 +795,57 @@ it("publishes lifecycle for approval-free reads and refused writes without argum
   });
   expect(JSON.stringify(db.toolEvents)).not.toContain("Recorded once");
   expect(tools.writes).not.toHaveBeenCalled();
+});
+
+it.each([
+  { text: "The write was not saved.", state: "succeeded" },
+  { text: "", state: "failed" },
+] as const)("handles a truncated tool call followed by a $state reply", async ({ text, state }) => {
+  const db = store();
+  const fixture = await toolFixture(db);
+  const modelFixture = model();
+  const commitTurn = vi.spyOn(db.repository, "commitTurn");
+  const executor = runner(db, modelFixture.models, {
+    tools: fixture.tools(),
+    approvals: fixture.approvals,
+  });
+  await send(executor);
+  await advance();
+  modelFixture.calls[0]!.complete(
+    "",
+    [
+      {
+        ...writeCall,
+        arguments: {},
+        argumentsError: "raw incomplete arguments",
+      },
+    ],
+    "length",
+  );
+  await advance();
+  expect(commitTurn.mock.calls[0]?.[2].tools).toEqual([
+    {
+      toolCallId: "refused-1-0",
+      toolName: "refused_tool",
+      target: writeCall.name,
+      argumentSummary: "TOOL_ARGUMENTS_TRUNCATED",
+    },
+  ]);
+  const continuation = modelFixture.calls[1]!.input.continuation;
+  expect(continuation).toEqual([
+    expect.objectContaining({
+      role: "system",
+      content: expect.stringContaining("TOOL_ARGUMENTS_TRUNCATED"),
+    }),
+  ]);
+  expect(JSON.stringify(continuation)).toContain(writeCall.name);
+  expect(JSON.stringify(db.rows[0]!.checkpoint)).not.toContain("raw incomplete arguments");
+  expect(fixture.writes).not.toHaveBeenCalled();
+  expect(fixture.requests.size).toBe(0);
+  modelFixture.calls[1]!.complete(text);
+  await advance();
+  expect(db.rows[0]!.run.state).toBe(state);
+  expect(db.rows[0]!.run.failureCode).toBe(text ? null : "MODEL_FAILED");
 });
 
 it("commits lifecycle for every pending call before approval and cancels later calls on stop", async () => {

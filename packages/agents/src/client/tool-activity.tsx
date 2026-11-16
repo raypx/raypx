@@ -32,6 +32,14 @@ const interactionCodes = {
   DELEGATION_TOTAL_LIMIT: "DELEGATION_TOTAL_LIMIT",
   AGENT_TARGET_UNAVAILABLE: "AGENT_TARGET_UNAVAILABLE",
 } as const;
+const toolRefusalKeys = {
+  INVALID_TOOL: "activity.refusal.unavailable",
+  INVALID_ARGUMENTS: "activity.refusal.invalidArguments",
+  TOOL_ARGUMENTS_TRUNCATED: "activity.refusal.truncatedArguments",
+  SECRET_INPUT: "activity.refusal.secretInput",
+  SECRET_OUTPUT: "activity.refusal.secretOutput",
+  COMPUTER_UNAVAILABLE: "activity.refusal.computerUnavailable",
+} as const;
 
 function interactionCode(call: ToolCallActivity) {
   if (call.outcome !== "refused") return undefined;
@@ -58,7 +66,16 @@ function ToolActivityRow({
   selection?: ConversationSelection | undefined;
 }) {
   const t = useTranslations("agents");
-  const toolName = toolOperationLabel(call, t);
+  const rejectedCall = call.toolName === "refused_tool";
+  let toolName = toolOperationLabel(call, t);
+  if (rejectedCall)
+    toolName =
+      call.target === "unavailable"
+        ? t("activity.refusal.tool")
+        : toolOperationLabel({ toolName: call.target, argumentSummary: "" }, t);
+  const rejectionKey = Object.hasOwn(toolRefusalKeys, call.argumentSummary)
+    ? toolRefusalKeys[call.argumentSummary as keyof typeof toolRefusalKeys]
+    : "activity.refusal.generic";
   const operationKind = openApiOperationKind(call);
   const refusal = interactionCode(call);
   const automatic = answer ? automaticApprovalState(answer) : null;
@@ -92,9 +109,13 @@ function ToolActivityRow({
           {t(`openapi.${operationKind}`)}
         </span>
       )}
-      <span className="min-w-0 font-mono text-muted-foreground wrap-anywhere">
-        {call.target.slice(0, 1_024)}
-      </span>
+      {rejectedCall ? (
+        <span className="text-muted-foreground">{t(rejectionKey)}</span>
+      ) : (
+        <span className="min-w-0 font-mono text-muted-foreground wrap-anywhere">
+          {call.target.slice(0, 1_024)}
+        </span>
+      )}
       <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
         <span className={statusStyle(call.outcome ?? "running")}>
           {refusal ? t(refusal) : t(`activity.outcomes.${call.outcome ?? "running"}`)}

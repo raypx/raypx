@@ -48,6 +48,30 @@ it.each(["en", "zh"] as const)("starts collapsed and shows real outcomes in %s",
   expect(screen.queryByText("PRIVATE OUTPUT")).not.toBeInTheDocument();
 });
 
+it("shows why a Page update was rejected before approval", () => {
+  render(
+    <BrowserLanguageProvider initialPreference="zh" restorePreference={false}>
+      <ToolActivity
+        activity={[
+          {
+            ...call,
+            toolName: "refused_tool",
+            target: "agent_page_update",
+            argumentSummary: "TOOL_ARGUMENTS_TRUNCATED",
+            outcome: "refused",
+          },
+        ]}
+        runId={call.runId}
+        defaultExpanded
+      />
+    </BrowserLanguageProvider>,
+  );
+  const row = screen.getByRole("listitem");
+  expect(row).toHaveTextContent(zh.agents.tools.updatePage);
+  expect(row).toHaveTextContent(zh.agents.activity.refusal.truncatedArguments);
+  expect(row).not.toHaveTextContent("refused_tool");
+});
+
 it("limits the computer list to twenty recent calls, including reads", () => {
   const activity = Array.from({ length: 24 }, (_, index) => ({
     ...call,

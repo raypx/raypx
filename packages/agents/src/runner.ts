@@ -159,6 +159,53 @@ class AttemptInterrupted extends Error {
     super("ATTEMPT_INTERRUPTED");
   }
 }
+const refusedToolName = "refused_tool";
+const refusedToolHints = {
+  INVALID_TOOL: "Choose a tool from the currently available tool definitions.",
+  INVALID_ARGUMENTS: "Check the tool schema and retry with all required arguments.",
+  TOOL_ARGUMENTS_TRUNCATED:
+    "The model output ended before the call was complete. Use a supported smaller operation if it preserves the intended change, or explain what remains unsaved.",
+  SECRET_INPUT: "Do not resend sensitive values. Use protected input if the tool supports it.",
+  SECRET_OUTPUT: "The call was refused because it could expose protected data.",
+  COMPUTER_UNAVAILABLE: "Explain that the computer is unavailable if the task cannot continue.",
+} as const;
+type RefusedToolCode = keyof typeof refusedToolHints;
+
+function refusedToolCode(value: unknown): RefusedToolCode {
+  if (typeof value === "string" && Object.hasOwn(refusedToolHints, value))
+    return value as RefusedToolCode;
+  return "INVALID_TOOL";
+}
+
+function modelContinuation(messages: readonly ModelMessage[]): ModelMessage[] {
+  return messages.flatMap((message): ModelMessage[] => {
+    if (message.role === "toolResult" && message.toolName === refusedToolName) {
+      const result = message.content.find((part) => part.type === "text");
+      return [
+        {
+          role: "system",
+          content: `A tool call was rejected before execution. ${result?.text ?? ""} If you cannot continue, tell the member what was not completed.`,
+          timestamp: message.timestamp,
+        },
+      ];
+    }
+    if (
+      message.role !== "assistant" ||
+      !message.content.some((part) => part.type === "toolCall" && part.name === refusedToolName)
+    )
+      return [message];
+    // The refused call is internal. Replaying it as a function paired with provider
+    // reasoning can make the next request invalid.
+    const content = message.content.filter(
+      (part) => part.type !== "toolCall" || part.name !== refusedToolName,
+    );
+    if (!content.some((part) => part.type === "toolCall")) {
+      const text = content.filter((part) => part.type === "text" && part.text.trim());
+      return text.length ? [{ ...message, content: text }] : [];
+    }
+    return [{ ...message, content }];
+  });
+}
 /** Bounds shutdown even if an adapter does not settle promptly after cancellation. */
 function interruptible<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
   if (signal.aborted) {
@@ -499,6 +546,7 @@ export class ConversationRunner {
     this.wake(scope, id);
   }
   private prepared(call: ToolCall, run?: ExecutionRun) {
+    if (call.name === refusedToolName) return undefined;
     try {
       return this.toolRuntime?.tools.prepare(call, run);
     } catch {
@@ -509,6 +557,7 @@ export class ConversationRunner {
     result: AssistantMessage,
     rounds: number,
     run: ExecutionRun,
+    definitions: readonly Tool[],
   ): AssistantMessage {
     let index = 0;
     return {
@@ -517,6 +566,7 @@ export class ConversationRunner {
         if (part.type !== "toolCall") return part;
         const callIndex = index++;
         try {
+          if (part.name === refusedToolName) throw new ComputerToolsError("INVALID_TOOL");
           if (!this.toolRuntime && !isAgentTool(part.name))
             throw new ComputerToolsError("INVALID_TOOL");
           if (isAgentTool(part.name)) {
@@ -525,19 +575,32 @@ export class ConversationRunner {
           } else this.toolRuntime!.tools.prepare(part, run);
           return part;
         } catch (error) {
-          const code = error instanceof ComputerToolsError ? error.code : "INVALID_ARGUMENTS";
+          const validationCode =
+            error instanceof ComputerToolsError ? error.code : "INVALID_ARGUMENTS";
+          const code =
+            validationCode === "INVALID_ARGUMENTS" && result.stopReason === "length"
+              ? "TOOL_ARGUMENTS_TRUNCATED"
+              : validationCode;
+          const tool = definitions.find((definition) => definition.name === part.name)?.name;
           // Refused/secret arguments never enter the durable model history.
           return {
             type: "toolCall" as const,
             id: `refused-${rounds}-${callIndex}`,
-            name: "refused_tool",
-            arguments: { code },
+            name: refusedToolName,
+            arguments: { code, ...(tool ? { tool } : {}) },
           };
         }
       }),
     };
   }
   private toolSummary(call: ToolCall, run?: ExecutionRun): ToolSummary {
+    if (call.name === refusedToolName)
+      return {
+        toolCallId: call.id,
+        toolName: call.name,
+        target: typeof call.arguments.tool === "string" ? call.arguments.tool : "unavailable",
+        argumentSummary: refusedToolCode(call.arguments.code),
+      };
     if (isAgentTool(call.name))
       return {
         toolCallId: call.id,
@@ -565,8 +628,16 @@ export class ConversationRunner {
     let output: string;
     let isError = false;
     if (!prepared || !this.toolRuntime) {
-      const code = call.name === "refused_tool" ? call.arguments.code : "INVALID_TOOL";
-      output = JSON.stringify({ untrusted: true, state: "refused", code });
+      const code =
+        call.name === refusedToolName ? refusedToolCode(call.arguments.code) : "INVALID_TOOL";
+      const tool = call.name === refusedToolName ? call.arguments.tool : undefined;
+      output = JSON.stringify({
+        untrusted: true,
+        state: "refused",
+        code,
+        ...(typeof tool === "string" ? { tool } : {}),
+        hint: refusedToolHints[code],
+      });
       isError = true;
     } else {
       const decision = await interruptible(
@@ -987,7 +1058,7 @@ export class ConversationRunner {
           {
             ...input,
             history,
-            continuation: [...attachmentContext, ...checkpoint.continuation],
+            continuation: [...attachmentContext, ...modelContinuation(checkpoint.continuation)],
             tools: definitions,
           },
           controller.signal,
@@ -1040,6 +1111,16 @@ export class ConversationRunner {
           break;
         }
         const calls = result.content.filter((part) => part.type === "toolCall");
+        const previous = checkpoint.continuation.at(-1);
+        if (
+          !text.trim() &&
+          !calls.length &&
+          previous?.role === "toolResult" &&
+          previous.toolName === refusedToolName
+        ) {
+          errorCode = "MODEL_FAILED";
+          break;
+        }
         if (calls.length && definitions.length === 0) throw new AiError("AI_REQUEST_FAILED");
         if (
           calls.length &&
@@ -1048,7 +1129,7 @@ export class ConversationRunner {
           errorCode = "TOOL_ROUND_LIMIT";
           break;
         }
-        const canonical = this.canonicalTurn(result, checkpoint.rounds, run);
+        const canonical = this.canonicalTurn(result, checkpoint.rounds, run, definitions);
         checkpoint.continuation.push(canonical);
         checkpoint.pendingCalls = canonical.content.filter((part) => part.type === "toolCall");
         checkpoint.completed = calls.length === 0;
