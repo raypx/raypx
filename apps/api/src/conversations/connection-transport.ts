@@ -138,7 +138,7 @@ export function createConnectionTransport(): ConnectionTransport {
             upstream = client.stream(
               selected(connection, model),
               guard(context(client, connection, model, input)),
-              { signal, apiKey: secret, env: {}, timeoutMs: 60_000 },
+              { signal, apiKey: secret, env: {}, timeoutMode: "stream-idle" },
             );
           } catch (error) {
             close();

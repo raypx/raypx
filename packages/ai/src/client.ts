@@ -1,5 +1,6 @@
 import {
   createModels,
+  createAssistantMessageEventStream,
   ModelsError,
   type AssistantMessage,
   type AssistantMessageEvent,
@@ -18,10 +19,17 @@ export interface AiSelection {
 export type AiRequestOptions = Pick<
   SimpleStreamOptions,
   "signal" | "apiKey" | "env" | "headers" | "maxTokens" | "temperature" | "reasoning" | "sessionId"
-> & { timeoutMs?: number };
+> &
+  (
+    | { timeoutMs?: number; timeoutMode?: never }
+    | { timeoutMs?: never; timeoutMode: "stream-idle"; signal: AbortSignal }
+  );
 export interface AiStream extends AsyncIterable<AssistantMessageEvent> {
   result(): Promise<AssistantMessage>;
 }
+
+const FIRST_PROGRESS_TIMEOUT_MS = 120_000;
+const STREAM_IDLE_TIMEOUT_MS = 60_000;
 
 function sanitized(message: AssistantMessage): AssistantMessage {
   const { diagnostics: _diagnostics, errorMessage: _errorMessage, ...safe } = message;
@@ -37,6 +45,44 @@ function abortable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
     signal.addEventListener("abort", abort, { once: true });
     promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
   });
+}
+
+/** Observe progress even when the caller only awaits the final result. */
+function observeStreamProgress(
+  upstream: AiStream,
+  signal: AbortSignal,
+  onProgress: () => void,
+): AiStream {
+  const events = createAssistantMessageEventStream();
+  const result = (async () => {
+    try {
+      const iterator = upstream[Symbol.asyncIterator]();
+      for (;;) {
+        const item = await abortable(iterator.next(), signal);
+        if (item.done) break;
+        const event = item.value;
+        if (
+          (event.type === "text_delta" ||
+            event.type === "thinking_delta" ||
+            event.type === "toolcall_delta") &&
+          event.delta.length > 0
+        )
+          onProgress();
+        events.push(event);
+      }
+      return await abortable(upstream.result(), signal);
+    } finally {
+      events.end();
+    }
+  })();
+  void result.catch(() => {});
+  return {
+    result: () => result,
+    async *[Symbol.asyncIterator]() {
+      yield* events;
+      await result;
+    },
+  };
 }
 
 export function createAiClient(
@@ -62,7 +108,8 @@ export function createAiClient(
     if (closed) throw new AiError("AI_CLOSED");
     const model = models.getModel(selection.provider, selection.model);
     if (!model) throw new AiError("AI_MODEL_NOT_FOUND");
-    const timeoutMs = request.timeoutMs ?? 60_000;
+    const { timeoutMode, timeoutMs = 60_000, ...requestOptions } = request;
+    const streamIdle = timeoutMode === "stream-idle";
     if (
       !Number.isSafeInteger(timeoutMs) ||
       timeoutMs < 1 ||
@@ -80,8 +127,13 @@ export function createAiClient(
     if (request.signal?.aborted) throw new AiError("AI_ABORTED");
     const controller = new AbortController();
     const deadline = new AbortController();
-    const timer = setTimeout(() => deadline.abort(), timeoutMs);
-    timer.unref();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const armDeadline = (ms: number) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => deadline.abort(), ms);
+      timer.unref();
+    };
+    armDeadline(streamIdle ? FIRST_PROGRESS_TIMEOUT_MS : timeoutMs);
     const signal = AbortSignal.any([
       controller.signal,
       deadline.signal,
@@ -119,13 +171,13 @@ export function createAiClient(
     // Resolve auth explicitly so missing credentials have a stable error before dispatch.
     const started = abortable(
       (async () => {
-        const auth = await models.getAuth(model, { ...request, signal });
+        const auth = await models.getAuth(model, { ...requestOptions, signal });
         if (!auth) throw new AiError("AI_AUTH_REQUIRED");
         if (signal.aborted) throw new AiError("AI_ABORTED");
-        return models.streamSimple(model, context, {
-          ...request,
+        const upstream = models.streamSimple(model, context, {
+          ...requestOptions,
           signal,
-          timeoutMs,
+          ...(streamIdle ? {} : { timeoutMs }),
           maxRetries: 0,
           transport: "sse",
           maxTokens: request.maxTokens ?? Math.min(model.maxTokens, 4096),
@@ -142,6 +194,9 @@ export function createAiClient(
             }
           },
         });
+        return streamIdle
+          ? observeStreamProgress(upstream, signal, () => armDeadline(STREAM_IDLE_TIMEOUT_MS))
+          : upstream;
       })(),
       signal,
     );

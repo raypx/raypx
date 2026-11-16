@@ -106,6 +106,11 @@ including after an approval's pending calls finish. Stop discards further work.
 - `RUN_ATTEMPT_TIMEOUT_MS`: 300,000 by default, including approval waits.
 - `RUN_BACKUP_MARGIN_MS`: 30,000 by default, added to the attempt deadline.
 
+Model streams in Runs allow 120 seconds for the first nonempty text, reasoning or
+tool argument delta. Each of those deltas resets a 60-second idle deadline.
+The Run attempt deadline still bounds the whole attempt. Connection tests and
+automatic approval reviews retain their own short request deadlines.
+
 A process cannot declare another owner dead before its lease expires. Clean
 handover explicitly clears ownership; a lost direct start has no lease and is
 eligible immediately. Recovery latency after a crash is the remaining lease plus

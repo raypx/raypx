@@ -193,7 +193,7 @@ export function createDeploymentModels(
               messages: [...messages, ...(input.continuation ?? [])],
               tools: input.tools ?? [],
             },
-            { signal, apiKey, env: {} },
+            { signal, apiKey, env: {}, timeoutMode: "stream-idle" },
           );
         },
       };
