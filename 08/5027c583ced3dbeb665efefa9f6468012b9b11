@@ -1,0 +1,87 @@
+packages/providers/src/object-storage.ts
+  s_9982c8d14794fa::t_6532682cbd82ca 15-19
+  s_9982c8d14794fa::t_1866adc1c0f69f 1-14,20-67
+packages/database/drizzle-foundation/20261116134206_r2_message_attachments/migration.sql
+  s_9982c8d14794fa::t_a7db3c06d44a90 6,16-31
+  s_9982c8d14794fa::t_7f04ace8144667 3-5
+  s_9982c8d14794fa::t_f303a5448bdbb6 7-9,13-15
+apps/api/src/config/service.ts
+  s_9982c8d14794fa::t_cd65c56f9cb66f 15
+apps/api/src/conversations/attachment-http.ts
+  s_9982c8d14794fa::t_bd81521ae68fbb 2,52
+  s_9982c8d14794fa::t_6532682cbd82ca 48-51
+docs/architecture/operations.md
+  s_9982c8d14794fa::t_70261804fe6790 14
+  s_9982c8d14794fa::t_6532682cbd82ca 8-13,15-16
+docs/development/object-storage.md
+  s_9982c8d14794fa::t_70261804fe6790 3-22
+apps/api/src/storage/config.ts
+  s_9982c8d14794fa::t_cd65c56f9cb66f 4,16-17,53-54,61-63,68,71-96,109
+  s_9982c8d14794fa::t_d84002f714201e 47,50-52,55,59-60,127-132,207,209
+  s_9982c8d14794fa::t_6532682cbd82ca 48-49,56-58,64-67,122-126
+  s_9982c8d14794fa::t_6247abb80798be 69-70
+apps/api/src/runtime/agents.ts
+  s_9982c8d14794fa::t_cd65c56f9cb66f 69,129-132
+apps/web/locales/zh/site.json
+  s_9982c8d14794fa::t_cd65c56f9cb66f 100
+packages/database/src/schema.ts
+  s_9982c8d14794fa::t_ba62596c860749 2628-2632,2637-2645,2660-2661,2667,2692-2696,2824
+  s_9982c8d14794fa::t_6532682cbd82ca 2633-2635
+  s_9982c8d14794fa::t_1019a6930949ce 2636
+apps/web/locales/en/site.json
+  s_9982c8d14794fa::t_cd65c56f9cb66f 100
+apps/api/src/spaces/deletion-worker.ts
+  s_9982c8d14794fa::t_d84002f714201e 23
+packages/agents/tests/postgres/attachments-notifications.test.ts
+  s_9982c8d14794fa::t_c4e5538fff97ff 370-385,392-393,398-400,404,409-410,420-426,432-433,437,441-449,452-458,462-464,471
+  s_9982c8d14794fa::t_6532682cbd82ca 386-391,394-397,401-403,405-408,411-419,427-431,434-436,438-440,450-451,459-461,465-470
+  s_9982c8d14794fa::t_bd81521ae68fbb 9
+docs/architecture/spaces.md
+  s_9982c8d14794fa::t_70261804fe6790 101-103
+packages/providers/AGENTS.md
+  s_9982c8d14794fa::t_70261804fe6790 40-42
+AGENTS.md
+  s_9982c8d14794fa::t_70261804fe6790 244-245
+docs/architecture/member-input-and-notifications.md
+  s_9982c8d14794fa::t_70261804fe6790 3-5,26-37
+docs/development/configuration.md
+  s_9982c8d14794fa::t_70261804fe6790 81
+packages/agents/src/server/attachments.ts
+  s_9982c8d14794fa::t_cd65c56f9cb66f 297-298,301-304
+  s_9982c8d14794fa::t_6f789587cb988c 1,5,148-219,221-240,246-248,272,274,279,288-290,296,305-306,327,333-338,341,343-344,372,374-376,417,481,493-494,497-500,503-506,511-512,568-569
+  s_9982c8d14794fa::t_6532682cbd82ca 220,292-295,299-300,501-502
+packages/agents/src/server/postgres.ts
+  s_9982c8d14794fa::t_cd65c56f9cb66f 198-201
+apps/web/src/features/config/components/storage.tsx
+  s_9982c8d14794fa::t_cd65c56f9cb66f 22
+packages/agents/src/attachments.ts
+  s_9982c8d14794fa::t_ba62596c860749 8-14
+packages/providers/package.json
+  s_9982c8d14794fa::t_ba62596c860749 12-13
+packages/providers/src/object-storage.test.ts
+  s_9982c8d14794fa::t_c4e5538fff97ff 1-7,10-29,35-43
+  s_9982c8d14794fa::t_6532682cbd82ca 8-9,30-34
+  s_9982c8d14794fa::t_f3e0af99c4c40f 44
+apps/api/src/routers/rpc/config.ts
+  s_9982c8d14794fa::t_6532682cbd82ca 33-37
+apps/api/src/conversations/attachment-http.test.ts
+  s_9982c8d14794fa::t_bd81521ae68fbb 4,31-34
+apps/api/src/routers/rpc/message-attachments.ts
+  s_9982c8d14794fa::t_cd65c56f9cb66f 17-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "085027c583ced3dbeb665efefa9f6468012b9b11",
+  "prompts": {},
+  "sessions": {
+    "s_9982c8d14794fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e405-521b-74e0-8156-fbfa29fb9ed2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
