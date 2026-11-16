@@ -1,0 +1,62 @@
+.github/workflows/deployment-smoke.yml
+  h_f0766e80fd3864 1-40
+apps/api/AGENTS.md
+  h_f0766e80fd3864 28-32
+apps/api/package.json
+  h_f0766e80fd3864 57
+apps/api/src/app/server.ts
+  h_f0766e80fd3864 1,6-13,15-42
+apps/api/src/env.test.ts
+  h_f0766e80fd3864 75-76
+apps/api/src/env.ts
+  h_f0766e80fd3864 1-5,104
+apps/api/src/middleware/http.ts
+  h_f0766e80fd3864 46
+apps/api/src/middleware/relay-headers.ts
+  h_f0766e80fd3864 5
+apps/api/src/pages/http.test.ts
+  h_f0766e80fd3864 195-201
+apps/api/src/public-address.test.ts
+  h_f0766e80fd3864 38-39,120-121,132-206
+apps/api/src/public-address.ts
+  h_f0766e80fd3864 1-2,32-35,44-45,91-131
+apps/api/src/routers/device-connector.test.ts
+  h_f0766e80fd3864 149-156
+apps/api/src/routers/device-connector.ts
+  h_f0766e80fd3864 130-134
+apps/api/src/routers/openapi-assets.ts
+  h_f0766e80fd3864 7
+apps/web/vite.app.config.ts
+  h_f0766e80fd3864 17
+bun.lock
+  h_f0766e80fd3864 61,995,3506-3509
+docs/development/deployment.md
+  h_f0766e80fd3864 138-146,170,405-456
+docs/development/dev-cli.md
+  h_f0766e80fd3864 11-29
+docs/development/railway.md
+  h_f0766e80fd3864 271
+package.json
+  h_f0766e80fd3864 53
+packages/dev-cli/AGENTS.md
+  h_f0766e80fd3864 69-71
+packages/dev-cli/src/cli.ts
+  h_f0766e80fd3864 180-182
+packages/dev-cli/src/validation/deployment-production.ts
+  h_f0766e80fd3864 1-186
+packages/dev-cli/src/validation/deployment-public.test.ts
+  h_f0766e80fd3864 1-74
+packages/dev-cli/src/validation/deployment-smoke.ts
+  h_f0766e80fd3864 3-6,72-90,481-627
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "84a863e17c75a71e2153f657b02df0b9dc58aeac",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
