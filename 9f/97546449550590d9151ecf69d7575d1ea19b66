@@ -1,0 +1,49 @@
+packages/agents/locales/en/agents.json
+  s_9982c8d14794fa::t_8ee285fd9d0615 159
+apps/api/src/conversations/page-tools.test.ts
+  s_9982c8d14794fa::t_b7f28c1c9c5ae1 144
+  s_9982c8d14794fa::t_d2244c308815a6 136-140,158
+packages/pages/src/server/tools.ts
+  s_9982c8d14794fa::t_e7ce6509c08bae 14-18,23-32,49-54,56-69,74-80,106,170,175-177
+  s_9982c8d14794fa::t_e0ce45c3049136 55,171-174
+apps/api/tests/helpers/browser-model.ts
+  s_9982c8d14794fa::t_a48fd0ece8e8fb 238
+  s_9982c8d14794fa::t_90c9feda5f230c 239-243
+packages/pages/AGENTS.md
+  s_9982c8d14794fa::t_8ee285fd9d0615 8-9
+packages/agents/src/client/tool-activity.tsx
+  s_9982c8d14794fa::t_e0ce45c3049136 71-73
+  s_9982c8d14794fa::t_11599bdae86db0 70,85-87,127-128
+packages/agents/src/runner.test.ts
+  s_9982c8d14794fa::t_8ee285fd9d0615 981-992
+packages/agents/src/runner.ts
+  s_9982c8d14794fa::t_b7f28c1c9c5ae1 658-661,667
+  s_9982c8d14794fa::t_11599bdae86db0 1205-1206
+packages/agents/src/client/tool-activity.component.test.tsx
+  s_9982c8d14794fa::t_8ee285fd9d0615 51,72-73
+docs/architecture/capabilities.md
+  s_9982c8d14794fa::t_8ee285fd9d0615 49-50
+packages/pages/src/server/tools.test.ts
+  s_9982c8d14794fa::t_e0ce45c3049136 47-50,82-88,92-96,98-100,111-117
+  s_9982c8d14794fa::t_d2244c308815a6 22-46,51-81,89-91,97,101-110,118-120
+packages/agents/locales/zh/agents.json
+  s_9982c8d14794fa::t_11599bdae86db0 159
+packages/core/src/pages.ts
+  s_9982c8d14794fa::t_e7ce6509c08bae 76-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9f97546449550590d9151ecf69d7575d1ea19b66",
+  "prompts": {},
+  "sessions": {
+    "s_9982c8d14794fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e405-521b-74e0-8156-fbfa29fb9ed2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
