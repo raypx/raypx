@@ -1,0 +1,31 @@
+apps/api/src/config/sandbox.ts
+  s_e8793b91e4301c::t_0a39a20a1de6c7 4,6,8-13
+apps/api/src/config/migrate.ts
+  s_e8793b91e4301c::t_0a39a20a1de6c7 4
+apps/api/src/runtime/sandbox.ts
+  s_e8793b91e4301c::t_0a39a20a1de6c7 7-11,22
+apps/api/tests/postgres/node/sandbox-configuration.test.ts
+  s_e8793b91e4301c::t_0a39a20a1de6c7 16-17
+apps/api/src/config/sandbox-initialization.ts
+  s_e8793b91e4301c::t_0a39a20a1de6c7 1-37
+packages/tooling/src/build/bun-deployment.test.ts
+  s_e8793b91e4301c::t_0a39a20a1de6c7 56-67
+apps/api/src/runtime/sandbox.test.ts
+  s_e8793b91e4301c::t_0a39a20a1de6c7 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a7e4059e7e596cc76912d2b0eff132d959c2e087",
+  "prompts": {},
+  "sessions": {
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
