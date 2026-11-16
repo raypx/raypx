@@ -1,0 +1,19 @@
+packages/agents/src/client/conversation.tsx
+  s_ddbd52580b902f::t_4e219476b027e1 963-968
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5f9c257c2e9065f58982728c033acb797c43c8bb",
+  "prompts": {},
+  "sessions": {
+    "s_ddbd52580b902f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e35b-a3ed-7d82-bc13-b90662a0bc24",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
