@@ -2999,7 +2999,7 @@ it.each(["en", "zh"] as const)(
     });
     const main = screen.getByRole("main");
     const user = userEvent.setup();
-    await user.click(within(main).getByRole("button", { name: copy.createAgent }));
+    await user.click(await within(main).findByRole("button", { name: copy.createAgent }));
     await screen.findByRole("dialog", { name: copy.newAgent });
     await act(async () => {
       localStorage.setItem("raypx_sidebar_open", "true");

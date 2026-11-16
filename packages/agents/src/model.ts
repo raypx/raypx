@@ -186,3 +186,11 @@ export {
 
 export { NotificationsController, type MemberNotificationsPort } from "./model/notifications.js";
 export { memberTextParts } from "./model/page-reference.js";
+
+export {
+  createSidebarStore,
+  sidebarStorageKey,
+  safeSidebarStorage,
+  type SidebarState,
+  type SidebarSection,
+} from "./model/sidebar.js";

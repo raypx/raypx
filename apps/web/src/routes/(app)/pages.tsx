@@ -1,10 +1,9 @@
-import { useSettingsNavigation } from "../../features/settings/navigation.js";
-import { AgentsWorkspace } from "@raypx/agents/client";
+import { useWorkspaceContext } from "@raypx/agents/client";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { pageIdSchema } from "@raypx/core/pages";
 import type { PagesClientPort } from "@raypx/pages/model";
-import { PagesWorkspace, PagesWorkspaceLoading } from "@raypx/pages/client";
+import { PagesWorkspace } from "@raypx/pages/client";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
 import { agentsClient } from "../../features/agents/client.js";
 import { apiOrigin } from "../../features/auth/client.js";
@@ -35,57 +34,33 @@ function PagesPage() {
     </SessionBoundary>
   );
 }
-function SignedInPages({ accountId }: { accountId: string }) {
-  const settings = useSettingsNavigation();
+function SignedInPages({ accountId: _accountId }: { accountId: string }) {
+  const { spaceId, agents, subscribe, accountNames } = useWorkspaceContext();
   const port: PagesClientPort = agentsClient.pages;
   const selection = Route.useSearch();
   const navigate = Route.useNavigate();
   return (
-    <AgentsWorkspace
-      client={agentsClient}
-      onOpenTools={() => void settings.open("tools")}
-      onNewConversation={(spaceId) =>
-        void navigate({ to: "/agents", search: { spaceId: spaceIdSchema.parse(spaceId) } })
+    <PagesWorkspace
+      key={spaceId}
+      spaceId={spaceIdSchema.parse(spaceId)}
+      port={port}
+      apiOrigin={apiOrigin()}
+      canEmbedAuthenticatedDocuments
+      agents={agents}
+      accountNames={accountNames}
+      initialPageId={selection.pageId ? pageIdSchema.parse(selection.pageId) : null}
+      subscribe={subscribe}
+      onSelectPage={(pageId) =>
+        void navigate({
+          search: { spaceId: spaceIdSchema.parse(spaceId), ...(pageId ? { pageId } : {}) },
+        })
       }
-      onSessionEnded={() =>
-        void navigate({ to: "/login", search: { returnTo: "/agents" }, replace: true })
+      onAskAgent={(agentId, page) =>
+        void navigate({
+          to: "/agents",
+          search: { ...parseAgentSelection({ spaceId, agentId }), pageRef: page.id },
+        })
       }
-      groups={agentsClient.conversations}
-      spaceManagement={agentsClient.spaces}
-      accountApprovalSettings={agentsClient.approvals}
-      accountId={accountId}
-      origin={apiOrigin()}
-      {...(selection.spaceId ? { spaceId: selection.spaceId } : {})}
-      onNavigate={(next) => {
-        if (next.agentId || next.groupId)
-          void navigate({ to: "/agents", search: parseAgentSelection(next) });
-        else void navigate({ search: { spaceId: spaceIdSchema.parse(next.spaceId) } });
-      }}
-      workspaceLoading={selection.pageId ? undefined : <PagesWorkspaceLoading />}
-      renderWorkspace={({ spaceId, agents, subscribe, accountNames }) => (
-        <PagesWorkspace
-          key={spaceId}
-          spaceId={spaceIdSchema.parse(spaceId)}
-          port={port}
-          apiOrigin={apiOrigin()}
-          canEmbedAuthenticatedDocuments
-          agents={agents}
-          accountNames={accountNames}
-          initialPageId={selection.pageId ? pageIdSchema.parse(selection.pageId) : null}
-          subscribe={subscribe}
-          onSelectPage={(pageId) =>
-            void navigate({
-              search: { spaceId: spaceIdSchema.parse(spaceId), ...(pageId ? { pageId } : {}) },
-            })
-          }
-          onAskAgent={(agentId, page) =>
-            void navigate({
-              to: "/agents",
-              search: { ...parseAgentSelection({ spaceId, agentId }), pageRef: page.id },
-            })
-          }
-        />
-      )}
     />
   );
 }

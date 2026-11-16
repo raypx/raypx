@@ -9,3 +9,6 @@ export { JoinSpaceView } from "./client/join-space.js";
 export { McpServers } from "./client/mcp-servers.js";
 
 export { OpenApiServers } from "./client/openapi-servers.js";
+
+export { useWorkspaceContext } from "./client/workspace-context.js";
+export { useWorkspaceSidebar } from "./client/sidebar-state.js";

@@ -1,5 +1,18 @@
+import { AgentDirectoryList } from "./agent-directory-list.js";
+import { cachedSidebarReads, workspaceQueryKey } from "./sidebar-queries.js";
+import { spaceIdSchema } from "@raypx/core/spaces";
+import {
+  QueryClient,
+  QueryClientContext,
+  QueryClientProvider,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { createSidebarStore } from "../model/sidebar.js";
+import { SidebarStateProvider, SidebarStoreContext, useWorkspaceSidebar } from "./sidebar-state.js";
+import { WorkspaceContextProvider } from "./workspace-context.js";
+import type { WorkspaceSidebarSlots } from "@raypx/blocks/shell";
 import { createConversationFeed } from "@raypx/client/events";
-import { agentIdentityStyle } from "./identity.js";
 import type { PageResultMountProps } from "./page-result.js";
 import { NotificationsBell } from "./notifications.js";
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -9,6 +22,7 @@ import {
   type AgentCapabilitySelection,
 } from "../model/agent-capabilities.js";
 import {
+  useContext,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -95,6 +109,8 @@ import { FolderIcon } from "@raypx/icons/folder";
 import { ChevronsUpDownIcon } from "@raypx/icons/chevrons-up-down";
 import { PlusIcon } from "@raypx/icons/plus";
 import {
+  type AgentsPageState,
+  parseAgentSelection,
   applyAgents,
   applyGroups,
   selectGroup,
@@ -160,6 +176,10 @@ function screenMethods(port: ComputerPort): Partial<ComputerScreenPort> {
 export interface AgentsWorkspaceProps {
   nativeDeviceConfirmation?: NativeDeviceConfirmation | undefined;
   client: AgentsWorkspacePort;
+  route?: string;
+  ensureSpaceSearch?: boolean;
+  children?: ReactNode;
+  renderShell?: ((sidebar: WorkspaceSidebarSlots, content: ReactNode) => ReactNode) | undefined;
   renderWorkspace?:
     | ((context: {
         spaceId: string;
@@ -187,20 +207,52 @@ export interface AgentsWorkspaceProps {
   onNewConversation?: ((spaceId: string) => void) | undefined;
   onOpenExternal?: ((url: string) => void) | undefined;
   modelCatalogKey?: string | undefined;
-  onNavigate?: (selection: { spaceId: string; agentId?: string; groupId?: string }) => void;
+  onNavigate?: (
+    selection: { spaceId: string; agentId?: string; groupId?: string },
+    replace?: boolean,
+  ) => void;
   socket?: ConversationSocketPort;
   feed?: ConversationFeedPort;
   drafts?: ConversationDraftStore;
 }
 
 export function AgentsWorkspace(props: AgentsWorkspaceProps) {
+  const parent = useContext(QueryClientContext);
+  const [fallback] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+  );
   return (
-    <AgentsWorkspaceContents key={JSON.stringify([props.origin, props.accountId])} {...props} />
+    <QueryClientProvider client={parent ?? fallback}>
+      <ScopedWorkspace key={JSON.stringify([props.origin, props.accountId])} {...props} />
+    </QueryClientProvider>
+  );
+}
+function ScopedWorkspace(props: AgentsWorkspaceProps) {
+  const [store] = useState(() => createSidebarStore(props.origin, props.accountId));
+  useLayoutEffect(() => {
+    void store.persist.rehydrate();
+  }, [store]);
+  useEffect(() => {
+    const restore = (event: StorageEvent) => {
+      if (event.key === null || event.key === store.persist.getOptions().name)
+        void store.persist.rehydrate();
+    };
+    window.addEventListener("storage", restore);
+    return () => window.removeEventListener("storage", restore);
+  }, [store]);
+  return (
+    <SidebarStateProvider store={store}>
+      <AgentsWorkspaceContents {...props} />
+    </SidebarStateProvider>
   );
 }
 
 function AgentsWorkspaceContents({
-  client,
+  client: sourceClient,
+  route = "/agents",
+  ensureSpaceSearch = false,
+  children,
+  renderShell,
   nativeDeviceConfirmation,
   onSessionEnded,
   renderWorkspace,
@@ -208,15 +260,15 @@ function AgentsWorkspaceContents({
   onOpenPage,
   pageResultPreview,
   composerReference,
-  spaceManagement = client.spaceManagement,
-  accountApprovalSettings = client.accountApprovalSettings,
+  spaceManagement: suppliedManagement,
+  accountApprovalSettings: suppliedApprovalSettings,
   invitationOrigin,
   accountId,
   origin,
   spaceId,
   agentId,
   groupId,
-  groups = client.groups,
+  groups: suppliedGroups,
   onNavigate,
   onOpenModels,
   onOpenTools,
@@ -227,18 +279,80 @@ function AgentsWorkspaceContents({
   feed,
   drafts,
 }: AgentsWorkspaceProps) {
+  const queryClient = useQueryClient();
+  const client = useMemo(() => {
+    const spaces = cachedSidebarReads(
+      sourceClient.spaces,
+      queryClient,
+      origin,
+      accountId,
+      "spaces",
+      ["list"],
+    );
+    const notifications = sourceClient.notifications
+      ? cachedSidebarReads(
+          sourceClient.notifications,
+          queryClient,
+          origin,
+          accountId,
+          "notifications",
+          ["list"],
+        )
+      : undefined;
+    const routines = sourceClient.routines
+      ? cachedSidebarReads(sourceClient.routines, queryClient, origin, accountId, "routines", [
+          "list",
+        ])
+      : undefined;
+    return new Proxy(sourceClient, {
+      get(target, key, receiver) {
+        if (key === "spaces") return spaces;
+        if (key === "notifications") return notifications;
+        if (key === "routines") return routines;
+        return Reflect.get(target, key, receiver);
+      },
+    });
+  }, [sourceClient, queryClient, origin, accountId]);
+  const rawManagement = suppliedManagement ?? sourceClient.spaceManagement;
+  const spaceManagement = useMemo(
+    () =>
+      rawManagement
+        ? cachedSidebarReads(rawManagement, queryClient, origin, accountId, "membership", [
+            "get",
+            "members",
+            "settings",
+          ])
+        : undefined,
+    [rawManagement, queryClient, origin, accountId],
+  );
+  const accountApprovalSettings = suppliedApprovalSettings ?? sourceClient.accountApprovalSettings;
+  const groups = suppliedGroups ?? sourceClient.groups;
   const t = useTranslations("agents");
-  const sidebarCollapsed = useShellSidebarCollapsed();
+  const store = useContext(SidebarStoreContext)!;
+  const sidebarOpen = useWorkspaceSidebar((state) => state.open);
+  const sidebarSheetOpen = useWorkspaceSidebar((state) => state.sheetOpen);
+  const sidebarRoute = useWorkspaceSidebar((state) => state.route) || route;
+  const inheritedCollapsed = useShellSidebarCollapsed();
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setNarrow(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  const sidebarCollapsed = renderShell ? !sidebarOpen || narrow : inheritedCollapsed;
   const agentFilterId = useId();
   const filterTrigger = useRef<HTMLButtonElement>(null);
   const firstAgentTrigger = useRef<HTMLButtonElement>(null);
   const filterInput = useRef<HTMLInputElement>(null);
-  const [agentsSectionOpen, setAgentsSectionOpen] = useState(true);
-  const [agentFilterState, setAgentFilterState] = useState<{
-    spaceId: string | null;
-    text: string;
-    open: boolean;
-  }>({ spaceId: null, text: "", open: false });
+
+  const setAgentsSectionOpen = useCallback(
+    (value: boolean) => store.getState().setCollapsed("agents", !value),
+    [store],
+  );
+  const agentFilterState = useWorkspaceSidebar((state) => state.agentFilter);
+  const setAgentFilterState = useWorkspaceSidebar((state) => state.setAgentFilter);
   const [pageListeners] = useState(() => new Set<(event: SpaceEvent) => void>());
   const subscribePages = useCallback(
     (listener: (event: SpaceEvent) => void) => {
@@ -249,7 +363,142 @@ function AgentsWorkspaceContents({
     },
     [pageListeners],
   );
-  const [page, setPage] = useState(createAgentsPageState);
+  const ready = useSyncExternalStore(subscribeNothing, clientReady, serverNotReady);
+  const sidebarSpaceId = useWorkspaceSidebar((state) => state.spaceId);
+  const selectedAgentId = useWorkspaceSidebar((state) => state.agentId);
+  const selectedGroupId = useWorkspaceSidebar((state) => state.groupId);
+  const sidebarAgentId = sidebarRoute === "/agents" ? selectedAgentId : null;
+  const sidebarGroupId = sidebarRoute === "/agents" ? selectedGroupId : null;
+  const cacheKey = useCallback(
+    (name: string, scope: string | null = null) =>
+      workspaceQueryKey(origin, accountId, name, scope),
+    [origin, accountId],
+  );
+  const spacesQuery = useQuery({
+    refetchInterval: 30_000,
+    queryKey: cacheKey("spaces"),
+    queryFn: () => sourceClient.spaces.list({}),
+    enabled: ready && !!accountId,
+    staleTime: 30_000,
+  });
+  const directoryMemberships =
+    queryClient.getQueryData<typeof spacesQuery.data>(cacheKey("spaces")) ??
+    spacesQuery.data ??
+    noMemberships;
+  const requestedSpace = sidebarSpaceId ?? spaceId;
+  const resolvedSpaceId =
+    directoryMemberships.find((item) => item.space.id === requestedSpace)?.space.id ??
+    directoryMemberships[0]?.space.id ??
+    null;
+  const scope = resolvedSpaceId ?? (spaceId ? spaceIdSchema.parse(spaceId) : null);
+  const agentsQuery = useQuery({
+    refetchInterval: 30_000,
+    queryKey: cacheKey("agents", scope),
+    queryFn: () => client.agents.list({ spaceId: scope!, limit: 100 }),
+    enabled: ready && !!accountId && !!scope,
+    staleTime: 30_000,
+  });
+  const modelsQuery = useQuery({
+    queryKey: cacheKey("models", scope),
+    queryFn: () => client.agents.models({ spaceId: scope! }),
+    enabled: ready && !!accountId && !!scope,
+    staleTime: 30_000,
+  });
+  const groupsQuery = useQuery({
+    refetchInterval: 30_000,
+    queryKey: cacheKey("groups", scope),
+    queryFn: () => groups?.listGroups({ spaceId: scope!, limit: 100 }) ?? Promise.resolve([]),
+    enabled: ready && !!accountId && !!scope,
+    staleTime: 30_000,
+  });
+  const routinesQuery = useQuery({
+    refetchInterval: 30_000,
+    queryKey: cacheKey("routines", scope),
+    queryFn: () =>
+      sourceClient.routines?.list({ spaceId: scope!, limit: 100 }) ?? Promise.resolve([]),
+    enabled: ready && !!accountId && !!scope && !!sourceClient.routines,
+    staleTime: 30_000,
+  });
+  const page = useMemo<AgentsPageState>(() => {
+    const initial = applySpaces(
+      createAgentsPageState(),
+      directoryMemberships,
+      requestedSpace ?? undefined,
+    );
+    if (!initial.spaceId) return initial;
+    const selection = parseAgentSelection({ agentId: selectedAgentId, groupId: selectedGroupId });
+    const next = applyAgents(
+      initial,
+      initial.spaceId,
+      agentsQuery.data ?? [],
+      route === "/agents" ? selection.agentId : undefined,
+    );
+    return {
+      ...applyGroups(
+        next,
+        initial.spaceId,
+        (groupsQuery.data ?? []).map((conversation) => ({
+          conversation,
+          agents: next.agents
+            .filter((entry) => conversation.agentIds?.includes(entry.agent.id))
+            .map((entry) => entry.agent),
+        })),
+        route === "/agents" ? selection.groupId : undefined,
+      ),
+      models: modelsQuery.data ?? [],
+    };
+  }, [
+    directoryMemberships,
+    requestedSpace,
+    agentsQuery.data,
+    groupsQuery.data,
+    modelsQuery.data,
+    route,
+    selectedAgentId,
+    selectedGroupId,
+  ]);
+  const pageRef = useRef(page);
+  useLayoutEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+  const setPage = useCallback(
+    (update: typeof page | ((previous: typeof page) => typeof page)) => {
+      const previous = pageRef.current;
+      const next = typeof update === "function" ? update(previous) : update;
+      pageRef.current = next;
+      if (previous.spaces !== next.spaces)
+        queryClient.setQueryData(cacheKey("spaces"), next.spaces);
+      if (next.spaceId && next.spaceId === previous.spaceId) {
+        if (previous.agents !== next.agents)
+          queryClient.setQueryData(cacheKey("agents", next.spaceId), next.agents);
+        if (previous.groups !== next.groups)
+          queryClient.setQueryData(
+            cacheKey("groups", next.spaceId),
+            next.groups?.map((entry) => entry.conversation) ?? [],
+          );
+        if (previous.models !== next.models)
+          queryClient.setQueryData(cacheKey("models", next.spaceId), next.models);
+      }
+      store
+        .getState()
+        .select({ spaceId: next.spaceId, agentId: next.agentId, groupId: next.groupId ?? null });
+    },
+    [cacheKey, queryClient, store],
+  );
+  useLayoutEffect(() => {
+    store.getState().select({
+      spaceId: spaceId ?? store.getState().spaceId,
+      agentId: agentId ?? null,
+      groupId: groupId ?? null,
+    });
+    store.getState().setRoute(route);
+  }, [store, spaceId, agentId, groupId, route]);
+  useLayoutEffect(() => {
+    const state = store.getState();
+    if (spacesQuery.data && state.spaceId !== resolvedSpaceId)
+      state.select({ spaceId: resolvedSpaceId, agentId: state.agentId, groupId: state.groupId });
+  }, [store, spacesQuery.data, resolvedSpaceId]);
+
   const agentsByActivity = useMemo(
     () => [...page.agents].sort((left, right) => compareLastActivity(left.agent, right.agent)),
     [page.agents],
@@ -264,10 +513,10 @@ function AgentsWorkspaceContents({
   const agentFilter = agentFilterState.spaceId === page.spaceId ? agentFilterState.text : "";
   const filterOpen = agentFilterState.spaceId === page.spaceId && agentFilterState.open;
   const filteredAgents = useMemo(() => {
-    if (sidebarCollapsed || !filterOpen) return agentsByActivity;
+    if (sidebarCollapsed || !filterOpen) return page.agents;
     const query = agentFilter.trim().toLocaleLowerCase();
-    return agentsByActivity.filter((entry) => entry.agent.name.toLocaleLowerCase().includes(query));
-  }, [agentFilter, filterOpen, sidebarCollapsed, agentsByActivity]);
+    return page.agents.filter((entry) => entry.agent.name.toLocaleLowerCase().includes(query));
+  }, [agentFilter, filterOpen, sidebarCollapsed, page.agents]);
   useLayoutEffect(() => {
     if (filterOpen && !sidebarCollapsed) filterInput.current?.focus();
   }, [filterOpen, sidebarCollapsed]);
@@ -287,11 +536,19 @@ function AgentsWorkspaceContents({
   useLayoutEffect(() => {
     current.current = page;
   }, [page]);
-  const [spacesLoading, setSpacesLoading] = useState(true);
-  const [agentsLoading, setAgentsLoading] = useState(false);
+  const spacesLoading = spacesQuery.isPending;
+  const agentsLoading = Boolean(
+    scope && (agentsQuery.isPending || modelsQuery.isPending || groupsQuery.isPending),
+  );
   const loading = spacesLoading || agentsLoading;
-  const [failed, setFailed] = useState(false);
-  const [refresh, setRefresh] = useState(0);
+  const [actionFailed, setFailed] = useState(false);
+  const failed =
+    actionFailed ||
+    spacesQuery.isError ||
+    agentsQuery.isError ||
+    modelsQuery.isError ||
+    groupsQuery.isError;
+
   const [protectedInputKey, setProtectedInputKey] = useState("");
   const [activity, setActivity] = useState<Record<string, readonly ToolActivity[]>>({});
   const rememberActivity = useCallback(
@@ -340,10 +597,24 @@ function AgentsWorkspaceContents({
   const deletingRef = useRef<string | null>(null);
   const confirmation = useConfirmation();
   const eventSocket = useMemo(() => socket ?? browserConversationSocket(origin), [socket, origin]);
+  const navigateSelection = useRef(onNavigate);
   const sessionEnded = useRef(onSessionEnded);
   useLayoutEffect(() => {
     sessionEnded.current = onSessionEnded;
-  }, [onSessionEnded]);
+    navigateSelection.current = onNavigate;
+  }, [onSessionEnded, onNavigate]);
+  useEffect(() => {
+    if (ensureSpaceSearch && accountId && resolvedSpaceId && !spaceId) {
+      navigateSelection.current?.(
+        {
+          spaceId: resolvedSpaceId,
+          ...(agentId ? { agentId } : {}),
+          ...(groupId ? { groupId } : {}),
+        },
+        true,
+      );
+    }
+  }, [ensureSpaceSearch, accountId, resolvedSpaceId, spaceId, agentId, groupId]);
   const conversationFeed = useMemo<ConversationFeedPort>(() => {
     const source = feed ?? createConversationFeed(origin);
     return {
@@ -405,75 +676,13 @@ function AgentsWorkspaceContents({
       effects: (input) => approvals.effects(input),
     };
   }, [client]);
+  function refreshDirectory() {
+    setFailed(false);
+    void queryClient.invalidateQueries({ queryKey: ["workspace", origin, accountId] });
+  }
   useEffect(() => {
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (!cancelled) {
-        setSpacesLoading(true);
-        setFailed(false);
-      }
-    });
-    void client.spaces
-      .list({})
-      .then((spaces) => {
-        if (!cancelled) setPage((state) => applySpaces(state, spaces, spaceId));
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setSpacesLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [client, spaceId, accountId, origin, refresh]);
-  useEffect(() => {
-    const selected = page.spaceId;
-    if (!selected) return;
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (!cancelled) {
-        setAgentsLoading(true);
-        setFailed(false);
-      }
-    });
-    void Promise.all([
-      client.agents.list({ spaceId: selected, limit: 100 }),
-      client.agents.models({ spaceId: selected }),
-      groups?.listGroups({ spaceId: selected, limit: 100 }) ?? Promise.resolve([]),
-    ])
-      .then(([agents, models, conversations]) => {
-        if (!cancelled)
-          setPage((state) => {
-            if (state.spaceId !== selected) return state;
-            const next = applyAgents(state, selected, agents, agentId);
-            return {
-              ...applyGroups(
-                next,
-                selected,
-                conversations.map((conversation) => ({
-                  conversation,
-                  agents: agents
-                    .filter((item) => conversation.agentIds?.includes(item.agent.id))
-                    .map((item) => item.agent),
-                })),
-                groupId,
-              ),
-              models,
-            };
-          });
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setAgentsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [client, groups, page.spaceId, agentId, groupId, refresh, modelCatalogKey]);
+    if (scope) void queryClient.invalidateQueries({ queryKey: cacheKey("models", scope) });
+  }, [modelCatalogKey, scope, queryClient, cacheKey]);
 
   const confirmSpaceExit = useCallback(
     (reason: "deleting" | "left") => {
@@ -544,7 +753,7 @@ function AgentsWorkspaceContents({
       if (reason === "session-ended") {
         current.current = createAgentsPageState();
         setPage(current.current);
-        onSessionEnded?.();
+        sessionEnded.current?.();
         return;
       }
       // Close the old conversation immediately, before discovery can finish.
@@ -554,7 +763,8 @@ function AgentsWorkspaceContents({
       );
       current.current = fallback;
       setPage(fallback);
-      if (fallback.spaceId) onNavigate?.({ spaceId: fallback.spaceId });
+      if (fallback.spaceId) navigateSelection.current?.({ spaceId: fallback.spaceId });
+      void queryClient.invalidateQueries({ queryKey: cacheKey("spaces"), refetchType: "none" });
       void client.spaces
         .list({})
         .then((spaces) => {
@@ -563,11 +773,11 @@ function AgentsWorkspaceContents({
           current.current = reconciled;
           setPage(reconciled);
           if (reconciled.spaceId && reconciled.spaceId !== fallback.spaceId)
-            onNavigate?.({ spaceId: reconciled.spaceId });
+            navigateSelection.current?.({ spaceId: reconciled.spaceId });
         })
         .catch(() => {});
     },
-    [client, onNavigate, onSessionEnded],
+    [client, setPage, cacheKey, queryClient],
   );
   useEffect(() => {
     if (!management || !page.spaceId) return;
@@ -576,11 +786,25 @@ function AgentsWorkspaceContents({
       spaceId: selectedSpace,
       accountId,
       socket: eventSocket,
-      list: () => client.spaces.list({}),
+      list: () =>
+        queryClient.fetchQuery({
+          queryKey: cacheKey("spaces"),
+          queryFn: () => sourceClient.spaces.list({}),
+          staleTime: 0,
+        }),
       onMemberships(spaces) {
         if (mounted.current) setPage((state) => applySpaces(state, spaces));
       },
       async onEvent(event) {
+        await queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === "workspace" &&
+            query.queryKey[1] === origin &&
+            query.queryKey[2] === accountId &&
+            query.queryKey[3] === event.spaceId &&
+            String(query.queryKey[4]).startsWith("membership."),
+          refetchType: "none",
+        });
         if (event.spaceId === selectedSpace) {
           if (event.id <= management.getSnapshot().eventCursor) return;
           const applied = await management.applyEvent(event);
@@ -613,37 +837,55 @@ function AgentsWorkspaceContents({
       window.removeEventListener("focus", reconcile);
       live.dispose();
     };
-  }, [management, page.spaceId, accountId, eventSocket, client, exitSpace, pageListeners]);
+  }, [
+    management,
+    page.spaceId,
+    accountId,
+    eventSocket,
+    client,
+    exitSpace,
+    pageListeners,
+    cacheKey,
+    setPage,
+    sourceClient.spaces,
+    queryClient,
+    origin,
+  ]);
 
-  const rememberLastActivity = useCallback((at: string, conversationId: string) => {
-    setPage((state) => {
-      const selected = state.agents.find((entry) => entry.conversation.id === conversationId);
-      const selectedGroup = state.groups?.find((entry) => entry.conversation.id === conversationId);
-      if (selected && at !== selected.agent.lastActivityAt)
-        return {
-          ...state,
-          agents: state.agents.map((entry) =>
-            entry === selected
-              ? {
-                  ...entry,
-                  agent: { ...entry.agent, lastActivityAt: at },
-                  conversation: { ...entry.conversation, lastActivityAt: at },
-                }
-              : entry,
-          ),
-        };
-      if (selectedGroup && at !== selectedGroup.conversation.lastActivityAt)
-        return {
-          ...state,
-          groups: (state.groups ?? []).map((entry) =>
-            entry === selectedGroup
-              ? { ...entry, conversation: { ...entry.conversation, lastActivityAt: at } }
-              : entry,
-          ),
-        };
-      return state;
-    });
-  }, []);
+  const rememberLastActivity = useCallback(
+    (at: string, conversationId: string) => {
+      setPage((state) => {
+        const selected = state.agents.find((entry) => entry.conversation.id === conversationId);
+        const selectedGroup = state.groups?.find(
+          (entry) => entry.conversation.id === conversationId,
+        );
+        if (selected && at !== selected.agent.lastActivityAt)
+          return {
+            ...state,
+            agents: state.agents.map((entry) =>
+              entry === selected
+                ? {
+                    ...entry,
+                    agent: { ...entry.agent, lastActivityAt: at },
+                    conversation: { ...entry.conversation, lastActivityAt: at },
+                  }
+                : entry,
+            ),
+          };
+        if (selectedGroup && at !== selectedGroup.conversation.lastActivityAt)
+          return {
+            ...state,
+            groups: (state.groups ?? []).map((entry) =>
+              entry === selectedGroup
+                ? { ...entry, conversation: { ...entry.conversation, lastActivityAt: at } }
+                : entry,
+            ),
+          };
+        return state;
+      });
+    },
+    [setPage],
+  );
   const activityRefresh = useRef(0);
   async function refreshSpaceActivity() {
     const selectedSpace = current.current.spaceId;
@@ -717,6 +959,10 @@ function AgentsWorkspaceContents({
   const workspaceInputs =
     !loading && !failed && (renderWorkspace || (!selected && !agentId && !groupId));
   const rowButtons = useRef(new Map<string, HTMLElement>());
+  const agentListActions = useRef({
+    choose: (item: AgentConversationView) => chooseAgent(item),
+    menu: (item: AgentConversationView) => agentMenu(item),
+  });
   const previousSelection = useRef<string | null>(null);
   const selectedRowId = selectedGroup?.conversation.id ?? selected?.agent.id ?? null;
   useLayoutEffect(() => {
@@ -738,7 +984,7 @@ function AgentsWorkspaceContents({
     const nextPage = selectSpace(current.current, value);
     current.current = nextPage;
     setPage(nextPage);
-    onNavigate?.({ spaceId: value });
+    navigateSelection.current?.({ spaceId: value });
   }
   async function openNotification(
     notification: import("@raypx/core/notifications").MemberNotification,
@@ -784,7 +1030,7 @@ function AgentsWorkspaceContents({
     const nextPage = selectAgent(current.current, item.agent.id);
     current.current = nextPage;
     setPage(nextPage);
-    onNavigate?.({ spaceId: item.agent.spaceId, agentId: item.agent.id });
+    navigateSelection.current?.({ spaceId: item.agent.spaceId, agentId: item.agent.id });
   }
   function chooseGroup(item: GroupConversationView) {
     ++navigationRevision.current;
@@ -792,7 +1038,10 @@ function AgentsWorkspaceContents({
     const nextPage = selectGroup(current.current, item.conversation.id);
     current.current = nextPage;
     setPage(nextPage);
-    onNavigate?.({ spaceId: item.conversation.spaceId, groupId: item.conversation.id });
+    navigateSelection.current?.({
+      spaceId: item.conversation.spaceId,
+      groupId: item.conversation.id,
+    });
   }
   function updateGroup(conversation: Conversation) {
     setPage((state) => {
@@ -866,7 +1115,7 @@ function AgentsWorkspaceContents({
     });
     if (!selectCreated) return;
     closeGroupForm();
-    onNavigate?.({ spaceId: selectedSpace, groupId: conversation.id });
+    navigateSelection.current?.({ spaceId: selectedSpace, groupId: conversation.id });
   }
   function groupDeleted(group: GroupConversationView) {
     if (!mounted.current || current.current.spaceId !== group.conversation.spaceId) return;
@@ -881,7 +1130,7 @@ function AgentsWorkspaceContents({
           state.groups?.filter((item) => item.conversation.id !== group.conversation.id) ?? [],
       };
     });
-    if (wasSelected) onNavigate?.({ spaceId: group.conversation.spaceId });
+    if (wasSelected) navigateSelection.current?.({ spaceId: group.conversation.spaceId });
   }
   function back() {
     setAgentFilter("", false);
@@ -889,7 +1138,7 @@ function AgentsWorkspaceContents({
     ++navigationRevision.current;
     current.current = { ...current.current, agentId: null, groupId: null };
     setPage(current.current);
-    if (page.spaceId) onNavigate?.({ spaceId: page.spaceId });
+    if (page.spaceId) navigateSelection.current?.({ spaceId: page.spaceId });
   }
   async function createSpace(name: string) {
     const revision = ++navigationRevision.current;
@@ -905,7 +1154,7 @@ function AgentsWorkspaceContents({
     current.current = nextPage;
     setPage(nextPage);
     setSpaceNotice(null);
-    onNavigate?.({ spaceId: created.space.id });
+    navigateSelection.current?.({ spaceId: created.space.id });
   }
   async function saveAgent(input: AgentInput, capabilities?: AgentCapabilitySelection) {
     const selectedSpace = page.spaceId;
@@ -947,7 +1196,7 @@ function AgentsWorkspaceContents({
     if (agentFormRevision.current !== formRevision) return;
     ++agentFormRevision.current;
     setForm(null);
-    onNavigate?.({ spaceId: selectedSpace, agentId: saved.agent.id });
+    navigateSelection.current?.({ spaceId: selectedSpace, agentId: saved.agent.id });
   }
   async function removeAgent(item: AgentConversationView) {
     if (deletingRef.current) return;
@@ -971,8 +1220,8 @@ function AgentsWorkspaceContents({
         agents: state.agents.filter((entry) => entry.agent.id !== item.agent.id),
         agentId: wasSelected ? null : state.agentId,
       }));
-      if (wasSelected) onNavigate?.({ spaceId: item.agent.spaceId });
-      if (groups) setRefresh((value) => value + 1);
+      if (wasSelected) navigateSelection.current?.({ spaceId: item.agent.spaceId });
+      if (groups) refreshDirectory();
     } catch {
       if (mounted.current) setFailed(true);
     } finally {
@@ -981,7 +1230,7 @@ function AgentsWorkspaceContents({
     }
   }
 
-  const recent = [
+  const recentCandidates = [
     ...agentsByActivity
       .filter((entry) => entry.agent.lastActivityAt)
       .map((entry) => ({
@@ -1003,6 +1252,22 @@ function AgentsWorkspaceContents({
   ]
     .sort(compareLastActivity)
     .slice(0, 30);
+  const recentOrder = useWorkspaceSidebar((state) => state.recentOrder);
+  const candidateKey = JSON.stringify(recentCandidates.map((entry) => `${entry.kind}:${entry.id}`));
+  useEffect(() => {
+    const candidateIds: string[] = JSON.parse(candidateKey);
+    const ids = [
+      ...recentOrder.filter((id) => candidateIds.includes(id)),
+      ...candidateIds.filter((id) => !recentOrder.includes(id)),
+    ];
+    if (ids.join() !== recentOrder.join()) store.getState().setRecentOrder(ids);
+  }, [candidateKey, recentOrder, store]);
+  const recent = [...recentCandidates].sort((left, right) => {
+    const a = recentOrder.indexOf(`${left.kind}:${left.id}`);
+    const b = recentOrder.indexOf(`${right.kind}:${right.id}`);
+    return (a < 0 ? 30 : a) - (b < 0 ? 30 : b);
+  });
+
   function edit(item: AgentConversationView) {
     ++agentFormRevision.current;
     setForm(item);
@@ -1066,14 +1331,14 @@ function AgentsWorkspaceContents({
             size="sm"
             variant="ghost"
             aria-label={t("space")}
-            disabled={loading}
+            disabled={spacesLoading}
             className={rowClass}
           />
         }
       >
         <FolderIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
         <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
-          {membership?.space.name ?? t("space")}
+          {membership?.space.name ?? <Skeleton className="h-4 w-24" />}
         </span>
         <ChevronsUpDownIcon aria-hidden="true" className="size-3.5 shrink-0 sidebar-icon:hidden" />
       </DropdownMenuTrigger>
@@ -1105,62 +1370,59 @@ function AgentsWorkspaceContents({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-  return (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-clip">
-      {!renderWorkspace && !selected && !loadingConversation && (
-        <ShellToolbar>
-          <span className="sr-only">{t("title")}</span>
-        </ShellToolbar>
-      )}
-      {(page.spaceId || loading) && (
-        <ShellPrimaryAction>
-          <WorkspaceNavigationButton
-            variant="ghost"
-            disabled={!page.spaceId || loading || page.agents.length === 0}
-            className={cn(rowClass, "font-medium")}
-            aria-label={t("workspaceSidebar.new")}
-            onClick={() => {
-              if (page.spaceId && onNewConversation) onNewConversation(page.spaceId);
-              else back();
-            }}
-          >
-            <PlusIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
-            <span className="sidebar-icon:hidden">{t("workspaceSidebar.new")}</span>
-          </WorkspaceNavigationButton>
-        </ShellPrimaryAction>
-      )}
-      {client.routines && page.spaceId && (
-        <ShellSidebarNavigation>
-          <WorkspaceNavigationButton
-            ref={routinesTrigger}
-            variant="ghost"
-            className={rowClass}
-            aria-label={t("routines")}
-            disabled={Boolean(routinesDisabledReason)}
-            aria-describedby={routinesDisabledReason ? routinesReasonId : undefined}
-            onClick={() => {
-              setRoutinesAgentId(selected?.agent.id ?? currentHomeTarget?.agent.id ?? null);
-              setRoutinesOpen(true);
-            }}
-          >
-            <ClockIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
-            <span className="truncate sidebar-icon:hidden">{t("routines")}</span>
-          </WorkspaceNavigationButton>
-          {routinesDisabledReason && (
-            <p
-              id={routinesReasonId}
-              className={cn(
-                "px-2 text-xs text-muted-foreground sidebar-icon:sr-only",
-                loading && "sr-only",
-              )}
-            >
-              {routinesDisabledReason}
-            </p>
-          )}
-        </ShellSidebarNavigation>
-      )}
-      <ShellSidebarDirectory>
-        <div className="flex min-w-0 flex-col gap-3">
+  useLayoutEffect(() => {
+    agentListActions.current = { choose: chooseAgent, menu: agentMenu };
+  });
+  const sidebar: WorkspaceSidebarSlots = {
+    primaryAction: (
+      <>
+        <WorkspaceNavigationButton
+          variant="ghost"
+          disabled={!page.spaceId || loading || page.agents.length === 0}
+          className={cn(rowClass, "font-medium")}
+          aria-label={t("workspaceSidebar.new")}
+          onClick={() => {
+            if (page.spaceId && onNewConversation) onNewConversation(page.spaceId);
+            else back();
+          }}
+        >
+          <PlusIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
+          <span className="sidebar-icon:hidden">{t("workspaceSidebar.new")}</span>
+        </WorkspaceNavigationButton>
+      </>
+    ),
+    navigation: (
+      <>
+        <WorkspaceNavigationButton
+          ref={routinesTrigger}
+          variant="ghost"
+          className={rowClass}
+          aria-label={t("routines")}
+          disabled={Boolean(routinesDisabledReason)}
+          aria-describedby={routinesDisabledReason ? routinesReasonId : undefined}
+          onClick={() => {
+            setRoutinesAgentId(selected?.agent.id ?? currentHomeTarget?.agent.id ?? null);
+            setRoutinesOpen(true);
+          }}
+        >
+          <ClockIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
+          <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
+            {t("routines")}
+          </span>
+          <span className="w-6 shrink-0 text-right text-xs tabular-nums text-muted-foreground sidebar-icon:hidden">
+            {routinesQuery.data?.length || null}
+          </span>
+        </WorkspaceNavigationButton>
+        {routinesDisabledReason && !loading && (
+          <p id={routinesReasonId} className={cn("sr-only", loading && "sr-only")}>
+            {routinesDisabledReason}
+          </p>
+        )}
+      </>
+    ),
+    directory: (
+      <>
+        <div className="flex min-w-0 flex-col gap-2">
           {onOpenTools && (
             <WorkspaceNavigationButton
               variant="ghost"
@@ -1175,8 +1437,8 @@ function AgentsWorkspaceContents({
           {(page.spaceId || loading) && (
             <>
               <DirectorySection
+                section="agents"
                 title={t("title")}
-                expanded={agentsSectionOpen}
                 onExpandedChange={(open) => {
                   setAgentsSectionOpen(open);
                   if (!open) setAgentFilter("", false);
@@ -1253,15 +1515,15 @@ function AgentsWorkspaceContents({
                 {loading && !failed && page.agents.length === 0 && (
                   <div
                     aria-hidden="true"
-                    className="flex h-8 items-center gap-2 px-2 sidebar-icon:justify-center sidebar-icon:px-0"
+                    className="flex h-9 items-center gap-2 px-2 sidebar-icon:justify-center sidebar-icon:px-0"
                   >
                     <Skeleton className="size-4 shrink-0" />
                     <Skeleton className="h-3 w-20 sidebar-icon:hidden" />
                   </div>
                 )}
                 {!loading && page.agents.length === 0 && !homeCreateAction && (
-                  <div className="mx-1 flex flex-col gap-3 rounded-xl border border-border/60 bg-background/70 p-3 sidebar-icon:border-0 sidebar-icon:bg-transparent sidebar-icon:p-0">
-                    <p className="text-xs leading-5 text-muted-foreground sidebar-icon:hidden">
+                  <div className="mx-1 flex flex-col gap-1 rounded-xl border border-border/60 bg-background/70 p-2 sidebar-icon:border-0 sidebar-icon:bg-transparent sidebar-icon:p-0">
+                    <p className="truncate text-xs leading-5 text-muted-foreground sidebar-icon:hidden">
                       {t("workspaceSidebar.emptyAgents")}
                     </p>
                     <WorkspaceNavigationButton
@@ -1278,42 +1540,13 @@ function AgentsWorkspaceContents({
                   </div>
                 )}
                 {page.agents.length > 0 && (
-                  <ul className="flex min-w-0 flex-col gap-0.5">
-                    {filteredAgents.map((item) => (
-                      <li
-                        key={item.agent.id}
-                        className={cn(
-                          "group/directory-row flex min-w-0 items-center rounded-lg",
-                          item.agent.id === page.agentId && "bg-selected text-selected-text",
-                        )}
-                      >
-                        <WorkspaceNavigationButton
-                          ref={(node) => {
-                            if (node) rowButtons.current.set(item.agent.id, node);
-                            else rowButtons.current.delete(item.agent.id);
-                          }}
-                          size="sm"
-                          variant="ghost"
-                          className={cn(rowClass, "flex-1")}
-                          aria-label={item.agent.name}
-                          title={item.agent.name}
-                          aria-current={item.agent.id === page.agentId ? "page" : undefined}
-                          onClick={() => chooseAgent(item)}
-                        >
-                          <AgentIcon
-                            data-icon="inline-start"
-                            aria-hidden="true"
-                            className="size-5 rounded-md p-0.5"
-                            style={agentIdentityStyle(item.agent.id, true)}
-                          />
-                          <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
-                            {item.agent.name}
-                          </span>
-                        </WorkspaceNavigationButton>
-                        {agentMenu(item)}
-                      </li>
-                    ))}
-                  </ul>
+                  <AgentDirectoryList
+                    entries={filteredAgents}
+                    selectedId={sidebarAgentId}
+                    rowClass={rowClass}
+                    rowButtons={rowButtons}
+                    actions={agentListActions}
+                  />
                 )}
                 {page.agents.length > 0 && filteredAgents.length === 0 && (
                   <p role="status" className="px-2 py-2 text-xs text-muted-foreground">
@@ -1323,6 +1556,7 @@ function AgentsWorkspaceContents({
               </DirectorySection>
               {groups && (
                 <DirectorySection
+                  section="groups"
                   title={t("groups.title")}
                   action={
                     groupsByActivity.length > 0 ? (
@@ -1351,7 +1585,9 @@ function AgentsWorkspaceContents({
                           className={rowClass}
                           aria-label={item.conversation.name}
                           title={item.conversation.name}
-                          aria-current={item.conversation.id === page.groupId ? "page" : undefined}
+                          aria-current={
+                            item.conversation.id === sidebarGroupId ? "page" : undefined
+                          }
                           onClick={() => chooseGroup(item)}
                         >
                           <UserCircleIcon
@@ -1383,9 +1619,11 @@ function AgentsWorkspaceContents({
                   )}
                 </DirectorySection>
               )}
-              <DirectorySection title={t("space")}>{spaceControl}</DirectorySection>
-              {recent.length > 0 && (
-                <DirectorySection title={t("workspaceSidebar.recent")}>
+              <DirectorySection section="space" title={t("space")}>
+                {spaceControl}
+              </DirectorySection>
+              {(page.spaceId || loading) && (
+                <DirectorySection section="recent" title={t("workspaceSidebar.recent")}>
                   <ul className="flex min-w-0 flex-col gap-0.5">
                     {recent.map((entry) => (
                       <li
@@ -1444,13 +1682,19 @@ function AgentsWorkspaceContents({
             </>
           )}
         </div>
-      </ShellSidebarDirectory>
-      {membership && (
-        <ShellSidebarFooter>
-          <p className="px-2 pb-1 text-xs text-muted-foreground sidebar-icon:hidden">
-            {t(`spaceSettings.roles.${membership.member.role}`)}
-          </p>
-          {membership.member.role === "owner" && management && (
+      </>
+    ),
+    footer: (
+      <>
+        <div className="h-14 pointer-coarse:h-16 sidebar-icon:h-9 pointer-coarse:sidebar-icon:h-11">
+          <div className="px-2 pb-1 text-xs text-muted-foreground sidebar-icon:hidden">
+            {membership ? (
+              t(`spaceSettings.roles.${membership.member.role}`)
+            ) : (
+              <Skeleton className="h-3 w-12" />
+            )}
+          </div>
+          {membership?.member.role === "owner" && management && (
             <WorkspaceNavigationButton
               size="sm"
               variant="ghost"
@@ -1464,10 +1708,12 @@ function AgentsWorkspaceContents({
               </span>
             </WorkspaceNavigationButton>
           )}
-        </ShellSidebarFooter>
-      )}
-      {client.notifications && (
-        <ShellSidebarActions>
+        </div>
+      </>
+    ),
+    actions: (
+      <>
+        {accountId && client.notifications ? (
           <NotificationsBell
             port={client.notifications}
             protectedInputSpaceId={workspaceInputs ? page.spaceId : undefined}
@@ -1476,149 +1722,192 @@ function AgentsWorkspaceContents({
               void openNotification(item).catch(() => setSpaceNotice("unavailable"))
             }
           />
-        </ShellSidebarActions>
-      )}
-      {spaceNotice && (
-        <p role="status" className="px-5 py-2 text-sm text-muted-foreground">
-          {t(spaceExitKeys[spaceNotice])}
-        </p>
-      )}
-      {failed && (
-        <Alert variant="destructive">
-          <AlertDescription>{t("directoryError")}</AlertDescription>
-          <AlertAction>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={loading}
-              onClick={() => setRefresh((value) => value + 1)}
-            >
-              {t("refresh")}
-            </Button>
-          </AlertAction>
-        </Alert>
-      )}
-      {loading &&
-        !failed &&
-        (workspaceLoading ??
-          (loadingConversation ? (
-            <ConversationLoading label={t("loading")} />
-          ) : (
-            <div className={conversationColumn}>
-              <LoadingState label={t("loading")} />
-            </div>
-          )))}
-      {client.protectedInputs && page.spaceId && workspaceInputs && (
-        <ProtectedInputs
-          key={page.spaceId}
-          port={client.protectedInputs}
-          spaceId={page.spaceId}
-          refreshKey={protectedInputKey}
-          className="mx-auto w-full max-w-[44rem] px-3 pt-3 sm:px-5"
-        />
-      )}
-      {!loading && !failed && page.spaces.length === 0 && (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <AgentIcon aria-hidden="true" />
-            </EmptyMedia>
-            <h1 className="text-lg font-medium">{t("noSpaces")}</h1>
-          </EmptyHeader>
-          <Button onClick={() => setNewSpace(true)}>{t("newSpace")}</Button>
-        </Empty>
-      )}
-      {renderWorkspace &&
-        page.spaceId &&
-        !loading &&
-        !failed &&
-        renderWorkspace({
-          spaceId: page.spaceId,
-          agents: page.agents.map((entry) => entry.agent),
-          accountNames: Object.fromEntries(
-            (managementState?.members ?? []).map((member) => [member.accountId, member.name]),
-          ),
-          subscribe: subscribePages,
-        })}
-      {!renderWorkspace &&
-        !loading &&
-        !failed &&
-        page.spaceId &&
-        (selected ? (
-          <AgentConversation
-            key={JSON.stringify([accountId, origin, selected.conversation.id])}
-            item={selected}
-            runReference={
-              runReference?.conversationId === selected.conversation.id ? runReference : undefined
-            }
-            onBack={back}
-            onEditAgent={() => edit(selected)}
-            onDeleteAgent={selectedGroup ? undefined : () => void removeAgent(selected)}
-            onOpenPage={onOpenPage}
-            pageLinkOrigin={invitationOrigin ?? origin}
-            pageResultPreview={pageResultPreview}
-            onOpenExternal={onOpenExternal}
-            composerReference={composerReference}
-            subscribePages={subscribePages}
-            group={selectedGroup}
-            agentDirectory={page.agents.map((entry) => entry.agent)}
-            onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
-            capabilities={client}
-            supportsImages={
-              selectedGroup
-                ? selectedGroup.agents.some(
-                    (agent) =>
-                      page.models.find((model) => model.modelId === agent.model.modelId)
-                        ?.supportsImages === true,
-                  )
-                : page.models.find((model) => model.modelId === selected.agent.model.modelId)
-                    ?.supportsImages === true
-            }
-            port={conversationPort}
-            computerPort={computerPort}
-            approvalPort={approvalPort}
-            activity={activity[selected.agent.spaceId]}
-            onActivity={rememberActivity}
-            onComputerOpen={() => void refreshSpaceActivity()}
-            socket={eventSocket}
-            feed={conversationFeed}
-            drafts={draftStore}
-            origin={origin}
-            accountId={accountId}
-            members={managementState?.members}
-            spaceSettings={managementState?.settings}
-            effectiveMode={managementState?.effectiveMode}
-            onLastActivity={rememberLastActivity}
-          />
         ) : (
-          <WorkspaceHome
-            messageAttachments={client.messageAttachments}
-            agents={agentsByActivity}
-            deviceComputers={client.deviceComputers}
-            targetId={homeTargetId}
-            onTargetChange={rememberTarget}
-            onOpen={chooseAgent}
-            onEdit={edit}
-            onCreateAgent={homeCreateAction ? createAgent : undefined}
-            createAgentRef={firstAgentTrigger}
-            publicOrigin={invitationOrigin ?? origin}
-            onOpenExternal={onOpenExternal}
-            models={page.models}
-            mode={
-              managementState?.effectiveMode?.mode ??
-              managementState?.settings?.approvalMode ??
-              undefined
-            }
-            port={conversationPort}
-            computerPort={computerPort}
-            approvalPort={approvalPort}
-            socket={eventSocket}
-            feed={conversationFeed}
-            drafts={draftStore}
-            origin={origin}
-            accountId={accountId}
-          />
-        ))}
+          <Skeleton className="size-7" />
+        )}
+      </>
+    ),
+    spaceId: page.spaceId ?? spaceId,
+    activeRoute: sidebarRoute,
+    open: sidebarOpen,
+    sheetOpen: sidebarSheetOpen,
+    onSheetOpenChange: store.getState().setSheetOpen,
+    onOpenChange: store.getState().setOpen,
+    getScrollTop: () => store.getState().scrollTop,
+    onScrollTopChange: store.getState().setScrollTop,
+  };
+  const content = (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-clip">
+      {!children && !renderWorkspace && !selected && !loadingConversation && (
+        <ShellToolbar>
+          <span className="sr-only">{t("title")}</span>
+        </ShellToolbar>
+      )}
+      {!renderShell && (
+        <>
+          <ShellPrimaryAction>{sidebar.primaryAction}</ShellPrimaryAction>
+          <ShellSidebarNavigation>{sidebar.navigation}</ShellSidebarNavigation>
+          <ShellSidebarDirectory>{sidebar.directory}</ShellSidebarDirectory>
+          <ShellSidebarFooter>{sidebar.footer}</ShellSidebarFooter>
+          <ShellSidebarActions>{sidebar.actions}</ShellSidebarActions>
+        </>
+      )}
+      {children ?? (
+        <>
+          {spaceNotice && (
+            <p role="status" className="px-5 py-2 text-sm text-muted-foreground">
+              {t(spaceExitKeys[spaceNotice])}
+            </p>
+          )}
+          {failed && (
+            <Alert variant="destructive">
+              <AlertDescription>{t("directoryError")}</AlertDescription>
+              <AlertAction>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={loading}
+                  onClick={() => refreshDirectory()}
+                >
+                  {t("refresh")}
+                </Button>
+              </AlertAction>
+            </Alert>
+          )}
+          {loading &&
+            !failed &&
+            (workspaceLoading ??
+              (loadingConversation ? (
+                <ConversationLoading label={t("loading")} />
+              ) : (
+                <div className={conversationColumn}>
+                  <LoadingState label={t("loading")} />
+                </div>
+              )))}
+          {client.protectedInputs && page.spaceId && workspaceInputs && (
+            <ProtectedInputs
+              key={page.spaceId}
+              port={client.protectedInputs}
+              spaceId={page.spaceId}
+              refreshKey={protectedInputKey}
+              className="mx-auto w-full max-w-[44rem] px-3 pt-3 sm:px-5"
+            />
+          )}
+          {!loading && !failed && page.spaces.length === 0 && (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <AgentIcon aria-hidden="true" />
+                </EmptyMedia>
+                <h1 className="text-lg font-medium">{t("noSpaces")}</h1>
+              </EmptyHeader>
+              <Button onClick={() => setNewSpace(true)}>{t("newSpace")}</Button>
+            </Empty>
+          )}
+          {renderWorkspace && page.spaceId && !loading && !failed && (
+            <WorkspaceContextProvider
+              value={{
+                spaceId: page.spaceId,
+                agents: page.agents.map((entry) => entry.agent),
+                accountNames: Object.fromEntries(
+                  (managementState?.members ?? []).map((member) => [member.accountId, member.name]),
+                ),
+                subscribe: subscribePages,
+              }}
+            >
+              {renderWorkspace({
+                spaceId: page.spaceId,
+                agents: page.agents.map((entry) => entry.agent),
+                accountNames: Object.fromEntries(
+                  (managementState?.members ?? []).map((member) => [member.accountId, member.name]),
+                ),
+                subscribe: subscribePages,
+              })}
+            </WorkspaceContextProvider>
+          )}
+          {!renderWorkspace &&
+            !loading &&
+            !failed &&
+            page.spaceId &&
+            (selected ? (
+              <AgentConversation
+                key={JSON.stringify([accountId, origin, selected.conversation.id])}
+                item={selected}
+                runReference={
+                  runReference?.conversationId === selected.conversation.id
+                    ? runReference
+                    : undefined
+                }
+                onBack={back}
+                onEditAgent={() => edit(selected)}
+                onDeleteAgent={selectedGroup ? undefined : () => void removeAgent(selected)}
+                onOpenPage={onOpenPage}
+                pageLinkOrigin={invitationOrigin ?? origin}
+                pageResultPreview={pageResultPreview}
+                onOpenExternal={onOpenExternal}
+                composerReference={composerReference}
+                subscribePages={subscribePages}
+                group={selectedGroup}
+                agentDirectory={page.agents.map((entry) => entry.agent)}
+                onManageParticipants={selectedGroup && groups ? openParticipants : undefined}
+                capabilities={client}
+                supportsImages={
+                  selectedGroup
+                    ? selectedGroup.agents.some(
+                        (agent) =>
+                          page.models.find((model) => model.modelId === agent.model.modelId)
+                            ?.supportsImages === true,
+                      )
+                    : page.models.find((model) => model.modelId === selected.agent.model.modelId)
+                        ?.supportsImages === true
+                }
+                port={conversationPort}
+                computerPort={computerPort}
+                approvalPort={approvalPort}
+                activity={activity[selected.agent.spaceId]}
+                onActivity={rememberActivity}
+                onComputerOpen={() => void refreshSpaceActivity()}
+                socket={eventSocket}
+                feed={conversationFeed}
+                drafts={draftStore}
+                origin={origin}
+                accountId={accountId}
+                members={managementState?.members}
+                spaceSettings={managementState?.settings}
+                effectiveMode={managementState?.effectiveMode}
+                onLastActivity={rememberLastActivity}
+              />
+            ) : (
+              <WorkspaceHome
+                messageAttachments={client.messageAttachments}
+                agents={agentsByActivity}
+                deviceComputers={client.deviceComputers}
+                targetId={homeTargetId}
+                onTargetChange={rememberTarget}
+                onOpen={chooseAgent}
+                onEdit={edit}
+                onCreateAgent={homeCreateAction ? createAgent : undefined}
+                createAgentRef={firstAgentTrigger}
+                publicOrigin={invitationOrigin ?? origin}
+                onOpenExternal={onOpenExternal}
+                models={page.models}
+                mode={
+                  managementState?.effectiveMode?.mode ??
+                  managementState?.settings?.approvalMode ??
+                  undefined
+                }
+                port={conversationPort}
+                computerPort={computerPort}
+                approvalPort={approvalPort}
+                socket={eventSocket}
+                feed={conversationFeed}
+                drafts={draftStore}
+                origin={origin}
+                accountId={accountId}
+              />
+            ))}
+        </>
+      )}
       {newGroup && <GroupForm agents={page.agents} onSave={createGroup} onClose={closeGroupForm} />}
       {selectedGroup && groups && (
         <CapabilitySheet
@@ -1782,6 +2071,11 @@ function AgentsWorkspaceContents({
       {confirmation.dialog}
     </div>
   );
+  const renderedContent =
+    !accountId && renderWorkspace
+      ? renderWorkspace({ spaceId: "", agents: [], accountNames: {}, subscribe: subscribePages })
+      : content;
+  return renderShell ? renderShell(sidebar, renderedContent) : renderedContent;
 }
 
 const spaceExitKeys = {
@@ -1817,12 +2111,14 @@ function WorkspaceNavigationButton({ children, ...props }: ComponentProps<typeof
 }
 
 function DirectorySection({
+  section,
   title,
   action,
   children,
   expanded,
   onExpandedChange,
 }: {
+  section: import("../model/sidebar.js").SidebarSection;
   title: string;
   action?: ReactNode;
   children: ReactNode;
@@ -1830,10 +2126,16 @@ function DirectorySection({
   onExpandedChange?: (open: boolean) => void;
 }) {
   const collapsed = useShellSidebarCollapsed();
+  const store = useContext(SidebarStoreContext)!;
+  const scroll = useRef<HTMLDivElement>(null);
   const t = useTranslations("agents");
-  const [localOpen, setLocalOpen] = useState(true);
+  const localOpen = useWorkspaceSidebar((state) => !state.collapsed[section]);
+  const setCollapsed = useWorkspaceSidebar((state) => state.setCollapsed);
   const open = expanded ?? localOpen;
-  const setOpen = onExpandedChange ?? setLocalOpen;
+  const setOpen = onExpandedChange ?? ((value: boolean) => setCollapsed(section, !value));
+  useLayoutEffect(() => {
+    if (scroll.current) scroll.current.scrollTop = store.getState().sectionScroll[section] ?? 0;
+  }, [store, section, open]);
   return (
     <Collapsible
       role="region"
@@ -1864,7 +2166,23 @@ function DirectorySection({
         </div>
       )}
       {collapsed && action && <div className="flex justify-center">{action}</div>}
-      <CollapsibleContent>{children}</CollapsibleContent>
+      <CollapsibleContent>
+        <div
+          ref={scroll}
+          onScroll={(event) =>
+            store.getState().setSectionScroll(section, event.currentTarget.scrollTop)
+          }
+          className={cn(
+            "overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable]",
+            section === "agents" && "h-18 pointer-coarse:h-23",
+            section === "groups" && "h-9 pointer-coarse:h-11",
+            section === "space" && "h-9 pointer-coarse:h-11",
+            section === "recent" && "h-18 pointer-coarse:h-23",
+          )}
+        >
+          {children}
+        </div>
+      </CollapsibleContent>
     </Collapsible>
   );
 }
@@ -1909,4 +2227,12 @@ function lastAgentPreference(key: string) {
       for (const listener of listeners) listener();
     },
   };
+}
+
+const noMemberships: import("../model/port.js").SpaceMembership[] = [];
+function clientReady() {
+  return true;
+}
+function serverNotReady() {
+  return false;
 }

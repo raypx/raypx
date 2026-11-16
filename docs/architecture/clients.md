@@ -40,7 +40,23 @@ New opens the home composer and uses the last used or chosen Agent. Agent/group
 creation stays in their sections; an empty Space has one first-Agent action.
 Routines, Pages and Tools remain reachable above the directory; the account and
 owner invitation actions stay below it. Search targets current destinations.
-An account without a Space first gets New Space. Agent forms use the backend's
+Web's `(app)` layout and Desktop's root member layout mount one shared workspace.
+Agents, groups, Pages, routines, tools, notifications and settings retain the directory;
+administration has its own shell. Pages reads the selected Space from the layout.
+Sidebar links retain `spaceId`; the router owns the destination and the shared zustand
+store owns UI IDs, folds, filters, open/sheet state, scroll and retained Recent order.
+Only folds/open are device-persisted, scoped by origin/account and retained on logout.
+Identity changes discard transient UI state. Mobile retains its native navigation.
+
+A shared TanStack Query cache holds Space membership, Agent/group list projections,
+routines and notifications under stable origin/account/Space keys. Background reads
+update existing rows, while the backend still checks current membership on every
+request. Bounded section surfaces, first-paint skeletons and reserved header/account/
+footer slots prevent data arrival from moving the sidebar. Sidebar rows reserve
+badge/action space; lists keep their order while a member reads.
+
+An account without a Space first gets New Space; account and device settings remain
+available independently. Agent forms use the backend's
 offered models and show an explicit unavailable state for an empty catalog.
 
 At /agents without a selection, the shared client shows a centered question and

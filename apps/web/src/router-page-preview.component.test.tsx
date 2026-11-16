@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import type { AgentsWorkspaceProps } from "@raypx/agents/client";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -24,13 +23,12 @@ vi.mock("./features/auth/route-guard.js", () => ({
   PageAccessFeedback: () => null,
 }));
 vi.mock("@raypx/agents/client", () => ({
-  AgentsWorkspace: ({ renderWorkspace }: AgentsWorkspaceProps) =>
-    renderWorkspace?.({
-      spaceId: "team-one",
-      agents: [],
-      accountNames: {},
-      subscribe: () => () => {},
-    }),
+  useWorkspaceContext: () => ({
+    spaceId: "team-one",
+    agents: [],
+    accountNames: {},
+    subscribe: () => () => {},
+  }),
 }));
 import { Route } from "./routes/(app)/pages.js";
 

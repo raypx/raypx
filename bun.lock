@@ -370,9 +370,11 @@
         "@raypx/providers": "workspace:*",
         "@raypx/spaces": "workspace:*",
         "@raypx/ui": "workspace:*",
+        "@tanstack/react-query": "catalog:",
         "diff": "catalog:",
         "drizzle-orm": "catalog:",
         "zod": "catalog:",
+        "zustand": "catalog:",
       },
       "devDependencies": {
         "@raypx/tsconfig": "workspace:*",

@@ -1,3 +1,9 @@
+import { ShellSkipLink } from "@raypx/blocks/shell";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
+import { DesktopWorkspace } from "./workspace.js";
+import type { WorkspaceSidebarSlots } from "@raypx/blocks/shell";
+import { parseAgentSelection } from "@raypx/agents/model";
+import type { ReactNode } from "react";
 import { useTranslations } from "../i18n.js";
 import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
@@ -9,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui
 import { desktopReturnTo } from "../features/auth/return-to.js";
 import { useState } from "react";
 import {
-  Link,
+  useLinkProps,
   Outlet,
   useMatches,
   useRouter,
@@ -35,14 +41,26 @@ import { useSettingsNavigation } from "../features/settings/navigation.js";
 
 type DesktopPath = "/agents" | "/pages" | "/account";
 
-function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<DesktopPath>) {
+function ShellLink({
+  to,
+  markActive,
+  activeRoute,
+  exact,
+  spaceId,
+  ...props
+}: ShellLinkProps<DesktopPath>) {
+  const link = useLinkProps({
+    to,
+    search: to === "/pages" || to === "/agents" ? parseAgentSelection({ spaceId }) : {},
+    activeOptions: { exact: exact ?? false, includeSearch: false },
+    ...props,
+  });
+  const current = activeRoute === undefined ? link["aria-current"] : undefined;
+  const active = activeRoute === undefined ? current === "page" : activeRoute === to;
   return (
-    <Link
-      to={to}
-      activeOptions={{ exact: exact ?? false }}
-      activeProps={markActive ? { "aria-current": "page" } : {}}
-      {...props}
-    />
+    <a {...link} aria-current={markActive && active ? "page" : undefined}>
+      {props.children}
+    </a>
   );
 }
 
@@ -61,6 +79,9 @@ export function DesktopShell() {
   const settings = useSettingsNavigation();
   const auth = useDesktopSignOut();
   const routeReady = useRouterState({ select: (state) => !state.isLoading });
+  const memberRoute = useRouterState({
+    select: (state) => ["/agents", "/pages", "/account", "/join"].includes(state.location.pathname),
+  });
   const href = useRouterState({ select: (state) => state.location.href });
   const page = useMatches({
     select: (matches) =>
@@ -83,72 +104,76 @@ export function DesktopShell() {
   const actions: ShellAction[] = [
     { label: c("search"), icon: <SearchIcon />, shortcut, onSelect: () => setSearchOpen(true) },
   ];
-  return (
-    <>
-      <AnalyticsIdentity client={analytics} accountId={accountId} />
-      <div
-        className="h-full"
-        data-raypx-workbench-ready={engine.status === "ready" && routeReady ? "true" : undefined}
-      >
-        <AppShell
-          storageKey={desktopStorageKey("raypx_sidebar_open")}
-          frame="window"
-          brand={{ to: "/agents", label: "Raypx" }}
-          actions={actions}
-          navigation={[[pages[1]]]}
-          accountAction={
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    onClick={() => void settings.open()}
-                    aria-haspopup="dialog"
-                    aria-label={c("settings")}
-                    className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:focus-control"
-                  />
-                }
-              >
-                <SettingsIcon aria-hidden="true" className="size-5 stroke-[1.75]" />
-              </TooltipTrigger>
-              <TooltipContent side="top">{c("settings")}</TooltipContent>
-            </Tooltip>
-          }
-          breadcrumbs={[]}
-          layout={page?.layout ?? "document"}
-          LinkComponent={ShellLink}
-          notice={
-            <>
-              {accountId && (
-                <SetupChecklist
-                  destinations={{
-                    model: router.history.createHref(
-                      router.buildLocation({ hash: "settings/models", search: true }).href,
-                    ),
-                    sandbox: `${webUrl}/admin/settings#sandbox`,
-                    mail: `${webUrl}/admin/settings#email`,
-                  }}
-                  port={setupChecklistPort}
-                  origin={apiUrl}
-                  accountId={accountId}
-                  onConfigure={(item) => {
-                    if (item === "model") {
-                      void settings.open("models");
-                      return;
-                    }
-                    const url = `${webUrl}/admin/settings#${item === "mail" ? "email" : "sandbox"}`;
-                    if (isDesktop())
-                      void getBridge().then((bridge) => bridge.request.openExternal({ url }));
-                    else window.open(url, "_blank", "noopener,noreferrer");
-                  }}
+  function renderShell(
+    sidebar: WorkspaceSidebarSlots | undefined,
+    content: ReactNode = <Outlet />,
+  ) {
+    return (
+      <AppShell
+        sidebar={sidebar}
+        reserveWorkspaceSidebar
+        skipLink={false}
+        storageKey={desktopStorageKey("raypx_sidebar_open")}
+        frame="window"
+        brand={{ to: "/agents", label: "Raypx" }}
+        actions={actions}
+        navigation={[[pages[1]]]}
+        accountAction={
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  onClick={() => void settings.open()}
+                  aria-haspopup="dialog"
+                  aria-label={c("settings")}
+                  className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:focus-control"
                 />
-              )}
-              {engine.status === "error" && isDesktop() && (
-                <EngineNotice code={engine.code} restart={restart} />
-              )}
-            </>
-          }
-          account={
+              }
+            >
+              <SettingsIcon aria-hidden="true" className="size-5 stroke-[1.75]" />
+            </TooltipTrigger>
+            <TooltipContent side="top">{c("settings")}</TooltipContent>
+          </Tooltip>
+        }
+        breadcrumbs={[]}
+        layout={page?.layout ?? "document"}
+        LinkComponent={ShellLink}
+        notice={
+          <>
+            {accountId && (
+              <SetupChecklist
+                destinations={{
+                  model: router.history.createHref(
+                    router.buildLocation({ hash: "settings/models", search: true }).href,
+                  ),
+                  sandbox: `${webUrl}/admin/settings#sandbox`,
+                  mail: `${webUrl}/admin/settings#email`,
+                }}
+                port={setupChecklistPort}
+                origin={apiUrl}
+                accountId={accountId}
+                onConfigure={(item) => {
+                  if (item === "model") {
+                    void settings.open("models");
+                    return;
+                  }
+                  const url = `${webUrl}/admin/settings#${item === "mail" ? "email" : "sandbox"}`;
+                  if (isDesktop())
+                    void getBridge().then((bridge) => bridge.request.openExternal({ url }));
+                  else window.open(url, "_blank", "noopener,noreferrer");
+                }}
+              />
+            )}
+            {engine.status === "error" && isDesktop() && (
+              <EngineNotice code={engine.code} restart={restart} />
+            )}
+          </>
+        }
+        account={
+          session.isPending ? (
+            <Skeleton className="h-12 w-full rounded-lg" />
+          ) : (
             <AccountMenu
               key={accountId ?? "signed-out"}
               user={accountId ? (session.data?.user ?? null) : null}
@@ -161,17 +186,40 @@ export function DesktopShell() {
                       to: "/login",
                       search: { returnTo: desktopReturnTo(href) },
                     })
-                  : void router.navigate({ to: `/${destination}` })
+                  : void router.navigate({
+                      to: `/${destination}`,
+                      search: parseAgentSelection({ spaceId: sidebar?.spaceId }),
+                    })
               }
               onSignOut={async () => {
                 const result = await auth.signOut(accountId, "/login");
                 return result.status === "success";
               }}
             />
-          }
-        >
-          <Outlet />
-        </AppShell>
+          )
+        }
+      >
+        {content}
+      </AppShell>
+    );
+  }
+  return (
+    <>
+      <ShellSkipLink frame="window" />
+      <AnalyticsIdentity client={analytics} accountId={accountId} />
+      <div
+        className="h-full"
+        data-raypx-workbench-ready={engine.status === "ready" && routeReady ? "true" : undefined}
+      >
+        {memberRoute && (accountId || session.isPending || session.error) ? (
+          <DesktopWorkspace
+            key={`${apiUrl}:${accountId}`}
+            accountId={accountId ?? ""}
+            renderShell={renderShell}
+          />
+        ) : (
+          renderShell(undefined)
+        )}
       </div>
       <DesktopCommandMenu
         open={searchOpen}

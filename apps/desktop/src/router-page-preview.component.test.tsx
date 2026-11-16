@@ -1,7 +1,6 @@
 vi.mock("./features/auth/sign-out.js", () => ({
   useDesktopSignOut: () => ({ suppressSessionRedirect: false, sessionEnded: vi.fn() }),
 }));
-import type { AgentsWorkspaceProps } from "@raypx/agents/client";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -39,13 +38,12 @@ vi.mock("./lib/desktop.js", () => ({
   grantDeviceDirectory: vi.fn(async () => true),
 }));
 vi.mock("@raypx/agents/client", () => ({
-  AgentsWorkspace: ({ renderWorkspace }: AgentsWorkspaceProps) =>
-    renderWorkspace?.({
-      spaceId: "team-one",
-      agents: [],
-      accountNames: {},
-      subscribe: () => () => {},
-    }),
+  useWorkspaceContext: () => ({
+    spaceId: "team-one",
+    agents: [],
+    accountNames: {},
+    subscribe: () => () => {},
+  }),
 }));
 import { Route } from "./routes/pages.js";
 

@@ -27,8 +27,8 @@ Code outside `src/components/` stays private.
   The shell composes UI’s shadcn SidebarProvider, Sidebar, groups, menus and footer.
   It uses the persistent icon rail on narrow screens. The account slot adapts with
   UI's `sidebar-icon:` variant.
-  Blocks owns the local `raypx_sidebar_open` device preference and cross-window
-  storage subscription; the UI primitive owns no persistence. Missing/blocked
+  Standalone shells use the local `raypx_sidebar_open` device preference and cross-window
+  storage subscription; member layouts inject their scoped zustand control. The UI primitive owns no persistence. Missing/blocked
   storage keeps the expanded default or current in-memory choice. Narrow layouts
   still use the rail regardless of the stored desktop-width choice; navigation uses
   UI's `sidebar-icon:` variant so the rail paints before hydration.
@@ -101,3 +101,10 @@ both Web and Desktop headers; feature packages own their content.
 `settings` also exports `SettingsNavigation`: caller-owned scope/category items,
 quiet wide navigation rows with optional icons and a labelled narrow Select. The host owns role filtering,
 selection, URL state, panel lifetime and all data reads.
+
+Member layouts pass `sidebar` direct slots and controlled open/mobile state from
+the Agents store. `reserveWorkspaceSidebar` fixes primary/navigation/action, account
+and footer geometry before data arrives; section lists own bounded scrolling. The
+existing local preference is only the standalone-shell fallback. `ShellSkipLink` can
+live outside the identity-bound workspace (`skipLink={false}` on AppShell), retaining
+keyboard focus through session discovery. Blocks still owns no remote data or router.

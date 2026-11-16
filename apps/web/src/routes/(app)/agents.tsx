@@ -1,13 +1,9 @@
-import { useTranslations } from "../../i18n.js";
-import { AgentsWorkspace, type PageResultMountProps } from "@raypx/agents/client";
-import { PageResultPreview } from "@raypx/pages/client";
 import { pageIdSchema } from "@raypx/core/pages";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
-import { useSettingsNavigation } from "../../features/settings/navigation.js";
-import { agentsClient } from "../../features/agents/client.js";
+
 import { SessionBoundary } from "../../features/auth/components/session-boundary.js";
-import { apiOrigin, webOrigin } from "../../features/auth/client.js";
+
 import { safeReturnTo } from "../../features/auth/return-to.js";
 import { PageAccessFeedback, webPageGuard } from "../../features/auth/route-guard.js";
 
@@ -26,65 +22,12 @@ export const Route = createFileRoute("/(app)/agents")({
 });
 
 function AgentsPage() {
-  const pageCopy = useTranslations("pages");
-  const settings = useSettingsNavigation();
-  const selection = Route.useSearch();
-  const navigate = Route.useNavigate();
   const href = useLocation({ select: (location) => location.href });
-  const settingsHash = useLocation({ select: (location) => location.hash });
   return (
     <SessionBoundary
       guest={<Navigate to="/login" search={{ returnTo: safeReturnTo(href) }} replace />}
     >
-      {(accountId) => (
-        <AgentsWorkspace
-          key={`${apiOrigin()}:${accountId}`}
-          client={agentsClient}
-          onSessionEnded={() =>
-            void navigate({ to: "/login", search: { returnTo: "/agents" }, replace: true })
-          }
-          groups={agentsClient.conversations}
-          spaceManagement={agentsClient.spaces}
-          accountApprovalSettings={agentsClient.approvals}
-          invitationOrigin={webOrigin()}
-          accountId={accountId}
-          origin={apiOrigin()}
-          {...selection}
-          composerReference={
-            selection.pageRef && selection.spaceId
-              ? {
-                  id: selection.pageRef,
-                  text: `[${pageCopy("title")}](${apiOrigin()}/api/pages/member/${encodeURIComponent(selection.spaceId)}/${encodeURIComponent(selection.pageRef)})`,
-                }
-              : undefined
-          }
-          onOpenPage={(pageId) =>
-            void navigate({
-              to: "/pages",
-              search: {
-                ...(selection.spaceId ? { spaceId: selection.spaceId } : {}),
-                ...(pageId ? { pageId: pageIdSchema.parse(pageId) } : {}),
-              },
-            })
-          }
-          pageResultPreview={ChatPagePreview}
-          modelCatalogKey={settingsHash}
-          onOpenModels={() => void settings.open("models")}
-          onOpenTools={() => void settings.open("tools")}
-          onNavigate={(next) => void navigate({ search: parseAgentSelection(next) })}
-        />
-      )}
+      {() => null}
     </SessionBoundary>
-  );
-}
-
-function ChatPagePreview(props: PageResultMountProps) {
-  return (
-    <PageResultPreview
-      {...props}
-      apiOrigin={apiOrigin()}
-      read={agentsClient.pages.get}
-      canEmbedAuthenticatedDocuments
-    />
   );
 }

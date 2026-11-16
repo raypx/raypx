@@ -13,7 +13,8 @@ import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { Button } from "@raypx/ui/components/ui/button";
 import { DevicesIcon } from "@raypx/icons/devices";
 import { SettingsIcon } from "@raypx/icons/settings";
-import { Link } from "@tanstack/react-router";
+import { parseAgentSelection } from "@raypx/agents/model";
+import { Link, useSearch } from "@tanstack/react-router";
 import { useQuickSettingsStore } from "./quick-settings-store.js";
 
 type InstallPromptEvent = Event & { prompt(): Promise<unknown> };
@@ -24,6 +25,7 @@ type InstallPromptEvent = Event & { prompt(): Promise<unknown> };
  * For advanced settings like device connections, users navigate to /settings.
  */
 export function QuickSettingsModal() {
+  const selection = parseAgentSelection(useSearch({ strict: false }));
   const t = useTranslations("settings");
   const c = useTranslations("common");
   const pwa = useTranslations("guest");
@@ -97,7 +99,7 @@ export function QuickSettingsModal() {
             variant="outline"
             nativeButton={false}
             className="mt-6 w-full"
-            render={<Link to="/settings" onClick={closeModal} />}
+            render={<Link to="/settings" search={selection} onClick={closeModal} />}
           >
             <SettingsIcon data-icon="inline-start" aria-hidden="true" />
             {c("settings")}

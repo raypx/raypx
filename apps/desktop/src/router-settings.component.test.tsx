@@ -53,6 +53,13 @@ vi.mock("./features/analytics/provider.js", () => ({
 vi.mock("./features/analytics/client.js", () => ({ analytics: {} }));
 vi.mock("@raypx/analytics/client", () => ({ AnalyticsIdentity: () => null }));
 vi.mock("@raypx/analytics/client/settings", () => ({ AnalyticsSettings: () => null }));
+vi.mock("./components/workspace.js", () => ({
+  DesktopWorkspace: ({
+    renderShell,
+  }: {
+    renderShell: (sidebar: unknown, content: ReactNode) => ReactNode;
+  }) => renderShell(undefined, <Outlet />),
+}));
 vi.mock("@raypx/agents/client", () => ({
   ApprovalSettings: mocks.approvalSettings,
   ModelConnections: mocks.modelConnections,

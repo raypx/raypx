@@ -55,3 +55,9 @@ local and Sandbox/Email open the existing Web center. No admin router is added.
 Dismissal uses device localStorage scoped by API origin/account and survives logout.
 
 Selected-origin API paths use /api/. Browser previews and the daemon share /api/rpc and /api/events; path changes require upgrading the bundled CLI with Desktop.
+
+The root member layout owns the persistent shared workspace across Agents, Pages
+and Account. Routes render page content or the shared conversation selection, never
+another directory. Sidebar UI preferences and IDs live in the shared Agents zustand
+store; renderer queries remain account/origin/Space-scoped. Native Mobile uses its
+own navigation state.

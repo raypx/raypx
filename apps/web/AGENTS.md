@@ -150,3 +150,10 @@ client coverage and deployment boundaries checked against PRODUCT.md/roadmap. Bo
 languages and auth side facts must describe current scope; examples perform no private I/O.
 
 Configuration center also owns Sandbox selection, URL, write-only credentials, Screen offering and saved-connection testing. Preserve conflict drafts and clear credentials after saves; never place them in query cache or error output.
+
+The `(app)` layout owns one persistent member workspace and direct sidebar slots.
+Agents renders its conversation in that layout; Pages consumes the shared workspace
+context. Settings and invitation content also stays inside the same frame, including
+accounts without Spaces. Administration retains its independent layout. Sidebar links
+carry the selected Space. Initial device preference controls wait for session discovery
+so that discovering the account cannot replace an edited background view.

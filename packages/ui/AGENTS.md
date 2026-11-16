@@ -124,3 +124,7 @@ bun run --cwd packages/ui check
 bun run --cwd packages/ui test
 bun run --cwd packages/ui test:unit
 ```
+
+SidebarProvider also accepts controlled `openMobile`/`onOpenMobileChange`; callers
+can keep sheet state alongside desktop open state. Its uncontrolled default remains
+available, and member chrome retains the existing narrow-screen icon rail.

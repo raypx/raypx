@@ -275,3 +275,13 @@ visible until the authenticated raster finishes decoding, and returns on failure
 A new Run with a dynamically disabled sandbox retains conversation-only execution and no Computer tools. Pinned Runs never switch computers after a deployment configuration change. Shared availability copy includes PROVIDER_UNAVAILABLE for all clients.
 
 Member Page chips recognize only exact selected-origin /api/pages/member references in the conversation Space. Earlier stored references stay plain text.
+
+The DOM workspace owns a scoped zustand sidebar store in `/model`: selection IDs,
+route identity, section folds, filter, reading order and scroll positions. Persist only
+section folds and open preference under origin/account; restore before preference
+writes, tolerate unavailable storage and reset on identity changes. Server directories,
+routine summaries and notifications remain in the shared QueryClient, never zustand.
+`renderShell` supplies direct first-paint sidebar slots; `children` renders independent
+member pages and `renderWorkspace` supplies the Space context for Pages. The layout
+keeps this workspace mounted across navigation. Agent rows use narrow subscriptions
+and a memoized list; bounded section surfaces reserve geometry and retain scroll.

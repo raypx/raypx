@@ -4,8 +4,10 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ComponentType,
@@ -51,6 +53,8 @@ export interface ShellLinkProps<To extends string> {
   to: To;
   /** Navigation entries set `aria-current="page"` while active; the brand link does not. */
   markActive: boolean;
+  activeRoute?: string | undefined;
+  spaceId?: string | undefined;
   exact?: boolean;
   className: string;
   "aria-label"?: string;
@@ -108,7 +112,27 @@ const pageLayouts: Record<PageLayout, string> = {
   tool: "flex h-full min-h-0 flex-col",
 };
 
+export interface WorkspaceSidebarSlots {
+  primaryAction?: ReactNode;
+  navigation?: ReactNode;
+  directory?: ReactNode;
+  footer?: ReactNode;
+  actions?: ReactNode;
+  spaceId?: string | undefined;
+  activeRoute?: string | undefined;
+  open: boolean;
+  sheetOpen?: boolean | undefined;
+  onSheetOpenChange?: ((open: boolean) => void) | undefined;
+  onOpenChange: (open: boolean) => void;
+  getScrollTop: () => number;
+  onScrollTopChange: (scrollTop: number) => void;
+}
+
 export interface AppShellProps<To extends string> {
+  sidebar?: WorkspaceSidebarSlots | undefined;
+  skipLink?: boolean;
+  reserveWorkspaceSidebar?: boolean;
+
   storageKey?: string;
   /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
   frame?: "document" | "window";
@@ -268,13 +292,24 @@ export function ShellProjectToolbar({
 }
 
 export function AppShell<To extends string>(props: AppShellProps<To>) {
-  const preference = useMemo(() => sidebarPreference(props.storageKey), [props.storageKey]);
-  const open = useSyncExternalStore(preference.subscribe, preference.snapshot, () => true);
+  const controlled = props.sidebar !== undefined;
+  const preference = useMemo(
+    () => (controlled ? null : sidebarPreference(props.storageKey)),
+    [controlled, props.storageKey],
+  );
+  const open = useSyncExternalStore(
+    preference?.subscribe ?? subscribeNothing,
+    preference?.snapshot ?? expandedSidebar,
+    expandedSidebar,
+  );
+  const onOpenChange = props.sidebar?.onOpenChange ?? preference?.set;
   return (
     <TooltipProvider delay={300}>
       <SidebarProvider
-        open={open}
-        onOpenChange={preference.set}
+        open={props.sidebar?.open ?? open}
+        {...(onOpenChange ? { onOpenChange } : {})}
+        openMobile={props.sidebar?.sheetOpen}
+        onOpenMobileChange={props.sidebar?.onSheetOpenChange}
         mobileBehavior="rail"
         style={
           {
@@ -295,6 +330,9 @@ export function AppShell<To extends string>(props: AppShellProps<To>) {
 
 function ShellContents<To extends string>({
   frame = "document",
+  sidebar,
+  reserveWorkspaceSidebar,
+  skipLink = true,
   brand,
   actions,
   navigation,
@@ -310,6 +348,10 @@ function ShellContents<To extends string>({
   children,
 }: AppShellProps<To>) {
   const c = useTranslations("common");
+  const scrollNode = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    if (sidebar && scrollNode.current) scrollNode.current.scrollTop = sidebar.getScrollTop();
+  }, [sidebar]);
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const sidebarId = useId();
@@ -365,6 +407,8 @@ function ShellContents<To extends string>({
             <LinkComponent
               to={item.to}
               markActive
+              spaceId={sidebar?.spaceId}
+              activeRoute={sidebar?.activeRoute}
               {...(item.exact ? { exact: true } : {})}
               className=""
             >
@@ -405,6 +449,7 @@ function ShellContents<To extends string>({
     <LinkComponent
       to={brand.to}
       markActive={false}
+      spaceId={sidebar?.spaceId}
       aria-label={brand.label}
       className="mx-1 flex min-h-9 w-fit max-w-full min-w-0 shrink-0 items-center rounded-md pointer-coarse:min-h-11 pointer-coarse:min-w-11 outline-none transition-opacity hover:opacity-80 focus-visible:focus-control [&_[data-slot=logo]>span]:hidden"
     >
@@ -438,7 +483,16 @@ function ShellContents<To extends string>({
       {windowed ? (
         <div className="flex shrink-0 items-center gap-1 [--app-region:no-drag]">
           {brandLink}
-          <div ref={setSidebarActions} className="empty:hidden" />
+          <div
+            ref={setSidebarActions}
+            className={cn(
+              "empty:hidden",
+              reserveWorkspaceSidebar &&
+                "min-h-7 min-w-7 pointer-coarse:min-h-11 pointer-coarse:min-w-11 empty:block",
+            )}
+          >
+            {sidebar?.actions}
+          </div>
           {commands}
           {sidebarToggle}
         </div>
@@ -477,15 +531,7 @@ function ShellContents<To extends string>({
   return (
     <ToolbarContext.Provider value={toolbar}>
       <SidebarSlotsContext.Provider value={sidebarSlots}>
-        <a
-          href="#main"
-          className={cn(
-            "fixed top-0 left-2 z-30 -translate-y-full bg-foreground px-4 py-2 text-background focus:translate-y-0",
-            windowed ? "focus:top-[max(0.5rem,var(--mygo-titlebar-height,0px))]" : "focus:top-2",
-          )}
-        >
-          {c("skipNavigation")}
-        </a>
+        {skipLink && <ShellSkipLink frame={frame} />}
         {windowed && header}
         <div className="relative flex min-h-0 min-w-0 flex-1">
           <Sidebar
@@ -503,7 +549,16 @@ function ShellContents<To extends string>({
                 <div className="flex min-w-0 items-center justify-between gap-1 sidebar-icon:flex-col">
                   {brandLink}
                   <div className="flex shrink-0 items-center gap-0.5 sidebar-icon:flex-col">
-                    <div ref={setSidebarActions} className="empty:hidden" />
+                    <div
+                      ref={setSidebarActions}
+                      className={cn(
+                        "empty:hidden",
+                        reserveWorkspaceSidebar &&
+                          "min-h-7 min-w-7 pointer-coarse:min-h-11 pointer-coarse:min-w-11 empty:block",
+                      )}
+                    >
+                      {sidebar?.actions}
+                    </div>
                     {commands}
                     {sidebarToggle}
                   </div>
@@ -517,12 +572,30 @@ function ShellContents<To extends string>({
               <div ref={setSidebarHeader} className="mt-2 min-w-0 empty:hidden" />
               <div
                 ref={setPrimaryAction}
-                className={cn("min-w-0 empty:hidden", windowed ? "mt-1" : "mt-3")}
-              />
+                className={cn(
+                  "min-w-0 empty:hidden",
+                  windowed ? "mt-1" : "mt-3",
+                  reserveWorkspaceSidebar && "h-9 pointer-coarse:h-11 empty:block",
+                )}
+              >
+                {sidebar?.primaryAction}
+              </div>
             </SidebarHeader>
             <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">
-              <SidebarContent className="gap-1">
-                <div ref={setSidebarNavigation} className="min-w-0 empty:hidden" />
+              <SidebarContent
+                ref={scrollNode}
+                onScroll={(event) => sidebar?.onScrollTopChange(event.currentTarget.scrollTop)}
+                className="gap-1 [scrollbar-gutter:stable]"
+              >
+                <div
+                  ref={setSidebarNavigation}
+                  className={cn(
+                    "min-w-0 empty:hidden",
+                    reserveWorkspaceSidebar && "h-9 pointer-coarse:h-11 shrink-0 empty:block",
+                  )}
+                >
+                  {sidebar?.navigation}
+                </div>
                 {navigation.map((group, index) => (
                   <Fragment key={index}>
                     <SidebarGroup
@@ -545,21 +618,35 @@ function ShellContents<To extends string>({
                     {index === 0 && contextNavigation}
                   </Fragment>
                 ))}
-                <div ref={setSidebarDirectory} className="min-w-0 empty:hidden" />
+                <div ref={setSidebarDirectory} className="min-w-0 shrink-0 empty:hidden">
+                  {sidebar?.directory}
+                </div>
               </SidebarContent>
-              {secondaryNavigation && secondaryNavigation.length > 0 && (
-                <SidebarFooter className="mt-auto shrink-0 px-0 pt-2 pb-0">
-                  <SidebarMenu className="gap-1">{secondaryNavigation.map(renderItem)}</SidebarMenu>
+              {(reserveWorkspaceSidebar ||
+                (secondaryNavigation && secondaryNavigation.length > 0)) && (
+                <SidebarFooter className="mt-auto h-11 pointer-coarse:h-13 shrink-0 px-0 pt-2 pb-0">
+                  <SidebarMenu className="gap-1">
+                    {secondaryNavigation?.map(renderItem)}
+                  </SidebarMenu>
                 </SidebarFooter>
               )}
             </nav>
             {account !== undefined && (
-              <SidebarFooter className="mt-2 shrink-0 flex-row items-center gap-1 border-t border-sidebar-border/60 px-0 pt-2 pb-0 sidebar-icon:flex-col">
+              <SidebarFooter className="mt-2 h-16 shrink-0 sidebar-icon:h-26 flex-row items-center gap-1 border-t border-sidebar-border/60 px-0 pt-2 pb-0 sidebar-icon:flex-col">
                 <div className="min-w-0 flex-1 sidebar-icon:w-full">{account}</div>
                 {accountAction}
               </SidebarFooter>
             )}
-            <div ref={setSidebarFooter} className="min-w-0 shrink-0 empty:hidden" />
+            <div
+              ref={setSidebarFooter}
+              className={cn(
+                "min-w-0 shrink-0 empty:hidden",
+                reserveWorkspaceSidebar &&
+                  "h-14 pointer-coarse:h-16 sidebar-icon:h-9 pointer-coarse:sidebar-icon:h-11 empty:block",
+              )}
+            >
+              {sidebar?.footer}
+            </div>
           </Sidebar>
           <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             {!windowed && header}
@@ -581,4 +668,27 @@ function ShellContents<To extends string>({
       </SidebarSlotsContext.Provider>
     </ToolbarContext.Provider>
   );
+}
+
+export function ShellSkipLink({ frame = "document" }: { frame?: "document" | "window" }) {
+  const c = useTranslations("common");
+  const windowed = frame === "window";
+  return (
+    <a
+      href="#main"
+      className={cn(
+        "fixed top-0 left-2 z-30 -translate-y-full bg-foreground px-4 py-2 text-background focus:translate-y-0",
+        windowed ? "focus:top-[max(0.5rem,var(--mygo-titlebar-height,0px))]" : "focus:top-2",
+      )}
+    >
+      {c("skipNavigation")}
+    </a>
+  );
+}
+
+function subscribeNothing() {
+  return () => {};
+}
+function expandedSidebar() {
+  return true;
 }

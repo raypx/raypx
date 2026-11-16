@@ -33,7 +33,7 @@ export class NotificationsController {
       const result = await this.port.list({});
       if (revision === this.revision) this.update({ ...result, loading: false, error: false });
     } catch {
-      if (revision === this.revision) this.update({ items: [], loading: false, error: true });
+      if (revision === this.revision) this.update({ loading: false, error: true });
     }
   }
   async read(item: MemberNotification) {

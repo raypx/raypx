@@ -1,3 +1,4 @@
+import { DesktopWorkspace } from "./components/workspace.js";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { BrowserLanguageProvider } from "./i18n.js";
 import {
@@ -76,19 +77,27 @@ function TestLink({
   );
 }
 function TestShell() {
+  if (!mocks.account) return <Outlet />;
   return (
-    <AppShell
-      frame="window"
-      brand={{ to: "/agents", label: "Raypx" }}
-      navigation={[]}
-      breadcrumbs={["Agents"]}
-      layout="tool"
-      LinkComponent={TestLink}
-    >
-      <Outlet />
-    </AppShell>
+    <DesktopWorkspace
+      accountId={mocks.account}
+      renderShell={(sidebar, content) => (
+        <AppShell
+          sidebar={sidebar}
+          frame="window"
+          brand={{ to: "/agents", label: "Raypx" }}
+          navigation={[]}
+          breadcrumbs={[]}
+          layout="tool"
+          LinkComponent={TestLink}
+        >
+          {content}
+        </AppShell>
+      )}
+    />
   );
 }
+
 async function page(destination: string) {
   const root = createRootRoute({ component: TestShell });
   const tree = root.addChildren([

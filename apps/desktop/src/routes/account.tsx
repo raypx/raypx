@@ -1,3 +1,4 @@
+import { parseAgentSelection } from "@raypx/agents/model";
 import { useTranslations } from "../i18n.js";
 import { readAccount } from "@raypx/account";
 import {
@@ -16,6 +17,8 @@ import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { accountClient } from "../features/auth/account-client.js";
 
 export const Route = createFileRoute("/account")({
+  validateSearch: (search: Record<string, unknown>) =>
+    parseAgentSelection({ spaceId: search.spaceId }),
   staticData: { page: { title: "common.account", layout: "document" } },
   ssr: false,
   preload: false,
