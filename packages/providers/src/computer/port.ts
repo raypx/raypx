@@ -14,6 +14,35 @@ import {
 
 export const MAX_OUTPUT_BYTES = 1024 * 1024;
 export const MAX_HOME_BYTES = 32 * 1024 * 1024;
+export const MAX_COMPUTER_EDIT_BYTES = 256 * 1024;
+export const fileReplacementSchema = z.strictObject({
+  expected: z.string().regex(/^[a-f0-9]{64}$/),
+  bytes: z.base64().max(Math.ceil(MAX_COMPUTER_EDIT_BYTES / 3) * 4),
+});
+export const fileReplacementResultSchema = z.strictObject({ replaced: z.boolean() });
+export type FileReplacement = z.infer<typeof fileReplacementSchema>;
+export const fileSearchSchema = z.strictObject({
+  path: z.string().min(1).max(1024),
+  query: z
+    .string()
+    .min(1)
+    .max(256)
+    .regex(/^[^\r\n\0]+$/),
+});
+export const fileSearchResultSchema = z.strictObject({
+  matches: z
+    .array(
+      z.strictObject({
+        path: z.string().min(1).max(1024),
+        line: z.number().int().positive(),
+        text: z.string().max(240),
+      }),
+    )
+    .max(24),
+  truncated: z.boolean(),
+});
+export type FileSearch = z.infer<typeof fileSearchSchema>;
+export type FileSearchResult = z.infer<typeof fileSearchResultSchema>;
 export const computerRefSchema = z.strictObject({
   id: computerIdSchema.transform(String),
   generation: computerGenerationSchema,
@@ -166,6 +195,14 @@ export interface ComputerProvider {
     maxBytes: number,
   ): Promise<{ bytes: string; size: number; truncated: boolean }>;
   write(ref: ComputerRef, path: string, bytes: string): Promise<void>;
+  /** Literal, case-sensitive search of bounded UTF-8 workspace files. */
+  searchFiles?(ref: ComputerRef, input: FileSearch): Promise<FileSearchResult>;
+  /** Replace an existing regular file only if its bytes still match the expected digest. */
+  replaceFile?(
+    ref: ComputerRef,
+    path: string,
+    replacement: FileReplacement,
+  ): Promise<{ replaced: boolean }>;
   exportHome(ref: ComputerRef): Promise<HomeArchive>;
   importHome(ref: ComputerRef, archive: HomeArchive): Promise<{ revision: string }>;
   snapshot(ref: ComputerRef): Promise<{ revision: string }>;

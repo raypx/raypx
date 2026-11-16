@@ -65,6 +65,8 @@
     "./spinner": "./src/icons/spinner.ts",
     "./stop": "./src/icons/stop.ts",
     "./sun": "./src/icons/sun.ts",
+    "./cloud": "./src/icons/cloud.ts",
+    "./cloud-rain": "./src/icons/cloud-rain.ts",
     "./text-size": "./src/icons/text-size.ts",
     "./user-circle": "./src/icons/user-circle.ts",
     "./warning": "./src/icons/warning.ts",

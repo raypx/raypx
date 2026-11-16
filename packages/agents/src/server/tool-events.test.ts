@@ -19,6 +19,9 @@ function row(): typeof conversationToolCalls.$inferSelect {
     fence: 3,
     pageId: null,
     pageVersion: null,
+    webSources: null,
+    weatherForecast: null,
+    fileResult: null,
   };
 }
 

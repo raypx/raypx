@@ -1,0 +1,154 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "41deca30-e138-4e4e-9608-4dfa0d51f6eb",
+  "prevIds": [
+    "07bc98cd-bcfc-4a38-97fb-e4eff49ef59e"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_tool_calls",
+        "web_sources"
+      ],
+      "writes": [
+        "s|col|public.conversation_tool_calls.web_sources",
+        "n|col|public.conversation_tool_calls.web_sources",
+        "e|col|public.conversation_tool_calls.web_sources"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_tool_calls",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_tool_calls"
+      ],
+      "writes": [
+        "s|ck|public.conversation_tool_calls.conversation_tool_calls_web_sources_check",
+        "n|ck|public.conversation_tool_calls.conversation_tool_calls_web_sources_check",
+        "e|ck|public.conversation_tool_calls.conversation_tool_calls_web_sources_check",
+        "n|con|public.conversation_tool_calls.conversation_tool_calls_web_sources_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_tool_calls",
+        "n|sch|public",
+        "n|col|public.conversation_tool_calls.web_sources",
+        "n|col|public.conversation_tool_calls.finished_at",
+        "n|col|public.conversation_tool_calls.outcome",
+        "n|col|public.conversation_tool_calls.tool_name"
+      ]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|ck|public.approval_requests.approval_requests_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.approval_requests.tool_name",
+        "e|col|public.approval_requests.tool_name"
+      ],
+      "sqlHash": "b295f50d333f74a2"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_rules"
+      ],
+      "writes": [
+        "s|ck|public.approval_rules.approval_rules_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_rules",
+        "n|sch|public",
+        "n|col|public.approval_rules.tool_name",
+        "e|col|public.approval_rules.tool_name"
+      ],
+      "sqlHash": "a2f88420cfc05c0f"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_effects"
+      ],
+      "writes": [
+        "s|ck|public.conversation_effects.conversation_effects_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_effects",
+        "n|sch|public",
+        "n|col|public.conversation_effects.tool_name",
+        "e|col|public.conversation_effects.tool_name"
+      ],
+      "sqlHash": "e491569033749b85"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_tool_calls",
+        "name": "web_sources",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_tool_calls",
+        "name": "conversation_tool_calls_web_sources_check",
+        "value": "\"web_sources\" is null or (\n        \"finished_at\" is not null and \"outcome\" is not distinct from 'succeeded'\n        and \"tool_name\" in ('web_search', 'web_read')\n        and case when jsonb_typeof(\"web_sources\") = 'array'\n          then jsonb_array_length(\"web_sources\") between 1 and 5\n            and octet_length(\"web_sources\"::text) <= 16384\n          else false end\n      )",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_requests\",\"approval_requests_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_rules\",\"approval_rules_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_effects\",\"conversation_effects_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save', 'web_search', 'web_read') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    }
+  ]
+}

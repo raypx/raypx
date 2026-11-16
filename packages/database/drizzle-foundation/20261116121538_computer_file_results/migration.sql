@@ -1,0 +1,14 @@
+ALTER TABLE "conversation_tool_calls" ADD COLUMN "file_result" jsonb;--> statement-breakpoint
+ALTER TABLE "conversation_tool_calls" ADD CONSTRAINT "conversation_tool_calls_file_result_check" CHECK ("file_result" is null or (
+        "finished_at" is not null and "outcome" is not distinct from 'succeeded'
+        and jsonb_typeof("file_result") = 'object'
+        and octet_length("file_result"::text) <= 16384
+        and coalesce(
+          ("tool_name" = 'computer_search_files' and "file_result"->>'kind' = 'search')
+          or ("tool_name" = 'computer_edit_file' and "file_result"->>'kind' = 'edit'),
+          false
+        )
+      ));--> statement-breakpoint
+ALTER TABLE "approval_requests" DROP CONSTRAINT "approval_requests_tool_check", ADD CONSTRAINT "approval_requests_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128));--> statement-breakpoint
+ALTER TABLE "approval_rules" DROP CONSTRAINT "approval_rules_tool_check", ADD CONSTRAINT "approval_rules_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128));--> statement-breakpoint
+ALTER TABLE "conversation_effects" DROP CONSTRAINT "conversation_effects_tool_check", ADD CONSTRAINT "conversation_effects_tool_check" CHECK (("tool_name" in ('computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128));

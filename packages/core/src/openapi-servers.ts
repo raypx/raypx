@@ -2,6 +2,8 @@ import { z } from "zod";
 import { agentIdSchema } from "./agents.js";
 import { spaceIdSchema } from "./spaces.js";
 export const openApiServerIdSchema = z.string().uuid();
+export const WEB_SEARCH_API_URL = "https://api.tavily.com";
+export const WEATHER_API_URL = "https://api.open-meteo.com";
 export const openApiOperationIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 export const openApiAvailabilitySchema = z.discriminatedUnion("mode", [
   z.strictObject({ mode: z.literal("all") }),
@@ -19,6 +21,7 @@ export const openApiOperationSchema = z.strictObject({
   method: z.enum(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
   path: z.string().startsWith("/").max(1024),
   readOnly: z.boolean(),
+  preset: z.literal("open-meteo").optional(),
 });
 export const openApiServerConfigurationSchema = z.strictObject({
   name: z.string().trim().min(1).max(120),
@@ -32,6 +35,7 @@ export const openApiServerConfigurationSchema = z.strictObject({
 export const openApiSourceSchema = z.union([
   z.strictObject({ document: z.string().min(1).max(262144) }),
   z.strictObject({ url: z.string().min(1).max(2048) }),
+  z.strictObject({ preset: z.enum(["tavily", "open-meteo"]) }),
 ]);
 export const openApiCredentialSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("none") }),

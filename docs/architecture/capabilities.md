@@ -323,6 +323,23 @@ testing, operation selection, credential replacement and confirmed deletion.
 Mobile shows activity and addressed approval cards, including read/change labels;
 management remains in Web/Desktop.
 
+The Tavily preset binds `web_search` and `web_read` to the provider's fixed
+public Search and Extract endpoints. Space owners supply an encrypted bearer key
+and choose Agent availability through the HTTP APIs settings. The server builds
+the operations, marks these two reads read-only and retains effect receipts.
+The connection test checks the provider's Usage endpoint. Generic imported POST
+operations retain change rules. Link reads require a public HTTP(S) URL and
+public DNS; requests go to Tavily, which receives the search terms or link.
+Results enter model context as bounded untrusted data. Conversation history
+keeps only capped source titles, URLs and excerpts for Web/Desktop's source sheet.
+
+The Open-Meteo preset provides `weather_forecast` for a resolved city and one
+local date from today through the next fifteen days. It uses the fixed geocoding
+and forecast endpoints. Qualified place names and country codes narrow ambiguous
+matches. An optional encrypted commercial key selects the customer endpoints;
+the public mode is for non-commercial use. The forecast card retains normalized
+daily and hourly fields and names Open-Meteo as the data source.
+
 ### Review model selection
 
 Action review independently selects a deployment offer with

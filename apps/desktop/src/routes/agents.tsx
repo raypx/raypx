@@ -1,7 +1,8 @@
 import { getBridge, isDesktop, pairDeviceConnector, grantDeviceDirectory } from "../lib/desktop.js";
 import { useMemo, useState } from "react";
 import { useTranslations } from "../i18n.js";
-import { AgentsWorkspace } from "@raypx/agents/client";
+import { AgentsWorkspace, type PageResultMountProps } from "@raypx/agents/client";
+import { PageResultPreview } from "@raypx/pages/client";
 import { pageIdSchema } from "@raypx/core/pages";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
@@ -92,10 +93,22 @@ function SignedInAgents({ accountId }: { accountId: string }) {
           },
         })
       }
+      pageResultPreview={ChatPagePreview}
       modelCatalogKey={settingsHash}
       onOpenModels={() => void settings.open("models")}
       onOpenTools={() => void settings.open("tools")}
       onNavigate={(next) => void navigate({ search: parseAgentSelection(next) })}
+    />
+  );
+}
+
+function ChatPagePreview(props: PageResultMountProps) {
+  return (
+    <PageResultPreview
+      {...props}
+      apiOrigin={apiUrl}
+      read={agentsClient.pages.get}
+      canEmbedAuthenticatedDocuments={false}
     />
   );
 }

@@ -454,7 +454,7 @@ export function PageDetail({
 }
 
 /** The mount capability gates every saved-document frame, including history and fullscreen. */
-function PageDocumentPreview({
+export function PageDocumentPreview({
   available,
   onOpenWebPreview,
   title,

@@ -1066,6 +1066,9 @@ export const conversationToolCalls = pgTable(
     exitStatus: integer("exit_status"),
     pageId: text("page_id"),
     pageVersion: integer("page_version"),
+    webSources: jsonb("web_sources"),
+    weatherForecast: jsonb("weather_forecast"),
+    fileResult: jsonb("file_result"),
     fence: bigint("fence", { mode: "number" }).notNull().default(0),
   },
   (table) => [
@@ -1077,6 +1080,39 @@ export const conversationToolCalls = pgTable(
     check(
       "conversation_tool_calls_page_check",
       sql`(${table.pageId} is null and ${table.pageVersion} is null) or (${table.pageId} is not null and ${table.pageVersion} is not null and ${table.pageVersion} > 0 and ${table.finishedAt} is not null and ${table.outcome} = 'succeeded' and ${table.toolName} in ('agent_page_create', 'agent_page_update'))`,
+    ),
+    check(
+      "conversation_tool_calls_web_sources_check",
+      sql`${table.webSources} is null or (
+        ${table.finishedAt} is not null and ${table.outcome} is not distinct from 'succeeded'
+        and ${table.toolName} in ('web_search', 'web_read')
+        and case when jsonb_typeof(${table.webSources}) = 'array'
+          then jsonb_array_length(${table.webSources}) between 1 and 5
+            and octet_length(${table.webSources}::text) <= 16384
+          else false end
+      )`,
+    ),
+    check(
+      "conversation_tool_calls_weather_check",
+      sql`${table.weatherForecast} is null or (
+        ${table.finishedAt} is not null and ${table.outcome} is not distinct from 'succeeded'
+        and ${table.toolName} = 'weather_forecast'
+        and jsonb_typeof(${table.weatherForecast}) = 'object'
+        and octet_length(${table.weatherForecast}::text) <= 8192
+      )`,
+    ),
+    check(
+      "conversation_tool_calls_file_result_check",
+      sql`${table.fileResult} is null or (
+        ${table.finishedAt} is not null and ${table.outcome} is not distinct from 'succeeded'
+        and jsonb_typeof(${table.fileResult}) = 'object'
+        and octet_length(${table.fileResult}::text) <= 16384
+        and coalesce(
+          (${table.toolName} = 'computer_search_files' and ${table.fileResult}->>'kind' = 'search')
+          or (${table.toolName} = 'computer_edit_file' and ${table.fileResult}->>'kind' = 'edit'),
+          false
+        )
+      )`,
     ),
     foreignKey({
       columns: [table.spaceId, table.conversationId, table.runId],
@@ -1113,7 +1149,7 @@ export const approvalRules = pgTable(
     check("approval_rules_decision_check", sql`${table.decision} in ('allow', 'block')`),
     check(
       "approval_rules_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_rules_executable_check",
@@ -1274,7 +1310,7 @@ export const approvalRequests = pgTable(
     }).onDelete("cascade"),
     check(
       "approval_requests_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_requests_state_check",
@@ -1343,7 +1379,7 @@ export const conversationEffects = pgTable(
     }).onDelete("cascade"),
     check(
       "conversation_effects_tool_check",
-      sql`(${table.toolName} in ('computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "conversation_effects_state_check",

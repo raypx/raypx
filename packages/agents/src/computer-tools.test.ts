@@ -403,6 +403,8 @@ it("defines JSON Schema once, validates before allocation, and excludes file con
   expect(definitions.map((tool) => tool.name)).toEqual([
     "computer_list_files",
     "computer_read_file",
+    "computer_search_files",
+    "computer_edit_file",
     "computer_write_file",
     "computer_run_command",
   ]);
@@ -442,6 +444,70 @@ it("starts lazily through the lifecycle service, then lists, reads and writes th
   const list = await f.execute("computer_list_files", { path: "notes" });
   expect(JSON.parse(list.content)).toEqual([{ path: "notes/hello.txt", kind: "file" }]);
   expect(provision).toHaveBeenCalledTimes(1);
+});
+
+it("matches literal text by path and line and reports the committed exact edit", async () => {
+  const f = fixture();
+  const path = "nested/hello.txt";
+  const before = "\uFEFFExample\r\n  mode=[old]\r\nStay\r\n";
+  await f.execute("computer_write_file", { path, content: before });
+  const search = { path: "nested", query: "[old]" };
+  expect(f.prepare("computer_search_files", search).changes).toBe(false);
+  const read = await f.execute("computer_search_files", search);
+  expect(JSON.parse(read.content)).toEqual({
+    kind: "search",
+    truncated: false,
+    matches: [{ path, line: 2, text: "  mode=[old]" }],
+  });
+  const edit = { path, oldText: "  mode=[old]\r\n", newText: "  mode=new\r\n" };
+  const prepared = f.prepare("computer_edit_file", edit);
+  expect(prepared.changes).toBe(true);
+  expect(prepared.argumentSummary).not.toContain("mode");
+  const changed = await f.execute("computer_edit_file", edit);
+  expect(JSON.parse(changed.content)).toMatchObject({
+    kind: "edit",
+    path,
+    truncated: false,
+    hunks: [
+      {
+        oldStart: 1,
+        newStart: 1,
+        lines: expect.arrayContaining([
+          expect.stringContaining("-  mode=[old]"),
+          expect.stringContaining("+  mode=new"),
+        ]),
+      },
+    ],
+  });
+  expect((await f.execute("computer_read_file", { path })).content).toBe(
+    before.replace(edit.oldText, edit.newText),
+  );
+});
+
+it("refuses missing, ambiguous or stale edits and never replaces a different version", async () => {
+  const f = fixture();
+  const path = "settings.txt";
+  await f.execute("computer_write_file", { path, content: "aaa\nunique" });
+  const replace = f.provider.replaceFile!.bind(f.provider);
+  const commit = vi.spyOn(f.provider, "replaceFile");
+  for (const [oldText, reason] of [
+    ["missing", "COMPUTER_EDIT_TEXT_NOT_FOUND"],
+    ["aa", "COMPUTER_EDIT_TEXT_NOT_UNIQUE"],
+  ] as const) {
+    expect(await f.execute("computer_edit_file", { path, oldText, newText: "" })).toMatchObject({
+      state: "failed",
+      content: reason,
+    });
+  }
+  expect(commit).not.toHaveBeenCalled();
+  commit.mockImplementationOnce(async (ref, selected, replacement) => {
+    await f.provider.write(ref, selected, Buffer.from("newer version").toString("base64"));
+    return replace(ref, selected, replacement);
+  });
+  expect(
+    await f.execute("computer_edit_file", { path, oldText: "unique", newText: "" }),
+  ).toMatchObject({ state: "failed", content: "COMPUTER_EDIT_STALE_FILE" });
+  expect((await f.execute("computer_read_file", { path })).content).toBe("newer version");
 });
 
 it("passes exact executable and argv without an implicit shell or environment", async () => {

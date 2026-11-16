@@ -4,6 +4,8 @@ import {
   openApiCredentialSchema,
   openApiServerConfigurationSchema,
   openApiServerSchema,
+  WEB_SEARCH_API_URL,
+  WEATHER_API_URL,
   type OpenApiCredential,
   type OpenApiServer,
   type OpenApiServerConfiguration,
@@ -14,6 +16,10 @@ import {
   OpenApiDocumentError,
   OpenApiTransportError,
   parseOpenApiDocument,
+  tavilyOperations,
+  tavilyToolName,
+  isWeatherOperation,
+  openMeteoOperations,
   type OpenApiToolOperation,
   type OpenApiTransport,
 } from "@raypx/providers/openapi";
@@ -169,12 +175,25 @@ export function createOpenApiServers(
       const suppliedHeaders = credentialHeaders(credential);
       let toolOperations: OpenApiToolOperation[];
       try {
-        const document =
-          "document" in source
-            ? source.document
-            : await transport.fetchDocument(source.url, new AbortController().signal);
-        toolOperations = parseOpenApiDocument(document);
+        if ("preset" in source) {
+          if (source.preset === "tavily") {
+            if (parsed.url !== WEB_SEARCH_API_URL || credential.type !== "bearer")
+              throw new OpenApiServerError("INVALID_SERVER");
+            toolOperations = tavilyOperations();
+          } else {
+            if (parsed.url !== WEATHER_API_URL || credential.type === "apiKey")
+              throw new OpenApiServerError("INVALID_SERVER");
+            toolOperations = openMeteoOperations();
+          }
+        } else {
+          const document =
+            "document" in source
+              ? source.document
+              : await transport.fetchDocument(source.url, new AbortController().signal);
+          toolOperations = parseOpenApiDocument(document);
+        }
       } catch (error) {
+        if (error instanceof OpenApiServerError) throw error;
         if (error instanceof OpenApiDocumentError) throw new OpenApiServerError(error.code);
         throw new OpenApiServerError("INVALID_DOCUMENT");
       }
@@ -194,13 +213,16 @@ export function createOpenApiServers(
         secretId,
         credentialOwnerId: scope.member.accountId,
         toolOperations,
-        operations: toolOperations.map(({ operationId, label, method, path, readOnly }) => ({
-          operationId,
-          label,
-          method,
-          path,
-          readOnly,
-        })),
+        operations: toolOperations.map(
+          ({ operationId, label, method, path, readOnly, preset }) => ({
+            operationId,
+            label,
+            method,
+            path,
+            readOnly,
+            ...(preset ? { preset } : {}),
+          }),
+        ),
         hasCredentials: credential.type !== "none",
         createdAt: now,
         updatedAt: now,
@@ -226,6 +248,11 @@ export function createOpenApiServers(
       // Endpoint identity is intentionally immutable. Re-register to change host or document.
       if (
         parsed.url !== current.url ||
+        (credential?.type === "apiKey" &&
+          current.toolOperations.some((operation) => isWeatherOperation(current.url, operation))) ||
+        (credential !== undefined &&
+          credential.type !== "bearer" &&
+          current.toolOperations.some((operation) => tavilyToolName(current.url, operation))) ||
         parsed.selectedOperationIds.some(
           (operationId) =>
             !current.operations.some((operation) => operation.operationId === operationId),
@@ -264,7 +291,17 @@ export function createOpenApiServers(
       requireOwner(scope);
       const row = await repository.get(scope, id);
       try {
-        await transport.test(row.url, await headers(scope, row), new AbortController().signal);
+        let preset: "tavily" | "open-meteo" | undefined;
+        if (row.toolOperations.some((operation) => tavilyToolName(row.url, operation)))
+          preset = "tavily";
+        if (row.toolOperations.some((operation) => isWeatherOperation(row.url, operation)))
+          preset = "open-meteo";
+        await transport.test(
+          row.url,
+          await headers(scope, row),
+          new AbortController().signal,
+          ...(preset ? [preset] : []),
+        );
         return {
           code: "SUCCEEDED",
           operationIds: row.operations.map((operation) => operation.operationId),
@@ -293,8 +330,10 @@ export function createOpenApiServers(
           serverId: row.id,
           fingerprint: await openApiFingerprint(row),
           url: row.url,
-          tools: row.toolOperations.filter((operation) =>
-            row.selectedOperationIds.includes(operation.operationId),
+          tools: row.toolOperations.filter(
+            (operation) =>
+              row.selectedOperationIds.includes(operation.operationId) &&
+              (row.hasCredentials || !tavilyToolName(row.url, operation)),
           ),
         };
         guard(item, values);

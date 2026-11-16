@@ -6,6 +6,9 @@
   returns a bounded prefix and observed total size for member previews; memory
   and Docker implement it. Docker runs the fixed no-follow reader through private
   execution transport in the prepared computer image, never a shell or backend process.
+- Optional `searchFiles` and `replaceFile` use bounded UTF-8 search and digest-guarded
+  replacement. The virtual, Docker and E2B adapters implement them. Docker and
+  E2B share the shipped no-follow workspace helper.
 - `./computer/docker` is the lazily selected supervisor HTTP adapter, consumed by
   API. Only Sandbox opens the Engine socket. Vendor details stay inside adapters.
 - The optional `screen/startScreen/stopScreen/screenshot/input/streamScreen`
@@ -27,6 +30,10 @@ model authority. Callers own secrets, approval/effects and untrusted provenance.
 operations without executing document code. Both remote adapters use the private
 HTTP-egress DNS/socket admission path. HTTP API calls pin the registered origin
 and base path, reject every redirect, bound responses and reject credential echoes.
+The Tavily preset binds search and extraction to the fixed provider origin and
+normalizes short public source data before the generic response limit.
+The Open-Meteo preset resolves city names and local forecast dates through fixed
+public or customer endpoints and emits a bounded daily and hourly forecast.
 
 `./computer` also exports `createDeviceComputerProvider`, consumed by API's Run tool adapter. It delegates through an injected connector transport and never executes on the backend host. Device providers report `device-process`, unrestricted egress and no home transfer/snapshot or Screen capability. All host I/O remains in the outbound connector; backend approvals and effect receipts remain authoritative.
 

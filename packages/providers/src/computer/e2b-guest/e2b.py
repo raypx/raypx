@@ -99,7 +99,7 @@ def main(operation):
     if operation == "cancel":
         emit(home["run"](operation, value))
         return
-    if operation not in ("exec", "list", "read", "preview", "write", "export", "import"):
+    if operation not in ("exec", "list", "read", "preview", "write", "replace", "search", "export", "import"):
         raise Refusal("INVALID_INPUT")
     # Archives wait for admitted commands to finish before reading the home.
     with open(LOCK_PATH, "r") as lock:

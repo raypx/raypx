@@ -23,6 +23,16 @@ The port and its adapters live in `@raypx/providers`. A vendor SDK loads only wh
 its provider is configured. Optional graphical operations extend this same port;
 capability checks make an image without a graphical stack explicit.
 
+The virtual, Docker and hosted providers also support literal file search and
+exact text edits. Searches report one-based line numbers, skip symlinks, and
+skip `.git` and `node_modules` during traversal. They scan bounded UTF-8 files
+and can return partial results. Edits require one exact match in an existing
+UTF-8 file, authorize through the ordinary file-change approval flow, and use a
+guarded replacement that verifies the previously read bytes before committing.
+File results contain bounded excerpts or diff hunks. Docker uses the current
+prepared computer image and supervisor. Hosted sandboxes receive the helper
+when provisioned. The member-owned device connector retains list/read/write.
+
 ## Providers
 
 | Provider | Runs on                        | Boundary                                   | Started by         |

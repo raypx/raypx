@@ -1,0 +1,12 @@
+ALTER TABLE "conversation_tool_calls" ADD COLUMN "web_sources" jsonb;--> statement-breakpoint
+ALTER TABLE "conversation_tool_calls" ADD CONSTRAINT "conversation_tool_calls_web_sources_check" CHECK ("web_sources" is null or (
+        "finished_at" is not null and "outcome" is not distinct from 'succeeded'
+        and "tool_name" in ('web_search', 'web_read')
+        and case when jsonb_typeof("web_sources") = 'array'
+          then jsonb_array_length("web_sources") between 1 and 5
+            and octet_length("web_sources"::text) <= 16384
+          else false end
+      ));--> statement-breakpoint
+ALTER TABLE "approval_requests" DROP CONSTRAINT "approval_requests_tool_check", ADD CONSTRAINT "approval_requests_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128));--> statement-breakpoint
+ALTER TABLE "approval_rules" DROP CONSTRAINT "approval_rules_tool_check", ADD CONSTRAINT "approval_rules_tool_check" CHECK (("tool_name" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128));--> statement-breakpoint
+ALTER TABLE "conversation_effects" DROP CONSTRAINT "conversation_effects_tool_check", ADD CONSTRAINT "conversation_effects_tool_check" CHECK (("tool_name" in ('computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save', 'web_search', 'web_read') or ("tool_name" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or "tool_name" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length("tool_name") <= 128));

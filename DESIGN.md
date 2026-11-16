@@ -150,6 +150,16 @@ for tool activity, effects, approvals and delegated work. Activity shows the Run
 timeline; Files shows bounded computer files. Wide screens add quiet context
 cards for the Computer/Screen, pending approvals and memory/routines. Narrow
 screens retain accessible sheets with their existing focus and Escape rules.
+Successful Page writes show a compact result card in Web/Desktop chat. Opening it
+shows the saved version in a right sheet, with changes from the previous version
+selected for an update. Closing returns focus to the card at the same reading position.
+Web lookups group public source links by Run in a compact card. Its right sheet
+shows the original links and excerpts and preserves the same reading position.
+Weather forecasts appear inline with the resolved city, local date, conditions,
+daily temperatures and precipitation probability. Hourly details expand on demand.
+File search cards show matching paths and line numbers. Exact edits show the file
+and a View diff action. Both open in the same right sheet with preserved reading
+position. Diffs show old and new line numbers with semantic change colors.
 The composer floats at the bottom of the reading column, with Still working and
 pending approvals immediately above it. Addressed protected-input forms share
 that rounded card stack across all conversation tabs, with masked fields and

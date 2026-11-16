@@ -35,6 +35,9 @@ export function toolActivityView(row: typeof calls.$inferSelect): ToolActivity {
     durationMs: row.durationMs,
     exitStatus: row.exitStatus,
     ...(row.pageId !== null ? { page: { id: row.pageId, version: row.pageVersion } } : {}),
+    ...(row.webSources ? { webSources: row.webSources } : {}),
+    ...(row.weatherForecast ? { weatherForecast: row.weatherForecast } : {}),
+    ...(row.fileResult ? { fileResult: row.fileResult } : {}),
   });
 }
 function selection(scope: Pick<SpaceScope, "spaceId">, run: Identity, toolCallId: string) {
@@ -71,6 +74,9 @@ async function append(
           durationMs: row.durationMs,
           exitStatus: row.exitStatus,
           ...(row.pageId !== null ? { page: { id: row.pageId, version: row.pageVersion } } : {}),
+          ...(row.webSources ? { webSources: row.webSources } : {}),
+          ...(row.weatherForecast ? { weatherForecast: row.weatherForecast } : {}),
+          ...(row.fileResult ? { fileResult: row.fileResult } : {}),
         }
       : {}),
   };
@@ -131,6 +137,9 @@ export async function finishToolEvent(
       exitStatus: result.exitStatus,
       pageId: result.page?.id ?? null,
       pageVersion: result.page?.version ?? null,
+      webSources: result.webSources ?? null,
+      weatherForecast: result.weatherForecast ?? null,
+      fileResult: result.fileResult ?? null,
       fence: run.fence,
     })
     .where(and(where, isNull(calls.finishedAt)))

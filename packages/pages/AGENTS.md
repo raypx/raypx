@@ -30,6 +30,9 @@ A missing selected Page shows the translated deleted state and a return to the l
 The mount must supply `canEmbedAuthenticatedDocuments`: Web passes true and
 Desktop passes false in both browser and packaged builds. Desktop offers a Web
 handoff; source editing and safe Markdown source preview remain available.
+The chat result sheet reads the exact recorded version and its predecessor on
+open. It renders Markdown in both clients, sandboxed HTML on Web and HTML source
+on Desktop. Comparison is read-only and uses the saved source of those versions.
 `/messages/en` and `/messages/zh` own the `pages` catalog. Dirty source retains
 its original comparison version on live updates; loading latest is explicit and
 keeps the draft. Shared URLs exist only inside an open sharing dialog; closing

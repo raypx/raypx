@@ -24,6 +24,11 @@ and contract consumer tests.
 
 `/conversation` owns attachment limits/metadata/delivery events. `/notifications`
 owns source keys and bounded member-feed projections; neither grants authority.
+Successful public web calls can project bounded source titles, URLs and excerpts
+through `/conversation`. Raw provider responses and credentials stay outside that view.
+Successful weather calls project a bounded forecast for one resolved city and date.
+Successful Computer file search and edit calls project bounded matching lines or
+diff hunks through `/conversation`.
 `/pages` includes body-free list items with the current author kind and account.
 
 `/computers` owns additive lifecycle/screen availability reasons for resource

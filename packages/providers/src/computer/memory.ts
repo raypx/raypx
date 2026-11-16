@@ -1,6 +1,10 @@
+import { createHash } from "node:crypto";
 import {
   ComputerError,
+  MAX_COMPUTER_EDIT_BYTES,
   MAX_HOME_BYTES,
+  fileReplacementSchema,
+  fileSearchSchema,
   bound,
   commandSchema,
   computerRefSchema,
@@ -8,6 +12,7 @@ import {
   workspacePath,
   type ComputerProvider,
   type ComputerRef,
+  type FileSearchResult,
   type HomeArchive,
   type ProviderComputer,
   type ProcessEvent,
@@ -294,6 +299,70 @@ export function createMemoryComputerProvider(): ComputerProvider {
       }
       if (c.files.get(clean)?.kind === "directory") throw new ComputerError("INVALID_INPUT");
       c.files.set(clean, { kind: "file", bytes, mode: 0o644 });
+    },
+    async searchFiles(ref, input) {
+      const { path, query } = fileSearchSchema.parse(input);
+      const c = current(ref, true);
+      const root = pathFor(c, path);
+      const rootEntry = c.files.get(root);
+      if (root !== "workspace" && !rootEntry) throw new ComputerError("NOT_FOUND");
+      const result: FileSearchResult = { matches: [], truncated: false };
+      const files = [...c.files.entries()]
+        .filter(
+          ([name, entry]) =>
+            entry.kind === "file" &&
+            (name === root ||
+              (name.startsWith(root + "/") &&
+                !name
+                  .slice(root.length + 1)
+                  .split("/")
+                  .some((part) => part === ".git" || part === "node_modules"))),
+        )
+        .sort(([a], [b]) => a.localeCompare(b));
+      if (files.length > 256) result.truncated = true;
+      const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+      for (const [name, entry] of files.slice(0, 256)) {
+        if (entry.kind !== "file") continue;
+        const relative = name.slice("workspace/".length);
+        const bytes = Buffer.from(entry.bytes, "base64");
+        if (relative.length > 1024 || bytes.length > MAX_COMPUTER_FILE_BYTES) {
+          result.truncated = true;
+          continue;
+        }
+        let text: string;
+        try {
+          text = decoder.decode(bytes);
+        } catch {
+          continue;
+        }
+        if (text.includes("\0")) continue;
+        for (const [index, line] of text.split("\n").entries()) {
+          if (!line.includes(query)) continue;
+          if (result.matches.length === 24) return { ...result, truncated: true };
+          const source = line.replace(/\r$/, "");
+          result.matches.push({
+            path: relative,
+            line: index + 1,
+            text: source.length <= 240 ? source : "",
+          });
+        }
+      }
+      return result;
+    },
+    async replaceFile(ref, path, input) {
+      const { expected, bytes } = fileReplacementSchema.parse(input);
+      const c = current(ref, true);
+      const clean = pathFor(c, path);
+      const entry = c.files.get(clean);
+      if (entry?.kind !== "file") throw new ComputerError("NOT_FOUND");
+      const before = Buffer.from(entry.bytes, "base64");
+      if (Buffer.byteLength(bytes, "base64") > MAX_COMPUTER_EDIT_BYTES)
+        throw new ComputerError("LIMIT_EXCEEDED");
+      const replaced =
+        before.length <= MAX_COMPUTER_EDIT_BYTES &&
+        createHash("sha256").update(before).digest("hex") === expected;
+      if (replaced) c.files.set(clean, { ...entry, bytes });
+      return { replaced };
     },
     async exportHome(ref) {
       const c = current(ref);

@@ -48,7 +48,13 @@ import { StopIcon } from "@raypx/icons/stop";
 import type { EffectiveApprovalMode } from "@raypx/core/approvals";
 import type { Agent } from "@raypx/core/agents";
 import type { SpaceDirectoryMember, SpaceSettings } from "@raypx/core/spaces";
-import type { RunId, ToolActivity as ToolCallActivity } from "@raypx/core/conversation";
+import type {
+  ComputerFileResult,
+  RunId,
+  ToolActivity as ToolCallActivity,
+  ToolPage,
+  WebSources,
+} from "@raypx/core/conversation";
 import {
   conversationMemberLabel,
   toolDisplayLabel,
@@ -100,6 +106,10 @@ import { ReplyActions } from "./reply-actions.js";
 import { ReplyWaiting } from "./reply-waiting.js";
 import { ComputerFiles } from "./computer-files.js";
 import { ToolActivity } from "./tool-activity.js";
+import { PageResultCards, type PageResultMountProps } from "./page-result.js";
+import { WebSourceCard, WebSourceSheet } from "./web-sources.js";
+import { WeatherForecastCards } from "./weather-forecast.js";
+import { ComputerFileCards, ComputerFileSheet } from "./computer-file-results.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
 
@@ -122,6 +132,8 @@ interface AgentConversationProps {
   onDeleteAgent?: (() => void) | undefined;
   onLastActivity?: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
+  pageResultPreview?: import("react").ComponentType<PageResultMountProps> | undefined;
+  onOpenExternal?: ((url: string) => void) | undefined;
   subscribePages?: PageReferenceSubscription | undefined;
   composerReference?: { id: string; text: string } | undefined;
   runReference?: { id: string; runId: string } | undefined;
@@ -168,6 +180,8 @@ export function AgentConversation({
   onDeleteAgent,
   onLastActivity,
   onOpenPage,
+  pageResultPreview,
+  onOpenExternal,
   composerReference,
   subscribePages,
   runReference,
@@ -256,6 +270,8 @@ export function AgentConversation({
       onEditAgent={onEditAgent}
       onDeleteAgent={onDeleteAgent}
       onOpenPage={onOpenPage}
+      pageResultPreview={pageResultPreview}
+      onOpenExternal={onOpenExternal}
       subscribePages={subscribePages}
       onLastActivity={onLastActivity}
       runReference={runReference}
@@ -290,6 +306,8 @@ function ConversationContents({
   onDeleteAgent,
   onLastActivity,
   onOpenPage,
+  pageResultPreview: PageResultPreview,
+  onOpenExternal,
   group,
   agentDirectory,
   onManageParticipants,
@@ -316,6 +334,8 @@ function ConversationContents({
   onDeleteAgent: (() => void) | undefined;
   onLastActivity: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage: ((id: string) => void) | undefined;
+  pageResultPreview: AgentConversationProps["pageResultPreview"];
+  onOpenExternal: AgentConversationProps["onOpenExternal"];
   item: AgentConversationView;
   group: GroupConversationView | undefined;
   agentDirectory: readonly Agent[] | undefined;
@@ -382,16 +402,13 @@ function ConversationContents({
     computer.getSnapshot,
     computer.getSnapshot,
   );
+  const devicePort = capabilities?.deviceComputers;
   const devices = useMemo(
     () =>
-      capabilities?.deviceComputers
-        ? new DeviceComputersController(
-            item.agent.spaceId,
-            capabilities.deviceComputers,
-            item.conversation.id,
-          )
+      devicePort
+        ? new DeviceComputersController(item.agent.spaceId, devicePort, item.conversation.id)
         : null,
-    [capabilities?.deviceComputers, item.agent.spaceId, item.conversation.id],
+    [devicePort, item.agent.spaceId, item.conversation.id],
   );
   const deviceState = useSyncExternalStore(
     devices?.subscribe ?? subscribeNoDevices,
@@ -435,6 +452,17 @@ function ConversationContents({
   const content = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
   const anchor = useRef<{ id: string; offset: number } | null>(null);
+  type Result =
+    | { kind: "page"; page: ToolPage }
+    | { kind: "sources"; sources: WebSources }
+    | { kind: "computer-file"; file: ComputerFileResult };
+  const [resultPanel, setResultPanel] = useState<
+    | (Result & {
+        opener: HTMLButtonElement;
+        open: boolean;
+      })
+    | null
+  >(null);
   const composing = useRef(false);
   const dismissedMention = useRef<{ text: string; caret: number } | null>(null);
   const mentionCaret = useRef<number | null>(null);
@@ -785,6 +813,37 @@ function ConversationContents({
     if (follow.current && state.history?.hasNewer && !state.history.loading)
       void controller.loadLater();
   }
+  function openResultPanel(result: Result, opener: HTMLButtonElement) {
+    const node = history.current;
+    if (node) {
+      follow.current = false;
+      captureReadingAnchor(node);
+    }
+    setResultPanel({ ...result, opener, open: true });
+  }
+  function openPageResult(page: ToolPage, opener: HTMLButtonElement) {
+    openResultPanel({ kind: "page", page }, opener);
+  }
+  function openWebSources(sources: WebSources, opener: HTMLButtonElement) {
+    openResultPanel({ kind: "sources", sources }, opener);
+  }
+  function openComputerFile(file: ComputerFileResult, opener: HTMLButtonElement) {
+    openResultPanel({ kind: "computer-file", file }, opener);
+  }
+  function closeResultPanel() {
+    restoreReading();
+    const node = history.current;
+    if (node) {
+      follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48;
+      setAway(!follow.current);
+      captureReadingAnchor(node);
+    }
+    setResultPanel((current) => current && { ...current, open: false });
+  }
+  function resultFinalFocus() {
+    if (resultPanel?.opener.isConnected) return resultPanel.opener;
+    return history.current ?? false;
+  }
   async function loadEarlier() {
     follow.current = false;
     if (history.current) captureReadingAnchor(history.current);
@@ -1041,7 +1100,7 @@ function ConversationContents({
             aria-label={t("conversation")}
             tabIndex={0}
             className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:focus-control [overflow-anchor:none]"
-            onScroll={trackReading}
+            onScroll={resultPanel?.open ? undefined : trackReading}
           >
             <div
               ref={content}
@@ -1074,35 +1133,62 @@ function ConversationContents({
                 if (row.kind === "activity") {
                   const work = delegatedWork(state, row.runId);
                   return (
-                    <ToolActivity
-                      onOpenPage={onOpenPage}
+                    <div
                       key={row.id}
-                      runId={row.runId}
-                      runStatus={statusForRun(state.runs.find((run) => run.id === row.runId))}
-                      activity={row.activity}
-                      pendingCount={row.pendingCount}
-                      additionalCount={work.length}
-                      approvalPort={approvalPort}
-                      answers={state.cards}
-                      memberName={senderContext.hasOtherMembers ? memberName : undefined}
-                      selection={{
-                        spaceId: item.agent.spaceId,
-                        conversationId: item.conversation.id,
-                      }}
+                      data-message-row={row.id}
+                      className="flex min-w-0 flex-col gap-1.5"
                     >
-                      <DelegatedWork
-                        work={work}
-                        parentRunId={row.runId}
-                        agentName={group ? agentName : undefined}
-                        answers={state.cards}
+                      {PageResultPreview && (
+                        <PageResultCards
+                          activity={row.activity}
+                          delegated={work}
+                          onOpen={openPageResult}
+                        />
+                      )}
+                      <WebSourceCard
+                        activity={row.activity}
+                        delegated={work}
+                        onOpen={openWebSources}
+                      />
+                      <WeatherForecastCards
+                        activity={row.activity}
+                        delegated={work}
+                        onOpenExternal={onOpenExternal}
+                      />
+                      <ComputerFileCards
+                        activity={row.activity}
+                        delegated={work}
+                        onOpen={openComputerFile}
+                      />
+                      <ToolActivity
+                        onOpenPage={onOpenPage}
+                        runId={row.runId}
+                        runStatus={statusForRun(state.runs.find((run) => run.id === row.runId))}
+                        activity={row.activity}
+                        pendingCount={row.pendingCount}
+                        additionalCount={work.length}
                         approvalPort={approvalPort}
+                        answers={state.cards}
+                        memberName={senderContext.hasOtherMembers ? memberName : undefined}
                         selection={{
                           spaceId: item.agent.spaceId,
                           conversationId: item.conversation.id,
                         }}
-                        memberName={senderContext.hasOtherMembers ? memberName : undefined}
-                      />
-                    </ToolActivity>
+                      >
+                        <DelegatedWork
+                          work={work}
+                          parentRunId={row.runId}
+                          agentName={group ? agentName : undefined}
+                          answers={state.cards}
+                          approvalPort={approvalPort}
+                          selection={{
+                            spaceId: item.agent.spaceId,
+                            conversationId: item.conversation.id,
+                          }}
+                          memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                        />
+                      </ToolActivity>
+                    </div>
                   );
                 }
                 if (row.kind === "approval") return null;
@@ -1341,25 +1427,45 @@ function ConversationContents({
                         !rows.some(
                           (entry) => entry.kind === "activity" && entry.runId === run.id,
                         ) && (
-                          <ToolActivity
-                            runId={run.id}
-                            runStatus={runStatus}
-                            activity={[]}
-                            additionalCount={work.length}
-                          >
-                            <DelegatedWork
-                              work={work}
-                              parentRunId={run.id}
-                              agentName={group ? agentName : undefined}
-                              answers={state.cards}
-                              approvalPort={approvalPort}
-                              selection={{
-                                spaceId: item.agent.spaceId,
-                                conversationId: item.conversation.id,
-                              }}
-                              memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                          <>
+                            {PageResultPreview && (
+                              <PageResultCards
+                                activity={[]}
+                                delegated={work}
+                                onOpen={openPageResult}
+                              />
+                            )}
+                            <WebSourceCard activity={[]} delegated={work} onOpen={openWebSources} />
+                            <WeatherForecastCards
+                              activity={[]}
+                              delegated={work}
+                              onOpenExternal={onOpenExternal}
                             />
-                          </ToolActivity>
+                            <ComputerFileCards
+                              activity={[]}
+                              delegated={work}
+                              onOpen={openComputerFile}
+                            />
+                            <ToolActivity
+                              runId={run.id}
+                              runStatus={runStatus}
+                              activity={[]}
+                              additionalCount={work.length}
+                            >
+                              <DelegatedWork
+                                work={work}
+                                parentRunId={run.id}
+                                agentName={group ? agentName : undefined}
+                                answers={state.cards}
+                                approvalPort={approvalPort}
+                                selection={{
+                                  spaceId: item.agent.spaceId,
+                                  conversationId: item.conversation.id,
+                                }}
+                                memberName={senderContext.hasOtherMembers ? memberName : undefined}
+                              />
+                            </ToolActivity>
+                          </>
                         )}
                     </div>
                   </article>
@@ -2045,6 +2151,32 @@ function ConversationContents({
             selection={{ spaceId: item.agent.spaceId, conversationId: item.conversation.id }}
           />
         </CapabilitySheet>
+      )}
+      {resultPanel?.kind === "page" && PageResultPreview && (
+        <PageResultPreview
+          open={resultPanel.open}
+          page={resultPanel.page}
+          spaceId={item.conversation.spaceId}
+          onClose={closeResultPanel}
+          finalFocus={resultFinalFocus}
+        />
+      )}
+      {resultPanel?.kind === "sources" && (
+        <WebSourceSheet
+          open={resultPanel.open}
+          sources={resultPanel.sources}
+          onClose={closeResultPanel}
+          finalFocus={resultFinalFocus}
+          onOpenExternal={onOpenExternal}
+        />
+      )}
+      {resultPanel?.kind === "computer-file" && (
+        <ComputerFileSheet
+          open={resultPanel.open}
+          result={resultPanel.file}
+          onClose={closeResultPanel}
+          finalFocus={resultFinalFocus}
+        />
       )}
     </Tabs>
   );

@@ -28,4 +28,7 @@ configuration.setupStatus adds a renderer-safe administrator-only configuration.
 with strict empty input and exactly model/sandbox/mail booleans. It grants no Space
 access and changes neither configuration.public nor any database schema.
 
+Space HTTP API creation supports the server-defined Tavily and Open-Meteo presets.
+Conversation activity and finish events carry bounded web sources and forecasts.
+
 Public RPC uses /api/rpc; device possession paths use /api/device. Transport path changes provide no aliases.

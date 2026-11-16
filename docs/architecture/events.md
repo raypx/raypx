@@ -215,7 +215,18 @@ Approval cards expose the same `toolCallId` for correlation.
 Snapshots add `toolActivity` (at most the newest 100 lifecycle rows, returned in
 start order) and `toolActivityTruncated`. Each row contains the shared summary
 fields, `startedAt`, nullable `finishedAt`, `outcome`, `durationMs` and `exitStatus`.
-This projection survives event retention and contains no tool results.
+This projection survives event retention and includes only the result fields below.
+
+Successful `web_search` and `web_read` calls add optional `webSources` to finish
+events and snapshot/history activity. The server projects at most five bounded
+titles, URLs and excerpts. Full extracted text stays outside the member projection.
+Successful `weather_forecast` calls project one bounded local-day forecast with
+hourly readings. The normalized forecast is retained in activity and finish events.
+
+Successful `computer_search_files` and `computer_edit_file` calls retain a bounded
+`fileResult` in the same activity and finish events. Search results record workspace
+paths, line numbers and short matching lines. Edit results record the path and
+diff hunks computed from the confirmed file replacement. Partial results carry a flag.
 
 Successful Page create/update calls add optional nullable `page: { id, version }`
 to `tool.finished` and their snapshot/history activity. The backend takes both

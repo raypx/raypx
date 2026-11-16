@@ -1,5 +1,7 @@
 """Computer-side helper. No host access, shell interpolation, or content logging."""
 import base64
+import errno
+import hashlib
 import itertools
 import json
 import os
@@ -15,6 +17,9 @@ import uuid
 HOME = "/home/computer"
 WORKSPACE = HOME + "/workspace"
 MAX_BYTES = 32 * 1024 * 1024
+EDIT_BYTES = 256 * 1024
+SEARCH_BYTES = 64 * 1024
+SEARCH_IGNORED = {".git", "node_modules"}
 
 
 class Refusal(Exception):
@@ -91,6 +96,122 @@ def write(root, path, data, mode=0o644):
         except FileNotFoundError:
             pass
         os.close(parent)
+
+
+def fingerprint(info):
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
+
+
+def replace(path, expected, data):
+    components = parts(path)
+    if not components:
+        raise Refusal("INVALID_INPUT")
+    if len(data) > EDIT_BYTES:
+        raise Refusal("LIMIT_EXCEEDED")
+    parent = directory(WORKSPACE, "/".join(components[:-1]))
+    name = components[-1]
+    temporary = ".rpx-" + str(uuid.uuid4())
+    try:
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        with os.fdopen(fd, "rb") as original:
+            info = os.fstat(original.fileno())
+            if not stat.S_ISREG(info.st_mode):
+                raise Refusal("INVALID_INPUT")
+            before = original.read(EDIT_BYTES + 1)
+            if len(before) > EDIT_BYTES or hashlib.sha256(before).hexdigest() != expected:
+                return {"replaced": False}
+            fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW,
+                         stat.S_IMODE(info.st_mode) & 0o777, dir_fd=parent)
+            with os.fdopen(fd, "wb") as staged:
+                os.fchmod(staged.fileno(), stat.S_IMODE(info.st_mode) & 0o777)
+                staged.write(data)
+                staged.flush()
+                os.fsync(staged.fileno())
+            try:
+                current = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                return {"replaced": False}
+            if fingerprint(current) != fingerprint(info):
+                return {"replaced": False}
+            os.rename(temporary, name, src_dir_fd=parent, dst_dir_fd=parent)
+            return {"replaced": True}
+    finally:
+        try:
+            os.unlink(temporary, dir_fd=parent)
+        except FileNotFoundError:
+            pass
+        os.close(parent)
+
+
+def search(path, query):
+    matches = []
+    truncated = False
+    entries_left = 4096
+    files_left = 256
+
+    def visit(name, depth, explicit=False):
+        nonlocal entries_left, files_left, truncated
+        if len(name.encode("utf-16-le", errors="replace")) > 2048 or depth > 16:
+            truncated = True
+            return
+        components = parts(name)
+        if not explicit and components[-1] in SEARCH_IGNORED:
+            return
+        try:
+            fd = directory(WORKSPACE, name)
+        except OSError as error:
+            if error.errno not in (errno.ENOTDIR, errno.ELOOP):
+                if explicit:
+                    raise
+                truncated = True
+                return
+            try:
+                data = read(WORKSPACE, name, SEARCH_BYTES)
+            except (OSError, Refusal):
+                if explicit:
+                    raise
+                truncated = True
+                return
+            files_left -= 1
+            try:
+                content = data.decode("utf-8")
+            except UnicodeError:
+                return
+            if "\0" in content:
+                return
+            for line, text in enumerate(content.split("\n"), 1):
+                start = text.find(query)
+                if start < 0:
+                    continue
+                if len(matches) == 24:
+                    truncated = True
+                    return
+                excerpt = text.removesuffix("\r")
+                if len(excerpt.encode("utf-16-le")) > 480:
+                    excerpt = ""
+                matches.append({"path": name, "line": line, "text": excerpt})
+            return
+        try:
+            with os.scandir(fd) as scan:
+                batch = list(itertools.islice(scan, entries_left + 1))
+            if len(batch) > entries_left:
+                truncated = True
+                batch.pop()
+            entries_left -= len(batch)
+            for item in sorted(batch, key=lambda entry: entry.name):
+                if files_left <= 0 or len(matches) >= 24:
+                    truncated = True
+                    return
+                if "\\" in item.name or any(0xD800 <= ord(ch) <= 0xDFFF for ch in item.name):
+                    continue
+                if item.is_symlink() or not (item.is_dir(follow_symlinks=False) or item.is_file(follow_symlinks=False)):
+                    continue
+                visit("/".join(components + [item.name]), depth + 1)
+        finally:
+            os.close(fd)
+
+    visit(path, 0, True)
+    return {"matches": matches, "truncated": truncated}
 
 
 def export_home():
@@ -207,6 +328,10 @@ def run(operation, value, *, ready=True):
             raise Refusal("LIMIT_EXCEEDED")
         write(WORKSPACE, value["path"], data)
         return {}
+    if operation == "replace":
+        return replace(value["path"], value["expected"], base64.b64decode(value["bytes"], validate=True))
+    if operation == "search":
+        return search(value["path"], value["query"])
     if operation == "export":
         return export_home()
     if operation == "import":

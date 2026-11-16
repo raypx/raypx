@@ -1,5 +1,6 @@
 import { useTranslations } from "../../i18n.js";
-import { AgentsWorkspace } from "@raypx/agents/client";
+import { AgentsWorkspace, type PageResultMountProps } from "@raypx/agents/client";
+import { PageResultPreview } from "@raypx/pages/client";
 import { pageIdSchema } from "@raypx/core/pages";
 import { parseAgentSelection } from "@raypx/agents/model";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
@@ -66,6 +67,7 @@ function AgentsPage() {
               },
             })
           }
+          pageResultPreview={ChatPagePreview}
           modelCatalogKey={settingsHash}
           onOpenModels={() => void settings.open("models")}
           onOpenTools={() => void settings.open("tools")}
@@ -73,5 +75,16 @@ function AgentsPage() {
         />
       )}
     </SessionBoundary>
+  );
+}
+
+function ChatPagePreview(props: PageResultMountProps) {
+  return (
+    <PageResultPreview
+      {...props}
+      apiOrigin={apiOrigin()}
+      read={agentsClient.pages.get}
+      canEmbedAuthenticatedDocuments
+    />
   );
 }

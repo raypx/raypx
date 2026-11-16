@@ -92,6 +92,8 @@
     "listFiles": "List files",
     "readFile": "Read a file",
     "writeFile": "Write a file",
+    "searchFiles": "Search files",
+    "editFile": "Edit a file",
     "runCommand": "Run a command",
     "saveMemory": "Save memory",
     "updateMemory": "Update memory",
@@ -104,6 +106,9 @@
     "readPage": "Read page",
     "loadSkill": "Load skill",
     "saveSkill": "Save skill",
+    "webSearch": "Search the web",
+    "webRead": "Read web page",
+    "weatherForecast": "Weather forecast",
     "screenshot": "Screenshot",
     "pointer": "Pointer input",
     "keyboard": "Keyboard input"
@@ -569,6 +574,11 @@
     "cancelSteering": "Cancel steering"
   },
   "openapi": {
+    "addWeather": "Add weather",
+    "weatherFree": "Public API (non-commercial)",
+    "weatherPaid": "Commercial API key",
+    "addWebSearch": "Add web search",
+    "webSearchName": "Tavily web search",
     "title": "HTTP APIs",
     "add": "Add API",
     "edit": "Edit {name}",
@@ -755,6 +765,53 @@
   "copyReplyError": "Select the reply and copy it manually.",
   "replyActions": "Reply actions",
   "addContext": "Add context",
+  "weather": {
+    "card": "Weather forecast for {place}",
+    "high": "High",
+    "low": "Low",
+    "rain": "Precip. chance",
+    "maxRain": "Peak precip. chance",
+    "hourly": "Hourly forecast",
+    "localTime": "Local time",
+    "condition": "Weather",
+    "temperature": "Temp.",
+    "source": "Forecast data by Open-Meteo",
+    "conditions": {
+      "clear": "Clear",
+      "mostlyClear": "Mostly clear",
+      "partlyCloudy": "Partly cloudy",
+      "cloudy": "Overcast",
+      "fog": "Fog",
+      "drizzle": "Drizzle",
+      "rain": "Rain",
+      "snow": "Snow",
+      "thunderstorm": "Thunderstorms",
+      "unknown": "Conditions unavailable"
+    }
+  },
+  "fileResult": {
+    "searchTitle": "File search",
+    "editTitle": "File changes",
+    "matches": "{count, plural, =0 {No matching lines} one {# matching line} other {# matching lines}}",
+    "viewMatches": "View matches",
+    "viewDiff": "View diff",
+    "searchPartial": "Showing partial results. Search a smaller directory to see more.",
+    "diffPartial": "Showing part of the diff.",
+    "before": "Before",
+    "after": "After",
+    "change": "Change",
+    "noNewline": "No newline at end of file"
+  },
+  "webSources": {
+    "title": "Web sources",
+    "count": "{count, plural, one {# web source} other {# web sources}}"
+  },
+  "pageResult": {
+    "label": "Page results",
+    "created": "Page created",
+    "updated": "Page updated",
+    "version": "Version {version, number}"
+  },
   "pageReference": {
     "page": "Page",
     "open": "Open Page: {title}",

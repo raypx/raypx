@@ -30,6 +30,91 @@ async function screenshots(page: Page, surface: string, name: string) {
   }
 }
 export function registerTests() {
+  test("shows file matches and the approved exact edit diff in chat after reload", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(!endpoint, "Requires the owned backend fixture");
+    if (!endpoint || !baseURL) return;
+    const api = await signIn(page, baseURL);
+    const { space } = await api.spaces.create({ name: `File tools ${crypto.randomUUID()}` });
+    const spaceId = space.id;
+    try {
+      await api.spaces.setApprovalOverride({ spaceId, mode: "ask" });
+      const { agent, conversation } = await api.agents.create({
+        spaceId,
+        agent: {
+          name: "File editor",
+          instructions: "Search and edit files.",
+          model: { modelId: "browser-fixture" },
+        },
+      });
+      await page.goto(`${baseURL}/agents?spaceId=${spaceId}&agentId=${agent.id}`);
+      const send = async (message: string) => {
+        await page.getByRole("textbox", { name: "Message", exact: true }).fill(message);
+        await page.getByRole("button", { name: "Send", exact: true }).click();
+      };
+      const approval = page.locator("[data-approval-card]");
+      const approve = approval.getByRole("button", { name: "Approve", exact: true });
+      const selection = { spaceId, conversationId: conversation.id };
+      const snapshot = () => api.conversations.snapshot(selection);
+      await send("Fixture file seed");
+      await approve.click();
+      await expect
+        .poll(async () => (await snapshot()).runs.some((run) => run.state === "succeeded"))
+        .toBe(true);
+      await send("Fixture file search");
+      const searchCard = page.getByRole("region", { name: "File search", exact: true });
+      const matches = searchCard.getByRole("button", { name: "View matches", exact: true });
+      await expect(searchCard.getByText("browser-fixture.txt:1", { exact: true })).toBeVisible();
+      expect(await api.approvals.pending({ spaceId })).toEqual([]);
+      await matches.click();
+      const searchPanel = page.getByRole("dialog", { name: "File search", exact: true });
+      await expect(
+        searchPanel.getByText("A deterministic browser approval fixture.", { exact: true }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(searchPanel).toBeHidden();
+      await expect(matches).toBeFocused();
+      await send("Fixture exact edit");
+      await expect(approval).toBeVisible();
+      const diff = page.getByRole("button", { name: "View diff", exact: true });
+      await expect(diff).toHaveCount(0);
+      await approve.click();
+      const diffPanel = page.getByRole("dialog", { name: "File changes", exact: true });
+      for (const reload of [false, true]) {
+        if (reload) {
+          await page.reload();
+          await page.setViewportSize({ width: 375, height: 812 });
+          await expect(
+            searchCard.getByText("browser-fixture.txt:1", { exact: true }),
+          ).toBeVisible();
+        }
+        await diff.click();
+        await expect(
+          diffPanel.getByText("-A deterministic browser approval fixture.", { exact: true }),
+        ).toBeVisible();
+        await expect(
+          diffPanel.getByText("+A reviewed browser fixture.", { exact: true }),
+        ).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(diffPanel).toBeHidden();
+        await expect(diff).toBeFocused();
+      }
+      expect((await snapshot()).toolActivity).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            toolName: "computer_edit_file",
+            outcome: "succeeded",
+            fileResult: expect.objectContaining({ path: "browser-fixture.txt" }),
+          }),
+        ]),
+      );
+    } finally {
+      await api.spaces.delete({ spaceId });
+    }
+  });
+
   test("attaches files and images, sends image parts and retains downloads after reload", async ({
     page,
     baseURL,

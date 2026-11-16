@@ -5,6 +5,10 @@ import {
   commandSchema,
   ComputerError,
   fileEntrySchema,
+  fileReplacementResultSchema,
+  fileReplacementSchema,
+  fileSearchResultSchema,
+  fileSearchSchema,
   MAX_HOME_BYTES,
   processEventSchema,
   validateHome,
@@ -539,6 +543,33 @@ export function createE2bComputerProvider(options: {
           empty,
         );
       }),
+    searchFiles: (ref, input) =>
+      locked(ref, "use", async (tx) => {
+        const { path, query } = fileSearchSchema.parse(input);
+        return invoke(
+          await running(ref, tx),
+          "search",
+          {
+            path: workspacePath(path) || ".",
+            query,
+          },
+          fileSearchResultSchema,
+          192 * 1024,
+        );
+      }),
+    replaceFile: (ref, path, replacement) =>
+      locked(ref, "use", async (tx) =>
+        invoke(
+          await running(ref, tx),
+          "replace",
+          {
+            path: workspacePath(path),
+            ...fileReplacementSchema.parse(replacement),
+          },
+          fileReplacementResultSchema,
+          1024,
+        ),
+      ),
     exportHome: (ref) =>
       locked(ref, "use", async (tx) => (await exportHome(await running(ref, tx))).archive),
     importHome: (ref, input) =>

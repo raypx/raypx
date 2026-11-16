@@ -7,6 +7,8 @@ export const computerToolNameSchema = z.enum([
   "computer_list_files",
   "computer_read_file",
   "computer_write_file",
+  "computer_search_files",
+  "computer_edit_file",
   "computer_run_command",
   "computer_screenshot",
   "computer_pointer",
@@ -19,6 +21,9 @@ export const computerToolNameSchema = z.enum([
   "agent_search_history",
   "agent_skill_load",
   "agent_skill_save",
+  "web_search",
+  "web_read",
+  "weather_forecast",
 ]);
 export type ComputerToolName = z.infer<typeof computerToolNameSchema>;
 /** Dynamic remote tools never extend the closed built-in catalog. */

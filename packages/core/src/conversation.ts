@@ -233,6 +233,86 @@ export const toolPageSchema = z.strictObject({
   version: pageSchema.shape.version,
 });
 export type ToolPage = z.infer<typeof toolPageSchema>;
+/** Only bounded public source details are projected to members. */
+export const webSourceUrlSchema = z
+  .url()
+  .max(1024)
+  .regex(/^https?:\/\/[^/?#@\\\s]+(?:[/?][^#\\\s]*)?$/);
+export const webSourcesSchema = z
+  .array(
+    z.strictObject({
+      url: webSourceUrlSchema,
+      title: z.string().min(1).max(120),
+      excerpt: z.string().max(360),
+    }),
+  )
+  .max(5);
+export type WebSources = z.infer<typeof webSourcesSchema>;
+const forecastCodeSchema = z.number().int().min(0).max(99).nullable();
+const forecastTemperatureSchema = z.number().min(-120).max(80).nullable();
+const rainProbabilitySchema = z.number().int().min(0).max(100).nullable();
+/** Bounded local-day forecast; provider payloads and coordinates stay private. */
+export const weatherForecastSchema = z.strictObject({
+  place: z.string().min(1).max(360),
+  date: z.iso.date(),
+  code: forecastCodeSchema,
+  low: forecastTemperatureSchema,
+  high: forecastTemperatureSchema,
+  rain: rainProbabilitySchema,
+  hourly: z
+    .array(
+      z.strictObject({
+        time: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+        code: forecastCodeSchema,
+        temperature: forecastTemperatureSchema,
+        rain: rainProbabilitySchema,
+      }),
+    )
+    .max(25),
+});
+export type WeatherForecast = z.infer<typeof weatherForecastSchema>;
+
+const workspaceResultPath = z.string().min(1).max(1024);
+export const MAX_COMPUTER_FILE_RESULT_BYTES = 7_000;
+export const computerFileResultSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("search"),
+    matches: z
+      .array(
+        z.strictObject({
+          path: workspaceResultPath,
+          line: z.number().int().positive(),
+          text: z.string().max(240),
+        }),
+      )
+      .max(24),
+    truncated: z.boolean(),
+  }),
+  z.strictObject({
+    kind: z.literal("edit"),
+    path: workspaceResultPath,
+    hunks: z
+      .array(
+        z.strictObject({
+          oldStart: z.number().int().nonnegative(),
+          newStart: z.number().int().nonnegative(),
+          lines: z
+            .array(
+              z
+                .string()
+                .max(401)
+                .regex(/^(?:[ +-]|\\ No newline at end of file$)/),
+            )
+            .min(1)
+            .max(80),
+        }),
+      )
+      .min(1)
+      .max(8),
+    truncated: z.boolean(),
+  }),
+]);
+export type ComputerFileResult = z.infer<typeof computerFileResultSchema>;
 export const toolLifecycleFields = {
   runId: runIdSchema,
   toolCallId: z.string().min(1).max(128),
@@ -250,6 +330,9 @@ export const toolActivitySchema = z.strictObject({
   durationMs: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).nullable(),
   exitStatus: z.number().int().nullable(),
   page: toolPageSchema.nullable().optional(),
+  webSources: webSourcesSchema.optional(),
+  weatherForecast: weatherForecastSchema.optional(),
+  fileResult: computerFileResultSchema.optional(),
 });
 export type ToolActivity = z.infer<typeof toolActivitySchema>;
 export type ToolOutcome = z.infer<typeof toolOutcomeSchema>;
@@ -275,6 +358,9 @@ export const conversationEventSchema = z
       durationMs: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
       exitStatus: z.number().int().nullable(),
       page: toolPageSchema.nullable().optional(),
+      webSources: webSourcesSchema.optional(),
+      weatherForecast: weatherForecastSchema.optional(),
+      fileResult: computerFileResultSchema.optional(),
     }),
     z.strictObject({
       ...eventFields,

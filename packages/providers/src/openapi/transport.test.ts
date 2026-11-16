@@ -1,6 +1,8 @@
 import { expect, it, vi } from "vitest";
 import { type OpenApiTransportOptions, createOpenApiTransport } from "./transport.js";
 import { parseOpenApiDocument } from "./document.js";
+import { tavilyArguments, tavilyOperations, tavilyToolName } from "./tavily.js";
+import { WEB_SEARCH_API_URL } from "@raypx/core/openapi-servers";
 const operation = parseOpenApiDocument(
   JSON.stringify({
     openapi: "3.1.0",
@@ -136,5 +138,57 @@ it("respects deadlines and cancellation without raw errors", async () => {
   });
   await expect(transport.test("https://api.test", {}, signal)).rejects.toMatchObject({
     code: "TIMED_OUT",
+  });
+});
+
+it("admits only public read targets and projects bounded Tavily sources", async () => {
+  const request = vi.fn<NonNullable<OpenApiTransportOptions["request"]>>(async () => ({
+    status: 200,
+    headers: new Headers(),
+    body: JSON.stringify({
+      results: [
+        {
+          url: "https://public.example.test/article#fragment",
+          title: "Reference",
+          raw_content: "a".repeat(20_000),
+          images: ["https://ignored.example.test/image"],
+        },
+      ],
+    }),
+  }));
+  const transport = createOpenApiTransport({
+    resolver: async (host) => [
+      { address: host === "private.example.test" ? "10.0.0.2" : "93.184.216.34", family: 4 },
+    ],
+    request,
+  });
+  const read = tavilyOperations().find((entry) => entry.operationId === "web_read")!;
+  const args = tavilyArguments("web_read", {
+    url: "https://public.example.test/article#fragment",
+  })!;
+  expect(
+    tavilyArguments("web_read", { url: "https://public.example.test/a?access_token=example" }),
+  ).toBeUndefined();
+  expect(tavilyToolName("https://other.example.test", read)).toBeUndefined();
+  expect(tavilyToolName(WEB_SEARCH_API_URL, { ...read, readOnly: false })).toBeUndefined();
+  await expect(
+    transport.call(
+      WEB_SEARCH_API_URL,
+      {},
+      read,
+      {
+        body: { urls: ["https://private.example.test/article"], format: "text" },
+      },
+      signal,
+    ),
+  ).rejects.toMatchObject({ code: "INVALID_ENDPOINT" });
+  expect(request).not.toHaveBeenCalled();
+  const result = await transport.call(WEB_SEARCH_API_URL, {}, read, args, signal);
+  expect(request.mock.calls[0]?.[0].url.href).toBe(`${WEB_SEARCH_API_URL}/extract`);
+  expect(JSON.parse(result.content)).toEqual({
+    sources: [
+      { url: "https://public.example.test/article", title: "Reference", excerpt: "a".repeat(360) },
+    ],
+    content: "a".repeat(3_600),
   });
 });

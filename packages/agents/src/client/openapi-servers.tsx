@@ -10,10 +10,13 @@ import {
   type FormEvent,
 } from "react";
 import type { AgentId } from "@raypx/core/agents";
-import type {
-  OpenApiCredential,
-  OpenApiServer,
-  OpenApiServerConfiguration,
+import {
+  WEB_SEARCH_API_URL,
+  WEATHER_API_URL,
+  type OpenApiCredential,
+  type OpenApiServer,
+  type OpenApiServerConfiguration,
+  type OpenApiSource,
 } from "@raypx/core/openapi-servers";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -80,7 +83,12 @@ export function OpenApiServersEditor({ controller }: { controller: OpenApiServer
     controller.getSnapshot,
     controller.getSnapshot,
   );
-  const [editing, setEditing] = useState<OpenApiServer | "new" | null>(null);
+  const [editing, setEditing] = useState<OpenApiServer | "new" | Preset | null>(null);
+  const presets = view.servers.map(serverPreset);
+  const activeServer = typeof editing === "object" ? editing : null;
+  let activePreset: Preset | undefined;
+  if (activeServer) activePreset = serverPreset(activeServer);
+  else if (editing === "tavily" || editing === "open-meteo") activePreset = editing;
   const confirmation = useConfirmation();
   async function remove(server: OpenApiServer) {
     const accepted = await confirmation.confirm({
@@ -102,14 +110,36 @@ export function OpenApiServersEditor({ controller }: { controller: OpenApiServer
         <h2 id={`${id}-title`} className="text-lg font-medium">
           {t("openapi.title")}
         </h2>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={view.loading || !!view.busy || !view.spaceId}
-          onClick={() => setEditing("new")}
-        >
-          {t("openapi.add")}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {!presets.includes("tavily") && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={view.loading || !!view.busy || !view.spaceId}
+              onClick={() => setEditing("tavily")}
+            >
+              {t("openapi.addWebSearch")}
+            </Button>
+          )}
+          {!presets.includes("open-meteo") && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={view.loading || !!view.busy || !view.spaceId}
+              onClick={() => setEditing("open-meteo")}
+            >
+              {t("openapi.addWeather")}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={view.loading || !!view.busy || !view.spaceId}
+            onClick={() => setEditing("new")}
+          >
+            {t("openapi.add")}
+          </Button>
+        </div>
       </div>
       {view.loading && <LoadingState label={t("loading")} />}
       {!view.loading && !view.spaces.length && (
@@ -244,18 +274,19 @@ export function OpenApiServersEditor({ controller }: { controller: OpenApiServer
       </ul>
       {editing && (
         <OpenApiServerForm
-          key={editing === "new" ? "new" : editing.id}
-          initial={editing === "new" ? null : editing}
+          key={typeof editing === "string" ? editing : editing.id}
+          initial={activeServer}
+          preset={activePreset}
           agents={view.agents}
           onClose={() => setEditing(null)}
           onSave={async (server, source, credential) => {
             const saved = await controller.save(
-              editing === "new" ? null : editing.id,
+              activeServer?.id ?? null,
               server,
               source,
               credential,
             );
-            if (saved) setEditing(editing === "new" ? saved : null);
+            if (saved) setEditing(activeServer || activePreset ? null : saved);
             return !!saved;
           }}
         />
@@ -265,30 +296,71 @@ export function OpenApiServersEditor({ controller }: { controller: OpenApiServer
   );
 }
 
-type Source = { document: string } | { url: string };
+type Preset = Extract<OpenApiSource, { preset: string }>["preset"];
+function serverPreset(server: OpenApiServer): Preset | undefined {
+  if (
+    server.url === WEATHER_API_URL &&
+    server.operations.some((operation) => operation.preset === "open-meteo")
+  )
+    return "open-meteo";
+  if (
+    server.url === WEB_SEARCH_API_URL &&
+    server.operations.some(
+      (operation) =>
+        operation.method === "POST" &&
+        operation.readOnly &&
+        (operation.operationId === "web_search" || operation.operationId === "web_read"),
+    )
+  )
+    return "tavily";
+}
+
 export function OpenApiServerForm({
   initial,
+  preset,
   agents,
   onClose,
   onSave,
 }: {
   initial: OpenApiServer | null;
+  preset?: Preset | undefined;
   agents: readonly { id: AgentId; name: string }[];
   onClose: () => void;
   onSave: (
     server: OpenApiServerConfiguration,
-    source?: Source,
+    source?: OpenApiSource,
     credential?: OpenApiCredential,
   ) => Promise<boolean>;
 }) {
   const t = useTranslations("agents");
   const id = useId();
-  const [draft, setDraft] = useState(() => createOpenApiServerDraft(initial));
+  const [draft, setDraft] = useState(() => {
+    const current = createOpenApiServerDraft(initial);
+    if (initial) return current;
+    if (preset === "tavily")
+      return {
+        ...current,
+        name: t("openapi.webSearchName"),
+        url: WEB_SEARCH_API_URL,
+        selectedOperationIds: ["web_search", "web_read"],
+      };
+    if (preset === "open-meteo")
+      return {
+        ...current,
+        name: "Open-Meteo",
+        url: WEATHER_API_URL,
+        selectedOperationIds: ["weather_forecast"],
+      };
+    return current;
+  });
   const [sourceKind, setSourceKind] = useState<"document" | "url">("document");
   const [document, setDocument] = useState("");
   const [documentUrl, setDocumentUrl] = useState("");
   const [credentialKind, setCredentialKind] = useState<"keep" | "none" | "bearer" | "apiKey">(
-    initial ? "keep" : "none",
+    () => {
+      if (initial) return "keep";
+      return preset === "tavily" ? "bearer" : "none";
+    },
   );
   const [header, setHeader] = useState("X-API-Key");
   const [pending, setPending] = useState(false);
@@ -333,14 +405,17 @@ export function OpenApiServerForm({
       setError("url");
       return;
     }
-    if (!initial && sourceKind === "document") {
+    if (!initial && !preset && sourceKind === "document") {
       if (!document.trim()) {
         setError("document");
         return;
       }
     }
-    let source: Source | undefined;
-    if (!initial) source = sourceKind === "document" ? { document } : { url: documentUrl.trim() };
+    let source: OpenApiSource | undefined;
+    if (!initial) {
+      if (preset) source = { preset };
+      else source = sourceKind === "document" ? { document } : { url: documentUrl.trim() };
+    }
     setPending(true);
     setError(null);
     try {
@@ -360,10 +435,23 @@ export function OpenApiServerForm({
   }
   const credentialOptions = [
     ...(initial ? [{ value: "keep", label: t("openapi.keepCredentials") }] : []),
-    { value: "none", label: t("openapi.noCredentials") },
-    { value: "bearer", label: t("openapi.bearer") },
-    { value: "apiKey", label: t("openapi.apiKey") },
+    ...(preset === "tavily"
+      ? []
+      : [
+          {
+            value: "none",
+            label: t(preset === "open-meteo" ? "openapi.weatherFree" : "openapi.noCredentials"),
+          },
+        ]),
+    {
+      value: "bearer",
+      label: t(preset === "open-meteo" ? "openapi.weatherPaid" : "openapi.bearer"),
+    },
+    ...(preset ? [] : [{ value: "apiKey", label: t("openapi.apiKey") }]),
   ];
+  let addLabel = t("openapi.add");
+  if (preset === "tavily") addLabel = t("openapi.addWebSearch");
+  if (preset === "open-meteo") addLabel = t("openapi.addWeather");
   return (
     <Dialog
       open
@@ -381,7 +469,7 @@ export function OpenApiServerForm({
       >
         <DialogHeader>
           <DialogTitle>
-            {initial ? t("openapi.edit", { name: initial.name }) : t("openapi.add")}
+            {initial ? t("openapi.edit", { name: initial.name }) : addLabel}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-w-0 flex-col gap-4">
@@ -398,19 +486,21 @@ export function OpenApiServerForm({
                 onChange={(event) => setDraft({ ...draft, name: event.target.value })}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor={`${id}-url`}>{t("openapi.url")}</FieldLabel>
-              <Input
-                id={`${id}-url`}
-                autoComplete="off"
-                value={draft.url}
-                maxLength={2048}
-                required
-                disabled={pending || !!initial}
-                onChange={(event) => setDraft({ ...draft, url: event.target.value })}
-              />
-            </Field>
-            {!initial && (
+            {preset !== "open-meteo" && (
+              <Field>
+                <FieldLabel htmlFor={`${id}-url`}>{t("openapi.url")}</FieldLabel>
+                <Input
+                  id={`${id}-url`}
+                  autoComplete="off"
+                  value={draft.url}
+                  maxLength={2048}
+                  required
+                  disabled={pending || !!initial || !!preset}
+                  onChange={(event) => setDraft({ ...draft, url: event.target.value })}
+                />
+              </Field>
+            )}
+            {!initial && !preset && (
               <fieldset disabled={pending} className="flex min-w-0 flex-col gap-3">
                 <legend className="mb-2 text-sm font-medium">{t("openapi.source")}</legend>
                 <RadioGroup
@@ -621,7 +711,7 @@ export function OpenApiServerForm({
               {t("cancel")}
             </Button>
             <Button type="submit" disabled={pending || !draft.name.trim() || !draft.url.trim()}>
-              {t(initial ? "save" : "openapi.import")}
+              {t(initial || preset ? "save" : "openapi.import")}
             </Button>
           </DialogFooter>
         </form>

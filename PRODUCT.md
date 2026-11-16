@@ -163,8 +163,13 @@ native-confirmed Space directory grants. Only the granting member’s initiated
 Runs can use one; delegated root requester, routine owner, provenance, lease and
 grant checks apply. Device commands always need a member answer or an exact Allow;
 Auto never approves them. See [device setup and limits](docs/development/device-connector.md).
-Hosted computers remain future work. Managed app connectors and web search/fetch
-are not implemented Agent capabilities. Screen can expand into a large dialog;
+Space owners can connect Tavily for public web search and link reading. Web and
+Desktop show the saved sources next to the Agent reply. Owners can also enable
+Open-Meteo to show local-day and hourly forecast cards in Web/Desktop chat.
+File search and exact edits in isolated Computer workspaces show matching lines
+and saved diffs in Web/Desktop chat.
+Managed app connectors
+remain outside the product. Screen can expand into a large dialog;
 the same viewer and control state continue without opening another stream.
 
 The CLI provides only the outbound Space connector and private Desktop session

@@ -1,4 +1,5 @@
 import { scrubProtectedValue } from "@raypx/core/protected-input";
+import { WEATHER_API_URL, WEB_SEARCH_API_URL } from "@raypx/core/openapi-servers";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import {
@@ -9,6 +10,8 @@ import {
   type ResolvedEndpoint,
 } from "../core/http-egress.js";
 import { matchesOpenApiSchema, type OpenApiToolOperation } from "./document.js";
+import { tavilyPublicUrl, tavilyResult, tavilyToolName } from "./tavily.js";
+import { isWeatherOperation, lookupWeather, weatherArguments } from "./open-meteo.js";
 export class OpenApiTransportError extends Error {
   constructor(
     readonly code:
@@ -30,6 +33,7 @@ export interface OpenApiReply {
 export interface OpenApiTransportOptions {
   resolver?: RemoteResolver;
   timeoutMs?: number;
+  now?: () => Date;
   request?: (
     endpoint: ResolvedEndpoint,
     method: string,
@@ -46,6 +50,7 @@ export interface OpenApiTransport {
     url: string,
     headers: Record<string, string>,
     signal: AbortSignal,
+    preset?: "tavily" | "open-meteo",
   ): Promise<void>;
   call(
     this: void,
@@ -117,6 +122,7 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
     parent: AbortSignal,
     allowError = false,
     redactValues: readonly string[] = [],
+    readUrl?: string,
   ) {
     const controller = new AbortController();
     let timedOut = false;
@@ -139,6 +145,13 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
       });
     }
     try {
+      if (readUrl) {
+        const page = new URL(readUrl);
+        page.protocol = "https:";
+        page.search = "";
+        const resolved = await abortable(resolveRemoteEndpoint(page.href, options.resolver));
+        if (resolved.url.hostname === "localhost") throw new RemoteEndpointError();
+      }
       // Query values are supplied separately from endpoint admission; resolution
       // and the socket always use the same admitted host/address.
       const admission = new URL(target);
@@ -198,6 +211,33 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
       controller.abort();
     }
   }
+  async function readWeather(headers: Record<string, string>, args: unknown, signal: AbortSignal) {
+    const input = weatherArguments(args);
+    if (!input) throw new OpenApiTransportError("INVALID_ARGUMENTS");
+    const key = headers.authorization?.match(/^Bearer (.+)$/)?.[1];
+    try {
+      return await lookupWeather(
+        input,
+        key,
+        async (target) => {
+          const response = await perform(
+            target,
+            "GET",
+            {},
+            undefined,
+            signal,
+            false,
+            key ? [key] : [],
+          );
+          return JSON.parse(response.body) as unknown;
+        },
+        options.now?.(),
+      );
+    } catch (error) {
+      if (signal.aborted || error instanceof OpenApiTransportError) throw error;
+      throw new OpenApiTransportError("REQUEST_FAILED");
+    }
+  }
   return {
     validate(url) {
       try {
@@ -209,10 +249,32 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
     async fetchDocument(url, signal) {
       return (await perform(validateRemoteEndpoint(url), "GET", {}, undefined, signal)).body;
     },
-    async test(url, headers, signal) {
+    async test(url, headers, signal, preset) {
+      if (preset === "tavily" && url === WEB_SEARCH_API_URL) {
+        await perform(new URL("/usage", url), "GET", headers, undefined, signal);
+        return;
+      }
+      if (preset === "open-meteo" && url === WEATHER_API_URL) {
+        const result = await readWeather(
+          headers,
+          { city: "Berlin, Germany", countryCode: "DE" },
+          signal,
+        );
+        if (!result.forecast) throw new OpenApiTransportError("REQUEST_FAILED");
+        return;
+      }
       await perform(validateRemoteEndpoint(url), "HEAD", headers, undefined, signal);
     },
     async call(url, headers, operation, args, signal, protectedInput) {
+      if (isWeatherOperation(url, operation)) {
+        const result = await readWeather(headers, args, signal);
+        return {
+          status: 200,
+          content: JSON.stringify(result),
+          truncated: false,
+          isError: !result.forecast,
+        };
+      }
       if (JSON.stringify(args).length > 40000 || !matchesOpenApiSchema(args, operation.inputSchema))
         throw new OpenApiTransportError("INVALID_ARGUMENTS");
       const base = validateRemoteEndpoint(url);
@@ -236,6 +298,12 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
           target.searchParams.set(parameter.name, String(queryValues[parameter.name]));
       if (protectedInput?.query)
         target.searchParams.set(protectedInput.query.name, protectedInput.query.value);
+      const webTool = tavilyToolName(url, operation);
+      const readUrl =
+        webTool === "web_read"
+          ? tavilyPublicUrl((args.body as { urls?: string[] } | undefined)?.urls?.[0])
+          : undefined;
+      if (webTool === "web_read" && !readUrl) throw new OpenApiTransportError("INVALID_ARGUMENTS");
       const result = await perform(
         target,
         operation.method,
@@ -244,7 +312,24 @@ export function createOpenApiTransport(options: OpenApiTransportOptions = {}): O
         signal,
         true,
         protectedInput?.protectedValues,
+        readUrl,
       );
+      if (webTool && result.status >= 200 && result.status < 300) {
+        let normalized: ReturnType<typeof tavilyResult>;
+        try {
+          normalized = tavilyResult(webTool, JSON.parse(result.body));
+        } catch {
+          // Malformed responses are a stable failed read.
+        }
+        if (!normalized)
+          return { status: result.status, content: "", truncated: false, isError: true };
+        return {
+          status: result.status,
+          content: JSON.stringify(normalized),
+          truncated: false,
+          isError: false,
+        };
+      }
       return {
         status: result.status,
         content: result.body.slice(0, 12000),

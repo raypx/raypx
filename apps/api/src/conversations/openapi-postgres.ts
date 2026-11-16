@@ -9,7 +9,11 @@ import {
   spaceMembers,
 } from "@raypx/database/schema";
 import type { SpaceScope } from "@raypx/spaces/server";
-import type { OpenApiToolOperation } from "@raypx/providers/openapi";
+import {
+  isWeatherOperation,
+  tavilyToolName,
+  type OpenApiToolOperation,
+} from "@raypx/providers/openapi";
 import type { AgentId } from "@raypx/core/agents";
 import {
   OpenApiServerError,
@@ -67,13 +71,16 @@ export function createOpenApiServersRepository(db: Database): OpenApiServersRepo
         name: row.name,
         url: row.url,
         toolOperations,
-        operations: toolOperations.map(({ operationId, label, method, path, readOnly }) => ({
-          operationId,
-          label,
-          method,
-          path,
-          readOnly,
-        })),
+        operations: toolOperations.map(
+          ({ operationId, label, method, path, readOnly, preset }) => ({
+            operationId,
+            label,
+            method,
+            path,
+            readOnly,
+            ...(preset ? { preset } : {}),
+          }),
+        ),
         selectedOperationIds: row.selectedOperationIds,
         availability:
           row.availability === "all"
@@ -165,11 +172,29 @@ export function createOpenApiServersRepository(db: Database): OpenApiServersRepo
           .for("update");
         if (!space) throw new OpenApiServerError("NOT_FOUND");
         const count = await tx
-          .select({ id: openApiServers.id })
+          .select({ url: openApiServers.url, operations: openApiServers.operations })
           .from(openApiServers)
           .where(scoped(scope))
           .limit(32);
         if (count.length === 32) throw new OpenApiServerError("SERVER_LIMIT");
+        if (
+          row.toolOperations.some((operation) => isWeatherOperation(row.url, operation)) &&
+          count.some(({ url, operations }) =>
+            (operations as OpenApiToolOperation[]).some((operation) =>
+              isWeatherOperation(url, operation),
+            ),
+          )
+        )
+          throw new OpenApiServerError("INVALID_SERVER");
+        if (
+          row.toolOperations.some((operation) => tavilyToolName(row.url, operation)) &&
+          count.some(({ url, operations }) =>
+            (operations as OpenApiToolOperation[]).some((operation) =>
+              tavilyToolName(url, operation),
+            ),
+          )
+        )
+          throw new OpenApiServerError("INVALID_SERVER");
         const rows = await tx
           .insert(openApiServers)
           .values({

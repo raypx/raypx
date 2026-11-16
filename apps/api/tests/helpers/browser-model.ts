@@ -55,9 +55,16 @@ export function browserModelFixture() {
       }
       const requestsMcp = lastMessage?.text.startsWith("Fixture MCP call ") ?? false;
       const requestsOpenApi = lastMessage?.text.startsWith("Fixture API call ") ?? false;
+      const requestsWeb = lastMessage?.text === "Fixture web lookup";
+      const requestsWeather = lastMessage?.text === "上海明天会下雨吗？";
       const pagePrefix = "Fixture Page create ";
       const requestsPage = lastMessage?.text.startsWith(pagePrefix) ?? false;
+      const pageUpdatePrefix = "Fixture Page update ";
+      const updatesPage = lastMessage?.text.startsWith(pageUpdatePrefix) ?? false;
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
+      const fileSearch = lastMessage?.text === "Fixture file search";
+      const fileEdit = lastMessage?.text === "Fixture exact edit";
+      const fileSeed = lastMessage?.text === "Fixture file seed";
       const requestsAutoWrite = lastMessage?.text.startsWith("Fixture Auto write ") ?? false;
       const requestsProtected = lastMessage?.text === "Fixture protected command";
       const requestsDeviceCommand = lastMessage?.text === "Fixture device command";
@@ -223,12 +230,47 @@ export function browserModelFixture() {
           kind: "document",
           body: "# Agent Page\n\nCreated from the conversation.",
         });
+      if (updatesPage) {
+        if (!results.some((entry) => entry.toolName === "agent_page_update"))
+          return toolCall("agent_page_update", "browser-page-update", {
+            id: lastMessage!.text.slice(pageUpdatePrefix.length),
+            expectedVersion: 1,
+            body: "# Agent Page\n\nUpdated from the conversation.",
+          });
+        text = "The page has been updated.\n\n".repeat(30);
+      }
       if (requestsMcp && !results.some((entry) => entry.toolName.startsWith("mcp_"))) {
         const remoteTool = input.tools?.find((candidate) =>
           candidate.name.endsWith("__fixture_echo"),
         );
         if (remoteTool)
           return toolCall(remoteTool.name, "browser-mcp-echo", { text: "Fixture MCP result" });
+      }
+      if (
+        requestsWeather &&
+        input.tools?.some((tool) => tool.name === "weather_forecast") &&
+        !results.some((entry) => entry.toolName === "weather_forecast")
+      )
+        return toolCall("weather_forecast", "fixture-weather", {
+          city: "上海",
+          date: "tomorrow",
+          language: "zh",
+        });
+      if (requestsWeb) {
+        if (
+          input.tools?.some((tool) => tool.name === "web_search") &&
+          !results.some((entry) => entry.toolName === "web_search")
+        )
+          return toolCall("web_search", "fixture-web-search", {
+            query: "fixture public web sources",
+          });
+        if (
+          input.tools?.some((tool) => tool.name === "web_read") &&
+          !results.some((entry) => entry.toolName === "web_read")
+        )
+          return toolCall("web_read", "fixture-web-read", {
+            url: "https://docs.example.com/start",
+          });
       }
       if (requestsOpenApi) {
         const read = input.tools?.find((candidate) => candidate.name.endsWith("__getItem"));
@@ -260,7 +302,18 @@ export function browserModelFixture() {
           content: "A deterministic delegated browser fixture.\n",
         });
       if (child) text = "Fixture delegated task finished.";
-      if (requestsFile && !input.continuation?.length) {
+      if (fileSearch && !results.some((entry) => entry.toolName === "computer_search_files"))
+        return toolCall("computer_search_files", "browser-search-file", {
+          path: ".",
+          query: "deterministic",
+        });
+      if (fileEdit && !results.some((entry) => entry.toolName === "computer_edit_file"))
+        return toolCall("computer_edit_file", "browser-edit-file", {
+          path: "browser-fixture.txt",
+          oldText: "A deterministic browser approval fixture.",
+          newText: "A reviewed browser fixture.",
+        });
+      if ((requestsFile || fileSeed) && !input.continuation?.length) {
         const request: AssistantMessage = {
           ...message(),
           content: [
@@ -315,7 +368,13 @@ export function browserModelFixture() {
         child ||
         requestsMcp ||
         requestsPage ||
+        updatesPage ||
         requestsOpenApi ||
+        requestsWeb ||
+        requestsWeather ||
+        fileSeed ||
+        fileSearch ||
+        fileEdit ||
         requestsAutoWrite ||
         requestsAutoUntrusted ||
         requestsDeviceCommand ||

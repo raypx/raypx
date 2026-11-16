@@ -40,6 +40,15 @@ Conversation/Activity/Files text tabs and context actions; below 640px tabs occu
 second row. Replies are plain Markdown and member messages are compact bubbles.
 Completed replies keep quiet actions and collapsible real steps, effects and delegated
 work. Pending approvals appear once above the composer with active Runs.
+Web/Desktop also show successful Page result cards in the transcript. The mounted
+Page preview uses the recorded version and restores focus and the reading anchor.
+Successful public web reads project bounded source links and excerpts. The chat
+source sheet uses the same reading anchor and restores focus to the source card.
+Weather results use a retained local-day forecast and an inline card with hourly details.
+File search and exact edits use optional Computer operations. Searches are
+read-only. Exact edits enter the file-change approvals and effects flow and
+confirm the replacement against the read version. Web/Desktop retain bounded
+matching lines and diff hunks with the same result sheet and reading anchor.
 
 A quiet right rail holds the computer/Screen and capability shortcuts at wide widths;
 narrow layouts use sheets. Routines and Space memory use injected optional ports.

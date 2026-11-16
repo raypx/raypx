@@ -1,6 +1,7 @@
 import {
   createMemoryComputerProvider,
   ComputerError,
+  fileReplacementSchema,
   type ComputerProcess,
   type ComputerProvider,
   type ComputerRef,
@@ -281,6 +282,22 @@ export function fakeEngine() {
             break;
           case "read":
             value = await provider.read(ref, String(selected), Number(maxBytes));
+            break;
+          case "search":
+            value = await provider.searchFiles!(ref, {
+              path: String(selected),
+              query: String(e.input.query),
+            });
+            break;
+          case "replace":
+            value = await provider.replaceFile!(
+              ref,
+              String(selected),
+              fileReplacementSchema.parse({
+                bytes,
+                expected: e.input.expected,
+              }),
+            );
             break;
           case "list":
             value = await provider.list(ref, String(selected), Number(limit));

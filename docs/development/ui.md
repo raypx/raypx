@@ -111,8 +111,26 @@ Escape closes it and returns focus to Expand. Keep this behavior for the screen
 surface and composed-text field, and retain the explicit Release control action.
 
 Routines and Space memory remain reachable through sidebar/context shortcuts
-and the compact conversation overflow menu; narrow layouts retain their sheets. Pages mounts at `/pages` with versions, restore and sharing. Web
-can embed sandboxed authenticated documents; Desktop always opens Web preview.
+and the compact conversation overflow menu; narrow layouts retain their sheets.
+Successful Agent Page writes have chat results that open the saved version in a
+sheet. Updates default to a comparison against the preceding version. The
+transcript keeps its reading position and focus returns to the card on close.
+Pages mounts at `/pages` with versions, restore and sharing. Web can embed
+sandboxed authenticated documents. In chat, Desktop renders Markdown and shows
+HTML source; the Pages workspace offers a Web handoff for saved previews.
+Space owners add Tavily under Tools → HTTP APIs → Add web search, enter a Tavily
+API key and choose Agent availability. Successful searches and link reads add a
+Web sources card to the transcript. Its side sheet groups distinct original
+links and their excerpts with the same focus and reading position behavior.
+Tools → HTTP APIs → Add weather enables Open-Meteo for selected or all Agents.
+Use the public API for non-commercial use, or enter a commercial API key. A query
+such as “Will it rain in Shanghai tomorrow?” returns a dated forecast card with
+expandable hourly readings. Relative dates use the resolved city's time zone.
+Ask the Agent to find text in an isolated Computer workspace to see matching
+paths and line numbers in chat. Ask it to replace exact text in a file to get an
+edit card after the change is applied. View diff opens the recorded changes
+with old and new line numbers. Both result sheets return focus
+and reading position to the transcript when closed.
 Models, approval policy, Skills and Tools compose account settings. Closing editors
 clears one-time secrets; failed mutations preserve ordinary drafts for retry.
 

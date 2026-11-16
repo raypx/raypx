@@ -4,6 +4,10 @@ import {
   bound,
   commandSchema,
   computerRefSchema,
+  fileReplacementResultSchema,
+  fileReplacementSchema,
+  fileSearchResultSchema,
+  fileSearchSchema,
   validateHome,
   workspacePath,
   type ComputerProvider,
@@ -851,6 +855,42 @@ export function createSupervisor(
         // helper transfer I/O fit before reporting delivery as successful.
         await measured(c);
         await store.write(c);
+      }),
+    searchFiles: (ref, input) =>
+      locked(ref, async () => {
+        const c = await current(ref, true);
+        const { path, query } = fileSearchSchema.parse(input);
+        return fileSearchResultSchema.parse(
+          await engine.helper(
+            c.container!,
+            "search",
+            {
+              path: workspacePath(path) || ".",
+              query,
+            },
+            192 * 1024,
+          ),
+        );
+      }),
+    replaceFile: (ref, path, replacement) =>
+      locked(ref, async () => {
+        const c = await current(ref, true);
+        const result = fileReplacementResultSchema.parse(
+          await engine.helper(
+            c.container!,
+            "replace",
+            {
+              path: workspacePath(path),
+              ...fileReplacementSchema.parse(replacement),
+            },
+            1024,
+          ),
+        );
+        if (result.replaced) {
+          await measured(c);
+          await store.write(c);
+        }
+        return result;
       }),
     exportHome: (ref) =>
       serialized(() =>

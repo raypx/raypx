@@ -8,7 +8,17 @@ import {
 import { MAX_TOOL_RESULT } from "@raypx/core/approvals";
 import { z } from "zod";
 import { protectedInputSpecSchema, httpInputDestinationSchema } from "@raypx/core/protected-input";
-import { matchesOpenApiSchema, OpenApiTransportError } from "@raypx/providers/openapi";
+import {
+  matchesOpenApiSchema,
+  OpenApiTransportError,
+  tavilyArguments,
+  tavilyDefinition,
+  tavilyToolName,
+  isWeatherOperation,
+  weatherArguments,
+  weatherDefinition,
+} from "@raypx/providers/openapi";
+import { weatherForecastSchema, webSourcesSchema } from "@raypx/core/conversation";
 import { OpenApiServerError, type OpenApiServersService } from "./openapi-servers.js";
 
 import { openApiOperationSchema } from "@raypx/core/openapi-servers";
@@ -53,11 +63,30 @@ interface Binding {
   url: string;
   operation: OpenApiToolOperation;
   readOnly: boolean;
+  presetTool?: ReturnType<typeof tavilyToolName> | "weather_forecast";
   definition: Tool;
 }
 export function openApiToolName(serverId: string, remoteName: string): string {
   return `openapi_${serverId.replaceAll("-", "")}__${remoteName}`;
 }
+function isPresetTool(name: string) {
+  return name === "web_search" || name === "web_read" || name === "weather_forecast";
+}
+const weatherResult = z.union([
+  z.strictObject({ forecast: weatherForecastSchema }),
+  z.strictObject({ code: z.literal("CITY_NOT_FOUND") }),
+  z.strictObject({ code: z.literal("INVALID_DATE") }),
+  z.strictObject({
+    code: z.literal("CITY_AMBIGUOUS"),
+    choices: z.array(z.string().max(360)).max(5),
+  }),
+  z.strictObject({
+    code: z.literal("DATE_OUT_OF_RANGE"),
+    from: z.iso.date(),
+    through: z.iso.date(),
+  }),
+  z.strictObject({ code: z.literal("FORECAST_UNAVAILABLE") }),
+]);
 /** All HTTP calls stay effects, including annotated reads, so completed calls replay once. */
 export function withOpenApiTools(
   base: ComputerTools,
@@ -80,7 +109,14 @@ export function withOpenApiTools(
     const map = new Map<string, Binding>();
     for (const server of catalog)
       for (const tool of server.tools) {
-        const name = openApiToolName(server.serverId, tool.operationId);
+        const web = tavilyToolName(server.url, tool);
+        const weather = isWeatherOperation(server.url, tool);
+        let presetDefinition: Tool | undefined;
+        if (web) presetDefinition = tavilyDefinition(web);
+        if (weather) presetDefinition = weatherDefinition;
+        const presetTool = weather ? weatherDefinition.name : web;
+        const name = presetTool ?? openApiToolName(server.serverId, tool.operationId);
+        if (presetTool && map.has(presetTool)) continue;
         map.set(name, {
           serverId: server.serverId,
           fingerprint: server.fingerprint,
@@ -88,7 +124,8 @@ export function withOpenApiTools(
           url: server.url,
           operation: tool,
           readOnly: tool.readOnly,
-          definition: {
+          presetTool,
+          definition: presetDefinition ?? {
             name,
             description: `${tool.method} ${tool.label}. Request protectedInput for a one-call bearer, API-key header/query or basic credential; never put its value in chat or arguments.`,
             parameters: {
@@ -158,8 +195,9 @@ export function withOpenApiTools(
       ];
     },
     prepare(call: ToolCall, run?: ExecutionRun): PreparedComputerCall {
-      if (!call.name.startsWith("openapi_")) return base.prepare(call, run);
-      const binding = run ? bindings.get(run.id)?.get(call.name) : find(call.name);
+      const preset = isPresetTool(call.name);
+      if (!preset && !call.name.startsWith("openapi_")) return base.prepare(call, run);
+      const binding = run ? bindings.get(run.id)?.get(call.name) : !preset && find(call.name);
       if (!binding) throw new ComputerToolsError("INVALID_TOOL");
       if (
         !call.id ||
@@ -173,6 +211,23 @@ export function withOpenApiTools(
       )
         throw new ComputerToolsError("INVALID_ARGUMENTS");
       guard(call, "SECRET_INPUT");
+      const presetTool = binding.presetTool;
+      if (presetTool) {
+        const weather = presetTool === "weather_forecast";
+        const valid = weather
+          ? weatherArguments(call.arguments)
+          : tavilyArguments(presetTool, call.arguments);
+        if (!valid) throw new ComputerToolsError("INVALID_ARGUMENTS");
+        return {
+          id: call.id,
+          name: presetTool,
+          arguments: call.arguments,
+          target: weather ? "Open-Meteo" : "Tavily",
+          argumentSummary: binding.operation.label,
+          changes: false,
+          recordEffect: true,
+        };
+      }
       const { protectedInput: rawInput, ...operationArguments } = call.arguments;
       const input =
         rawInput === undefined ? undefined : protectedInputSpecSchema.safeParse(rawInput);
@@ -206,11 +261,18 @@ export function withOpenApiTools(
       };
     },
     async execute(scope, run, call, signal) {
-      if (!call.name.startsWith("openapi_")) return base.execute(scope, run, call, signal);
+      if (!isPresetTool(call.name) && !call.name.startsWith("openapi_"))
+        return base.execute(scope, run, call, signal);
       if (call.protectedInput) throw new ComputerToolsError("INVALID_ARGUMENTS");
       const binding = bindings.get(run.id)?.get(call.name);
       if (!binding) throw new ComputerToolsError("INVALID_TOOL");
       guard(call, "SECRET_INPUT");
+      const presetTool = binding.presetTool;
+      const args =
+        presetTool && presetTool !== "weather_forecast"
+          ? tavilyArguments(presetTool, call.arguments)
+          : call.arguments;
+      if (!args) throw new ComputerToolsError("INVALID_ARGUMENTS");
       try {
         const result = await service.call(
           scope,
@@ -218,10 +280,42 @@ export function withOpenApiTools(
           run.id,
           binding,
           binding.remoteName,
-          call.arguments,
+          args,
           signal,
         );
         guard(result, "SECRET_OUTPUT");
+        if (presetTool === "weather_forecast") {
+          const decoded = weatherResult.parse(JSON.parse(result.content));
+          const envelope = { source: "remote", untrusted: true };
+          if ("forecast" in decoded)
+            return JSON.stringify({
+              ...envelope,
+              state: "succeeded",
+              weatherForecast: decoded.forecast,
+            });
+          return JSON.stringify({ ...envelope, state: "failed", ...decoded });
+        }
+        if (presetTool) {
+          if (!result.isError) {
+            const { sources, content } = JSON.parse(result.content) as {
+              sources: unknown;
+              content?: string;
+            };
+            return JSON.stringify({
+              source: "remote",
+              untrusted: true,
+              state: "succeeded",
+              webSources: webSourcesSchema.parse(sources),
+              ...(content ? { content } : {}),
+            });
+          }
+          return JSON.stringify({
+            source: "remote",
+            untrusted: true,
+            state: "failed",
+            code: "OPERATION_FAILED",
+          });
+        }
         const serialized = JSON.stringify({
           source: "remote",
           untrusted: true,
@@ -242,6 +336,13 @@ export function withOpenApiTools(
       } catch (error) {
         if (signal.aborted) throw signal.reason ?? new Error("OPENAPI_CANCELLED");
         if (error instanceof ComputerToolsError) throw error;
+        if (presetTool)
+          return JSON.stringify({
+            source: "remote",
+            untrusted: true,
+            state: "failed",
+            code: error instanceof OpenApiTransportError ? error.code : "OPERATION_FAILED",
+          });
         // A transport failure may follow a completed remote change. Let the
         // durable effect engine mark its outcome unknown and prohibit replay.
         if (error instanceof OpenApiTransportError) throw error;

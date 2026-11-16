@@ -177,6 +177,45 @@ export function computerConformance(
       expect(events.at(-1)).toMatchObject({ kind: "exit", cancelled: true });
       expect((await provider.get(ref)).state).toBe("running");
     });
+    it("searches literal text without following links and guards replacement by digest", async () => {
+      const { provider, ref } = await setup();
+      const path = "nested/example.txt";
+      const content = Buffer.from("one\nfind [exactly]\nlast\n");
+      const bytes = content.toString("base64");
+      await provider.write(ref, path, bytes);
+      await provider.write(ref, "node_modules/ignored.txt", bytes);
+      const link = await provider.execute(ref, {
+        executable: "ln",
+        argv: ["-s", "nested", "linked"],
+        cwd: ".",
+        outputBudget: 64,
+        environment: {},
+      });
+      for await (const event of link.events)
+        if (event.kind === "exit") expect(event.status).toBe(0);
+      expect(await provider.searchFiles!(ref, { path: ".", query: "[exactly]" })).toEqual({
+        matches: [{ path, line: 2, text: "find [exactly]" }],
+        truncated: false,
+      });
+      await expect(
+        provider.searchFiles!(ref, { path: "linked", query: "[exactly]" }),
+      ).rejects.toBeInstanceOf(ComputerError);
+      await expect(
+        provider.replaceFile!(ref, "../outside", { bytes, expected: "0".repeat(64) }),
+      ).rejects.toBeInstanceOf(ComputerError);
+      const update = { bytes: Buffer.from("updated\n").toString("base64") };
+      expect(
+        await provider.replaceFile!(ref, path, { ...update, expected: "0".repeat(64) }),
+      ).toEqual({ replaced: false });
+      expect(await provider.read(ref, path, 64)).toEqual({ bytes });
+      expect(
+        await provider.replaceFile!(ref, path, {
+          ...update,
+          expected: createHash("sha256").update(content).digest("hex"),
+        }),
+      ).toEqual({ replaced: true });
+      expect(await provider.read(ref, path, 64)).toEqual(update);
+    });
     it("bounds files and rejects traversal, absolute paths and symlink escapes", async () => {
       const { provider, ref } = await setup();
       const bytes = Buffer.from("persist").toString("base64");

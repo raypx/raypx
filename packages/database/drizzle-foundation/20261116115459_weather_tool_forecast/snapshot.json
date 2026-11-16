@@ -1,0 +1,154 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "c8308736-b158-4261-b512-32bcd43ce585",
+  "prevIds": [
+    "41deca30-e138-4e4e-9608-4dfa0d51f6eb"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_tool_calls",
+        "weather_forecast"
+      ],
+      "writes": [
+        "s|col|public.conversation_tool_calls.weather_forecast",
+        "n|col|public.conversation_tool_calls.weather_forecast",
+        "e|col|public.conversation_tool_calls.weather_forecast"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_tool_calls",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_tool_calls"
+      ],
+      "writes": [
+        "s|ck|public.conversation_tool_calls.conversation_tool_calls_weather_check",
+        "n|ck|public.conversation_tool_calls.conversation_tool_calls_weather_check",
+        "e|ck|public.conversation_tool_calls.conversation_tool_calls_weather_check",
+        "n|con|public.conversation_tool_calls.conversation_tool_calls_weather_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_tool_calls",
+        "n|sch|public",
+        "n|col|public.conversation_tool_calls.weather_forecast",
+        "n|col|public.conversation_tool_calls.finished_at",
+        "n|col|public.conversation_tool_calls.outcome",
+        "n|col|public.conversation_tool_calls.tool_name"
+      ]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|ck|public.approval_requests.approval_requests_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.approval_requests.tool_name",
+        "e|col|public.approval_requests.tool_name"
+      ],
+      "sqlHash": "58bf96ba87665c6b"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_rules"
+      ],
+      "writes": [
+        "s|ck|public.approval_rules.approval_rules_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_rules",
+        "n|sch|public",
+        "n|col|public.approval_rules.tool_name",
+        "e|col|public.approval_rules.tool_name"
+      ],
+      "sqlHash": "5010159b55c6340a"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_effects"
+      ],
+      "writes": [
+        "s|ck|public.conversation_effects.conversation_effects_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_effects",
+        "n|sch|public",
+        "n|col|public.conversation_effects.tool_name",
+        "e|col|public.conversation_effects.tool_name"
+      ],
+      "sqlHash": "d41c75fc32f79b96"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_tool_calls",
+        "name": "weather_forecast",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_tool_calls",
+        "name": "conversation_tool_calls_weather_check",
+        "value": "\"weather_forecast\" is null or (\n        \"finished_at\" is not null and \"outcome\" is not distinct from 'succeeded'\n        and \"tool_name\" = 'weather_forecast'\n        and jsonb_typeof(\"weather_forecast\") = 'object'\n        and octet_length(\"weather_forecast\"::text) <= 8192\n      )",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_requests\",\"approval_requests_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_rules\",\"approval_rules_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_effects\",\"conversation_effects_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_write_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    }
+  ]
+}

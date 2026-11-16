@@ -6,6 +6,10 @@ import {
   commandSchema,
   computerRefSchema,
   fileEntrySchema,
+  fileReplacementResultSchema,
+  fileReplacementSchema,
+  fileSearchResultSchema,
+  fileSearchSchema,
   homeArchiveSchema,
   processEventSchema,
   providerComputerSchema,
@@ -280,6 +284,20 @@ export function createDockerComputerProvider(options: {
     },
     async write(ref, path, bytes) {
       await call(ref, "files/write", { path, bytes });
+    },
+    async searchFiles(ref, input) {
+      const { path, query } = fileSearchSchema.parse(input);
+      return fileSearchResultSchema.parse(
+        await json(await call(ref, "files/search", { path, query }), 192 * 1024),
+      );
+    },
+    async replaceFile(ref, path, replacement) {
+      return fileReplacementResultSchema.parse(
+        await json(
+          await call(ref, "files/replace", { path, ...fileReplacementSchema.parse(replacement) }),
+          1024,
+        ),
+      );
     },
     async exportHome(ref) {
       return homeArchiveSchema.parse(await json(await call(ref, "home/export")));

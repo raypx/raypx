@@ -7,6 +7,8 @@ import {
   commandSchema,
   computerRefSchema,
   computerProvisionContextSchema,
+  fileReplacementSchema,
+  fileSearchSchema,
   homeArchiveSchema,
   type ComputerProcess,
   type ComputerProvider,
@@ -27,7 +29,7 @@ export function supervisorHandler(
       if (url.pathname === "/description" && request.method === "GET")
         return Response.json(await provider.describe());
       const match =
-        /^\/computers\/([^/]+)\/(create|get|exec|cancel|files\/list|files\/read|files\/write|stop|destroy|snapshot|home\/export|home\/import|screen\/(?:get|start|stop|screenshot|input|stream))$/.exec(
+        /^\/computers\/([^/]+)\/(create|get|exec|cancel|files\/(?:list|read|write|search|replace)|stop|destroy|snapshot|home\/export|home\/import|screen\/(?:get|start|stop|screenshot|input|stream))$/.exec(
           url.pathname,
         );
       if (!match || request.method !== "POST")
@@ -157,6 +159,26 @@ export function supervisorHandler(
         case "files/write":
           await provider.write(ref, z.string().parse(body.path), z.base64().parse(body.bytes));
           return Response.json({});
+        case "files/search":
+          if (!provider.searchFiles) throw new ComputerError("PROVIDER_UNAVAILABLE");
+          return Response.json(
+            await provider.searchFiles(
+              ref,
+              fileSearchSchema.parse({
+                path: body.path,
+                query: body.query,
+              }),
+            ),
+          );
+        case "files/replace":
+          if (!provider.replaceFile) throw new ComputerError("PROVIDER_UNAVAILABLE");
+          return Response.json(
+            await provider.replaceFile(
+              ref,
+              z.string().parse(body.path),
+              fileReplacementSchema.parse({ expected: body.expected, bytes: body.bytes }),
+            ),
+          );
         case "cancel": {
           await provider.get(ref); // A stale generation cannot cancel a replacement's process.
           const id = z.string().uuid().parse(body.executionId);

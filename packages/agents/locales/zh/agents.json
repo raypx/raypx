@@ -92,6 +92,8 @@
     "listFiles": "列出文件",
     "readFile": "读取文件",
     "writeFile": "写入文件",
+    "searchFiles": "搜索文件",
+    "editFile": "精确编辑文件",
     "runCommand": "运行命令",
     "saveMemory": "保存记忆",
     "updateMemory": "更新记忆",
@@ -104,6 +106,9 @@
     "readPage": "读取页面",
     "loadSkill": "加载技能",
     "saveSkill": "保存技能",
+    "webSearch": "搜索网页",
+    "webRead": "读取网页",
+    "weatherForecast": "天气预报",
     "screenshot": "屏幕截图",
     "pointer": "指针输入",
     "keyboard": "键盘输入"
@@ -569,6 +574,11 @@
     "cancelSteering": "取消补充指示"
   },
   "openapi": {
+    "addWeather": "添加天气",
+    "weatherFree": "公共 API（非商业用途）",
+    "weatherPaid": "商业 API 密钥",
+    "addWebSearch": "添加网页搜索",
+    "webSearchName": "Tavily 网页搜索",
     "title": "HTTP API",
     "add": "添加 API",
     "edit": "编辑{name}",
@@ -755,6 +765,53 @@
   "copyReplyError": "请选择回复并手动复制。",
   "replyActions": "回复操作",
   "addContext": "添加上下文",
+  "weather": {
+    "card": "{place}天气预报",
+    "high": "最高温",
+    "low": "最低温",
+    "rain": "降水概率",
+    "maxRain": "最高降水概率",
+    "hourly": "逐小时预报",
+    "localTime": "当地时间",
+    "condition": "天气",
+    "temperature": "气温",
+    "source": "预报数据来自 Open-Meteo",
+    "conditions": {
+      "clear": "晴",
+      "mostlyClear": "大致晴朗",
+      "partlyCloudy": "多云",
+      "cloudy": "阴",
+      "fog": "雾",
+      "drizzle": "毛毛雨",
+      "rain": "有雨",
+      "snow": "有雪",
+      "thunderstorm": "雷雨",
+      "unknown": "暂无天气状况"
+    }
+  },
+  "fileResult": {
+    "searchTitle": "文件搜索",
+    "editTitle": "文件差异",
+    "matches": "{count, plural, =0 {未找到匹配的行} other {命中 # 行}}",
+    "viewMatches": "查看命中",
+    "viewDiff": "查看差异",
+    "searchPartial": "仅显示部分结果。可缩小搜索目录查看更多。",
+    "diffPartial": "仅显示部分差异。",
+    "before": "修改前",
+    "after": "修改后",
+    "change": "变更",
+    "noNewline": "文件末尾无换行"
+  },
+  "webSources": {
+    "title": "网页来源",
+    "count": "{count, number} 个网页来源"
+  },
+  "pageResult": {
+    "label": "页面结果",
+    "created": "已创建页面",
+    "updated": "已更新页面",
+    "version": "第 {version, number} 版"
+  },
   "pageReference": {
     "page": "页面",
     "open": "打开页面：{title}",

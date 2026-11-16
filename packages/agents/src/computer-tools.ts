@@ -20,12 +20,14 @@ import type { SpaceScope } from "@raypx/spaces/server";
 import {
   ComputerError,
   MAX_HOME_BYTES,
+  fileSearchSchema,
   type ComputerProcess,
   type ComputerProvider,
   type ComputerRef,
 } from "@raypx/providers/computer";
 import { RunResourceUnavailableError, type ExecutionRun } from "./conversations.js";
 import { TOOL_DEADLINE_MS } from "./tool-limits.js";
+import { exactFileEdit, searchFileResult } from "./computer-file-results.js";
 
 const MAX_ARGUMENTS = 40_000;
 const MAX_CONTENT = 32_000;
@@ -53,6 +55,12 @@ const argument = z
 const schemas = {
   computer_list_files: z.strictObject({ path: safePath.default(".") }),
   computer_read_file: z.strictObject({ path: safePath.min(1) }),
+  computer_search_files: fileSearchSchema.extend({ path: safePath.default(".") }),
+  computer_edit_file: z.strictObject({
+    path: safePath,
+    oldText: argument.min(1).max(12_000),
+    newText: argument.max(12_000),
+  }),
   computer_write_file: z.strictObject({
     path: safePath.min(1),
     content: z
@@ -79,6 +87,10 @@ type NativeComputerToolName = keyof typeof schemas;
 const descriptions: Record<NativeComputerToolName, string> = {
   computer_list_files: "List files in a directory relative to the computer workspace. Read only.",
   computer_read_file: "Read a UTF-8 file relative to the computer workspace. Read only.",
+  computer_search_files:
+    "Search UTF-8 files under a workspace-relative directory or file for case-sensitive literal text. Returns file paths and one-based matching lines. Read only. Root is '.'. Directory scans skip .git and node_modules.",
+  computer_edit_file:
+    "Replace exactly one occurrence of oldText in an existing workspace-relative UTF-8 file with newText. Use exact text including indentation and line endings. An empty newText removes the match. If oldText occurs zero or multiple times, no edit is made. Read the file first to select enough context. Changes files and returns a diff.",
   computer_write_file:
     "Write UTF-8 content to a file relative to the computer workspace. Changes files. Protected input is unavailable because file contents persist.",
   computer_run_command:
@@ -357,6 +369,10 @@ export function createComputerTools(
       throw new ComputerToolsError("SECRET_INPUT");
     const name = call.name as NativeComputerToolName;
     if (isScreenTool(name) && !screenSupported) throw new ComputerToolsError("INVALID_TOOL");
+    if (name === "computer_search_files" && !provider.searchFiles)
+      throw new ComputerToolsError("INVALID_TOOL");
+    if (name === "computer_edit_file" && !provider.replaceFile)
+      throw new ComputerToolsError("INVALID_TOOL");
     const parsed = schemas[name].safeParse(call.arguments);
     if (!parsed.success) throw new ComputerToolsError("INVALID_ARGUMENTS");
     const args = parsed.data;
@@ -398,7 +414,7 @@ export function createComputerTools(
       arguments: args,
       argumentSummary: clip(summary, 1024),
       target: path,
-      changes: name === "computer_write_file",
+      changes: name === "computer_write_file" || name === "computer_edit_file",
     };
   }
   const tools: ComputerTools = {
@@ -431,7 +447,11 @@ export function createComputerTools(
     definitions: (run) =>
       provider && (!run || !withoutComputer.has(attemptKey(run)))
         ? structuredClone(
-            definitions.filter((definition) => !isScreenTool(definition.name) || screenSupported),
+            definitions.filter(({ name }) => {
+              if (name === "computer_search_files") return !!provider.searchFiles;
+              if (name === "computer_edit_file") return !!provider.replaceFile;
+              return !isScreenTool(name) || screenSupported;
+            }),
           )
         : [],
     async initialize(scope, run, signal) {
@@ -569,6 +589,34 @@ export function createComputerTools(
         const args = schemas.computer_read_file.parse(call.arguments);
         const result = await provider.read(ref, args.path, MAX_HOME_BYTES);
         content = Buffer.from(result.bytes, "base64").toString("utf8");
+      } else if (call.name === "computer_search_files") {
+        if (!provider.searchFiles) throw new ComputerToolsError("COMPUTER_UNAVAILABLE");
+        const args = schemas.computer_search_files.parse(call.arguments);
+        const found = await provider.searchFiles(ref, args);
+        if (containsSecret(found, secrets())) throw new ComputerToolsError("SECRET_OUTPUT");
+        if (signal.aborted || cancelled.has(runKey))
+          return computerToolResult("cancelled", "CANCELLED");
+        const result = searchFileResult(found);
+        truncated = result.kind === "search" && result.truncated;
+        content = JSON.stringify(result);
+      } else if (call.name === "computer_edit_file") {
+        const args = schemas.computer_edit_file.parse(call.arguments);
+        const edit = await exactFileEdit(
+          provider,
+          ref,
+          args,
+          () => signal.aborted || cancelled.has(runKey),
+          (text) => {
+            if (containsSecret(text, secrets())) throw new ComputerToolsError("SECRET_OUTPUT");
+          },
+        );
+        if ("failure" in edit)
+          return computerToolResult(
+            edit.failure === "CANCELLED" ? "cancelled" : "failed",
+            edit.failure,
+          );
+        truncated = edit.result.truncated;
+        content = JSON.stringify(edit.result);
       } else if (call.name === "computer_write_file") {
         const args = schemas.computer_write_file.parse(call.arguments);
         await provider.write(ref, args.path, Buffer.from(args.content, "utf8").toString("base64"));

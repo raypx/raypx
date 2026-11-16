@@ -34,6 +34,7 @@
     "@raypx/providers": "workspace:*",
     "@raypx/spaces": "workspace:*",
     "@raypx/ui": "workspace:*",
+    "diff": "catalog:",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },

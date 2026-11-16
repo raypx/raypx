@@ -45,6 +45,9 @@ export function applyToolActivityEvent(
     durationMs: finished ? event.durationMs : null,
     exitStatus: finished ? event.exitStatus : null,
     ...(finished && event.page !== undefined ? { page: event.page } : {}),
+    ...(finished && event.webSources ? { webSources: event.webSources } : {}),
+    ...(finished && event.weatherForecast ? { weatherForecast: event.weatherForecast } : {}),
+    ...(finished && event.fileResult ? { fileResult: event.fileResult } : {}),
   };
   return mergeToolActivity(previous, [call], limit);
 }

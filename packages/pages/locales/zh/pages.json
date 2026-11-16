@@ -67,5 +67,15 @@
   "webPreviewRequired": "请在网页版打开此页面以预览。",
   "openInWeb": "在网页版打开",
   "member": "成员",
-  "unknownAgent": "智能体不可用"
+  "unknownAgent": "智能体不可用",
+  "result": {
+    "title": "页面结果",
+    "changes": "改动",
+    "comparison": "{from} → {to}",
+    "lines": "第 {before, number} 行 → 第 {after, number} 行",
+    "noChanges": "内容没有改动。",
+    "fullSources": "改动较多，以下显示两个版本的完整内容。",
+    "unavailable": "此页面版本已不可用。",
+    "error": "无法加载此页面版本。"
+  }
 }

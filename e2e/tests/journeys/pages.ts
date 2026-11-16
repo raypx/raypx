@@ -220,6 +220,15 @@ export function registerTests() {
       await expect(approval).toBeVisible();
       await approval.getByRole("button", { name: "Approve", exact: true }).click({ timeout });
       await expect(approval).toBeHidden();
+      const createdResult = page.getByRole("button", { name: "Page created Version 1" });
+      await createdResult.click({ timeout });
+      const result = page.getByRole("dialog", { name: producedTitle, exact: true });
+      await expect(
+        result.getByText("Created from the conversation.", { exact: true }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(result).toBeHidden();
+      await expect(createdResult).toBeFocused();
       const activity = page.locator("[data-tool-activity]");
       await activity.getByRole("button", { name: /^1 step/ }).click({ timeout });
       await expect(activity.locator('[data-tool-outcome="succeeded"]')).toBeVisible();
@@ -242,15 +251,65 @@ export function registerTests() {
         expect(new URL(handoff.url()).searchParams.get("pageId")).toBe(producedId);
         await handoff.close();
       }
+      await page.goto(conversationUrl, { timeout });
+      await page
+        .getByRole("textbox", { name: "Message", exact: true })
+        .fill(`Fixture Page update ${producedId}`, { timeout });
+      await page.getByRole("button", { name: "Send", exact: true }).click({ timeout });
+      await approval.getByRole("button", { name: "Approve", exact: true }).click({ timeout });
+      const updatedResult = page.getByRole("button", { name: "Page updated Version 2" });
+      await expect(updatedResult).toBeVisible();
+      await rpc("pages/update", {
+        spaceId,
+        id: producedId,
+        expectedVersion: 2,
+        body: "# Agent Page\n\nUpdated later by the member.",
+      });
+      await page.reload({ timeout });
+      const log = page.getByRole("log");
+      await updatedResult.scrollIntoViewIfNeeded({ timeout });
+      const scrollTop = await log.evaluate((node) => node.scrollTop);
+      expect(scrollTop).toBeGreaterThan(0);
+      await updatedResult.click({ timeout });
+      await expect(result.getByText("Version 1 → Version 2", { exact: true })).toBeVisible();
+      await expect(result.getByText(/^-Created from the conversation\./)).toBeVisible();
+      await expect(result.getByText(/^\+Updated from the conversation\./)).toBeVisible();
+      await expect(result.getByText("Updated later by the member.")).toHaveCount(0);
+      await expectSurfaceControls(page, result);
+      await capture(page, { path: info.outputPath("chat-page-changes.png") });
+      await result.getByRole("tab", { name: "Preview", exact: true }).click({ timeout });
+      await expect(
+        result.getByText("Updated from the conversation.", { exact: true }),
+      ).toBeVisible();
+      await result.getByRole("button", { name: "Close", exact: true }).click({ timeout });
+      await expect(result).toBeHidden();
+      await expect(updatedResult).toBeFocused();
+      await expect.poll(() => log.evaluate((node) => node.scrollTop)).toBe(scrollTop);
+      await expect(page).toHaveURL(conversationUrl);
+      await page.setViewportSize(viewports[3]!);
+      await updatedResult.click({ timeout });
+      await expect(result.getByText("Version 1 → Version 2", { exact: true })).toBeVisible();
+      await expectSurfaceControls(page, result);
+      await capture(page, { path: info.outputPath("chat-page-changes-narrow.png") });
+      await page.keyboard.press("Escape");
+      await expect(updatedResult).toBeFocused();
+      await page.setViewportSize(viewports[0]!);
       // Deletion retains the activity reference; stale links resolve to an explicit state.
+      await page.goto(`${baseURL}/pages?spaceId=${spaceId}&pageId=${producedId}`, { timeout });
       await page.getByRole("button", { name: "Delete page", exact: true }).click({ timeout });
       await page
         .getByRole("alertdialog")
         .getByRole("button", { name: "Delete page", exact: true })
         .click({ timeout });
       await page.goto(conversationUrl, { timeout });
+      await updatedResult.click({ timeout });
+      await expect(
+        page.getByRole("dialog").getByText("This page version is no longer available."),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
       await page
         .locator("[data-tool-activity]")
+        .first()
         .getByRole("button", { name: /^1 step/ })
         .click({ timeout });
       await page.getByRole("button", { name: "Create page", exact: true }).click({ timeout });

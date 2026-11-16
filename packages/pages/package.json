@@ -27,6 +27,7 @@
     "@raypx/icons": "workspace:*",
     "@raypx/spaces": "workspace:*",
     "@raypx/ui": "workspace:*",
+    "diff": "catalog:",
     "drizzle-orm": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

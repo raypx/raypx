@@ -1,5 +1,6 @@
 import { createConversationFeed } from "@raypx/client/events";
 import { agentIdentityStyle } from "./identity.js";
+import type { PageResultMountProps } from "./page-result.js";
 import { NotificationsBell } from "./notifications.js";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { ProtectedInputs } from "./protected-input.js";
@@ -18,6 +19,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
   type ComponentProps,
+  type ComponentType,
 } from "react";
 import {
   ShellToolbar,
@@ -169,6 +171,7 @@ export interface AgentsWorkspaceProps {
   workspaceLoading?: ReactNode;
   onSessionEnded?: (() => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
+  pageResultPreview?: ComponentType<PageResultMountProps> | undefined;
   composerReference?: { id: string; text: string } | undefined;
   spaceManagement?: SpaceManagementPort | undefined;
   accountApprovalSettings?: Pick<ApprovalSettingsPort, "settings"> | undefined;
@@ -203,6 +206,7 @@ function AgentsWorkspaceContents({
   renderWorkspace,
   workspaceLoading,
   onOpenPage,
+  pageResultPreview,
   composerReference,
   spaceManagement = client.spaceManagement,
   accountApprovalSettings = client.accountApprovalSettings,
@@ -1551,6 +1555,8 @@ function AgentsWorkspaceContents({
             onEditAgent={() => edit(selected)}
             onDeleteAgent={selectedGroup ? undefined : () => void removeAgent(selected)}
             onOpenPage={onOpenPage}
+            pageResultPreview={pageResultPreview}
+            onOpenExternal={onOpenExternal}
             composerReference={composerReference}
             subscribePages={subscribePages}
             group={selectedGroup}

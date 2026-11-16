@@ -3,6 +3,7 @@ import type { SpaceId } from "@raypx/core/spaces";
 import type {
   OpenApiServer,
   OpenApiServerConfiguration,
+  OpenApiSource,
   OpenApiCredential,
   OpenApiTestCode,
 } from "@raypx/core/openapi-servers";
@@ -19,7 +20,7 @@ export interface OpenApiServersPort {
     input: {
       spaceId: SpaceId;
       server: OpenApiServerConfiguration;
-      source: { document: string } | { url: string };
+      source: OpenApiSource;
       credential?: OpenApiCredential;
     },
   ): Promise<OpenApiServer>;
@@ -155,7 +156,7 @@ export class OpenApiServersController {
   async save(
     id: string | null,
     server: OpenApiServerConfiguration,
-    source?: { document: string } | { url: string },
+    source?: OpenApiSource,
     credential?: OpenApiCredential,
   ): Promise<OpenApiServer | null> {
     const spaceId = this.view.spaceId;

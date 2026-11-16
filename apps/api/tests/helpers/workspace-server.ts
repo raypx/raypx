@@ -33,6 +33,7 @@ import { createSkillsService } from "@raypx/skills/server";
 import { createSkillsRepository } from "@raypx/skills/server/postgres";
 import { createMcpTransport } from "@raypx/providers/mcp";
 import { createOpenApiTransport } from "@raypx/providers/openapi";
+import { WEATHER_API_URL, WEB_SEARCH_API_URL } from "@raypx/core/openapi-servers";
 import { createMcpServers } from "../../src/conversations/mcp-servers.js";
 import { createMcpServersRepository } from "../../src/conversations/mcp-postgres.js";
 import { withPageTools } from "../../src/conversations/page-tools.js";
@@ -181,10 +182,134 @@ const mcpServers = createMcpServers(
   applicationSecretKeyProvider("browser-fixture-mcp-encryption-key"),
   createMcpTransport(),
 );
+const openApiTransport = createOpenApiTransport();
+const webFixtureTransport = createOpenApiTransport({
+  resolver: async () => [{ address: "93.184.216.34", family: 4 }],
+  async request(endpoint, method, headers, body) {
+    const expected = headers.authorization === "Bearer fixture-tavily-key";
+    let output: unknown = { error: "fixture request rejected" };
+    let status = expected && endpoint.url.origin === WEB_SEARCH_API_URL ? 200 : 401;
+    if (status === 200) {
+      const input = body ? JSON.parse(body) : null;
+      if (method === "GET" && endpoint.url.pathname === "/usage") output = {};
+      else if (
+        method === "POST" &&
+        endpoint.url.pathname === "/search" &&
+        input?.query === "fixture public web sources"
+      )
+        output = {
+          results: [
+            {
+              title: "Fixture documentation",
+              url: "https://docs.example.com/start",
+              content: "Search excerpt.",
+            },
+            {
+              title: "Fixture reference",
+              url: "https://docs.example.com/reference",
+              content: "Reference excerpt.",
+            },
+          ],
+        };
+      else if (
+        method === "POST" &&
+        endpoint.url.pathname === "/extract" &&
+        input?.urls?.[0] === "https://docs.example.com/start"
+      )
+        output = {
+          results: [
+            {
+              url: "https://docs.example.com/start",
+              raw_content: "Verified document excerpt.",
+            },
+          ],
+        };
+      else status = 400;
+    }
+    return { status, headers: new Headers(), body: JSON.stringify(output) };
+  },
+});
+const weatherFixtureTransport = createOpenApiTransport({
+  now: () => new Date("2026-08-09T17:30:00Z"),
+  resolver: async () => [{ address: "93.184.216.34", family: 4 }],
+  async request({ url: endpoint }, method) {
+    const input = endpoint.searchParams;
+    let response: unknown;
+    if (
+      method === "GET" &&
+      endpoint.hostname === "geocoding-api.open-meteo.com" &&
+      endpoint.pathname === "/v1/search"
+    ) {
+      const city = input.get("name");
+      if (city === "上海")
+        response = {
+          results: [
+            {
+              name: "上海",
+              country: "中国",
+              latitude: 31.23,
+              longitude: 121.47,
+              timezone: "Asia/Shanghai",
+            },
+          ],
+        };
+      if (city === "Berlin, Germany")
+        response = {
+          results: [
+            {
+              name: "Berlin",
+              country: "Germany",
+              latitude: 52.52,
+              longitude: 13.41,
+              timezone: "Europe/Berlin",
+            },
+          ],
+        };
+    }
+    if (
+      method === "GET" &&
+      endpoint.origin === WEATHER_API_URL &&
+      endpoint.pathname === "/v1/forecast"
+    ) {
+      const date = input.get("start_date");
+      const validDate = input.get("timezone") === "Asia/Shanghai" ? "2026-08-11" : "2026-08-09";
+      if (date === validDate && input.get("end_date") === date)
+        response = {
+          daily: {
+            time: [date],
+            weather_code: [61],
+            temperature_2m_min: [22],
+            temperature_2m_max: [29],
+            precipitation_probability_max: [80],
+          },
+          hourly: {
+            time: [`${date}T08:00`, `${date}T17:00`],
+            temperature_2m: [23, 28],
+            weather_code: [2, 61],
+            precipitation_probability: [15, 80],
+          },
+        };
+    }
+    return {
+      status: response ? 200 : 400,
+      headers: new Headers(),
+      body: JSON.stringify(response ?? { error: true }),
+    };
+  },
+});
+function fixtureTransport(endpoint: string) {
+  if (endpoint === WEB_SEARCH_API_URL) return webFixtureTransport;
+  if (endpoint === WEATHER_API_URL) return weatherFixtureTransport;
+  return openApiTransport;
+}
 const openApiServers = createOpenApiServers(
   createOpenApiServersRepository(connection.db),
   applicationSecretKeyProvider("browser-fixture-api-encryption-key"),
-  createOpenApiTransport(),
+  {
+    ...openApiTransport,
+    test: (...args) => fixtureTransport(args[0]).test(...args),
+    call: (...args) => fixtureTransport(args[0]).call(...args),
+  },
 );
 const protectedKeys = applicationSecretKeyProvider("browser-fixture-protected-encryption");
 const protectedInputs = createProtectedInputsService(connection.db, {
