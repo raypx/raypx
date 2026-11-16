@@ -1,0 +1,121 @@
+packages/agents/src/client/conversation.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 1009
+packages/ui/src/components/ui/input.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 18
+apps/web/src/features/config/components/settings.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 34
+packages/ui/src/components/ui/native-select.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 22
+packages/ui/src/components/ui/switch.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 15
+packages/ui/src/components/ui/toast.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 35
+packages/ui/src/components/ui/button.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 9,15,21
+packages/agents/src/client/workspace.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 1781
+apps/web/src/components/public-chrome.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 56
+apps/web/src/routes/(auth)/signup.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 23
+packages/agents/src/client/home.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 154,168
+  s_2d5ecafcaef8ed::t_1351940726b74a 405
+packages/ui/src/components/ui/field.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 51
+packages/ui/src/components/ui/input-group.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 22
+packages/ui/src/styles/native.css
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 63-64,165-166
+packages/agents/src/client/approval-card.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 122
+packages/ui/src/lib/utils.ts
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 8-10
+  s_2d5ecafcaef8ed::t_f6ce2c4333bbdb 3-5
+apps/desktop/src/features/auth/components/browser-login.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 164
+apps/desktop/src/components/shell.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 108
+packages/ui/src/date-picker.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 85,152
+packages/agents/src/client/computer.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 174,184
+packages/agents/src/client/space-settings-dialog.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 42
+packages/ui/src/styles/globals.css
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 37,138-151,187
+packages/ui/src/components/ui/badge.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 8,15
+packages/ui/src/components/ui/sidebar.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 401,425,473,557,658
+apps/web/src/routes/(legal)/privacy.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 57,79,102,109
+packages/agents/src/client/capability-sheet.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 55
+packages/ui/src/styles/theme.css
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 61-62,164-165
+packages/ui/src/components/ui/combobox.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 22,45,109
+packages/ui/src/components/ui/dropdown-menu.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 85,110
+packages/auth/src/client/auth-form.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 174
+packages/ui/src/themes/picker.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 45
+apps/web/src/components/legal-footer.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 11
+packages/ui/src/components/ui/select.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 42,114
+packages/auth/src/client/auth-form-parts.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 13
+DESIGN.md
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 28-34
+packages/ui/src/themes/tokens.ts
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 62-63,164-165
+packages/account/src/client/menu.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 65,100
+packages/ui/src/components/ui/tabs.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 52
+  s_2d5ecafcaef8ed::t_3da15473193a64 67
+packages/ui/src/components/ui/textarea.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 9
+packages/agents/src/client/computer-screen.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 300
+packages/blocks/src/components/shell.tsx
+  s_2d5ecafcaef8ed::t_7d5ac61e114657 409
+  s_2d5ecafcaef8ed::t_b18b401e46af0c 260
+apps/desktop/src/features/auth/components/session-gate.tsx
+  s_2d5ecafcaef8ed::t_89ac6bbb063bc3 36
+apps/web/e2e/theme-contrast.ts
+  s_2d5ecafcaef8ed::t_c1f8340948d01c 89-91
+apps/web/e2e/theme-final.spec.ts
+  s_2d5ecafcaef8ed::t_9cbdb8058ed008 446-448
+packages/blocks/src/components/command-palette.tsx
+  s_2d5ecafcaef8ed::t_53f5d6ad885469 104
+packages/ui/src/components/ui/calendar.tsx
+  s_2d5ecafcaef8ed::t_022ee0d3fe015f 194
+packages/ui/src/components/ui/checkbox.tsx
+  s_2d5ecafcaef8ed::t_6be788f985063a 10
+packages/ui/src/components/ui/radio-group.tsx
+  s_2d5ecafcaef8ed::t_f14afe6fff27fd 22
+packages/ui/src/lib/utils.test.ts
+  s_2d5ecafcaef8ed::t_20da575261ff55 20-38
+packages/ui/src/themes/tokens.test.ts
+  s_2d5ecafcaef8ed::t_160a4f5dc88ef8 21,27,40-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0a67fa978071f00e07d20c2c506d1418785d1dab",
+  "prompts": {},
+  "sessions": {
+    "s_2d5ecafcaef8ed": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e244-9dc5-7723-a658-4b559143b04e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
