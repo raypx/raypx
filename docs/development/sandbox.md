@@ -197,31 +197,30 @@ a directory grant is not sandbox isolation. See [device setup and acceptance](de
 
 ## E2B hosted computers
 
-Build a new Raypx template name for each release of the guest helper. The
-command copies the local helpers into the template and prints the resulting ID.
-Use an E2B project with filesystem-only pause enabled.
+In **Configuration center → Sandbox**, choose **E2B**, enter the project API
+key, then save and test the connection. Raypx selects E2B's public `base`
+template for new configurations and installs the bundled helper before the
+Computer accepts commands. Use an E2B project with filesystem-only pause enabled.
 
-```sh
-# Supply E2B_API_KEY securely to the shell before running.
-bun run --cwd infra/sandbox e2b:template <new-template-name> python:3.13-slim-bookworm@sha256:<digest>
-```
+Start the Computer in a fresh Space. E2B uses private traffic and disables
+internet egress. Explicit Stop commits the bounded PostgreSQL home archive
+before deleting the sandbox. Startup restores and verifies the archive
+in the next sandbox. The idle timeout saves disk for a later explicit Start.
 
-In **Configuration center → Sandbox**, choose **E2B**, paste the template ID
-and the project API key, then save and test the connection. Start the Computer
-in a fresh Space. E2B uses private traffic, disables internet egress, and serves
-commands and workspace files. An explicit Stop commits the bounded PostgreSQL
-home archive before deleting the sandbox. Startup restores and verifies that
-archive in a new sandbox. The E2B idle timeout saves disk state for a later
-explicit Start. Use separate projects for testing and production.
+Deploy a matching Web and API release before configuring E2B. An API whose
+configuration schema lists only `none` and `docker` must be updated first.
+Apply migrations using the normal deployment path for the current foundation.
+See [deployment instructions](deployment.md).
 
-The PostgreSQL acceptance uses an isolated temporary guest by default. To check
-the same path against E2B, supply a disposable test database, a test project key,
-and the built template ID through the environment:
+The PostgreSQL acceptance uses a local guest by default. For live acceptance,
+supply a disposable `TEST_DATABASE_URL` and test-project `E2B_API_KEY` to the
+test process. The fixture saves the key through the same administrator RPC as
+the configuration page and uses the public `base` template.
 
 ```sh
 RAYPX_TEST_E2B=1 bun run --cwd apps/api test:postgres e2b-computer.test.ts
 ```
 
-The test creates and removes test sandboxes. It verifies headless command
-execution, bounded file preview, explicit Stop, restoration across new runtime
-instances, and stale-generation write rejection.
+The test creates and removes test sandboxes. It verifies command execution,
+bounded file preview, Stop, restoration across new runtime instances, and
+stale-generation write rejection.

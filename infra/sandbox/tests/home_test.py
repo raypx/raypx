@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-spec = importlib.util.spec_from_file_location("computer_home", Path(__file__).parents[1] / "src" / "home.py")
+spec = importlib.util.spec_from_file_location("computer_home", Path(__file__).parents[3] / "packages/providers/src/computer/e2b-guest/home.py")
 helper = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(helper)
 

@@ -232,3 +232,30 @@ it("saves write-only sandbox credentials, tests saved settings, and keeps other 
   fireEvent.click(screen.getByRole("tab", { name: "Site" }));
   expect(screen.getByLabelText("Site name")).toHaveValue("Site draft");
 });
+
+it("saves E2B with only the key and identifies an older Sandbox API", async () => {
+  vi.spyOn(configurationClient, "get").mockResolvedValue(config);
+  const sandbox = {
+    values: { provider: "e2b", url: null, screen: false },
+    hasCredential: false,
+    revision: 1,
+    updatedAt: null,
+  } as const;
+  vi.spyOn(configurationClient, "sandbox").mockResolvedValue(sandbox);
+  const save = vi.spyOn(configurationClient, "updateSandbox").mockRejectedValue({
+    code: "BAD_REQUEST",
+    data: { issues: [{ path: ["values", "provider"], values: ["none", "docker"] }] },
+  });
+  page(<ConfigurationSettings />);
+  fireEvent.click(screen.getByRole("tab", { name: "Sandbox" }));
+  const key = await screen.findByLabelText("E2B API key");
+  expect(key).toHaveAttribute("type", "password");
+  expect(screen.queryByLabelText(/template|supervisor base URL|offer screen/i)).toBeNull();
+  const credential = "fake-e2b-key-with-at-least-32-characters";
+  fireEvent.change(key, { target: { value: credential } });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Update the Raypx API to a version that supports E2B",
+  );
+  expect(save).toHaveBeenCalledExactlyOnceWith({ values: sandbox.values, credential, revision: 1 });
+});

@@ -14,7 +14,7 @@ false. Fixed display helpers run inside the computer with intrinsic deadlines;
 private authenticated HTTP carries bounded PNG/input frames, never a published
 display port. Stop/replacement close frame iterators. No framebuffer is logged.
 
-`src/home.py` is baked into the computer image; file operations walk directory FDs
+The shared `packages/providers/src/computer/e2b-guest/home.py` is baked into the computer image; file operations walk directory FDs
 with O_NOFOLLOW. Home archives preserve links without following them and reject special files.
 Run `check` and `test` without Docker; tests inject a fake Engine HTTP transport.
 Live provider conformance is opt-in via RAYPX_TEST_DOCKER=1 against a prepared service.
@@ -68,7 +68,3 @@ supervisor on missing privacy hooks or low disk/inode headroom. It never repairs
 rules during admission; operator review/restart follows a refusal.
 
 All routes authenticate before disclosing state. Authenticated description includes tenant mode/runtime; body reads have a ten-second deadline plus existing byte bounds. An operator-accepted TLS proxy with source allowlisting may front the private listener for a PaaS; do not publish raw HTTP or weaken untrusted mode.
-
-`e2b:template` publishes a separate headless E2B template with the shared home
-helper and the fixed stdin protocol in `src/e2b.py`. The template build is
-explicit and needs an E2B project key and a digest-pinned base image.

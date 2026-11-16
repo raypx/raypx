@@ -7,7 +7,7 @@ import {
   type SandboxSettingsUpdate,
 } from "@raypx/contracts/api";
 import { testDockerComputerConnection } from "@raypx/providers/computer/docker";
-import { testE2bConnection } from "@raypx/providers/computer/e2b";
+import { e2bBaseTemplate, testE2bConnection } from "@raypx/providers/computer/e2b";
 import type { AuditService } from "../admin/audit.js";
 import { configurationCipher } from "./credentials.js";
 import { writeAuditedSetting } from "./audited-write.js";
@@ -27,7 +27,6 @@ const summary = {
   provider: sandboxConfiguration.provider,
   url: sandboxConfiguration.url,
   screen: sandboxConfiguration.screen,
-  template: sandboxConfiguration.template,
   hasCredential: sql<boolean>`${sandboxConfiguration.credentials} is not null`,
   revision: sandboxConfiguration.revision,
   updatedAt: sandboxConfiguration.updatedAt,
@@ -36,7 +35,6 @@ function snapshot(
   row:
     | {
         provider: "none" | "docker" | "e2b";
-        template: string | null;
         url: string | null;
         screen: boolean;
         hasCredential: boolean;
@@ -52,9 +50,9 @@ function snapshot(
       revision: 0,
       updatedAt: null,
     };
-  const { provider, url, screen, template, hasCredential, revision, updatedAt } = row;
+  const { provider, url, screen, hasCredential, revision, updatedAt } = row;
   return {
-    values: { provider, url, screen, ...(template ? { template } : {}) },
+    values: { provider, url, screen },
     hasCredential,
     revision,
     updatedAt: updatedAt.toISOString(),
@@ -72,7 +70,13 @@ export async function initializeSandbox(
     : null;
   await db
     .insert(sandboxConfiguration)
-    .values({ id, ...values, credentials, revision: 1 })
+    .values({
+      id,
+      ...values,
+      credentials,
+      revision: 1,
+      template: values.provider === "e2b" ? e2bBaseTemplate : null,
+    })
     .onConflictDoNothing();
 }
 export function createSandboxSettings(
@@ -122,9 +126,11 @@ export function createSandboxSettings(
             ? previous.credentials
             : null;
         if (values.provider !== "none" && !credentials) throw new ConfigError("INVALID_INPUT");
+        // Credential rotation keeps the template already bound to existing Computers.
+        const template = values.provider === "e2b" ? (previous?.template ?? e2bBaseTemplate) : null;
         const next = {
           ...values,
-          template: values.template ?? null,
+          template,
           credentials,
           revision: revision + 1,
           updatedAt: sql`now()`,
@@ -162,10 +168,7 @@ export function createSandboxSettings(
         if (!row || row.provider === "none" || !row.credentials)
           return { status: "not-configured" };
         const token = await cipher.open(row.credentials, sandboxCredentialTarget(row));
-        if (row.provider === "e2b") {
-          if (!row.template) return { status: "not-configured" };
-          return await testE2bConnection(token, row.template);
-        }
+        if (row.provider === "e2b") return await testE2bConnection(token);
         if (!row.url) return { status: "not-configured" };
         return await testDockerComputerConnection({
           url: row.url,

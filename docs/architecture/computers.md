@@ -98,8 +98,8 @@ The supervisor is a separate service under `infra/sandbox`.
 
 The administrator selects `none`, `docker` or `e2b`. Docker uses a supervisor root URL,
 write-only encrypted credential and Screen offering through the existing
-configuration center. E2B uses a Raypx template ID and a write-only encrypted
-API key. `sandbox_configuration` uses the same revisioned,
+configuration center. E2B uses a write-only encrypted API key and initializes
+new sandboxes from the public `base` template. `sandbox_configuration` uses the same revisioned,
 audited provider-setting transaction and configuration reader/optional Redis
 invalidation as mail/storage. Fresh PostgreSQL reads admit every operation in API
 and worker roles without startup I/O or restart; no environment value overrides

@@ -1,4 +1,4 @@
-import type { Sandbox } from "e2b";
+import type { CommandHandle, Sandbox } from "e2b";
 import { z } from "zod";
 import {
   bound,
@@ -18,7 +18,11 @@ import {
   type ProviderComputer,
 } from "./port.js";
 
+export const e2bBaseTemplate = "base";
+
 const helper = "/opt/raypx/e2b.py";
+const python = ["/usr/bin/env", "python3", "-I"];
+const guestEnvironment = { PATH: "/usr/local/bin:/usr/bin:/bin" };
 const homeResponseLimit = MAX_HOME_BYTES * 2;
 const commandTimeout = 60_000;
 
@@ -58,16 +62,17 @@ function connection(apiKey: string) {
   } as const;
 }
 
-export async function testE2bConnection(apiKey: string, template: string) {
+export async function testE2bConnection(apiKey: string) {
   try {
-    const { Template, AuthenticationError, TimeoutError } = await import("e2b");
+    const { Sandbox, AuthenticationError, TimeoutError } = await import("e2b");
     try {
-      const tags = await Template.getTags(template, {
+      await Sandbox.list({
         ...connection(apiKey),
         requestTimeoutMs: 5000,
         retries: 0,
-      });
-      return { status: tags.length ? "e2b-connected" : "unavailable" } as const;
+        limit: 1,
+      }).nextItems();
+      return { status: "e2b-connected" } as const;
     } catch (error) {
       if (error instanceof AuthenticationError) return { status: "authentication-failed" } as const;
       if (error instanceof TimeoutError) return { status: "timeout" } as const;
@@ -93,6 +98,22 @@ function outputCollector(limit: number) {
   };
 }
 
+async function sendGuestInput(
+  handle: Pick<CommandHandle<string | undefined>, "sendStdin" | "closeStdin" | "kill">,
+  data: Uint8Array,
+  signal: AbortSignal,
+) {
+  try {
+    // Keep frames below the SDK RPC limit and preserve order.
+    for (let offset = 0; offset < data.length; offset += 512 * 1024)
+      await handle.sendStdin(data.subarray(offset, offset + 512 * 1024), { signal });
+    await handle.closeStdin({ signal });
+  } catch {
+    await handle.kill().catch(() => {});
+    throw new ComputerError("PROVIDER_UNAVAILABLE");
+  }
+}
+
 async function startGuest(
   guest: Guest,
   operation: string,
@@ -103,7 +124,8 @@ async function startGuest(
   const data = Buffer.from(JSON.stringify(payload));
   if (data.length > homeResponseLimit + 1024) throw new ComputerError("LIMIT_EXCEEDED");
   const handle = await guest.commands.run("raypx", {
-    shell: ["/usr/bin/python3", "-I", helper, operation],
+    shell: [...python, helper, operation],
+    envs: guestEnvironment,
     user: "computer",
     cwd: "/",
     background: true,
@@ -112,16 +134,27 @@ async function startGuest(
     onStdout,
     timeoutMs: commandTimeout,
   });
-  try {
-    // One in-flight request at a time preserves stdin order. Keep frames below the SDK RPC limit.
-    for (let offset = 0; offset < data.length; offset += 512 * 1024)
-      await handle.sendStdin(data.subarray(offset, offset + 512 * 1024), { signal });
-    await handle.closeStdin({ signal });
-    return handle;
-  } catch {
-    await handle.kill().catch(() => {});
-    throw new ComputerError("PROVIDER_UNAVAILABLE");
-  }
+  await sendGuestInput(handle, data, signal);
+  return handle;
+}
+
+async function initializeGuest(candidate: Guest) {
+  const { bootstrap, home, guest } = await import("./e2b-guest/sources.js");
+  const timeout = 20_000;
+  const signal = AbortSignal.timeout(timeout);
+  const handle = await candidate.commands.run("raypx-bootstrap", {
+    shell: [...python, "-c", bootstrap],
+    envs: guestEnvironment,
+    user: "root",
+    cwd: "/",
+    background: true,
+    stdin: true,
+    retainOutput: false,
+    timeoutMs: timeout,
+  });
+  await sendGuestInput(handle, Buffer.from(JSON.stringify({ home, guest })), signal);
+  await handle.wait();
+  await invoke(candidate, "list", { path: "", limit: 1 }, listing);
 }
 
 const guestError = z.object({
@@ -446,8 +479,8 @@ export function createE2bComputerProvider(options: {
             throw new ComputerError("STALE_GENERATION");
           if (!p.ready) {
             const candidate = await connect(p.sandboxId);
+            await initializeGuest(candidate);
             if (p.homeRevision) await restoreHome(candidate, await tx.loadHome(), p.homeRevision);
-            else await invoke(candidate, "list", { path: "", limit: 1 }, listing);
             await tx.save({ ready: true });
           } else {
             const state = await remoteState(p.sandboxId);
@@ -517,7 +550,9 @@ export function createE2bComputerProvider(options: {
         if (!p.ready || !p.sandboxId) throw new ComputerError("NOT_RUNNING");
         const sandboxId = await create(Bun.randomUUIDv7());
         try {
-          await restoreHome(await connect(sandboxId), archive, revision);
+          const candidate = await connect(sandboxId);
+          await initializeGuest(candidate);
+          await restoreHome(candidate, archive, revision);
           await kill(p.sandboxId);
           await tx.save({ sandboxId, archive, homeRevision: revision });
         } catch (error) {

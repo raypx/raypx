@@ -1,15 +1,19 @@
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { eq } from "drizzle-orm";
 import { expect, it, vi } from "vitest";
+import { createApiClient } from "@raypx/client/api";
 import { createComputersService } from "@raypx/computers/server";
 import { createComputersRepository } from "@raypx/computers/server/postgres";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { sandboxConfiguration, spaces, user } from "@raypx/database/schema";
 import { createSpaceAccess } from "@raypx/spaces/server/postgres";
-import { initializeSandbox } from "../../../src/config/sandbox.js";
+import { AuditService } from "../../../src/admin/audit.js";
+import { createAdministrationRepository } from "../../../src/admin/repository.js";
+import { createSandboxSettings } from "../../../src/config/sandbox.js";
+import { createApiApp } from "../../helpers/app.js";
+import { testSession } from "../../helpers/session.js";
 import { createConfigReads } from "../../../src/config/reads.js";
 import { databaseComputerProvider } from "../../../src/runtime/sandbox.js";
 
@@ -19,6 +23,8 @@ const fake = vi.hoisted(() => ({
   live: process.env.RAYPX_TEST_E2B === "1",
   root: "",
   writes: 0,
+  bootstraps: 0,
+  ready: new Set<string>(),
   dropCreateResponse: true,
 }));
 
@@ -27,7 +33,6 @@ const fake = vi.hoisted(() => ({
 vi.mock(import("@raypx/providers/computer/e2b"), async (original) => {
   const adapter = await original();
   if (fake.live) return adapter;
-  const source = fileURLToPath(new URL("../../../../../infra/sandbox/src/", import.meta.url));
   const launcher = `
 import os, runpy, sys
 source, root, operation = sys.argv[1:]
@@ -44,14 +49,14 @@ guest["main"](operation)
   const sdk = {
     SandboxNotFoundError,
     Sandbox: {
-      async create(_template: string, options: { idempotencyKey: string }) {
+      async create(template: string, options: { idempotencyKey: string }) {
+        if (template !== "base") throw new Error("Expected the official base template");
         let sandboxId = fake.keys.get(options.idempotencyKey);
         if (sandboxId) return { sandboxId };
         sandboxId = crypto.randomUUID();
         const base = join(fake.root, sandboxId);
         const home = join(base, "home");
-        await mkdir(join(home, "workspace"), { recursive: true });
-        await writeFile(join(base, "process.lock"), "");
+        await mkdir(base, { recursive: true });
         fake.keys.set(options.idempotencyKey, sandboxId);
         fake.guests.set(sandboxId, home);
         if (fake.dropCreateResponse) {
@@ -78,12 +83,42 @@ guest["main"](operation)
           sandboxId,
           commands: {
             async run(
-              _command: string,
+              command: string,
               options: {
                 shell: string[];
+                user: string;
                 onStdout: (output: string) => void;
               },
             ) {
+              const base = join(home, "..");
+              const source = join(base, "helpers");
+              if (command === "raypx-bootstrap") {
+                if (options.user !== "root" || options.shell.at(-2) !== "-c")
+                  throw new Error("Expected privileged bootstrap");
+                const chunks: Uint8Array[] = [];
+                return {
+                  sendStdin(bytes: Uint8Array) {
+                    chunks.push(bytes);
+                  },
+                  async closeStdin() {
+                    const scripts = JSON.parse(Buffer.concat(chunks).toString()) as {
+                      home: string;
+                      guest: string;
+                    };
+                    await mkdir(join(home, "workspace"), { recursive: true });
+                    await mkdir(source, { recursive: true });
+                    await writeFile(join(source, "home.py"), scripts.home);
+                    await writeFile(join(source, "e2b.py"), scripts.guest);
+                    await writeFile(join(base, "process.lock"), "");
+                    fake.ready.add(sandboxId);
+                    fake.bootstraps++;
+                  },
+                  wait() {},
+                  kill() {},
+                };
+              }
+              if (options.user !== "computer" || !fake.ready.has(sandboxId))
+                throw new Error("Guest command admitted before bootstrap");
               const operation = options.shell.at(-1)!;
               if (operation === "write") fake.writes++;
               const child = Bun.spawn(["python3", "-I", "-c", launcher, source, home, operation], {
@@ -118,6 +153,7 @@ guest["main"](operation)
         const home = fake.guests.get(id);
         if (!home) return false;
         fake.guests.delete(id);
+        fake.ready.delete(id);
         await rm(join(home, ".."), { recursive: true, force: true });
         return true;
       },
@@ -127,6 +163,7 @@ guest["main"](operation)
   type LoadSdk = NonNullable<Options["loadSdk"]>;
   return {
     ...adapter,
+    testE2bConnection: async () => ({ status: "e2b-connected" as const }),
     createE2bComputerProvider: (options: Options) =>
       adapter.createE2bComputerProvider({
         ...options,
@@ -142,9 +179,7 @@ it("restores the E2B home across a backend restart and fences the old generation
   const credential = fake.live
     ? process.env.E2B_API_KEY
     : "fixture-e2b-key-with-at-least-32-characters";
-  const template = fake.live ? process.env.E2B_TEMPLATE_ID : "raypx-test-template";
-  if (!credential || !template)
-    throw new Error("Set E2B_API_KEY and E2B_TEMPLATE_ID for live acceptance");
+  if (!credential) throw new Error("Set E2B_API_KEY for live acceptance");
 
   await migrateDatabase(url);
   const secret = "e2b-fixture-configuration-key-32-characters";
@@ -158,19 +193,33 @@ it("restores the E2B home across a backend restart and fences the old generation
   try {
     const db = connection.db;
     const access = createSpaceAccess(db);
-    await db
-      .insert(user)
-      .values({ id: owner, name: "E2B fixture", email: `${owner}@example.test` });
+    const session = testSession(owner);
+    await db.insert(user).values({ ...session.user, role: "admin" });
     const { space } = await access.create(owner, { name: "E2B acceptance" });
     spaceId = space.id;
     const scope = await access.resolve(owner, space.id);
-    await initializeSandbox(db, secret, {
-      values: { provider: "e2b", url: null, screen: false, template },
-      credential,
-      revision: 0,
+    const audit = new AuditService(createAdministrationRepository(db));
+    const origin = "https://web.example.test";
+    const app = createApiApp({
+      audit,
+      sandboxSettings: createSandboxSettings(db, secret, audit, reads),
+      allowedOrigins: [origin],
+      readSession: async () => ({ ...session, user: { ...session.user, role: "admin" } }),
     });
+    const config = createApiClient({
+      baseUrl: "https://api.example.test",
+      headers: { origin },
+      fetch: async (input, init) => app.fetch(new Request(input, init)),
+    }).configuration;
+    const values = { provider: "e2b", url: null, screen: false } as const;
+    const saved = await config.updateSandbox({ values, credential, revision: 0 });
+    expect(saved.values).toEqual(values);
+    expect(saved.hasCredential).toBe(true);
+    await expect(config.testSandbox({})).resolves.toEqual({ status: "e2b-connected" });
     const service = createComputersService(createComputersRepository(db), runtime.provider);
     const started = await service.start(scope);
+    if (started.status === "available" && started.computer)
+      active = { id: started.computer.id, generation: started.computer.generation };
     expect(started).toMatchObject({ status: "available", computer: { state: "running" } });
     if (started.status !== "available" || !started.computer) throw new Error("Start failed");
     expect(fake.keys.size).toBe(fake.live ? 0 : 1);
@@ -218,6 +267,8 @@ it("restores the E2B home across a backend restart and fences the old generation
       runtime.provider,
     );
     const restarted = await worker.start(scope);
+    if (restarted.status === "available" && restarted.computer)
+      active = { id: restarted.computer.id, generation: restarted.computer.generation };
     expect(restarted).toMatchObject({
       computer: { id: old.id, generation: old.generation + 1, state: "running" },
     });
@@ -230,6 +281,7 @@ it("restores the E2B home across a backend restart and fences the old generation
       bytes: Buffer.from("E2B").toString("base64"),
       truncated: true,
     });
+    expect(fake.bootstraps).toBe(fake.live ? 0 : 2);
     const writes = fake.writes;
     await expect(runtime.provider.write(old, "saved.txt", "Y29ycnVwdA==")).rejects.toMatchObject({
       code: "STALE_GENERATION",

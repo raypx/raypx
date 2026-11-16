@@ -319,7 +319,6 @@
       "dependencies": {
         "@raypx/core": "workspace:*",
         "@raypx/providers": "workspace:*",
-        "e2b": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {

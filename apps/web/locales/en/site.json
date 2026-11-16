@@ -27,10 +27,10 @@
   "closed": "Invitation required",
   "closedHint": "Use an invitation link from a Space owner to create an account.",
   "sandbox": {
-    "e2bTemplate": "E2B template ID",
     "e2bKey": "E2B API key",
     "e2bKeyHint": "Leave blank to keep the saved E2B key.",
-    "e2bTestHint": "Checks access to the saved E2B template.",
+    "e2bUpdateApi": "Update the Raypx API to a version that supports E2B, then try again.",
+    "e2bTestHint": "Checks the saved E2B API key.",
     "e2b-connected": "Connected to E2B.",
     "title": "Sandbox",
     "provider": "Provider",

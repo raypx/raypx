@@ -71,9 +71,9 @@ export function createConfigHandlers({
         return {
           model,
           sandbox:
-            sandbox.values.provider !== "none" &&
-            Boolean(sandbox.values.url || sandbox.values.template) &&
-            sandbox.hasCredential,
+            sandbox.hasCredential &&
+            (sandbox.values.provider === "e2b" ||
+              (sandbox.values.provider === "docker" && Boolean(sandbox.values.url))),
           mail,
         };
       }),

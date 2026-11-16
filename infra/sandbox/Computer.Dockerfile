@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends coreutils git c
     && mkdir -p /home/computer/workspace && chown -R 1000:1000 /home/computer \
     && mkdir -p /run/raypx /usage/home /usage/input && chown 1000:1000 /run/raypx && chmod 700 /run/raypx
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
-COPY infra/sandbox/src/home.py /opt/raypx/home.py
+COPY packages/providers/src/computer/e2b-guest/home.py /opt/raypx/home.py
 COPY infra/sandbox/src/usage.py /opt/raypx/usage.py
 USER 1000:1000
 ENV HOME=/home/computer

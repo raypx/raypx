@@ -19,6 +19,24 @@ import { useTranslations } from "../../../i18n.js";
 import { configurationClient, configurationError } from "../client.js";
 import { ConfigurationActions } from "./actions.js";
 
+function serverLacksE2b(error: unknown) {
+  const response = error as { code?: unknown; data?: { issues?: unknown } } | null;
+  const issues = response?.data?.issues;
+  return (
+    response?.code === "BAD_REQUEST" &&
+    Array.isArray(issues) &&
+    issues.some(
+      (issue: { path?: unknown; values?: unknown } | null) =>
+        Array.isArray(issue?.path) &&
+        issue.path[0] === "values" &&
+        issue.path[1] === "provider" &&
+        Array.isArray(issue.values) &&
+        issue.values.includes("docker") &&
+        !issue.values.includes("e2b"),
+    )
+  );
+}
+
 export function SandboxSettings({ accountId, active }: { accountId: string; active: boolean }) {
   const t = useTranslations("site");
   const queryKey = ["configuration", "sandbox", accountId];
@@ -71,7 +89,6 @@ function SandboxForm({
     values.provider !== current.provider ||
     values.url !== current.url ||
     values.screen !== current.screen ||
-    values.template !== current.template ||
     Boolean(credential);
   const parsed = sandboxUpdateSchema.safeParse({
     values,
@@ -104,18 +121,14 @@ function SandboxForm({
         if (
           next.values.provider !== current.provider &&
           draft.url === current.url &&
-          draft.screen === current.screen &&
-          draft.template === current.template
+          draft.screen === current.screen
         )
           return next.values;
         if (next.values.provider !== current.provider) return draft;
-        const template =
-          draft.template !== current.template ? draft.template : next.values.template;
         return {
           provider: draft.provider,
           url: draft.url !== current.url ? draft.url : next.values.url,
           screen: draft.screen !== current.screen ? draft.screen : next.values.screen,
-          ...(template !== undefined ? { template } : {}),
         };
       });
       cache.setQueryData(queryKey, next);
@@ -145,6 +158,12 @@ function SandboxForm({
     if (dirty) return t("saveFirst");
     if (saved.values.provider === "none") return t("not-configured");
     return t(saved.values.provider === "e2b" ? "e2bTestHint" : "testHint");
+  }
+  const formError = reload.error ?? save.error;
+  function errorMessage() {
+    if (values.provider === "e2b" && serverLacksE2b(formError)) return t("e2bUpdateApi");
+    if ((formError as { code?: string } | null)?.code === "BAD_REQUEST") return t("invalidInput");
+    return site(configurationError(formError));
   }
   const providers = [
     { value: "none", label: t("disabled") },
@@ -198,22 +217,7 @@ function SandboxForm({
               </SelectContent>
             </Select>
           </Field>
-          {values.provider === "e2b" ? (
-            <Field>
-              <FieldLabel htmlFor="sandbox-template">{t("e2bTemplate")}</FieldLabel>
-              <Input
-                id="sandbox-template"
-                autoComplete="off"
-                maxLength={100}
-                required
-                value={values.template ?? ""}
-                onChange={(event) => {
-                  setValues({ ...values, template: event.target.value });
-                  edited();
-                }}
-              />
-            </Field>
-          ) : (
+          {values.provider !== "e2b" && (
             <Field>
               <FieldLabel htmlFor="sandbox-url">{t("url")}</FieldLabel>
               <Input
@@ -307,11 +311,7 @@ function SandboxForm({
       {(save.isError || reload.isError) && (
         <div className="flex flex-col items-start gap-2 border-t border-border px-4 py-4 sm:px-6">
           <Alert variant="destructive">
-            <AlertDescription>
-              {((reload.error ?? save.error) as { code?: string } | null)?.code === "BAD_REQUEST"
-                ? t("invalidInput")
-                : site(configurationError(reload.error ?? save.error))}
-            </AlertDescription>
+            <AlertDescription>{errorMessage()}</AlertDescription>
           </Alert>
           {conflict && (
             <Button type="button" variant="outline" disabled={busy} onClick={() => reload.mutate()}>

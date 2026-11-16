@@ -688,7 +688,7 @@ it("selects sandbox acceptance only for its Engine, image, provider and gate inp
   const { model } = project();
   for (const file of [
     "infra/sandbox/src/supervisor.ts",
-    "infra/sandbox/src/home.py",
+    "packages/providers/src/computer/e2b-guest/home.py",
     "infra/sandbox/src/config.test.ts",
     "infra/sandbox/tests/fake-engine.ts",
     "infra/sandbox/Computer.Dockerfile",

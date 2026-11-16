@@ -105,16 +105,11 @@ export const sandboxValuesSchema = z
       .regex(/^https?:\/\/[^/?#@]+\/?$/)
       .transform((value) => value.replace(/\/$/, ""))
       .nullable(),
-    template: z
-      .string()
-      .regex(/^[a-zA-Z0-9_-]{1,100}$/)
-      .optional(),
     screen: z.boolean(),
   })
   .refine((value) => {
-    if (value.provider === "e2b")
-      return Boolean(value.template && value.url === null && !value.screen);
-    return value.template === undefined && (value.provider === "none" || value.url !== null);
+    if (value.provider === "e2b") return value.url === null && !value.screen;
+    return value.provider === "none" || value.url !== null;
   });
 const sandboxSnapshotSchema = z.strictObject({
   values: sandboxValuesSchema,

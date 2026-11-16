@@ -46,6 +46,8 @@ Deployment adapters may implement configured() for fresh availability admission.
 
 `./computer/e2b` is API's hosted command/file adapter. It loads the E2B SDK
 lazily, takes a fenced placement store, and exchanges bounded data over stdin
-with the fixed guest helper. Explicit Stop commits a portable home before
+with the fixed guest helper. New configurations use E2B’s public `base` template.
+The adapter installs the packaged guest scripts before admission. The shared
+`e2b-guest/home.py` is also baked into the Docker computer image. Explicit Stop commits a portable home before
 killing the sandbox. Idle pause preserves disk and discards memory on resume.
 It exposes no Screen operations.
