@@ -1,0 +1,23 @@
+apps/api/tests/postgres/node/e2b-computer.test.ts
+  s_9982c8d14794fa::t_7614ea899d5d32 2,229-230,232-239
+  s_9982c8d14794fa::t_7cb76f60cd614e 240-247
+apps/api/src/runtime/sandbox.ts
+  s_9982c8d14794fa::t_7614ea899d5d32 180-181
+  s_9982c8d14794fa::t_bc3ced273d10b1 182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d6f979d9519828514318a3ad90f0e8d1f9150e36",
+  "prompts": {},
+  "sessions": {
+    "s_9982c8d14794fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e405-521b-74e0-8156-fbfa29fb9ed2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
