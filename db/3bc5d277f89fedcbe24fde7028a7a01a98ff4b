@@ -1,0 +1,31 @@
+apps/api/src/conversations/connection-transport.test.ts
+  s_e8793b91e4301c::t_99676ac76aef61 154
+apps/api/src/conversations/connection-transport.ts
+  s_e8793b91e4301c::t_2aad8464fd9f87 141
+apps/api/src/conversations/models.ts
+  s_e8793b91e4301c::t_1b84087fb5a7b3 196
+docs/architecture/execution.md
+  s_e8793b91e4301c::t_ce9524a077bfef 109-113
+packages/ai/AGENTS.md
+  s_e8793b91e4301c::t_53508fd108e521 11-14
+packages/ai/src/client.test.ts
+  s_e8793b91e4301c::t_3b0406cae0fbf7 2-7,19,30-42,151-215
+packages/ai/src/client.ts
+  s_e8793b91e4301c::t_19e41ca6f8de79 3,22-26,31-33,50-87,111-112,130-136,174,177-178,180,197-199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "db3bc5d277f89fedcbe24fde7028a7a01a98ff4b",
+  "prompts": {},
+  "sessions": {
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
