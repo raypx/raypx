@@ -151,8 +151,12 @@ timeline; Files shows bounded computer files. Wide screens add quiet context
 cards for the Computer/Screen, pending approvals and memory/routines. Narrow
 screens retain accessible sheets with their existing focus and Escape rules.
 Successful Page writes show a compact result card in Web/Desktop chat. Opening it
-shows the saved version in a right sheet, with changes from the previous version
-selected for an update. Closing returns focus to the card at the same reading position.
+shows the saved version, with changes selected for an update. Page links in Agent
+replies open the latest version within the same Space. Wide screens place the
+preview alongside the conversation, with the transcript and composer available.
+Narrow screens use a right sheet. Closing restores focus to the opener. In Web,
+the preview can open its document in a new tab, and the Page detail toolbar opens
+the latest version in a standalone tab.
 Web lookups group public source links by Run in a compact card. Its right sheet
 shows the original links and excerpts and preserves the same reading position.
 Weather forecasts appear inline with the resolved city, local date, conditions,

@@ -48,7 +48,7 @@ const accounts: string[] = [];
 const ownedSpaces: string[] = [];
 const cleanup: Array<() => Promise<void>> = [];
 const secret = "private-model-connection-credential-fixture";
-const replacementSecret = "rotated-private-model-connection-credential-fixture";
+const replacementSecret = "rotated-private-model-connection-credential-replacement";
 const configuration: ModelConnectionConfiguration = {
   name: "My models",
   kind: "compatible",
@@ -198,6 +198,7 @@ it("encrypts write-only credentials and preserves or replaces them through owner
     secret,
   });
   expect(created).not.toHaveProperty("secretId");
+  expect(created.apiKeyMask).toBe("priv••••ture");
   const [encrypted] = await storedSecrets(f.owner);
   expect(encrypted).toMatchObject({
     connectionId: created.id,
@@ -210,6 +211,16 @@ it("encrypts write-only credentials and preserves or replaces them through owner
     "SECRET_UNAVAILABLE",
   );
   expect(await f.memberClient.modelConnections.list({})).toEqual([]);
+  await connection.db
+    .update(modelConnections)
+    .set({ apiKeyMask: null })
+    .where(eq(modelConnections.id, created.id));
+  expect(await f.ownerClient.modelConnections.list({})).toEqual([created]);
+  const [backfilled] = await connection.db
+    .select({ apiKeyMask: modelConnections.apiKeyMask })
+    .from(modelConnections)
+    .where(eq(modelConnections.id, created.id));
+  expect(backfilled?.apiKeyMask).toBe(created.apiKeyMask);
   for (const operation of [
     () =>
       f.memberClient.modelConnections.update({
@@ -227,11 +238,13 @@ it("encrypts write-only credentials and preserves or replaces them through owner
   });
   expect((await storedSecrets(f.owner))[0]).toEqual(encrypted);
   expect(updated.name).toBe("Renamed");
+  expect(updated.apiKeyMask).toBe(created.apiKeyMask);
   const rotated = await f.ownerClient.modelConnections.update({
     id: created.id,
     connection: configuration,
     secret: replacementSecret,
   });
+  expect(rotated.apiKeyMask).toBe("rota••••ment");
   const [replacement] = await storedSecrets(f.owner);
   expect(replacement!.id).toBe(encrypted!.id);
   expect(replacement!.ciphertext).not.toBe(encrypted!.ciphertext);

@@ -79,8 +79,11 @@ it("reveals a link only in memory and refuses a late completion after close", ()
   expect(memory.reveal(generation, "https://api.test", link)).toBeNull();
   expect(memory.read()).toBeNull();
 });
-it("uses the backend document route with the exact saved version", () => {
+it("links to the latest document or an exact saved version", () => {
   expect(pageDocumentUrl("https://api.test/", page)).toBe(
     "https://api.test/api/pages/member/space-a/page-a?version=1",
+  );
+  expect(pageDocumentUrl("https://api.test", { spaceId: page.spaceId, id: page.id })).toBe(
+    "https://api.test/api/pages/member/space-a/page-a",
   );
 });

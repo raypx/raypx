@@ -1,6 +1,7 @@
 import { RunResourceUnavailableError, type ModelAccess } from "@raypx/agents/server";
 import type { Run } from "@raypx/core/conversation";
 import {
+  hiddenModelConnectionKey,
   modelConnectionConfigurationSchema,
   type ModelConnection,
   type ModelConnectionConfiguration,
@@ -20,6 +21,7 @@ export class ModelConnectionError extends Error {
 export interface StoredModelConnection extends ModelConnection {
   secretId: string;
 }
+type MaskedSealedSecret = SealedSecret & { apiKeyMask: string };
 export interface ModelConnectionsRepository {
   list(this: void, accountId: string, spaceId?: string): Promise<StoredModelConnection[]>;
   get(this: void, accountId: string, id: string): Promise<StoredModelConnection>;
@@ -29,15 +31,16 @@ export interface ModelConnectionsRepository {
     id: string,
     secretId: string,
     input: ModelConnectionConfiguration,
-    secret: SealedSecret,
+    secret: MaskedSealedSecret,
   ): Promise<StoredModelConnection>;
   update(
     this: void,
     accountId: string,
     id: string,
     input: ModelConnectionConfiguration,
-    secret?: SealedSecret,
+    secret?: MaskedSealedSecret,
   ): Promise<StoredModelConnection>;
+  fillApiKeyMask(this: void, accountId: string, id: string, mask: string): Promise<boolean>;
   delete(this: void, accountId: string, id: string): Promise<{ deleted: true }>;
 }
 type ResolvedModel = Awaited<ReturnType<ModelAccess["resolve"]>>;
@@ -61,6 +64,11 @@ export interface ConnectionTransport {
 function publicConnection(row: StoredModelConnection): ModelConnection {
   const { secretId: _secretId, ...connection } = row;
   return connection;
+}
+function maskApiKey(value: string): string {
+  if (value.length < 16 || !/^[a-zA-Z0-9._~+/-]+={0,2}$/.test(value))
+    return hiddenModelConnectionKey;
+  return `${value.slice(0, 4)}${hiddenModelConnectionKey}${value.slice(-4)}`;
 }
 export function connectionModelId(id: string, model: string): string {
   return `connection:${id}:${model}`;
@@ -91,15 +99,37 @@ export function createModelConnections(
       throw new ModelConnectionError("INVALID_CONNECTION");
     }
   }
+  async function seal(
+    accountId: string,
+    secretId: string,
+    value: string,
+  ): Promise<MaskedSealedSecret> {
+    return { ...(await secrets.seal(accountId, secretId, value)), apiKeyMask: maskApiKey(value) };
+  }
+  async function listConnection(accountId: string, row: StoredModelConnection) {
+    const connection = publicConnection(row);
+    if (connection.apiKeyMask) return connection;
+    try {
+      const apiKeyMask = maskApiKey(await secrets.read(accountId, row.id, row.secretId));
+      if (await repository.fillApiKeyMask(accountId, row.id, apiKeyMask))
+        return { ...connection, apiKeyMask };
+    } catch {
+      // An unreadable legacy credential can still be replaced or removed.
+    }
+    return connection;
+  }
   return {
     /** Internal Computer boundary input; never an RPC projection. */
     protectedValues: () => [...protectedSecrets.values()],
-    list: async (accountId: string) => (await repository.list(accountId)).map(publicConnection),
+    async list(accountId: string) {
+      const rows = await repository.list(accountId);
+      return Promise.all(rows.map((row) => listConnection(accountId, row)));
+    },
     async create(accountId: string, input: ModelConnectionConfiguration, value: string) {
       const parsed = validate(input);
       const id = crypto.randomUUID();
       const secretId = crypto.randomUUID();
-      const sealed = await secrets.seal(accountId, secretId, value);
+      const sealed = await seal(accountId, secretId, value);
       return publicConnection(await repository.create(accountId, id, secretId, parsed, sealed));
     },
     async update(
@@ -111,7 +141,7 @@ export function createModelConnections(
       const parsed = validate(input);
       const current = await repository.get(accountId, id);
       const sealed =
-        value === undefined ? undefined : await secrets.seal(accountId, current.secretId, value);
+        value === undefined ? undefined : await seal(accountId, current.secretId, value);
       return publicConnection(await repository.update(accountId, id, parsed, sealed));
     },
     delete: (accountId: string, id: string) => repository.delete(accountId, id),

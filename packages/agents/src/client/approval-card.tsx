@@ -95,6 +95,11 @@ export function ApprovalCard({
   const expired = elapsed;
   const summary = approvalExtraSummary(card);
   const operationKind = openApiOperationKind(card);
+  const pageTarget =
+    card.target === "Space page" &&
+    (card.toolName === "agent_page_create" ||
+      card.toolName === "agent_page_update" ||
+      card.toolName === "agent_page_read");
   const disabled =
     card.answering || expired || card.error === "unconfirmed" || card.error === "resolvedElsewhere";
   const errorKeys = {
@@ -121,16 +126,25 @@ export function ApprovalCard({
       tabIndex={-1}
       className="flex min-w-0 flex-col gap-2 rounded-xl border border-warning-border bg-warning-bg p-3 shadow-soft text-sm outline-none focus-visible:focus-control"
     >
-      <h3
-        id={id}
-        className="flex min-w-0 items-start gap-2 font-medium text-warning-text wrap-anywhere"
-      >
-        <ShieldCheckIcon
-          aria-hidden="true"
-          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+      <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h3
+          id={id}
+          className="flex min-w-0 items-start gap-2 font-medium text-warning-text wrap-anywhere"
+        >
+          <ShieldCheckIcon
+            aria-hidden="true"
+            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+          />
+          {toolOperationLabel(card, t)}
+        </h3>
+        <ApprovalDeadline
+          card={card}
+          onExpired={() => {
+            setElapsed(true);
+            onExpired();
+          }}
         />
-        {toolOperationLabel(card, t)}
-      </h3>
+      </div>
       {operationKind && (
         <p data-openapi-operation-kind={operationKind} className="text-xs text-muted-foreground">
           {t(`openapi.${operationKind}`)}
@@ -158,9 +172,13 @@ export function ApprovalCard({
           {t("approval.childTask", { task: taskSummary.slice(0, 240) })}
         </p>
       )}
-      <code className="min-w-0 rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap wrap-anywhere">
-        {card.target.slice(0, 1024)}
-      </code>
+      {pageTarget ? (
+        <p className="text-xs text-muted-foreground">{t("approval.pageTarget")}</p>
+      ) : (
+        <code className="min-w-0 rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap wrap-anywhere">
+          {card.target.slice(0, 1024)}
+        </code>
+      )}
       {summary && (
         <pre className="min-w-0 font-mono text-xs whitespace-pre-wrap wrap-anywhere">{summary}</pre>
       )}
@@ -176,16 +194,13 @@ export function ApprovalCard({
           })}
         </p>
       )}
-      <ApprovalDeadline
-        card={card}
-        onExpired={() => {
-          setElapsed(true);
-          onExpired();
-        }}
-      />
       {addressed && (
-        <>
-          <Field orientation="horizontal" data-disabled={disabled || card.error === "ruleLimit"}>
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <Field
+            orientation="horizontal"
+            className="w-fit"
+            data-disabled={disabled || card.error === "ruleLimit"}
+          >
             <Checkbox
               id={`${id}-remember`}
               checked={remember && card.error !== "ruleLimit"}
@@ -211,7 +226,7 @@ export function ApprovalCard({
               {t("approval.deny")}
             </Button>
           </div>
-        </>
+        </div>
       )}
       {card.error && (
         <p className="text-xs text-danger-text wrap-anywhere">{t(errorKeys[card.error])}</p>

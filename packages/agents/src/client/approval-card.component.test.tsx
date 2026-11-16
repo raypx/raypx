@@ -228,6 +228,23 @@ it.each(["en", "zh"] as const)(
   },
 );
 
+it("presents a Page update approval without internal tool labels", () => {
+  fixture(
+    pendingCard({
+      toolName: "agent_page_update",
+      target: "Space page",
+      argumentSummary: "agent page update",
+    }),
+    "zh",
+  );
+  expect(screen.getByRole("heading", { name: "更新页面" })).toBeInTheDocument();
+  expect(screen.getByText("空间页面")).toBeInTheDocument();
+  expect(screen.queryByText("agent page update")).not.toBeInTheDocument();
+  expect(screen.queryByText("Space page")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "批准" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "拒绝" })).toBeEnabled();
+});
+
 it.each([
   ["en", 600, "10 min left"],
   ["en", 599, "10 min left"],

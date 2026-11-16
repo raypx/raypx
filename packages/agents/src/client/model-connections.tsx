@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
   type FormEvent,
 } from "react";
-import type { ModelConnection } from "@raypx/core/model-connections";
+import { hiddenModelConnectionKey, type ModelConnection } from "@raypx/core/model-connections";
 import type { SpaceMembership } from "../model/port.js";
 import {
   ConnectionSecret,
@@ -183,6 +183,12 @@ export function ModelConnectionsEditor({
                 <dd>{t(`connections.kinds.${connection.kind}`)}</dd>
                 <dt>{t("connections.models")}</dt>
                 <dd className="wrap-anywhere">{connection.models.join(", ")}</dd>
+                <dt>{t("connections.secret")}</dt>
+                <dd>
+                  <bdi className="font-mono">
+                    {connection.apiKeyMask ?? hiddenModelConnectionKey}
+                  </bdi>
+                </dd>
                 <dt>{t("connections.availability")}</dt>
                 <dd className="wrap-anywhere">{availability}</dd>
               </dl>
@@ -389,9 +395,18 @@ export function ModelConnectionForm({
                 aria-describedby={initial ? `${id}-secret-hint` : undefined}
               />
               {initial && (
-                <p className="text-xs text-muted-foreground" id={`${id}-secret-hint`}>
-                  {t("connections.keepSecret")}
-                </p>
+                <div
+                  id={`${id}-secret-hint`}
+                  className="flex flex-col gap-1 text-xs text-muted-foreground"
+                >
+                  <p className="flex flex-wrap gap-x-2">
+                    <span>{t("connections.currentSecret")}</span>
+                    <bdi className="font-mono">
+                      {initial.apiKeyMask ?? hiddenModelConnectionKey}
+                    </bdi>
+                  </p>
+                  <p>{t("connections.keepSecret")}</p>
+                </div>
               )}
             </Field>
             {spaces.length > 1 && (

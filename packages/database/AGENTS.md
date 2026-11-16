@@ -21,7 +21,8 @@ relations. `/env`: validated database configuration.
 
 ## Ownership
 
-`model_connections` is account-owned metadata. `model_connection_secrets` is its
+`model_connections` is account-owned metadata, including a nullable API key mask.
+`model_connection_secrets` is its
 encrypted child, with a wrapped data key and key-provider selector. Composite
 references bind owner/secret identity and cascade with connection/account deletion.
 `model_connection_spaces` narrows availability to current owner memberships and

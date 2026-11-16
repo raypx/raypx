@@ -69,8 +69,10 @@ may touch; the Agent decides what it needs.
 `modelConnections.list/create/update/delete/test` manage only the session account's
 connections. A connection stores a display name, an existing AI transport kind,
 offered model identifiers and optional compatible endpoint/protocol settings.
-Credentials are write-only: create requires `secret`; update replaces it only
-when `secret` is supplied. Lists expose neither the secret nor its storage reference.
+Credentials are write-only. Create requires `secret`, and update replaces it
+when `secret` is supplied. Connection settings return a display mask generated
+by the server. Existing connections get a mask when their owner opens settings
+and the encrypted credential can be read.
 Compatible endpoints use the existing AI adapter's HTTPS/loopback and URL rules.
 
 Availability defaults to `{ mode: "all" }`, including future Spaces; deliberate
@@ -232,11 +234,17 @@ same optional nullable `page` metadata. Same-Space identity tombstones retain th
 link after deletion without retaining the document body or granting access.
 Web opens Page detail, Desktop retains its Web preview handoff, and Mobile hands
 off to Web. Null identity opens the Pages list; stale IDs show a deleted state.
+Web can open the member document directly in a new tab from either the chat
+preview or the detail toolbar.
 
 Successful Page reads, creates and updates include a `pageUrl` for the Page
 detail route under the configured public Web origin (`PUBLIC_URL`). The tool
 descriptions tell Agents to use the latest successful result's URL verbatim in
 replies. The link opens the current Page and requires Space membership.
+Web and Desktop handle those links inside chat when the URL matches the configured
+Web origin and the conversation's Space. The preview is alongside the conversation
+on wide screens and in a sheet on narrow screens. Result cards still select the
+recorded version.
 
 Ask about a Page keeps the member-content Markdown link in the draft and stored
 message for Agent resolution. Web/Desktop recognize only the exact reference at

@@ -12,6 +12,7 @@ import {
   useState,
   useSyncExternalStore,
   type FormEvent,
+  type MouseEvent,
 } from "react";
 import { ShellToolbar } from "@raypx/blocks/shell";
 import { cn } from "@raypx/ui/lib/utils";
@@ -52,7 +53,6 @@ import type {
   ComputerFileResult,
   RunId,
   ToolActivity as ToolCallActivity,
-  ToolPage,
   WebSources,
 } from "@raypx/core/conversation";
 import {
@@ -87,6 +87,7 @@ import { ApprovalCard } from "./approval-card.js";
 import { ProtectedInputs } from "./protected-input.js";
 import {
   memberTextParts,
+  pageDetailLink,
   pageReferenceDraft,
   withPageReferences,
 } from "../model/page-reference.js";
@@ -132,6 +133,7 @@ interface AgentConversationProps {
   onDeleteAgent?: (() => void) | undefined;
   onLastActivity?: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
+  pageLinkOrigin?: string | undefined;
   pageResultPreview?: import("react").ComponentType<PageResultMountProps> | undefined;
   onOpenExternal?: ((url: string) => void) | undefined;
   subscribePages?: PageReferenceSubscription | undefined;
@@ -180,6 +182,7 @@ export function AgentConversation({
   onDeleteAgent,
   onLastActivity,
   onOpenPage,
+  pageLinkOrigin,
   pageResultPreview,
   onOpenExternal,
   composerReference,
@@ -270,6 +273,7 @@ export function AgentConversation({
       onEditAgent={onEditAgent}
       onDeleteAgent={onDeleteAgent}
       onOpenPage={onOpenPage}
+      pageLinkOrigin={pageLinkOrigin ?? origin}
       pageResultPreview={pageResultPreview}
       onOpenExternal={onOpenExternal}
       subscribePages={subscribePages}
@@ -306,6 +310,7 @@ function ConversationContents({
   onDeleteAgent,
   onLastActivity,
   onOpenPage,
+  pageLinkOrigin,
   pageResultPreview: PageResultPreview,
   onOpenExternal,
   group,
@@ -334,6 +339,7 @@ function ConversationContents({
   onDeleteAgent: (() => void) | undefined;
   onLastActivity: ((at: string, conversationId: string) => void) | undefined;
   onOpenPage: ((id: string) => void) | undefined;
+  pageLinkOrigin: string;
   pageResultPreview: AgentConversationProps["pageResultPreview"];
   onOpenExternal: AgentConversationProps["onOpenExternal"];
   item: AgentConversationView;
@@ -431,7 +437,10 @@ function ConversationContents({
   else if (deviceState?.error) computerStatus = t("computerUnavailable");
   function openComputer(opener: HTMLButtonElement | null = computerTrigger.current) {
     computerMenuOpener.current = opener === computerTrigger.current ? null : opener;
-    if (wide) setContextOpen(true);
+    if (wide) {
+      if (pageDocked) closeResultPanel(false);
+      setContextOpen(true);
+    }
     setComputerOpen(true);
     onComputerOpen?.();
   }
@@ -453,16 +462,17 @@ function ConversationContents({
   const follow = useRef(true);
   const anchor = useRef<{ id: string; offset: number } | null>(null);
   type Result =
-    | { kind: "page"; page: ToolPage }
+    | { kind: "page"; page: PageResultMountProps["page"] }
     | { kind: "sources"; sources: WebSources }
     | { kind: "computer-file"; file: ComputerFileResult };
   const [resultPanel, setResultPanel] = useState<
     | (Result & {
-        opener: HTMLButtonElement;
+        opener: HTMLElement;
         open: boolean;
       })
     | null
   >(null);
+  const pageDocked = wide && resultPanel?.kind === "page" && resultPanel.open;
   const composing = useRef(false);
   const dismissedMention = useRef<{ text: string; caret: number } | null>(null);
   const mentionCaret = useRef<number | null>(null);
@@ -770,7 +780,7 @@ function ConversationContents({
           row.getBoundingClientRect().top - node.getBoundingClientRect().top - saved.offset;
     }
   }, []);
-  useLayoutEffect(restoreReading, [rows, state.history?.revision, restoreReading]);
+  useLayoutEffect(restoreReading, [rows, state.history?.revision, pageDocked, restoreReading]);
   useLayoutEffect(() => {
     if (!content.current || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(restoreReading);
@@ -813,7 +823,7 @@ function ConversationContents({
     if (follow.current && state.history?.hasNewer && !state.history.loading)
       void controller.loadLater();
   }
-  function openResultPanel(result: Result, opener: HTMLButtonElement) {
+  function openResultPanel(result: Result, opener: HTMLElement) {
     const node = history.current;
     if (node) {
       follow.current = false;
@@ -821,8 +831,31 @@ function ConversationContents({
     }
     setResultPanel({ ...result, opener, open: true });
   }
-  function openPageResult(page: ToolPage, opener: HTMLButtonElement) {
+  function openPageResult(page: PageResultMountProps["page"], opener: HTMLElement) {
     openResultPanel({ kind: "page", page }, opener);
+  }
+  function openReplyPage(event: MouseEvent<HTMLDivElement>) {
+    if (
+      !PageResultPreview ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      !(event.target instanceof Element)
+    )
+      return;
+    const link = event.target.closest<HTMLAnchorElement>("a[href]");
+    if (!link || !event.currentTarget.contains(link)) return;
+    const pageId = pageDetailLink(
+      link.getAttribute("href")!,
+      pageLinkOrigin,
+      item.conversation.spaceId,
+    );
+    if (!pageId) return;
+    event.preventDefault();
+    openPageResult({ id: pageId }, link);
   }
   function openWebSources(sources: WebSources, opener: HTMLButtonElement) {
     openResultPanel({ kind: "sources", sources }, opener);
@@ -830,7 +863,7 @@ function ConversationContents({
   function openComputerFile(file: ComputerFileResult, opener: HTMLButtonElement) {
     openResultPanel({ kind: "computer-file", file }, opener);
   }
-  function closeResultPanel() {
+  function closeResultPanel(restoreFocus = true) {
     restoreReading();
     const node = history.current;
     if (node) {
@@ -839,6 +872,10 @@ function ConversationContents({
       captureReadingAnchor(node);
     }
     setResultPanel((current) => current && { ...current, open: false });
+    if (pageDocked && restoreFocus) {
+      const opener = resultFinalFocus();
+      if (opener) opener.focus({ preventScroll: true });
+    }
   }
   function resultFinalFocus() {
     if (resultPanel?.opener.isConnected) return resultPanel.opener;
@@ -1006,10 +1043,10 @@ function ConversationContents({
                     : undefined
                 }
                 deviceConnected={selectedDevice?.connected}
-                open={wide ? contextOpen : computerOpen}
+                open={wide ? contextOpen && !pageDocked : computerOpen}
                 panelId={panelId}
                 onOpen={() => {
-                  if (wide ? contextOpen : computerOpen) closeComputer();
+                  if (wide ? contextOpen && !pageDocked : computerOpen) closeComputer();
                   else openComputer();
                 }}
               />
@@ -1100,7 +1137,7 @@ function ConversationContents({
             aria-label={t("conversation")}
             tabIndex={0}
             className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:focus-control [overflow-anchor:none]"
-            onScroll={resultPanel?.open ? undefined : trackReading}
+            onScroll={resultPanel?.open && !pageDocked ? undefined : trackReading}
           >
             <div
               ref={content}
@@ -1143,6 +1180,7 @@ function ConversationContents({
                           activity={row.activity}
                           delegated={work}
                           onOpen={openPageResult}
+                          docked={wide}
                         />
                       )}
                       <WebSourceCard
@@ -1326,7 +1364,11 @@ function ConversationContents({
                           <span className="min-w-0 truncate">{agentName(row.agentId)}</span>
                         </h3>
                       )}
-                      <div data-reply-bubble className="min-w-0 text-[15px] leading-7 sm:text-base">
+                      <div
+                        data-reply-bubble
+                        onClickCapture={openReplyPage}
+                        className="min-w-0 text-[15px] leading-7 sm:text-base"
+                      >
                         {row.text && (
                           <ReplyMarkdown
                             copyLabel={t("copyCode")}
@@ -1433,6 +1475,7 @@ function ConversationContents({
                                 activity={[]}
                                 delegated={work}
                                 onOpen={openPageResult}
+                                docked={wide}
                               />
                             )}
                             <WebSourceCard activity={[]} delegated={work} onOpen={openWebSources} />
@@ -2086,7 +2129,7 @@ function ConversationContents({
           </form>
         </div>
       </section>
-      {wide && contextOpen && (
+      {wide && contextOpen && !pageDocked && (
         <aside
           id={panelId}
           aria-label={t("computerTitle")}
@@ -2155,6 +2198,7 @@ function ConversationContents({
       {resultPanel?.kind === "page" && PageResultPreview && (
         <PageResultPreview
           open={resultPanel.open}
+          docked={wide}
           page={resultPanel.page}
           spaceId={item.conversation.spaceId}
           onClose={closeResultPanel}

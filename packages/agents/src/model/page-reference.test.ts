@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { memberTextParts } from "./page-reference.js";
+import { memberTextParts, pageDetailLink } from "./page-reference.js";
 
 it.each(["https://web.example.test", "https://api.example.test"])(
   "matches stored absolute references against the effective API origin %s",
@@ -20,4 +20,15 @@ it("leaves earlier stored member URLs as plain text without migration", () => {
   expect(memberTextParts(text, "https://api.example.test", "space-one")).toEqual([
     { kind: "text", text, start: 0, end: text.length },
   ]);
+});
+
+it("recognizes only Page detail links on the configured Web origin in this Space", () => {
+  const origin = "https://web.example.test";
+  const path = "/pages?spaceId=space-one&pageId=page%20%231";
+  expect(pageDetailLink(`${origin}${path}`, origin, "space-one")).toBe("page #1");
+  expect(pageDetailLink(path, origin, "space-one")).toBe("page #1");
+  expect(pageDetailLink(path, origin, "other-space")).toBeNull();
+  expect(pageDetailLink(`https://other.example.test${path}`, origin, "space-one")).toBeNull();
+  expect(pageDetailLink(`${path}&pageId=another`, origin, "space-one")).toBeNull();
+  expect(pageDetailLink("/api/pages/public/token", origin, "space-one")).toBeNull();
 });

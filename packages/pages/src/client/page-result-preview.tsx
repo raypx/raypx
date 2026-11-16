@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { structuredPatch } from "diff";
 import { ReplyMarkdown } from "@raypx/blocks/markdown";
 import type { PageId, PageVersion } from "@raypx/core/pages";
@@ -12,18 +21,24 @@ import { IconButton } from "@raypx/ui/icon-button";
 import { cn } from "@raypx/ui/lib/utils";
 import { pageDocumentUrl, pageFailure, type PagesClientPort } from "../model.js";
 import { PageDocumentPreview } from "./detail.js";
+import { PageDocumentLink } from "./document-link.js";
 import { useTranslations } from "./i18n.js";
 
 type PageReader = PagesClientPort["get"];
 type VersionState = { page: PageVersion } | { error: ReturnType<typeof pageFailure> } | null;
 
-function usePageVersion(read: PageReader, spaceId: SpaceId, id: PageId, version: number) {
+function usePageVersion(
+  read: PageReader,
+  spaceId: SpaceId,
+  id: PageId,
+  version: number | null | undefined,
+) {
   const [state, setState] = useState<VersionState>(null);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    if (version < 1) return;
+    if (version === null) return;
     let active = true;
-    void read({ spaceId, id, version }).then(
+    void read({ spaceId, id, ...(version === undefined ? {} : { version }) }).then(
       (page) => {
         if (active) setState({ page });
       },
@@ -46,10 +61,11 @@ function usePageVersion(read: PageReader, spaceId: SpaceId, id: PageId, version:
 
 interface PageResultPreviewProps {
   open: boolean;
+  docked: boolean;
   onClose: () => void;
   finalFocus: () => HTMLElement | false;
   spaceId: SpaceId;
-  page: { id: PageId; version: number };
+  page: { id: PageId; version?: number };
   read: PageReader;
   apiOrigin: string;
   canEmbedAuthenticatedDocuments: boolean;
@@ -57,6 +73,44 @@ interface PageResultPreviewProps {
 
 export function PageResultPreview({ open, onClose, ...props }: PageResultPreviewProps) {
   const heading = useRef<HTMLHeadingElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
+  const headingId = useId();
+  const { docked, page } = props;
+  useLayoutEffect(() => {
+    if (open && docked) heading.current?.focus({ preventScroll: true });
+  }, [open, docked, page.id, page.version]);
+  const closeFromKeyboard = useEffectEvent((event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.key !== "Escape") return;
+    event.preventDefault();
+    onClose();
+  });
+  useEffect(() => {
+    const node = sidebar.current;
+    if (!node) return;
+    node.addEventListener("keydown", closeFromKeyboard);
+    return () => node.removeEventListener("keydown", closeFromKeyboard);
+  }, [open, docked]);
+  const panel = open && (
+    <PageResultPanel
+      key={JSON.stringify([props.spaceId, page.id, page.version])}
+      {...props}
+      heading={heading}
+      headingId={headingId}
+      onClose={onClose}
+    />
+  );
+  if (docked)
+    return (
+      open && (
+        <aside
+          ref={sidebar}
+          aria-labelledby={headingId}
+          className="flex min-h-0 min-w-0 w-[clamp(24rem,40%,36rem)] shrink-0 flex-col overflow-hidden border-l bg-background text-sm"
+        >
+          {panel}
+        </aside>
+      )
+    );
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
       <SheetContent
@@ -65,14 +119,7 @@ export function PageResultPreview({ open, onClose, ...props }: PageResultPreview
         finalFocus={props.finalFocus}
         className="gap-0 overflow-hidden data-[side=right]:w-full sm:data-[side=right]:max-w-2xl motion-reduce:transform-none motion-reduce:transition-none"
       >
-        {open && (
-          <PageResultPanel
-            key={JSON.stringify([props.spaceId, props.page.id, props.page.version])}
-            {...props}
-            heading={heading}
-            onClose={onClose}
-          />
-        )}
+        {panel}
       </SheetContent>
     </Sheet>
   );
@@ -84,41 +131,63 @@ function PageResultPanel({
   read,
   apiOrigin,
   canEmbedAuthenticatedDocuments,
+  docked,
   heading,
+  headingId,
   onClose,
 }: Omit<PageResultPreviewProps, "open" | "finalFocus"> & {
   heading: RefObject<HTMLHeadingElement | null>;
+  headingId: string;
 }) {
   const t = useTranslations("pages");
   const current = usePageVersion(read, spaceId, id, version);
-  const previous = usePageVersion(read, spaceId, id, version - 1);
+  const comparesVersions = version !== undefined && version > 1;
+  const previous = usePageVersion(read, spaceId, id, comparesVersions ? version - 1 : null);
   const page = current.state && "page" in current.state ? current.state.page : null;
   const base = previous.state && "page" in previous.state ? previous.state.page : null;
   const htmlSource = page?.kind === "html" && !canEmbedAuthenticatedDocuments;
+  const displayVersion = version ?? page?.version;
+  const Title = docked ? "h2" : SheetTitle;
   return (
     <>
       <SheetHeader className="flex-row items-start justify-between gap-3 border-b">
         <div className="min-w-0">
-          <SheetTitle
+          <Title
+            id={headingId}
             ref={heading}
             tabIndex={-1}
-            className="truncate rounded-md outline-none focus-visible:focus-control"
+            className="truncate rounded-md font-heading text-base font-medium text-foreground outline-none focus-visible:focus-control"
           >
             {page?.title ?? t("result.title")}
-          </SheetTitle>
-          <p className="text-xs text-muted-foreground">{t("version", { version })}</p>
+          </Title>
+          {displayVersion !== undefined && (
+            <p className="text-xs text-muted-foreground">
+              {t("version", { version: displayVersion })}
+            </p>
+          )}
         </div>
-        <IconButton size="icon-sm" label={t("close")} onClick={onClose}>
-          <CloseIcon aria-hidden="true" />
-        </IconButton>
+        <div className="flex shrink-0 items-center gap-1">
+          {page && canEmbedAuthenticatedDocuments && (
+            <PageDocumentLink
+              href={pageDocumentUrl(apiOrigin, {
+                spaceId,
+                id,
+                ...(version === undefined ? {} : { version }),
+              })}
+            />
+          )}
+          <IconButton size="icon-sm" label={t("close")} onClick={onClose}>
+            <CloseIcon aria-hidden="true" />
+          </IconButton>
+        </div>
       </SheetHeader>
       {page ? (
-        <Tabs defaultValue={version > 1 ? "changes" : "preview"} className="min-h-0 flex-1">
+        <Tabs defaultValue={comparesVersions ? "changes" : "preview"} className="min-h-0 flex-1">
           <TabsList aria-label={t("result.title")} variant="line" className="mx-4 mt-2 shrink-0">
-            {version > 1 && <TabsTrigger value="changes">{t("result.changes")}</TabsTrigger>}
+            {comparesVersions && <TabsTrigger value="changes">{t("result.changes")}</TabsTrigger>}
             <TabsTrigger value="preview">{t(htmlSource ? "source" : "preview")}</TabsTrigger>
           </TabsList>
-          {version > 1 && (
+          {comparesVersions && (
             <TabsContent value="changes" className="min-h-0 overflow-y-auto overscroll-contain p-4">
               {base ? <PageChanges before={base} after={page} /> : <VersionStatus {...previous} />}
             </TabsContent>

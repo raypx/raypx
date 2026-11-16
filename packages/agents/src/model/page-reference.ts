@@ -4,6 +4,28 @@ export type MemberTextPart =
   | { kind: "text"; text: string; start: number; end: number }
   | { kind: "page"; id: PageId; text: string; start: number; end: number };
 
+/** Agent replies may contain the private Page detail URL returned by a tool. */
+export function pageDetailLink(href: string, webOrigin: string, spaceId: string): PageId | null {
+  try {
+    const url = new URL(href, webOrigin);
+    if (
+      url.origin !== new URL(webOrigin).origin ||
+      url.username ||
+      url.password ||
+      url.pathname !== "/pages" ||
+      url.hash ||
+      url.searchParams.size !== 2 ||
+      url.searchParams.get("spaceId") !== spaceId
+    )
+      return null;
+    const id = pageIdSchema.safeParse(url.searchParams.get("pageId"));
+    if (id.success && id.data !== "." && id.data !== "..") return id.data;
+  } catch {
+    // Unrecognized links keep their normal navigation.
+  }
+  return null;
+}
+
 /** Recognize only the member reference emitted by Ask about this Page, never Markdown. */
 export function memberTextParts(text: string, origin: string, spaceId: string): MemberTextPart[] {
   const prefix = `${origin.replace(/\/$/, "")}/api/pages/member/${encodeURIComponent(spaceId)}/`;

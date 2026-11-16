@@ -15,6 +15,7 @@ export const modelConnectionApiSchema = z.enum([
   "openai-responses",
 ]);
 export const modelConnectionIdSchema = z.string().uuid();
+export const hiddenModelConnectionKey = "••••";
 const models = z
   .array(z.string().trim().min(1).max(128))
   .min(1)
@@ -51,6 +52,10 @@ export const modelConnectionSchema = z.strictObject({
   baseUrl: z.string().url().max(2048).nullable(),
   api: modelConnectionApiSchema.nullable(),
   models,
+  apiKeyMask: z
+    .string()
+    .regex(/^(?:••••|[a-zA-Z0-9._~+/-]{4}••••[a-zA-Z0-9._~+/=-]{4})$/)
+    .optional(),
   availability: modelConnectionAvailabilitySchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

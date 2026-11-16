@@ -7,8 +7,9 @@ import { useTranslations } from "./i18n.js";
 
 export interface PageResultMountProps {
   open: boolean;
+  docked: boolean;
   spaceId: SpaceId;
-  page: ToolPage;
+  page: { id: ToolPage["id"]; version?: number };
   onClose: () => void;
   finalFocus: () => HTMLElement | false;
 }
@@ -17,10 +18,12 @@ export function PageResultCards({
   activity,
   delegated,
   onOpen,
+  docked,
 }: {
   activity: readonly ToolActivity[];
   delegated: readonly { activity: readonly ToolActivity[] }[];
   onOpen: (page: ToolPage, opener: HTMLButtonElement) => void;
+  docked: boolean;
 }) {
   const t = useTranslations("agents");
   const cards = [...activity, ...delegated.flatMap((work) => work.activity)].flatMap((call) => {
@@ -41,7 +44,7 @@ export function PageResultCards({
           <Button
             size="sm"
             variant="outline"
-            aria-haspopup="dialog"
+            aria-haspopup={docked ? undefined : "dialog"}
             className="h-auto min-h-11 max-w-full gap-2.5 py-2"
             onClick={(event) => onOpen(page, event.currentTarget)}
           >

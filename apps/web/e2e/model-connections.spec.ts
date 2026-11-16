@@ -28,12 +28,14 @@ test(
     await form.getByRole("button", { name: "Save", exact: true }).click();
     await expect(form).toHaveCount(0);
     await expect(settings.getByText(name, { exact: true })).toBeVisible();
+    await expect(settings.getByText("fixt••••-key", { exact: true })).toBeVisible();
     await expect(settings).not.toContainText("fixture-member-write-only-key");
     await settings.getByRole("button", { name: `Test ${name}`, exact: true }).click();
     await expect(settings.getByRole("status")).toHaveText("Connection succeeded");
     await settings.getByRole("button", { name: `Edit ${name}`, exact: true }).click();
     const edit = page.getByRole("dialog", { name: "Edit model connection", exact: true });
     await expect(edit.getByLabel("API key", { exact: true })).toHaveValue("");
+    await expect(edit.getByText("fixt••••-key", { exact: true })).toBeVisible();
     await expect(
       edit.getByText("Leave empty to keep the current key.", { exact: true }),
     ).toBeVisible();

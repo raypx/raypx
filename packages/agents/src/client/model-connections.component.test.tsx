@@ -20,6 +20,7 @@ const connection = modelConnectionSchema.parse({
   baseUrl: null,
   api: null,
   models: ["model-one"],
+  apiKeyMask: "abcd••••wxyz",
   availability: { mode: "all" },
   createdAt: time,
   updatedAt: time,
@@ -62,6 +63,7 @@ it.each(["en", "zh"] as const)(
     });
     expect(screen.getByText("Personal")).toBeInTheDocument();
     expect(screen.getByText("model-one")).toBeInTheDocument();
+    expect(screen.getByText(connection.apiKeyMask!)).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: language === "en" ? "Test Personal" : "测试 Personal" }),
     );
@@ -95,6 +97,7 @@ it("never prefills an edit key, clears on submit and unmount, and preserves expl
   );
   const key = screen.getByLabelText("API key") as HTMLInputElement;
   expect(key.value).toBe("");
+  expect(screen.getByText(connection.apiKeyMask!)).toBeInTheDocument();
   expect(screen.getByText("Leave empty to keep the current key.")).toBeInTheDocument();
   fireEvent.change(key, { target: { value: "write-only-key" } });
   fireEvent.click(screen.getByRole("radio", { name: "Chosen Spaces" }));

@@ -1,0 +1,1 @@
+ALTER TABLE "model_connections" ADD COLUMN "api_key_mask" text;

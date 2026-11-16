@@ -25,6 +25,7 @@ import {
   type PageVersionSummary,
 } from "../model.js";
 import { PageForm } from "./page-form.js";
+import { PageDocumentLink } from "./document-link.js";
 import { PageSharing } from "./share.js";
 import { useTranslations } from "./i18n.js";
 
@@ -198,6 +199,11 @@ export function PageDetail({
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
+        {canEmbedAuthenticatedDocuments && (
+          <PageDocumentLink
+            href={pageDocumentUrl(apiOrigin, { spaceId: page.spaceId, id: page.id })}
+          />
+        )}
         <Button size="sm" variant="outline" disabled={pending} onClick={() => setEditing(true)}>
           {t("edit")}
         </Button>

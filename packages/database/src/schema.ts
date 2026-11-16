@@ -974,6 +974,7 @@ export const modelConnections = pgTable(
     models: jsonb("models").$type<string[]>().notNull(),
     availability: text("availability", { enum: ["all", "selected"] }).notNull(),
     secretId: text("secret_id").notNull(),
+    apiKeyMask: text("api_key_mask"),
     ...timestamps(),
   },
   (table) => [

@@ -126,7 +126,13 @@ export function approvalExtraSummary(
       summary === `${label}: ${card.target}` ||
       summary === `${label}：${card.target}`,
   );
-  if (redundant || summary === card.target || summary === `Path: ${card.target}`) return "";
+  if (
+    redundant ||
+    (Object.hasOwn(labels, display) && summary === card.toolName.replaceAll("_", " ")) ||
+    summary === card.target ||
+    summary === `Path: ${card.target}`
+  )
+    return "";
   return summary.slice(0, 1024);
 }
 

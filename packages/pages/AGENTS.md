@@ -32,9 +32,12 @@ A missing selected Page shows the translated deleted state and a return to the l
 The mount must supply `canEmbedAuthenticatedDocuments`: Web passes true and
 Desktop passes false in both browser and packaged builds. Desktop offers a Web
 handoff; source editing and safe Markdown source preview remain available.
-The chat result sheet reads the exact recorded version and its predecessor on
-open. It renders Markdown in both clients, sandboxed HTML on Web and HTML source
-on Desktop. Comparison is read-only and uses the saved source of those versions.
+The chat Page preview renders in a sidebar on wide screens and a sheet on narrow
+screens. A result reads the recorded version and its predecessor on open. A Page
+link opens the latest version. The preview renders Markdown in both clients,
+sandboxed HTML on Web and HTML source on Desktop. Comparison uses saved source.
+Web lets users open the preview or latest detail in a standalone tab through the
+member document URL, which requires current Space membership.
 `/messages/en` and `/messages/zh` own the `pages` catalog. Dirty source retains
 its original comparison version on live updates; loading latest is explicit and
 keeps the draft. Shared URLs exist only inside an open sharing dialog; closing

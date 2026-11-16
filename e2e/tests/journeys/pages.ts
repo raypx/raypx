@@ -76,7 +76,10 @@ export function registerTests() {
       // including this compiled browser renderer. Both still edit/version/share through RPC.
       const embedded = info.project.name !== "desktop";
       const frame = page.frameLocator(`iframe[title="${title}"]`);
+      const openDocument = page.getByRole("link", { name: "Open in new tab", exact: true });
+      const documentUrl = embedded ? await openDocument.getAttribute("href", { timeout }) : null;
       if (embedded) {
+        expect(documentUrl).toMatch(/\/api\/pages\/member\/[^/]+\/[^/?]+$/);
         await expect(
           frame.getByRole("heading", { name: "Shared fixture", exact: true }),
         ).toBeVisible();
@@ -110,7 +113,22 @@ export function registerTests() {
       await capture(page, { path: info.outputPath("page-editor.png") });
       await page.getByRole("button", { name: "Save version", exact: true }).click({ timeout });
       await expect(page.getByText("Version 2", { exact: true })).toBeVisible();
-      if (!embedded) await expect(page.locator("iframe")).toHaveCount(0);
+      if (documentUrl) {
+        await expect(openDocument).toHaveAttribute("href", documentUrl);
+        const [document] = await Promise.all([
+          page.waitForEvent("popup", { timeout }),
+          openDocument.click({ timeout }),
+        ]);
+        try {
+          await expect(document).toHaveURL(documentUrl);
+          await expect(document.getByText("The second version.", { exact: true })).toBeVisible();
+          expect(await document.evaluate(() => window.origin)).toBe("null");
+        } finally {
+          await document.close();
+        }
+      } else {
+        await expect(page.locator("iframe")).toHaveCount(0);
+      }
       await page.getByRole("button", { name: "Version history", exact: true }).click({ timeout });
       const history = page.getByRole("dialog", { name: "Version history", exact: true });
       await expectSurfaceAtRest(page, history);
@@ -162,6 +180,9 @@ export function registerTests() {
       try {
         expect(await publicContext.cookies()).toEqual([]);
         const publicPage = await publicContext.newPage();
+        if (documentUrl) {
+          expect((await publicPage.goto(documentUrl, { timeout }))?.status()).toBe(404);
+        }
         const response = await publicPage.goto(publicUrl, { timeout });
         expect(response?.status()).toBe(200);
         expect(response?.headers()["cache-control"]).toContain("no-store");
@@ -222,13 +243,22 @@ export function registerTests() {
       await expect(approval).toBeHidden();
       const createdResult = page.getByRole("button", { name: "Page created Version 1" });
       await createdResult.click({ timeout });
-      const result = page.getByRole("dialog", { name: producedTitle, exact: true });
+      const result = page.getByRole("complementary", { name: producedTitle, exact: true });
       await expect(
         result.getByText("Created from the conversation.", { exact: true }),
       ).toBeVisible();
+      await page.setViewportSize(viewports[1]!);
+      await expectSurfaceControls(page, result);
+      const composer = page.getByRole("textbox", { name: "Message", exact: true });
+      await composer.fill("Draft while reading the Page", { timeout });
+      await expect(result).toBeVisible();
+      await expect(composer).toBeFocused();
+      await composer.fill("", { timeout });
+      await result.getByRole("heading", { name: producedTitle, exact: true }).focus();
       await page.keyboard.press("Escape");
       await expect(result).toBeHidden();
       await expect(createdResult).toBeFocused();
+      await page.setViewportSize(viewports[0]!);
       const activity = page.locator("[data-tool-activity]");
       await activity.getByRole("button", { name: /^1 step/ }).click({ timeout });
       await expect(activity.locator('[data-tool-outcome="succeeded"]')).toBeVisible();
@@ -268,6 +298,13 @@ export function registerTests() {
       await page.reload({ timeout });
       const log = page.getByRole("log");
       await updatedResult.scrollIntoViewIfNeeded({ timeout });
+      const pageLink = page.getByRole("link", { name: "View updated Page", exact: true });
+      await pageLink.click({ timeout });
+      await expect(result.getByText("Updated later by the member.", { exact: true })).toBeVisible();
+      await expect(page).toHaveURL(conversationUrl);
+      await result.getByRole("button", { name: "Close", exact: true }).click({ timeout });
+      await expect(pageLink).toBeFocused();
+      await updatedResult.scrollIntoViewIfNeeded({ timeout });
       const scrollTop = await log.evaluate((node) => node.scrollTop);
       expect(scrollTop).toBeGreaterThan(0);
       await updatedResult.click({ timeout });
@@ -275,6 +312,21 @@ export function registerTests() {
       await expect(result.getByText(/^-Created from the conversation\./)).toBeVisible();
       await expect(result.getByText(/^\+Updated from the conversation\./)).toBeVisible();
       await expect(result.getByText("Updated later by the member.")).toHaveCount(0);
+      if (embedded) {
+        const openSavedVersion = result.getByRole("link", { name: "Open in new tab", exact: true });
+        const [savedVersion] = await Promise.all([
+          page.waitForEvent("popup", { timeout }),
+          openSavedVersion.click({ timeout }),
+        ]);
+        try {
+          await expect(savedVersion).toHaveURL(/\?version=2$/);
+          await expect(
+            savedVersion.getByText("Updated from the conversation.", { exact: true }),
+          ).toBeVisible();
+        } finally {
+          await savedVersion.close();
+        }
+      }
       await expectSurfaceControls(page, result);
       await capture(page, { path: info.outputPath("chat-page-changes.png") });
       await result.getByRole("tab", { name: "Preview", exact: true }).click({ timeout });
@@ -288,8 +340,13 @@ export function registerTests() {
       await expect(page).toHaveURL(conversationUrl);
       await page.setViewportSize(viewports[3]!);
       await updatedResult.click({ timeout });
-      await expect(result.getByText("Version 1 → Version 2", { exact: true })).toBeVisible();
-      await expectSurfaceControls(page, result);
+      const narrowResult = page.getByRole("dialog", { name: producedTitle, exact: true });
+      await expect(narrowResult.getByText("Version 1 → Version 2", { exact: true })).toBeVisible();
+      if (embedded)
+        await expect(
+          narrowResult.getByRole("link", { name: "Open in new tab", exact: true }),
+        ).toBeVisible();
+      await expectSurfaceControls(page, narrowResult);
       await capture(page, { path: info.outputPath("chat-page-changes-narrow.png") });
       await page.keyboard.press("Escape");
       await expect(updatedResult).toBeFocused();
@@ -304,7 +361,9 @@ export function registerTests() {
       await page.goto(conversationUrl, { timeout });
       await updatedResult.click({ timeout });
       await expect(
-        page.getByRole("dialog").getByText("This page version is no longer available."),
+        page
+          .getByRole("complementary", { name: "Page result" })
+          .getByText("This page version is no longer available."),
       ).toBeVisible();
       await page.keyboard.press("Escape");
       await page

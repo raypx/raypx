@@ -1,0 +1,47 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "361af666-3a8a-4ee3-8320-08b8c345ef57",
+  "prevIds": [
+    "ed7a343f-265c-4c02-8db0-679a865ea210"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "model_connections",
+        "api_key_mask"
+      ],
+      "writes": [
+        "s|col|public.model_connections.api_key_mask",
+        "n|col|public.model_connections.api_key_mask",
+        "e|col|public.model_connections.api_key_mask"
+      ],
+      "reads": [
+        "n|tbl|public.model_connections",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "model_connections",
+        "name": "api_key_mask",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

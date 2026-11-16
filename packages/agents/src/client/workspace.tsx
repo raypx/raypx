@@ -1555,6 +1555,7 @@ function AgentsWorkspaceContents({
             onEditAgent={() => edit(selected)}
             onDeleteAgent={selectedGroup ? undefined : () => void removeAgent(selected)}
             onOpenPage={onOpenPage}
+            pageLinkOrigin={invitationOrigin ?? origin}
             pageResultPreview={pageResultPreview}
             onOpenExternal={onOpenExternal}
             composerReference={composerReference}

@@ -108,6 +108,7 @@ function fixture() {
         id,
         secretId,
         accountId,
+        apiKeyMask: sealed.apiKeyMask,
         createdAt: at,
         updatedAt: at,
       });
@@ -116,9 +117,20 @@ function fixture() {
     },
     async update(accountId, id, input, sealed) {
       const current = owned(accountId, id);
-      rows.set(id, { ...current, ...structuredClone(input), accountId });
+      rows.set(id, {
+        ...current,
+        ...structuredClone(input),
+        accountId,
+        ...(sealed ? { apiKeyMask: sealed.apiKeyMask } : {}),
+      });
       if (sealed) storedSecrets.set(current.secretId, sealed);
       return owned(accountId, id);
+    },
+    async fillApiKeyMask(accountId, id, mask) {
+      const row = rows.get(id);
+      if (!row || row.accountId !== accountId || row.apiKeyMask !== undefined) return false;
+      row.apiKeyMask = mask;
+      return true;
     },
     async delete(accountId, id) {
       const current = owned(accountId, id);
@@ -206,6 +218,16 @@ it("keeps connection CRUD owner-only and credentials write-only, replacing them 
   expect(serialized).not.toContain("ciphertext");
 });
 
+it.each(["short-key", "non-token credential with spaces"])(
+  "fully masks credentials that cannot safely show their ends",
+  async (value) => {
+    const { service } = fixture();
+    const created = await service.create("owner", configuration, value);
+    expect(created.apiKeyMask).toBe("••••");
+    expect(await service.list("owner")).toEqual([created]);
+  },
+);
+
 it("offers an owner's connections across their Spaces, respects narrowing, and isolates a second member", async () => {
   const f = fixture();
   const created = await f.service.create("owner", configuration, credential);
@@ -255,9 +277,14 @@ it("keeps a pinned connection resumable after credential rotation and explicitly
   expect(first.connectionId).toMatch(/^connection:[\w-]+:[a-f0-9]{64}$/);
   execution.connectionId = first.connectionId!;
   const checkpoint = { pendingCalls: [], continuation: [], connectionId: execution.connectionId };
-  await f.service.update("owner", created.id, configuration, `${credential}-rotated`);
+  const rotated = await f.service.update(
+    "owner",
+    created.id,
+    configuration,
+    `${credential}-rotated`,
+  );
   expect((await models.resolve(execution)).connectionId).toBe(first.connectionId);
-  expect(f.transport.resolve).toHaveBeenLastCalledWith(created, "model-a", `${credential}-rotated`);
+  expect(f.transport.resolve).toHaveBeenLastCalledWith(rotated, "model-a", `${credential}-rotated`);
   expect(JSON.stringify([execution, checkpoint, first])).not.toContain(credential);
   await f.service.delete("owner", created.id);
   await expect(models.resolve(execution)).rejects.toMatchObject({ code: "CONNECTION_UNAVAILABLE" });

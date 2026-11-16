@@ -90,8 +90,12 @@ export function pageRestoreRequest(current: PageVersion, version: PageVersionSum
     version: version.version,
   };
 }
-export function pageDocumentUrl(apiOrigin: string, page: Pick<Page, "spaceId" | "id" | "version">) {
-  return `${apiOrigin.replace(/\/$/, "")}/api/pages/member/${encodeURIComponent(page.spaceId)}/${encodeURIComponent(page.id)}?version=${page.version}`;
+export function pageDocumentUrl(
+  apiOrigin: string,
+  page: Pick<Page, "spaceId" | "id"> & { version?: number },
+) {
+  const path = `${apiOrigin.replace(/\/$/, "")}/api/pages/member/${encodeURIComponent(page.spaceId)}/${encodeURIComponent(page.id)}`;
+  return page.version === undefined ? path : `${path}?version=${page.version}`;
 }
 /** Memory only. Closing invalidates pending creation so a late response cannot reveal a token. */
 export class OneTimePageLink {

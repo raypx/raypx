@@ -231,7 +231,8 @@ export function browserModelFixture() {
           body: "# Agent Page\n\nCreated from the conversation.",
         });
       if (updatesPage) {
-        if (!results.some((entry) => entry.toolName === "agent_page_update"))
+        const updatedPage = results.find((entry) => entry.toolName === "agent_page_update");
+        if (!updatedPage)
           return toolCall("agent_page_update", "browser-page-update", {
             id: lastMessage!.text.slice(pageUpdatePrefix.length),
             expectedVersion: 1,
@@ -243,6 +244,11 @@ export function browserModelFixture() {
             ],
           });
         text = "The page has been updated.\n\n".repeat(30);
+        const result = updatedPage.content.find((entry) => entry.type === "text");
+        if (result) {
+          const { pageUrl } = JSON.parse(result.text) as { pageUrl?: string };
+          if (pageUrl) text += `[View updated Page](${pageUrl})`;
+        }
       }
       if (requestsMcp && !results.some((entry) => entry.toolName.startsWith("mcp_"))) {
         const remoteTool = input.tools?.find((candidate) =>

@@ -45,6 +45,7 @@ export function createModelConnectionsRepository(db: Database): ModelConnections
       api: row.api,
       models: row.models,
       secretId: row.secretId,
+      ...(row.apiKeyMask === null ? {} : { apiKeyMask: row.apiKeyMask }),
       availability:
         row.availability === "all"
           ? { mode: "all" }
@@ -156,13 +157,14 @@ export function createModelConnectionsRepository(db: Database): ModelConnections
           .orderBy(asc(modelConnections.id))
           .limit(100);
         if (count.length === 100) throw new ModelConnectionError("CONNECTION_LIMIT");
+        const { apiKeyMask, ...sealed } = secret;
         const rows = await tx
           .insert(modelConnections)
-          .values({ id, accountId, secretId, ...values(input) })
+          .values({ id, accountId, secretId, apiKeyMask, ...values(input) })
           .returning();
         await tx
           .insert(modelConnectionSecrets)
-          .values({ id: secretId, connectionId: id, accountId, ...secret });
+          .values({ id: secretId, connectionId: id, accountId, ...sealed });
         await selection(tx, accountId, id, input);
         return (await project(tx, rows))[0]!;
       });
@@ -171,23 +173,33 @@ export function createModelConnectionsRepository(db: Database): ModelConnections
       return db.transaction(async (tx) => {
         const rows = await tx
           .update(modelConnections)
-          .set({ ...values(input), updatedAt: new Date() })
+          .set({ ...values(input), apiKeyMask: secret?.apiKeyMask, updatedAt: new Date() })
           .where(owned(accountId, id))
           .returning();
         if (!rows.length) throw new ModelConnectionError("NOT_FOUND");
-        if (secret)
+        if (secret) {
+          const { apiKeyMask: _apiKeyMask, ...sealed } = secret;
           await tx
             .update(modelConnectionSecrets)
-            .set({ ...secret, updatedAt: new Date() })
+            .set({ ...sealed, updatedAt: new Date() })
             .where(
               and(
                 eq(modelConnectionSecrets.accountId, accountId),
                 eq(modelConnectionSecrets.connectionId, id),
               ),
             );
+        }
         await selection(tx, accountId, id, input);
         return (await project(tx, rows))[0]!;
       });
+    },
+    async fillApiKeyMask(accountId, id, mask) {
+      const rows = await db
+        .update(modelConnections)
+        .set({ apiKeyMask: mask })
+        .where(and(owned(accountId, id), isNull(modelConnections.apiKeyMask)))
+        .returning({ id: modelConnections.id });
+      return rows.length > 0;
     },
     async delete(accountId, id) {
       const rows = await db
