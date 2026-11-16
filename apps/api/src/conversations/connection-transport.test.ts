@@ -139,6 +139,18 @@ it.each([
   {
     api: "openai-responses",
     path: "/api/v1/responses",
+    status: 200,
+    body: { code: 1001, msg: credential, success: false },
+    headers: { "ga-traceid": "bigmodel-trace-1" },
+    expected: {
+      code: "REQUEST_FAILED",
+      providerCode: "1001",
+      providerRequestId: "bigmodel-trace-1",
+    },
+  },
+  {
+    api: "openai-responses",
+    path: "/api/v1/responses",
     status: 400,
     body: { error: { code: "1210", message: credential }, request_id: "glm-request-1" },
     headers: { "x-request-id": "gateway-request" },
@@ -167,7 +179,7 @@ it.each([
     headers: { "x-request-id": "invalid request ID" },
     expected: { code: "REQUEST_FAILED" },
   },
-] as const)("returns only allowed diagnostics from $api HTTP errors", async (fixture) => {
+] as const)("returns only allowed diagnostics from $api upstream failures", async (fixture) => {
   const serve = vi.fn((request: Request) => {
     expect(new URL(request.url).pathname).toBe(fixture.path);
     return Response.json(fixture.body, { status: fixture.status, headers: fixture.headers });

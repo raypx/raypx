@@ -6,7 +6,7 @@ import {
 import { protectedInputVariants } from "@raypx/core/protected-input";
 
 const maxErrorBytes = 16_384;
-const requestIdHeaders = ["x-request-id", "request-id", "x-zhipu-request-id"];
+const requestIdHeaders = ["x-request-id", "request-id", "x-zhipu-request-id", "ga-traceid"];
 
 function object(value: unknown): Record<string, unknown> | undefined {
   if (value && typeof value === "object" && !Array.isArray(value))
@@ -51,6 +51,7 @@ export function observeConnectionTest(secret: string) {
     if (
       !failedResponse &&
       !error &&
+      message?.success !== false &&
       message?.type !== "error" &&
       message?.type !== "response.failed"
     )
@@ -74,9 +75,10 @@ export function observeConnectionTest(secret: string) {
             break;
           }
         }
-        if (!response.ok) {
+        const contentType = response.headers.get("content-type")?.split(";", 1)[0]?.trim();
+        if (!response.ok || contentType === "application/json") {
           try {
-            record(await readErrorBody(response), true);
+            record(await readErrorBody(response), !response.ok);
           } catch {
             // A response without usable diagnostics still reaches the SDK.
           }
