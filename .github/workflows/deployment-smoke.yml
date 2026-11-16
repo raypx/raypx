@@ -26,10 +26,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: next
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - run: bun install --frozen-lockfile --production --filter '@raypx/dev-cli' --ignore-scripts
+      - uses: ./.github/actions/setup-bun
       - name: Probe the deployed public ingress
         env:
           PUBLIC_URL: ${{ inputs.public_url || vars.PRERELEASE_PUBLIC_URL }}
