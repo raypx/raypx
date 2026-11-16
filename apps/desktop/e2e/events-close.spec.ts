@@ -56,6 +56,7 @@ async function nativeEventsFixture(page: Page) {
   let terminal: { type: "closed"; code: number; reason: string } | undefined;
   const subscriptions = new Set<string>();
   const unexpected: string[] = [];
+  const publicConfigurationReads: string[] = [];
   const streams = new Map<string, { ready: boolean; reader?: string }>();
   let finish!: (code: number, reason: string) => void;
   const availableModes = [
@@ -83,6 +84,20 @@ async function nativeEventsFixture(page: Page) {
           updatedAt: createdAt,
         },
       };
+    // Login reads public first-account metadata through the selected API. Keep
+    // rejecting it before session termination or for Space-only close reasons.
+    if (path === "/rpc/configuration/public" && terminal?.reason === "SESSION_ENDED") {
+      publicConfigurationReads.push(path);
+      return {
+        json: {
+          siteName: "Raypx",
+          registrationEnabled: true,
+          bootstrap: false,
+          setupTokenRequired: false,
+          mailConfigured: true,
+        },
+      };
+    }
     const reads: Record<string, unknown> = {
       "/rpc/account/access": accessForRole("member", accountId),
       "/rpc/account/get": { id: accountId, name: user.name, email: user.email },
@@ -184,6 +199,7 @@ async function nativeEventsFixture(page: Page) {
   return {
     subscriptions,
     unexpected,
+    publicConfigurationReads,
     end: (code: number, reason: string) => finish(code, reason),
   };
 }
@@ -207,10 +223,18 @@ for (const [code, reason, notice] of [
     await expect
       .poll(() => [...fixture.subscriptions])
       .toEqual(expect.arrayContaining(["subscribe", "space.subscribe"]));
+    expect(fixture.publicConfigurationReads).toEqual([]);
     fixture.end(code, reason);
-    if (notice)
+    if (notice) {
       await expect(page.getByRole("status").filter({ hasText: notice })).toHaveText(notice);
-    else await expect(page).toHaveURL(/#\/login\?/);
+      expect(fixture.publicConfigurationReads).toEqual([]);
+    } else {
+      await expect(page).toHaveURL(/#\/login\?/);
+      await expect(page.getByRole("button", { name: "Sign in with browser" })).toBeVisible();
+      await expect
+        .poll(() => fixture.publicConfigurationReads)
+        .toEqual(["/rpc/configuration/public"]);
+    }
     await expect(composer).toBeHidden();
     expect(fixture.unexpected).toEqual([]);
   });
