@@ -2,9 +2,9 @@ import { createApiClient } from "@raypx/client/api";
 import { readAccount, type AccountState } from "@raypx/account";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { apiUrl, authClient } from "./client.js";
+import { apiOrigin, apiFetch, authClient } from "./client.js";
 
-const browserClient = createApiClient({ baseUrl: apiUrl });
+const browserClient = createApiClient({ fetch: apiFetch });
 
 /** Forward only Better Auth cookies to the API, never inbound host or auth headers. */
 export function sessionCookie(cookie: string | null | undefined): string {
@@ -20,7 +20,7 @@ export const loadAccount = createIsomorphicFn()
   .server((): Promise<AccountState> => {
     const cookie = sessionCookie(getRequestHeaders().get("cookie"));
     if (!cookie) return Promise.resolve({ status: "signed-out" });
-    return readAccount(createApiClient({ baseUrl: apiUrl, headers: { cookie } }));
+    return readAccount(createApiClient({ baseUrl: apiOrigin(), headers: { cookie } }));
   })
   .client(async () => {
     try {

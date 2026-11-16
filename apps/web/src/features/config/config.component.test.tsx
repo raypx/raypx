@@ -10,7 +10,8 @@ import { configurationClient, type Configuration } from "./client.js";
 
 const auth = vi.hoisted(() => ({ error: null as Error | null, refetch: vi.fn() }));
 vi.mock("../auth/client.js", () => ({
-  apiUrl: "https://api.example.test",
+  apiOrigin: () => "https://api.example.test",
+  apiFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
   authClient: {
     useSession: () => ({
       data: auth.error ? null : { user: { id: "admin" } },

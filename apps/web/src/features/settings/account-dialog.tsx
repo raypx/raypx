@@ -18,7 +18,7 @@ import { PasswordChangeDialog, PasswordSetupEmail } from "@raypx/auth/client";
 
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
-import { apiUrl, authClient, webUrl } from "../auth/client.js";
+import { apiOrigin, authClient, webOrigin } from "../auth/client.js";
 import { accountQuery } from "../auth/account-query.js";
 import { PermissionBoundary } from "../auth/components/permission-boundary.js";
 import { SessionBoundary, SignInGate } from "../auth/components/session-boundary.js";
@@ -152,7 +152,7 @@ function PasswordSettings({
   const t = useTranslations("auth");
   const mail = useQuery(publicConfigurationQuery());
   const query = useQuery({
-    queryKey: ["linked-accounts", apiUrl, accountId],
+    queryKey: ["linked-accounts", apiOrigin(), accountId],
     queryFn: async ({ signal }) => {
       const { data, error } = await authClient.listAccounts({
         fetchOptions: { signal, cache: "no-store" },
@@ -202,7 +202,7 @@ function PasswordSettings({
       ) : mail.data?.mailConfigured === false ? (
         <MailUnavailable reset />
       ) : (
-        <PasswordSetupEmail client={authClient} email={email} webUrl={webUrl} />
+        <PasswordSetupEmail client={authClient} email={email} webUrl={webOrigin()} />
       )}
       <SignInMethods
         accounts={query.data}
@@ -229,8 +229,8 @@ function AccountProfile({
   reload: () => Promise<void>;
   onClose: () => void;
 }) {
-  const query = useQuery({ ...accountQuery(), queryKey: ["account", apiUrl, accountId] });
-  const auth = useAuthActions({ client: authClient, webUrl });
+  const query = useQuery({ ...accountQuery(), queryKey: ["account", apiOrigin(), accountId] });
+  const auth = useAuthActions({ client: authClient, webUrl: webOrigin() });
   const queries = useQueryClient();
   const router = useRouter();
   const c = useTranslations("common");

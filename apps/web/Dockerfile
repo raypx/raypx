@@ -16,9 +16,9 @@ RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
 FROM dependencies AS build
 COPY . .
-# Browser and server rendering both use the API origin baked into this build.
+# Retired build inputs fail even when explicitly supplied empty.
 ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+RUN if [ "${VITE_API_URL+present}" = present ]; then echo "VITE_API_URL is no longer supported; use runtime API_PUBLIC_URL on Web for split origins" >&2; exit 1; fi
 ARG VITE_APP_RELEASE
 ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE

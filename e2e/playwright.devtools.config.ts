@@ -30,7 +30,8 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       // Dedicated loopback servers, with no operator account or external API.
-      VITE_API_URL: "http://127.0.0.1:4399",
+      VITE_DESKTOP_PREVIEW_API_URL: "http://127.0.0.1:4399",
+      API_PUBLIC_URL: "http://127.0.0.1:4399",
       VITE_DEVTOOLS_DISABLE_CLIENT_AUTH: "true",
     },
   })),

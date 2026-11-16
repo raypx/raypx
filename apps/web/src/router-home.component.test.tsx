@@ -8,7 +8,8 @@ import {
 import { renderToString } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 vi.mock("./features/auth/client.js", () => ({
-  apiUrl: "https://api.example.test",
+  apiOrigin: () => "https://api.example.test",
+  apiFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
   authClient: { useSession: () => ({ isPending: true, data: null, error: null }) },
 }));
 import { LandingHome } from "./features/landing/components/home.js";

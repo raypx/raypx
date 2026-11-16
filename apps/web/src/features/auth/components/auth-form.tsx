@@ -13,7 +13,7 @@ import {
   type AuthFormLinkProps,
   type AuthMode,
 } from "@raypx/auth/client";
-import { apiUrl, authClient, webUrl } from "../client.js";
+import { apiOrigin, authClient, webOrigin } from "../client.js";
 import { useQuery } from "@tanstack/react-query";
 import type { SocialProvider } from "@raypx/core/auth";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
@@ -35,8 +35,8 @@ function authCallbackURLs(returnTo: string) {
   if (returnTo === "/") return undefined;
   const destination = encodeURIComponent(returnTo);
   return {
-    verify: `${webUrl}/verify-email?verified=1&returnTo=${destination}`,
-    reset: `${webUrl}/reset-password?returnTo=${destination}`,
+    verify: `${webOrigin()}/verify-email?verified=1&returnTo=${destination}`,
+    reset: `${webOrigin()}/reset-password?returnTo=${destination}`,
   };
 }
 
@@ -62,7 +62,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const search = useLocation({ select: (location) => location.searchStr });
   const returnTo = safeReturnTo(new URLSearchParams(search).get("returnTo"));
   const providers = useQuery({
-    queryKey: ["auth", "social-providers", apiUrl],
+    queryKey: ["auth", "social-providers", apiOrigin()],
     queryFn: async ({ signal }) => {
       const result = await authClient.$fetch<{
         providers: SocialProvider[];
@@ -123,7 +123,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       backLabel={g("back")}
       client={authClient}
       onTwoFactorRequired={() => setChallenge(true)}
-      webUrl={webUrl}
+      webUrl={webOrigin()}
       search={search}
       callbackURLs={authCallbackURLs(returnTo)}
       socialLogin={{
@@ -131,8 +131,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           configuration.data?.bootstrap && configuration.data.setupTokenRequired
             ? []
             : (providers.data?.providers ?? []),
-        callbackURL: `${webUrl}/login?oauth=success&returnTo=${oauthDestination}`,
-        errorCallbackURL: `${webUrl}/login?returnTo=${oauthDestination}`,
+        callbackURL: `${webOrigin()}/login?oauth=success&returnTo=${oauthDestination}`,
+        errorCallbackURL: `${webOrigin()}/login?returnTo=${oauthDestination}`,
       }}
       onSignedIn={onSignedIn}
       renderSignInAlternatives={(busy) => (

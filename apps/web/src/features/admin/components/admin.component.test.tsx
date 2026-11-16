@@ -8,7 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mocks = vi.hoisted(() => ({ overview: vi.fn(), health: vi.fn(), audit: vi.fn() }));
 vi.mock("../client.js", () => ({ administrationClient: mocks }));
 vi.mock("../../auth/client.js", () => ({
-  apiUrl: "https://api.example.test",
+  apiOrigin: () => "https://api.example.test",
+  apiFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
   authClient: { useSession: () => ({ data: { user: { id: "admin" } } }) },
 }));
 import { Overview } from "./overview.js";

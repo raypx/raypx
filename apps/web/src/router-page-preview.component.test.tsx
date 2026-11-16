@@ -13,7 +13,7 @@ import { pageVersionSchema } from "@raypx/core/pages";
 import { BrowserLanguageProvider } from "./i18n.js";
 
 const mocks = vi.hoisted(() => ({ pages: { list: vi.fn(), get: vi.fn() } }));
-vi.mock("./features/auth/client.js", () => ({ apiUrl: "https://api.example.test" }));
+vi.mock("./features/auth/client.js", () => ({ apiOrigin: () => "https://api.example.test" }));
 vi.mock("./features/agents/client.js", () => ({ agentsClient: { pages: mocks.pages } }));
 vi.mock("./features/auth/components/session-boundary.js", () => ({
   SessionBoundary: ({ children }: { children: (accountId: string) => ReactNode }) =>

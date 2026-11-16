@@ -207,12 +207,7 @@ export async function smokeDeployment(root: string, args: string[]) {
       const releaseArg = `VITE_APP_RELEASE=${release}`;
       for (const [label, file, image, buildArgs] of [
         ["railway-api", "apps/api/Dockerfile", images.railwayApi, ["--build-arg", releaseArg]],
-        [
-          "railway-web",
-          "apps/web/Dockerfile",
-          images.railwayWeb,
-          ["--build-arg", `VITE_API_URL=${origin}`, "--build-arg", releaseArg],
-        ],
+        ["railway-web", "apps/web/Dockerfile", images.railwayWeb, ["--build-arg", releaseArg]],
         ["gateway", "infra/railway/Dockerfile", images.gateway, []],
       ] as const) {
         await evidence.command(

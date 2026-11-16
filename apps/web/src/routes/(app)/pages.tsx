@@ -7,7 +7,7 @@ import type { PagesClientPort } from "@raypx/pages/model";
 import { PagesWorkspace } from "@raypx/pages/client";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
 import { agentsClient } from "../../features/agents/client.js";
-import { apiUrl } from "../../features/auth/client.js";
+import { apiOrigin } from "../../features/auth/client.js";
 import { SessionBoundary } from "../../features/auth/components/session-boundary.js";
 import { webPageGuard, PageAccessFeedback } from "../../features/auth/route-guard.js";
 import { safeReturnTo } from "../../features/auth/return-to.js";
@@ -31,7 +31,7 @@ function PagesPage() {
     <SessionBoundary
       guest={<Navigate to="/login" search={{ returnTo: safeReturnTo(href) }} replace />}
     >
-      {(accountId) => <SignedInPages key={`${apiUrl}:${accountId}`} accountId={accountId} />}
+      {(accountId) => <SignedInPages key={`${apiOrigin()}:${accountId}`} accountId={accountId} />}
     </SessionBoundary>
   );
 }
@@ -54,7 +54,7 @@ function SignedInPages({ accountId }: { accountId: string }) {
       spaceManagement={agentsClient.spaces}
       accountApprovalSettings={agentsClient.approvals}
       accountId={accountId}
-      origin={apiUrl}
+      origin={apiOrigin()}
       {...(selection.spaceId ? { spaceId: selection.spaceId } : {})}
       onNavigate={(next) => {
         if (next.agentId || next.groupId)
@@ -66,7 +66,7 @@ function SignedInPages({ accountId }: { accountId: string }) {
           key={spaceId}
           spaceId={spaceIdSchema.parse(spaceId)}
           port={port}
-          apiOrigin={apiUrl}
+          apiOrigin={apiOrigin()}
           canEmbedAuthenticatedDocuments
           agents={agents}
           accountNames={accountNames}

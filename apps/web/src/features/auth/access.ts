@@ -1,11 +1,11 @@
 import { loadAccountAccess } from "./account-access.js";
 import { hasPermission, type AccountAccess, type AccountPermission } from "@raypx/account/access";
-import { apiUrl } from "./client.js";
+import { apiOrigin } from "./client.js";
 
 /** One account-scoped read feeds menu visibility and direct page access. */
 export function accountAccessQuery(accountId: string | null) {
   return {
-    queryKey: ["account-access", apiUrl, accountId],
+    queryKey: ["account-access", apiOrigin(), accountId],
     queryFn: ({ signal }: { signal: AbortSignal }) =>
       loadAccountAccess(AbortSignal.any([signal, AbortSignal.timeout(10_000)])),
     enabled: Boolean(accountId),

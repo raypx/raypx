@@ -65,6 +65,5 @@ docker buildx build --builder "$builder" --load \
 web_dockerfile=$(build_dockerfile apps/web/Dockerfile)
 docker buildx build --builder "$builder" --load \
   --file "$web_dockerfile" --target runtime \
-  --build-arg "VITE_API_URL=https://$APP_HOST" \
   --build-arg "VITE_APP_RELEASE=$release" \
   --tag "raypx/web:$release" .

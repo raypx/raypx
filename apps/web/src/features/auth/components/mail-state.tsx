@@ -9,7 +9,7 @@ import { CloseIcon } from "@raypx/icons/close";
 import { SpinnerIcon } from "@raypx/icons/spinner";
 import { useTranslations } from "../../../i18n.js";
 import { configurationClient, publicConfigurationQuery } from "../../config/client.js";
-import { authClient, webUrl } from "../client.js";
+import { authClient, webOrigin } from "../client.js";
 
 export function MailUnavailable({ reset = false }: { reset?: boolean }) {
   const t = useTranslations("auth");
@@ -71,7 +71,7 @@ export function VerificationPrompt() {
     try {
       const result = await authClient.sendVerificationEmail({
         email: session.data.user.email,
-        callbackURL: `${webUrl}/verify-email?verified=1`,
+        callbackURL: `${webOrigin()}/verify-email?verified=1`,
       });
       setState(result.error ? "failed" : "sent");
     } catch {

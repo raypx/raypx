@@ -1,3 +1,4 @@
+import { validateWebEnvironment } from "./src/public-address.js";
 import { i18nCatalogs } from "@raypx/i18n/vite";
 import { raypxDevtools } from "@raypx/devtools/vite";
 import { analyticsBuild } from "@raypx/tooling/build/analytics";
@@ -23,15 +24,26 @@ const securityHeaders = {
 };
 
 export default defineConfig(() => {
+  validateWebEnvironment(process.env);
   const analytics = analyticsBuild("web");
   return {
     devtools: { apply: "serve", embeddedVisibility: "passive" },
     define: analytics.define,
     plugins: [
+      {
+        name: "web-public-address",
+        configResolved(config) {
+          // Vite also loads app dotenv files without adding all their keys to process.env.
+          if (Object.hasOwn(config.env, "VITE_API_URL"))
+            validateWebEnvironment({ VITE_API_URL: String(config.env.VITE_API_URL) });
+          validateWebEnvironment(process.env);
+        },
+      },
       analytics.plugin,
       raypxDevtools(),
       nitro({
         ...nitroTarget(),
+        plugins: ["./src/runtime/plugin.ts"],
         routeRules: {
           "/**": { headers: securityHeaders },
           "/manifest.webmanifest": { headers: { "Cache-Control": "no-cache" } },

@@ -9,11 +9,11 @@ import {
 } from "@raypx/contracts/api";
 import { Button, buttonVariants } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "../../../i18n.js";
-import { apiUrl, authClient } from "../client.js";
+import { apiOrigin, apiFetch, authClient } from "../client.js";
 
 async function send(path: string, input: unknown, parent?: AbortSignal) {
   const timeout = AbortSignal.timeout(10_000);
-  return fetch(new URL(`/api/auth${path}`, apiUrl), {
+  return apiFetch(`/api/auth${path}`, {
     method: "POST",
     credentials: "include",
     redirect: "error",
@@ -32,7 +32,7 @@ export function DesktopAuthorization({ oauth }: { oauth?: string }) {
   const [error, setError] = useState(false);
   const sending = useRef(false);
   const preview = useQuery({
-    queryKey: ["desktop-authorization", apiUrl, oauth],
+    queryKey: ["desktop-authorization", apiOrigin(), oauth],
     queryFn: async ({ signal }) => {
       const response = await send(desktopLoginPaths.inspect, { oauthQuery: oauth }, signal);
       if (response.status === 401) return { status: "signed-out" } as const;

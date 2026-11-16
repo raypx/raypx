@@ -6,7 +6,7 @@ import { LoadingState } from "@raypx/ui/loading-state";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "../../i18n.js";
 import { agentsClient } from "../agents/client.js";
-import { apiUrl } from "../auth/client.js";
+import { apiOrigin } from "../auth/client.js";
 
 export function AccountSkills({ accountId }: { accountId: string }) {
   const c = useTranslations("common");
@@ -14,7 +14,7 @@ export function AccountSkills({ accountId }: { accountId: string }) {
     select: (location) => (location.search as { spaceId?: string }).spaceId,
   });
   const query = useQuery({
-    queryKey: ["account-skills-spaces", apiUrl, accountId],
+    queryKey: ["account-skills-spaces", apiOrigin(), accountId],
     queryFn: () => agentsClient.spaces.list({}),
     retry: false,
   });

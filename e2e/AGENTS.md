@@ -80,7 +80,7 @@ gate for Web's `agents.spec.ts`; that case verifies streaming before commit and 
 after reload. It is skipped without the owned backend fixture.
 The owned backend fixture is opt-in; ordinary browser response fixtures do not prove
 real backend, PostgreSQL, provider or native WebView behavior. Keep the fixture API
-origin explicit in client builds. Desktop browser output allows only its validated
+origin explicit in the Web server process and Desktop browser-preview build. Desktop browser output allows only its validated
 loopback API origin; static serving preserves its HTML/CSP.
 
 Pages and Skills/Tools journeys use isolated Spaces in the owned backend fixture.
@@ -170,3 +170,7 @@ responses render the compiled Web workspace, administration and public/auth view
 no palette switch or backend is involved. Evidence and browser-resolved contrast
 measurements live under `.artifacts/theme/final/`; focused control captures and
 computed measurements live under `.artifacts/focus/`. Native device acceptance is separate.
+
+`e2e:deployment` consumes two already-running local production ingresses from
+RAYPX_DEPLOYMENT_ORIGINS. public-origins.spec.ts verifies hydration and identical
+script inventories across them; deployment:smoke --local-production owns the services.

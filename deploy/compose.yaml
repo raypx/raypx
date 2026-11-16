@@ -192,6 +192,8 @@ services:
     cpus: 0.5
 
   web:
+    environment:
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-}
     image: raypx/web:${COMPOSE_PROJECT_NAME:?}-${RAYPX_RELEASE:?}
     pull_policy: never
     restart: unless-stopped

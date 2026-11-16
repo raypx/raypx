@@ -1,10 +1,9 @@
 import { createApiClient, type ApiClient } from "@raypx/client/api";
-import { apiUrl } from "../auth/client.js";
+import { apiFetch } from "../auth/client.js";
 
 const client = createApiClient({
-  baseUrl: apiUrl,
   fetch: (input, init) =>
-    globalThis.fetch(input, {
+    apiFetch(input, {
       ...init,
       signal: AbortSignal.any([
         ...(init?.signal ? [init.signal] : []),

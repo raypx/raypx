@@ -43,8 +43,9 @@ const mocks = vi.hoisted(() => ({
   loadAccount: vi.fn(),
 }));
 vi.mock("../../src/features/auth/client.js", () => ({
-  webUrl: "https://raypx.example",
-  apiUrl: "https://api.raypx.example",
+  webOrigin: () => "https://raypx.example",
+  apiOrigin: () => "https://api.raypx.example",
+  apiFetch: fetch,
   loadAccount: async () => ({ status: "signed-out" }),
   authClient: {
     useSession: () => ({

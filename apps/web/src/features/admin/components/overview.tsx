@@ -24,7 +24,7 @@ import {
   TableRow,
 } from "@raypx/ui/components/ui/table";
 import { administrationClient } from "../client.js";
-import { authClient, apiUrl } from "../../auth/client.js";
+import { authClient, apiOrigin } from "../../auth/client.js";
 import { LoadingState } from "@raypx/ui/loading-state";
 
 type Registration = { day: string; count: number };
@@ -121,7 +121,7 @@ export function Overview() {
   const id = session.data?.user.id;
   const [days, setDays] = useState<"7" | "30">("30");
   const data = useQuery({
-    queryKey: ["admin-overview", apiUrl, id, days],
+    queryKey: ["admin-overview", apiOrigin(), id, days],
     queryFn: ({ signal }) =>
       administrationClient.overview({ days: days === "7" ? 7 : 30 }, { signal }),
     enabled: Boolean(id),
@@ -129,7 +129,7 @@ export function Overview() {
     staleTime: 30000,
   });
   const health = useQuery({
-    queryKey: ["admin-health", apiUrl, id],
+    queryKey: ["admin-health", apiOrigin(), id],
     queryFn: ({ signal }) => administrationClient.health({}, { signal }),
     enabled: Boolean(id),
     retry: false,

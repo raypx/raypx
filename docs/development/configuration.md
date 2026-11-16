@@ -319,7 +319,7 @@ uncertainty and permanent-retention behavior.
 The exclusive fresh-deployment browser fixture is `apps/api/tests/helpers/bootstrap-server.ts`.
 Start it with `RAYPX_VALIDATION=1`, an empty disposable loopback `TEST_DATABASE_URL`,
 `BOOTSTRAP_E2E_PORT=56539` and `BOOTSTRAP_E2E_WEB_URL=http://127.0.0.1:56540`.
-Build Web with `VITE_API_URL=http://127.0.0.1:56539`, then run
+Build Web once, then set its runtime API origin while running the gate:
 `BOOTSTRAP_E2E_API_URL=http://127.0.0.1:56539 bun --cwd e2e --bun playwright test --config playwright.bootstrap.config.ts`.
 It uses fake mail transport and cannot establish real inbox delivery. Stop that
 owned fixture before database suites or the separately seeded backend fixture.

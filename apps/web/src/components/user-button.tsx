@@ -12,7 +12,7 @@ import { IconButton } from "@raypx/ui/icon-button";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { AdjustmentsIcon } from "@raypx/icons/adjustments";
 import { RefreshIcon } from "@raypx/icons/refresh";
-import { authClient, apiUrl, webUrl } from "../features/auth/client.js";
+import { authClient, apiOrigin, webOrigin } from "../features/auth/client.js";
 import { accountAccessQuery } from "../features/auth/access.js";
 import { safeReturnTo } from "../features/auth/return-to.js";
 import { analytics } from "../features/analytics/client.js";
@@ -66,16 +66,16 @@ function AccountButton({
       : undefined;
   const c = useTranslations("common");
   const nav = useTranslations("dash.nav");
-  const auth = useAuthActions({ client: authClient, webUrl });
+  const auth = useAuthActions({ client: authClient, webUrl: webOrigin() });
   useEffect(() => {
     if (previous.current !== accountId) {
       const oldAccount = previous.current;
       previous.current = accountId;
       cache.removeQueries({ queryKey: ["account"], exact: true });
       if (oldAccount) {
-        cache.removeQueries({ queryKey: ["account", apiUrl, oldAccount] });
+        cache.removeQueries({ queryKey: ["account", apiOrigin(), oldAccount] });
         for (const key of ["admin-users", "admin-overview", "admin-health", "admin-audit"])
-          cache.removeQueries({ queryKey: [key, apiUrl, oldAccount] });
+          cache.removeQueries({ queryKey: [key, apiOrigin(), oldAccount] });
       }
     }
   }, [accountId, cache]);

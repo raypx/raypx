@@ -24,7 +24,7 @@ import { EmptyState } from "@raypx/ui/empty-state";
 import { ArrowLeftIcon } from "@raypx/icons/arrow-left";
 import { ArrowRightIcon } from "@raypx/icons/arrow-right";
 import { accountAccessQuery } from "../../auth/access.js";
-import { authClient, apiUrl } from "../../auth/client.js";
+import { authClient, apiOrigin } from "../../auth/client.js";
 import { UserTable, type UserRoleSelection } from "./user-table.js";
 import { UserFilters, type UserFiltersValue } from "./user-filters.js";
 import { RolePermissions } from "./role-permissions.js";
@@ -68,7 +68,7 @@ export function Users({ accountId }: { accountId: string }) {
     !access.isError && access.data?.accountId === accountId ? access.data : undefined;
   const canView = hasPermission(permissions, "users.read");
   const canChange = canView && hasPermission(permissions, "users.roles.update");
-  const listKey = ["admin-users", apiUrl, accountId] as const;
+  const listKey = ["admin-users", apiOrigin(), accountId] as const;
   const { search, verification, sortDirection } = filters;
   const users = useQuery({
     queryKey: [...listKey, filters, offset],

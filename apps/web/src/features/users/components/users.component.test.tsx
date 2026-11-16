@@ -14,8 +14,9 @@ const mocks = vi.hoisted(() => ({
   mailConfigured: true,
 }));
 vi.mock("../../auth/client.js", () => ({
-  apiUrl: "https://api.example.test",
-  webUrl: "https://web.example.test",
+  apiOrigin: () => "https://api.example.test",
+  apiFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
+  webOrigin: () => "https://web.example.test",
   authClient: { admin: { listUsers: mocks.list, setRole: mocks.setRole } },
 }));
 vi.mock("../../auth/access.js", () => ({

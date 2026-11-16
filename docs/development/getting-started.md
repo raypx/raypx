@@ -48,20 +48,20 @@ shell values win. Values are literal: `${VAR}` is not expanded. Tests supply an
 explicit environment. `bun run raypx-dev env -- <command>` loads this same
 configuration for an operator command without printing it.
 
-| Input                                                          | Local use                                                                                                                  |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                 | New isolated PostgreSQL database.                                                                                          |
-| `PUBLIC_URL`, `API_PUBLIC_URL`, `EXTRA_ALLOWED_ORIGINS`        | Browser Web origin, optional separate API origin, optional additional exact browser origins; native origins are automatic. |
-| `AUTH_SECRET`, `APP_KEY`                                       | Independent secrets; replace development examples before deployment. API and workers share the encryption key.             |
-| `VITE_API_URL`, `VITE_WEB_URL`                                 | Public Web build inputs; rebuild when changing them. Installed Desktop uses runtime TOML.                                  |
-| `SERVER_ROLE`                                                  | Defaults to `all`: API, worker and device connector.                                                                       |
-| `AGENT_MODELS`, `AGENT_MODEL_CREDENTIALS`                      | Optional deployment model directory and protected credential map; empty defaults disable deployment offers.                |
-| `APPROVAL_DEFAULT_MODE`, `APPROVAL_REQUEST_TTL_MS`             | Defaults: `ask` and 600000 ms. Auto review is explicitly unavailable.                                                      |
-| `RUN_RECOVERY_INTERVAL_MS`, `RUN_LEASE_MS`, `RUN_HEARTBEAT_MS` | Defaults: 5000, 15000 and 5000 ms.                                                                                         |
-| `RUN_ATTEMPT_TIMEOUT_MS`, `RUN_BACKUP_MARGIN_MS`               | Defaults: 300000 and 30000 ms.                                                                                             |
-| `JOBS_ENABLED`                                                 | Enables Nitro maintenance and cleanup; false in the development example. Space routines use worker scans.                  |
-| `ROUTINE_EMAIL_RELAY_TOKEN`, `ROUTINE_EMAIL_DOMAIN`            | Paired configuration for server routine email ingress; Raypx does not run SMTP.                                            |
-| `REDIS_URL`                                                    | Optional cache/broker; required for split device connector routing.                                                        |
+| Input                                                          | Local use                                                                                                                                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                 | New isolated PostgreSQL database.                                                                                                                                                     |
+| `PUBLIC_URL`, `API_PUBLIC_URL`, `EXTRA_ALLOWED_ORIGINS`        | Browser Web origin, optional separate API origin, optional additional exact browser origins; native origins are automatic.                                                            |
+| `AUTH_SECRET`, `APP_KEY`                                       | Independent secrets; replace development examples before deployment. API and workers share the encryption key.                                                                        |
+| `API_PUBLIC_URL`, `VITE_WEB_URL`                               | Web API origin is runtime-only for split/dev ports; shared origin omits it. Desktop native uses runtime TOML; its browser preview uses VITE_DESKTOP_PREVIEW_API_URL and VITE_WEB_URL. |
+| `SERVER_ROLE`                                                  | Defaults to `all`: API, worker and device connector.                                                                                                                                  |
+| `AGENT_MODELS`, `AGENT_MODEL_CREDENTIALS`                      | Optional deployment model directory and protected credential map; empty defaults disable deployment offers.                                                                           |
+| `APPROVAL_DEFAULT_MODE`, `APPROVAL_REQUEST_TTL_MS`             | Defaults: `ask` and 600000 ms. Auto review is explicitly unavailable.                                                                                                                 |
+| `RUN_RECOVERY_INTERVAL_MS`, `RUN_LEASE_MS`, `RUN_HEARTBEAT_MS` | Defaults: 5000, 15000 and 5000 ms.                                                                                                                                                    |
+| `RUN_ATTEMPT_TIMEOUT_MS`, `RUN_BACKUP_MARGIN_MS`               | Defaults: 300000 and 30000 ms.                                                                                                                                                        |
+| `JOBS_ENABLED`                                                 | Enables Nitro maintenance and cleanup; false in the development example. Space routines use worker scans.                                                                             |
+| `ROUTINE_EMAIL_RELAY_TOKEN`, `ROUTINE_EMAIL_DOMAIN`            | Paired configuration for server routine email ingress; Raypx does not run SMTP.                                                                                                       |
+| `REDIS_URL`                                                    | Optional cache/broker; required for split device connector routing.                                                                                                                   |
 
 Configure mail through [administrator settings](configuration.md#resend-email).
 Unconfigured mail actions return `MAIL_NOT_CONFIGURED`; use a real configured mail
@@ -108,7 +108,9 @@ Set `PUBLIC_URL` to the Web origin; Page framing and event admission follow it a
 Without origin settings, development uses Web `http://localhost:3000` and API
 `http://localhost:3002`. If you explicitly set `PUBLIC_URL` locally, also set
 `API_PUBLIC_URL=http://localhost:3002` for the separate API port. Local Web development
-uses `VITE_API_URL` directly, with no path proxy in the Vite configuration.
+uses runtime `API_PUBLIC_URL`, with no path proxy in Vite. With no configuration,
+Web derives the local API hostname and port 3002. Shared-origin production has no
+API address setting.
 
 `SERVER_ROLE=api` serves requests and starts committed Runs directly;
 `SERVER_ROLE=worker` scans recovery, routines and claimed Space deletion without

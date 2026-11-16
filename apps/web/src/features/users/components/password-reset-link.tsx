@@ -17,7 +17,7 @@ import { SpinnerIcon } from "@raypx/icons/spinner";
 import { useTranslations } from "../../../i18n.js";
 import { administrationClient } from "../../admin/client.js";
 import { publicConfigurationQuery } from "../../config/client.js";
-import { webUrl } from "../../auth/client.js";
+import { webOrigin } from "../../auth/client.js";
 
 export function PasswordResetLink({
   userId,
@@ -47,7 +47,7 @@ export function PasswordResetLink({
     try {
       const result = await administrationClient.issuePasswordReset({ userId });
       setLink({
-        url: `${webUrl}/reset-password?token=${encodeURIComponent(result.token)}`,
+        url: `${webOrigin()}/reset-password?token=${encodeURIComponent(result.token)}`,
         expiresAt: result.expiresAt,
       });
     } catch {

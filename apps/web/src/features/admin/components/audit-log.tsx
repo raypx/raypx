@@ -34,7 +34,7 @@ import { EyeIcon } from "@raypx/icons/eye";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { administrationClient } from "../client.js";
-import { authClient, apiUrl } from "../../auth/client.js";
+import { authClient, apiOrigin } from "../../auth/client.js";
 
 const outcomeTones: Record<AuditEntry["outcome"], StatusTone> = {
   success: "success",
@@ -103,7 +103,7 @@ export function AuditLog() {
   const [invalid, setInvalid] = useState(false);
   const cursor = cursors.at(-1);
   const query = useQuery({
-    queryKey: ["admin-audit", apiUrl, session.data?.user.id, filters, cursor],
+    queryKey: ["admin-audit", apiOrigin(), session.data?.user.id, filters, cursor],
     queryFn: ({ signal }) =>
       administrationClient.audit({ ...filters, ...(cursor ? { cursor } : {}) }, { signal }),
     enabled: Boolean(session.data?.user.id),

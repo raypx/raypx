@@ -11,7 +11,8 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 vi.mock("./features/auth/client.js", () => ({
-  apiUrl: "https://api.example.test",
+  apiOrigin: () => "https://api.example.test",
+  apiFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
   authClient: { useSession: () => ({ data: null, isPending: false, error: null }) },
 }));
 import { Route } from "./routes/(app)/settings.js";

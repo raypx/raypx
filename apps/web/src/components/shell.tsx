@@ -14,7 +14,7 @@ import { analytics } from "../features/analytics/client.js";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { useEffect, useRef, useState } from "react";
 import { UserButton } from "./user-button.js";
-import { authClient, apiUrl } from "../features/auth/client.js";
+import { authClient, apiOrigin } from "../features/auth/client.js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Link,
@@ -138,7 +138,7 @@ export function WebShell() {
                 mail: "/admin/settings#email",
               }}
               port={setupChecklistPort}
-              origin={apiUrl}
+              origin={apiOrigin()}
               accountId={accountId}
               onConfigure={(item) => {
                 if (item === "model") {

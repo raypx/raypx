@@ -3,7 +3,7 @@
 import type {} from "@testing-library/jest-dom/vitest";
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup } from "@testing-library/react";
-import { afterEach, expect } from "vitest";
+import { afterEach, expect, vi } from "vitest";
 
 // Keep matcher registration on the expect instance used by the actual runner.
 expect.extend(matchers);
@@ -12,3 +12,14 @@ motion.textContent =
   "*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}";
 document.head.append(motion);
 afterEach(cleanup);
+
+vi.mock("../src/origins.js", () => ({
+  webOrigins: () => ({
+    webOrigin: "https://raypx.example",
+    apiOrigin: "https://api.raypx.example",
+    apiBaseUrl: "https://api.raypx.example",
+  }),
+  apiOrigin: () => "https://api.raypx.example",
+  webOrigin: () => "https://raypx.example",
+  apiFetch: fetch,
+}));

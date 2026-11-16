@@ -10,6 +10,7 @@
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
     "e2e": "raypx-dev e2e",
+    "e2e:deployment": "bun --bun playwright test --config playwright.deployment.config.ts",
     "e2e:devtools": "bun --bun playwright test --config playwright.devtools.config.ts",
     "e2e:web": "raypx-dev e2e --web",
     "e2e:desktop": "raypx-dev e2e --desktop",

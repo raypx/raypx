@@ -79,7 +79,10 @@ can be started and stopped. Conversation activity and addressed approvals render
   mail implementation and duplicates no API behavior in server functions.
 - Remote commands/reads use API contracts; PostgreSQL owns Agent state. The CLI provides only the outbound connector and private Desktop sessions.
 - SSR forwards Better Auth cookies only. Without them, skip private account RPCs.
-  `VITE_API_URL` is fixed at build time; SSR needs a shared origin or API AUTH_DOMAIN.
+  Shared-origin browser transport is relative. Split/dev API_PUBLIC_URL belongs to
+  the Web process and is bootstrapped per request before client modules; never bake
+  deployment origins into assets. Absolute links use effective runtime origins.
+  Split hosts require covering API AUTH_DOMAIN and passkey RP configuration.
 - Never read `window`/`document` during render. Read URLs through the router.
 - Device theme/locale use cookies and storage independently of account sessions.
   SSR negotiates the weighted Accept-Language list; hydrate the same ready catalog

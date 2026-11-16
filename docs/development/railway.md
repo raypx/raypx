@@ -43,7 +43,7 @@ railway variable set --skip-deploys; never commit decrypted variables.
 | gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                                             |
 | api      | NODE_ENV=production; SERVER_ROLE=all (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET and APP_KEY are distinct private random values of at least 32 characters |
 | api      | PUBLIC_URL=${{gateway.PUBLIC_ORIGIN}}; JOBS_ENABLED=true; omit API_PUBLIC_URL for this shared origin; EXTRA_ALLOWED_ORIGINS is optional                                                                                                                |
-| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                                                                      |
+| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; omit API_PUBLIC_URL on a shared origin                                                                                                                                                       |
 | api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                                              |
 
 Remove retired `AUTH_URL`, `ALLOWED_ORIGINS` and any `DEVICE_CONNECTOR_ORIGIN`
@@ -259,12 +259,15 @@ After the domain is ready:
 1. Add raypx.com to Gateway's public networking, targeting port 8080.
 2. Apply the exact DNS records Railway provides and wait for its certificate.
 3. Set Gateway's PUBLIC_ORIGIN to https://raypx.com.
-4. Check the resolved API PUBLIC_URL, optional API_PUBLIC_URL/EXTRA_ALLOWED_ORIGINS and Web VITE_API_URL references.
-5. Rebuild Web because VITE_API_URL is baked into browser and SSR output; redeploy
-   API to refresh authentication settings. Keep the same database, Redis, AUTH_SECRET and APP_KEY.
+4. Check API PUBLIC_URL and optional API_PUBLIC_URL/EXTRA_ALLOWED_ORIGINS. Shared-origin Web needs no address variable.
+5. Restart API to refresh authentication settings. Web uses the new request origin
+   with the same built artifact. Keep the same database, Redis, AUTH_SECRET and APP_KEY.
 6. Repeat HTTPS, signed-out redirect, login, cookie and Relay checks on raypx.com.
 
-The DNS change alone does not rebuild Web or change its API origin.
+The Web artifact follows its served origin. API still requires the matching
+PUBLIC_URL configuration and restart. For split origins, set the same runtime
+API_PUBLIC_URL on Web and API, with covering AUTH_DOMAIN and passkey RP ID.
+Remove the retired Web build/runtime input during the image/environment cutover.
 
 ## Sandbox connection from a PaaS
 

@@ -21,7 +21,12 @@ export default defineConfig({
   webServer: {
     command: "bun --no-env-file ../apps/web/.output/server/index.mjs",
     url: baseURL,
-    env: { NODE_ENV: "production", HOST: "127.0.0.1", PORT: url.port },
+    env: {
+      NODE_ENV: "production",
+      HOST: "127.0.0.1",
+      PORT: url.port,
+      API_PUBLIC_URL: process.env.BOOTSTRAP_E2E_API_URL ?? "http://127.0.0.1:56539",
+    },
     reuseExistingServer: false,
     timeout: 30_000,
   },

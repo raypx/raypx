@@ -5,6 +5,13 @@ shares Core, contracts and feature models for its native Space and Agent workflo
 Native Screen viewing/input remains unavailable; the phone Web client provides it.
 An implemented workflow works on each client or degrades for a stated reason.
 
+Web uses relative API requests on a shared origin and derives event socket URLs
+from the active browser origin. Separate API origins are runtime `API_PUBLIC_URL`
+on the Web server, serialized per SSR request before client modules run. SSR
+resolves the request origin without retaining it in module state; sharing,
+invitation and Page references remain absolute. Desktop and Mobile keep their
+selected server origins. See [deployment](../development/deployment.md).
+
 ## Shared layers
 
 - Core owns schemas and pure rules. Contracts composes the oRPC definitions.

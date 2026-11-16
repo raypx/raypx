@@ -7,10 +7,11 @@ import {
 } from "@raypx/auth/client";
 import { accountAccessControl, accountRoles } from "@raypx/auth/access";
 
-export const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3002";
-export const webUrl = typeof window === "undefined" ? "" : window.location.origin;
+export { apiOrigin, webOrigin, apiFetch } from "../../origins.js";
+import { apiFetch } from "../../origins.js";
+
 export const authClient = createAuthClient({
-  baseURL: apiUrl,
+  fetchOptions: { customFetchImpl: apiFetch },
   plugins: [
     adminClient({ ac: accountAccessControl, roles: accountRoles }),
     passkeyClient(),

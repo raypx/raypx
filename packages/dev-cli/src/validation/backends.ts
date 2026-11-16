@@ -267,7 +267,8 @@ export async function validateBackends(root: string, args: string[]) {
           ],
           {
             ...env,
-            VITE_API_URL: apiUrl,
+            API_PUBLIC_URL: apiUrl,
+            VITE_DESKTOP_PREVIEW_API_URL: apiUrl,
             VITE_WEB_URL: "http://127.0.0.1:4173",
             CONTROL_E2E_API_URL: apiUrl,
             PLAYWRIGHT_JSON_OUTPUT_FILE: join(evidence.directory, "e2e.json"),

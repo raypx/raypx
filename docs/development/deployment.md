@@ -64,8 +64,9 @@ falls back to local routing or queues uncertain execution for retry.
 COMPOSE_PROJECT_NAME=raypx-app APP_HOST=app.example.com RAYPX_RELEASE=git-sha sh deploy/build.sh
 ```
 
-Builds run sequentially: migration, backend, Web. Web bakes its API origin into
-SSR/browser assets. API and Relay roles use the same backend output and image.
+Builds run sequentially: migration, backend, Web. Web assets contain no deployment
+API address. Shared-origin requests stay relative; split-origin Web processes read
+`API_PUBLIC_URL` at request time and bootstrap it before client modules. API and Relay roles use the same backend output and image.
 The portable Dockerfiles are `apps/api/Dockerfile` and `apps/web/Dockerfile`;
 Compose and Railway use the same sources. Both use pinned Bun images and run as
 the bun user.
@@ -125,14 +126,25 @@ comma-separated HTTP(S) origins with no wildcard. Fixed native origins are
 included automatically. Every split backend role receives the same address inputs.
 Compose forwards the optional API/extra settings but retains its existing gateway
 routing. Publishing a separate API requires separately prepared ingress; this
-change does not add gateway routes or change Web's build-time `VITE_API_URL`.
-For separate Web/API hosts, retain the existing `AUTH_DOMAIN` cookie configuration
-and explicit passkey RP setting when needed. The passkey default is the API hostname.
+change does not add gateway routes. On Web, omit `API_PUBLIC_URL` for a shared
+origin; for split origins set the same `API_PUBLIC_URL` on Web and every backend
+role. It is a **runtime Web process variable**, never a Docker build argument or
+Vite definition. Web needs no address variable on a shared origin. Reverse proxies
+must preserve Host and supply the external scheme. Absolute sharing, invitation,
+Page reference and connector links use the effective request/API origin. Stored
+absolute Page references keep their existing format and exact origin/Space match.
+Desktop and Mobile retain their own selected origins.
+
+For separate Web/API hosts, configure `AUTH_DOMAIN` to cover both hosts for SSR
+cookies and select a passkey RP ID covering the Web hostname. Same-host development
+ports need neither setting. The default RP ID is the API hostname.
 
 Delete `AUTH_URL` and `ALLOWED_ORIGINS` from API and all split role environments,
 including shared/group variables. Also delete `DEVICE_CONNECTOR_ORIGIN` if present;
 connector checks now derive from the public API origin. Empty old variables still
-fail startup. No aliases or fallback are supported.
+fail startup. No aliases or fallback are supported. Delete `VITE_API_URL` from Web build, runtime
+and shared/group settings, including empty values. Web build/start refuses it and
+names runtime `API_PUBLIC_URL` as the split-origin replacement.
 
 For an existing hosted shared-origin deployment:
 
@@ -145,12 +157,17 @@ For an existing hosted shared-origin deployment:
    settings if necessary. Deleting old required variables and restarting the old
    build fails; starting the new build before deleting them also fails. A platform
    without an atomic image/environment cutover needs a maintenance window.
-4. Verify login, `/ready`, a real authenticated event socket and a Page preview.
-   A later gateway domain change updates the one `PUBLIC_URL` source/reference.
+4. For this Web update, remove its retired build/runtime address in the same image/
+   environment cutover. Keep Web `API_PUBLIC_URL` absent on a shared origin; add no
+   Web address variable. An older Web image already contains its compiled address,
+   but rolling it back requires restoring its old build settings before rebuilding.
+5. Verify login, a real authenticated event
+   socket and a Page preview. A later domain change updates API's `PUBLIC_URL`
+   source/reference and restarts backend roles; the Web artifact needs no rebuild.
 
 Rollback restores both the previous image and its previous environment. The old
-build still requires its old address variables. Keep existing Web build-time API
-settings aligned separately; their handling is unchanged by this task.
+build still requires its old address variables. Restore the previous Web image
+and its protected build settings when rolling back across the retired-input change.
 
 For Compose, deploy the changed template with the new image together; keep
 `APP_HOST` as the single hostname input and remove retired entries from the

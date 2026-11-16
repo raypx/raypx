@@ -4,6 +4,7 @@ import {
   ClientOnly,
   HeadContent,
   Scripts,
+  ScriptOnce,
   createRootRouteWithContext,
   Link,
   type ErrorComponentProps,
@@ -12,6 +13,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider, ThemeScript, themeMeta } from "@raypx/ui/themes";
 
 import { resolveLocalePreference } from "@raypx/i18n/preferences";
+import { webOrigins } from "../origins.js";
 import { loadPreferences } from "../preferences.js";
 import { AppAnalytics } from "../features/analytics/provider.js";
 import appCss from "../styles.css?url";
@@ -24,7 +26,7 @@ const Devtools = import.meta.env.DEV
   : null;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: () => loadPreferences(),
+  loader: () => ({ ...loadPreferences(), origins: webOrigins() }),
   // After hydration the providers own preferences; navigation never reloads them.
   staleTime: Infinity,
   head: () => ({
@@ -93,6 +95,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <head>
+        <ScriptOnce>{`window.__RAYPX_PUBLIC_CONFIG__=${JSON.stringify({ API_PUBLIC_URL: preferences.origins?.apiBaseUrl || "", NODE_ENV: "production" }).replace(/</g, "\\u003c")}`}</ScriptOnce>
         <HeadContent />
         {/* "system" themes resolve from the media query before first paint. */}
         <ThemeScript />

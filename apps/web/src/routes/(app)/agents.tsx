@@ -6,7 +6,7 @@ import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
 import { useSettingsNavigation } from "../../features/settings/navigation.js";
 import { agentsClient } from "../../features/agents/client.js";
 import { SessionBoundary } from "../../features/auth/components/session-boundary.js";
-import { apiUrl, webUrl } from "../../features/auth/client.js";
+import { apiOrigin, webOrigin } from "../../features/auth/client.js";
 import { safeReturnTo } from "../../features/auth/return-to.js";
 import { PageAccessFeedback, webPageGuard } from "../../features/auth/route-guard.js";
 
@@ -37,7 +37,7 @@ function AgentsPage() {
     >
       {(accountId) => (
         <AgentsWorkspace
-          key={`${apiUrl}:${accountId}`}
+          key={`${apiOrigin()}:${accountId}`}
           client={agentsClient}
           onSessionEnded={() =>
             void navigate({ to: "/login", search: { returnTo: "/agents" }, replace: true })
@@ -45,15 +45,15 @@ function AgentsPage() {
           groups={agentsClient.conversations}
           spaceManagement={agentsClient.spaces}
           accountApprovalSettings={agentsClient.approvals}
-          invitationOrigin={webUrl}
+          invitationOrigin={webOrigin()}
           accountId={accountId}
-          origin={apiUrl}
+          origin={apiOrigin()}
           {...selection}
           composerReference={
             selection.pageRef && selection.spaceId
               ? {
                   id: selection.pageRef,
-                  text: `[${pageCopy("title")}](${apiUrl}/page-content/member/${encodeURIComponent(selection.spaceId)}/${encodeURIComponent(selection.pageRef)})`,
+                  text: `[${pageCopy("title")}](${apiOrigin()}/page-content/member/${encodeURIComponent(selection.spaceId)}/${encodeURIComponent(selection.pageRef)})`,
                 }
               : undefined
           }

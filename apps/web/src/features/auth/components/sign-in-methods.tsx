@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@raypx/ui/components/ui/button";
 import type { SocialProvider } from "@raypx/core/auth";
 import { useTranslations } from "../../../i18n.js";
-import { apiUrl, authClient, webUrl } from "../client.js";
+import { apiOrigin, authClient, webOrigin } from "../client.js";
 
 const providers = ["google", "github"] as const;
 const names = { google: "Google", github: "GitHub" } as const;
@@ -26,7 +26,7 @@ export function SignInMethods({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const methods = useQuery({
-    queryKey: ["sign-in-methods", apiUrl, accountId],
+    queryKey: ["sign-in-methods", apiOrigin(), accountId],
     retry: false,
     queryFn: async ({ signal }) => {
       const options = { signal, cache: "no-store" as const };
@@ -114,8 +114,8 @@ export function SignInMethods({
                       () =>
                         authClient.linkSocial({
                           provider,
-                          callbackURL: `${webUrl}${settings}`,
-                          errorCallbackURL: `${webUrl}${settings}`,
+                          callbackURL: `${webOrigin()}${settings}`,
+                          errorCallbackURL: `${webOrigin()}${settings}`,
                         }),
                       false,
                     )

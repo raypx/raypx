@@ -32,7 +32,9 @@ if (import.meta.main) {
     : resolve(import.meta.dirname, "../../dist/client");
   const options = {
     browserPreview: directory === resolve(import.meta.dirname, "../../artifacts/browser/client"),
-    ...(process.env.VITE_API_URL ? { apiOrigin: process.env.VITE_API_URL } : {}),
+    ...(process.env.VITE_DESKTOP_PREVIEW_API_URL
+      ? { apiOrigin: process.env.VITE_DESKTOP_PREVIEW_API_URL }
+      : {}),
   };
   let count = 0;
   for await (const file of new Bun.Glob("**/*.html").scan({ cwd: directory, absolute: true })) {
