@@ -151,7 +151,7 @@ it("keeps credentials out of streamed model events and results", async () => {
   expect(client.stream.mock.calls[0]?.[2]).toMatchObject({
     apiKey: credential,
     env: {},
-    timeoutMs: 60_000,
+    timeoutMode: "stream-idle",
   });
   expect(client.close).toHaveBeenCalled();
   transport.close();

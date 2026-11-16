@@ -1,5 +1,10 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { fauxAssistantMessage, fauxProvider, fauxToolCall } from "@earendil-works/pi-ai";
+import {
+  createAssistantMessageEventStream,
+  fauxAssistantMessage,
+  fauxProvider,
+  fauxToolCall,
+} from "@earendil-works/pi-ai";
 import {
   AiError,
   createAiClient,
@@ -11,6 +16,7 @@ import {
 const clients: AiClient[] = [];
 afterEach(() => {
   for (const client of clients.splice(0)) client.close();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 const context: Context = { messages: [{ role: "user", content: "Hello", timestamp: 0 }] };
@@ -19,6 +25,19 @@ function fixture() {
   const client = createAiClient({ providers: [faux.provider] });
   clients.push(client);
   return { client, faux, selection: { provider: "test", model: "model" } };
+}
+
+function idleStreamFixture() {
+  vi.useFakeTimers();
+  const { client, faux, selection } = fixture();
+  const upstream = createAssistantMessageEventStream();
+  const dispatch = vi.spyOn(faux.provider, "streamSimple").mockReturnValue(upstream);
+  const run = new AbortController();
+  const stream = client.stream(selection, context, {
+    signal: run.signal,
+    timeoutMode: "stream-idle",
+  });
+  return { dispatch, run, stream, upstream };
 }
 
 it("lists default catalogs offline without resolving credentials", () => {
@@ -127,6 +146,71 @@ it.each(["abort", "timeout", "close"])("ends a stalled provider promptly on %s",
   await expect(result).rejects.toMatchObject({
     code: action === "timeout" ? "AI_TIMEOUT" : "AI_ABORTED",
   });
+});
+
+it("allows a slow start and renews the deadline on text, reasoning and tool argument deltas", async () => {
+  const { dispatch, stream, upstream } = idleStreamFixture();
+  const types: string[] = [];
+  const consume = (async () => {
+    for await (const event of stream) types.push(event.type);
+  })();
+  const partial = fauxAssistantMessage("Done");
+  await vi.advanceTimersByTimeAsync(90_000);
+  upstream.push({ type: "text_delta", contentIndex: 0, delta: "Done", partial });
+  await vi.advanceTimersByTimeAsync(50_000);
+  upstream.push({ type: "thinking_delta", contentIndex: 1, delta: "plan", partial });
+  await vi.advanceTimersByTimeAsync(50_000);
+  upstream.push({ type: "toolcall_delta", contentIndex: 2, delta: "{}", partial });
+  await vi.advanceTimersByTimeAsync(50_000);
+  upstream.push({ type: "done", reason: "stop", message: partial });
+  upstream.end();
+
+  await consume;
+  await expect(stream.result()).resolves.toMatchObject({ stopReason: "stop" });
+  expect(types).toEqual(["text_delta", "thinking_delta", "toolcall_delta", "done"]);
+  expect(dispatch.mock.calls[0]?.[2]?.timeoutMs).toBeUndefined();
+});
+
+it.each([
+  { progress: false, quietMs: 120_000 },
+  { progress: true, quietMs: 60_000 },
+])(
+  "times out an idle response with progress=$progress even without an iterator",
+  async ({ progress, quietMs }) => {
+    const { dispatch, stream, upstream } = idleStreamFixture();
+    const result = stream.result().catch((error: unknown) => error);
+    const partial = fauxAssistantMessage("");
+    if (progress) {
+      await vi.advanceTimersByTimeAsync(90_000);
+      upstream.push({ type: "toolcall_delta", contentIndex: 0, delta: "{", partial });
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    await vi.advanceTimersByTimeAsync(quietMs - 1);
+    upstream.push({ type: "text_delta", contentIndex: 1, delta: "", partial });
+    const signal = dispatch.mock.calls[0]?.[2]?.signal;
+    expect(signal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(signal?.aborted).toBe(true);
+    expect(await result).toMatchObject({ code: "AI_TIMEOUT" });
+  },
+);
+
+it("aborts a stream on the Run signal even while progress keeps it active", async () => {
+  const { dispatch, run, stream, upstream } = idleStreamFixture();
+  const result = stream.result().catch((error: unknown) => error);
+  await vi.advanceTimersByTimeAsync(90_000);
+  upstream.push({
+    type: "thinking_delta",
+    contentIndex: 0,
+    delta: "plan",
+    partial: fauxAssistantMessage(""),
+  });
+  await vi.advanceTimersByTimeAsync(50_000);
+  const signal = dispatch.mock.calls[0]?.[2]?.signal;
+  expect(signal?.aborted).toBe(false);
+  run.abort();
+  expect(await result).toMatchObject({ code: "AI_ABORTED" });
+  expect(signal?.aborted).toBe(true);
 });
 
 it("aborts upstream work when a stream consumer stops early", async () => {
