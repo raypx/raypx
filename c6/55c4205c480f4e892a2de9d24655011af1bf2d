@@ -1,0 +1,25 @@
+e2e/tests/helpers/browser-fixture.ts
+  s_7f9362525d805b::t_b23a9340841e31 22-27
+  s_7f9362525d805b::t_2493f37fe9c9cc 28-30
+apps/desktop/src/lib/connection.ts
+  s_7f9362525d805b::t_b23a9340841e31 1,7
+e2e/tests/helpers/account-fixture.ts
+  s_7f9362525d805b::t_b23a9340841e31 53-58
+  s_7f9362525d805b::t_e79d0865459fc6 59-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c655c4205c480f4e892a2de9d24655011af1bf2d",
+  "prompts": {},
+  "sessions": {
+    "s_7f9362525d805b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e2-b18c-79c0-acca-50ae949d3042",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
