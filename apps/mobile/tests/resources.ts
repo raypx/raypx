@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import { spaceIdSchema, spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
 import { agentIdSchema } from "@raypx/core/agents";
-import { pageSchema } from "@raypx/core/pages";
+import { pageListItemSchema } from "@raypx/core/pages";
 import { skillSchema, type SkillAvailability } from "@raypx/core/skills";
 import { mcpServerSchema } from "@raypx/core/mcp-servers";
 import { openApiServerSchema } from "@raypx/core/openapi-servers";
@@ -10,7 +10,7 @@ import type { MobileResourcesController } from "../src/resources/controllers.js"
 const date = "2026-11-14T00:00:00.000Z";
 export const spaceId = spaceIdSchema.parse("space-one");
 export const agentId = agentIdSchema.parse("agent-one");
-export const page = pageSchema.parse({
+export const page = pageListItemSchema.parse({
   id: "page-one",
   spaceId,
   agentId: null,
@@ -19,6 +19,7 @@ export const page = pageSchema.parse({
   version: 2,
   createdAt: date,
   updatedAt: date,
+  author: { kind: "member", accountId: "member" },
 });
 export const skill = skillSchema.parse({
   id: "skill-one",

@@ -1,15 +1,22 @@
 import { useLocale } from "@raypx/i18n/browser";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
 import type { AgentId } from "@raypx/core/agents";
-import type { PageId, PageVersion } from "@raypx/core/pages";
+import type { PageId, PageListItem, PageVersion } from "@raypx/core/pages";
 import type { SpaceEvent, SpaceId } from "@raypx/core/spaces";
-import { ShellToolbar } from "@raypx/blocks/shell";
+import { ShellActions, ShellToolbar } from "@raypx/blocks/shell";
+import { Alert, AlertAction, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { EmptyState } from "@raypx/ui/empty-state";
+import { ChevronRightIcon } from "@raypx/icons/chevron-right";
+import { CodeFolderIcon } from "@raypx/icons/code-folder";
 import { FileTextIcon } from "@raypx/icons/file-text";
+import { PlusIcon } from "@raypx/icons/plus";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TooltipProvider } from "@raypx/ui/components/ui/tooltip";
 import { useConfirmation } from "@raypx/ui/confirmation";
+import { cn } from "@raypx/ui/lib/utils";
 import { PageForm } from "./page-form.js";
 import { PageDetail } from "./detail.js";
 import { useTranslations } from "./i18n.js";
@@ -43,6 +50,15 @@ export function PagesWorkspace(props: PagesWorkspaceProps) {
   return <PagesSession key={props.spaceId} {...props} />;
 }
 
+export function PagesWorkspaceLoading() {
+  const t = useTranslations("pages");
+  return (
+    <PageDirectoryFrame>
+      <PageListLoading label={t("loading")} />
+    </PageDirectoryFrame>
+  );
+}
+
 function PagesSession({
   spaceId,
   port,
@@ -57,8 +73,7 @@ function PagesSession({
   subscribe,
 }: PagesWorkspaceProps) {
   const t = useTranslations("pages");
-  const locale = useLocale();
-  const [rows, setRows] = useState<PageVersion[]>([]);
+  const [rows, setRows] = useState<PageListItem[]>([]);
   const [selected, setSelected] = useState<PageId | null>(initialPageId ?? null);
   const [editor, setEditor] = useState<PageEditorState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,10 +100,8 @@ function PagesSession({
     const generation = ++listGeneration.current;
     try {
       const pages = await port.list({ spaceId });
-      // The list contract omits authors. Current-version reads provide the bounded attribution.
-      const versions = await Promise.all(pages.map((page) => port.get({ spaceId, id: page.id })));
       if (generation === listGeneration.current) {
-        setRows(versions);
+        setRows(pages);
         setFailed(false);
       }
     } catch {
@@ -227,7 +240,9 @@ function PagesSession({
       if (preserveDraft) return { ...current, current: page };
       return beginPageEdit(page);
     });
-    setRows((current) => [page, ...current.filter((row) => row.id !== page.id)]);
+    const { body: _body, reason: _reason, author, ...metadata } = page;
+    const row = { ...metadata, author: { kind: author.kind, accountId: author.accountId } };
+    setRows((current) => [row, ...current.filter((entry) => entry.id !== page.id)]);
   }
   const visibleEditor = !missing && editor?.current.id === selected ? editor : null;
   if (selected)
@@ -286,100 +301,235 @@ function PagesSession({
     );
   return (
     <TooltipProvider escapeKeyBubbles>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
-        <ShellToolbar>
-          <h1 className="truncate text-2xl font-medium">{t("title")}</h1>
-        </ShellToolbar>
-        <div className="flex justify-end">
-          <Button
-            ref={createButton}
-            onClick={() => {
-              creatingOpen.current = true;
-              setCreating(true);
-            }}
-          >
-            {t("newPage")}
-          </Button>
-        </div>
-        {loading && <LoadingState label={t("loading")} />}
+      <PageDirectoryFrame
+        createButton={createButton}
+        onCreate={() => {
+          creatingOpen.current = true;
+          setCreating(true);
+        }}
+      >
+        {loading && rows.length === 0 && <PageListLoading label={t("loading")} />}
         {failed && (
-          <div role="alert" className="flex flex-wrap items-center gap-2">
-            <p>{t("error")}</p>
-            <Button variant="outline" onClick={() => void refreshList()}>
-              {t("retry")}
-            </Button>
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{t("error")}</AlertDescription>
+            <AlertAction>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setFailed(false);
+                  setLoading(true);
+                  void refreshList();
+                }}
+              >
+                {t("retry")}
+              </Button>
+            </AlertAction>
+          </Alert>
         )}
         {!loading && !failed && rows.length === 0 && (
           <EmptyState title={t("empty")} icon={<FileTextIcon aria-hidden="true" />} />
         )}
-        <ul className="flex min-w-0 flex-col divide-y">
-          {rows.map((page) => {
-            const maintainer =
-              agents.find((agent) => agent.id === page.agentId)?.name ??
-              (page.agentId ? t("unknownAgent") : t("noAgent"));
-            const author = accountNames?.[page.author.accountId] ?? t("member");
-            return (
-              <li key={page.id}>
-                <Button
-                  variant="ghost"
-                  className="h-auto w-full min-w-0 flex-col items-start gap-2 py-4 text-left"
-                  onClick={() => void select(page.id)}
-                >
-                  <span className="w-full truncate font-medium" title={page.title}>
-                    {page.title}
-                  </span>
-                  <span className="flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span>{page.kind === "document" ? t("document") : t("html")}</span>
-                    <span className="max-w-full truncate">
-                      {t("maintainer")}: {maintainer}
-                    </span>
-                    <span>
-                      {t("updated")}:{" "}
-                      <time
-                        dateTime={page.updatedAt}
-                        title={new Date(page.updatedAt).toLocaleString(locale)}
-                      >
-                        {new Date(page.updatedAt).toLocaleString(locale, {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
-                      </time>
-                    </span>
-                    <span className="max-w-full truncate">
-                      {t("updatedBy")}:{" "}
-                      {page.author.kind === "run" ? t("agentAuthor", { name: author }) : author}
-                    </span>
-                  </span>
-                </Button>
-              </li>
-            );
-          })}
-        </ul>
-        {creating && (
-          <PageForm
-            agents={agents}
-            finalFocus={createButton}
-            onClose={() => {
-              creatingOpen.current = false;
-              setCreating(false);
-            }}
-            onSave={async (page) => {
-              const result = await port.create({ spaceId, page });
-              if (!creatingOpen.current) {
-                void refreshList();
-                return;
-              }
-              creatingOpen.current = false;
-              changed(result);
-              setCreating(false);
-              setSelected(result.id);
-              onSelectPage?.(result.id);
-            }}
-          />
+        {rows.length > 0 && (
+          <ul aria-label={t("title")} className={pageListSurface}>
+            {rows.map((page) => (
+              <PageListRow
+                key={page.id}
+                page={page}
+                maintainer={agents.find((agent) => agent.id === page.agentId)?.name}
+                author={accountNames?.[page.author.accountId]}
+                onOpen={() => void select(page.id)}
+              />
+            ))}
+          </ul>
         )}
-        {dialog}
-      </div>
+      </PageDirectoryFrame>
+      {creating && (
+        <PageForm
+          agents={agents}
+          finalFocus={createButton}
+          onClose={() => {
+            creatingOpen.current = false;
+            setCreating(false);
+          }}
+          onSave={async (page) => {
+            const result = await port.create({ spaceId, page });
+            if (!creatingOpen.current) {
+              void refreshList();
+              return;
+            }
+            creatingOpen.current = false;
+            changed(result);
+            setCreating(false);
+            setSelected(result.id);
+            onSelectPage?.(result.id);
+          }}
+        />
+      )}
+      {dialog}
     </TooltipProvider>
+  );
+}
+
+function PageDirectoryFrame({
+  createButton,
+  onCreate,
+  children,
+}: {
+  createButton?: Ref<HTMLButtonElement>;
+  onCreate?: () => void;
+  children: ReactNode;
+}) {
+  const t = useTranslations("pages");
+  return (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <ShellToolbar>
+        <h1 className="min-w-0 truncate text-sm font-semibold text-foreground">{t("title")}</h1>
+      </ShellToolbar>
+      <ShellActions>
+        <Button
+          ref={createButton}
+          size="sm"
+          className="pointer-coarse:min-h-11"
+          disabled={!onCreate}
+          onClick={onCreate}
+        >
+          <PlusIcon data-icon="inline-start" aria-hidden="true" />
+          {t("newPage")}
+        </Button>
+      </ShellActions>
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex w-full min-w-0 max-w-5xl flex-col gap-3 px-3 py-3 sm:px-5 sm:py-5">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const pageListSurface =
+  "@container/pages min-w-0 divide-y divide-border rounded-xl border border-border bg-surface-panel";
+const pageRow = {
+  item: "px-1 py-1 @lg/pages:px-2",
+  grid: "grid h-auto w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-start gap-x-3 gap-y-1 px-2 py-2.5 text-left @lg/pages:grid-cols-[auto_minmax(0,1fr)_auto_auto] @lg/pages:px-3",
+  icon: "col-start-1 row-span-2 row-start-1 size-9 self-start rounded-lg @lg/pages:row-span-1 @lg/pages:self-center",
+  identity: "col-start-2 row-start-1 flex min-w-0 flex-col gap-1.5",
+  details:
+    "flex min-w-0 flex-col items-start gap-1 @lg/pages:flex-row @lg/pages:items-center @lg/pages:gap-2.5",
+  updated: "col-start-2 row-start-2 min-w-0 @lg/pages:col-start-3 @lg/pages:row-start-1",
+  chevron: "col-start-3 row-span-2 row-start-1 @lg/pages:col-start-4 @lg/pages:row-span-1",
+};
+
+function PageListLoading({ label }: { label: string }) {
+  return (
+    <div role="status">
+      <span className="sr-only">{label}</span>
+      <ul
+        aria-hidden="true"
+        className={cn(pageListSurface, "motion-reduce:[&_[data-slot=skeleton]]:animate-none")}
+      >
+        {["w-36", "w-48", "w-28"].map((width) => (
+          <li key={width} className={pageRow.item}>
+            <div className={cn(pageRow.grid, "border border-transparent")}>
+              <Skeleton className={pageRow.icon} />
+              <div className={pageRow.identity}>
+                <div className="flex h-5 items-center">
+                  <Skeleton className={cn("h-3.5 max-w-full", width)} />
+                </div>
+                <div className={pageRow.details}>
+                  <Skeleton className="h-5 w-14 rounded-full" />
+                  <div className="flex h-4 w-28 max-w-full items-center">
+                    <Skeleton className="h-2.5 w-full" />
+                  </div>
+                </div>
+              </div>
+              <div className={cn(pageRow.updated, "flex h-4 items-center")}>
+                <Skeleton className="h-2.5 w-28 max-w-full" />
+              </div>
+              <div className={cn(pageRow.chevron, "size-4")} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const pageKindIcon = { document: FileTextIcon, html: CodeFolderIcon };
+
+function PageListRow({
+  page,
+  maintainer,
+  author,
+  onOpen,
+}: {
+  page: PageListItem;
+  maintainer: string | undefined;
+  author: string | undefined;
+  onOpen: () => void;
+}) {
+  const t = useTranslations("pages");
+  const locale = useLocale();
+  const id = useId();
+  const KindIcon = pageKindIcon[page.kind];
+  const authorName = author ?? t("member");
+  const attributedAuthor =
+    page.author.kind === "run" ? t("agentAuthor", { name: authorName }) : authorName;
+  const maintainerName = maintainer ?? t("unknownAgent");
+  const updatedAt = new Date(page.updatedAt);
+  return (
+    <li className={pageRow.item}>
+      <Button
+        variant="ghost"
+        className={pageRow.grid}
+        aria-labelledby={`${id}-title`}
+        aria-describedby={`${id}-details ${id}-updated`}
+        onClick={onOpen}
+      >
+        <span
+          className={cn(pageRow.icon, "grid place-items-center bg-muted text-muted-foreground")}
+        >
+          <KindIcon aria-hidden="true" />
+        </span>
+        <span className={pageRow.identity}>
+          <span id={`${id}-title`} className="truncate" title={page.title}>
+            {page.title}
+          </span>
+          <span
+            id={`${id}-details`}
+            className={cn(pageRow.details, "text-xs font-normal text-muted-foreground")}
+          >
+            <Badge variant="secondary">{t(page.kind)}</Badge>
+            {page.agentId && (
+              <span
+                className="sr-only @lg/pages:not-sr-only @lg/pages:truncate"
+                title={maintainerName}
+              >
+                {t("maintainer")}: {maintainerName}
+              </span>
+            )}
+            <span className="max-w-full truncate" title={attributedAuthor}>
+              {t("updatedBy")}: {attributedAuthor}
+            </span>
+          </span>
+        </span>
+        <span
+          id={`${id}-updated`}
+          className={cn(
+            pageRow.updated,
+            "truncate text-xs font-normal text-muted-foreground tabular-nums",
+          )}
+        >
+          <span className="sr-only">{t("updated")}: </span>
+          <time dateTime={page.updatedAt} title={updatedAt.toLocaleString(locale)}>
+            {updatedAt.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}
+          </time>
+        </span>
+        <ChevronRightIcon
+          aria-hidden="true"
+          className={cn(pageRow.chevron, "text-muted-foreground")}
+        />
+      </Button>
+    </li>
   );
 }

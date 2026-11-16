@@ -17,6 +17,8 @@ Device connector protocol 2 requires ephemeral protected environment/stdin deliv
 The renderer contract adds messageAttachments upload/remove/download and
 notifications list/read/viewed. Computer read requests accept an optional device
 selector. Connector member-read frames are read-only and independent of Runs.
+`pages.list` returns bounded metadata with current author attribution. Page
+bodies and full version metadata remain on detail operations.
 
 Public configuration includes non-secret bootstrap/setupTokenRequired/mailConfigured booleans. Web-only configuration.testMail sends to the acting administrator; admin.issuePasswordReset requires users.password.reset and durable user.password.reset-link audit. The reset response is a one-time bearer secret, never cache or log it.
 

@@ -166,6 +166,7 @@ export interface AgentsWorkspaceProps {
         subscribe: (listener: (event: SpaceEvent) => void) => () => void;
       }) => ReactNode)
     | undefined;
+  workspaceLoading?: ReactNode;
   onSessionEnded?: (() => void) | undefined;
   onOpenPage?: ((id: string) => void) | undefined;
   composerReference?: { id: string; text: string } | undefined;
@@ -200,6 +201,7 @@ function AgentsWorkspaceContents({
   nativeDeviceConfirmation,
   onSessionEnded,
   renderWorkspace,
+  workspaceLoading,
   onOpenPage,
   composerReference,
   spaceManagement = client.spaceManagement,
@@ -1489,13 +1491,14 @@ function AgentsWorkspaceContents({
       )}
       {loading &&
         !failed &&
-        (loadingConversation ? (
-          <ConversationLoading label={t("loading")} />
-        ) : (
-          <div className={conversationColumn}>
-            <LoadingState label={t("loading")} />
-          </div>
-        ))}
+        (workspaceLoading ??
+          (loadingConversation ? (
+            <ConversationLoading label={t("loading")} />
+          ) : (
+            <div className={conversationColumn}>
+              <LoadingState label={t("loading")} />
+            </div>
+          )))}
       {client.protectedInputs && page.spaceId && (renderWorkspace || !selected) && (
         <ProtectedInputs
           key={page.spaceId}

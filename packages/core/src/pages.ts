@@ -46,6 +46,10 @@ export const pageSchema = z.strictObject({
   updatedAt: z.iso.datetime(),
 });
 export type Page = z.infer<typeof pageSchema>;
+export const pageListItemSchema = pageSchema.extend({
+  author: pageAuthorSchema.pick({ kind: true, accountId: true }),
+});
+export type PageListItem = z.infer<typeof pageListItemSchema>;
 export const pageVersionSchema = pageSchema.extend({
   body: pageBodySchema,
   author: pageAuthorSchema,

@@ -1,1 +1,5 @@
-export { PagesWorkspace, type PagesWorkspaceProps } from "./client/workspace.js";
+export {
+  PagesWorkspace,
+  PagesWorkspaceLoading,
+  type PagesWorkspaceProps,
+} from "./client/workspace.js";

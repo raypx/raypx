@@ -4,7 +4,7 @@ import { agentIdSchema } from "@raypx/core/agents";
 import {
   pageIdSchema,
   pageInputSchema,
-  pageSchema,
+  pageListItemSchema,
   pageVersionSchema,
   pageShareLinkSchema,
 } from "@raypx/core/pages";
@@ -24,7 +24,7 @@ export const pagesContract = {
         limit: z.number().int().min(1).max(100).default(100),
       }),
     )
-    .output(z.array(pageSchema)),
+    .output(z.array(pageListItemSchema).max(100)),
   get: session
     .input(selection.extend({ version: z.number().int().positive().optional() }))
     .output(pageVersionSchema),

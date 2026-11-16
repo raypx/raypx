@@ -4,7 +4,7 @@ import { parseAgentSelection } from "@raypx/agents/model";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { pageIdSchema } from "@raypx/core/pages";
 import type { PagesClientPort } from "@raypx/pages/model";
-import { PagesWorkspace } from "@raypx/pages/client";
+import { PagesWorkspace, PagesWorkspaceLoading } from "@raypx/pages/client";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
 import { agentsClient } from "../../features/agents/client.js";
 import { apiOrigin } from "../../features/auth/client.js";
@@ -61,6 +61,7 @@ function SignedInPages({ accountId }: { accountId: string }) {
           void navigate({ to: "/agents", search: parseAgentSelection(next) });
         else void navigate({ search: { spaceId: spaceIdSchema.parse(next.spaceId) } });
       }}
+      workspaceLoading={selection.pageId ? undefined : <PagesWorkspaceLoading />}
       renderWorkspace={({ spaceId, agents, subscribe, accountNames }) => (
         <PagesWorkspace
           key={spaceId}

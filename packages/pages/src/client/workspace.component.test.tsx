@@ -64,7 +64,10 @@ function mount(
   language: "en" | "zh" = "en",
   subscribe?: (listener: (event: SpaceEvent) => void) => () => void,
   previewOptions?: Partial<
-    Pick<PagesWorkspaceProps, "canEmbedAuthenticatedDocuments" | "onOpenWebPreview">
+    Pick<
+      PagesWorkspaceProps,
+      "canEmbedAuthenticatedDocuments" | "onOpenWebPreview" | "initialPageId"
+    >
   >,
 ) {
   return render(
@@ -81,6 +84,29 @@ function mount(
     </BrowserLanguageProvider>,
   );
 }
+it("shows the directory without document reads and fetches the body when a Page opens", async () => {
+  const { port } = fixture();
+  let resolveList!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    resolveList = resolve;
+  });
+  vi.mocked(port.list).mockImplementation(async () => {
+    await pending;
+    return [page];
+  });
+  mount(port, "en", undefined, { initialPageId: null });
+  expect(screen.getByRole("status")).toHaveTextContent(en.pages.loading);
+  const create = screen.getByRole("button", { name: en.pages.newPage });
+  resolveList();
+  const row = await screen.findByRole("button", { name: page.title });
+  expect(row).toHaveAccessibleDescription(/Markdown document.*Updated by: Member/);
+  expect(screen.getByRole("button", { name: en.pages.newPage })).toBe(create);
+  expect(screen.queryByRole("status")).toBeNull();
+  expect(port.get).not.toHaveBeenCalled();
+  fireEvent.click(row);
+  await screen.findByRole("heading", { name: page.title });
+  expect(port.get).toHaveBeenCalledExactlyOnceWith({ spaceId: page.spaceId, id: page.id });
+});
 it.each(["en", "zh"] as const)(
   "renders only the sandboxed backend frame and edits source in %s",
   async (language) => {

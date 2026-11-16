@@ -55,7 +55,11 @@ const page = pageVersionSchema.parse({
   createdAt: now,
   updatedAt: now,
 });
-const { body: _pageBody, author: _pageAuthor, reason: _pageReason, ...pageMetadata } = page;
+const { body: _pageBody, author: pageAuthor, reason: _pageReason, ...pageMetadata } = page;
+const listedPage = {
+  ...pageMetadata,
+  author: { kind: pageAuthor.kind, accountId: pageAuthor.accountId },
+};
 const { body: _versionBody, ...versionMetadata } = page;
 const shareLink = pageShareLinkSchema.parse({
   id: "share-monthly-report",
@@ -125,7 +129,7 @@ function fixture() {
     list: vi.fn<PagesService["list"]>(async (current, input) => {
       requireScope(current);
       scopedPageList.parse(input);
-      return [pageMetadata];
+      return [listedPage];
     }),
     get: vi.fn<PagesService["get"]>(async (current, id, version) => {
       requireScope(current);
@@ -331,7 +335,7 @@ const pageCases: ProcedureCase[] = [
   {
     name: "list",
     request: (client) => client.pages.list({ spaceId, agentId, limit: 25 }),
-    expected: [pageMetadata],
+    expected: [listedPage],
     verify: (f) => expect(f.pages.list).toHaveBeenCalledWith(f.scope, { agentId, limit: 25 }),
   },
   {

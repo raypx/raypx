@@ -23,6 +23,9 @@ PostgreSQL requires a disposable `*_test` database.
 one-time link memory. `/client` renders the Space Pages directory and sandboxed
 backend document frames; it never injects Page HTML. Web and Desktop inject the
 session RPC port, Space events, account labels and conversation navigation.
+The directory gets current author attribution in its bounded list response and
+reads document bodies only for an opened Page. Its loading view shares the
+toolbar, list surface and responsive row geometry with the directory.
 A missing selected Page shows the translated deleted state and a return to the list.
 The mount must supply `canEmbedAuthenticatedDocuments`: Web passes true and
 Desktop passes false in both browser and packaged builds. Desktop offers a Web

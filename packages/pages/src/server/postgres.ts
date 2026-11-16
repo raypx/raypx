@@ -16,6 +16,7 @@ import {
   MAX_PAGES_PER_SPACE,
   PageError,
   pageSchema,
+  pageListItemSchema,
   pageShareLinkSchema,
   pageVersionSchema,
   type PageId,
@@ -211,8 +212,16 @@ export function createPagesRepository(db: Database): PagesRepository {
   return {
     async list(scope, input) {
       const rows = await db
-        .select()
+        .select({ page: pages, author: pageVersions.author })
         .from(pages)
+        .innerJoin(
+          pageVersions,
+          and(
+            eq(pageVersions.spaceId, pages.spaceId),
+            eq(pageVersions.pageId, pages.id),
+            eq(pageVersions.version, pages.version),
+          ),
+        )
         .where(
           and(
             eq(pages.spaceId, scope.spaceId),
@@ -221,7 +230,12 @@ export function createPagesRepository(db: Database): PagesRepository {
         )
         .orderBy(desc(pages.updatedAt), asc(pages.id))
         .limit(input.limit);
-      return rows.map(pageView);
+      return rows.map(({ page, author }) =>
+        pageListItemSchema.parse({
+          ...pageView(page),
+          author: { kind: author.kind, accountId: author.accountId },
+        }),
+      );
     },
     async get(scope, id, version) {
       const [row] = await db

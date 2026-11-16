@@ -1,5 +1,12 @@
 import type { AgentId } from "@raypx/core/agents";
-import type { Page, PageId, PageInput, PageShareLink, PageVersion } from "@raypx/core/pages";
+import type {
+  Page,
+  PageId,
+  PageInput,
+  PageListItem,
+  PageShareLink,
+  PageVersion,
+} from "@raypx/core/pages";
 import type { SpaceId } from "@raypx/core/spaces";
 
 interface Selection {
@@ -12,7 +19,10 @@ interface ExpectedSelection extends Selection {
 export type PageVersionSummary = Omit<PageVersion, "body">;
 /** The backend resolves fresh Space membership on every request. */
 export interface PagesClientPort {
-  list(this: void, input: { spaceId: SpaceId; agentId?: AgentId; limit?: number }): Promise<Page[]>;
+  list(
+    this: void,
+    input: { spaceId: SpaceId; agentId?: AgentId; limit?: number },
+  ): Promise<PageListItem[]>;
   get(this: void, input: Selection & { version?: number }): Promise<PageVersion>;
   create(this: void, input: { spaceId: SpaceId; page: PageInput }): Promise<PageVersion>;
   update(this: void, input: ExpectedSelection & { body: string }): Promise<PageVersion>;

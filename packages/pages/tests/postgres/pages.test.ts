@@ -88,6 +88,20 @@ it("creates immutable versions with CAS conflict, rename, restore, bounds and or
     author: { kind: "member", accountId: f.owner, runId: null },
   });
   expect((await service.get(f.a, first.id, 2)).body).toBe("Second");
+  expect(await service.list(f.a, { agentId: f.agentId, limit: 1 })).toEqual([
+    {
+      id: first.id,
+      spaceId: f.a.spaceId,
+      agentId: f.agentId,
+      title: restored.title,
+      kind: restored.kind,
+      version: restored.version,
+      createdAt: first.createdAt,
+      updatedAt: restored.updatedAt,
+      author: { kind: "member", accountId: f.owner },
+    },
+  ]);
+  expect(await service.list(f.b, { limit: 1 })).toEqual([]);
   expect((await service.versions(f.a, first.id)).map((version) => version.version)).toEqual([
     4, 3, 2, 1,
   ]);

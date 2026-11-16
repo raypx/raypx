@@ -32,7 +32,9 @@ or invented notification data are stored. A last-used Agent preference is scoped
 origin, account and Space. The centered home composer uses the same device draft and
 idempotent-send controller without starting an invisible transcript. Sending opens
 that Agent conversation. `onOpenTools` and `onNewConversation` adapt app navigation;
-`renderWorkspace` keeps the directory around Pages. The conversation fills remaining
+`renderWorkspace` keeps the directory around Pages. `workspaceLoading` lets
+the owning feature render its loading view while Space selection resolves.
+The conversation fills remaining
 width with a centered reading column and floating composer. The sticky toolbar owns
 Conversation/Activity/Files text tabs and context actions; below 640px tabs occupy a
 second row. Replies are plain Markdown and member messages are compact bubbles.

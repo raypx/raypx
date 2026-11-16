@@ -1,5 +1,11 @@
 import type { AgentId } from "@raypx/core/agents";
-import type { Page, PageId, PageInput, PageShareLink, PageVersion } from "@raypx/core/pages";
+import type {
+  PageId,
+  PageInput,
+  PageListItem,
+  PageShareLink,
+  PageVersion,
+} from "@raypx/core/pages";
 import type { SpaceScope } from "@raypx/spaces/server";
 
 export interface PageActor {
@@ -24,7 +30,7 @@ export interface PageRunActor {
   execution: { conversationId: string; ownerId: string; fence: number };
 }
 export interface PagesRepository {
-  list(scope: SpaceScope, options: { agentId?: AgentId; limit: number }): Promise<Page[]>;
+  list(scope: SpaceScope, options: { agentId?: AgentId; limit: number }): Promise<PageListItem[]>;
   get(scope: SpaceScope, id: PageId, version?: number): Promise<PageVersion>;
   create(
     scope: SpaceScope,
@@ -78,7 +84,7 @@ export interface PagesRepository {
   resolveShare(tokenHash: string, now: Date): Promise<PageVersion | null>;
 }
 export interface PagesService {
-  list(scope: SpaceScope, options?: { agentId?: AgentId; limit?: number }): Promise<Page[]>;
+  list(scope: SpaceScope, options?: { agentId?: AgentId; limit?: number }): Promise<PageListItem[]>;
   get(scope: SpaceScope, id: PageId, version?: number): Promise<PageVersion>;
   create(scope: SpaceScope, input: PageInput, actor?: PageActor, id?: PageId): Promise<PageVersion>;
   update(

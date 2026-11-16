@@ -24,6 +24,7 @@ and contract consumer tests.
 
 `/conversation` owns attachment limits/metadata/delivery events. `/notifications`
 owns source keys and bounded member-feed projections; neither grants authority.
+`/pages` includes body-free list items with the current author kind and account.
 
 `/computers` owns additive lifecycle/screen availability reasons for resource
 admission and unsupported graphical runtimes. Frames remain transient untrusted
