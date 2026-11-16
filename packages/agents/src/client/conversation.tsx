@@ -960,7 +960,12 @@ function ConversationContents({
         {state.connection !== "live" &&
           state.error !== "load" &&
           !(state.loading && state.connection === "connecting") && (
-            <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+            <div
+              className={cn(
+                conversationColumn,
+                "flex shrink-0 items-center gap-1 text-xs text-muted-foreground",
+              )}
+            >
               <span role="status">{t(connectionKeys[state.connection])}</span>
               {state.connection === "reconnecting" && (
                 <IconButton
