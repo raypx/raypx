@@ -1,0 +1,44 @@
+packages/database/drizzle-foundation/20261116095643_add_e2b_computers/snapshot.json
+  s_e8793b91e4301c::t_cdb5a5f3d2c253 1-381
+apps/api/AGENTS.md
+  s_e8793b91e4301c::t_1c181dce82e8ba 43-44
+packages/database/drizzle-foundation/20261116095643_add_e2b_computers/migration.sql
+  s_e8793b91e4301c::t_cdb5a5f3d2c253 1-20
+packages/database/AGENTS.md
+  s_e8793b91e4301c::t_1c181dce82e8ba 108-110,204,214,216
+packages/database/src/baseline.test.ts
+  s_e8793b91e4301c::t_4777a07a8ea9eb 47-48
+  s_e8793b91e4301c::t_1c181dce82e8ba 22,49,55-56
+  s_e8793b91e4301c::t_49a365ef59516c 9,18-21,23-37,58
+  s_e8793b91e4301c::t_9f06a45532b1c1 11-17,44-46
+packages/database/drizzle-foundation/20261115004545_baseline/snapshot.json
+  s_e8793b91e4301c::t_cdb5a5f3d2c253 1-27625
+docs/architecture/domain.md
+  s_e8793b91e4301c::t_21c281332cdeca 82-83
+packages/database/drizzle-foundation/20261115004545_baseline/migration.sql
+  s_e8793b91e4301c::t_cdb5a5f3d2c253 1-1554
+apps/api/tests/postgres/node/startup-migrations.test.ts
+  s_e8793b91e4301c::t_1c181dce82e8ba 39
+docs/architecture/operations.md
+  s_e8793b91e4301c::t_21c281332cdeca 47-50,58,60
+docs/roadmap.md
+  s_e8793b91e4301c::t_21c281332cdeca 43-46
+docs/development/configuration.md
+  s_e8793b91e4301c::t_21c281332cdeca 11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5eb829c37fa4c7ef4a1ad10b34829b07b8a8a54e",
+  "prompts": {},
+  "sessions": {
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
