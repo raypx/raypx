@@ -44,6 +44,12 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
       c.header("x-request-id", requestId);
       c.header("x-raypx-service", "api");
       c.header("x-raypx-revision", process.env.RAYPX_BUILD_REVISION ?? "development");
+      if (
+        c.res.status === 429 &&
+        !c.res.headers.has("retry-after") &&
+        !c.res.headers.has("x-retry-after")
+      )
+        c.header("retry-after", "60");
       // CORS preflights and non-RPC requests finish here. The RPC plugin owns
       // matched and unmatched RPC requests, including their errors.
       if (!c.get("rpcLogged")) {
@@ -89,6 +95,7 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
         "X-Retry-After",
         "X-Raypx-Service",
         "X-Raypx-Revision",
+        "X-Raypx-State",
       ],
       // Every JSON RPC call is preflighted; let browsers reuse the answer for ten minutes.
       maxAge: 600,

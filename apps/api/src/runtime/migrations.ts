@@ -31,7 +31,9 @@ export async function migrateApiDatabase(
   } catch (error) {
     if (error instanceof MigrationError) throw error;
     // Driver errors can include connection details or SQL. Never expose them at startup.
-    throw new Error("API database migration failed. Check database availability and migrations.", { cause: error });
+    throw new Error("API database migration failed. Check database availability and migrations.", {
+      cause: error,
+    });
   } finally {
     if (directory) await rm(directory, { recursive: true, force: true });
   }

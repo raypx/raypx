@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export interface ValidationProcess {
+  pid?: number | undefined;
   exited: Promise<number>;
   alive: () => boolean;
   stop: () => Promise<void>;
@@ -77,6 +78,7 @@ export class Evidence {
       }
     };
     const value = {
+      pid: child.pid,
       exited,
       alive: () => active,
       async stop() {

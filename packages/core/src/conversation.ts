@@ -79,6 +79,8 @@ export const memberMessageInputSchema = z
 export type MemberMessageInput = z.infer<typeof memberMessageInputSchema>;
 export const messageSchema = z.strictObject({
   id: messageIdSchema,
+  /** Send reconciliation receipt, projected only to the originating member. */
+  idempotencyKey: z.string().min(1).max(128).optional(),
   spaceId: spaceIdSchema,
   conversationId: conversationIdSchema,
   sequence: eventSequenceSchema,

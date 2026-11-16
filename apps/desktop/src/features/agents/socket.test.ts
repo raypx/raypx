@@ -20,7 +20,10 @@ vi.mock("../../lib/desktop.js", () => ({
     },
   }),
 }));
-vi.mock("../auth/client.js", () => ({ apiUrl: "https://api.example.test" }));
+vi.mock("../auth/client.js", () => ({
+  apiUrl: "https://api.example.test",
+  desktopRecovery: { pause: vi.fn() },
+}));
 vi.mock("@raypx/agents/client", () => ({ createBrowserConversationSocket: mocks.browser }));
 import { conversationFeedSelectionSchema } from "@raypx/contracts/api";
 import { desktopConversationFeed, desktopConversationSocket } from "./socket.js";

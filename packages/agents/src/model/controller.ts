@@ -2,7 +2,7 @@ import { AttachmentsController, type MessageAttachmentsPort } from "./attachment
 import type { ConversationFeedFrame } from "@raypx/contracts/api";
 import type { AgentId } from "@raypx/core/agents";
 import { editMentionTokens, insertMention, mentionIds, type MentionToken } from "./mentions.js";
-import type { ConversationHistoryCursor, RunId } from "@raypx/core/conversation";
+import type { ConversationHistoryCursor, Message, RunId } from "@raypx/core/conversation";
 import type { ApprovalRequest, EffectiveApprovalMode } from "@raypx/core/approvals";
 import { ApprovalProjection, type ApprovalCardView } from "./approvals.js";
 import { ConversationState, type ConversationView } from "./conversation.js";
@@ -148,10 +148,22 @@ export class ConversationController {
     };
   };
   getSnapshot = () => this.view;
-  private update(patch: Partial<ConversationControllerView> = {}) {
+  private update(patch: Partial<ConversationControllerView> = {}, receipt?: Message) {
     if (this.disposed) return;
     const error = patch.error === null && this.storageUnavailable ? "storage" : patch.error;
     const state = this.state.getSnapshot();
+    const pending = this.view.pending;
+    const confirmsPending = (message: Message | undefined) =>
+      Boolean(
+        pending &&
+        message &&
+        message.spaceId === this.options.selection.spaceId &&
+        message.conversationId === this.options.selection.conversationId &&
+        message.author.kind === "member" &&
+        message.author.accountId === this.options.owner.accountId &&
+        message.idempotencyKey === pending.idempotencyKey,
+      );
+    const delivered = pending && (confirmsPending(receipt) || state.messages.some(confirmsPending));
     if (
       this.resolvedSummaries !== state.resolvedApprovals ||
       this.resolvedActivity !== state.toolActivity
@@ -174,7 +186,22 @@ export class ConversationController {
       cards: this.approvals.getSnapshot(),
       ...patch,
       ...(error !== undefined ? { error } : {}),
+      ...(delivered
+        ? {
+            pending: null,
+            sending: false,
+            sendCode: null,
+            steeringRunId: undefined,
+            draft: this.view.draft === pending.text ? "" : this.view.draft,
+            mentionTokens: this.view.draft === pending.text ? [] : this.view.mentionTokens,
+            error: this.storageUnavailable ? "storage" : null,
+          }
+        : {}),
     };
+    if (delivered) {
+      this.persist();
+      this.attachments?.sent(pending.attachmentIds ?? []);
+    }
     for (const listener of this.listeners) listener();
   }
   private persist(text = this.view.draft, pending = this.view.pending): boolean {
@@ -260,6 +287,15 @@ export class ConversationController {
           limit: CONVERSATION_HISTORY_PAGE_SIZE,
         });
         if (this.disposed || generation !== this.generation) return;
+        const pending = this.view.pending;
+        const receipt =
+          pending &&
+          recent.messages.find(
+            (message) =>
+              message.author.accountId === this.options.owner.accountId &&
+              message.idempotencyKey === pending.idempotencyKey,
+          );
+        if (receipt) this.update({}, receipt);
         let pages = [recent];
         let hasNewer = false;
         const messages = this.state.getSnapshot().messages;
@@ -617,6 +653,7 @@ export class ConversationController {
         (event.kind === "run.state" &&
           (event.state === "succeeded" || event.state === "failed" || event.state === "cancelled"));
       const applied = this.state.applyEvent(frame.entry, !this.view.history.hasNewer);
+      if (this.view.pending && frame.entry.message) this.update({}, frame.entry.message);
       if (applied === "snapshot-required") {
         void this.refreshSnapshot("snapshot-required");
         return;
@@ -876,6 +913,8 @@ export class ConversationController {
       this.attachments?.sent(pending.attachmentIds ?? []);
       return true;
     } catch (error) {
+      // Replay may have confirmed the receipt while its HTTP response was lost.
+      if (this.view.pending === null) return true;
       const code = sendFailureCode(error);
       if (code) {
         this.update({ sending: false, pending: null, sendCode: code, error: null });

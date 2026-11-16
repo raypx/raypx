@@ -2,12 +2,41 @@ import { defineMiddleware } from "nitro";
 import { getWebSocketHooks, setWebSocketHooks } from "crossws";
 import { CLIENT_IP_HEADER } from "../runtime/server.js";
 import { getBackendRuntime } from "../runtime/backend.js";
+import { isDraining } from "../runtime/draining.js";
 
 // Keep the terminal middleware's two-argument signature: H3 otherwise treats
 // an API 404 Response as fallthrough and replaces its body and security headers.
 export default defineMiddleware(async (event, _next) => {
   const request = event.req as Request & { ip?: string };
   const upgrade = request.headers.get("upgrade")?.toLowerCase() === "websocket";
+  const runtime = await getBackendRuntime();
+  if (isDraining()) {
+    const origin = request.headers.get("origin");
+    const response = Response.json(
+      { status: "updating" },
+      {
+        status: 503,
+        headers: {
+          "x-raypx-service": "api",
+          "x-raypx-state": "updating",
+          "x-raypx-revision": process.env.RAYPX_BUILD_REVISION ?? "development",
+          "retry-after": "3",
+          "cache-control": "no-store",
+          ...(origin && runtime.allowedOrigins.includes(origin)
+            ? {
+                "access-control-allow-origin": origin,
+                "access-control-allow-credentials": "true",
+                "access-control-expose-headers":
+                  "Retry-After, X-Raypx-Service, X-Raypx-State, X-Raypx-Revision",
+                vary: "Origin",
+              }
+            : {}),
+        },
+      },
+    );
+    if (upgrade) setWebSocketHooks(request, { upgrade: () => response });
+    return response;
+  }
   if (upgrade && !["/api/events", "/api/device/connect"].includes(new URL(request.url).pathname)) {
     const response = new Response(null, { status: 404, headers: { "x-raypx-service": "api" } });
     setWebSocketHooks(request, { upgrade: () => response });
@@ -15,7 +44,6 @@ export default defineMiddleware(async (event, _next) => {
   }
   // Replace any client-supplied value with the socket address resolved by the server.
   const headers = new Headers(request.headers);
-  const runtime = await getBackendRuntime();
   headers.delete(CLIENT_IP_HEADER);
   const ip = runtime.clientIp(request.ip, request.headers);
   if (ip) headers.set(CLIENT_IP_HEADER, ip);

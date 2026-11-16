@@ -581,3 +581,12 @@ It preserves mounted drafts and retries the existing public read automatically; 
 compatible response restores the workspace without a reload. This guard cannot
 retrofit an already deployed older client that predates it. Equal ingress versions
 do not prove equal releases; public revision smoke is the deployment check.
+
+The prepared local production smoke also terminates its API under an open workspace,
+counts background requests during the outage/focus events, restarts the same artifact
+and verifies draft recovery without reload. Its separate production HTTP test holds
+an admitted database-backed request across SIGTERM with an open SSE feed, verifies
+prompt retry-hinted stream closure, HTTP completion and a clean restart. It consumes
+prepared outputs, uses only the explicitly selected disposable database and owns every
+process it signals. This is loopback production-artifact acceptance; packaged Desktop
+and public HTTPS remain separate gates.

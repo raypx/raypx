@@ -16,6 +16,7 @@
     "test:coverage": "bun --bun vitest run --coverage",
     "build": "bun --bun vp build --config vite.app.config.ts",
     "test:postgres": "bun --bun vitest run --mode postgres",
+    "test:production": "bun --bun vitest run --mode production",
     "test:redis": "bun --bun vitest run --mode redis",
     "deployment:fixture:build": "bun --no-env-file build tests/fixtures/deployment.ts --target=bun --format=esm --minify --packages=bundle --env=disable"
   },

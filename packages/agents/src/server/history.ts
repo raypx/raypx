@@ -326,7 +326,7 @@ export async function readHistory(
         ? { agentIds: agentIds.map((a) => agentIdSchema.parse(a.id)) }
         : {}),
     },
-    messages: await Promise.all(rows.map((row) => message(tx, row))),
+    messages: await Promise.all(rows.map((row) => message(tx, row, scope.member.accountId))),
     runs: includedRuns.map(runView),
     ...(await readActiveRuns(tx, scope, id)),
     runsTruncated: runRows.length > 500,

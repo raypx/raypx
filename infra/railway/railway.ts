@@ -13,7 +13,7 @@ export default defineRailway((context) => {
   }
   const deployment = {
     restartPolicyMaxRetries: 3,
-    drainingSeconds: 15,
+    drainingSeconds: 30,
     overlapSeconds: 0,
   } as const;
   const replicas = { "asia-southeast1-eqsg3a": 1 };

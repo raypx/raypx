@@ -4,6 +4,7 @@ import type { ContractRouterClient } from "@orpc/contract";
 import type { apiContract } from "@raypx/contracts/api";
 
 export { isMissingProcedure } from "./response.js";
+export { OriginRecovery, originRecovery, existingOriginRecovery } from "./origin-recovery.js";
 
 export type ApiClient = ContractRouterClient<typeof apiContract>;
 export type ApiHeaders = Record<string, string | undefined>;

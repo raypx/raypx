@@ -431,6 +431,31 @@ describe("ConversationController", () => {
     expect(h.connections).toHaveLength(0);
     expect(h.controller.getSnapshot().cursor).toBe(0);
   });
+  it.each(["snapshot", "event"])(
+    "clears uncertain delivery from a matching %s receipt without resending",
+    async (source) => {
+      const h = harness();
+      await h.controller.start();
+      h.controller.setDraft("Hello 世界");
+      vi.mocked(h.port.send).mockRejectedValueOnce(new Error("response lost"));
+      await h.controller.send();
+      expect(h.controller.getSnapshot().pending).not.toBeNull();
+      const confirmed = { ...message(), idempotencyKey: "receipt-1" };
+      if (source === "snapshot") {
+        vi.mocked(h.port.snapshot).mockResolvedValueOnce(
+          snapshot({ messages: [confirmed], cursor: 1 }),
+        );
+        await h.controller.loadLatest();
+      } else {
+        const frame = messageEvent();
+        h.connections.at(-1)!.onFrame({ ...frame, entry: { ...frame.entry, message: confirmed } });
+      }
+      expect(h.controller.getSnapshot()).toMatchObject({ pending: null, draft: "", error: null });
+      expect(h.port.send).toHaveBeenCalledOnce();
+      h.controller.dispose();
+    },
+  );
+
   it("persists a frozen idempotency receipt, restores without sending, and retries deliberately", async () => {
     const h = harness();
     h.controller.setDraft("Hello 世界");

@@ -118,11 +118,16 @@ export class DesktopApi {
       throw invalidRequest();
     const url = new URL(input.path, this.cookies.origin);
     const rpc = rendererPaths.has(url.pathname);
+    const readiness =
+      url.pathname === "/ready" &&
+      !url.search &&
+      input.method === "GET" &&
+      input.body === undefined;
     if (
       url.origin !== this.cookies.origin.origin ||
       url.username ||
       url.password ||
-      (!authPaths.has(url.pathname) && !rpc) ||
+      (!authPaths.has(url.pathname) && !rpc && !readiness) ||
       (rpc && input.method !== "POST")
     )
       throw invalidRequest();
@@ -182,7 +187,15 @@ export class DesktopApi {
       signal.throwIfAborted();
       this.cookies.apply(changes);
       const output: Record<string, string> = {};
-      for (const name of ["content-type", "retry-after", "x-request-id"]) {
+      for (const name of [
+        "content-type",
+        "retry-after",
+        "x-retry-after",
+        "x-request-id",
+        "x-raypx-service",
+        "x-raypx-revision",
+        "x-raypx-state",
+      ]) {
         const value = response.headers.get(name);
         if (value !== null) output[name] = value;
       }

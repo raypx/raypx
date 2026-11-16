@@ -1,6 +1,7 @@
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestUrl } from "@tanstack/react-start/server";
 import { resolveWebOrigins } from "./public-address.js";
+import { originRecovery } from "@raypx/client/api";
 
 // The SSR bootstrap precedes all client modules. This snapshot never reads the DOM
 // during render, and no request-specific state is retained by the server module.
@@ -34,6 +35,13 @@ export function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   const origins = webOrigins();
   const base = typeof window === "undefined" ? origins.apiOrigin : origins.apiBaseUrl;
   const resolved = `${base}${url.pathname}${url.search}`;
-  if (input instanceof Request) return globalThis.fetch(new Request(resolved, input), init);
-  return globalThis.fetch(resolved, init);
+  if (typeof window === "undefined") {
+    if (input instanceof Request) return globalThis.fetch(new Request(resolved, input), init);
+    return globalThis.fetch(resolved, init);
+  }
+  const absolute = new URL(resolved, origins.webOrigin);
+  return originRecovery(origins.apiOrigin).fetch(
+    input instanceof Request ? new Request(absolute, input) : absolute,
+    init,
+  );
 }

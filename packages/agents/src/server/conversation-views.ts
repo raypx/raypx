@@ -11,7 +11,11 @@ import {
 import { attachmentView } from "./attachments.js";
 import { messageSchema, runSchema, replySegmentSchema } from "@raypx/core/conversation";
 
-export async function message(tx: Pick<Database, "select">, row: typeof messages.$inferSelect) {
+export async function message(
+  tx: Pick<Database, "select">,
+  row: typeof messages.$inferSelect,
+  viewerAccountId: string,
+) {
   const mentions = await tx
     .select({ agentId: messageMentions.agentId })
     .from(messageMentions)
@@ -63,6 +67,9 @@ export async function message(tx: Pick<Database, "select">, row: typeof messages
         .map(({ runId, state, path, reason }) => ({ runId, state, path, reason })),
     })),
     id: row.id,
+    ...(!row.authorAgentId && row.authorAccountId === viewerAccountId
+      ? { idempotencyKey: row.idempotencyKey }
+      : {}),
     spaceId: row.spaceId,
     conversationId: row.conversationId,
     sequence: row.sequence,

@@ -215,6 +215,7 @@ it("Message/Event: commits idempotently, snapshots at a cursor and refuses all r
   const selection = { spaceId: a.space.id, conversationId: saved.conversation.id };
   const message = { text: "A member message", idempotencyKey: "retry" };
   const sent = await client.conversations.send({ ...selection, message });
+  expect(sent.idempotencyKey).toBe(message.idempotencyKey);
   expect(await client.conversations.send({ ...selection, message })).toEqual(sent);
   expect(sent.author).toEqual({ kind: "member", accountId: owner });
   expect(await client.conversations.events({ ...selection, limit: 1 })).toMatchObject({
@@ -254,5 +255,31 @@ it("Message/Event: commits idempotently, snapshots at a cursor and refuses all r
     ])
       await expect(request()).rejects.toMatchObject({ code: "NOT_FOUND" });
   }
+  actor = owner;
+});
+
+it("projects send reconciliation keys only to the originating member", async () => {
+  actor = owner;
+  const space = await client.spaces.create({ name: "Receipt scope" });
+  owned.push(space.space.id);
+  await connection.db
+    .insert(spaceMembers)
+    .values({ spaceId: space.space.id, accountId: stranger, role: "member" });
+  const saved = await client.agents.create({ spaceId: space.space.id, agent });
+  const selected = { spaceId: space.space.id, conversationId: saved.conversation.id };
+  await client.conversations.send({
+    ...selected,
+    message: { text: "Receipt", idempotencyKey: "private-receipt" },
+  });
+  expect((await client.conversations.snapshot(selected)).messages[0]?.idempotencyKey).toBe(
+    "private-receipt",
+  );
+  actor = stranger;
+  expect(
+    (await client.conversations.snapshot(selected)).messages[0]?.idempotencyKey,
+  ).toBeUndefined();
+  expect(
+    (await client.conversations.history(selected)).messages[0]?.idempotencyKey,
+  ).toBeUndefined();
   actor = owner;
 });

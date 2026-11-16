@@ -15,6 +15,7 @@ import { useTranslations } from "../i18n.js";
 import { Button } from "@raypx/ui/components/ui/button";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { FileTextIcon } from "@raypx/icons/file-text";
+import { DeploymentBoundary } from "../features/auth/components/deployment-boundary.js";
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import("@raypx/devtools").then((module) => ({ default: module.DevtoolsBridge })))
@@ -89,10 +90,12 @@ function RootComponent() {
         <AppAnalytics>
           <DesktopRuntimeProvider>
             <DesktopSignOutProvider>
-              <SessionGate>
-                <DesktopShell />
-              </SessionGate>
-              <SettingsOverlay />
+              <DeploymentBoundary>
+                <SessionGate>
+                  <DesktopShell />
+                </SessionGate>
+                <SettingsOverlay />
+              </DeploymentBoundary>
             </DesktopSignOutProvider>
           </DesktopRuntimeProvider>
           {Devtools && (

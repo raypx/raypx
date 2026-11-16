@@ -76,3 +76,7 @@ Hosted E2B uses a saved API key and defaults to the public `base` template.
 PostgreSQL binds each Computer to its backend before remote I/O and fences E2B
 calls under the Computer row. The private placement store retains the last
 committed archive and never exposes sandbox IDs to members.
+
+Shutdown marks ingress updating and closes retry-hinted streams before the bounded
+HTTP drain; Run lease handover follows it. test:production consumes a prepared API
+artifact and an explicitly selected disposable database for HTTP/SSE restart acceptance.

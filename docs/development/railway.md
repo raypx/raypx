@@ -304,6 +304,11 @@ them as literal Caddy configuration in its image. No dashboard runtime revision 
 Its `X-Raypx-Gateway-Revision` response header identifies the proxy itself while
 preserving the upstream service identity and revision headers.
 
+Keep the reviewed `drainingSeconds: 30` on all three services. It covers the API's
+25-second HTTP drain and lease/resource cleanup margin. The earlier checked-in
+15-second value was shorter than that server bound; pushing this file alone does
+not change a live service's drain settings.
+
 The checked-in source currently selects `canary` for all three services. If the
 intended deployment tracks `next`, review that branch choice for all three before
 applying IaC; do not unintentionally switch an existing deployment's branch. This

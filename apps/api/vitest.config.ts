@@ -3,6 +3,16 @@ import defaults from "../../test.config.js";
 
 export default defineConfig(({ mode }) => {
   switch (mode) {
+    case "production":
+      return mergeConfig(
+        defaults,
+        defineConfig({
+          test: {
+            include: ["tests/production/**/*.test.ts"],
+            fileParallelism: false,
+          },
+        }),
+      );
     case "postgres":
       return mergeConfig(
         defaults,

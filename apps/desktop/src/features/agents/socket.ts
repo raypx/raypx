@@ -3,7 +3,7 @@ import type { ConversationFeedSelection } from "@raypx/contracts/api";
 import type { ConversationFeedPort, ConversationSocketPort } from "@raypx/agents/model";
 import { createBrowserConversationSocket } from "@raypx/agents/client";
 import { getBridge, isDesktop } from "../../lib/desktop.js";
-import { apiUrl } from "../auth/client.js";
+import { apiUrl, desktopRecovery } from "../auth/client.js";
 
 type SocketCallbacks = Parameters<ConversationSocketPort["connect"]>[0];
 
@@ -54,7 +54,10 @@ function desktopEventChannel(
   const fail = (error: unknown) => {
     if (conversation && error instanceof Error && "code" in error && error.code === "AUTH_REQUIRED")
       ended(4001, "SESSION_ENDED");
-    else ended();
+    else {
+      desktopRecovery.pause();
+      ended();
+    }
   };
   void (async () => {
     const native = await bridge;
@@ -68,6 +71,8 @@ function desktopEventChannel(
       const frame = await native.request.eventsRead({ id });
       if (scope.signal.aborted) return;
       if (frame?.type === "closed") {
+        if (frame.code === 1001 || frame.code === 1013)
+          desktopRecovery.pause(frame.retryAfterMs ?? 3000);
         ended(frame.code, frame.reason, frame.retryAfterMs);
         return;
       }

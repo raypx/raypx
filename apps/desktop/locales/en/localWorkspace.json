@@ -1,4 +1,6 @@
 {
+  "deploymentUpdating": "This deployment is being updated",
+  "deploymentRecovery": "Reconnecting automatically…",
   "remoteSignIn": "Sign in to continue",
   "remoteSignInHint": "Your Agents and conversations are available after sign-in."
 }

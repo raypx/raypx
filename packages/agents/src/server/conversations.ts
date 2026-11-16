@@ -1505,7 +1505,7 @@ export function createConversationsRepository(
               eq(messages.idempotencyKey, key),
             ),
           );
-        if (existing) return message(tx, existing);
+        if (existing) return message(tx, existing, scope.member.accountId);
         await rememberMember(tx, scope, run.conversationId, parent.memberAccountId);
         if (parent.agentChainDepth >= MAX_AGENT_MESSAGE_DEPTH)
           throw new AgentMessageError("AGENT_MESSAGE_DEPTH_LIMIT");
@@ -1578,7 +1578,7 @@ export function createConversationsRepository(
           runAt: sql`clock_timestamp() + ${timeoutMs + backupMarginMs} * interval '1 millisecond'`,
         });
         await appendState(tx, scope, runView(child!), sequence + 1, run.fence);
-        return message(tx, row!);
+        return message(tx, row!, scope.member.accountId);
       });
     },
     async send(scope, id, input) {
@@ -1615,7 +1615,7 @@ export function createConversationsRepository(
               eq(messages.idempotencyKey, values.idempotencyKey),
             ),
           );
-        if (existing) return message(tx, existing);
+        if (existing) return message(tx, existing, scope.member.accountId);
         const [steeringTarget] = values.steerRunId
           ? await tx
               .select()
@@ -1754,7 +1754,7 @@ export function createConversationsRepository(
         }
         await tx.update(counters).set({ sequence: latest }).where(counterSelection(scope, id));
         await publish(tx, { conversationId: id, sequence: latest });
-        return message(tx, row!);
+        return message(tx, row!, scope.member.accountId);
       });
     },
     async events(scope, id, after, limit) {
@@ -1852,7 +1852,12 @@ export function createConversationsRepository(
                 ...(row.run ? { agentId: row.run.agentId, parentRunId: row.run.parentRunId } : {}),
                 createdAt: row.event.createdAt.toISOString(),
               });
-              return { event, ...(row.message ? { message: await message(tx, row.message) } : {}) };
+              return {
+                event,
+                ...(row.message
+                  ? { message: await message(tx, row.message, scope.member.accountId) }
+                  : {}),
+              };
             }),
           );
           const cursor = entries.at(-1)?.event.sequence ?? after;
@@ -1929,7 +1934,9 @@ export function createConversationsRepository(
                   }
                 : {}),
             },
-            messages: await Promise.all(rows.map((row) => message(tx, row))),
+            messages: await Promise.all(
+              rows.map((row) => message(tx, row, scope.member.accountId)),
+            ),
             runs: (
               await tx
                 .select()

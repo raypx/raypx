@@ -19,6 +19,7 @@ type ServerRuntime = ApiRuntime & {
   allowedOrigins: string[];
   clientIp: ReturnType<typeof createClientIpReader>;
   start(): Promise<void>;
+  drainStreams(): Promise<void>;
 };
 
 export async function createApiRuntime(
@@ -69,6 +70,8 @@ export async function createApiRuntime(
   }
   const warnSetup = createSetupWarning(environment, runtime.registration);
   let closing: Promise<void> | undefined;
+  let draining: Promise<void> | undefined;
+  const drainStreams = () => (draining ??= events.shutdown());
   return {
     ...runtime,
     app: runtime.app.route(
@@ -81,6 +84,7 @@ export async function createApiRuntime(
     ),
     allowedOrigins: environment.allowedOrigins,
     clientIp: createClientIpReader(environment.ipAddressHeaders, environment.trustedProxies),
+    drainStreams,
     start: async () => {
       await warnSetup();
       await runtime.deviceConnector.start().catch(() => {});
@@ -93,8 +97,7 @@ export async function createApiRuntime(
     close: () =>
       (closing ??= (async () => {
         try {
-          await events
-            .shutdown()
+          await drainStreams()
             .finally(() => fanout.close())
             .finally(() => spaceFanout.close());
         } finally {

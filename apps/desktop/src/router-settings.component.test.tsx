@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   modelConnections: vi.fn(() => null),
 }));
 vi.mock("./features/auth/client.js", () => ({
+  desktopRecovery: { subscribe: () => () => {}, getSnapshot: () => "ready" },
   apiUrl: "https://api.example.test",
   webUrl: "https://raypx.example",
   authClient: {

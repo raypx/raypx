@@ -14,6 +14,8 @@ const request = (path = "/api/rpc/account/get", extra: Record<string, unknown> =
 });
 
 it.each([
+  request("/ready"),
+  request("/ready?query=1", { method: "GET", body: undefined }),
   request("https://evil.test/api/rpc/account/get"),
   request("//evil.test/rpc/account/get"),
   request("/api/rpc/hosts/authorize"),
@@ -38,6 +40,34 @@ it.each([
     code: "INVALID_API_REQUEST",
   });
   expect(fetch).not.toHaveBeenCalled();
+});
+
+it("admits only a read-only readiness probe and preserves public service and retry headers", async () => {
+  const fetch = vi.fn(async () =>
+    Response.json(
+      { status: "ok" },
+      {
+        headers: {
+          "x-raypx-service": "api",
+          "x-raypx-revision": "revision",
+          "x-retry-after": "60",
+          authorization: "private",
+        },
+      },
+    ),
+  );
+  const api = new DesktopApi(new SessionCookies(origin), fetch);
+  const response = await api.request(
+    { path: "/ready", method: "GET", headers: {} },
+    "page",
+    signal(),
+  );
+  expect(response.headers).toMatchObject({
+    "x-raypx-service": "api",
+    "x-raypx-revision": "revision",
+    "x-retry-after": "60",
+  });
+  expect(response.headers).not.toHaveProperty("authorization");
 });
 
 it("admits renderer and native RPCs with a native capability and rejects other procedures", async () => {

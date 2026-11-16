@@ -80,7 +80,9 @@ export function conversationSse(
         const ending =
           code === undefined
             ? Promise.resolve()
-            : write(`data: ${JSON.stringify({ type: "closed", code, reason })}\n\n`);
+            : write(
+                `${code === 1001 ? "retry: 3000\n" : ""}data: ${JSON.stringify({ type: "closed", code, reason, ...(code === 1001 ? { retryAfterMs: 3000 } : {}) })}\n\n`,
+              );
         closed = true;
         void ending.then(() => writer.close()).catch(abort);
       },

@@ -405,3 +405,32 @@ The live model also caps outside-window work at 100 independently of loaded Run
 history. It removes terminal outside rows and ignores omitted reply bodies.
 Overflow keeps a visible truncation warning with an explicit Refresh action;
 refresh replaces it from an authoritative projection without sending the draft.
+
+## Deployment recovery
+
+Before the listener drains, shutdown closes conversation/Space/Screen streams.
+Conversation SSE sends `closed` with code 1001 and `retryAfterMs: 3000` plus an SSE
+retry hint. New HTTP/upgrade admission returns 503 with `Retry-After: 3` and an
+updating status. Already admitted finite HTTP requests retain their 25-second
+bound; runner lease handover follows the drain.
+
+Web/Desktop share one recovery circuit per API origin in each renderer. Network
+failures, service-unavailable responses and background 429s pause new requests;
+one credential-free `/ready` probe retries with exponential jitter and honors both
+Retry-After header forms. A 200 Web fallback is not API readiness. Focus, query
+mounts and stream reconnects cannot bypass that schedule. Mutation failures are
+returned to the caller and never replayed by recovery. Authentication action
+cooldowns keep their existing form behavior.
+
+The remaining burst path was failed authentication session mounts and focus reads:
+the session client only deduplicates fresh successful mounts. Its HTTP limiter
+keys by client IP and auth path (100 per minute by default), while RPC quotas key
+by account and procedure. Query retries are already disabled; public configuration
+and access use 30-second refreshes. Recovery now gates their shared transport too,
+rather than increasing quotas or adding query-specific polling.
+
+A member message exposes its existing idempotency key only to its originating
+member in send/history/snapshot/replay projections. An uncertain local send clears
+itself when one of those projections contains that exact key and member identity.
+Other members and Agent-authored messages receive no key. Text equality is never
+confirmation, and a reconnect never sends an absent receipt automatically.

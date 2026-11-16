@@ -190,6 +190,7 @@ export const conversationFeedCloseSchema = z.strictObject({
     z.literal(1013),
   ]),
   reason: z.string().max(123),
+  retryAfterMs: z.number().int().nonnegative().max(2_147_483_647).optional(),
 });
 export const conversationFeedFrameSchema = z.discriminatedUnion("type", feedFrames);
 export type ConversationFeedFrame = z.infer<typeof conversationFeedFrameSchema>;

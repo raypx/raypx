@@ -1,4 +1,6 @@
 {
+  "deploymentUpdating": "服务正在更新",
+  "deploymentRecovery": "正在自动重新连接…",
   "remoteSignIn": "登录以继续",
   "remoteSignInHint": "登录后即可访问你的 Agent 和对话。"
 }

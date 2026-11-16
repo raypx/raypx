@@ -55,7 +55,25 @@ export async function smokeLocalProduction(root: string, args: string[]) {
     return { port: api ? apiPort : webPort, headers };
   }
   await evidence.run(async () => {
+    const fixtureEnvironment = {
+      ...process.env,
+      TEST_DATABASE_URL: databaseURL,
+      RAYPX_PRODUCTION_TEST_EMAIL: `restart-${crypto.randomUUID()}@example.invalid`,
+      RAYPX_PRODUCTION_STATE_FILE: join(evidence.directory, "production-fixture.json"),
+    };
+    const fixture = (operation: string) =>
+      evidence.command(
+        `production-fixture-${operation}`,
+        [
+          process.execPath,
+          "--no-env-file",
+          join(root, "apps/api/tests/fixtures/production-acceptance.ts"),
+          operation,
+        ],
+        fixtureEnvironment,
+      );
     try {
+      await fixture("prepare");
       for (let index = 0; index < 2; index++) {
         const proxy = createServer((request: IncomingMessage, response: ServerResponse) => {
           const upstream = proxyRequest(
@@ -113,7 +131,7 @@ export async function smokeLocalProduction(root: string, args: string[]) {
         (proxy) => `http://127.0.0.1:${(proxy.address() as { port: number }).port}`,
       );
       const common = { PATH: process.env.PATH, HOST: "127.0.0.1" };
-      evidence.start("api", [process.execPath, join(root, "apps/api/.output/server/index.mjs")], {
+      const apiEnvironment = {
         ...common,
         NODE_ENV: "production",
         PORT: String(apiPort),
@@ -126,7 +144,12 @@ export async function smokeLocalProduction(root: string, args: string[]) {
         AUTH_SECRET: crypto.randomUUID(),
         APP_KEY: crypto.randomUUID(),
         JOBS_ENABLED: "false",
-      });
+      };
+      const api = evidence.start(
+        "api",
+        [process.execPath, join(root, "apps/api/.output/server/index.mjs")],
+        apiEnvironment,
+      );
       evidence.start("web", [process.execPath, webArtifact], {
         ...common,
         NODE_ENV: "production",
@@ -172,6 +195,19 @@ export async function smokeLocalProduction(root: string, args: string[]) {
         {
           ...process.env,
           RAYPX_DEPLOYMENT_ORIGINS: JSON.stringify(origins),
+          RAYPX_PRODUCTION_API_PID: String(api.pid),
+          RAYPX_PRODUCTION_API_ENV: JSON.stringify(apiEnvironment),
+          RAYPX_PRODUCTION_API_ARTIFACT: join(root, "apps/api/.output/server/index.mjs"),
+          TEST_DATABASE_URL: databaseURL,
+          RAYPX_PRODUCTION_TEST_EMAIL: fixtureEnvironment.RAYPX_PRODUCTION_TEST_EMAIL,
+        },
+      );
+      await evidence.command(
+        "production-http-drain",
+        [process.execPath, "run", "--cwd", "apps/api", "test:production"],
+        {
+          ...process.env,
+          TEST_DATABASE_URL: databaseURL,
         },
       );
       if (before !== (await digest()))
@@ -185,10 +221,13 @@ export async function smokeLocalProduction(root: string, args: string[]) {
         ),
       );
     } finally {
+      await evidence.stopAll();
       for (const socket of sockets) socket.destroy();
       await Promise.all(
         proxies.map((proxy) => new Promise<void>((resolve) => proxy.close(() => resolve()))),
       );
+      if (await Bun.file(fixtureEnvironment.RAYPX_PRODUCTION_STATE_FILE).exists())
+        await fixture("cleanup");
     }
   });
 }

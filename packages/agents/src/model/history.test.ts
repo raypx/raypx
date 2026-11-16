@@ -843,6 +843,38 @@ it("uses stream trigger references when new work starts for a message older than
   expect(conversationRows(state.getSnapshot()).some((row) => row.id === "reply:run-1")).toBe(false);
 });
 
+it("confirms an uncertain send from replay while its message is outside the reading window", async () => {
+  const h = harness();
+  await h.controller.start();
+  for (let index = 0; index < 5; index++) await h.controller.loadEarlier();
+  expect(h.controller.getSnapshot().history.hasNewer).toBe(true);
+  h.controller.setDraft("Keep this reading position");
+  vi.mocked(h.port.send).mockRejectedValueOnce(new Error("Response lost"));
+  await h.controller.send();
+  const receipt = { ...message(211), idempotencyKey: "key", text: "Keep this reading position" };
+  h.callbacks.at(-1)!.onFrame({
+    type: "event",
+    entry: {
+      event: {
+        ...selection,
+        kind: "message.created",
+        messageId: receipt.id,
+        sequence: 211,
+        createdAt: time,
+      },
+      message: receipt,
+    },
+  });
+  expect(h.controller.getSnapshot()).toMatchObject({
+    pending: null,
+    draft: "",
+    error: null,
+    history: { hasNewer: true },
+  });
+  expect(h.controller.getSnapshot().messages.some((item) => item.id === receipt.id)).toBe(false);
+  expect(h.port.send).toHaveBeenCalledOnce();
+});
+
 it("freezes the selected outside-window Run in an uncertain send receipt and restores it without sending", async () => {
   const h = harness(100);
   const active = {

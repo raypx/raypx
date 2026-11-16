@@ -5,12 +5,13 @@ import {
   type ConversationFeedFrame,
   type ConversationFeedSelection,
 } from "@raypx/contracts/api";
+import { existingOriginRecovery } from "./origin-recovery.js";
 
 interface FeedClose {
   type: "closed";
   code: number;
   reason: string;
-  retryAfterMs?: number;
+  retryAfterMs?: number | undefined;
 }
 
 interface FeedOptions {
@@ -41,7 +42,8 @@ export async function* readConversationFeed(
   const requestHeaders = new Headers(await headers?.());
   requestHeaders.set("Accept", "text/event-stream");
   if (signal.aborted) return;
-  const response = await fetch(url.toString(), {
+  const transport = existingOriginRecovery(origin)?.fetch ?? fetch;
+  const response = await transport(url.toString(), {
     credentials: headers ? "omit" : "include",
     redirect: "error",
     headers: requestHeaders,
