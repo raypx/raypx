@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { expect, it } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,7 +24,7 @@ it("persists Secure/HttpOnly sessions over real HTTPS, restores them and deletes
     },
     fetch(request) {
       received.push(request.headers.get("cookie") ?? "");
-      expect(request.headers.get("origin")).toBe("views://main");
+      expect(request.headers.get("origin")).toBe(nativeClientOrigins.desktop);
       const path = new URL(request.url).pathname;
       if (path === "/api/auth/sign-out")
         return Response.json(

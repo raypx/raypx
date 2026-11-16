@@ -32,7 +32,7 @@ export function createAdapters(environment: ApiEnvironment, db: Database, redis?
 
 export function createAuthConfig(environment: ApiEnvironment) {
   return {
-    baseURL: environment.AUTH_URL,
+    baseURL: environment.publicApiOrigin,
     secret: environment.AUTH_SECRET,
     trustedOrigins: environment.allowedOrigins,
     production: environment.NODE_ENV === "production",

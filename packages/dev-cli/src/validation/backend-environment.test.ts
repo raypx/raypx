@@ -38,6 +38,12 @@ it("routes visual intent to the browser wrapper while preserving owned journey a
 it("replaces operator endpoints without forcing test JSX transforms into production browser builds", () => {
   const source = {
     NODE_ENV: "test",
+    AUTH_URL: "https://old.example.test",
+    ALLOWED_ORIGINS: "https://old.example.test",
+    DEVICE_CONNECTOR_ORIGIN: "https://old.example.test",
+    PUBLIC_URL: "https://operator.example.test",
+    API_PUBLIC_URL: "https://operator-api.example.test",
+    EXTRA_ALLOWED_ORIGINS: "https://extra.example.test",
     DATABASE_URL: "operator-db",
     TEST_DATABASE_URL: "operator-test-db",
     REDIS_URL: "operator-redis",

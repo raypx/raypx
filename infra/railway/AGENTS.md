@@ -6,7 +6,9 @@ partial. Do not import them into application ownership or remove their storage.
 
 Runtime variables are unmanaged. Keep secret values on Railway, preserve reference
 variables and never print decrypted variables in logs or source. Gateway supplies
-one public HTTPS origin. API, Web and databases use private networking.
+one public HTTPS origin. API receives PUBLIC_URL from that origin; optional
+API_PUBLIC_URL is only for a separately published API. Native trust is automatic;
+EXTRA_ALLOWED_ORIGINS contains only additional exact browser origins. API, Web and databases use private networking.
 
 This private Bun tooling workspace exports `railway.ts`. Keep the Railway SDK
 and CLI dependencies here, with versions in the root development catalog.

@@ -136,9 +136,10 @@ optional subject. Raypx does not run SMTP.
 
 `routines.list` and `routines.get` add optional `ingress` metadata. Webhook and
 repository entries return complete `/routines/:id/webhook` and
-`/routines/:id/repository` URLs from the explicitly configured `AUTH_URL` origin;
-the authentication localhost fallback is never advertised as public ingress.
-An absent origin returns `url: null` with
+`/routines/:id/repository` URLs from the derived public API origin
+(`API_PUBLIC_URL`, defaulting to `PUBLIC_URL`);
+the API supplies that origin in development too, using its port 3002 default.
+A service composed without a public origin returns `url: null` with
 `PUBLIC_API_ORIGIN_NOT_CONFIGURED`. Email returns the stored complete inbound
 address when `ROUTINE_EMAIL_DOMAIN` is configured, or `address: null` with
 `EMAIL_NOT_CONFIGURED`. A missing trigger returns `TRIGGER_NOT_CONFIGURED`.
@@ -204,7 +205,8 @@ headers after fresh membership admission. Both are read-only, no-store and cooki
 Markdown uses CommonMark/GFM with raw HTML disabled and allowlisted tags/protocols.
 HTML keeps inline scripts/styles and data images under an opaque sandbox origin:
 no same-origin, forms, frames, objects, external images/scripts or network access.
-CSP frame ancestors are the HTTP(S) origins from `ALLOWED_ORIGINS`, including the
+CSP frame ancestors are the HTTP(S) trusted origins derived from `PUBLIC_URL`,
+optional `API_PUBLIC_URL` and `EXTRA_ALLOWED_ORIGINS`, including the
 public Web origin for a shared-origin deployment. Gateways forward `/page-content/*`
 to API and preserve its response headers; `/pages` stays on Web. See
 [shared-origin routing](operations.md#shared-origin-routing). Public admission is

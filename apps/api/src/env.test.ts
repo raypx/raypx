@@ -19,20 +19,6 @@ it("shares the opaque review model selection across API and recovery workers", (
     "Invalid environment variables",
   );
 });
-it("publishes only an explicitly configured HTTP API origin for routine ingress", () => {
-  expect(getApiEnvironment({}).publicApiOrigin).toBeNull();
-  expect(getApiEnvironment({ AUTH_URL: "" }).publicApiOrigin).toBeNull();
-  expect(getApiEnvironment({ AUTH_URL: "https://api.example.test/" }).publicApiOrigin).toBe(
-    "https://api.example.test",
-  );
-  expect(
-    getApiEnvironment({ AUTH_URL: "https://api.example.test/auth?private=marker#fragment" })
-      .publicApiOrigin,
-  ).toBe("https://api.example.test");
-  expect(
-    getApiEnvironment({ AUTH_URL: "https://private:credential@api.example.test" }).publicApiOrigin,
-  ).toBeNull();
-});
 it("defaults to every role and allows PostgreSQL-only split API and worker roles", () => {
   expect(getApiEnvironment({}).SERVER_ROLE).toBe("all");
   expect(getServerRole({})).toBe("all");
@@ -52,7 +38,7 @@ it("worker and relay do not require or parse API authentication or mail settings
     DATABASE_URL: "postgres://fixture:fixture@db.example.test:5432/raypx_test",
     AUTH_SECRET: "invalid",
     APP_KEY: "synthetic-app-key-for-tests-only-32-chars",
-    AUTH_URL: "invalid",
+    PUBLIC_URL: "https://app.example.test",
     RESEND_API_KEY: "invalid",
   });
   expect(environment).not.toHaveProperty("AUTH_SECRET");
@@ -63,7 +49,7 @@ it("worker and relay do not require or parse API authentication or mail settings
   expect(
     getRelayEnvironment({
       DATABASE_URL: environment.DATABASE_URL,
-      ALLOWED_ORIGINS: "https://app.example.test",
+      PUBLIC_URL: "https://app.example.test",
     }).REDIS_URL,
   ).toBeUndefined();
 });
@@ -82,29 +68,17 @@ it("uses an optional explicitly supplied worker broker only for split device com
     "redis://127.0.0.1:6379",
   );
 });
-it("shares one explicit origin across split device roles without reading auth configuration", () => {
-  const input = { DEVICE_CONNECTOR_ORIGIN: "https://api.example.test/", AUTH_URL: "invalid" };
-  expect(getWorkerEnvironment(input).DEVICE_CONNECTOR_ORIGIN).toBe("https://api.example.test");
+it("shares the derived public API origin across device roles without reading auth configuration", () => {
+  const input = {
+    PUBLIC_URL: "https://web.example.test",
+    API_PUBLIC_URL: "https://api.example.test",
+  };
+  expect(getWorkerEnvironment(input).publicApiOrigin).toBe(input.API_PUBLIC_URL);
   expect(
-    getRelayEnvironment({
-      ...input,
-      DATABASE_URL: "postgres://localhost/raypx_test",
-      ALLOWED_ORIGINS: "https://app.example.test",
-    }).DEVICE_CONNECTOR_ORIGIN,
-  ).toBe("https://api.example.test");
-  expect(
-    getApiEnvironment({ DEVICE_CONNECTOR_ORIGIN: input.DEVICE_CONNECTOR_ORIGIN })
-      .DEVICE_CONNECTOR_ORIGIN,
-  ).toBe("https://api.example.test");
-  for (const origin of [
-    "https://user:secret@example.test",
-    "https://example.test/private",
-    "http://example.test",
-    "https://example.test/?secret=1",
-  ])
-    expect(() => getWorkerEnvironment({ DEVICE_CONNECTOR_ORIGIN: origin })).toThrow(
-      "Invalid environment variables",
-    );
+    getRelayEnvironment({ ...input, DATABASE_URL: "postgres://localhost/raypx_test" })
+      .publicApiOrigin,
+  ).toBe(input.API_PUBLIC_URL);
+  expect(getApiEnvironment(input).publicApiOrigin).toBe(input.API_PUBLIC_URL);
 });
 it("validates lease heartbeat headroom and recovery bounds", () => {
   expect(() => getWorkerEnvironment({ RUN_RECOVERY_INTERVAL_MS: "0" })).toThrow(
@@ -137,10 +111,9 @@ it("requires a production application key that is independent of the auth secret
   const production = {
     NODE_ENV: "production",
     DATABASE_URL: "postgres://fixture:fixture@db.example.test:5432/raypx",
-    AUTH_URL: "https://app.example.test",
+    PUBLIC_URL: "https://app.example.test",
     AUTH_SECRET: "synthetic-auth-secret-for-tests-32-chars",
     APP_KEY: "synthetic-app-key-for-tests-only-32-chars",
-    ALLOWED_ORIGINS: "https://app.example.test",
   };
   expect(getApiEnvironment(production).APP_KEY).toBe(production.APP_KEY);
   const { APP_KEY: _, ...missing } = production;

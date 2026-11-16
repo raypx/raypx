@@ -168,3 +168,31 @@ it("rejects ingress that strips the connector bearer credential", () => {
     ]),
   );
 });
+
+it.each(["AUTH_URL", "ALLOWED_ORIGINS", "DEVICE_CONNECTOR_ORIGIN"])(
+  "refuses retired deployment input %s",
+  (key) => {
+    const root = fixture();
+    replace(
+      root,
+      "deploy/compose.yaml",
+      "      NODE_ENV: production",
+      `      NODE_ENV: production\n      ${key}: https://old.example.test`,
+    );
+    expect(checkDeployment(root)).toContain(
+      `deploy: retired ${key} must be removed; configure PUBLIC_URL and optional API_PUBLIC_URL/EXTRA_ALLOWED_ORIGINS`,
+    );
+  },
+);
+it("requires split roles to use the same public-address settings", () => {
+  const root = fixture();
+  replace(
+    root,
+    "deploy/compose.split.yaml",
+    "      PUBLIC_URL: https://${APP_HOST:?Set the application hostname}",
+    "      PUBLIC_URL: https://stale.example.test",
+  );
+  expect(checkDeployment(root)).toContain(
+    "deploy/compose.split.yaml: relay must share API PUBLIC_URL",
+  );
+});

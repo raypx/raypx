@@ -290,14 +290,14 @@ only. Credentials are API runtime settings, never `VITE_*` values or build argum
 
 Create separate applications for development and each deployed environment.
 
-| Provider | API runtime variables                      | Authorized callback URL                |
-| -------- | ------------------------------------------ | -------------------------------------- |
-| Google   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `${AUTH_URL}/api/auth/callback/google` |
-| GitHub   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | `${AUTH_URL}/api/auth/callback/github` |
+| Provider | API runtime variables                      | Authorized callback URL                                     |
+| -------- | ------------------------------------------ | ----------------------------------------------------------- |
+| Google   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `${API_PUBLIC_URL:-${PUBLIC_URL}}/api/auth/callback/google` |
+| GitHub   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | `${API_PUBLIC_URL:-${PUBLIC_URL}}/api/auth/callback/github` |
 
-`AUTH_URL` is the API's public origin; a gateway serving Web and API can use the
-same public origin for both. Register the exact callback URL without a trailing
-slash. For local development the callbacks are
+`PUBLIC_URL` is the Web origin. Authentication uses `API_PUBLIC_URL` when supplied,
+otherwise `PUBLIC_URL`; a shared-origin gateway needs only `PUBLIC_URL`. Register
+the exact callback URL without a trailing slash. For local development the callbacks are
 `http://localhost:3002/api/auth/callback/google` and
 `http://localhost:3002/api/auth/callback/github`.
 
@@ -312,8 +312,8 @@ requests the profile/email access needed for login, including private email.
 
 Put the credentials in the API environment and restart API. Compose forwards all
 four optional variables from its environment file. On Railway, configure them on
-the API service. Leave both values empty to disable a provider. Keep the Web origin
-in `ALLOWED_ORIGINS`; sibling Web/API subdomains also require the existing
+the API service. Leave both values empty to disable a provider. Set `PUBLIC_URL`
+to the Web origin; sibling Web/API subdomains also require the existing
 `AUTH_DOMAIN` cookie setting so Web SSR can see the session.
 
 ### Behavior and boundaries
@@ -331,8 +331,10 @@ In Web, open **Settings → Account → Password** to add or remove passkeys, li
 unlink configured Google and GitHub accounts, and configure an authenticator app.
 A supported browser can sign in with a passkey using its authenticator. Set
 `AUTH_PASSKEY_RP_ID` to a shared parent domain if Web and API use sibling hosts.
-Keep the exact Web origin in `ALLOWED_ORIGINS`. Use HTTPS outside localhost. Keep
-the RP ID stable after deployment because it scopes existing credentials.
+Set `PUBLIC_URL` to the exact Web origin. The API derives its trust list from the
+public Web/API origins and includes native origins automatically. The passkey RP
+default is the public API hostname. Use HTTPS outside localhost. Keep the RP ID
+stable after deployment because it scopes existing credentials.
 
 Email sign-in codes use the existing Resend configuration. Codes are valid for
 five minutes, allow up to three verification attempts and are single-use. They

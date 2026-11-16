@@ -23,7 +23,8 @@ Space-scoped messageAttachments procedures.
 Top-level HTTP mounts must fit apiIngress in @raypx/tooling/build/deployment;
 tests import that build-only contract and check the composed route table. Update
 both static proxies when adding paths. /page-content owns its sandbox/CSP with
-frame-ancestors from HTTP(S) ALLOWED_ORIGINS, including the public Web origin;
+frame-ancestors from the HTTP(S) trusted origins derived from PUBLIC_URL,
+API_PUBLIC_URL and EXTRA_ALLOWED_ORIGINS;
 Nitro must not add outer response header rules.
 
 The connector registry revalidates current account/Space grants and fences per

@@ -1,3 +1,9 @@
+/** Fixed browser-facing native identities; these do not grant Space membership. */
+export const nativeClientOrigins = {
+  desktop: "views://main",
+  mobile: "raypx://",
+} as const;
+
 export type SocialProvider = "google" | "github";
 
 /** Public account fields only. These types never infer server/database internals. */
@@ -24,9 +30,12 @@ export function normalizeTrustedOrigins(values: readonly string[]): string[] {
     ...new Set(
       values.flatMap((value) => {
         try {
-          const url = new URL(value.trim());
+          const candidate = value.trim();
+          if (candidate === nativeClientOrigins.mobile) return [nativeClientOrigins.mobile];
+          const url = new URL(candidate);
           if (url.username || url.password || url.hostname.includes("*")) return [];
-          if (url.protocol === "views:" && url.hostname === "main") return ["views://main"];
+          if (url.protocol === "views:" && url.hostname === "main")
+            return [nativeClientOrigins.desktop];
           return ["http:", "https:"].includes(url.protocol) && url.origin !== "null"
             ? [url.origin]
             : [];

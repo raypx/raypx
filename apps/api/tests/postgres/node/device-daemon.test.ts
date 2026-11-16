@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { connectDatabase } from "@raypx/database/connection";
 import {
   conversationEvents,
@@ -152,7 +153,7 @@ afterAll(async () => {
 it("accepts the native Desktop origin for fixture sign-in and session RPC", async () => {
   const response = await fetch(`${serverOrigin}/api/auth/sign-in/email`, {
     method: "POST",
-    headers: { origin: "views://main", "content-type": "application/json" },
+    headers: { origin: nativeClientOrigins.desktop, "content-type": "application/json" },
     body: JSON.stringify({ email: "control-e2e@example.com", password: "Raypx-control-test-123" }),
   });
   expect(response.status).toBe(200);
@@ -162,7 +163,7 @@ it("accepts the native Desktop origin for fixture sign-in and session RPC", asyn
     .join("; ");
   const nativeClient = createApiClient({
     baseUrl: serverOrigin,
-    headers: { origin: "views://main", cookie },
+    headers: { origin: nativeClientOrigins.desktop, cookie },
   });
   expect(await nativeClient.account.get({})).toMatchObject({ email: "control-e2e@example.com" });
 });

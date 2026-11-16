@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import {
   apiExposure,
   desktopLoginPaths,
@@ -132,7 +133,7 @@ export class DesktopApi {
         throw invalidRequest();
       headers.set(name, value);
     }
-    headers.set("origin", "views://main");
+    headers.set("origin", nativeClientOrigins.desktop);
     const cookie = this.cookies.header(url);
     if (cookie) headers.set("cookie", cookie);
     const key = input.id === undefined ? undefined : `${client}:${input.id}`;

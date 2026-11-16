@@ -18,6 +18,16 @@ export function backendEnvironment(
   delete env.NODE_ENV;
   delete env.REDIS_URL;
   delete env.TEST_REDIS_URL;
+  // Owned fixtures supply their own addresses; deployment settings never select trust.
+  for (const key of [
+    "AUTH_URL",
+    "ALLOWED_ORIGINS",
+    "DEVICE_CONNECTOR_ORIGIN",
+    "PUBLIC_URL",
+    "API_PUBLIC_URL",
+    "EXTRA_ALLOWED_ORIGINS",
+  ])
+    delete env[key];
   if (redisURL) Object.assign(env, { REDIS_URL: redisURL, TEST_REDIS_URL: redisURL });
   return env;
 }
@@ -227,7 +237,14 @@ export async function validateBackends(root: string, args: string[]) {
             "--no-env-file",
             join(root, "apps/api/tests/helpers/workspace-server.ts"),
           ],
-          { ...env, RAYPX_VALIDATION: "1", CONTROL_E2E_PORT: String(apiPort) },
+          {
+            ...env,
+            RAYPX_VALIDATION: "1",
+            CONTROL_E2E_PORT: String(apiPort),
+            PUBLIC_URL: "http://127.0.0.1:4173",
+            API_PUBLIC_URL: apiUrl,
+            EXTRA_ALLOWED_ORIGINS: "http://127.0.0.1:4174",
+          },
         );
         await ready(evidence, api, async () => {
           try {

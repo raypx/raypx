@@ -29,8 +29,21 @@ export function checkDeployment(root: string): string[] {
     for (const [key, source] of Object.entries(declared)) {
       if (source !== "derived" && source !== "input") throw new Error("Invalid API setting source");
       if (!(key in environment)) findings.push(`deploy/compose.yaml: API does not forward ${key}`);
-      if (source === "input" && !template.has(key))
+      // Compose derives the public URL from its one gateway hostname input.
+      const suppliedByTemplate =
+        template.has(key) ||
+        (key === "PUBLIC_URL" &&
+          template.has("APP_HOST") &&
+          environment[key] === "https://${APP_HOST:?Set the application hostname}");
+      if (source === "input" && !suppliedByTemplate)
         findings.push(`deploy/.env.example: missing API setting ${key}`);
+    }
+    const retired = ["AUTH_URL", "ALLOWED_ORIGINS", "DEVICE_CONNECTOR_ORIGIN"];
+    for (const key of retired) {
+      if (key in environment || template.has(key))
+        findings.push(
+          `deploy: retired ${key} must be removed; configure PUBLIC_URL and optional API_PUBLIC_URL/EXTRA_ALLOWED_ORIGINS`,
+        );
     }
     if (services.relay)
       findings.push("deploy/compose.yaml: default topology must use one combined backend");
@@ -126,6 +139,15 @@ export function checkDeployment(root: string): string[] {
     const split = Bun.YAML.parse(read("deploy/compose.split.yaml")) as {
       services: Record<string, ComposeService & { image?: string }>;
     };
+    for (const role of ["api", "worker", "relay"]) {
+      const settings = split.services[role]?.environment ?? {};
+      for (const key of retired)
+        if (key in settings)
+          findings.push(`deploy/compose.split.yaml: ${role} must not forward retired ${key}`);
+      for (const key of ["PUBLIC_URL", "API_PUBLIC_URL", "EXTRA_ALLOWED_ORIGINS"])
+        if ((settings[key] ?? (role === "api" ? environment[key] : undefined)) !== environment[key])
+          findings.push(`deploy/compose.split.yaml: ${role} must share API ${key}`);
+    }
     if (
       split.services.api?.environment?.SERVER_ROLE !== "api" ||
       split.services.relay?.environment?.SERVER_ROLE !== "relay" ||

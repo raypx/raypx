@@ -41,10 +41,9 @@ export async function probeApi(root: string): Promise<void> {
           SERVER_ROLE: role,
           DATABASE_MIGRATE_ON_START: "false",
           DATABASE_URL: databaseUrl ?? "postgres://raypx:raypx@127.0.0.1:1/raypx_artifact_test",
-          AUTH_URL: base,
+          PUBLIC_URL: base,
           AUTH_SECRET: "raypx-artifact-test-secret-32-characters",
           APP_KEY: "raypx-artifact-test-app-key-32-characters",
-          ALLOWED_ORIGINS: base,
         }),
         async (base) => {
           if (!databaseUrl) throw new Error("API unexpectedly started without PostgreSQL");
@@ -91,7 +90,7 @@ async function probeRelay(root: string, databaseUrl?: string): Promise<void> {
       SERVER_ROLE: "relay",
       DATABASE_URL: databaseUrl ?? "postgres://raypx:raypx@127.0.0.1:1/raypx_artifact_test",
       REDIS_URL: "redis://127.0.0.1:1",
-      ALLOWED_ORIGINS: base,
+      PUBLIC_URL: base,
     }),
     async check(base) {
       // Dependencies are deliberately unavailable; liveness must remain usable.

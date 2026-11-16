@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { ORPCError, os } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 
@@ -61,7 +62,7 @@ export function startOrpcFixture() {
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request) {
-      if (request.headers.get("origin") !== "views://main")
+      if (request.headers.get("origin") !== nativeClientOrigins.desktop)
         return new Response("Unexpected native Origin", { status: 400 });
       if (new URL(request.url).pathname === "/rpc/hosts/authorize") {
         const wire: unknown = await request.clone().json();

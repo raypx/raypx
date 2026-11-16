@@ -8,8 +8,8 @@ import { createRoutinesService, type RoutinesRepository } from "@raypx/jobs/rout
 import { getApiEnvironment } from "../../src/env.js";
 import { createApiApp } from "../helpers/app.js";
 
-function fixture(authUrl?: string) {
-  const environment = getApiEnvironment(authUrl ? { AUTH_URL: authUrl } : {});
+function fixture(publicUrl: string) {
+  const environment = getApiEnvironment({ PUBLIC_URL: publicUrl });
   const accountId = `routine-reader-${crypto.randomUUID()}`;
   const spaceId = spaceIdSchema.parse(`routine-read-${crypto.randomUUID()}`);
   const id = crypto.randomUUID();
@@ -86,18 +86,18 @@ function fixture(authUrl?: string) {
   return { client, accountId, spaceId, id, routine, list, get, resolve, open };
 }
 
-it.each([undefined, "https://ingress.example.test/"])(
+it.each(["https://shared.example.test", "https://ingress.example.test"])(
   "returns server-owned ingress metadata through both scoped routine read procedures (%s)",
-  async (authUrl) => {
-    const f = fixture(authUrl);
+  async (publicUrl) => {
+    const f = fixture(publicUrl);
     const expected = {
       webhook: {
-        url: authUrl ? `${authUrl}routines/${f.id}/webhook` : null,
-        unavailableReason: authUrl ? null : "PUBLIC_API_ORIGIN_NOT_CONFIGURED",
+        url: `${publicUrl}/routines/${f.id}/webhook`,
+        unavailableReason: null,
       },
       repository: {
-        url: authUrl ? `${authUrl}routines/${f.id}/repository` : null,
-        unavailableReason: authUrl ? null : "PUBLIC_API_ORIGIN_NOT_CONFIGURED",
+        url: `${publicUrl}/routines/${f.id}/repository`,
+        unavailableReason: null,
       },
       email: { address: f.routine.emailAddress, unavailableReason: null },
     };

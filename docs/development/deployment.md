@@ -102,11 +102,59 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
 
 Compose and Railway match `apiIngress` in
 [the deployment contract](../../packages/tooling/src/build/deployment.ts).
-Member/public Page documents and attachment downloads must reach API. Include
-the public Web origin in `ALLOWED_ORIGINS` for Page `frame-ancestors`, and preserve
+Member/public Page documents and attachment downloads must reach API. Page
+`frame-ancestors` automatically includes the Web origin from `PUBLIC_URL`; preserve
 API response headers without adding a proxy-wide framing denial. Web's Nitro
 security headers stay on Web responses. Gateway readiness alone does not validate
 Page document routing.
+
+## Public address configuration
+
+Configure the address once. These are the address-related variables; keep existing
+database, secrets, role, networking and other unrelated settings.
+
+| Deployment                        | Operator address settings                                                                                                                     | API derivation                                                                                            |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Shared-origin PaaS with a gateway | `PUBLIC_URL=https://app.example.com`; omit `API_PUBLIC_URL`; omit `EXTRA_ALLOWED_ORIGINS` unless another browser origin needs access          | Authentication, API links, connector origin checks and trust all follow that origin                       |
+| Compose                           | `APP_HOST=app.example.com`; omit `API_PUBLIC_URL`; optional `EXTRA_ALLOWED_ORIGINS`                                                           | Compose supplies `PUBLIC_URL=https://${APP_HOST}` to every backend role; do not add a second host setting |
+| Separate Web/API origins          | `PUBLIC_URL=https://app.example.com` and `API_PUBLIC_URL=https://api.example.com`; optional `EXTRA_ALLOWED_ORIGINS=https://other.example.com` | Authentication and connector checks use API; both Web and API are trusted                                 |
+
+Use exact origins with no trailing slash, path, query, fragment or credentials.
+Production `PUBLIC_URL` and `API_PUBLIC_URL` require HTTPS. Extras are exact
+comma-separated HTTP(S) origins with no wildcard. Fixed native origins are
+included automatically. Every split backend role receives the same address inputs.
+Compose forwards the optional API/extra settings but retains its existing gateway
+routing. Publishing a separate API requires separately prepared ingress; this
+change does not add gateway routes or change Web's build-time `VITE_API_URL`.
+For separate Web/API hosts, retain the existing `AUTH_DOMAIN` cookie configuration
+and explicit passkey RP setting when needed. The passkey default is the API hostname.
+
+Delete `AUTH_URL` and `ALLOWED_ORIGINS` from API and all split role environments,
+including shared/group variables. Also delete `DEVICE_CONNECTOR_ORIGIN` if present;
+connector checks now derive from the public API origin. Empty old variables still
+fail startup. No aliases or fallback are supported.
+
+For an existing hosted shared-origin deployment:
+
+1. Record the running image and its protected configuration privately for rollback.
+2. Stage `PUBLIC_URL` with the exact gateway HTTPS origin. The previous build
+   ignores this new variable, so it may be present while the previous build runs.
+   Keep the previous build's required `AUTH_URL` and `ALLOWED_ORIGINS` until cutover.
+3. Deploy the new build with `PUBLIC_URL` present and all retired variables absent
+   in the **same configuration cutover**. Disable automatic redeploys while staging
+   settings if necessary. Deleting old required variables and restarting the old
+   build fails; starting the new build before deleting them also fails. A platform
+   without an atomic image/environment cutover needs a maintenance window.
+4. Verify login, `/ready`, a real authenticated event socket and a Page preview.
+   A later gateway domain change updates the one `PUBLIC_URL` source/reference.
+
+Rollback restores both the previous image and its previous environment. The old
+build still requires its old address variables. Keep existing Web build-time API
+settings aligned separately; their handling is unchanged by this task.
+
+For Compose, deploy the changed template with the new image together; keep
+`APP_HOST` as the single hostname input and remove retired entries from the
+protected env file. The Compose template does not forward retired inputs.
 
 ## Optional computers
 
@@ -400,8 +448,8 @@ credentials and storage are never inferred or migrated by the scripts.
 
 Forward `/device/*` to API with Authorization intact. The shared ingress contract,
 Compose router and gateway include that prefix. For split roles, supply the same
-`DEVICE_CONNECTOR_ORIGIN` canonical public API origin and optional `REDIS_URL`
+`PUBLIC_URL`, optional `API_PUBLIC_URL` and optional `REDIS_URL`
 to API/worker/Relay. Redis carries device frames, while Run leases/checkpoints
-remain PostgreSQL-only. Compose defaults the explicit device origin to its
-application HTTPS origin; other deployments must set split-role inputs together.
+remain PostgreSQL-only. Compose derives the common public origin from APP_HOST;
+other deployments must set split-role public-address inputs together.
 No listener or inbound connection to the member machine is required.

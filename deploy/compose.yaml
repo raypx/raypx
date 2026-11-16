@@ -62,15 +62,15 @@ services:
       SERVER_ROLE: ${SERVER_ROLE:-all}
       DATABASE_MIGRATE_ON_START: "false"
       DATABASE_URL: postgres://${POSTGRES_RUNTIME_USER:-raypx_runtime}:${POSTGRES_RUNTIME_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
-      AUTH_URL: https://${APP_HOST:?Set the application hostname}
-      DEVICE_CONNECTOR_ORIGIN: ${DEVICE_CONNECTOR_ORIGIN:-https://${APP_HOST:?}}
+      PUBLIC_URL: https://${APP_HOST:?Set the application hostname}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-}
+      EXTRA_ALLOWED_ORIGINS: ${EXTRA_ALLOWED_ORIGINS:-}
       AUTH_SECRET: ${AUTH_SECRET:?Set the authentication secret}
       APP_KEY: ${APP_KEY:?Set the application key}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
       COMPUTERS_PER_MEMBER: ${COMPUTERS_PER_MEMBER:-10}
       COMPUTERS_PER_SPACE: ${COMPUTERS_PER_SPACE:-1}
       AGENT_MODELS: ${AGENT_MODELS:-}

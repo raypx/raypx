@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { expect, it, vi } from "vitest";
 import type { LocalMethod } from "@raypx/contracts/local";
 import { DesktopApi } from "./api.js";
@@ -59,7 +60,7 @@ it("opens conversation events only after verifying the requested account through
     for (const [request] of fetch.mock.calls) expect(request.url).toBe(`${origin}/rpc/account/get`);
     expect(f.connect.mock.calls[0]![1]).toEqual({
       cookie: "__Secure-better-auth.session_token=private",
-      origin: "views://main",
+      origin: nativeClientOrigins.desktop,
     });
     expect(f.owner.request).not.toHaveBeenCalled();
   } finally {

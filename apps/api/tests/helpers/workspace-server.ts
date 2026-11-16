@@ -84,6 +84,8 @@ import { createAdministrationRepository } from "../../src/admin/repository.js";
 import { createConfigRepository } from "../../src/config/repository.js";
 import { createConfigService } from "../../src/config/service.js";
 import { createAccessPolicy } from "../../src/access.js";
+import { getApiEnvironment } from "../../src/env.js";
+import { createAuthConfig } from "../../src/runtime/adapters.js";
 const url = process.env.TEST_DATABASE_URL;
 const port = Number(process.env.CONTROL_E2E_PORT);
 if (
@@ -103,15 +105,20 @@ const accounts = [
   { email: "control-member-desktop@example.com", name: "Desktop Space Member" },
 ];
 const accountEmails = accounts.map((account) => account.email);
-const allowedOrigins = ["http://127.0.0.1:4173", "http://127.0.0.1:4174", "views://main"];
+const environment = getApiEnvironment({
+  NODE_ENV: "test",
+  DATABASE_URL: url,
+  PUBLIC_URL: process.env.PUBLIC_URL ?? "http://127.0.0.1:4173",
+  API_PUBLIC_URL: process.env.API_PUBLIC_URL ?? `http://127.0.0.1:${port}`,
+  EXTRA_ALLOWED_ORIGINS: process.env.EXTRA_ALLOWED_ORIGINS ?? "http://127.0.0.1:4174",
+});
+const { allowedOrigins } = environment;
 await connection.db.delete(user).where(inArray(user.email, accountEmails));
 const auth = createAuth({
   database: drizzleAdapter(connection.db, { provider: "pg", schema }),
   config: {
-    baseURL: `http://127.0.0.1:${port}`,
+    ...createAuthConfig(environment),
     secret: "raypx-browser-fixture-secret-32-characters",
-    trustedOrigins: allowedOrigins,
-    production: false,
   },
   mailer: { async sendVerification() {}, async sendPasswordReset() {} },
 });
@@ -307,7 +314,7 @@ for (const account of accounts) {
   const signup = await app.fetch(
     new Request(`http://127.0.0.1:${port}/api/auth/sign-up/email`, {
       method: "POST",
-      headers: { "content-type": "application/json", origin: "http://127.0.0.1:4173" },
+      headers: { "content-type": "application/json", origin: environment.publicWebOrigin },
       body: JSON.stringify({ ...account, password: "Raypx-control-test-123" }),
     }),
   );
@@ -345,8 +352,7 @@ const server = serve<SocketData>({
       path === "/fixture/device/offline"
     ) {
       const origin = request.headers.get("origin");
-      if (!origin || !["http://127.0.0.1:4173", "http://127.0.0.1:4174"].includes(origin))
-        return new Response(null, { status: 403 });
+      if (!origin || !allowedOrigins.includes(origin)) return new Response(null, { status: 403 });
       const session = await readSession(request.headers);
       if (!session || !accountEmails.includes(session.user.email))
         return new Response(null, { status: 401 });

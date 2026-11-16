@@ -115,9 +115,10 @@ cannot restore that authority.
 Combined roles route directly. Split API/worker/Relay roles reuse the existing
 private broker through an injected device-only adapter and separate namespace.
 PostgreSQL remains the authority; Redis transports frames only. Configure the
-same `DEVICE_CONNECTOR_ORIGIN` canonical public API origin in split API, worker
-and Relay deployment inputs; an omitted or mismatched worker/Relay origin fails
-closed. Combined API defaults to its configured public auth origin.
+same `PUBLIC_URL` and optional `API_PUBLIC_URL` in split API, worker
+and Relay deployment inputs. Production requires the Web origin in every role;
+connector origin checks use the separate API origin when supplied, otherwise the
+Web origin. No independent connector-origin setting exists.
 
 ## Bounds and platform limits
 

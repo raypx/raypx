@@ -42,7 +42,11 @@ unrelated Space selectors keep the generic refusal.
 
 - Better Auth owns sign-in: password, passkey, email code, optional social
   providers and an authenticator app.
-- A mutation requires an exact trusted Origin.
+- A mutation requires an exact trusted Origin. The API derives trusted origins
+  from `PUBLIC_URL`, optional `API_PUBLIC_URL` and exact `EXTRA_ALLOWED_ORIGINS`,
+  plus the fixed native identities in `@raypx/core/auth`. Production public URLs
+  require HTTPS origins without paths or trailing slashes; wildcards are refused.
+  Event sockets and Page frame ancestors consume the same derivation.
 - A password change, a sign-out everywhere or an account deactivation revokes
   device grants and closes event subscriptions.
 - Session tokens never enter markup, persistent browser storage, query caches or

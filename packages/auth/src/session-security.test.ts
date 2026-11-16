@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { expect, it, vi } from "vitest";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { createAuth } from "./server.js";
@@ -19,7 +20,7 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
     config: {
       baseURL: origin + "/",
       secret: "session-security-test-secret-with-32-characters",
-      trustedOrigins: ["views://main", "https://web.example.test/", "invalid", "null"],
+      trustedOrigins: [nativeClientOrigins.desktop, "https://web.example.test/", "invalid", "null"],
       production: true,
     },
   });
@@ -70,10 +71,13 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
         ).status,
       ).toBe(403);
   for (const name of ["   ", "x".repeat(81)])
-    expect((await call("update-user", { name }, cookie, "views://main")).status).toBe(400);
-  expect((await call("update-user", { name: "  Updated  " }, cookie, "views://main")).status).toBe(
-    200,
-  );
+    expect((await call("update-user", { name }, cookie, nativeClientOrigins.desktop)).status).toBe(
+      400,
+    );
+  expect(
+    (await call("update-user", { name: "  Updated  " }, cookie, nativeClientOrigins.desktop))
+      .status,
+  ).toBe(200);
   expect(data.user?.[0]?.name).toBe("Updated");
   expect(
     (await call("update-user", { name: "Web user" }, cookie, "https://web.example.test")).status,

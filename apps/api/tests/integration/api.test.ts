@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
 import { createApiClient } from "@raypx/client/api";
@@ -25,7 +26,12 @@ describe("HTTP foundation", () => {
     const normalized = createApiApp({
       authHandler: async () => Response.json({}),
       readSession: async () => null,
-      allowedOrigins: ["invalid", "null", "https://web.example.com/", "views://main/"],
+      allowedOrigins: [
+        "invalid",
+        "null",
+        "https://web.example.com/",
+        `${nativeClientOrigins.desktop}/`,
+      ],
     });
     const response = await normalized.request("/health", {
       headers: { origin: "https://web.example.com" },

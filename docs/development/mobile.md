@@ -390,3 +390,9 @@ Markdown links/code/tables without raw HTML. Simulator and physical-device
 acceptance, authenticated live WebSocket/listener checks, PostgreSQL and live
 computer/provider checks have not been run for this mobile implementation.
 Exported bundles and unit/component tests do not substitute for this acceptance.
+
+The server derives trusted origins from `PUBLIC_URL`, optional `API_PUBLIC_URL`
+and `EXTRA_ALLOWED_ORIGINS`, including the fixed native identities automatically.
+Mobile's configured API Origin is already covered by the derived API origin;
+operators do not maintain a separate allowlist. See
+[public address configuration](deployment.md#public-address-configuration).

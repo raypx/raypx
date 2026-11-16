@@ -99,7 +99,7 @@ export function createAuth({
   };
   if (config.secret.length < 32) throw new Error("AUTH_SECRET must contain at least 32 characters");
   if (config.production && new URL(config.baseURL).protocol !== "https:")
-    throw new Error("Production AUTH_URL must use HTTPS");
+    throw new Error("Production authentication base URL must use HTTPS");
   const issuer = new URL(config.baseURL).origin;
   const rpId = config.passkeyRpId ?? new URL(issuer).hostname;
   const passkeyOrigins = origins.filter((origin) => {

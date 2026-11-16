@@ -1,3 +1,4 @@
+import { PublicAddressConfigurationError } from "../public-address.js";
 import { definePlugin } from "nitro";
 import { closeBackendRuntime, getBackendRuntime } from "./backend.js";
 
@@ -5,10 +6,12 @@ export default definePlugin(async (nitroApp) => {
   let runtime: Awaited<ReturnType<typeof getBackendRuntime>>;
   try {
     runtime = await getBackendRuntime();
-  } catch {
+  } catch (error) {
     // Nitro traps rejected plugin promises; explicitly stop this failed startup.
     console.error(
-      "Backend startup failed. Check runtime role, configuration, database availability and migrations.",
+      error instanceof PublicAddressConfigurationError
+        ? error.message
+        : "Backend startup failed. Check runtime role, configuration, database availability and migrations.",
     );
     process.exit(1);
   }

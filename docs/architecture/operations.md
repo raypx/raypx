@@ -160,21 +160,41 @@ settings ask the member. Review never falls back to Never ask or ambient keys.
 owns the API prefixes and exact paths used by Railway and Compose. API tests
 check mounted routes against it; proxy tests/policy check exact matcher parity.
 `/page-content/*` and `/message-attachments/*` reach API, while `/pages` and other
-Web destinations remain on Web. Page `frame-ancestors` comes from HTTP(S)
-`ALLOWED_ORIGINS`, including the common public origin. Proxies preserve API
+Web destinations remain on Web. Page `frame-ancestors` comes from the derived HTTP(S) trusted origins,
+including `PUBLIC_URL` and the public API origin. Proxies preserve API
 response headers; Web's Nitro framing denial never wraps API responses.
+
+## Public address configuration
+
+Production requires `PUBLIC_URL`, the exact HTTPS origin members open in Web.
+`API_PUBLIC_URL` is optional and defaults to `PUBLIC_URL`; supply it only when API
+is published on a different origin. Both reject trailing slashes, paths, queries,
+fragments, credentials and wildcards. `EXTRA_ALLOWED_ORIGINS` is an optional
+comma-separated list of exact additional browser origins (HTTP(S), no wildcard).
+API normalizes and deduplicates the Web/API origins, fixed native client origins
+from `@raypx/core/auth`, and extras. Authentication, passkey RP defaults, routine
+ingress metadata, connector checks, CORS, RPC mutations, event sockets and Page
+frame ancestors consume this derivation. Invitation and Page share links in clients
+continue to use their selected Web/API origins; Web build-time URL handling is
+unchanged. Native identities grant no session or Space membership.
+
+Without explicit public settings, development uses Web `http://localhost:3000`
+and API `http://localhost:3002`. Supplying `PUBLIC_URL` selects the shared-origin
+default; set `API_PUBLIC_URL` explicitly for separate development ports.
+
+`AUTH_URL`, `ALLOWED_ORIGINS` and `DEVICE_CONNECTOR_ORIGIN` are rejected at startup,
+even when empty. See [deployment migration](../development/deployment.md#public-address-configuration)
+for rollout order and rollback settings. All backend roles share this contract.
 
 ## Device connector routing
 
 `/device/*` is API ingress alongside `/rpc/*` and `/events`; Authorization must
 reach it. Combined roles need no broker. Split device Computer frames reuse the
 private Redis broker with a dedicated namespace; durable Runs still use PostgreSQL
-only. Set `DEVICE_CONNECTOR_ORIGIN` to the same canonical public API origin in
-every split API/worker/Relay role. API defaults to its public auth origin; a role
-without the matching device origin fails closed instead of accepting another
-origin's registration. Compose supplies that common origin in its split overlay.
-The optional value accepts HTTPS or loopback HTTP, with no credentials, path,
-query or fragment. See [device limits and acceptance](../development/device-connector.md).
+only. Every split API/worker/Relay role derives connector origin checks from
+`API_PUBLIC_URL`, defaulting to `PUBLIC_URL`. Supply matching public-address
+settings to every role; no independent connector-origin input exists.
+See [device limits and acceptance](../development/device-connector.md).
 
 Worker maintenance deletes expired unsent uploads and transient device file reads
 in batches of 100. Upload rows expire after 24 hours; member reads expire after ten

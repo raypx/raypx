@@ -61,3 +61,9 @@ A shared API/Web origin must follow the
 Desktop opens authenticated Page previews at the Web `/pages` destination;
 its document frames load API `/page-content/*`. Attachment downloads also reach
 API through `/message-attachments/*`.
+
+Server deployments configure `PUBLIC_URL` once, plus `API_PUBLIC_URL` only for a
+separate API origin. Desktop's fixed native Origin is included automatically from
+`@raypx/core/auth`; operators do not add it to a separate allowlist. Keep local
+`base_url` and `web_url` selections aligned with the chosen API and Web origins.
+See [public address configuration](deployment.md#public-address-configuration).

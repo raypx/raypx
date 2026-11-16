@@ -1,3 +1,7 @@
+import { getWebSocketHooks } from "crossws";
+import { conversationFixture } from "../../tests/helpers/conversations.js";
+import { ConversationStream } from "../conversations/stream.js";
+import { createConversationSocketRoutes } from "../conversations/socket.js";
 import { createHash } from "node:crypto";
 import { expect, it, vi } from "vitest";
 import { pageVersionSchema } from "@raypx/core/pages";
@@ -113,11 +117,11 @@ it("rate-limits a token and a platform-owned address independently", async () =>
   ).toBe(200);
 });
 it.each(["document", "html"] as const)(
-  "allows a same-origin member %s frame using ALLOWED_ORIGINS through all API middleware",
+  "allows a same-origin member %s frame using PUBLIC_URL through all API middleware",
   async (kind) => {
     const f = fixture(kind);
     const origin = "https://app.example";
-    const environment = getApiEnvironment({ ALLOWED_ORIGINS: `${origin},views://main,raypx://` });
+    const environment = getApiEnvironment({ PUBLIC_URL: origin });
     const scope = resolveSpaceScope(
       { spaceId: spaceIdSchema.parse("space"), accountId: "member", role: "member", createdAt: at },
       "member",
@@ -178,3 +182,49 @@ it("serves the same hash-authorized Markdown styling for member frames and publi
   stylesheetCoveredByPolicy(memberBody, member);
   stylesheetCoveredByPolicy(publicBody, publicShare);
 });
+
+// A domain replacement must update both field failures from the same input.
+it.each(["document", "html"] as const)(
+  "moves %s frame ancestors and event socket admission together with PUBLIC_URL",
+  async (kind) => {
+    const oldOrigin = "https://old.example.test";
+    for (const apiOrigin of [undefined, "https://api.example.test"]) {
+      for (const origin of [oldOrigin, "https://new.example.test"]) {
+        const environment = getApiEnvironment({
+          PUBLIC_URL: origin,
+          ...(apiOrigin ? { API_PUBLIC_URL: apiOrigin } : {}),
+        });
+        const page = fixture(kind);
+        const session = conversationFixture();
+        const stream = new ConversationStream(session);
+        const app = createApiApp({
+          pages: page.pages,
+          allowedOrigins: environment.allowedOrigins,
+        }).route(
+          "/events",
+          createConversationSocketRoutes({
+            stream,
+            allowedOrigins: environment.allowedOrigins,
+            readSession: session.readSession,
+          }),
+        );
+        const response = await app.request(`/page-content/public/${token}`);
+        expect(response.status).toBe(200);
+        const ancestors = response.headers
+          .get("content-security-policy")!
+          .split("; ")
+          .find((directive) => directive.startsWith("frame-ancestors "));
+        expect(ancestors).toBe(`frame-ancestors ${origin}${apiOrigin ? ` ${apiOrigin}` : ""}`);
+        for (const browserOrigin of [oldOrigin, "https://new.example.test"]) {
+          const request = new Request(`${environment.publicApiOrigin}/events`, {
+            headers: { origin: browserOrigin, upgrade: "websocket" },
+          });
+          expect((await app.fetch(request)).status).toBe(browserOrigin === origin ? 426 : 403);
+          expect(getWebSocketHooks(request)?.open).toBeTypeOf(
+            browserOrigin === origin ? "function" : "undefined",
+          );
+        }
+      }
+    }
+  },
+);

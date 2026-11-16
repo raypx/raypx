@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { expect, it, vi } from "vitest";
 import { DesktopApi } from "./api.js";
 import { SessionCookies } from "./cookies.js";
@@ -87,7 +88,7 @@ it("keeps cookies and authorization response headers in the daemon and redacts a
   await api.request(request(), "page", signal());
   const forwarded = fetch.mock.calls[1]![0];
   expect(forwarded.headers.get("cookie")).toContain("private-cookie");
-  expect(forwarded.headers.get("origin")).toBe("views://main");
+  expect(forwarded.headers.get("origin")).toBe(nativeClientOrigins.desktop);
 });
 
 it("rejects redirects, oversized response streams and unsafe RPC serializer metadata", async () => {

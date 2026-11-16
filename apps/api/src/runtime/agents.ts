@@ -77,12 +77,9 @@ export async function composeAgents(
 ) {
   const deviceComputersRepository = createDeviceComputersRepository(
     db,
-    environment.DEVICE_CONNECTOR_ORIGIN ?? environment.publicApiOrigin ?? "",
+    environment.publicApiOrigin,
   );
-  const memberFiles = createDeviceMemberFilesRepository(
-    db,
-    environment.DEVICE_CONNECTOR_ORIGIN ?? environment.publicApiOrigin ?? "",
-  );
+  const memberFiles = createDeviceMemberFilesRepository(db, environment.publicApiOrigin);
   const deviceConnector = createDeviceConnectorRegistry(
     deviceComputersRepository,
     environment.REDIS_URL ? createDeviceBroker(environment.REDIS_URL) : undefined,

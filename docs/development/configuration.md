@@ -6,8 +6,8 @@ server or configuration package.
 
 ## First setup
 
-1. Create a fresh isolated PostgreSQL database. Set `DATABASE_URL`, `AUTH_URL`,
-   exact `ALLOWED_ORIGINS`, and independent `AUTH_SECRET` and `APP_KEY` values.
+1. Create a fresh isolated PostgreSQL database. Set `DATABASE_URL`, `PUBLIC_URL`,
+   optional `API_PUBLIC_URL` for a separate API origin, and independent `AUTH_SECRET` and `APP_KEY` values.
    Apply the single current baseline with `bun run --cwd apps/api db:migrate`
    (or let the documented startup migration apply it). Never apply this baseline
    to an earlier/operator database.
@@ -112,7 +112,7 @@ database compare-and-swap, returning a conflict instead of silently overwriting.
 The page retains the draft until the administrator loads the latest version,
 which keeps the fields they edited and takes every other field from the new
 revision. Writes require a valid session, admitted administrator role and an Origin
-in `ALLOWED_ORIGINS`, and are limited to 10 per administrator per minute. DTOs
+in the trusted origins derived from `PUBLIC_URL`, `API_PUBLIC_URL` and `EXTRA_ALLOWED_ORIGINS`, and are limited to 10 per administrator per minute. DTOs
 reject extra configuration keys.
 
 The public projection contains only site name, registration policy and the three non-secret setup/mail booleans.

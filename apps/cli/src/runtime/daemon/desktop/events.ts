@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import {
   conversationServerFrameSchema,
   MAX_CONVERSATION_FRAME_BYTES,
@@ -137,7 +138,12 @@ export class DesktopEvents {
     };
     resource.protocol = resource.protocol === "https:" ? "wss:" : "ws:";
     try {
-      stream.socket = this.connect(resource, { cookie, origin: "views://main" }, receive, ended);
+      stream.socket = this.connect(
+        resource,
+        { cookie, origin: nativeClientOrigins.desktop },
+        receive,
+        ended,
+      );
       if (stream.scope.signal.aborted || stream.closed) {
         stream.socket.close();
         delete stream.socket;

@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { expect, it, vi } from "vitest";
 import { DesktopEvents, type EventsSocketFactory } from "./events.js";
 import { parseSessionCookie, SessionCookies } from "./cookies.js";
@@ -82,7 +83,7 @@ it("opens only the selected-origin stream with private session headers, and neve
   expect(f.connect.mock.calls[0]![0].href).toBe("wss://api.example.test/events");
   expect(f.connect.mock.calls[0]![1]).toEqual({
     cookie: "__Secure-better-auth.session_token=private",
-    origin: "views://main",
+    origin: nativeClientOrigins.desktop,
   });
   f.receive({ type: "ready", version: 1 });
   expect(await f.events.read("page", f.id, signal())).toEqual({ type: "ready", version: 1 });

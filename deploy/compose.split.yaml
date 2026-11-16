@@ -18,10 +18,11 @@ services:
     environment:
       NODE_ENV: production
       SERVER_ROLE: relay
-      DEVICE_CONNECTOR_ORIGIN: ${DEVICE_CONNECTOR_ORIGIN:-https://${APP_HOST:?}}
+      PUBLIC_URL: https://${APP_HOST:?Set the application hostname}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-}
+      EXTRA_ALLOWED_ORIGINS: ${EXTRA_ALLOWED_ORIGINS:-}
       DATABASE_URL: postgres://${POSTGRES_RUNTIME_USER:-raypx_runtime}:${POSTGRES_RUNTIME_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       REDIS_URL: ${REDIS_URL:-}
-      ALLOWED_ORIGINS: https://${APP_HOST:?},views://main,raypx://
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -51,7 +52,9 @@ services:
     environment:
       NODE_ENV: production
       SERVER_ROLE: worker
-      DEVICE_CONNECTOR_ORIGIN: ${DEVICE_CONNECTOR_ORIGIN:-https://${APP_HOST:?}}
+      PUBLIC_URL: https://${APP_HOST:?Set the application hostname}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-}
+      EXTRA_ALLOWED_ORIGINS: ${EXTRA_ALLOWED_ORIGINS:-}
       REDIS_URL: ${REDIS_URL:-}
       APP_KEY: ${APP_KEY:?Set the application key}
       DATABASE_MIGRATE_ON_START: "false"

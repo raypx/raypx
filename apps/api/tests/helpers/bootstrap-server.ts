@@ -30,8 +30,8 @@ const runtime = await createRuntime(
   getApiEnvironment({
     NODE_ENV: "test",
     DATABASE_URL: url,
-    AUTH_URL: `http://127.0.0.1:${port}`,
-    ALLOWED_ORIGINS: webOrigin,
+    PUBLIC_URL: webOrigin,
+    API_PUBLIC_URL: `http://127.0.0.1:${port}`,
   }),
   {
     logger,

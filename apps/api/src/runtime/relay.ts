@@ -13,7 +13,7 @@ import { createClientIpReader } from "../app/client-ip.js";
 export async function createRelayRuntime(environment: RelayEnvironment) {
   const connection = connectRuntimeDatabase(environment.DATABASE_URL);
   const deviceConnector = createDeviceConnectorRegistry(
-    createDeviceComputersRepository(connection.db, environment.DEVICE_CONNECTOR_ORIGIN ?? ""),
+    createDeviceComputersRepository(connection.db, environment.publicApiOrigin),
     environment.REDIS_URL ? createDeviceBroker(environment.REDIS_URL) : undefined,
   );
   try {

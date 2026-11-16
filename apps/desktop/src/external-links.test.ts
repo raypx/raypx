@@ -1,4 +1,5 @@
 /** @vitest-environment happy-dom */
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { expect, it } from "vitest";
 import { externalLinkTarget } from "./lib/external-links.js";
 it("keeps dev-server router links inside Desktop and identifies only external HTTP links", () => {
@@ -12,7 +13,7 @@ it("keeps dev-server router links inside Desktop and identifies only external HT
     return externalLinkTarget(event, origin);
   };
   expect(target("http://localhost:1420/tasks", "http://localhost:1420")).toBeNull();
-  expect(target("views://main/tasks?scope=local#settings", "null")).toBeNull();
+  expect(target(`${nativeClientOrigins.desktop}/tasks?scope=local#settings`, "null")).toBeNull();
   expect(target("https://raypx.com/docs", "http://localhost:1420")).toBe("https://raypx.com/docs");
   expect(target("javascript:alert(1)", "http://localhost:1420")).toBeNull();
 });

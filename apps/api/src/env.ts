@@ -1,4 +1,4 @@
-import { normalizeTrustedOrigins } from "@raypx/core/auth";
+import { derivePublicAddress, rejectRetiredOriginInputs } from "./public-address.js";
 import { defineEnv, type Preset, z } from "@raypx/env";
 import type apiEnvironmentSources from "./env.contract.js";
 function computerLimit(fallback: string) {
@@ -10,22 +10,9 @@ function computerLimit(fallback: string) {
     .pipe(z.number().int().max(1000));
 }
 const server = {
-  DEVICE_CONNECTOR_ORIGIN: z
-    .url()
-    .refine((value) => {
-      const url = new URL(value);
-      const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
-      return (
-        !url.username &&
-        !url.password &&
-        url.pathname === "/" &&
-        !url.search &&
-        !url.hash &&
-        (url.protocol === "https:" || (url.protocol === "http:" && loopback))
-      );
-    })
-    .transform((value) => new URL(value).origin)
-    .optional(),
+  PUBLIC_URL: z.string().default("http://localhost:3000"),
+  API_PUBLIC_URL: z.string().optional(),
+  EXTRA_ALLOWED_ORIGINS: z.string().default(""),
   COMPUTERS_PER_MEMBER: computerLimit("10"),
   COMPUTERS_PER_SPACE: computerLimit("1"),
   SERVER_ROLE: z.enum(["api", "all"]).default("all"),
@@ -76,7 +63,6 @@ const server = {
     .default("true")
     .transform((value) => value === "true"),
   DATABASE_URL: z.url().default("postgres://postgres:postgres@localhost:5433/raypx_foundation"),
-  AUTH_URL: z.url().default("http://localhost:3002"),
   AUTH_SECRET: z.string().min(32).default("raypx-development-only-secret-32-characters"),
   /** Encrypts stored provider credentials; never the auth secret. */
   APP_KEY: z.string().min(32).default("raypx-development-only-app-key-32-characters"),
@@ -84,9 +70,6 @@ const server = {
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   GITHUB_CLIENT_ID: z.string().min(1).optional(),
   GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
-  ALLOWED_ORIGINS: z
-    .string()
-    .default("http://localhost:3000,http://localhost:5173,views://main,raypx://"),
   AUTH_PASSKEY_RP_ID: z
     .union([z.literal(""), z.string().regex(/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/)])
     .optional(),
@@ -111,7 +94,9 @@ const list = (value: string | undefined) =>
     .filter(Boolean);
 
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
+  rejectRetiredOriginInputs(runtimeEnv);
   const env = defineEnv({ extends: [apiServerEnv], runtimeEnv, isServer: true });
+  const address = derivePublicAddress(env, runtimeEnv);
   validateRunTiming(env);
   if (Boolean(env.ROUTINE_EMAIL_RELAY_TOKEN) !== Boolean(env.ROUTINE_EMAIL_DOMAIN))
     throw new Error("Routine email requires ROUTINE_EMAIL_RELAY_TOKEN and ROUTINE_EMAIL_DOMAIN");
@@ -129,16 +114,8 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
       throw new Error("ROUTINE_EMAIL_RELAY_TOKEN must be dedicated");
   }
   if (env.NODE_ENV === "production") {
-    if (
-      !runtimeEnv.DATABASE_URL ||
-      !runtimeEnv.AUTH_URL ||
-      !runtimeEnv.AUTH_SECRET ||
-      !runtimeEnv.APP_KEY ||
-      !runtimeEnv.ALLOWED_ORIGINS
-    )
-      throw new Error(
-        "Production requires DATABASE_URL, AUTH_URL, AUTH_SECRET, APP_KEY and ALLOWED_ORIGINS",
-      );
+    if (!runtimeEnv.DATABASE_URL || !runtimeEnv.AUTH_SECRET || !runtimeEnv.APP_KEY)
+      throw new Error("Production requires DATABASE_URL, PUBLIC_URL, AUTH_SECRET and APP_KEY");
     if (env.AUTH_SECRET.startsWith("raypx-development"))
       throw new Error("Production AUTH_SECRET must be explicitly configured");
     if (env.APP_KEY.startsWith("raypx-development"))
@@ -146,8 +123,6 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
     // Rotating sessions must never invalidate stored credentials.
     if (env.APP_KEY === env.AUTH_SECRET)
       throw new Error("Production APP_KEY must differ from AUTH_SECRET");
-    if (new URL(env.AUTH_URL).protocol !== "https:")
-      throw new Error("Production AUTH_URL must use HTTPS");
   }
   for (const provider of ["GOOGLE", "GITHUB"] as const) {
     if (Boolean(env[`${provider}_CLIENT_ID`]) !== Boolean(env[`${provider}_CLIENT_SECRET`]))
@@ -161,9 +136,7 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
     );
   return {
     ...env,
-    // AUTH_URL's development fallback is for authentication, not a published ingress address.
-    publicApiOrigin: normalizeTrustedOrigins([runtimeEnv.AUTH_URL ?? ""])[0] ?? null,
-    allowedOrigins: normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(",")),
+    ...address,
     ipAddressHeaders: list(env.AUTH_IP_HEADERS).map((v) => v.toLowerCase()),
     trustedProxies: list(env.AUTH_TRUSTED_PROXIES),
   };
@@ -171,6 +144,7 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
 export type ApiEnvironment = ReturnType<typeof getApiEnvironment>;
 
 export function getServerRole(runtimeEnv: Record<string, string | undefined> = process.env) {
+  rejectRetiredOriginInputs(runtimeEnv);
   return z.enum(["api", "worker", "relay", "all"]).parse(runtimeEnv.SERVER_ROLE || "all");
 }
 
@@ -181,12 +155,15 @@ function validateRunTiming(environment: { RUN_HEARTBEAT_MS: number; RUN_LEASE_MS
 
 /** Worker Runs need no broker; split device computers optionally reuse one. */
 export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
+  rejectRetiredOriginInputs(runtimeEnv);
   const environment = defineEnv({
     isServer: true,
     runtimeEnv,
     server: {
       NODE_ENV: server.NODE_ENV,
-      DEVICE_CONNECTOR_ORIGIN: server.DEVICE_CONNECTOR_ORIGIN,
+      PUBLIC_URL: server.PUBLIC_URL,
+      API_PUBLIC_URL: server.API_PUBLIC_URL,
+      EXTRA_ALLOWED_ORIGINS: server.EXTRA_ALLOWED_ORIGINS,
       DATABASE_URL: server.DATABASE_URL,
       DATABASE_MIGRATE_ON_START: server.DATABASE_MIGRATE_ON_START,
       COMPUTERS_PER_MEMBER: server.COMPUTERS_PER_MEMBER,
@@ -217,30 +194,33 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
   if (!/^postgres(?:ql)?:$/.test(new URL(environment.DATABASE_URL).protocol))
     throw new Error("Invalid worker database protocol");
   const { REDIS_URL, ...worker } = environment;
-  return { ...worker, ...(REDIS_URL ? { REDIS_URL } : {}) };
+  return {
+    ...worker,
+    ...derivePublicAddress(environment, runtimeEnv),
+    ...(REDIS_URL ? { REDIS_URL } : {}),
+  };
 }
 export type WorkerEnvironment = ReturnType<typeof getWorkerEnvironment>;
 
 /** Relay intentionally never parses authentication, mail or signing configuration. */
 export function getRelayEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
+  rejectRetiredOriginInputs(runtimeEnv);
   const env = defineEnv({
     isServer: true,
     runtimeEnv,
     server: {
       NODE_ENV: server.NODE_ENV,
-      DEVICE_CONNECTOR_ORIGIN: server.DEVICE_CONNECTOR_ORIGIN,
+      PUBLIC_URL: server.PUBLIC_URL,
+      API_PUBLIC_URL: server.API_PUBLIC_URL,
+      EXTRA_ALLOWED_ORIGINS: server.EXTRA_ALLOWED_ORIGINS,
       DATABASE_URL: z.url(),
       REDIS_URL: z.url().optional(),
-      ALLOWED_ORIGINS: z.string().min(1),
     },
   });
   if (!/^postgres(?:ql)?:$/.test(new URL(env.DATABASE_URL).protocol))
     throw new Error("Invalid Relay database protocol");
   if (env.REDIS_URL && !/^rediss?:$/.test(new URL(env.REDIS_URL).protocol))
     throw new Error("Invalid Relay broker protocol");
-  if (env.ALLOWED_ORIGINS.includes("*")) throw new Error("Relay requires exact allowed origins");
-  const allowedOrigins = normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(","));
-  if (!allowedOrigins.length) throw new Error("Relay requires allowed origins");
-  return { ...env, allowedOrigins };
+  return { ...env, ...derivePublicAddress(env, runtimeEnv) };
 }
 export type RelayEnvironment = ReturnType<typeof getRelayEnvironment>;

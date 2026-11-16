@@ -1,3 +1,4 @@
+import { nativeClientOrigins } from "@raypx/core/auth";
 import { expect, it, vi } from "vitest";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { desktopLoginPaths, desktopOAuthClientId, oauthTokenPath } from "@raypx/contracts/api";
@@ -27,7 +28,7 @@ async function fixture() {
     config: {
       baseURL: issuer,
       secret: "desktop-login-test-secret-at-least-32-characters",
-      trustedOrigins: [web, "views://main"],
+      trustedOrigins: [web, nativeClientOrigins.desktop],
       production: false,
     },
   });
