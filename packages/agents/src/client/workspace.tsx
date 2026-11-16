@@ -990,7 +990,7 @@ function AgentsWorkspaceContents({
   const homeCreateAction =
     sidebarCollapsed && !renderWorkspace && !selected && page.agents.length === 0;
   const rowClass =
-    "min-h-9 w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal aria-[current=page]:font-medium aria-[current=page]:text-selected-text pointer-coarse:min-h-11 sidebar-icon:justify-center sidebar-icon:px-0";
+    "min-h-9 w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal aria-[current=page]:bg-selected aria-[current=page]:font-medium aria-[current=page]:text-selected-text aria-[current=page]:hover:bg-selected aria-[current=page]:hover:text-selected-text pointer-coarse:min-h-11 dark:aria-[current=page]:hover:bg-selected sidebar-icon:justify-center sidebar-icon:px-0";
   function agentMenu(item: AgentConversationView, isRecent = false) {
     return (
       <DropdownMenu>
@@ -1317,11 +1317,7 @@ function AgentsWorkspaceContents({
                           }}
                           size="sm"
                           variant="ghost"
-                          className={cn(
-                            rowClass,
-                            item.conversation.id === page.groupId &&
-                              "bg-selected text-selected-text",
-                          )}
+                          className={rowClass}
                           aria-label={item.conversation.name}
                           title={item.conversation.name}
                           aria-current={item.conversation.id === page.groupId ? "page" : undefined}
