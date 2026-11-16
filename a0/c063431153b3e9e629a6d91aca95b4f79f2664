@@ -1,0 +1,96 @@
+package.json
+  s_e8793b91e4301c::t_9ef4fca123c194 36
+apps/web/locales/en/site.json
+  s_e8793b91e4301c::t_f5f0d8c6da295b 30-34
+docs/development/sandbox.md
+  s_e8793b91e4301c::t_b87eb4dc2d1963 197-227
+apps/web/locales/zh/site.json
+  s_e8793b91e4301c::t_f5f0d8c6da295b 30-34
+packages/contracts/src/config.ts
+  s_e8793b91e4301c::t_9ef4fca123c194 101,108-111,114-118,142
+packages/providers/src/computer/e2b.ts
+  s_e8793b91e4301c::t_2524809e60fd02 1-104,106-129,134-216,222,224-238,242-256,260,262,264-267,270-305,311-341,343-356,358-386,388,392-402,407,416-451,456-531
+  s_e8793b91e4301c::t_7cafddb02b66b5 258,261,263,269,342,357,389,406,408,414-415,452-455
+  s_e8793b91e4301c::t_b87eb4dc2d1963 130-133,268,306-310,387,390-391,409-412
+  s_e8793b91e4301c::t_9cf01a237d705b 105,217,239-241
+  s_e8793b91e4301c::t_cb010036aadd4f 218-221,223,257,259,403-405,413
+packages/database/src/schema.ts
+  s_e8793b91e4301c::t_9ef4fca123c194 288,291,312-342,1626,1628,2846
+  s_030816a343f37e::t_be3abe6fd80d10 263,289-290
+infra/sandbox/src/e2b.py
+  s_e8793b91e4301c::t_7cafddb02b66b5 14,62-63,105
+  s_e8793b91e4301c::t_2524809e60fd02 1-13,15-61,64-104,106-125
+apps/api/tests/postgres/node/e2b-computer.test.ts
+  s_e8793b91e4301c::t_b2078f2f104d87 1-254
+infra/sandbox/src/e2b-template.ts
+  s_e8793b91e4301c::t_9cf01a237d705b 1-15,19-36
+  s_e8793b91e4301c::t_7cafddb02b66b5 16-18
+infra/sandbox/AGENTS.md
+  s_e8793b91e4301c::t_b87eb4dc2d1963 71-74
+PRODUCT.md
+  s_030816a343f37e::t_3c78dd13a79eb3 253-255,258
+docs/architecture/computers.md
+  s_e8793b91e4301c::t_909cb3ef71228e 31
+  s_e8793b91e4301c::t_b87eb4dc2d1963 99,101-102,116-121
+AGENTS.md
+  s_030816a343f37e::t_3c78dd13a79eb3 29-31
+apps/api/AGENTS.md
+  s_e8793b91e4301c::t_b87eb4dc2d1963 67-71
+infra/sandbox/src/home.py
+  s_e8793b91e4301c::t_09728341f6656e 127,134-135
+packages/providers/package.json
+  s_e8793b91e4301c::t_9ef4fca123c194 9,23
+docs/development/configuration.md
+  s_e8793b91e4301c::t_b87eb4dc2d1963 161-168,185-186,198-202
+  s_e8793b91e4301c::t_0cb0777bab1b8d 203
+infra/sandbox/package.json
+  s_e8793b91e4301c::t_9cf01a237d705b 10,17
+apps/api/src/runtime/sandbox.ts
+  s_e8793b91e4301c::t_b87eb4dc2d1963 6-7,9,26-31,34,38-46,48,73,89-91,125-129,143,159,186-187
+packages/providers/AGENTS.md
+  s_e8793b91e4301c::t_b87eb4dc2d1963 46-51
+packages/database/AGENTS.md
+  s_e8793b91e4301c::t_b87eb4dc2d1963 217-221
+apps/web/src/features/config/components/sandbox.tsx
+  s_e8793b91e4301c::t_f5f0d8c6da295b 74,102-120,133-138,147,152,173-183,201-236,238-240,254,257-269
+apps/api/src/config/sandbox.ts
+  s_030816a343f37e::t_d582ffabafc931 10,22-25,30,38-39,55,57,69,71,112-117,120-131,162,164-169,172
+apps/api/src/routers/rpc/config.ts
+  s_e8793b91e4301c::t_c38d830e310199 75
+apps/api/src/runtime/e2b-placement.ts
+  s_030816a343f37e::t_f35ad51702f758 1-87
+bun.lock
+  s_030816a343f37e::t_de4450b033b727 322,813,984,1305-1310,1333-1334,2427,2479-2480,2589-2590,3169-3172,3223-3224,3573-3574,3757-3760,3763-3768,3771-3774,3777-3784,3875-3876,3897-3898,3901-3902,4027-4042,4047-4052,4107-4108,4117-4120
+docs/roadmap.md
+  s_030816a343f37e::t_a5a74ee1d25ba7 282-285,293
+packages/computers/src/server/postgres.ts
+  s_030816a343f37e::t_d8d0836652a483 18-23
+packages/database/drizzle-foundation/20261116080027_baseline/migration.sql
+  s_e8793b91e4301c::t_2b058c94a964ad 126-141,182,188,1093,1439
+packages/database/drizzle-foundation/20261116080027_baseline/snapshot.json
+  s_e8793b91e4301c::t_f9f3715b7411ab 5,200-218,4568-4592,8064-8069,9608-9737,10102-10114,17771-17783,23301-23319,25981-25991,27279-27292,27321-27327
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a0c063431153b3e9e629a6d91aca95b4f79f2664",
+  "prompts": {},
+  "sessions": {
+    "s_030816a343f37e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e350-789c-7202-9ccd-a645a338ab28",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
