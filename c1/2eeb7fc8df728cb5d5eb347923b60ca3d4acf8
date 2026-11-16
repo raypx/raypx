@@ -1,0 +1,19 @@
+apps/web/e2e/production-restart.spec.ts
+  s_7f9362525d805b::t_be5b10458f858c 63-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c12eeb7fc8df728cb5d5eb347923b60ca3d4acf8",
+  "prompts": {},
+  "sessions": {
+    "s_7f9362525d805b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e2-b18c-79c0-acca-50ae949d3042",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
