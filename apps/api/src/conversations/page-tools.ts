@@ -10,9 +10,9 @@ import {
 export function withPageTools(
   computer: ComputerTools,
   service: PagesService,
-  secrets: () => readonly string[],
+  { publicWebOrigin, secrets }: { publicWebOrigin: string; secrets: () => readonly string[] },
 ): ComputerTools {
-  const pages = createPageTools(service);
+  const pages = createPageTools(service, publicWebOrigin);
   function isPage(name: string) {
     return (
       name === "agent_page_create" || name === "agent_page_update" || name === "agent_page_read"

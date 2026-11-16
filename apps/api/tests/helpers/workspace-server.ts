@@ -231,7 +231,7 @@ const runner = new ConversationRunner(
               protectedValues,
             ),
             pages,
-            protectedValues,
+            { publicWebOrigin: environment.publicWebOrigin, secrets: protectedValues },
           ),
           skills,
           protectedValues,

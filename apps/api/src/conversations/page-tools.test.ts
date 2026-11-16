@@ -5,6 +5,10 @@ import { agentToolsFixture } from "../../tests/helpers/agent-tools.js";
 import { withPageTools } from "./page-tools.js";
 
 const cleanups: Array<() => Promise<void>> = [];
+const pageToolsOptions = {
+  publicWebOrigin: "https://workspace.example.test",
+  secrets: () => [],
+};
 afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();
 });
@@ -44,8 +48,12 @@ it("refuses model-supplied Page activity metadata rather than copying it from ar
   const f = agentToolsFixture();
   cleanups.push(() => f.runner.close());
   const s = service();
-  const tools = withPageTools(f.tools, s.pages, () => []);
-  for (const forged of [{ pageId: "forged", version: 99 }, { page: { id: "forged", version: 99 } }])
+  const tools = withPageTools(f.tools, s.pages, pageToolsOptions);
+  for (const forged of [
+    { pageId: "forged", version: 99 },
+    { page: { id: "forged", version: 99 } },
+    { pageUrl: "https://other.example.test/pages" },
+  ])
     expect(() =>
       tools.prepare({
         type: "toolCall",
@@ -61,10 +69,7 @@ it("asks for routine Page changes and asks again after untrusted results even wi
   cleanups.push(() => f.runner.close());
   const s = service();
   const checkpoints = vi.spyOn(f.repository, "saveCheckpoint");
-  Object.assign(
-    f.tools,
-    withPageTools({ ...f.tools }, s.pages, () => []),
-  );
+  Object.assign(f.tools, withPageTools({ ...f.tools }, s.pages, pageToolsOptions));
   const claim = f.repository.claimNext.bind(f.repository);
   f.repository.claimNext = async (...args) => {
     const execution = await claim(...args);
@@ -77,10 +82,16 @@ it("asks for routine Page changes and asks again after untrusted results even wi
   await f.agentApprovals.updateSettings("member", { expectedRevision: 0, mode: "ask", rules: [] });
   await f.conversations.send(f.scope, f.conversationId, {
     idempotencyKey: "page-routine",
-    text: "Maintain the report",
+    text: "Maintain the report. Previous link: https://gateway-next.up.railway.app/pages",
   });
   await expect.poll(() => f.calls.length).toBe(1);
-  expect(f.calls[0]!.input.tools?.map((tool) => tool.name)).toContain("agent_page_create");
+  expect(f.calls[0]!.input.tools).toEqual(
+    expect.arrayContaining(
+      ["agent_page_create", "agent_page_read", "agent_page_update"].map((name) =>
+        expect.objectContaining({ name, description: expect.stringContaining("pageUrl verbatim") }),
+      ),
+    ),
+  );
   f.calls[0]!.toolCalls([
     {
       type: "toolCall",
@@ -103,6 +114,15 @@ it("asks for routine Page changes and asks again after untrusted results even wi
     agentId: "agent",
     author: { kind: "run", accountId: "member" },
   });
+  const pageUrl = `${pageToolsOptions.publicWebOrigin}/pages?spaceId=${f.scope.spaceId}&pageId=${s.saved()!.id}`;
+  const includesPageUrl = expect.stringContaining(`"pageUrl":${JSON.stringify(pageUrl)}`);
+  expect(f.calls[1]!.input.continuation).toContainEqual(
+    expect.objectContaining({
+      role: "toolResult",
+      toolName: "agent_page_create",
+      content: [{ type: "text", text: includesPageUrl }],
+    }),
+  );
   await f.agentApprovals.updateSettings("member", {
     expectedRevision: 1,
     mode: "ask",
@@ -119,6 +139,12 @@ it("asks for routine Page changes and asks again after untrusted results even wi
   await expect.poll(() => f.requests.length).toBe(2);
   await f.agentApprovals.answer(f.scope, f.requests[1]!.id, { decision: "approved" });
   await expect.poll(() => f.calls.length).toBe(3);
+  const update = f.calls[2]!.input.continuation?.find(
+    (message) => message.role === "toolResult" && message.toolName === "agent_page_update",
+  );
+  expect(update).toMatchObject({
+    content: [{ type: "text", text: includesPageUrl }],
+  });
   expect(checkpoints.mock.calls.map((call) => call[3]?.page)).toEqual([
     { id: s.saved()!.id, version: 1 },
     { id: s.saved()!.id, version: 2 },
@@ -136,10 +162,7 @@ it("keeps exact Block precedence for Page changes", async () => {
   const f = agentToolsFixture();
   cleanups.push(() => f.runner.close());
   const s = service();
-  Object.assign(
-    f.tools,
-    withPageTools({ ...f.tools }, s.pages, () => []),
-  );
+  Object.assign(f.tools, withPageTools({ ...f.tools }, s.pages, pageToolsOptions));
   await f.agentApprovals.updateSettings("member", {
     expectedRevision: 0,
     mode: "ask",
@@ -168,10 +191,7 @@ it("asks on an untrusted Run even when the member has an exact Page Allow rule",
   const f = agentToolsFixture();
   cleanups.push(() => f.runner.close());
   const s = service();
-  Object.assign(
-    f.tools,
-    withPageTools({ ...f.tools }, s.pages, () => []),
-  );
+  Object.assign(f.tools, withPageTools({ ...f.tools }, s.pages, pageToolsOptions));
   const claim = f.repository.claimNext.bind(f.repository);
   f.repository.claimNext = async (...args) => {
     const execution = await claim(...args);

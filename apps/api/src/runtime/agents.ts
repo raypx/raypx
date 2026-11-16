@@ -169,7 +169,14 @@ export async function composeAgents(
   );
   const tools = withOpenApiTools(
     withMcpTools(
-      withSkillTools(withPageTools(memoryTools, pages, protectedValues), skills, protectedValues),
+      withSkillTools(
+        withPageTools(memoryTools, pages, {
+          publicWebOrigin: environment.publicWebOrigin,
+          secrets: protectedValues,
+        }),
+        skills,
+        protectedValues,
+      ),
       mcpServers,
       protectedValues,
     ),

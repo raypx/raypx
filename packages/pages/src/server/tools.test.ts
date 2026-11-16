@@ -22,7 +22,7 @@ const run = {
 it("paginates escaped Page text within the complete result budget and labels each slice untrusted", async () => {
   const body = '\u0001"\\'.repeat(5_000);
   const page = pageVersionSchema.parse({
-    id: pageIdSchema.parse("page"),
+    id: pageIdSchema.parse("page #1/?"),
     spaceId: scope.spaceId,
     agentId: run.agentId,
     title: "Report",
@@ -34,7 +34,10 @@ it("paginates escaped Page text within the complete result budget and labels eac
     createdAt: at,
     updatedAt: at,
   });
-  const tools = createPageTools({ get: async () => page } as unknown as PagesService);
+  const tools = createPageTools(
+    { get: async () => page } as unknown as PagesService,
+    "https://workspace.example.test",
+  );
   let offset = 0;
   let reconstructed = "";
   while (offset < body.length) {
@@ -48,10 +51,14 @@ it("paginates escaped Page text within the complete result budget and labels eac
     expect(result.length).toBeLessThanOrEqual(MAX_TOOL_RESULT);
     const parsed = JSON.parse(result) as {
       untrusted: boolean;
+      pageUrl: string;
       page: { body: string };
       nextOffset: number | null;
     };
     expect(parsed.untrusted).toBe(true);
+    expect(parsed.pageUrl).toBe(
+      "https://workspace.example.test/pages?spaceId=space&pageId=page+%231%2F%3F",
+    );
     reconstructed += parsed.page.body;
     if (parsed.nextOffset === null) break;
     expect(parsed.nextOffset).toBeGreaterThan(offset);
@@ -72,7 +79,10 @@ it("requires change policy for writes, carries fenced mutation identity, and ref
       updatedAt: at,
     }),
   );
-  const tools = createPageTools({ create } as unknown as PagesService);
+  const tools = createPageTools(
+    { create } as unknown as PagesService,
+    "https://workspace.example.test",
+  );
   const call = tools.prepare({
     id: "write",
     name: "agent_page_create",

@@ -229,6 +229,11 @@ link after deletion without retaining the document body or granting access.
 Web opens Page detail, Desktop retains its Web preview handoff, and Mobile hands
 off to Web. Null identity opens the Pages list; stale IDs show a deleted state.
 
+Successful Page reads, creates and updates include a `pageUrl` for the Page
+detail route under the configured public Web origin (`PUBLIC_URL`). The tool
+descriptions tell Agents to use the latest successful result's URL verbatim in
+replies. The link opens the current Page and requires Space membership.
+
 Ask about a Page keeps the member-content Markdown link in the draft and stored
 message for Agent resolution. Web/Desktop recognize only the exact reference at
 the configured API origin in the conversation's own Space, render a focusable Page
