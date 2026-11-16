@@ -1,0 +1,61 @@
+apps/web/e2e/theme-final.spec.ts
+  s_2d5ecafcaef8ed::t_72ae7fb677cc3a 499
+  s_2d5ecafcaef8ed::t_37641eed09fd08 15,18,208-209,317-320,332,397-398,401-404,414-424,431,433-436,438,452-454,456-457,464-465,467-474,477-478,500,504,527-529,531,533-538,541-544
+  s_2d5ecafcaef8ed::t_1e086d59cc46d6 210
+  s_2d5ecafcaef8ed::t_fd09daf43b46f2 3,405-413,425,437,455,505,530
+  s_2d5ecafcaef8ed::t_c8390c67bbeaf5 311,462-463
+  s_2d5ecafcaef8ed::t_d61db9d68db2d1 501-503
+  s_2d5ecafcaef8ed::t_ca5c92e23369a3 207,334-340,399-400,426-430,432,466,475-476,532
+apps/web/e2e/theme-focus.ts
+  s_2d5ecafcaef8ed::t_37641eed09fd08 1-58,64-69,74-78,80-88
+  s_2d5ecafcaef8ed::t_4793e128b42b6d 70-73
+  s_2d5ecafcaef8ed::t_fd09daf43b46f2 59-63,79
+e2e/AGENTS.md
+  s_2d5ecafcaef8ed::t_1e086d59cc46d6 166-168,171-172
+DESIGN.md
+  s_2d5ecafcaef8ed::t_5c35e8e4f1068d 33-35
+packages/blocks/src/components/command-palette.tsx
+  s_2d5ecafcaef8ed::t_305ec1435e811d 104,109
+packages/ui/src/components/ui/badge.tsx
+  s_2d5ecafcaef8ed::t_f75d8d51ca568b 8
+packages/ui/src/components/ui/button.tsx
+  s_2d5ecafcaef8ed::t_4df2eb792d3e71 9
+packages/ui/src/components/ui/checkbox.tsx
+  s_2d5ecafcaef8ed::t_42f9305b5d32b3 10
+packages/ui/src/components/ui/combobox.tsx
+  s_2d5ecafcaef8ed::t_9e7e4d4e2c0465 22,45
+packages/ui/src/components/ui/field.tsx
+  s_2d5ecafcaef8ed::t_864ae2265b1b16 51
+packages/ui/src/components/ui/input-group.tsx
+  s_2d5ecafcaef8ed::t_ac95afcecab685 22
+packages/ui/src/components/ui/input.tsx
+  s_2d5ecafcaef8ed::t_26f08f7c6fc391 18
+packages/ui/src/components/ui/native-select.tsx
+  s_2d5ecafcaef8ed::t_46ab50ace055e3 22
+packages/ui/src/components/ui/radio-group.tsx
+  s_2d5ecafcaef8ed::t_408f641641ad69 22
+packages/ui/src/components/ui/select.tsx
+  s_2d5ecafcaef8ed::t_7106e817d59696 42
+packages/ui/src/components/ui/textarea.tsx
+  s_2d5ecafcaef8ed::t_96f1c40d7efb91 9
+packages/ui/src/date-picker.tsx
+  s_2d5ecafcaef8ed::t_d3a1d09d96102c 85,152
+packages/ui/src/styles/globals.css
+  s_2d5ecafcaef8ed::t_1db05fcb9f1a41 138-139,141,150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f172a2ecbddd0b3a2ee8d790daca2eee1f955cb7",
+  "prompts": {},
+  "sessions": {
+    "s_2d5ecafcaef8ed": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e244-9dc5-7723-a658-4b559143b04e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
