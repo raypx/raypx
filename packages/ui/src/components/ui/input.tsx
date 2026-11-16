@@ -15,7 +15,7 @@ function Input({ className, type, controlSize = "default", ...props }: InputProp
       data-slot="input"
       data-size={controlSize}
       className={cn(
-        "w-full min-w-0 border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-control-xs file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:focus-entry disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:invalid-control md:text-sm dark:bg-input/30 dark:disabled:bg-input/80",
+        "w-full min-w-0 border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-control-xs file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:not-aria-invalid:border-ring focus-visible:focus-entry disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:invalid-control md:text-sm dark:bg-input/30 dark:disabled:bg-input/80",
         controlSizeVariants({ size: controlSize }),
         controlSize === "sm" && "md:text-xs",
         className,

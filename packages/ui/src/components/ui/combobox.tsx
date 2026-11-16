@@ -19,7 +19,7 @@ function ComboboxTrigger({
       data-slot="combobox-trigger"
       data-size={size}
       className={cn(
-        "inline-flex min-w-0 items-center justify-between gap-2 border border-input bg-background px-2.5 text-sm outline-none transition-[background-color,border-color,box-shadow] hover:bg-muted focus-visible:focus-entry disabled:pointer-events-none disabled:opacity-50 aria-invalid:invalid-control data-popup-open:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "inline-flex min-w-0 items-center justify-between gap-2 border border-input bg-background px-2.5 text-sm outline-none transition-[background-color,border-color,box-shadow] hover:bg-muted focus-visible:not-aria-invalid:border-ring focus-visible:focus-entry disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:invalid-control data-popup-open:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         controlSizeVariants({ size }),
         size === "sm" && "text-xs [&_svg:not([class*='size-'])]:size-3.5",
         className,
@@ -42,7 +42,7 @@ function ComboboxInput({
       data-slot="combobox-input"
       data-size={controlSize}
       className={cn(
-        "w-full min-w-0 border border-input bg-transparent px-2.5 py-1 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus-visible:focus-entry disabled:pointer-events-none disabled:opacity-50 aria-invalid:invalid-control md:text-sm",
+        "w-full min-w-0 border border-input bg-transparent px-2.5 py-1 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus-visible:not-aria-invalid:border-ring focus-visible:focus-entry disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:invalid-control md:text-sm",
         controlSizeVariants({ size: controlSize }),
         controlSize === "sm" && "md:text-xs",
         className,

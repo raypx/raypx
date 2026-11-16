@@ -101,12 +101,12 @@ export function CommandPalette({
             item.onSelect();
           }}
         >
-          <div className="m-1 flex items-center gap-2 rounded-md border border-transparent border-b-border px-3 has-[[data-slot=combobox-input]:focus-visible]:focus-entry">
+          <div className="m-1 flex items-center gap-2 rounded-md border border-transparent border-b-border px-3 has-[[data-slot=combobox-input]:focus-visible]:not-has-[[aria-invalid=true]]:border-ring has-[[data-slot=combobox-input]:focus-visible]:focus-entry has-[[data-slot=combobox-input][aria-invalid=true]]:border-destructive has-[[data-slot=combobox-input][aria-invalid=true]]:invalid-control">
             <SearchIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
             <ComboboxInput
               aria-label={c("search")}
               placeholder={c("searchHint")}
-              className="h-12 rounded-none border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 md:text-sm"
+              className="h-12 rounded-none border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 aria-invalid:ring-0 md:text-sm"
             />
           </div>
           <ComboboxEmpty>{c("noResults")}</ComboboxEmpty>

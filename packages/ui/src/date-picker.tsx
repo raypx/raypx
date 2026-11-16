@@ -82,7 +82,7 @@ export function DatePicker({
             {...trigger}
             variant="outline"
             className={cn(
-              "w-full min-w-0 justify-between text-left font-normal focus-visible:focus-entry",
+              "w-full min-w-0 justify-between text-left font-normal focus-visible:not-aria-invalid:border-ring focus-visible:focus-entry",
               !selected && "text-muted-foreground",
               trigger.className,
             )}
@@ -149,7 +149,7 @@ export function DateRangePicker({
             {...trigger}
             variant="outline"
             className={cn(
-              "w-full min-w-0 justify-between text-left font-normal focus-visible:focus-entry",
+              "w-full min-w-0 justify-between text-left font-normal focus-visible:not-aria-invalid:border-ring focus-visible:focus-entry",
               !from && "text-muted-foreground",
               trigger.className,
             )}

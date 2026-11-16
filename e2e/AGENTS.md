@@ -163,8 +163,10 @@ pre-issue reset confirmation are captured; issued recovery credentials never are
 Capture may reveal a supplied locator after each resize so lower-page result states
 remain visible at narrow widths; original scroll positions are restored afterwards.
 
-`theme-final.spec.ts --visual` captures the single shared theme at 1440×860 in
-both appearances, with 390px conversation/approval checks. Deterministic browser
+`theme-final.spec.ts` runs token contrast and computed focus/invalid border and
+keyboard-ring checks in the ordinary browser gate. `--visual` also captures the
+single shared theme at 1440×860 in both appearances, with 390px conversation/approval checks. Deterministic browser
 responses render the compiled Web workspace, administration and public/auth views;
 no palette switch or backend is involved. Evidence and browser-resolved contrast
-measurements live under `.artifacts/theme/final/`. Native device acceptance is separate.
+measurements live under `.artifacts/theme/final/`; focused control captures and
+computed measurements live under `.artifacts/focus/`. Native device acceptance is separate.

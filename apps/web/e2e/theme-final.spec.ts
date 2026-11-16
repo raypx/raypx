@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { expect, type Page, type Route } from "@playwright/test";
+import { expect, type Page, type Route, type Locator } from "@playwright/test";
 import { runSchema } from "@raypx/core/conversation";
 import {
   test,
@@ -12,8 +12,10 @@ import {
   accountAccessFixture,
 } from "@raypx/e2e/testing";
 import { measureTheme } from "./theme-contrast.js";
+import { expectEntryFocus, expectKeyboardRing, expectInvalidBorder } from "./theme-focus.js";
 
 const directory = fileURLToPath(new URL("../../../.artifacts/theme/final/", import.meta.url));
+const focusDirectory = fileURLToPath(new URL("../../../.artifacts/focus/", import.meta.url));
 const createdAt = "2026-11-15T08:00:00.000Z";
 const spaceId = "11111111-1111-4111-8111-111111111111";
 const names = [
@@ -202,6 +204,10 @@ async function fixture(page: Page) {
           member: { spaceId, accountId: account.id, role: "owner", createdAt },
         },
       ],
+      "admin/audit": { entries: [], next: null },
+      "skills/list": [],
+      "mcpServers/list": [],
+      "openApiServers/list": [],
       "spaces/settings": { spaceId, approvalMode: null },
       "spaces/invitations": [],
       "spaces/get": { id: spaceId, name: "Design studio", createdAt, updatedAt: createdAt },
@@ -302,13 +308,16 @@ async function fixture(page: Page) {
 
 test.use({
   trace: "off",
+  actionTimeout: 10_000,
   video: "off",
   screenshot: "off",
   reducedMotion: "reduce",
   viewport: { width: 1440, height: 860 },
 });
-test("captures the final shared color system", async ({ page, browser }) => {
-  test.skip(process.env.RAYPX_E2E_SCREENSHOTS !== "1", "Opt in with --visual");
+test("verifies the shared color system and compiled focus treatments", async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(180_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -320,7 +329,15 @@ test("captures the final shared color system", async ({ page, browser }) => {
     localStorage.setItem("raypx_sidebar_open", "true");
   });
   await mkdir(directory, { recursive: true });
+  await mkdir(focusDirectory, { recursive: true });
   const measurements = [];
+  const focusMeasurements: {
+    theme: "light" | "dark";
+    name: string;
+    styles:
+      | Awaited<ReturnType<typeof expectEntryFocus>>
+      | Awaited<ReturnType<typeof expectInvalidBorder>>;
+  }[] = [];
   const home = `${web}/agents?spaceId=${spaceId}`;
   async function open(suffix = "") {
     await page.goto(home + suffix);
@@ -377,6 +394,48 @@ test("captures the final shared color system", async ({ page, browser }) => {
     await open();
     await shot(page, theme, "home");
     measurements.push({ theme, ...(await measureTheme(page)) });
+    async function focusShot(
+      name: string,
+      styles: Awaited<ReturnType<typeof expectEntryFocus>>,
+      target = page,
+    ) {
+      focusMeasurements.push({ theme, name, styles });
+      await capture(target, { path: `${focusDirectory}/after-${theme}-${name}.png` });
+    }
+    async function invalidShots(name: string, control: Locator, surface = control, target = page) {
+      const styles = await expectInvalidBorder(control, surface, async (focused) => {
+        const suffix = focused ? "" : "-unfocused";
+        await capture(target, {
+          path: `${focusDirectory}/after-${theme}-invalid-${name}${suffix}.png`,
+        });
+      });
+      focusMeasurements.push({ theme, name: `invalid-${name}`, styles });
+    }
+    const composer = page.getByRole("textbox", { name: "Message", exact: true });
+    const composerSurface = page.locator("[data-composer-card]");
+    await focusShot("composer", await expectEntryFocus(composer, composerSurface));
+    await focusShot(
+      "select",
+      await expectEntryFocus(page.getByRole("combobox", { name: "Choose an Agent", exact: true })),
+    );
+    await focusShot(
+      "icon-button",
+      await expectKeyboardRing(page.getByRole("button", { name: "Add context", exact: true })),
+    );
+    await invalidShots("composer", composer, composerSurface);
+    await page.getByRole("button", { name: "Search", exact: true }).click();
+    const commandSearch = page.locator('[data-slot="combobox-input"]');
+    const commandSurface = commandSearch.locator("..");
+    await focusShot("command-search", await expectEntryFocus(commandSearch, commandSurface));
+    await invalidShots("command-search", commandSearch, commandSurface);
+    await page.keyboard.press("Escape");
+
+    await page.getByRole("button", { name: "New Agent", exact: true }).click();
+    const editor = page.getByRole("dialog", { name: "New Agent", exact: true });
+    const instructions = editor.getByRole("textbox", { name: "Instructions", exact: true });
+    await focusShot("textarea", await expectEntryFocus(instructions));
+    await invalidShots("textarea", instructions);
+    await page.keyboard.press("Escape");
     await open(`&agentId=${agents[0]!.id}`);
     await expect(page.getByText("A clear starting point", { exact: true })).toBeVisible();
     await expect(page.getByRole("table")).toBeVisible();
@@ -390,9 +449,32 @@ test("captures the final shared color system", async ({ page, browser }) => {
     await open(`&groupId=${group.id}`);
     await expect(page.locator("[data-reply-bubble]")).toHaveCount(3);
     await shot(page, theme, "group");
+    await page.getByRole("textbox", { name: "Message", exact: true }).fill("@");
+    const mentionSearch = page.locator('[data-slot="combobox-input"]');
+    await focusShot("combobox", await expectEntryFocus(mentionSearch));
+    await invalidShots("combobox", mentionSearch);
+    await page.keyboard.press("Escape");
+    await page.getByRole("textbox", { name: "Message", exact: true }).fill("");
     await page.getByRole("button", { name: "Settings", exact: true }).click();
     await expect(page.getByRole("dialog", { name: "Settings", exact: true })).toBeVisible();
     await shot(page, theme, "settings");
+    await page.keyboard.press("Escape");
+    await page.goto(`${home}#settings/account`);
+    await expect(page.getByRole("dialog", { name: "Settings", exact: true })).toBeVisible();
+    const settingsSearch = page.getByRole("searchbox", { name: "Search settings", exact: true });
+    await focusShot(
+      "settings-search",
+      await expectEntryFocus(
+        settingsSearch,
+        page
+          .getByRole("dialog", { name: "Settings", exact: true })
+          .locator('[data-slot="input-group"]'),
+      ),
+    );
+    await focusShot(
+      "settings-input",
+      await expectEntryFocus(page.getByRole("textbox", { name: "Display name", exact: true })),
+    );
     await page.keyboard.press("Escape");
     f.setChecklist(true);
     await open();
@@ -414,6 +496,13 @@ test("captures the final shared color system", async ({ page, browser }) => {
     await expect(sandbox.locator("svg")).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Provider", exact: true })).toBeVisible();
     await shot(page, theme, "admin-configuration");
+    await page.getByRole("link", { name: "Audit log", exact: true }).click();
+    const dateRange = page.locator("#audit-range");
+    await expect(dateRange.or(retry).first()).toBeVisible();
+    if (await retry.isVisible()) await retry.click();
+    await expect(dateRange).toBeVisible();
+    await focusShot("audit-date-range", await expectEntryFocus(dateRange));
+    await invalidShots("date-range", dateRange);
     await page.setViewportSize({ width: 390, height: 844 });
     await open(`&agentId=${agents[0]!.id}`);
     await expect(page.getByText("A clear starting point", { exact: true })).toBeVisible();
@@ -435,8 +524,24 @@ test("captures the final shared color system", async ({ page, browser }) => {
           publicPage.getByRole("button", { name: "Create account", exact: true }),
         ).toBeVisible();
       await shot(publicPage, theme, screen!);
+      if (route === "login") {
+        const email = publicPage.getByRole("textbox", { name: "Email address", exact: true });
+        await focusShot("login-input", await expectEntryFocus(email), publicPage);
+        await invalidShots("input", email, email, publicPage);
+        await focusShot(
+          "button",
+          await expectKeyboardRing(
+            publicPage.getByRole("button", { name: "Sign in", exact: true }),
+          ),
+          publicPage,
+        );
+      }
     }
   }
+  await writeFile(
+    `${focusDirectory}/production-measurements.json`,
+    JSON.stringify(focusMeasurements, null, 2),
+  );
   await publicContext.close();
   await writeFile(`${directory}/measurements.json`, JSON.stringify(measurements, null, 2));
   expect(errors).toEqual([]);

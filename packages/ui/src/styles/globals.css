@@ -135,9 +135,10 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* Entry focus uses a solid 1px border; the translucent halo is supplementary. */
+/* Halos only: pair these with ordinary border-color variants at the call site.
+   Multi-property utilities sort before single-property colors in compiled CSS. */
 @utility focus-entry {
-  @apply border-ring ring-3 ring-control-ring;
+  @apply ring-3 ring-control-ring;
 }
 
 /* Keyboard focus on actions keeps a crisp 2px accent indicator. */
@@ -146,7 +147,7 @@
 }
 
 @utility invalid-control {
-  @apply border-destructive ring-3 ring-control-invalid-ring;
+  @apply ring-3 ring-control-invalid-ring;
 }
 
 @layer base {

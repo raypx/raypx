@@ -30,7 +30,9 @@ plus a 3px accent halo (`control-ring`: 24% light, 32% dark). The border carries
 the 3:1 focus contrast. Other controls use a keyboard-only 2px solid accent ring,
 preserving their offsets; bare elements use the same 2px fallback. Invalid controls
 retain a solid destructive border and a soft 3px destructive halo. Use UI’s shared
-`focus-entry`, `focus-control` and `invalid-control` utilities.
+`focus-entry`, `focus-control` and `invalid-control` ring utilities. Pair entry and
+invalid halos with ordinary border-color variants (`border-ring` /
+`border-destructive`); custom multi-property utilities must not own border colors.
 
 Success, warning, danger and info each have background, border and text tokens.
 Running/starting/queued work uses info; waiting approvals and protected-input

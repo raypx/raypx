@@ -7,7 +7,7 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input transition-colors outline-none group-has-disabled/field:opacity-50 group-has-[>[data-slot=field]]/field-label:focus-visible:ring-0 group-has-[:focus-visible]/field-label:not-data-checked:border-input after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:focus-control disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:invalid-control data-checked:aria-invalid:invalid-control dark:bg-input/30 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground group-has-[:focus-visible]/field-label:data-checked:border-primary dark:data-checked:bg-primary",
+        "peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input transition-colors outline-none group-has-disabled/field:opacity-50 group-has-[>[data-slot=field]]/field-label:focus-visible:ring-0 group-has-[:focus-visible]/field-label:not-data-checked:not-aria-invalid:border-input after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:focus-control disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:invalid-control data-checked:aria-invalid:border-destructive data-checked:aria-invalid:invalid-control dark:bg-input/30 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground group-has-[:focus-visible]/field-label:data-checked:not-aria-invalid:border-primary dark:data-checked:bg-primary",
         className,
       )}
       {...props}
