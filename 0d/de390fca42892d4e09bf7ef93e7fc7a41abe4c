@@ -1,0 +1,130 @@
+packages/agents/src/client/sidebar-queries.ts
+  s_de5c5bfaaee2d9::t_d6ccd1b8084c0a 1-44
+docs/architecture/clients.md
+  s_de5c5bfaaee2d9::t_41cac5242f8d85 43-59
+packages/blocks/AGENTS.md
+  s_de5c5bfaaee2d9::t_8d669d4f03fa4a 30-31,104-110
+packages/pages/AGENTS.md
+  s_de5c5bfaaee2d9::t_77496a663267fa 59-62
+apps/web/src/components/shell.tsx
+  s_de5c5bfaaee2d9::t_6927ef1ee61de1 1-5,25,49-64,66-68,128-132,134-136,182,187,191-205
+apps/web/src/routes/(app)/agents.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 30
+  s_de5c5bfaaee2d9::t_156871f67e363e 4,6
+packages/agents/AGENTS.md
+  s_de5c5bfaaee2d9::t_29b19dd466787c 278-287
+packages/agents/src/client/workspace.component.test.tsx
+  s_de5c5bfaaee2d9::t_dd92dd33b84dc9 3002
+packages/agents/src/client/workspace.tsx
+  s_de5c5bfaaee2d9::t_d8aec960428682 334
+  s_de5c5bfaaee2d9::t_9042bc59f783cf 4-8,10-14,25,112-113,179-182,210-213,220-221,223,225-227,229-231,233-234,239,242,244-246,251-255,263-264,271,282-329,331,335,350-351,353,368-373,376-379,383,386,389,392,394-397,400-403,406-410,413,421,423-424,427-433,435-443,445,449-450,452-457,459-460,464-470,472-476,478-483,485,487,489,493-494,501,516,518-519,539-540,542,544-551,600,604-617,679-682,684,840,853,886,888,965,1044,1269,1341,1373-1376,1378-1392,1395-1421,1424-1425,1440,1518,1525-1526,1543-1549,1559,1622-1626,1685,1688-1689,1694,1697,1711-1712,1715-1716,1725-1728,1735-1740,1742-1744,1753,1761,1776,1795,1806,1880-1898,1909,2114,2121,2129-2130,2132-2133,2135-2138,2169-2176,2179,2181-2185,2235,2238
+  s_f9cc0d01f49051::t_4e1234147a5a49 1588-1590
+  s_de5c5bfaaee2d9::t_fe773adbe3e567 1690,1696
+  s_de5c5bfaaee2d9::t_4d5024e16ead9c 1-3,9,222,228,232,235-238,240-241,243,332-333,336-344,349,352,354-355,366-367,374-375,380-382,384-385,387-388,390-391,393,398-399,404-405,411-412,414-420,422,425-426,434,444,446-448,451,458,461-463,471,477,484,486,488,490-492,495-500,541,685,756,766-767,776,780,789-794,799-807,841-852,855-885,887,962-964,987,1033,1041-1043,1118,1133,1141,1157,1199,1223-1224,1233,1255-1268,1270,1334,1377,1393-1394,1422-1423,1686-1687,1691-1693,1695,1713-1714,1729-1734,1741,1746-1752,1755-1760,1762-1775,1777-1794,1796-1805,1807-1816,1818-1879,1899-1908,2074-2078,2177-2178,2180,2231-2234,2236-2237
+bun.lock
+  s_de5c5bfaaee2d9::t_99191c9522f6b2 373,377
+apps/web/src/routes/(app)/pages.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1,6,37-38
+  s_de5c5bfaaee2d9::t_986f30ace07d0d 43-56,58-62
+apps/desktop/src/components/shell.tsx
+  s_de5c5bfaaee2d9::t_92c0cfeee7ae55 1-6,18,44-59,61-63,82-84,107-130,132-176,189-192,199-222
+packages/ui/AGENTS.md
+  s_de5c5bfaaee2d9::t_82e8779c3030ac 127-130
+apps/desktop/src/routes/account.tsx
+  s_de5c5bfaaee2d9::t_fda883d12cb65b 1,20-21
+packages/agents/src/client/agent-directory-list.tsx
+  s_de5c5bfaaee2d9::t_e76f5bae2181b6 1-71
+apps/desktop/src/router-page-preview.component.test.tsx
+  s_de5c5bfaaee2d9::t_ac3640c9129d3b 41-46
+packages/agents/src/client/workspace-context.tsx
+  s_de5c5bfaaee2d9::t_ddccecea8bcfc7 1-9,17
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 10-16
+packages/agents/src/client.ts
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 12-14
+apps/web/src/routes/(app)/settings.tsx
+  s_de5c5bfaaee2d9::t_fe773adbe3e567 5,10-11
+  s_de5c5bfaaee2d9::t_1540574a5192fb 1-2,17,22-33
+apps/web/src/components/workspace.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1-16,18-19,21-30,32-38,40-74,90-102
+  s_de5c5bfaaee2d9::t_546236ca5f61cf 17,20,31,39,75-86
+  s_de5c5bfaaee2d9::t_0b828892a607a8 87-89
+packages/agents/src/client/sidebar-state.component.test.tsx
+  s_de5c5bfaaee2d9::t_8377765ae2acca 1-68
+apps/desktop/src/components/workspace.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1-22,24-25,27-39,41-47,49-93,109-121
+  s_de5c5bfaaee2d9::t_7092aa9710dbb6 23,26,40,48,94-105
+  s_de5c5bfaaee2d9::t_0b828892a607a8 106-108
+packages/agents/src/model.ts
+  s_de5c5bfaaee2d9::t_eccfb31375f524 195
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 189-194,196
+apps/desktop/src/router-settings.component.test.tsx
+  s_de5c5bfaaee2d9::t_0e383993af34fb 56-62
+apps/desktop/src/routes/pages.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1,6,11,41-42
+  s_de5c5bfaaee2d9::t_efca4ed4f8e360 47-63,65-79
+apps/desktop/AGENTS.md
+  s_de5c5bfaaee2d9::t_da856800bc0a10 58-63
+apps/web/src/features/settings/quick-settings-modal.tsx
+  s_de5c5bfaaee2d9::t_fe773adbe3e567 16-17,28,102
+packages/ui/src/sidebar.component.test.tsx
+  s_de5c5bfaaee2d9::t_14ccfdbf194db7 2-4,19-34
+packages/blocks/src/components/shell.tsx
+  s_de5c5bfaaee2d9::t_67c728fdd4966f 556-557,578,594,635,644-645,672-686
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 7,10,56-57,115-130,132-135,295-305,309-312,333-335,351-354,410-411,452,486-495,534,552-555,558-561,575-577,579-582,585-593,595-598,621-623,625-630,640-643,646-649,687,691,694
+  s_de5c5bfaaee2d9::t_a28ec801c7bad7 688-690,692-693
+packages/agents/package.json
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 40
+  s_de5c5bfaaee2d9::t_6c8bb6cbf7f241 37,41
+apps/web/src/router-page-preview.component.test.tsx
+  s_de5c5bfaaee2d9::t_675e1d7d996747 26-31
+packages/agents/src/client/sidebar-state.tsx
+  s_de5c5bfaaee2d9::t_47a016b82be207 8,11
+  s_de5c5bfaaee2d9::t_ddccecea8bcfc7 1-7,9-10,12-19
+packages/agents/src/model/sidebar.ts
+  s_de5c5bfaaee2d9::t_ca6e5454192985 120-124
+  s_de5c5bfaaee2d9::t_8e2cf9e24df5d3 25-26
+  s_de5c5bfaaee2d9::t_c448e9db2a4a47 96-99
+  s_de5c5bfaaee2d9::t_754791f49d70c8 114
+  s_de5c5bfaaee2d9::t_fd8b274623b2f1 149-150
+  s_de5c5bfaaee2d9::t_ddccecea8bcfc7 1-24,27-69,71,86-95,100-112,115-119,125-133,135-146,148,151-154
+  s_de5c5bfaaee2d9::t_13b7268eef71bc 70,72-85,134,147,155-167
+  s_de5c5bfaaee2d9::t_cece553adb3acb 113
+packages/agents/src/model/sidebar.test.ts
+  s_de5c5bfaaee2d9::t_1bbf79c7edd019 20,37,40-95,108-110,117
+  s_de5c5bfaaee2d9::t_5b6f45cd6f2ebc 1-19,21-31,34-35,38-39,118
+  s_de5c5bfaaee2d9::t_2074564f812d3f 32-33,36,96-107,111-116
+apps/desktop/src/router-agents.component.test.tsx
+  s_de5c5bfaaee2d9::t_699f87e03f594f 1,80,82-97,100
+packages/ui/src/components/ui/sidebar.tsx
+  s_de5c5bfaaee2d9::t_c780b87d25c6e7 55-56,66-67,70-79
+packages/agents/src/model/notifications.ts
+  s_de5c5bfaaee2d9::t_527811913e1b36 36
+apps/desktop/src/routes/agents.tsx
+  s_de5c5bfaaee2d9::t_1d6734611d4096 1-2,6,8,33
+apps/web/AGENTS.md
+  s_de5c5bfaaee2d9::t_4a40147d3a7f5f 153-159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0dde390fca42892d4e09bf7ef93e7fc7a41abe4c",
+  "prompts": {},
+  "sessions": {
+    "s_de5c5bfaaee2d9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e8-47cf-7651-994f-ba1c53ca3e94",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9cc0d01f49051": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff01868d-8ad5-4c5d-a943-d655ba1347bb",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
