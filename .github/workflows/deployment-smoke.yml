@@ -17,6 +17,8 @@ permissions:
 concurrency:
   group: prerelease-deployment-smoke
   cancel-in-progress: false
+env:
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
   smoke:
     if: github.event_name == 'workflow_dispatch' || vars.PRERELEASE_PUBLIC_URL != ''
