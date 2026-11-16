@@ -992,7 +992,8 @@ it("switches Send to Stop for the selected conversation and back after cancellat
     },
   });
   expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
-  expect(screen.getByText("Queued")).toBeInTheDocument();
+  expect(screen.getByText("Queued").closest("[data-reply-waiting]")).toBeInTheDocument();
+  expect(screen.queryByText("Replying…")).not.toBeInTheDocument();
   const member = screen.getByText("Hello Agent").closest("article")!;
   expect(within(member).queryByText("Queued")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Stop reply" }));
@@ -1021,6 +1022,7 @@ it("switches Send to Stop for the selected conversation and back after cancellat
   expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Stop reply" })).not.toBeInTheDocument();
   expect(within(screen.getByRole("log")).getByText("Stopped")).toBeInTheDocument();
+  expect(screen.getByRole("log").querySelector("[data-reply-waiting]")).toBeNull();
 });
 
 it.each([
@@ -1319,6 +1321,7 @@ it("renders Markdown replies safely and preserves their DOM row through streamin
   await screen.findByText("Hello Agent");
   const log = screen.getByRole("log");
   const replyRow = log.querySelector('[data-message-row="reply:run-one"]');
+  expect(within(log).getByText("Replying…").closest("[data-reply-waiting]")).toBeInTheDocument();
   const text =
     "A **bold** reply with `inline code`.\n\n- First\n- Second\n\n```js\nconst safe = true;\n```\n\n[Safe](https://example.test) [Unsafe](javascript:alert%281%29)\n\n<script>alert('unsafe')</script>\n\n| One | Two |\n| --- | --- |\n| A | B |";
   await test.emit({
@@ -1331,6 +1334,7 @@ it("renders Markdown replies safely and preserves their DOM row through streamin
     text,
   });
   expect(log.querySelector("strong")).toHaveTextContent("bold");
+  expect(log.querySelector("[data-reply-waiting]")).toBeNull();
   expect(log.querySelector("ul")).toHaveTextContent("First Second");
   expect(within(log).getByRole("table")).toBeInTheDocument();
   expect(within(log).getByRole("button", { name: "Copy code" })).toBeInTheDocument();
@@ -1924,8 +1928,10 @@ it("keeps an exchange tight and separates the next member turn", async () => {
   });
   test.mount(true);
   await screen.findByText("Answer 1");
-  expect(screen.getByText("Hello Agent").closest("article")).not.toHaveClass("mt-4");
-  expect(screen.getByText("Next exchange").closest("article")).toHaveClass("mt-4");
+  const firstTurn = screen.getByText("Hello Agent").closest("article");
+  expect(firstTurn).not.toHaveClass("mt-2");
+  expect(firstTurn).not.toHaveClass("sm:mt-3");
+  expect(screen.getByText("Next exchange").closest("article")).toHaveClass("mt-2", "sm:mt-3");
   expect(screen.getByRole("log").firstElementChild).toHaveClass("gap-4", "max-w-[44rem]");
 });
 

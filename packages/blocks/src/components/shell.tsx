@@ -96,7 +96,7 @@ export interface ShellPage<Title extends string = string> {
 
 const itemClass = cn(
   buttonVariants({ variant: "ghost" }),
-  "relative w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal text-sidebar-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-selected-text sidebar-icon:justify-center sidebar-icon:px-0",
+  "relative min-h-9 w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal text-sidebar-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-selected-text pointer-coarse:min-h-11 sidebar-icon:justify-center sidebar-icon:px-0 [&>span:first-child>svg]:size-5",
 );
 
 const pageLayouts: Record<PageLayout, string> = {
@@ -368,7 +368,7 @@ function ShellContents<To extends string>({
               {...(item.exact ? { exact: true } : {})}
               className=""
             >
-              <span aria-hidden="true" className="grid size-4 shrink-0 place-items-center">
+              <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center">
                 {item.icon}
               </span>
               <span className="min-w-0 truncate sidebar-icon:sr-only">{item.label}</span>
@@ -545,7 +545,7 @@ function ShellContents<To extends string>({
                     {index === 0 && contextNavigation}
                   </Fragment>
                 ))}
-                <div ref={setSidebarDirectory} className="mt-3 min-w-0 empty:hidden" />
+                <div ref={setSidebarDirectory} className="min-w-0 empty:hidden" />
               </SidebarContent>
               {secondaryNavigation && secondaryNavigation.length > 0 && (
                 <SidebarFooter className="mt-auto shrink-0 px-0 pt-2 pb-0">
@@ -554,7 +554,7 @@ function ShellContents<To extends string>({
               )}
             </nav>
             {account !== undefined && (
-              <SidebarFooter className="mt-1 shrink-0 flex-row items-center gap-1 px-0 pt-2 pb-0 sidebar-icon:flex-col">
+              <SidebarFooter className="mt-2 shrink-0 flex-row items-center gap-1 border-t border-sidebar-border/60 px-0 pt-2 pb-0 sidebar-icon:flex-col">
                 <div className="min-w-0 flex-1 sidebar-icon:w-full">{account}</div>
                 {accountAction}
               </SidebarFooter>

@@ -95,7 +95,7 @@ function ToolActivityRow({
       <span className="min-w-0 font-mono text-muted-foreground wrap-anywhere">
         {call.target.slice(0, 1_024)}
       </span>
-      <span className="flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-muted-foreground">
+      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
         <span className={statusStyle(call.outcome ?? "running")}>
           {refusal ? t(refusal) : t(`activity.outcomes.${call.outcome ?? "running"}`)}
         </span>
@@ -159,6 +159,7 @@ export function ToolActivity({
   children,
   additionalCount = 0,
   defaultExpanded = false,
+  timeline = false,
   runStatus,
 }: {
   onOpenPage?: ((id: string) => void) | undefined;
@@ -172,6 +173,7 @@ export function ToolActivity({
   children?: ReactNode;
   additionalCount?: number;
   defaultExpanded?: boolean;
+  timeline?: boolean;
   runStatus?: string | undefined;
 }) {
   const t = useTranslations("agents");
@@ -197,22 +199,39 @@ export function ToolActivity({
   if (pendingCount) status = t("approval.states.pending");
   if (runStatus !== undefined) status = runStatus;
   return (
-    <Collapsible defaultOpen={defaultExpanded} data-tool-activity={runId} className="min-w-0">
+    <Collapsible
+      defaultOpen={defaultExpanded}
+      data-tool-activity={runId}
+      className={cn("min-w-0", timeline && "border-t border-border/60 px-2 py-1.5 sm:px-3")}
+    >
       <CollapsibleTrigger
         aria-label={t("activity.steps", { count })}
         aria-describedby={status ? statusId : undefined}
-        render={<Button size="sm" variant="ghost" className="max-w-full" />}
+        render={
+          <Button
+            size="sm"
+            variant="ghost"
+            className={cn("max-w-full", timeline && "w-full justify-start")}
+          />
+        }
       >
-        <ChevronDownIcon data-icon="inline-start" aria-hidden="true" />
+        <ChevronDownIcon
+          data-icon="inline-start"
+          aria-hidden="true"
+          className="group-aria-[expanded=false]/button:-rotate-90"
+        />
         <span className="min-w-0 truncate">{t("activity.steps", { count })}</span>
         {status && (
-          <span id={statusId} className={cn("min-w-0 truncate text-xs", statusStyle(role))}>
+          <span
+            id={statusId}
+            className={cn("min-w-0 truncate text-xs", timeline && "ml-auto", statusStyle(role))}
+          >
             {status}
           </span>
         )}
       </CollapsibleTrigger>
       <CollapsibleContent animated>
-        <div className="flex min-w-0 flex-col gap-2 py-2">
+        <div className={cn("flex min-w-0 flex-col gap-2 py-2", timeline && "px-3")}>
           <ul aria-label={t("activity.title")} className="flex min-w-0 flex-col gap-2">
             {activity.map((call) => (
               <ToolActivityRow

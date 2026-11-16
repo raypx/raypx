@@ -46,6 +46,11 @@ it("copies only fenced code and keeps the code and control mounted as a stream g
     <ReplyMarkdown {...labels}>{"```ts\nconst value = 1;\nconst next = 2;\n```"}</ReplyMarkdown>,
   );
   expect(view.container.querySelector("pre")).toBe(code);
+  const gutter = view.container.querySelector("[data-code-line-numbers]");
+  expect(gutter?.getAttribute("aria-hidden")).toBe("true");
+  expect(gutter?.getAttribute("data-code-line-numbers")).toBe("1\n2");
+  expect(gutter?.textContent).toBe("");
+  expect(code?.querySelector("code span")?.textContent).toBe("const");
   expect(screen.getByRole("button", { name: "Copy code" })).toBe(button);
   fireEvent.click(button);
   await screen.findByRole("button", { name: "Code copied" });
@@ -56,8 +61,9 @@ it("copies only fenced code and keeps the code and control mounted as a stream g
 
 it("offers manual selection if clipboard access fails", async () => {
   vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("denied"));
-  render(<ReplyMarkdown {...labels}>{"```\ncopy me\n```"}</ReplyMarkdown>);
+  const text = 'const text = "<tag>";\n  console.log(text);\n';
+  render(<ReplyMarkdown {...labels}>{"```js\n" + text + "```"}</ReplyMarkdown>);
   fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
   expect((await screen.findByRole("status")).textContent).toBe(labels.copyErrorLabel);
-  expect(window.getSelection()?.toString()).toBe("copy me\n");
+  expect(window.getSelection()?.toString()).toBe(text);
 });

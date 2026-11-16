@@ -272,6 +272,16 @@ export function registerTests() {
             page.getByRole("tabpanel").locator("[data-tool-activity]").first(),
           ).toBeVisible();
           await review("activity");
+          await openTab(page, "Files");
+          const workspaceFile = page.getByRole("treeitem", {
+            name: "browser-fixture.txt",
+            exact: true,
+          });
+          await workspaceFile.click({ timeout });
+          await expect(
+            page.getByRole("region", { name: "File preview", exact: true }),
+          ).toContainText("A deterministic browser approval fixture.");
+          await review("files");
           await openTab(page, "Conversation");
           const steps = page.getByRole("button", { name: /^\d+ steps?$/ }).first();
           await steps.click({ timeout });
@@ -316,9 +326,16 @@ export function registerTests() {
             page.getByRole("button", { name: "Create Agent", exact: true }),
           ).toBeVisible();
           await review("empty-space");
-          await page.goto(home, { timeout });
-          await page.getByRole("button", { name: "Settings", exact: true }).click({ timeout });
+          if (info.project.name === "web") {
+            await page.goto(`${home}#settings/preferences`, { timeout });
+          } else {
+            await page.goto(home, { timeout });
+            await page.getByRole("button", { name: "Settings", exact: true }).click({ timeout });
+          }
           const settings = page.getByRole("dialog", { name: "Settings", exact: true });
+          await expect(
+            settings.getByRole("heading", { name: "Appearance", exact: true }),
+          ).toBeVisible();
           await expectSurfaceAtRest(page, settings);
           await expectSurfaceControls(page, settings);
           await capture(page, { path: `${reviewDirectory}/${prefix}-settings.png` });

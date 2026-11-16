@@ -15,6 +15,7 @@ import {
 import { IconButton } from "@raypx/ui/icon-button";
 import { CopyIcon } from "@raypx/icons/copy";
 import { CheckIcon } from "@raypx/icons/check";
+import { highlightCode } from "../markdown-code-highlight.js";
 
 type CopyLabels = Omit<ReplyMarkdownProps, "children">;
 const CopyContext = createContext<CopyLabels>({
@@ -79,22 +80,35 @@ export interface ReplyMarkdownProps {
   copyErrorLabel: string;
 }
 
+const codeTokenStyle = {
+  com: "text-muted-foreground italic",
+  str: "text-muted-foreground",
+  kw: "font-semibold",
+  num: "font-medium",
+  lit: "font-semibold",
+  fn: "font-medium",
+  key: "font-semibold",
+  var: "font-medium",
+} as const;
+
 function CodeBlock({ children }: ComponentProps<"pre">) {
   const { copyLabel, copiedLabel, copyErrorLabel } = useContext(CopyContext);
   const code = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
-  const source = Children.toArray(children).find(isValidElement);
-  let languageClass = "";
-  if (
-    source?.props &&
-    typeof source.props === "object" &&
-    "className" in source.props &&
-    typeof source.props.className === "string"
-  ) {
-    languageClass = source.props.className;
-  }
+  const source = Children.toArray(children).find(isValidElement<ComponentProps<"code">>);
+  const languageClass = source?.props.className ?? "";
   const language = languageClass.match(/(?:^|\s)language-([^\s]+)/)?.[1] ?? "";
+  const sourceText = typeof source?.props.children === "string" ? source.props.children : undefined;
+  const tokens = useMemo(
+    () => (sourceText === undefined ? undefined : highlightCode(sourceText, language)),
+    [sourceText, language],
+  );
+  const lineNumbers = useMemo(() => {
+    if (!sourceText) return "";
+    const count = sourceText.replace(/\n$/, "").split("\n").length;
+    return Array.from({ length: count }, (_, index) => index + 1).join("\n");
+  }, [sourceText]);
   useEffect(() => {
     queueMicrotask(() => setCopied(false));
   }, [children]);
@@ -114,8 +128,8 @@ function CodeBlock({ children }: ComponentProps<"pre">) {
     }
   }
   return (
-    <div className="my-[0.8em] min-w-0 overflow-hidden rounded-xl border border-border/60 bg-muted/50">
-      <div className="flex items-center justify-between gap-2 px-3 py-1">
+    <figure className="my-[0.8em] min-w-0 overflow-hidden rounded-xl border border-border bg-muted/50">
+      <figcaption className="flex items-center justify-between gap-2 px-3 py-1">
         <span
           data-code-language
           className="min-w-0 truncate font-mono text-xs text-muted-foreground"
@@ -129,20 +143,46 @@ function CodeBlock({ children }: ComponentProps<"pre">) {
         >
           {copied ? <CheckIcon aria-hidden="true" /> : <CopyIcon aria-hidden="true" />}
         </IconButton>
-      </div>
-      <pre
-        ref={code}
-        className="max-w-full overflow-x-auto p-4 whitespace-pre"
-        onCopy={() => setCopied(true)}
+      </figcaption>
+      <div
+        dir="ltr"
+        className="flex min-w-0 border-t border-border bg-card font-mono text-xs leading-5 whitespace-pre"
       >
-        {children}
-      </pre>
+        {lineNumbers && (
+          <span
+            aria-hidden="true"
+            data-code-line-numbers={lineNumbers}
+            className="shrink-0 border-e border-border px-3 py-3 text-right text-muted-foreground tabular-nums select-none before:content-[attr(data-code-line-numbers)]"
+          />
+        )}
+        <pre
+          ref={code}
+          className="min-w-0 flex-1 overflow-x-auto px-3 py-3"
+          onCopy={() => setCopied(true)}
+        >
+          {tokens ? (
+            <code className={languageClass}>
+              {tokens.map(({ kind, text, offset }) =>
+                kind ? (
+                  <span key={offset} className={codeTokenStyle[kind]}>
+                    {text}
+                  </span>
+                ) : (
+                  text
+                ),
+              )}
+            </code>
+          ) : (
+            children
+          )}
+        </pre>
+      </div>
       {failed && (
         <p role="status" className="px-4 pb-2 text-xs text-muted-foreground">
           {copyErrorLabel}
         </p>
       )}
-    </div>
+    </figure>
   );
 }
 

@@ -16,6 +16,7 @@ import { RefreshIcon } from "@raypx/icons/refresh";
 import { FolderIcon } from "@raypx/icons/folder";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
+import { cn } from "@raypx/ui/lib/utils";
 import {
   computerFileDestination,
   computerFileRows,
@@ -86,11 +87,13 @@ export function ComputerFiles({
   status,
   refreshKey,
   device,
+  sourceLabel,
 }: {
   controller: ComputerFilesController;
   status: ComputerView["status"];
   refreshKey: string;
   device?: import("@raypx/core/computers").DeviceComputerSelection | null | undefined;
+  sourceLabel?: string;
 }) {
   const t = useTranslations("agents");
   const view = useSyncExternalStore(
@@ -147,6 +150,7 @@ export function ComputerFiles({
     move(computerFileDestination(view, row.path, event.key));
   }
   const preview = view.preview;
+  const Heading = sourceLabel ? "h2" : "h3";
   function downloadPreview() {
     if (preview?.status !== "available" || preview.truncated || !view.selectedPath) return;
     const bytes = Uint8Array.from(atob(preview.bytes), (character) => character.charCodeAt(0));
@@ -163,12 +167,18 @@ export function ComputerFiles({
   return (
     <section
       aria-label={t("files.title")}
-      className="flex w-full min-w-0 max-w-full flex-col gap-3"
+      className={cn(
+        "flex w-full min-w-0 max-w-full flex-col gap-3",
+        sourceLabel && "rounded-xl border border-border/60 bg-surface-panel p-3 sm:p-4",
+      )}
     >
       <div className="flex w-full min-w-0 max-w-full items-center justify-between gap-2">
-        <h3 className="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">
-          {t("files.title")}
-        </h3>
+        <Heading className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium">
+          {sourceLabel && (
+            <FolderIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          <span className="truncate">{sourceLabel ?? t("files.title")}</span>
+        </Heading>
         <IconButton
           label={t("files.refresh")}
           size="icon-sm"
@@ -184,7 +194,7 @@ export function ComputerFiles({
           role="tree"
           aria-label={t("files.workspace")}
           aria-busy={view.refreshing}
-          className="w-full min-w-0 max-w-full"
+          className="flex w-full min-w-0 max-w-full flex-col gap-0.5 rounded-lg border border-border/60 p-1"
           onFocusCapture={() => {
             focusWithin.current = true;
           }}
@@ -208,7 +218,7 @@ export function ComputerFiles({
                   role="treeitem"
                   variant="ghost"
                   size="sm"
-                  className="w-full min-w-0 max-w-full justify-start px-2 text-left aria-selected:bg-muted"
+                  className="min-h-8 w-full min-w-0 max-w-full justify-start px-2 text-left aria-selected:bg-selected aria-selected:text-selected-text pointer-coarse:min-h-11 dark:aria-selected:hover:bg-selected"
                   tabIndex={focusPath === row.path || (!focusExists && row.path === ".") ? 0 : -1}
                   aria-label={row.path === "." ? t("files.workspace") : row.path}
                   aria-level={row.depth}
@@ -254,7 +264,7 @@ export function ComputerFiles({
                   )}
                 </Button>
                 {expanded && directory?.status === "available" && directory.truncated && (
-                  <p className="py-1 text-xs text-muted-foreground wrap-anywhere">
+                  <p className="px-2 py-1 text-xs text-muted-foreground wrap-anywhere">
                     {t("files.directoryTruncated")}
                   </p>
                 )}
@@ -276,9 +286,12 @@ export function ComputerFiles({
       {view.selectedPath && preview && (
         <section
           aria-label={t("files.preview")}
-          className="flex w-full min-w-0 max-w-full flex-col gap-2 border-t pt-3"
+          className="flex w-full min-w-0 max-w-full flex-col gap-2 border-t border-border/60 pt-3"
         >
-          <nav aria-label={t("files.breadcrumbs")} className="min-w-0">
+          <nav
+            aria-label={t("files.breadcrumbs")}
+            className="min-w-0 rounded-lg bg-muted/60 px-1 py-1"
+          >
             <ol className="flex min-w-0 flex-wrap items-center gap-1 text-xs">
               <li>
                 <Button
@@ -305,7 +318,7 @@ export function ComputerFiles({
                         className="size-3 shrink-0 text-muted-foreground"
                       />
                       {last ? (
-                        <span aria-current="page" className="min-w-0 break-all font-medium">
+                        <span aria-current="page" className="min-w-0 pr-1 break-all font-medium">
                           {part}
                         </span>
                       ) : (
@@ -347,7 +360,7 @@ export function ComputerFiles({
               </div>
               {preview.contentType === "binary" && <p className="text-sm">{t("files.binary")}</p>}
               {preview.contentType === "text" && (
-                <pre className="box-border max-h-80 w-full min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-md bg-muted p-3 font-mono text-xs whitespace-pre-wrap wrap-normal">
+                <pre className="box-border max-h-80 w-full min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-lg border border-border/60 bg-card p-3 font-mono text-xs leading-5 whitespace-pre-wrap wrap-normal">
                   {computerPreviewText(preview.bytes)}
                 </pre>
               )}

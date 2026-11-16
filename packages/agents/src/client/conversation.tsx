@@ -38,6 +38,8 @@ import { MonitorIcon } from "@raypx/icons/monitor";
 import { MoreHorizontalIcon } from "@raypx/icons/more-horizontal";
 import { SettingsIcon } from "@raypx/icons/settings";
 import { AgentIcon } from "@raypx/icons/agent";
+import { FolderIcon } from "@raypx/icons/folder";
+import { ClockIcon } from "@raypx/icons/clock";
 import { CloseIcon } from "@raypx/icons/close";
 import { ChevronDownIcon } from "@raypx/icons/chevron-down";
 import { RefreshIcon } from "@raypx/icons/refresh";
@@ -94,6 +96,7 @@ import {
   conversationColumn,
 } from "./conversation-loading.js";
 import { ReplyActions } from "./reply-actions.js";
+import { ReplyWaiting } from "./reply-waiting.js";
 import { ComputerFiles } from "./computer-files.js";
 import { ToolActivity } from "./tool-activity.js";
 import { EffectRecords } from "./effects.js";
@@ -834,7 +837,7 @@ function ConversationContents({
         <ShellToolbar>
           <header
             data-conversation-header
-            className="grid w-full min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 py-2 sm:flex sm:flex-nowrap"
+            className="grid w-full min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1.5 py-2 sm:flex sm:flex-nowrap sm:gap-x-3"
           >
             {onBack && (
               <IconButton
@@ -851,24 +854,38 @@ function ConversationContents({
               tabIndex={-1}
               title={conversationName}
               className={cn(
-                "col-start-2 row-start-1 min-w-0 flex-1 truncate text-sm font-medium text-foreground outline-none focus-visible:underline focus-visible:decoration-muted-foreground focus-visible:underline-offset-4 sm:max-w-72",
+                "group/title col-start-2 row-start-1 flex min-w-0 flex-1 items-center gap-2 truncate text-sm font-semibold text-foreground outline-none",
                 !onBack && "col-span-2 col-start-1",
               )}
             >
-              {conversationName}
+              {!group && (
+                <AgentIcon
+                  aria-hidden="true"
+                  className="size-5 shrink-0 rounded-md p-0.5"
+                  style={agentIdentityStyle(item.agent.id, true)}
+                />
+              )}
+              <span className="min-w-0 truncate group-focus-visible/title:underline group-focus-visible/title:decoration-muted-foreground group-focus-visible/title:underline-offset-4">
+                {conversationName}
+              </span>
             </h1>
             <TabsList
-              variant="line"
               aria-label={t("conversationViews")}
-              className="col-span-3 row-start-2 w-full min-w-0 flex-nowrap justify-start gap-3 p-0 sm:mr-auto sm:w-auto"
+              className="col-span-3 row-start-2 w-full min-w-0 shrink-0 flex-nowrap gap-0.5 p-0.5 sm:w-auto"
             >
-              <TabsTrigger value="conversation">{t("conversation")}</TabsTrigger>
-              <TabsTrigger value="activity">{t("activity.title")}</TabsTrigger>
-              <TabsTrigger value="files">{t("files.title")}</TabsTrigger>
+              <TabsTrigger value="conversation" className="px-3">
+                {t("conversation")}
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="px-3">
+                {t("activity.title")}
+              </TabsTrigger>
+              <TabsTrigger value="files" className="px-3">
+                {t("files.title")}
+              </TabsTrigger>
             </TabsList>
             <div
               data-conversation-actions
-              className="col-start-3 row-start-1 flex shrink-0 flex-row flex-nowrap items-center gap-1 whitespace-nowrap"
+              className="col-start-3 row-start-1 flex shrink-0 flex-row flex-nowrap items-center justify-end gap-1 whitespace-nowrap sm:flex-1"
             >
               {group && (
                 <Button
@@ -975,7 +992,9 @@ function ConversationContents({
           className="relative flex min-h-0 min-w-0 flex-1 flex-col data-hidden:hidden"
         >
           {!state.loading && state.history && (
-            <div className="flex shrink-0 flex-col items-center gap-2 py-2">
+            <div
+              className={cn(conversationColumn, "flex shrink-0 flex-col items-center gap-2 py-2")}
+            >
               {state.history.olderCursor ? (
                 <Button
                   size="sm"
@@ -986,7 +1005,11 @@ function ConversationContents({
                   {t("history.earlier")}
                 </Button>
               ) : (
-                <p className="text-xs text-muted-foreground">{t("history.start")}</p>
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span aria-hidden="true" className="h-px w-5 bg-border" />
+                  {t("history.start")}
+                  <span aria-hidden="true" className="h-px w-5 bg-border" />
+                </p>
               )}
               {state.history.loading && (
                 <p role="status" className="text-xs text-muted-foreground">
@@ -1124,8 +1147,8 @@ function ConversationContents({
                       data-message-row={row.id}
                       data-message-id={row.id.startsWith("message:") ? row.id.slice(8) : row.id}
                       className={cn(
-                        "flex min-w-0 flex-col items-end gap-1 pl-8",
-                        index > 0 && rows[index - 1]?.kind !== "member" && "mt-4",
+                        "flex min-w-0 flex-col items-end gap-1 pl-6 sm:pl-8",
+                        index > 0 && rows[index - 1]?.kind !== "member" && "mt-2 sm:mt-3",
                       )}
                     >
                       {showSender && (
@@ -1133,7 +1156,7 @@ function ConversationContents({
                           {memberName(row.sender.slice("member:".length))}
                         </h3>
                       )}
-                      <p className="max-w-[90%] rounded-2xl bg-muted px-4 py-2.5 text-[15px] leading-6 whitespace-pre-wrap wrap-anywhere">
+                      <p className="max-w-[92%] rounded-2xl rounded-br-md border border-border/50 bg-muted px-3 py-2 text-[15px] leading-6 whitespace-pre-wrap wrap-anywhere sm:max-w-[90%] sm:px-4 sm:py-2.5">
                         <MemberMessageText
                           text={row.text}
                           origin={origin}
@@ -1158,6 +1181,8 @@ function ConversationContents({
                   work.length > 0 ||
                   rows.some((entry) => entry.kind === "activity" && entry.runId === run?.id);
                 const producing = run?.state === "running" || run?.state === "queued";
+                const waitingForReply = producing && !row.text && !run.computerInputPaused;
+                const runStatus = statusForRun(run);
                 const retryMessage = state.messages.find(
                   (message) => message.id === run?.messageId,
                 );
@@ -1218,11 +1243,15 @@ function ConversationContents({
                         )}
                         {run && run.state !== "succeeded" && (!hasSteps || run.failureCode) && (
                           <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            {!hasSteps && (
-                              <span className={cn(statusStyle(run.state), row.text && "mt-2")}>
-                                {statusForRun(run)}
-                              </span>
-                            )}
+                            {!hasSteps &&
+                              runStatus &&
+                              (waitingForReply ? (
+                                <ReplyWaiting label={runStatus} running={run.state === "running"} />
+                              ) : (
+                                <span className={cn(statusStyle(run.state), row.text && "mt-2")}>
+                                  {runStatus}
+                                </span>
+                              ))}
                             {run.failureCode && (
                               <span className="text-danger-text wrap-anywhere">
                                 {t(run.failureCode)}
@@ -1305,7 +1334,7 @@ function ConversationContents({
                         ) && (
                           <ToolActivity
                             runId={run.id}
-                            runStatus={statusForRun(run)}
+                            runStatus={runStatus}
                             activity={[]}
                             additionalCount={work.length}
                           >
@@ -1357,7 +1386,7 @@ function ConversationContents({
           value="activity"
           className="min-h-0 min-w-0 overflow-y-auto overscroll-contain"
         >
-          <div className="mx-auto flex w-full min-w-0 max-w-[44rem] flex-col gap-6 px-1 py-5 sm:px-3">
+          <div className={cn(conversationColumn, "flex flex-col gap-4 py-5 sm:gap-5")}>
             {state.toolActivityTruncated && (
               <p className="text-xs text-muted-foreground">{t("activity.truncated")}</p>
             )}
@@ -1365,6 +1394,9 @@ function ConversationContents({
               !runs.some((run) => !run.parentRunId && !run.outsideWindow) && (
                 <Empty>
                   <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <ClockIcon aria-hidden="true" />
+                    </EmptyMedia>
                     <EmptyTitle>{t("activity.empty")}</EmptyTitle>
                   </EmptyHeader>
                 </Empty>
@@ -1373,20 +1405,14 @@ function ConversationContents({
               if (row.kind !== "activity") return null;
               const run = state.runs.find((entry) => entry.id === row.runId);
               return (
-                <section
-                  key={row.id}
-                  data-run-id={row.runId}
-                  className="flex min-w-0 flex-col gap-2"
-                >
-                  <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                    <span className="min-w-0 flex-1 truncate">{agentName(run?.agentId)}</span>
-                  </div>
+                <ActivityRun key={row.id} id={row.runId} name={agentName(run?.agentId)}>
                   <ToolActivity
                     runId={row.runId}
                     runStatus={statusForRun(run) ?? (run ? t("replyReady") : undefined)}
                     activity={row.activity}
                     pendingCount={row.pendingCount}
                     defaultExpanded
+                    timeline
                     approvalPort={approvalPort}
                     answers={state.cards}
                     memberName={senderContext.hasOtherMembers ? memberName : undefined}
@@ -1409,7 +1435,7 @@ function ConversationContents({
                       memberName={senderContext.hasOtherMembers ? memberName : undefined}
                     />
                   </ToolActivity>
-                </section>
+                </ActivityRun>
               );
             })}
             {runs
@@ -1422,17 +1448,17 @@ function ConversationContents({
                 const work = delegatedWork(state, run.id);
                 if (run.outsideWindow) return null;
                 return (
-                  <section
+                  <ActivityRun
                     key={run.id}
-                    data-run-id={run.id}
-                    className="flex min-w-0 flex-col gap-2"
+                    id={run.id}
+                    name={agentName(run.agentId)}
+                    status={work.length === 0 ? (statusForRun(run) ?? t("replyReady")) : undefined}
+                    state={run.state}
                   >
-                    <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                      <span className="min-w-0 flex-1 truncate">{agentName(run.agentId)}</span>
-                      {work.length === 0 && <span>{statusForRun(run) ?? t("replyReady")}</span>}
-                    </div>
                     {run.failureCode && (
-                      <p className="text-sm text-danger-text">{t(run.failureCode)}</p>
+                      <p className="px-3 pt-2 text-sm text-danger-text wrap-anywhere">
+                        {t(run.failureCode)}
+                      </p>
                     )}
                     <ToolActivity
                       runId={run.id}
@@ -1440,6 +1466,7 @@ function ConversationContents({
                       activity={[]}
                       additionalCount={work.length}
                       defaultExpanded
+                      timeline
                     >
                       <DelegatedWork
                         work={work}
@@ -1454,21 +1481,21 @@ function ConversationContents({
                         memberName={senderContext.hasOtherMembers ? memberName : undefined}
                       />
                     </ToolActivity>
-                  </section>
+                  </ActivityRun>
                 );
               })}
           </div>
         </TabsContent>
         <TabsContent value="files" className="min-h-0 min-w-0 overflow-y-auto overscroll-contain">
-          <div className="mx-auto w-full min-w-0 max-w-[44rem] px-1 py-5 sm:px-3">
-            <h2 className="mb-3 text-sm font-medium">
-              {deviceState?.selection
-                ? (selectedDevice?.name ?? t("files.deviceTitle"))
-                : t("devices.teamSandbox")}
-            </h2>
+          <div className={cn(conversationColumn, "py-5")}>
             {computer.files ? (
               <ComputerFiles
                 controller={computer.files}
+                sourceLabel={
+                  deviceState?.selection
+                    ? (selectedDevice?.name ?? t("files.deviceTitle"))
+                    : t("devices.teamSandbox")
+                }
                 device={deviceState?.selection}
                 status={computerState.status}
                 refreshKey={state.toolActivity
@@ -1479,6 +1506,9 @@ function ConversationContents({
             ) : (
               <Empty>
                 <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <FolderIcon aria-hidden="true" />
+                  </EmptyMedia>
                   <EmptyTitle>{t("files.notConfigured")}</EmptyTitle>
                 </EmptyHeader>
               </Empty>
@@ -1686,6 +1716,7 @@ function ConversationContents({
               )}
 
               <ComposerCard
+                className="border-border/80"
                 attachments={
                   <>
                     <ComposerPageReferences
@@ -1887,7 +1918,7 @@ function ConversationContents({
                     32_000 - (state.draft.length - draftReferences.text.length),
                   )}
                   placeholder={t("message")}
-                  className="max-h-48 min-h-20 overflow-y-auto px-4 pt-4 pb-2"
+                  className="max-h-48 min-h-16 overflow-y-auto px-4 pt-3 pb-2 sm:min-h-20 sm:pt-4"
                   onChange={(event) => {
                     setComposerText(event.currentTarget.value);
                     updateMentionPicker(event.currentTarget);
@@ -2005,6 +2036,36 @@ function ConversationContents({
         </CapabilitySheet>
       )}
     </Tabs>
+  );
+}
+
+function ActivityRun({
+  id,
+  name,
+  status,
+  state,
+  children,
+}: {
+  id: string;
+  name: string;
+  status?: string | undefined;
+  state?: string;
+  children: import("react").ReactNode;
+}) {
+  return (
+    <section
+      data-run-id={id}
+      className="min-w-0 rounded-xl border border-border/60 bg-surface-panel"
+    >
+      <header className="flex min-w-0 flex-wrap items-center justify-between gap-2 px-3 py-2.5 sm:px-4">
+        <h2 className="flex min-w-0 items-center gap-2 text-sm font-medium wrap-anywhere">
+          <AgentIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          {name}
+        </h2>
+        {status && state && <span className={cn("text-xs", statusStyle(state))}>{status}</span>}
+      </header>
+      {children}
+    </section>
   );
 }
 

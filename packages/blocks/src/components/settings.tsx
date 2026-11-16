@@ -34,7 +34,7 @@ export function SettingsNavigation({
 }: {
   label: string;
   value: string;
-  items: readonly { value: string; label: string }[];
+  items: readonly { value: string; label: string; icon?: IconComponent }[];
   onValueChange: (value: string) => void;
 }) {
   return (
@@ -62,16 +62,17 @@ export function SettingsNavigation({
         </Select>
       </div>
       <ul className="hidden min-w-0 flex-col gap-1 md:flex">
-        {items.map((item) => (
+        {items.map(({ icon: Icon, ...item }) => (
           <li key={item.value}>
             <Button
               variant="ghost"
               data-value={item.value}
-              className="min-h-9 w-full min-w-0 justify-start px-3 text-left aria-[current=page]:bg-selected aria-[current=page]:text-selected-text aria-[current=page]:font-medium"
+              className="min-h-9 w-full min-w-0 justify-start gap-2 rounded-lg px-3 text-left font-normal aria-[current=page]:bg-selected aria-[current=page]:text-selected-text aria-[current=page]:font-medium dark:aria-[current=page]:hover:bg-selected"
               aria-current={item.value === value ? "page" : undefined}
               title={item.label}
               onClick={() => onValueChange(item.value)}
             >
+              {Icon && <Icon aria-hidden="true" className="size-4 shrink-0" />}
               <span className="truncate">{item.label}</span>
             </Button>
           </li>
@@ -116,7 +117,7 @@ export function SettingsSection({
   return (
     <section
       aria-labelledby={id}
-      className="grid min-w-0 grid-cols-1 items-start gap-3 border-b border-border py-5 last:border-b-0 @min-xl/settings:grid-cols-[minmax(9rem,1fr)_minmax(0,1.4fr)] @min-xl/settings:gap-8"
+      className="grid min-w-0 grid-cols-1 items-start gap-3 border-b border-border/60 py-4 last:border-b-0 sm:py-5 @min-xl/settings:grid-cols-[minmax(9rem,1fr)_minmax(0,1.4fr)] @min-xl/settings:gap-8"
     >
       <div className="min-w-0 pt-1.5">
         <h2 id={id} className="flex items-center gap-2 text-sm font-medium">

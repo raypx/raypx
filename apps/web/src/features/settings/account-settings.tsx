@@ -15,6 +15,9 @@ import { SettingsIcon } from "@raypx/icons/settings";
 import { ShieldCheckIcon } from "@raypx/icons/shield-check";
 import { CloseIcon } from "@raypx/icons/close";
 import { SearchIcon } from "@raypx/icons/search";
+import { AdjustmentsIcon } from "@raypx/icons/adjustments";
+import { BookOpenIcon } from "@raypx/icons/book-open";
+import { InfoIcon } from "@raypx/icons/info";
 import { Dialog, DialogContent, DialogTitle } from "@raypx/ui/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
 import { IconButton } from "@raypx/ui/icon-button";
@@ -87,12 +90,12 @@ export function AccountSettingsPanel({
     [
       { value: "account", label: c("account"), icon: UserCircleIcon },
       { value: "models", label: models("connections.title"), icon: SettingsIcon },
-      { value: "skills", label: skills("title"), icon: SettingsIcon },
-      { value: "tools", label: models("mcp.title"), icon: SettingsIcon },
+      { value: "skills", label: skills("title"), icon: BookOpenIcon },
+      { value: "tools", label: models("mcp.title"), icon: AdjustmentsIcon },
       { value: "password", label: t("password"), icon: LockIcon },
       { value: "sessions", label: t("sessions.title"), icon: ShieldCheckIcon },
-      { value: "preferences", label: s("device"), icon: SettingsIcon },
-      { value: "diagnostics", label: a("title"), icon: ShieldCheckIcon },
+      { value: "preferences", label: s("device"), icon: MonitorIcon },
+      { value: "diagnostics", label: a("title"), icon: InfoIcon },
     ] as const
   ).map((item) => ({
     ...item,
@@ -182,12 +185,12 @@ export function AccountSettingsPanel({
           orientation="vertical"
           className="min-h-0 min-w-0 flex-col gap-0 md:flex-row"
         >
-          <aside className="flex shrink-0 flex-col gap-5 border-b border-border bg-muted/30 p-4 md:w-56 md:border-r md:border-b-0 md:py-6">
+          <aside className="flex min-h-0 shrink-0 flex-col gap-3 border-b border-border/60 bg-sidebar/65 p-4 md:w-56 md:gap-4 md:overflow-y-auto md:border-r md:border-b-0 md:py-5">
             <DialogTitle className="flex items-center gap-2 px-2 pr-10">
               <SettingsIcon aria-hidden="true" className="size-5 text-muted-foreground" />
               {c("settings")}
             </DialogTitle>
-            <InputGroup>
+            <InputGroup className="bg-background dark:bg-background">
               <InputGroupInput
                 ref={searchRef}
                 role="searchbox"
@@ -256,10 +259,10 @@ export function AccountSettingsPanel({
                   <TabsTrigger
                     key={value}
                     value={value}
-                    className={`min-h-10 shrink-0 gap-2 px-3 py-2 md:flex-none ${value === "preferences" ? "mt-4" : ""}`}
+                    className={`min-h-9 shrink-0 gap-2 rounded-lg border-transparent px-3 py-2 text-left font-normal data-active:bg-selected data-active:font-medium data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-selected md:flex-none ${value === "preferences" ? "mt-2" : ""}`}
                   >
                     <Icon aria-hidden="true" />
-                    {label}
+                    <span className="min-w-0 truncate">{label}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -291,7 +294,7 @@ export function AccountSettingsPanel({
               </div>
             )}
             {!ownsHeading && (
-              <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-5 py-5 pr-14 md:px-8 md:py-6 md:pr-14">
+              <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-background px-5 py-4 pr-14 md:px-8 md:pr-14">
                 <div className="flex min-w-0 items-center gap-3">
                   <SectionIcon
                     aria-hidden="true"
@@ -313,7 +316,7 @@ export function AccountSettingsPanel({
                 )}
               </header>
             )}
-            <div className="p-5 md:px-8 md:py-7">
+            <div className="p-5 md:px-8 md:py-5">
               <VisitedSections value={visited}>
                 {children}
                 <AccountSettingsContent value="preferences">

@@ -2,7 +2,7 @@ import { ShellToolbar } from "@raypx/blocks/shell";
 import { Skeleton } from "@raypx/ui/components/ui/skeleton";
 import { cn } from "@raypx/ui/lib/utils";
 
-export const conversationColumn = "mx-auto w-full min-w-0 max-w-[44rem] px-1 sm:px-3";
+export const conversationColumn = "mx-auto w-full min-w-0 max-w-[44rem] px-2 sm:px-3";
 
 export function ConversationLoadingRows({ label }: { label: string }) {
   return (
@@ -40,7 +40,7 @@ export function ConversationLoading({ label }: { label: string }) {
         <ConversationLoadingRows label={label} />
       </div>
       <div aria-hidden="true" className={cn(conversationColumn, "shrink-0 pb-3 sm:pb-4")}>
-        <div className="flex h-24 flex-col justify-between rounded-3xl border border-panel-border bg-surface-panel p-3 shadow-soft">
+        <div className="flex h-24 flex-col justify-between rounded-3xl border border-border/80 bg-surface-panel p-3 shadow-soft sm:h-28">
           <Skeleton className="h-3.5 w-28 max-w-full" />
           <div className="flex items-center justify-between gap-2">
             <Skeleton className="h-7 w-24 rounded-full" />

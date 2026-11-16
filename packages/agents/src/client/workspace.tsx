@@ -990,7 +990,7 @@ function AgentsWorkspaceContents({
   const homeCreateAction =
     sidebarCollapsed && !renderWorkspace && !selected && page.agents.length === 0;
   const rowClass =
-    "w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal sidebar-icon:justify-center sidebar-icon:px-0";
+    "min-h-9 w-full min-w-0 justify-start gap-2 rounded-lg px-2 text-sm font-normal aria-[current=page]:font-medium aria-[current=page]:text-selected-text pointer-coarse:min-h-11 sidebar-icon:justify-center sidebar-icon:px-0";
   function agentMenu(item: AgentConversationView, isRecent = false) {
     return (
       <DropdownMenu>
@@ -1040,7 +1040,7 @@ function AgentsWorkspaceContents({
           />
         }
       >
-        <FolderIcon data-icon="inline-start" aria-hidden="true" />
+        <FolderIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
         <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
           {membership?.space.name ?? t("space")}
         </span>
@@ -1086,14 +1086,14 @@ function AgentsWorkspaceContents({
           <WorkspaceNavigationButton
             variant="ghost"
             disabled={!page.spaceId || loading || page.agents.length === 0}
-            className="w-full min-w-0 justify-start gap-2 px-2 sidebar-icon:justify-center sidebar-icon:px-0"
+            className={cn(rowClass, "font-medium")}
             aria-label={t("workspaceSidebar.new")}
             onClick={() => {
               if (page.spaceId && onNewConversation) onNewConversation(page.spaceId);
               else back();
             }}
           >
-            <PlusIcon data-icon="inline-start" aria-hidden="true" />
+            <PlusIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
             <span className="sidebar-icon:hidden">{t("workspaceSidebar.new")}</span>
           </WorkspaceNavigationButton>
         </ShellPrimaryAction>
@@ -1112,7 +1112,7 @@ function AgentsWorkspaceContents({
               setRoutinesOpen(true);
             }}
           >
-            <ClockIcon data-icon="inline-start" aria-hidden="true" />
+            <ClockIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
             <span className="truncate sidebar-icon:hidden">{t("routines")}</span>
           </WorkspaceNavigationButton>
           {routinesDisabledReason && (
@@ -1129,7 +1129,7 @@ function AgentsWorkspaceContents({
         </ShellSidebarNavigation>
       )}
       <ShellSidebarDirectory>
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-3">
           {onOpenTools && (
             <WorkspaceNavigationButton
               variant="ghost"
@@ -1137,7 +1137,7 @@ function AgentsWorkspaceContents({
               onClick={onOpenTools}
               aria-label={t("workspaceSidebar.tools")}
             >
-              <AdjustmentsIcon data-icon="inline-start" aria-hidden="true" />
+              <AdjustmentsIcon data-icon="inline-start" aria-hidden="true" className="size-5" />
               <span className="truncate sidebar-icon:hidden">{t("workspaceSidebar.tools")}</span>
             </WorkspaceNavigationButton>
           )}
@@ -1263,7 +1263,7 @@ function AgentsWorkspaceContents({
                           }}
                           size="sm"
                           variant="ghost"
-                          className={cn(rowClass, "flex-1 aria-[current=page]:text-selected-text")}
+                          className={cn(rowClass, "flex-1")}
                           aria-label={item.agent.name}
                           title={item.agent.name}
                           aria-current={item.agent.id === page.agentId ? "page" : undefined}
@@ -1272,7 +1272,7 @@ function AgentsWorkspaceContents({
                           <AgentIcon
                             data-icon="inline-start"
                             aria-hidden="true"
-                            className="rounded-md p-0.5"
+                            className="size-5 rounded-md p-0.5"
                             style={agentIdentityStyle(item.agent.id, true)}
                           />
                           <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
@@ -1327,7 +1327,11 @@ function AgentsWorkspaceContents({
                           aria-current={item.conversation.id === page.groupId ? "page" : undefined}
                           onClick={() => chooseGroup(item)}
                         >
-                          <UserCircleIcon data-icon="inline-start" aria-hidden="true" />
+                          <UserCircleIcon
+                            data-icon="inline-start"
+                            aria-hidden="true"
+                            className="size-5"
+                          />
                           <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
                             {item.conversation.name}
                           </span>
@@ -1353,57 +1357,63 @@ function AgentsWorkspaceContents({
                 </DirectorySection>
               )}
               <DirectorySection title={t("space")}>{spaceControl}</DirectorySection>
-              <DirectorySection title={t("workspaceSidebar.recent")}>
-                <ul className="flex min-w-0 flex-col gap-0.5">
-                  {recent.map((entry) => (
-                    <li
-                      key={`${entry.kind}:${entry.id}`}
-                      className="group/directory-row flex min-w-0 items-center rounded-lg"
-                    >
-                      <WorkspaceNavigationButton
-                        size="sm"
-                        variant="ghost"
-                        className={cn(rowClass, "flex-1 aria-[current=page]:text-selected-text")}
-                        aria-label={t("workspaceSidebar.openRecent", { name: entry.name })}
-                        title={entry.name}
-                        onClick={() => {
-                          if (entry.kind === "agent") chooseAgent(entry.item);
-                          else chooseGroup(entry.item);
-                        }}
+              {recent.length > 0 && (
+                <DirectorySection title={t("workspaceSidebar.recent")}>
+                  <ul className="flex min-w-0 flex-col gap-0.5">
+                    {recent.map((entry) => (
+                      <li
+                        key={`${entry.kind}:${entry.id}`}
+                        className="group/directory-row flex min-w-0 items-center rounded-lg"
                       >
-                        <HistoryIcon data-icon="inline-start" aria-hidden="true" />
-                        <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
-                          {entry.name}
-                        </span>
-                      </WorkspaceNavigationButton>
-                      {entry.kind === "agent" ? (
-                        agentMenu(entry.item, true)
-                      ) : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            render={
-                              <IconButton
-                                size="icon-sm"
-                                label={t("workspaceSidebar.recentActions", { name: entry.name })}
-                                className="opacity-0 group-hover/directory-row:opacity-100 group-focus-within/directory-row:opacity-100 pointer-coarse:opacity-100 sidebar-icon:hidden"
-                              />
-                            }
-                          >
-                            <MoreHorizontalIcon aria-hidden="true" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuGroup>
-                              <DropdownMenuItem onClick={() => chooseGroup(entry.item)}>
-                                {t("conversation")}
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </DirectorySection>
+                        <WorkspaceNavigationButton
+                          size="sm"
+                          variant="ghost"
+                          className={cn(rowClass, "flex-1 aria-[current=page]:text-selected-text")}
+                          aria-label={t("workspaceSidebar.openRecent", { name: entry.name })}
+                          title={entry.name}
+                          onClick={() => {
+                            if (entry.kind === "agent") chooseAgent(entry.item);
+                            else chooseGroup(entry.item);
+                          }}
+                        >
+                          <HistoryIcon
+                            data-icon="inline-start"
+                            aria-hidden="true"
+                            className="size-5"
+                          />
+                          <span className="min-w-0 flex-1 truncate text-left sidebar-icon:hidden">
+                            {entry.name}
+                          </span>
+                        </WorkspaceNavigationButton>
+                        {entry.kind === "agent" ? (
+                          agentMenu(entry.item, true)
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <IconButton
+                                  size="icon-sm"
+                                  label={t("workspaceSidebar.recentActions", { name: entry.name })}
+                                  className="opacity-0 group-hover/directory-row:opacity-100 group-focus-within/directory-row:opacity-100 pointer-coarse:opacity-100 sidebar-icon:hidden"
+                                />
+                              }
+                            >
+                              <MoreHorizontalIcon aria-hidden="true" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuGroup>
+                                <DropdownMenuItem onClick={() => chooseGroup(entry.item)}>
+                                  {t("conversation")}
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </DirectorySection>
+              )}
             </>
           )}
         </div>
@@ -1797,22 +1807,24 @@ function DirectorySection({
       className="group/directory-section min-w-0"
     >
       {!collapsed && (
-        <div className="mb-1 flex min-w-0 items-center gap-1 px-2">
+        <div className="mb-0.5 flex min-w-0 items-center gap-1 px-2">
           <CollapsibleTrigger
             aria-label={t(open ? "workspaceSidebar.collapse" : "workspaceSidebar.expand", {
               name: title,
             })}
-            className="flex min-h-7 min-w-0 flex-1 items-center gap-1 rounded-md text-left text-xs text-muted-foreground pointer-coarse:min-h-11 outline-none hover:text-foreground focus-visible:focus-control"
+            className="flex min-h-7 min-w-0 flex-1 items-center gap-1.5 rounded-md text-left text-xs font-medium text-muted-foreground pointer-coarse:min-h-11 outline-none hover:text-foreground focus-visible:focus-control"
           >
-            <span className="min-w-0 flex-1 truncate">{title}</span>
             <ChevronDownIcon
               aria-hidden="true"
-              className="size-3 opacity-0 transition-transform group-hover/directory-section:opacity-100 group-focus-within/directory-section:opacity-100 group-data-closed/collapsible:-rotate-90 motion-reduce:transition-none"
+              className="size-3 shrink-0 group-data-closed/collapsible:-rotate-90 motion-safe:transition-transform"
             />
+            <span className="min-w-0 flex-1 truncate">{title}</span>
           </CollapsibleTrigger>
-          <span className="opacity-0 group-hover/directory-section:opacity-100 group-focus-within/directory-section:opacity-100 pointer-coarse:opacity-100">
-            {action}
-          </span>
+          {action && (
+            <span className="opacity-0 group-hover/directory-section:opacity-100 group-focus-within/directory-section:opacity-100 pointer-coarse:opacity-100">
+              {action}
+            </span>
+          )}
         </div>
       )}
       {collapsed && action && <div className="flex justify-center">{action}</div>}
