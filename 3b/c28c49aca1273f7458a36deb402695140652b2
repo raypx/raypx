@@ -1,0 +1,24 @@
+apps/api/src/conversations/connection-transport.test.ts
+  s_e8793b91e4301c::t_c69de26ddea1b0 142-144,150
+  s_e8793b91e4301c::t_a1ad66d1581a7d 145-149
+  s_e8793b91e4301c::t_14e401f3fd576c 182
+  s_e8793b91e4301c::t_621ec65583764e 139-141
+apps/api/src/conversations/connection-test-diagnostics.ts
+  s_e8793b91e4301c::t_c69de26ddea1b0 9,54,78-79,81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3bc28c49aca1273f7458a36deb402695140652b2",
+  "prompts": {},
+  "sessions": {
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
