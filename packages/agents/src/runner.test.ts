@@ -77,7 +77,7 @@ interface Row {
   backupAt: number | null;
 }
 /** In-memory transactional port; actual SQL locking/FKs are covered by the PostgreSQL suite. */
-function store() {
+function store(history: ModelTurn["history"] = []) {
   const rows: Row[] = [];
   const visible: string[] = [];
   const crashed = new Set<string>();
@@ -194,7 +194,7 @@ function store() {
         scope,
         run,
         instructions: "Be helpful",
-        history: [],
+        history: structuredClone(history),
         checkpoint: structuredClone(row.checkpoint),
       };
     },
@@ -464,6 +464,49 @@ it("resumes a terminal checkpoint after the owner disappears without repeating v
   db.repository.finish = originalFinish;
 });
 
+it("reuses a fenced history summary after the owner disappears before the first reply", async () => {
+  const history: ModelTurn["history"] = Array.from({ length: 10 }, (_, index) => ({
+    role: index % 2 === 0 ? "user" : "assistant",
+    text: `message ${index}`,
+    createdAt: new Date(index).toISOString(),
+  }));
+  const db = store(history);
+  const firstModel = model();
+  const recoveredModel = model();
+  const summary = JSON.stringify({
+    source: "conversation_summary",
+    trust: "untrusted",
+    summary: "Context",
+  });
+  const compactHistory = vi.fn(async () => summary);
+  const first = runner(db, {
+    ...firstModel.models,
+    async resolve(run) {
+      return { ...(await firstModel.models.resolve(run)), compactHistory };
+    },
+  });
+  const second = runner(db, recoveredModel.models);
+
+  await send(first);
+  await advance();
+  const checkpoint = db.rows[0]!.checkpoint;
+  expect(checkpoint.historySummary).toEqual({ messages: 4, text: summary });
+  expect(checkpoint.untrustedInput).toBe(true);
+  expect(firstModel.calls[0]!.input.history.map((message) => message.text)).toEqual([
+    summary,
+    ...history.slice(4).map((message) => message.text),
+  ]);
+  db.crashed.add(first.ownerId);
+  await second.startWorker();
+  await advance(40);
+  expect(recoveredModel.calls[0]!.input.history).toEqual(firstModel.calls[0]!.input.history);
+  expect(compactHistory).toHaveBeenCalledTimes(1);
+  recoveredModel.calls[0]!.complete("Recovered reply");
+  await advance();
+  expect(db.rows[0]!.run.state).toBe("succeeded");
+  expect(db.visible).toEqual(["Recovered reply"]);
+});
+
 it("graceful handover releases immediately and a worker resumes before lease expiry", async () => {
   const db = store();
   const a = model();
@@ -669,6 +712,93 @@ const writeCall: ToolCall = {
   name: "computer_write_file",
   arguments: { path: "note.txt", content: "Recorded once" },
 };
+
+const searchCall: ToolCall = {
+  type: "toolCall",
+  id: "history-search",
+  name: "agent_search_history",
+  arguments: { query: "North Depot", before: 9000 },
+};
+
+function historyFixture(): ModelTurn["history"] {
+  return Array.from({ length: 10 }, (_, index) => ({
+    role: index % 2 === 0 ? "user" : "assistant",
+    text: index === 0 ? "North Depot uses MINT-17." : `North Depot update ${index}`,
+    createdAt: new Date(index).toISOString(),
+  }));
+}
+
+it("recovers the pinned history tool and its checkpointed result with the flag off", async () => {
+  const history = historyFixture();
+  const db = store(history);
+  const tools = await toolFixture(db);
+  const original = model();
+  const recovered = model();
+  const first = runner(
+    db,
+    {
+      ...original.models,
+      async resolve(run) {
+        return { ...(await original.models.resolve(run)), searchHistory: true };
+      },
+    },
+    { tools: tools.tools(), approvals: tools.approvals },
+  );
+  const second = runner(db, recovered.models, { tools: tools.tools(), approvals: tools.approvals });
+  await send(first);
+  await advance();
+  expect(original.calls[0]!.input.history).toEqual(history.slice(4));
+  expect(original.calls[0]!.input.tools).toContainEqual(
+    expect.objectContaining({ name: searchCall.name }),
+  );
+  original.calls[0]!.complete("", [searchCall]);
+  await advance();
+  const checkpoint = db.rows[0]!.checkpoint;
+  expect(checkpoint.historySearchBefore).toBe(4);
+  expect(checkpoint.untrustedInput).toBe(true);
+  const output = JSON.stringify(checkpoint.continuation.at(-1));
+  expect(output).toContain("North Depot uses MINT-17");
+  expect(output).not.toContain("North Depot update 4");
+  expect(tools.effects.size).toBe(0);
+  expect(tools.requests.size).toBe(0);
+
+  db.crashed.add(first.ownerId);
+  await second.startWorker();
+  await advance(40);
+  expect(recovered.calls[0]!.input.history).toEqual(history.slice(4));
+  expect(recovered.calls[0]!.input.continuation).toEqual(checkpoint.continuation);
+  expect(db.toolEvents.map((event) => event.kind)).toEqual(["tool.started", "tool.finished"]);
+  recovered.calls[0]!.complete("MINT-17");
+  await advance();
+  expect(db.visible).toEqual(["MINT-17"]);
+});
+
+it("honors an exact Block on history search without returning old passages", async () => {
+  const db = store(historyFixture());
+  const tools = await toolFixture(db, "never", [
+    { toolName: "agent_search_history", executable: null, decision: "block" },
+  ]);
+  const original = model();
+  const first = runner(
+    db,
+    {
+      ...original.models,
+      async resolve(run) {
+        return { ...(await original.models.resolve(run)), searchHistory: true };
+      },
+    },
+    { tools: tools.tools(), approvals: tools.approvals },
+  );
+  await send(first);
+  await advance();
+  original.calls[0]!.complete("", [searchCall]);
+  await advance();
+  const output = JSON.stringify(original.calls[1]!.input.continuation);
+  expect(output).toContain("blocked");
+  expect(output).not.toContain("MINT-17");
+  original.calls[1]!.complete("Unavailable");
+  await advance();
+});
 
 it("resumes a waiting approval, preserves its card and delivers waiting steering to the next turn", async () => {
   const db = store();

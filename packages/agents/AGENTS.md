@@ -82,6 +82,12 @@ while a Run is running or waiting steer that Run at the next model boundary.
 `/server` owns the injectable member-aware ModelAccess port and process-local
 LiveReplies prefixes. PostgreSQL owns execution leases, monotonically increasing
 fences, attempts, canonical checkpoints, steering receipts and backup jobs.
+Opt-in model adapters can summarize an older history prefix. The runner fences
+and persists the untrusted summary before using it, and reuses it on recovery.
+Alternatively, it can pin a recent history window and offer literal lookups into
+that Run's older history. The lookup uses the ordinary approval and tool lifecycle
+path, with no separate I/O or cross-conversation selector.
+Recent history, tool continuation and authorization stay with the existing runner.
 Every attempt mutation holds the conversation counter and verifies the current
 unexpired owner/fence under the Run lock. Turn output and checkpoint commit together.
 The worker starts scans explicitly; runtime construction performs no database I/O.

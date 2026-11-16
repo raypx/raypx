@@ -32,6 +32,13 @@ import { EffectInProgressError, EffectUnknownError, type ApprovalsService } from
 import { ComputerToolsError, type ComputerTools } from "./computer-tools.js";
 import { toolCompletion } from "./tool-lifecycle.js";
 import type { ProtectedInputsService } from "./protected-input.js";
+import {
+  historySearchInstructions,
+  historySearchTool,
+  prepareHistorySearch,
+  recentHistoryStart,
+  searchOlderHistory,
+} from "./history-search.js";
 
 export interface ModelTurn extends Pick<RunExecution, "instructions" | "history"> {
   /** Canonical model history after the initial conversation context. */
@@ -57,6 +64,12 @@ export interface ModelAccess {
   ): Promise<{
     connectionId?: string;
     supportsImages?: boolean;
+    searchHistory?: boolean;
+    compactHistory?(
+      input: ModelTurn,
+      range: { start: number; end: number },
+      signal: AbortSignal,
+    ): Promise<string | null | undefined>;
     stream(input: ModelTurn, signal: AbortSignal): AiStream;
   }>;
   close(this: void): void;
@@ -545,9 +558,14 @@ export class ConversationRunner {
   dispatch(scope: SpaceScope, id: ConversationId): void {
     this.wake(scope, id);
   }
-  private prepared(call: ToolCall, run?: ExecutionRun) {
+  private prepared(call: ToolCall, run?: ExecutionRun, historySearchEnabled = false) {
     if (call.name === refusedToolName) return undefined;
     try {
+      if (call.name === historySearchTool.name) {
+        if (!historySearchEnabled || !this.toolRuntime) return undefined;
+        this.toolRuntime.tools.guardInput?.(call);
+        return prepareHistorySearch(call);
+      }
       return this.toolRuntime?.tools.prepare(call, run);
     } catch {
       return undefined;
@@ -569,7 +587,12 @@ export class ConversationRunner {
           if (part.name === refusedToolName) throw new ComputerToolsError("INVALID_TOOL");
           if (!this.toolRuntime && !isAgentTool(part.name))
             throw new ComputerToolsError("INVALID_TOOL");
-          if (isAgentTool(part.name)) {
+          if (part.name === historySearchTool.name) {
+            if (!definitions.includes(historySearchTool))
+              throw new ComputerToolsError("INVALID_TOOL");
+            this.toolRuntime?.tools.guardInput?.(part);
+            prepareHistorySearch(part);
+          } else if (isAgentTool(part.name)) {
             this.toolRuntime?.tools.guardInput?.(part);
             prepareAgentTool(part);
           } else this.toolRuntime!.tools.prepare(part, run);
@@ -601,7 +624,7 @@ export class ConversationRunner {
         target: typeof call.arguments.tool === "string" ? call.arguments.tool : "unavailable",
         argumentSummary: refusedToolCode(call.arguments.code),
       };
-    if (isAgentTool(call.name))
+    if (isAgentTool(call.name) || call.name === historySearchTool.name)
       return {
         toolCallId: call.id,
         toolName: call.name,
@@ -621,9 +644,10 @@ export class ConversationRunner {
     run: ExecutionRun,
     call: ToolCall,
     controller: AbortController,
+    historySearch?: { history: RunExecution["history"]; end: number },
   ): Promise<ModelMessage> {
     if (isAgentTool(call.name)) return this.agentToolResult(scope, run, call, controller);
-    const prepared = this.prepared(call, run);
+    const prepared = this.prepared(call, run, Boolean(historySearch));
     await this.repository.beginTool(scope, run, this.toolSummary(call, run));
     let output: string;
     let isError = false;
@@ -648,6 +672,8 @@ export class ConversationRunner {
       if (decision !== "approved") {
         output = JSON.stringify({ untrusted: true, state: decision, refused: true });
         isError = true;
+      } else if (call.name === historySearchTool.name && historySearch) {
+        return searchOlderHistory(historySearch.history, historySearch.end, prepared);
       } else {
         try {
           if (prepared.protectedInput) {
@@ -947,6 +973,9 @@ export class ConversationRunner {
           text: checkpoint.memory.context,
           createdAt: run.startedAt,
         });
+      const historyStart = history.length - input.history.length;
+      const summaryEnd = recentHistoryStart(input.history);
+      let summaryUnavailable = false;
       if (checkpoint.routineTiming?.annotation)
         history.push({
           role: "user",
@@ -961,8 +990,26 @@ export class ConversationRunner {
         storing = false;
         run.connectionId = model.connectionId;
       }
+      if (
+        model.searchHistory &&
+        this.toolRuntime &&
+        summaryEnd > 0 &&
+        checkpoint.historySearchBefore === undefined &&
+        !checkpoint.historySummary &&
+        !checkpoint.continuation.length
+      ) {
+        checkpoint.historySearchBefore = summaryEnd;
+        storing = true;
+        await this.repository.saveCheckpoint(scope, run, checkpoint);
+        storing = false;
+      }
+      const historySearch =
+        checkpoint.historySearchBefore === undefined || !this.toolRuntime
+          ? undefined
+          : { history: input.history, end: checkpoint.historySearchBefore };
       const definitions = [
         ...(this.toolRuntime?.tools.definitions(run) ?? []),
+        ...(historySearch ? [historySearchTool] : []),
         ...agentToolDefinitions.filter((tool) => {
           if (tool.name === "agent_send_message") return this.repository.sendAgent !== undefined;
           return this.repository.delegate !== undefined;
@@ -994,7 +1041,7 @@ export class ConversationRunner {
         // are reused by executeEffect when a crash preceded the tool checkpoint.
         while (checkpoint.pendingCalls.length) {
           const call = checkpoint.pendingCalls[0]!;
-          const output = await this.toolResult(scope, run, call, controller);
+          const output = await this.toolResult(scope, run, call, controller, historySearch);
           checkpoint.continuation.push(output);
           // Every external/tool response is untrusted data. Without argument-level
           // information flow tracking, conservatively taint all later calls.
@@ -1054,15 +1101,51 @@ export class ConversationRunner {
           await this.repository.saveCheckpoint(scope, run, checkpoint);
           storing = false;
         }
-        const stream = model.stream(
-          {
-            ...input,
-            history,
-            continuation: [...attachmentContext, ...modelContinuation(checkpoint.continuation)],
-            tools: definitions,
-          },
-          controller.signal,
-        );
+        const turn: ModelTurn = {
+          instructions: input.instructions,
+          history,
+          continuation: [...attachmentContext, ...modelContinuation(checkpoint.continuation)],
+          tools: definitions,
+        };
+        if (historySearch) {
+          turn.instructions = `${turn.instructions}\n\n${historySearchInstructions}`;
+          turn.history = [
+            ...history.slice(0, historyStart),
+            ...history.slice(historyStart + historySearch.end),
+          ];
+        } else if (
+          !checkpoint.historySummary &&
+          !summaryUnavailable &&
+          summaryEnd >= 2 &&
+          model.compactHistory
+        ) {
+          const summary = await interruptible(
+            model.compactHistory(
+              turn,
+              { start: historyStart, end: historyStart + summaryEnd },
+              controller.signal,
+            ),
+            controller.signal,
+          );
+          summaryUnavailable = summary === null;
+          if (summary) {
+            checkpoint.historySummary = { messages: summaryEnd, text: summary };
+            checkpoint.untrustedInput = true;
+            run.untrustedInput = true;
+            storing = true;
+            await this.repository.saveCheckpoint(scope, run, checkpoint);
+            storing = false;
+          }
+        }
+        if (checkpoint.historySummary) {
+          const { messages, text } = checkpoint.historySummary;
+          turn.history = [
+            ...history.slice(0, historyStart),
+            { role: "user", text, createdAt: history[historyStart]!.createdAt },
+            ...history.slice(historyStart + messages),
+          ];
+        }
+        const stream = model.stream(turn, controller.signal);
         let text = "";
         let firstResponseAt: string | undefined;
         const segmentId = crypto.randomUUID();

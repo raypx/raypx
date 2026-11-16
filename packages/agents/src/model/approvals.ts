@@ -100,6 +100,7 @@ export function approvalExtraSummary(
     "tools.createPage": ["Create page", "创建页面"],
     "tools.updatePage": ["Update page", "更新页面"],
     "tools.readPage": ["Read page", "读取页面"],
+    "tools.searchHistory": ["Search conversation history", "搜索对话历史"],
     "tools.loadSkill": ["Load skill", "加载技能"],
     "tools.saveSkill": ["Save skill", "保存技能"],
     "tools.messageAgent": ["Message Agent", "向智能体发消息"],

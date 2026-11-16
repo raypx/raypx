@@ -16,6 +16,7 @@ export const computerToolNameSchema = z.enum([
   "agent_page_create",
   "agent_page_update",
   "agent_page_read",
+  "agent_search_history",
   "agent_skill_load",
   "agent_skill_save",
 ]);

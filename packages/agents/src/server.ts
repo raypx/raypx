@@ -29,6 +29,13 @@ export type {
 } from "./conversations.js";
 
 export { RunResourceUnavailableError, StaleRunFenceError } from "./conversations.js";
+export {
+  historySearchInstructions,
+  historySearchTool,
+  prepareHistorySearch,
+  recentHistoryStart,
+  searchOlderHistory,
+} from "./history-search.js";
 
 export {
   ConversationRunner,

@@ -130,6 +130,9 @@ export class RunResourceUnavailableError extends Error {
 export interface RunCheckpoint {
   continuation: ModelMessage[];
   pendingCalls: ToolCall[];
+  historySummary?: { messages: number; text: string };
+  /** Number of original history entries available through the retrieval tool. */
+  historySearchBefore?: number;
   rounds: number;
   completed: boolean;
   /** Snapshot for inspection; effect rows remain authoritative for replay. */

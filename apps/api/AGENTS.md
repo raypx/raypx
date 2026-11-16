@@ -10,6 +10,9 @@ Resolve fresh Space membership for every operation and subscription; filter befo
 limiting. Mutations require trusted Origin and account quotas. Resource selectors
 and deployment administration never grant Space access. Clients receive neither
 execution ports nor secrets. Protected input stays outside history/events/checkpoints.
+Deployment models may opt into a bounded, tool-free history summary on the pinned
+model or read-only retrieval into the accepted conversation history. The Agent
+runner owns the history checkpoint, tool policy and provenance.
 
 SERVER_ROLE is api, worker, relay or default all. PostgreSQL owns leases, fences,
 checkpoints, recovery and event fanout. Runtime construction performs no I/O;

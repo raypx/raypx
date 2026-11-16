@@ -14,6 +14,7 @@ export const toolLabelKeys = {
   agent_page_create: "tools.createPage",
   agent_page_update: "tools.updatePage",
   agent_page_read: "tools.readPage",
+  agent_search_history: "tools.searchHistory",
   agent_skill_load: "tools.loadSkill",
   agent_skill_save: "tools.saveSkill",
   agent_send_message: "tools.messageAgent",

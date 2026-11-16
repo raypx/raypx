@@ -9,6 +9,7 @@
     "dev": "bun --bun vp dev --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "tsc --noEmit --project tsconfig.json",
+    "bench:history-context": "bun tests/fixtures/history-context.ts",
     "test": "bun --bun vitest run",
     "test:unit": "bun --bun vitest run --exclude \"**/*.component.test.*\" --exclude \"**/tests/integration/**\"",
     "test:integration": "bun --bun vitest run tests/integration",

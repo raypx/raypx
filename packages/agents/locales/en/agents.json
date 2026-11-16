@@ -98,6 +98,7 @@
     "messageAgent": "Message Agent",
     "delegateTask": "Delegate task",
     "waitForChildren": "Wait for delegated work",
+    "searchHistory": "Search conversation history",
     "createPage": "Create page",
     "updatePage": "Update page",
     "readPage": "Read page",
