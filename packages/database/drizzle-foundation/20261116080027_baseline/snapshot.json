@@ -2,7 +2,7 @@
   "type": "base",
   "version": "9",
   "dialect": "postgres",
-  "id": "490f2f3f-f490-49fe-9b0e-fc938684a168",
+  "id": "684630ec-2bb1-4214-841f-22cd65030243",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -192,6 +192,25 @@
         "n|rel|public.approval_settings",
         "n|type|public.approval_settings",
         "n|rel|public.approval_settings_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "computer_e2b_homes"
+      ],
+      "writes": [
+        "s|tbl|public.computer_e2b_homes",
+        "n|tbl|public.computer_e2b_homes",
+        "e|tbl|public.computer_e2b_homes",
+        "n|rel|public.computer_e2b_homes",
+        "n|type|public.computer_e2b_homes",
+        "n|rel|public.computer_e2b_homes_pkey"
       ],
       "reads": [
         "n|sch|public"
@@ -4551,6 +4570,31 @@
       "statementTarget": [
         "table",
         "public",
+        "computer_e2b_homes"
+      ],
+      "writes": [
+        "s|fk|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey",
+        "n|fk|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey",
+        "e|fk|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey",
+        "n|con|public.computer_e2b_homes.computer_e2b_homes_qZksMmOBP7yl_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.computer_e2b_homes",
+        "n|sch|public",
+        "n|tbl|public.computers",
+        "n|sch|public",
+        "n|col|public.computer_e2b_homes.space_id",
+        "n|col|public.computer_e2b_homes.computer_id",
+        "n|col|public.computers.space_id",
+        "n|col|public.computers.id",
+        "e|uniqueness|public.computers.id.space_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
         "computer_screen_controls"
       ],
       "writes": [
@@ -8019,6 +8063,12 @@
     },
     {
       "schema": "public",
+      "name": "computer_e2b_homes",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "computer_screen_controls",
       "isRlsEnabled": false,
       "entityType": "tables"
@@ -9557,6 +9607,136 @@
     },
     {
       "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "space_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "computer_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "template",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "sandbox_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "sandbox_generation",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "create_key",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "ready",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "destroyed",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "home_revision",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "archive",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
       "table": "computer_screen_controls",
       "name": "space_id",
       "type": "text",
@@ -9915,6 +10095,19 @@
       "notNull": false,
       "dimensions": 0,
       "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "computers",
+      "name": "e2b_placed",
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
       "generated": null,
       "identity": null,
       "entityType": "columns"
@@ -17578,6 +17771,19 @@
     {
       "schema": "public",
       "table": "sandbox_configuration",
+      "name": "template",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "sandbox_configuration",
       "name": "screen",
       "type": "boolean",
       "typeSchema": null,
@@ -23094,6 +23300,25 @@
     },
     {
       "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "computer_e2b_homes_qZksMmOBP7yl_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "space_id",
+        "computer_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "computers",
+      "columnsTo": [
+        "space_id",
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
       "table": "computer_screen_controls",
       "name": "computer_screen_controls_uqO47s9zW1Mc_fkey",
       "nameExplicit": false,
@@ -25755,6 +25980,17 @@
     },
     {
       "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "computer_e2b_homes_pkey",
+      "columns": [
+        "space_id",
+        "computer_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
       "table": "computer_screen_controls",
       "name": "computer_screen_controls_pkey",
       "columns": [
@@ -27042,6 +27278,20 @@
     },
     {
       "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "computer_e2b_instance_check",
+      "value": "(\"create_key\" is null or \"sandbox_generation\" is not null) and (\"sandbox_id\" is null or \"sandbox_generation\" is not null) and (not \"ready\" or \"sandbox_id\" is not null)",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "computer_e2b_homes",
+      "name": "computer_e2b_archive_check",
+      "value": "(\"home_revision\" is null and \"archive\" is null) or (\"home_revision\" is not null and \"home_revision\" ~ '^[a-f0-9]{64}$' and \"archive\" is not null and octet_length(\"archive\"::text) <= 71303168)",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
       "table": "computer_screen_controls",
       "name": "computer_screen_controls_generation_check",
       "value": "\"generation\" > 0 and \"generation\" <= 9007199254740991",
@@ -27066,6 +27316,13 @@
       "table": "computers",
       "name": "computers_scope_check",
       "value": "(\"scope\" = 'team' and \"agent_id\" is null) or (\"scope\" = 'private' and \"agent_id\" is not null) or (\"scope\" = 'device' and \"agent_id\" is null)",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "computers",
+      "name": "computers_placement_check",
+      "value": "not \"e2b_placed\" or (\"supervisor_url\" is null and \"provider\" = 'sandbox')",
       "entityType": "checks"
     },
     {

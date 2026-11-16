@@ -98,16 +98,24 @@ export type ResendSettingsUpdate = z.infer<typeof resendUpdateSchema>;
 /** Administrator-owned supervisor location. HTTP requires a protected private channel. */
 export const sandboxValuesSchema = z
   .strictObject({
-    provider: z.enum(["none", "docker"]),
+    provider: z.enum(["none", "docker", "e2b"]),
     url: z
       .url({ protocol: /^https?$/, normalize: true })
       .max(2048)
       .regex(/^https?:\/\/[^/?#@]+\/?$/)
       .transform((value) => value.replace(/\/$/, ""))
       .nullable(),
+    template: z
+      .string()
+      .regex(/^[a-zA-Z0-9_-]{1,100}$/)
+      .optional(),
     screen: z.boolean(),
   })
-  .refine((value) => value.provider === "none" || value.url !== null);
+  .refine((value) => {
+    if (value.provider === "e2b")
+      return Boolean(value.template && value.url === null && !value.screen);
+    return value.template === undefined && (value.provider === "none" || value.url !== null);
+  });
 const sandboxSnapshotSchema = z.strictObject({
   values: sandboxValuesSchema,
   hasCredential: z.boolean(),
@@ -131,6 +139,7 @@ const sandboxTestSchema = z.discriminatedUnion("status", [
     runtime: z.enum(["runc", "runsc", "other"]),
     screen: z.boolean(),
   }),
+  z.strictObject({ status: z.literal("e2b-connected") }),
   z.strictObject({
     status: z.enum(["not-configured", "authentication-failed", "timeout", "unavailable"]),
   }),

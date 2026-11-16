@@ -33,6 +33,7 @@
       "croner": "^11.0.0",
       "crossws": "0.4.17",
       "drizzle-orm": "1.0.0-rc.5",
+      "e2b": "2.64.0",
       "evlog": "^2.34.0",
       "hono": "^4.13.18",
       "hono-rate-limiter": "^0.5.4",

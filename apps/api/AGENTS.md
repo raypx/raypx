@@ -64,3 +64,8 @@ configuration.setupStatus is an administrator-only configuration.read projection
 three current booleans: usable deployment/acting-account model, enabled sandbox with
 credential, and active mail. No Space access, provider probe, secret or URL is exposed.
 Deployment model offers exclude unsupported models and missing credentials.
+
+Hosted E2B uses the same saved Sandbox configuration and templates by ID.
+PostgreSQL binds each Computer to its backend before remote I/O and fences E2B
+calls under the Computer row. The private placement store retains the last
+committed archive and never exposes sandbox IDs to members.

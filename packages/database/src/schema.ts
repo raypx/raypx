@@ -260,6 +260,7 @@ export const computers = pgTable(
     leaseExpiresAt: date("lease_expires_at"),
     leaseFence: bigint("lease_fence", { mode: "number" }).notNull().default(0),
     supervisorUrl: text("supervisor_url"), // Private placement; never part of the Computer projection.
+    e2bPlaced: boolean("e2b_placed").notNull().default(false),
     failureCode: text("failure_code", { enum: ["PROVIDER_UNAVAILABLE", "RESTORE_FAILED"] }),
     ...timestamps(),
   },
@@ -284,6 +285,10 @@ export const computers = pgTable(
       "computers_scope_check",
       sql`(${t.scope} = 'team' and ${t.agentId} is null) or (${t.scope} = 'private' and ${t.agentId} is not null) or (${t.scope} = 'device' and ${t.agentId} is null)`,
     ),
+    check(
+      "computers_placement_check",
+      sql`not ${t.e2bPlaced} or (${t.supervisorUrl} is null and ${t.provider} = 'sandbox')`,
+    ),
     check("computers_provider_check", sql`${t.provider} in ('memory', 'sandbox', 'device')`),
     check(
       "computers_state_check",
@@ -301,6 +306,37 @@ export const computers = pgTable(
     check(
       "computers_failure_check",
       sql`(${t.state} = 'failed' and ${t.failureCode} is not null and ${t.failureCode} in ('PROVIDER_UNAVAILABLE', 'RESTORE_FAILED')) or (${t.state} <> 'failed' and ${t.failureCode} is null)`,
+    ),
+  ],
+);
+/** Private E2B placement and the last committed home, separate from member projections. */
+export const computerE2bHomes = pgTable(
+  "computer_e2b_homes",
+  {
+    spaceId: text("space_id").notNull(),
+    computerId: text("computer_id").notNull(),
+    template: text("template").notNull(),
+    sandboxId: text("sandbox_id"),
+    sandboxGeneration: bigint("sandbox_generation", { mode: "number" }),
+    createKey: text("create_key"),
+    ready: boolean("ready").notNull().default(false),
+    destroyed: boolean("destroyed").notNull().default(false),
+    homeRevision: text("home_revision"),
+    archive: jsonb("archive"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.spaceId, t.computerId] }),
+    foreignKey({
+      columns: [t.spaceId, t.computerId],
+      foreignColumns: [computers.spaceId, computers.id],
+    }).onDelete("cascade"),
+    check(
+      "computer_e2b_instance_check",
+      sql`(${t.createKey} is null or ${t.sandboxGeneration} is not null) and (${t.sandboxId} is null or ${t.sandboxGeneration} is not null) and (not ${t.ready} or ${t.sandboxId} is not null)`,
+    ),
+    check(
+      "computer_e2b_archive_check",
+      sql`(${t.homeRevision} is null and ${t.archive} is null) or (${t.homeRevision} is not null and ${t.homeRevision} ~ '^[a-f0-9]{64}$' and ${t.archive} is not null and octet_length(${t.archive}::text) <= 71303168)`,
     ),
   ],
 );
@@ -1587,8 +1623,9 @@ export const mailConfiguration = pgTable("mail_configuration", {
 
 export const sandboxConfiguration = pgTable("sandbox_configuration", {
   id: text("id").primaryKey(),
-  provider: text("provider", { enum: ["none", "docker"] }).notNull(),
+  provider: text("provider", { enum: ["none", "docker", "e2b"] }).notNull(),
   url: text("url"),
+  template: text("template"),
   screen: boolean("screen").notNull(),
   credentials: text("credentials"),
   revision: integer("revision").notNull(),
@@ -2806,6 +2843,7 @@ export const schema = {
   storageConfiguration,
   mailConfiguration,
   sandboxConfiguration,
+  computerE2bHomes,
   user,
   session,
   account,

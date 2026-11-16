@@ -124,14 +124,15 @@ def export_home():
     return {"version": 1, "entries": entries}
 
 
-def run(operation, value):
+def run(operation, value, *, ready=True):
     if operation.startswith("screen-"):
         screen_run = runpy.run_path("/opt/raypx/screen.py")["run"]
         return screen_run(operation[7:], value, Refusal)
     if operation == "exec":
         # The supervisor holds the computer lock until this trusted ready prefix.
         # OCI errors before Python starts must never become command output.
-        os.write(1, b"\x1eRAYPX_READY\n")
+        if ready:
+            os.write(1, b"\x1eRAYPX_READY\n")
         execution_id = str(uuid.UUID(value["executionId"]))
         marker = "/tmp/rpx-cancel-" + execution_id
         pidfile = "/tmp/rpx-pid-" + execution_id

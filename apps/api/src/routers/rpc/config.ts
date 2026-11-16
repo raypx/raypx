@@ -72,7 +72,7 @@ export function createConfigHandlers({
           model,
           sandbox:
             sandbox.values.provider !== "none" &&
-            Boolean(sandbox.values.url) &&
+            Boolean(sandbox.values.url || sandbox.values.template) &&
             sandbox.hasCredential,
           mail,
         };

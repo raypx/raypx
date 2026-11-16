@@ -250,12 +250,12 @@ Public product copy does not promise verification for every signup. Client notic
 reflect deployment bootstrap, invitation-only registration and configured mail;
 optional verification reminders do not change server-owned account admission.
 
-Deployment administrators manage sandbox provider selection, supervisor connection
-and write-only credentials, connection testing and Screen offering in the existing
-Web/Desktop configuration center. Saved PostgreSQL changes apply to API/worker
+Deployment administrators select Docker or the hosted E2B command and file
+backend in the Web/Desktop configuration center, with write-only credentials
+and connection testing. Screen is offered by Docker. Saved PostgreSQL changes apply to API/worker
 roles without restarting. Disabled/unreachable/changed connections retain explicit
 member availability reasons on Web, Desktop and Mobile; Mobile adds no admin UI.
-Existing computers stay bound to their original supervisor, and unknown remote
+Existing computers stay bound to their original backend and destination, and unknown remote
 outcomes never become a stopped/success claim. Network routes, supervisor image,
 host isolation and quotas remain operator responsibilities. A PaaS without WireGuard
 requires a separately accepted TLS proxy with source restrictions or a private route.

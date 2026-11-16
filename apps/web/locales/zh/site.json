@@ -27,6 +27,11 @@
   "closed": "需要邀请",
   "closedHint": "请使用空间所有者提供的邀请链接创建账号。",
   "sandbox": {
+    "e2bTemplate": "E2B 模板 ID",
+    "e2bKey": "E2B API 密钥",
+    "e2bKeyHint": "留空以保留已保存的 E2B 密钥。",
+    "e2bTestHint": "检查是否可以访问已保存的 E2B 模板。",
+    "e2b-connected": "已连接 E2B。",
     "title": "沙箱",
     "provider": "提供方",
     "disabled": "已停用",

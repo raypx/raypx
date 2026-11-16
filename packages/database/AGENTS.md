@@ -214,3 +214,8 @@ state only; sources remain authoritative. All relationships include Space scope.
 account_bootstrap is the permanent deployment-lifetime claim, independent of user deletion. user.email_verification_skipped records no-mail account admission without claiming email ownership. space_invitations.registration_account_id binds one new account before explicit Space acceptance; it is historical attribution, not membership. The current unreleased baseline was regenerated once for these schema changes.
 
 sandbox_configuration holds revisioned deployment provider/URL/Screen settings and encrypted credentials. computers.supervisor_url is private placement, excluded from domain projections/events. The unreleased foundation remains exactly one regenerated baseline; deployed test databases require a wipe, with no incremental migration/backfill.
+
+`computer_e2b_homes` retains the private E2B placement, admitted generation,
+creation receipt and bounded last known-good portable home. It cascades with
+its same-Space Computer and is separate from lifecycle/event projections.
+`computers.e2b_placed` excludes concurrent Docker placement.

@@ -71,6 +71,7 @@ function SandboxForm({
     values.provider !== current.provider ||
     values.url !== current.url ||
     values.screen !== current.screen ||
+    values.template !== current.template ||
     Boolean(credential);
   const parsed = sandboxUpdateSchema.safeParse({
     values,
@@ -98,11 +99,25 @@ function SandboxForm({
     mutationFn: () => configurationClient.sandbox({}),
     onSuccess: (next) => {
       setSaved(next);
-      setValues((draft) => ({
-        provider: draft.provider !== current.provider ? draft.provider : next.values.provider,
-        url: draft.url !== current.url ? draft.url : next.values.url,
-        screen: draft.screen !== current.screen ? draft.screen : next.values.screen,
-      }));
+      setValues((draft) => {
+        if (draft.provider !== current.provider) return draft;
+        if (
+          next.values.provider !== current.provider &&
+          draft.url === current.url &&
+          draft.screen === current.screen &&
+          draft.template === current.template
+        )
+          return next.values;
+        if (next.values.provider !== current.provider) return draft;
+        const template =
+          draft.template !== current.template ? draft.template : next.values.template;
+        return {
+          provider: draft.provider,
+          url: draft.url !== current.url ? draft.url : next.values.url,
+          screen: draft.screen !== current.screen ? draft.screen : next.values.screen,
+          ...(template !== undefined ? { template } : {}),
+        };
+      });
       cache.setQueryData(queryKey, next);
       save.reset();
       test.reset();
@@ -115,7 +130,12 @@ function SandboxForm({
     !conflict &&
     parsed.success &&
     (values.provider === "none" ||
-      Boolean(credential || (saved.hasCredential && values.url === current.url)));
+      Boolean(
+        credential ||
+        (saved.hasCredential &&
+          values.url === current.url &&
+          (values.provider === "e2b") === (current.provider === "e2b")),
+      ));
   function edited() {
     setNotice(false);
     test.reset();
@@ -124,11 +144,12 @@ function SandboxForm({
   function testHint() {
     if (dirty) return t("saveFirst");
     if (saved.values.provider === "none") return t("not-configured");
-    return t("testHint");
+    return t(saved.values.provider === "e2b" ? "e2bTestHint" : "testHint");
   }
   const providers = [
     { value: "none", label: t("disabled") },
     { value: "docker", label: t("supervisor") },
+    { value: "e2b", label: "E2B" },
   ];
   return (
     <form
@@ -149,8 +170,17 @@ function SandboxForm({
               value={values.provider}
               disabled={busy}
               onValueChange={(provider) => {
-                if (provider !== "none" && provider !== "docker") return;
-                setValues({ ...values, provider });
+                if (provider !== "none" && provider !== "docker" && provider !== "e2b") return;
+                if (provider === "e2b" || values.provider === "e2b") {
+                  setValues(
+                    current.provider === provider
+                      ? current
+                      : { provider, url: null, screen: false },
+                  );
+                  setCredential("");
+                } else {
+                  setValues({ ...values, provider });
+                }
                 edited();
               }}
             >
@@ -168,27 +198,46 @@ function SandboxForm({
               </SelectContent>
             </Select>
           </Field>
+          {values.provider === "e2b" ? (
+            <Field>
+              <FieldLabel htmlFor="sandbox-template">{t("e2bTemplate")}</FieldLabel>
+              <Input
+                id="sandbox-template"
+                autoComplete="off"
+                maxLength={100}
+                required
+                value={values.template ?? ""}
+                onChange={(event) => {
+                  setValues({ ...values, template: event.target.value });
+                  edited();
+                }}
+              />
+            </Field>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="sandbox-url">{t("url")}</FieldLabel>
+              <Input
+                id="sandbox-url"
+                type="url"
+                autoComplete="off"
+                maxLength={2048}
+                required={values.provider === "docker"}
+                value={values.url ?? ""}
+                aria-describedby="sandbox-url-hint"
+                onChange={(event) => {
+                  setValues({ ...values, url: event.target.value || null });
+                  edited();
+                }}
+              />
+              <p id="sandbox-url-hint" className="text-xs text-muted-foreground">
+                {t("urlHint")}
+              </p>
+            </Field>
+          )}
           <Field>
-            <FieldLabel htmlFor="sandbox-url">{t("url")}</FieldLabel>
-            <Input
-              id="sandbox-url"
-              type="url"
-              autoComplete="off"
-              maxLength={2048}
-              required={values.provider === "docker"}
-              value={values.url ?? ""}
-              aria-describedby="sandbox-url-hint"
-              onChange={(event) => {
-                setValues({ ...values, url: event.target.value || null });
-                edited();
-              }}
-            />
-            <p id="sandbox-url-hint" className="text-xs text-muted-foreground">
-              {t("urlHint")}
-            </p>
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="sandbox-credential">{t("credential")}</FieldLabel>
+            <FieldLabel htmlFor="sandbox-credential">
+              {t(values.provider === "e2b" ? "e2bKey" : "credential")}
+            </FieldLabel>
             <Input
               id="sandbox-credential"
               type="password"
@@ -202,20 +251,22 @@ function SandboxForm({
               }}
             />
             <p id="sandbox-credential-hint" className="text-xs text-muted-foreground">
-              {t("credentialHint")}
+              {t(values.provider === "e2b" ? "e2bKeyHint" : "credentialHint")}
             </p>
           </Field>
-          <Field orientation="horizontal" className="justify-between">
-            <FieldLabel htmlFor="sandbox-screen">{t("screen")}</FieldLabel>
-            <Switch
-              id="sandbox-screen"
-              checked={values.screen}
-              onCheckedChange={(screen) => {
-                setValues({ ...values, screen });
-                edited();
-              }}
-            />
-          </Field>
+          {values.provider !== "e2b" && (
+            <Field orientation="horizontal" className="justify-between">
+              <FieldLabel htmlFor="sandbox-screen">{t("screen")}</FieldLabel>
+              <Switch
+                id="sandbox-screen"
+                checked={values.screen}
+                onCheckedChange={(screen) => {
+                  setValues({ ...values, screen });
+                  edited();
+                }}
+              />
+            </Field>
+          )}
         </FieldGroup>
       </fieldset>
       <ConfigurationActions

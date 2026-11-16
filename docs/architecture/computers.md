@@ -28,7 +28,7 @@ capability checks make an image without a graphical stack explicit.
 | Provider | Runs on                        | Boundary                                   | Started by         |
 | -------- | ------------------------------ | ------------------------------------------ | ------------------ |
 | `docker` | The supervisor's Docker Engine | The container                              | Sandbox supervisor |
-| hosted   | One hosted sandbox service     | The provider's sandbox                     | Backend            |
+| `e2b`    | E2B hosted sandbox             | The provider's sandbox                     | Backend            |
 | `device` | A registered device            | Granted directories; the user's OS account | Device connector   |
 
 One conformance suite runs against an in-memory provider and every real provider.
@@ -96,9 +96,10 @@ The supervisor is a separate service under `infra/sandbox`.
 
 ## Deployment configuration
 
-The administrator configures provider (`none`/`docker`), supervisor root URL,
+The administrator selects `none`, `docker` or `e2b`. Docker uses a supervisor root URL,
 write-only encrypted credential and Screen offering through the existing
-configuration center. `sandbox_configuration` uses the same revisioned,
+configuration center. E2B uses a Raypx template ID and a write-only encrypted
+API key. `sandbox_configuration` uses the same revisioned,
 audited provider-setting transaction and configuration reader/optional Redis
 invalidation as mail/storage. Fresh PostgreSQL reads admit every operation in API
 and worker roles without startup I/O or restart; no environment value overrides
@@ -112,7 +113,12 @@ Known commands are cancelled and an admitted create finishing after a change is
 stopped at its original host best effort. Unreachable/unknown compute is never
 claimed stopped; supervisor containment still applies. Members see the existing
 not-configured state or the translated `PROVIDER_UNAVAILABLE` availability reason.
-Screen requires both the saved offering switch and actual provider support.
+E2B stores private placement and the last verified home archive in PostgreSQL.
+Operations check the Computer generation under its row lock before reaching E2B.
+Explicit Stop commits the archive before terminating compute. Idle timeout
+pauses only the filesystem and an explicit Start resumes it after a reboot.
+A missing or unverifiable previously active sandbox is reported as unavailable.
+Screen requires the Docker offering switch and actual supervisor support.
 Administrator permissions never confer Space membership. See
 [configuration semantics](../development/configuration.md#sandbox-connection) and
 [PaaS reachability](../development/sandbox-hosting.md#paas-reachability-without-wireguard).

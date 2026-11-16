@@ -279,8 +279,10 @@ PostgreSQL remains the authority. The separate Desktop session daemon retains
 only cookies, selected-origin HTTP and server events. macOS arm64 real-daemon
 acceptance is separate from unverified Windows/Linux and packaged native gates.
 See [device setup and conservative decisions](development/device-connector.md).
-Home transfer and Screen are unavailable on device Computers. The full mobile
-client and one hosted sandbox provider remain broader phase targets. See
+Home transfer and Screen are unavailable on device Computers. E2B provides
+hosted command and file support. The PostgreSQL acceptance covers Stop,
+new-generation restore and old-generation fencing with a local guest.
+Live E2B acceptance remains separate. See
 [computers](architecture/computers.md#device-connectors) and
 [clients](architecture/clients.md).
 
@@ -288,7 +290,7 @@ Acceptance:
 
 - Device operation/admission suites and actual CLI-to-API acceptance cover the
   supported device capabilities. Home/screen conformance is unavailable there.
-  Hosted-provider conformance remains future work.
+  Live hosted-provider conformance remains to be verified.
 - A device grant needs native confirmation. Revoking it cancels its work. An
   offline device is a waiting state.
 - A device runs only Runs started by the member who granted it.
@@ -315,7 +317,6 @@ provider. Each needs its own decision when a concrete workflow requires it.
 
 ## Open questions
 
-- Which hosted sandbox provider passes the conformance suite and fits the port.
 - Whether Claude and Codex continue as tools inside a computer or are dropped.
 
 ## Workspace gap closure

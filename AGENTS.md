@@ -26,8 +26,9 @@ fail-closed decisions. Untrusted input, HTTP changes and unlisted commands still
 Protected input supports one-use sandbox/own-device command environments and stdin,
 HTTP bearer/API-key/basic credentials and declared per-call remote tool headers.
 Values stay outside model history, events, checkpoints and connector journals;
-raw and common encoded output echoes are scrubbed best effort. File/graphical input
-and hosted computers remain unimplemented. Member-owned device
+raw and common encoded output echoes are scrubbed best effort. File and graphical
+protected input remain unimplemented. Hosted E2B computers support commands and
+workspace files. Member-owned device
 computers use a separate outbound-only CLI connector, locally confirmed Space
 directory grants and per-operation checks. Device commands require approval or an
 exact executable Allow even in Never ask; Auto never approves them. macOS arm64

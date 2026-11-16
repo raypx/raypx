@@ -158,13 +158,14 @@ and shared across API replicas. No earlier product database is imported.
 ## Sandbox connection
 
 Open **Configuration center → Sandbox** as a deployment administrator. Select
-**Sandbox supervisor**, enter its root base URL and dedicated bearer credential,
-choose whether to offer Screen, and save. **Test connection** then tests the saved
-configuration. No API/worker restart or redeploy is required. Disabled is the
-default, and ordinary conversations and device computers remain available.
-Deployment administration grants no Space access.
+**Sandbox supervisor** for Docker or **E2B** for hosted command and file tools.
+For Docker, enter the supervisor root URL and its dedicated bearer credential,
+then choose whether to offer Screen. For E2B, enter the project API key and the
+built Raypx template ID. **Test connection** checks the saved destination. No
+API/worker restart is required. Disabled is the default. Deployment
+administration grants no Space access.
 
-The URL accepts HTTPS or HTTP with no embedded credentials, path, query or fragment.
+The Docker URL accepts HTTPS or HTTP with no embedded credentials, path, query or fragment.
 Use HTTP only within an authenticated encrypted private tunnel (loopback is suitable
 for local development). See [host reachability](sandbox-hosting.md#paas-reachability-without-wireguard)
 for a PaaS API without WireGuard. A changed URL requires an explicitly supplied
@@ -181,7 +182,8 @@ allows three requests/minute, rejects redirects, caps the authenticated descript
 at 16 KiB and bounds headers and body to five seconds. Only connection status,
 untrusted-tenant mode, `runc`/`runsc`/`other` runtime classification and actual Screen
 availability are returned; arbitrary response text and diagnostics are discarded.
-This is a connection check, not host isolation or graphical acceptance.
+For E2B the test checks template access with the saved key and returns only a
+connection status. Live provisioning and isolation have separate acceptance.
 
 PostgreSQL is read freshly at operation admission and completion in both API and
 worker roles; only the adapter for the exact saved revision is reused. The existing
@@ -192,6 +194,12 @@ Commands and Screen streams recheck revisions at least every second while waitin
 for data. A change closes their old stream, cancels known commands best effort and
 refuses to publish success from the retired revision. New Runs without a configured
 sandbox continue without Computer tools; pinned Runs never switch computers.
+
+On E2B, the credential is encrypted against the fixed E2B API destination.
+Switching between Docker and E2B requires a credential for the selected
+backend. A Computer stays bound to the backend and template or URL it first
+used. Use a fresh Space to test a different backend. See
+[E2B template and acceptance](sandbox.md#e2b-hosted-computers).
 
 A private `computers.supervisor_url` binds a computer before its first remote
 provision. Changing the destination leaves existing computers unavailable, with

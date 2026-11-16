@@ -43,3 +43,9 @@ Provider lifecycle snapshots may also expose an optional value-free availability
 reason after an automatic transfer-budget stop. This metadata grants no authority.
 
 Deployment adapters may implement configured() for fresh availability admission. The Docker description reports optional hosting metadata; testDockerComputerConnection bounds headers/body to five seconds and 16 KiB, refuses redirects and returns only safe mode/runtime/Screen classifications. No response diagnostics or credentials are returned.
+
+`./computer/e2b` is API's hosted command/file adapter. It loads the E2B SDK
+lazily, takes a fenced placement store, and exchanges bounded data over stdin
+with the fixed guest helper. Explicit Stop commits a portable home before
+killing the sandbox. Idle pause preserves disk and discards memory on resume.
+It exposes no Screen operations.

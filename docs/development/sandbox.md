@@ -194,3 +194,34 @@ Device computers use a separate outbound connector and locally confirmed Space
 directories. They do not use this supervisor, Docker lifecycle, home snapshots or
 network isolation. An approved command retains the device user's OS permissions;
 a directory grant is not sandbox isolation. See [device setup and acceptance](device-connector.md).
+
+## E2B hosted computers
+
+Build a new Raypx template name for each release of the guest helper. The
+command copies the local helpers into the template and prints the resulting ID.
+Use an E2B project with filesystem-only pause enabled.
+
+```sh
+# Supply E2B_API_KEY securely to the shell before running.
+bun run --cwd infra/sandbox e2b:template <new-template-name> python:3.13-slim-bookworm@sha256:<digest>
+```
+
+In **Configuration center → Sandbox**, choose **E2B**, paste the template ID
+and the project API key, then save and test the connection. Start the Computer
+in a fresh Space. E2B uses private traffic, disables internet egress, and serves
+commands and workspace files. An explicit Stop commits the bounded PostgreSQL
+home archive before deleting the sandbox. Startup restores and verifies that
+archive in a new sandbox. The E2B idle timeout saves disk state for a later
+explicit Start. Use separate projects for testing and production.
+
+The PostgreSQL acceptance uses an isolated temporary guest by default. To check
+the same path against E2B, supply a disposable test database, a test project key,
+and the built template ID through the environment:
+
+```sh
+RAYPX_TEST_E2B=1 bun run --cwd apps/api test:postgres e2b-computer.test.ts
+```
+
+The test creates and removes test sandboxes. It verifies headless command
+execution, bounded file preview, explicit Stop, restoration across new runtime
+instances, and stale-generation write rejection.

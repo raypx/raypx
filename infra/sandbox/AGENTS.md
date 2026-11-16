@@ -68,3 +68,7 @@ supervisor on missing privacy hooks or low disk/inode headroom. It never repairs
 rules during admission; operator review/restart follows a refusal.
 
 All routes authenticate before disclosing state. Authenticated description includes tenant mode/runtime; body reads have a ten-second deadline plus existing byte bounds. An operator-accepted TLS proxy with source allowlisting may front the private listener for a PaaS; do not publish raw HTTP or weaken untrusted mode.
+
+`e2b:template` publishes a separate headless E2B template with the shared home
+helper and the fixed stdin protocol in `src/e2b.py`. The template build is
+explicit and needs an E2B project key and a digest-pinned base image.

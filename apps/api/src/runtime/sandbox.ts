@@ -3,8 +3,10 @@ import type { Database } from "@raypx/database/connection";
 import { computers, sandboxConfiguration } from "@raypx/database/schema";
 import { ComputerError, type ComputerProvider, type ComputerRef } from "@raypx/providers/computer";
 import { createDockerComputerProvider } from "@raypx/providers/computer/docker";
-import { sandboxCipher } from "../config/sandbox.js";
+import { createE2bComputerProvider } from "@raypx/providers/computer/e2b";
+import { sandboxCipher, sandboxCredentialTarget } from "../config/sandbox.js";
 import type { ConfigReads } from "../config/reads.js";
+import { postgresE2bPlacement } from "./e2b-placement.js";
 
 /** Construction registers a loader only. PostgreSQL is read at every operation admission. */
 export function databaseComputerProvider(db: Database, secret: string, reads: ConfigReads) {
@@ -21,19 +23,29 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
   async function current() {
     try {
       const row = await source.read();
-      if (!row || row.provider !== "docker" || !row.url || !row.credentials)
+      if (
+        !row ||
+        row.provider === "none" ||
+        !row.credentials ||
+        (row.provider === "docker" ? !row.url : !row.template)
+      )
         throw new ComputerError("PROVIDER_UNAVAILABLE");
       if (active?.revision !== row.revision) {
-        const token = await cipher.open(row.credentials, row.url);
+        const token = await cipher.open(row.credentials, sandboxCredentialTarget(row));
         protectedValues.add(token);
         if (protectedValues.size > 32)
           protectedValues.delete(protectedValues.values().next().value!);
-        active = {
-          revision: row.revision,
-          provider: createDockerComputerProvider({ url: row.url, token }),
-        };
+        const provider =
+          row.provider === "docker"
+            ? createDockerComputerProvider({ url: row.url!, token })
+            : createE2bComputerProvider({
+                apiKey: token,
+                template: row.template!,
+                store: postgresE2bPlacement(db, row.template!),
+              });
+        active = { revision: row.revision, provider };
       }
-      return { ...row, provider: active.provider };
+      return { ...row, kind: row.provider, provider: active.provider };
     } catch {
       throw new ComputerError("PROVIDER_UNAVAILABLE");
     }
@@ -58,6 +70,7 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
             eq(computers.spaceId, spaceId),
             eq(computers.provider, "sandbox"),
             or(isNull(computers.supervisorUrl), eq(computers.supervisorUrl, url)),
+            eq(computers.e2bPlaced, false),
           ),
         );
     }
@@ -73,8 +86,9 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
     screen = false,
   ) {
     const saved = await current();
-    if (screen && !saved.screen) throw new ComputerError("SCREEN_UNAVAILABLE");
-    if (ref) await placement(ref, saved.url!);
+    if (screen && (saved.kind !== "docker" || !saved.screen))
+      throw new ComputerError("SCREEN_UNAVAILABLE");
+    if (ref && saved.kind === "docker") await placement(ref, saved.url!);
     const result = await run(saved.provider);
     await unchanged(saved.revision);
     return result;
@@ -108,7 +122,11 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
   const provider: ComputerProvider = {
     async configured() {
       try {
-        return (await source.read())?.provider === "docker";
+        const row = await source.read();
+        return Boolean(
+          row?.credentials &&
+          (row.provider === "docker" ? row.url : row.provider === "e2b" && row.template),
+        );
       } catch {
         throw new ComputerError("PROVIDER_UNAVAILABLE");
       }
@@ -122,7 +140,7 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
     get: (ref) => call((p) => p.get(ref), ref),
     async provision(ref, context) {
       const saved = await current();
-      await placement(ref, saved.url!, context?.spaceId);
+      if (saved.kind === "docker") await placement(ref, saved.url!, context?.spaceId);
       await unchanged(saved.revision);
       const result = await saved.provider.provision(ref, context);
       try {
@@ -138,7 +156,7 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
     destroy: (ref) => call((p) => p.destroy(ref), ref),
     async execute(ref, command) {
       const saved = await current();
-      await placement(ref, saved.url!);
+      if (saved.kind === "docker") await placement(ref, saved.url!);
       const process = await saved.provider.execute(ref, command);
       async function* events() {
         let completed = false;
@@ -165,8 +183,8 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
     input: (ref, input) => call((p) => p.input!(ref, input), ref, true),
     async *streamScreen(ref, options) {
       const saved = await current();
-      if (!saved.screen) throw new ComputerError("SCREEN_UNAVAILABLE");
-      await placement(ref, saved.url!);
+      if (saved.kind !== "docker" || !saved.screen) throw new ComputerError("SCREEN_UNAVAILABLE");
+      if (saved.kind === "docker") await placement(ref, saved.url!);
       const controller = new AbortController();
       const signal = options?.signal
         ? AbortSignal.any([options.signal, controller.signal])

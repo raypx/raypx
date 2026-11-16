@@ -6,6 +6,7 @@
   "exports": {
     "./computer": "./src/computer/index.ts",
     "./computer/docker": "./src/computer/docker.ts",
+    "./computer/e2b": "./src/computer/e2b.ts",
     "./testing/computer": "./tests/helpers/computer.ts",
     "./mcp": "./src/mcp/index.ts",
     "./openapi": "./src/openapi/index.ts"
@@ -19,6 +20,7 @@
     "@modelcontextprotocol/client": "catalog:",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
+    "e2b": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
