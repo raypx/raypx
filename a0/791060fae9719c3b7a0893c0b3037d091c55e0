@@ -1,0 +1,69 @@
+packages/blocks/src/components/shell.tsx
+  s_7f9362525d805b::t_41b1c14f24c5e3 479,521-522
+e2e/tests/helpers/browser-fixture.ts
+  s_7f9362525d805b::t_be6e52861675f7 28-40,52
+  s_7f9362525d805b::t_2493f37fe9c9cc 27
+  s_7f9362525d805b::t_b23a9340841e31 22
+apps/web/e2e/theme-final.spec.ts
+  s_7f9362525d805b::t_862536c74e1ab6 426-442
+  s_7f9362525d805b::t_fc830ea7ad38cb 443,453-456,491-493,495-496
+packages/dev-cli/src/verification/ci.ts
+  s_7f9362525d805b::t_0342287dfec31f 133-134
+e2e/tests/helpers/account-fixture.ts
+  s_7f9362525d805b::t_fbb06f1793232e 15
+e2e/AGENTS.md
+  s_7f9362525d805b::t_44b9258b6d1f4b 44-45
+.github/workflows/ci.yml
+  s_7f9362525d805b::t_c3f410ed0a7177 124-126
+apps/web/e2e/theme-focus.ts
+  s_7f9362525d805b::t_fe40352bd0a4df 74-75,87
+  s_7f9362525d805b::t_008871715f9887 68,73,76-86,99-103
+  s_7f9362525d805b::t_862536c74e1ab6 63,70
+  s_7f9362525d805b::t_05ef0ca6355265 104-106
+apps/desktop/src/lib/connection.ts
+  s_7f9362525d805b::t_b23a9340841e31 1,7
+e2e/playwright.config.ts
+  s_7f9362525d805b::t_44b9258b6d1f4b 16
+packages/dev-cli/AGENTS.md
+  s_7f9362525d805b::t_44b9258b6d1f4b 59-60
+docs/development/testing.md
+  s_7f9362525d805b::t_44b9258b6d1f4b 53-60
+packages/agents/src/client/workspace.tsx
+  s_18d6a540bbcaf5::t_fb876200021392 594
+packages/blocks/AGENTS.md
+  s_7f9362525d805b::t_35196826c195cf 20-21
+apps/desktop/scripts/host/task.ts
+  s_7f9362525d805b::t_12a7c0f50d42d9 46
+packages/dev-cli/src/validation/backends.ts
+  s_7f9362525d805b::t_02ca5eda6a92ec 230,238-309
+e2e/tests/helpers/conversation-header.ts
+  s_7f9362525d805b::t_41b1c14f24c5e3 33-36
+packages/agents/src/client/conversation.tsx
+  s_7f9362525d805b::t_60fc87b9919ec5 16,146,196,288,323,354,1000
+packages/agents/src/client/group-directory.component.test.tsx
+  s_7f9362525d805b::t_b14f57715889ac 432-445
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a0791060fae9719c3b7a0893c0b3037d091c55e0",
+  "prompts": {},
+  "sessions": {
+    "s_18d6a540bbcaf5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d6eb-a788-79f2-bc14-40df50ce7bb0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_7f9362525d805b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e2-b18c-79c0-acca-50ae949d3042",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": null
+    }
+  }
+}
