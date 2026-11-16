@@ -200,3 +200,23 @@ in batches of 100. Upload rows expire after 24 hours; member reads expire after 
 seconds. Published attachments live with their conversation. Notification sources
 are queried from PostgreSQL, with no push service to deploy. See
 [limits and lifecycle](member-input-and-notifications.md).
+
+## Migration diagnostics
+
+Migration jobs and startup validate every applied ledger name, timestamp and SHA-256
+against the release before running DDL. Missing/renamed files, edited applied SQL,
+duplicate entries and holes before a later applied entry stop the rollout and name
+the differences. Restore the exact applied files from the deployed release, verify
+that the database is the intended isolated Raypx database, or restore a verified
+backup into an isolated database. Intentional reconciliation requires an operator
+review of schema and history together; never delete ledger rows or rerun a baseline.
+No automatic repair or schema change is performed.
+
+Failures identify the migration (or connection/lock/history/configuration phase),
+SQLSTATE or driver code and a safe message. Primary PostgreSQL messages may contain
+values; known SQLSTATEs use fixed summaries and unknown messages are withheld.
+SQL, parameters, DETAIL, HINT, connection options and credentials are never printed.
+Harmless schema/table-exists NOTICEs are suppressed only on migration connections.
+Lock acquisition remains bounded to 120 seconds and DDL lock waits to ten seconds;
+connection establishment is bounded to five seconds. Both explicit pre-deploy and
+startup use these diagnostics and the same transaction-scoped lock.

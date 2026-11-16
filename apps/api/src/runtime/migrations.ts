@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { migrateDatabase } from "@raypx/database";
+import { migrateDatabase, MigrationError } from "@raypx/database";
 import type { ApiEnvironment } from "../env.js";
 
 /** Stage Nitro's private bundled SQL for the official Drizzle filesystem migrator. */
@@ -28,9 +28,10 @@ export async function migrateApiDatabase(
       await writeFile(join(folder, "migration.sql"), contents);
     }
     await migrateDatabase(environment.DATABASE_URL, directory);
-  } catch {
+  } catch (error) {
+    if (error instanceof MigrationError) throw error;
     // Driver errors can include connection details or SQL. Never expose them at startup.
-    throw new Error("API database migration failed. Check database availability and migrations.");
+    throw new Error("API database migration failed. Check database availability and migrations.", { cause: error });
   } finally {
     if (directory) await rm(directory, { recursive: true, force: true });
   }

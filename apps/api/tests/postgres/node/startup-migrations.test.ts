@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { appendFile, cp, mkdir, mkdtemp, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,7 +100,9 @@ it("rolls back a failed migration and releases its lock for a subsequent startup
       join(folder, "migration.sql"),
       `CREATE TABLE public.${table} (id integer);\n--> statement-breakpoint\nSELECT 1 / 0;`,
     );
-    await expect(migrateDatabase(url, directory)).rejects.toThrow("1 / 0");
+    await expect(migrateDatabase(url, directory)).rejects.toThrow(
+      "20990101000000_failure_fixture. SQLSTATE/code: 22012. Message: division by zero",
+    );
     const rows = await connection.db.execute<{ name: string | null }>(sql`
       select to_regclass(${`public.${table}`})::text as name
     `);
@@ -113,7 +115,7 @@ it("rolls back a failed migration and releases its lock for a subsequent startup
         );
         throw new Error("provider import failed");
       }),
-    ).rejects.toThrow("provider import failed");
+    ).rejects.toThrow("post-migration configuration");
     const rolledBack = await connection.db.execute<{ name: string | null }>(sql`
       select to_regclass(${`public.${table}`})::text as name
     `);
@@ -122,6 +124,105 @@ it("rolls back a failed migration and releases its lock for a subsequent startup
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+it("identifies the later failing file when two pending migrations contain identical SQL", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "raypx-repeated-migration-"));
+  const table = `repeated_${crypto.randomUUID().replaceAll("-", "")}`;
+  try {
+    await cp(migrations, directory, { recursive: true });
+    for (const name of ["20990101000001_first", "20990101000002_second"]) {
+      await mkdir(join(directory, name));
+      await writeFile(
+        join(directory, name, "migration.sql"),
+        `CREATE TABLE public.${table} (id integer);`,
+      );
+    }
+    await expect(migrateDatabase(url, directory)).rejects.toThrow(
+      "20990101000002_second. SQLSTATE/code: 42P07",
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+it.each(["missing", "renamed", "edited"])(
+  "reports an applied migration %s in the release",
+  async (kind) => {
+    await migrateDatabase(url);
+    const directory = await mkdtemp(join(tmpdir(), "raypx-history-drift-"));
+    const name = (await readdir(migrations)).sort()[0]!;
+    try {
+      await cp(migrations, directory, { recursive: true });
+      const folder = join(directory, name);
+      if (kind === "missing") await rm(folder, { recursive: true });
+      if (kind === "renamed") await rename(folder, join(directory, "20261115004545_renamed"));
+      if (kind === "edited") await appendFile(join(folder, "migration.sql"), "\n-- edited\n");
+      const error = await migrateDatabase(url, directory).catch((failure: Error) => failure);
+      expect(error).toBeInstanceOf(Error);
+      expect(String(error)).toContain(name);
+      expect(String(error)).toContain("Migration history differs");
+      expect(String(error)).toContain(kind === "edited" ? "checksum drift" : kind);
+      expect(String(error)).toContain("Do not delete ledger rows");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+it("prints safe history diagnostics from the pre-deploy entry point", async () => {
+  await migrateDatabase(url);
+  const rows = await connection.db.execute<{ name: string; hash: string }>(
+    sql`select name, hash from public.__drizzle_migrations order by id limit 1`,
+  );
+  const row = rows[0]!;
+  try {
+    await connection.db.execute(
+      sql`update public.__drizzle_migrations set hash = 'drift' where name = ${row.name}`,
+    );
+    const [code, stdout, stderr] = await worker();
+    expect(code).toBe(1);
+    expect(stderr).toContain(`${row.name}: checksum drift`);
+    expect(stderr).toContain("Stop this rollout");
+    expect(stdout + stderr).not.toContain('schema "public" already exists');
+    expect(stdout + stderr).not.toContain(url);
+  } finally {
+    await connection.db.execute(
+      sql`update public.__drizzle_migrations set hash = ${row.hash} where name = ${row.name}`,
+    );
+  }
+});
+
+it("reports bounded lock contention and succeeds after the holder releases", async () => {
+  const locked = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  const holder = connection.db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext('raypx_foundation_migrations'), 0)`);
+    locked.resolve();
+    await release.promise;
+  });
+  await locked.promise;
+  try {
+    await expect(
+      migrateDatabase(url, migrations, undefined, { lockTimeoutMs: 100 }),
+    ).rejects.toThrow("SQLSTATE/code: 55P03. Message: lock wait timed out");
+  } finally {
+    release.resolve();
+    await holder;
+  }
+  await migrateDatabase(url);
+});
+
+it("reports an unreachable database without its URL or password", async () => {
+  const socket = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response() });
+  const unavailable = new URL(url);
+  unavailable.port = String(socket.port);
+  unavailable.password = "private-test-password";
+  await socket.stop(true);
+  const error = await migrateDatabase(unavailable.href).catch((failure: Error) => failure);
+  expect(String(error)).toMatch(/ECONNREFUSED|CONNECT_TIMEOUT|CONNECTION_CLOSED/);
+  expect(String(error)).not.toContain("private-test-password");
+  expect(String(error)).not.toContain(unavailable.href);
 });
 
 it("imports provider settings explicitly and preserves existing rows on retries", async () => {

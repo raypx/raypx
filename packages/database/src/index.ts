@@ -4,4 +4,4 @@ export {
   type DatabaseConnection,
   type Database,
 } from "./connection.js";
-export { migrateDatabase } from "./migrate.js";
+export { migrateDatabase, MigrationError } from "./migrate.js";

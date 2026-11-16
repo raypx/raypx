@@ -11,7 +11,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("nitro/kv", () => ({
   useKV: () => ({ getKeys: mocks.getKeys, getItemRaw: mocks.getItemRaw }),
 }));
-vi.mock("@raypx/database", () => ({ migrateDatabase: mocks.migrate }));
+vi.mock("@raypx/database", async (original) => ({
+  ...(await original<typeof import("@raypx/database")>()),
+  migrateDatabase: mocks.migrate,
+}));
 const environment = {
   DATABASE_URL: "postgres://fixture:private-password@127.0.0.1:5432/raypx_startup_test",
   DATABASE_MIGRATE_ON_START: true,

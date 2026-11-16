@@ -12,10 +12,19 @@ export interface DatabaseOptions {
   statementTimeoutMs?: number;
   /** Server-side bound for a transaction that stops sending statements. */
   idleTransactionTimeoutMs?: number;
+  /** Migration jobs suppress harmless schema/table-exists notices. */
+  suppressNotices?: boolean;
+  connectTimeoutSeconds?: number;
+  /** In-memory migration progress only; callers must never log SQL or parameters. */
+  onQuery?: (query: string) => void;
 }
 export function connectDatabase(databaseUrl: string, options: DatabaseOptions = {}) {
   const client = postgres(databaseUrl, {
     max: options.max ?? 10,
+    ...(options.suppressNotices ? { onnotice: () => {} } : {}),
+    ...(options.connectTimeoutSeconds === undefined
+      ? {}
+      : { connect_timeout: options.connectTimeoutSeconds }),
     connection: {
       search_path: "public",
       ...(options.statementTimeoutMs === undefined
@@ -28,7 +37,14 @@ export function connectDatabase(databaseUrl: string, options: DatabaseOptions = 
     ...(options.fetchTypes === undefined ? {} : { fetch_types: options.fetchTypes }),
   });
   let closed: Promise<void> | undefined;
-  return { db: drizzle({ client, relations }), close: () => (closed ??= client.end()) };
+  return {
+    db: drizzle({
+      client,
+      relations,
+      ...(options.onQuery ? { logger: { logQuery: options.onQuery } } : {}),
+    }),
+    close: () => (closed ??= client.end()),
+  };
 }
 export type DatabaseConnection = ReturnType<typeof connectDatabase>;
 export type Database = DatabaseConnection["db"];

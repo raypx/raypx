@@ -1,4 +1,5 @@
 import { PublicAddressConfigurationError } from "../public-address.js";
+import { MigrationError } from "@raypx/database";
 import { definePlugin } from "nitro";
 import { closeBackendRuntime, getBackendRuntime } from "./backend.js";
 
@@ -9,7 +10,7 @@ export default definePlugin(async (nitroApp) => {
   } catch (error) {
     // Nitro traps rejected plugin promises; explicitly stop this failed startup.
     console.error(
-      error instanceof PublicAddressConfigurationError
+      error instanceof PublicAddressConfigurationError || error instanceof MigrationError
         ? error.message
         : "Backend startup failed. Check runtime role, configuration, database availability and migrations.",
     );

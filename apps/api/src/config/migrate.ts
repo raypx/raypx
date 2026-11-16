@@ -1,6 +1,6 @@
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
-import { migrateDatabase } from "@raypx/database";
+import { migrateDatabase, MigrationError } from "@raypx/database";
 import { initializeSandbox } from "./sandbox-initialization.js";
 import { sandboxUpdateSchema, resendUpdateSchema } from "@raypx/contracts/api";
 import { configureRuntimeRole } from "./migration-runtime-role.js";
@@ -151,7 +151,7 @@ try {
   await migrate();
 } catch (error) {
   console.error(
-    error instanceof MigrationInputError
+    error instanceof MigrationInputError || error instanceof MigrationError
       ? error.message
       : "Database migration failed. Check the database and migration configuration.",
   );
