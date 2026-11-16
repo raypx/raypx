@@ -8,6 +8,8 @@ remain in the history of `canary`.
 
 Retirement implementation: [ADR 0067](0067-retire-device-runtime.md).
 
+Public transport paths superseded by [ADR 0068](0068-single-api-ingress.md).
+
 ## Context
 
 The earlier product gave each device the authority over its own work. The server
