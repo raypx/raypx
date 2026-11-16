@@ -5,15 +5,15 @@ covers the services, their roles and what the operator maintains.
 
 ## Services
 
-| Service            | Required                 | Notes                                                                                |
-| ------------------ | ------------------------ | ------------------------------------------------------------------------------------ |
-| PostgreSQL         | Yes                      | The one authority.                                                                   |
-| Backend            | Yes                      | One artifact; `SERVER_ROLE` selects its roles.                                       |
-| Web                | Yes                      | Bun server rendering.                                                                |
-| Sandbox supervisor | For `docker` computers   | Holds the Docker socket on the private network.                                      |
-| Object storage     | Optional                 | Future larger assets and home snapshots; current message attachments use PostgreSQL. |
-| Redis              | For split device routing | Private connector frames; optional shared caches in combined deployments.            |
-| Mail               | Optional                 | Verification, sign-in codes and inbound routine email.                               |
+| Service            | Required                 | Notes                                                                                     |
+| ------------------ | ------------------------ | ----------------------------------------------------------------------------------------- |
+| PostgreSQL         | Yes                      | The one authority.                                                                        |
+| Backend            | Yes                      | One artifact; `SERVER_ROLE` selects its roles.                                            |
+| Web                | Yes                      | Bun server rendering.                                                                     |
+| Sandbox supervisor | For `docker` computers   | Holds the Docker socket on the private network.                                           |
+| Object storage     | Optional                 | Stores new chat attachment bytes when enabled. PostgreSQL owns metadata and inline files. |
+| Redis              | For split device routing | Private connector frames; optional shared caches in combined deployments.                 |
+| Mail               | Optional                 | Verification, sign-in codes and inbound routine email.                                    |
 
 A deployment with no model connection, no sandbox provider and no mail still
 starts. Each missing capability is an explicit state in the product.

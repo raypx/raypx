@@ -1,0 +1,319 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "a9889192-ea1c-4788-ad6b-9534555668bd",
+  "prevIds": [
+    "361af666-3a8a-4ee3-8320-08b8c345ef57"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachment_objects"
+      ],
+      "writes": [
+        "s|tbl|public.conversation_attachment_objects",
+        "n|tbl|public.conversation_attachment_objects",
+        "e|tbl|public.conversation_attachment_objects",
+        "n|rel|public.conversation_attachment_objects",
+        "n|type|public.conversation_attachment_objects",
+        "n|rel|public.conversation_attachment_objects_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_attachments",
+        "object_key"
+      ],
+      "writes": [
+        "s|col|public.conversation_attachments.object_key",
+        "n|col|public.conversation_attachments.object_key",
+        "e|col|public.conversation_attachments.object_key"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "conversation_attachments",
+        "bytes"
+      ],
+      "writes": [
+        "s|colprop|public.conversation_attachments.bytes.notNull"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.bytes"
+      ],
+      "sqlHash": "e18891d25e515157"
+    },
+    {
+      "statementType": "add_unique",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachments"
+      ],
+      "writes": [
+        "s|uq|public.conversation_attachments.conversation_attachments_object_key",
+        "n|uq|public.conversation_attachments.conversation_attachments_object_key",
+        "e|uq|public.conversation_attachments.conversation_attachments_object_key",
+        "n|con|public.conversation_attachments.conversation_attachments_object_key",
+        "n|rel|public.conversation_attachments_object_key"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.object_key"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conversation_attachment_objects",
+        "conversation_attachment_objects_cleanup_idx"
+      ],
+      "writes": [
+        "s|idx|public.conversation_attachment_objects_cleanup_idx",
+        "n|idx|public.conversation_attachment_objects_cleanup_idx",
+        "e|idx|public.conversation_attachment_objects_cleanup_idx",
+        "n|rel|public.conversation_attachment_objects_cleanup_idx"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachment_objects",
+        "n|sch|public",
+        "n|col|public.conversation_attachment_objects.cleanup_after",
+        "n|col|public.conversation_attachment_objects.key"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachments"
+      ],
+      "writes": [
+        "s|fk|public.conversation_attachments.conversation_attachments_qbQn0jHfQFvr_fkey",
+        "n|fk|public.conversation_attachments.conversation_attachments_qbQn0jHfQFvr_fkey",
+        "e|fk|public.conversation_attachments.conversation_attachments_qbQn0jHfQFvr_fkey",
+        "n|con|public.conversation_attachments.conversation_attachments_qbQn0jHfQFvr_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|tbl|public.conversation_attachment_objects",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.object_key",
+        "n|col|public.conversation_attachment_objects.key",
+        "e|uniqueness|public.conversation_attachment_objects.key"
+      ]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_attachments"
+      ],
+      "writes": [
+        "s|ck|public.conversation_attachments.conversation_attachments_size_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_attachments",
+        "n|sch|public",
+        "n|col|public.conversation_attachments.size",
+        "n|col|public.conversation_attachments.bytes",
+        "n|col|public.conversation_attachments.object_key",
+        "n|col|public.conversation_attachments.ready",
+        "e|col|public.conversation_attachments.size",
+        "e|col|public.conversation_attachments.bytes"
+      ],
+      "sqlHash": "868183fbb571bebd"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "conversation_attachment_objects",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachment_objects",
+        "name": "key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachment_objects",
+        "name": "cleanup_after",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now() + interval '1 minute'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachment_objects",
+        "name": "cleanup_queued",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachments",
+        "name": "object_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachment_objects",
+        "name": "conversation_attachment_objects_cleanup_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "cleanup_after",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "key",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": "\"cleanup_queued\"",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachments",
+        "name": "conversation_attachments_qbQn0jHfQFvr_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "object_key"
+        ],
+        "schemaTo": "public",
+        "tableTo": "conversation_attachment_objects",
+        "columnsTo": [
+          "key"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachment_objects",
+        "name": "conversation_attachment_objects_pkey",
+        "columns": [
+          "key"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "conversation_attachments",
+        "name": "conversation_attachments_object_key",
+        "nameExplicit": true,
+        "columns": [
+          "object_key"
+        ],
+        "nullsNotDistinct": false,
+        "entityType": "uniques"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"conversation_attachments\",\"bytes\"]",
+      "set": {
+        "notNull": false
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_attachments\",\"conversation_attachments_size_check\"]",
+      "set": {
+        "value": "\"size\" between 1 and 1048576 and (\n        (\"bytes\" is not null and octet_length(decode(\"bytes\", 'base64')) = \"size\"\n          and (\"object_key\" is null or not \"ready\"))\n        or (\"bytes\" is null and \"object_key\" is not null and \"ready\")\n      )"
+      }
+    }
+  ]
+}

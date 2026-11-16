@@ -9,7 +9,8 @@
     "./computer/e2b": "./src/computer/e2b.ts",
     "./testing/computer": "./tests/helpers/computer.ts",
     "./mcp": "./src/mcp/index.ts",
-    "./openapi": "./src/openapi/index.ts"
+    "./openapi": "./src/openapi/index.ts",
+    "./object-storage": "./src/object-storage.ts"
   },
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",

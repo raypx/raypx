@@ -1,7 +1,8 @@
-import { and, asc, count, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 import {
   conversationAttachments as attachments,
+  conversationAttachmentObjects as objects,
   conversationAttachmentDeliveries as deliveries,
   conversations,
   conversationRunSteering as steering,
@@ -144,12 +145,107 @@ export async function claimMessageAttachments(
     .returning({ id: attachments.id });
   if (rows.length !== ids.length) throw new MessageAttachmentError("ATTACHMENT_EXPIRED");
 }
-export function createMessageAttachmentsService(db: Database): MessageAttachmentsService {
+type AttachmentRow = typeof attachments.$inferSelect;
+type StorageQuery = Pick<Database, "select">;
+
+export type MessageAttachmentObjectStorage = {
+  enabled(db: StorageQuery): Promise<boolean>;
+  put(db: StorageQuery, key: string, bytes: Buffer<ArrayBuffer>): Promise<void>;
+  read(db: StorageQuery, key: string, size: number): Promise<Buffer<ArrayBuffer>>;
+  remove(db: StorageQuery, key: string): Promise<void>;
+};
+
+function liveUpload(scope: SpaceScope, conversationId: ConversationId, id: string) {
+  return and(
+    eq(attachments.spaceId, scope.spaceId),
+    eq(attachments.conversationId, conversationId),
+    eq(attachments.id, id),
+    eq(attachments.uploaderAccountId, scope.member.accountId),
+    isNull(attachments.messageId),
+    gt(attachments.expiresAt, sql`clock_timestamp()`),
+  );
+}
+
+async function digest(bytes: Buffer<ArrayBuffer>) {
+  return Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+}
+
+export function createMessageAttachmentsService(
+  db: Database,
+  storage?: MessageAttachmentObjectStorage,
+): MessageAttachmentsService {
+  async function readBytes(query: StorageQuery, row: AttachmentRow) {
+    if (row.bytes !== null) return row.bytes;
+    try {
+      const bytes = row.objectKey && (await storage?.read(query, row.objectKey, row.size));
+      if (bytes && bytes.length === row.size && (await digest(bytes)) === row.sha256)
+        return bytes.toString("base64");
+    } catch {
+      // Expose only the stable attachment error.
+    }
+    throw new MessageAttachmentError("ATTACHMENT_STORAGE_UNAVAILABLE");
+  }
+
+  async function finalize(scope: SpaceScope, conversationId: ConversationId, id: string) {
+    return db.transaction(async (tx) => {
+      await admit(tx, scope, conversationId);
+      const selected = liveUpload(scope, conversationId, id);
+      const [row] = await tx.select().from(attachments).where(selected).for("update");
+      if (!row) throw new MessageAttachmentError("ATTACHMENT_EXPIRED");
+      if (row.ready) return row;
+      if (!storage || !row.objectKey || !row.bytes)
+        throw new MessageAttachmentError("ATTACHMENT_STORAGE_UNAVAILABLE");
+      try {
+        await storage.put(tx, row.objectKey, Buffer.from(row.bytes, "base64"));
+      } catch {
+        throw new MessageAttachmentError("ATTACHMENT_STORAGE_UNAVAILABLE");
+      }
+      const [saved] = await tx
+        .update(attachments)
+        .set({ bytes: null, ready: true })
+        .where(selected)
+        .returning();
+      if (!saved) throw new MessageAttachmentError("ATTACHMENT_EXPIRED");
+      return saved;
+    });
+  }
+
+  async function cleanupOrphan() {
+    if (!storage) return false;
+    return db.transaction(async (tx) => {
+      const [object] = await tx
+        .select()
+        .from(objects)
+        .where(
+          and(lte(objects.cleanupAfter, sql`clock_timestamp()`), sql`${objects.cleanupQueued}`),
+        )
+        .orderBy(asc(objects.cleanupAfter), asc(objects.key))
+        .limit(1)
+        .for("update", { skipLocked: true });
+      if (!object) return false;
+      const selected = eq(objects.key, object.key);
+      try {
+        await storage.remove(tx, object.key);
+      } catch {
+        await tx
+          .update(objects)
+          .set({ cleanupAfter: sql`clock_timestamp() + interval '5 minutes'` })
+          .where(selected);
+        return true;
+      }
+      await tx.delete(objects).where(selected);
+      return true;
+    });
+  }
+
   return {
     async cleanup() {
       await db.execute(
         sql`delete from ${attachments} where ctid in (select ctid from ${attachments} where ${attachments.messageId} is null and ${attachments.expiresAt} <= clock_timestamp() order by ${attachments.expiresAt} limit 100 for update skip locked)`,
       );
+      for (let index = 0; index < 4 && (await cleanupOrphan()); index++) {
+        // Delete a bounded number of orphaned objects per worker scan.
+      }
     },
     async upload(scope, conversationId, input) {
       const chunk = Buffer.from(input.bytes, "base64");
@@ -173,23 +269,14 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
         offset + chunk.length > totalSize
       )
         throw new MessageAttachmentError("ATTACHMENT_LIMIT");
-      return db.transaction(async (tx) => {
+      const row = await db.transaction(async (tx) => {
         await admit(tx, scope, conversationId, true);
-        let existing: typeof attachments.$inferSelect | undefined;
+        let existing: AttachmentRow | undefined;
         if (input.uploadId) {
           [existing] = await tx
             .select()
             .from(attachments)
-            .where(
-              and(
-                eq(attachments.spaceId, scope.spaceId),
-                eq(attachments.conversationId, conversationId),
-                eq(attachments.id, input.uploadId),
-                eq(attachments.uploaderAccountId, scope.member.accountId),
-                isNull(attachments.messageId),
-                gt(attachments.expiresAt, sql`clock_timestamp()`),
-              ),
-            )
+            .where(liveUpload(scope, conversationId, input.uploadId))
             .for("update");
           if (!existing) throw new MessageAttachmentError("ATTACHMENT_EXPIRED");
           if (
@@ -198,16 +285,25 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
             existing.expectedSize !== totalSize
           )
             throw new MessageAttachmentError("ATTACHMENT_INVALID");
-          const previous = Buffer.from(existing.bytes, "base64");
-          // An acknowledged prefix is immutable. A matching retry never appends twice.
+          const end = offset + chunk.length;
+          const resumeFinal = existing.objectKey !== null && !existing.ready && end === totalSize;
+          // Prefix retries are immutable, including retries after object finalization.
           if (
-            offset < previous.length &&
-            offset + chunk.length <= previous.length &&
-            previous.subarray(offset, offset + chunk.length).equals(chunk) &&
-            (!final || existing.ready)
-          )
-            return attachmentView(existing);
-          if (existing.ready || offset !== previous.length)
+            offset < existing.size &&
+            end <= existing.size &&
+            (!final || existing.ready || resumeFinal)
+          ) {
+            const previous = Buffer.from(await readBytes(tx, existing), "base64");
+            if (previous.subarray(offset, end).equals(chunk)) {
+              if (final && resumeFinal)
+                await tx
+                  .update(objects)
+                  .set({ cleanupAfter: sql`clock_timestamp() + interval '1 minute'` })
+                  .where(eq(objects.key, existing.objectKey!));
+              return existing;
+            }
+          }
+          if (existing.ready || existing.objectKey !== null || offset !== existing.size)
             throw new MessageAttachmentError("ATTACHMENT_INVALID");
         } else {
           if (offset !== 0) throw new MessageAttachmentError("ATTACHMENT_INVALID");
@@ -228,18 +324,24 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
           if (pending!.count >= 32) throw new MessageAttachmentError("ATTACHMENT_LIMIT");
         }
         const bytes = existing
-          ? Buffer.concat([Buffer.from(existing.bytes, "base64"), chunk])
+          ? Buffer.concat([Buffer.from(existing.bytes!, "base64"), chunk])
           : chunk;
         if (final && bytes.length !== totalSize)
           throw new MessageAttachmentError("ATTACHMENT_INVALID");
         const encoded = bytes.toString("base64");
         if (final) validateAttachment({ ...input, bytes: encoded });
-        const hash = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+        let objectKey: string | null = null;
+        if (final && (await storage?.enabled(tx))) {
+          objectKey = `raypx/message-attachments/${crypto.randomUUID()}`;
+          // Commit the cleanup record and unchanged source bytes before issuing a PUT.
+          await tx.insert(objects).values({ key: objectKey });
+        }
         const data = {
           size: bytes.length,
-          sha256: hash,
+          sha256: await digest(bytes),
           bytes: encoded,
-          ready: final,
+          objectKey,
+          ready: final && objectKey === null,
           expectedSize: totalSize,
         };
         const rows = existing
@@ -267,8 +369,11 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
                 expiresAt: sql`clock_timestamp() + interval '24 hours'`,
               })
               .returning();
-        return attachmentView(rows[0]!);
+        return rows[0]!;
       });
+      if (final && row.objectKey && !row.ready)
+        return attachmentView(await finalize(scope, conversationId, row.id));
+      return attachmentView(row);
     },
     async remove(scope, conversationId, id) {
       return db.transaction(async (tx) => {
@@ -309,7 +414,7 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
             ),
           );
         if (!row) throw new SpaceNotFound();
-        return { attachment: attachmentView(row), bytes: row.bytes };
+        return { attachment: attachmentView(row), bytes: await readBytes(tx, row) };
       });
     },
     async prepare(scope, run, supportsImages, signal, deliver, withheldReason) {
@@ -373,6 +478,7 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
           return { existing: created!, claimed: true };
         });
         let outcome: AttachmentOutcome;
+        let imageBytes: string | undefined;
         const image = attachment.mediaType.startsWith("image/");
         if (initial.existing.state !== "staging") {
           outcome = {
@@ -384,20 +490,26 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
           outcome = { state: "withheld", path: null, reason: "DELIVERY_UNCONFIRMED" };
         } else if (withheldReason) {
           outcome = { state: "withheld", path: null, reason: withheldReason };
-        } else if (image) {
-          outcome = supportsImages
-            ? { state: "image", path: null, reason: null }
-            : { state: "withheld", path: null, reason: "MODEL_IMAGES_UNAVAILABLE" };
+        } else if (image && !supportsImages) {
+          outcome = { state: "withheld", path: null, reason: "MODEL_IMAGES_UNAVAILABLE" };
         } else {
           try {
-            const path = await deliver?.(attachment.id, attachment.bytes);
-            outcome = path
-              ? { state: "available", path, reason: null }
-              : { state: "withheld", path: null, reason: "COMPUTER_UNAVAILABLE" };
+            if (image) {
+              imageBytes = await readBytes(db, attachment);
+              outcome = { state: "image", path: null, reason: null };
+            } else {
+              const path =
+                deliver && (await deliver(attachment.id, await readBytes(db, attachment)));
+              outcome = path
+                ? { state: "available", path, reason: null }
+                : { state: "withheld", path: null, reason: "COMPUTER_UNAVAILABLE" };
+            }
           } catch {
             outcome = { state: "withheld", path: null, reason: "DELIVERY_UNCONFIRMED" };
           }
         }
+        if (outcome.state === "image" && supportsImages && imageBytes === undefined)
+          imageBytes = await readBytes(db, attachment);
         if (initial.existing.state === "staging")
           await db.transaction(async (tx) => {
             const [counter] = await tx
@@ -453,8 +565,8 @@ export function createMessageAttachmentsService(db: Database): MessageAttachment
             ...outcome,
           }),
         });
-        if (outcome.state === "image" && supportsImages)
-          content.push({ type: "image", data: attachment.bytes, mimeType: attachment.mediaType });
+        if (imageBytes !== undefined)
+          content.push({ type: "image", data: imageBytes, mimeType: attachment.mediaType });
       }
       return content.length
         ? [{ role: "user", content, timestamp: Date.parse(run.createdAt) }]

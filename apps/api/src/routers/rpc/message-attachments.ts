@@ -14,7 +14,10 @@ export function createMessageAttachmentsHandlers(setup: RpcSetup) {
     } catch (error) {
       if (error instanceof SpaceNotFound) throw new ORPCError("NOT_FOUND");
       if (error instanceof MessageAttachmentError)
-        throw new ORPCError("BAD_REQUEST", { data: { error: { code: error.code } } });
+        throw new ORPCError(
+          error.code === "ATTACHMENT_STORAGE_UNAVAILABLE" ? "SERVICE_UNAVAILABLE" : "BAD_REQUEST",
+          { data: { error: { code: error.code } } },
+        );
       throw error;
     }
   }

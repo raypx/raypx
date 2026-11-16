@@ -97,6 +97,7 @@
     "credentialsRequired": "设置新的端点、存储桶或区域时，请填写两个密钥字段。",
     "credentialsOptional": "填写两个密钥字段以更换凭据，留空则保留现有凭据。",
     "operatorEndpoint": "请先由部署人员配置这个 S3 兼容端点。",
+    "locationInUse": "此位置仍有聊天附件。可以更新密钥，或暂停将新附件存入这里。",
     "invalidInput": "请检查存储配置。存储位置变更时需要填写两个密钥字段。",
     "unavailable": "暂时无法读取或保存对象存储设置，请重试。",
     "forbidden": "只有部署管理员可以管理对象存储。",

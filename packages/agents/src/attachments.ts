@@ -5,7 +5,13 @@ import type { ExecutionRun } from "./conversations.js";
 import type { Message as ModelMessage } from "@raypx/ai";
 
 export class MessageAttachmentError extends Error {
-  constructor(readonly code: "ATTACHMENT_INVALID" | "ATTACHMENT_LIMIT" | "ATTACHMENT_EXPIRED") {
+  constructor(
+    readonly code:
+      | "ATTACHMENT_INVALID"
+      | "ATTACHMENT_LIMIT"
+      | "ATTACHMENT_EXPIRED"
+      | "ATTACHMENT_STORAGE_UNAVAILABLE",
+  ) {
     super(code);
     this.name = "MessageAttachmentError";
   }

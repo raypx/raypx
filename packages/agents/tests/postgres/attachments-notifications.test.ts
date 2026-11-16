@@ -6,6 +6,7 @@ import {
   spaces,
   spaceMembers,
   conversationAttachments,
+  conversationAttachmentObjects,
   conversationAttachmentDeliveries,
   conversationRuns,
   approvalRequests,
@@ -365,4 +366,106 @@ it("claims group uploads once and exposes the same untrusted image to each addre
   expect(
     (await repository.history!(f.scope, group.id, 30)).messages[0]?.attachments?.[0]?.deliveries,
   ).toHaveLength(2);
+});
+
+it("finalizes object-backed uploads once, retries pending writes, and keeps existing inline files readable", async () => {
+  const f = await fixture();
+  const inline = await uploads.upload(f.scope, f.id, text);
+  const data = new Map<string, Buffer<ArrayBuffer>>();
+  const put = vi.fn(async (_db: unknown, key: string, bytes: Buffer<ArrayBuffer>) => {
+    data.set(key, bytes);
+  });
+  const read = vi.fn(async (_db: unknown, key: string) => data.get(key)!);
+  const remove = vi.fn(async (_db: unknown, key: string) => {
+    data.delete(key);
+  });
+  const enabled = vi.fn(async () => true);
+  const external = createMessageAttachmentsService(db, { enabled, put, read, remove });
+
+  const bytes = Buffer.from("a".repeat(98_304) + "新附件");
+  const prefix = {
+    ...text,
+    totalSize: bytes.length,
+    final: false,
+    bytes: bytes.subarray(0, 98_304).toString("base64"),
+  };
+  const staged = await external.upload(f.scope, f.id, prefix);
+  const final = {
+    ...prefix,
+    uploadId: staged.id,
+    offset: 98_304,
+    final: true,
+    bytes: bytes.subarray(98_304).toString("base64"),
+  };
+  put.mockRejectedValueOnce(new Error("provider response was lost"));
+  await expect(external.upload(f.scope, f.id, final)).rejects.toThrow(
+    "ATTACHMENT_STORAGE_UNAVAILABLE",
+  );
+  await expect(external.download(f.scope, f.id, staged.id)).rejects.toThrow("not found");
+  expect(await external.upload(f.scope, f.id, final)).toMatchObject({
+    id: staged.id,
+    size: bytes.length,
+  });
+  await external.upload(f.scope, f.id, final);
+  expect(put).toHaveBeenCalledTimes(2);
+  const [persisted] = await db
+    .select()
+    .from(conversationAttachments)
+    .where(
+      and(
+        eq(conversationAttachments.spaceId, f.scope.spaceId),
+        eq(conversationAttachments.id, staged.id),
+      ),
+    );
+  expect(persisted).toMatchObject({ ready: true, bytes: null, objectKey: expect.any(String) });
+  expect(put.mock.calls[0]?.[1]).toBe(persisted!.objectKey);
+  expect(put.mock.calls[1]?.[1]).toBe(persisted!.objectKey);
+
+  const readsBefore = read.mock.calls.length;
+  await expect(external.download(f.otherScope, f.id, staged.id)).rejects.toThrow("not found");
+  expect(read).toHaveBeenCalledTimes(readsBefore);
+  await repository.send(f.scope, f.id, {
+    text: "",
+    attachmentIds: [inline.id, staged.id],
+    idempotencyKey: "mixed-storage",
+  });
+  enabled.mockResolvedValue(false);
+  expect((await external.download(f.otherScope, f.id, inline.id)).bytes).toBe(text.bytes);
+  expect((await external.download(f.otherScope, f.id, staged.id)).bytes).toBe(
+    bytes.toString("base64"),
+  );
+  read.mockResolvedValueOnce(Buffer.alloc(bytes.length));
+  await expect(external.download(f.otherScope, f.id, staged.id)).rejects.toThrow(
+    "ATTACHMENT_STORAGE_UNAVAILABLE",
+  );
+
+  const run = await claim(f);
+  const deliver = vi.fn(async (id: string) => "inbox/" + id);
+  await external.prepare(f.scope, run, false, new AbortController().signal, deliver);
+  expect(deliver).toHaveBeenCalledWith(inline.id, text.bytes);
+  expect(deliver).toHaveBeenCalledWith(staged.id, bytes.toString("base64"));
+
+  await db.delete(spaces).where(eq(spaces.id, f.scope.spaceId));
+  const key = persisted!.objectKey!;
+  const [queued] = await db
+    .update(conversationAttachmentObjects)
+    .set({ cleanupAfter: new Date(0) })
+    .where(eq(conversationAttachmentObjects.key, key))
+    .returning();
+  expect(queued?.cleanupQueued).toBe(true);
+  remove.mockRejectedValueOnce(new Error("temporary outage"));
+  await external.cleanup();
+  expect(data.has(key)).toBe(true);
+  await db
+    .update(conversationAttachmentObjects)
+    .set({ cleanupAfter: new Date(0) })
+    .where(eq(conversationAttachmentObjects.key, key));
+  await external.cleanup();
+  expect(data.has(key)).toBe(false);
+  expect(
+    await db
+      .select()
+      .from(conversationAttachmentObjects)
+      .where(eq(conversationAttachmentObjects.key, key)),
+  ).toEqual([]);
 });

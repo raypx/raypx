@@ -66,6 +66,7 @@ import {
   openStoredSecret,
 } from "../conversations/secrets.js";
 import { knownComputerSecrets, type AgentEnvironment } from "./computers.js";
+import { createAttachmentObjectStorage } from "../storage/config.js";
 
 /** Shared by API direct dispatch and worker recovery. Composition performs no database I/O. */
 export async function composeAgents(
@@ -125,7 +126,10 @@ export async function composeAgents(
   const deploymentSecrets = knownComputerSecrets(environment);
   const spaceMemory = createSpaceMemoryService(createSpaceMemoryRepository(db));
   const keys = applicationSecretKeyProvider(environment.APP_KEY);
-  const messageAttachments = createMessageAttachmentsService(db);
+  const messageAttachments = createMessageAttachmentsService(
+    db,
+    createAttachmentObjectStorage(environment.APP_KEY),
+  );
   const protectedInputs = createProtectedInputsService(db, {
     seal: (binding, value) => sealStoredSecret(keys, "protected-input", binding, value),
     open: (binding, sealed) => openStoredSecret(keys, "protected-input", binding, sealed),

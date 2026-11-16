@@ -19,6 +19,7 @@ const fields = ["endpoint", "bucket", "region"] as const;
 function storageError(error: unknown) {
   const code = (error as { data?: { error?: { code?: unknown } } } | null)?.data?.error?.code;
   if (code === "STORAGE_ENDPOINT_REQUIRES_OPERATOR") return "operatorEndpoint";
+  if (code === "STORAGE_LOCATION_IN_USE") return "locationInUse";
   if (code === "INVALID_INPUT") return "invalidInput";
   return configurationError(error);
 }
@@ -106,7 +107,6 @@ function StorageForm({
     onSuccess: (snapshot) => {
       accept(snapshot);
       setNotice(true);
-      void cache.invalidateQueries({ queryKey: ["session-attachment-status"] });
     },
   });
   const conflict = configurationError(save.error) === "conflict";

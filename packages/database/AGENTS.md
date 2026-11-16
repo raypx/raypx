@@ -144,6 +144,9 @@ DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/d
 and last-editor metadata. API owns validation, permissions and compare-and-swap.
 
 `storage_configuration` stores the S3 endpoint, bucket and encrypted credentials.
+Chat attachment rows retain base64 for inline files or reference an object reservation.
+The deletion trigger queues the reservation even when a foreign-key cascade removes
+the attachment. The backend worker drains the indexed queue after the transaction.
 `mail_configuration` stores the revisioned Resend sender, locale, delivery switch and encrypted key.
 `admin_audit` stores durable administration intents and terminal outcomes, with
 bounded non-secret change snapshots. Actor/target IDs deliberately have no cascading

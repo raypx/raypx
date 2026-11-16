@@ -97,6 +97,7 @@
     "credentialsRequired": "Enter both keys to save a new endpoint, bucket or region.",
     "credentialsOptional": "Enter both keys to rotate credentials. Blank fields keep the current keys.",
     "operatorEndpoint": "Ask the deployment operator to set this S3-compatible endpoint first.",
+    "locationInUse": "This location still holds chat attachments. You can rotate its credentials or pause new uploads to it.",
     "invalidInput": "Check the storage settings and provide both keys if the location changed.",
     "unavailable": "Object storage settings are unavailable. Try again.",
     "forbidden": "Only a deployment administrator can manage object storage.",

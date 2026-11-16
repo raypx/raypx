@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import { and, eq, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
-import { storageConfiguration } from "@raypx/database/schema";
+import { conversationAttachmentObjects, storageConfiguration } from "@raypx/database/schema";
 import {
   storageCredentialsSchema,
   storageLocationSchema,
@@ -13,6 +13,8 @@ import { type ConfigReads } from "../config/reads.js";
 import { configurationCipher } from "../config/credentials.js";
 import type { AuditService } from "../admin/audit.js";
 import { writeAuditedSetting } from "../config/audited-write.js";
+import { createS3ObjectStorage } from "@raypx/providers/object-storage";
+import type { MessageAttachmentObjectStorage } from "@raypx/agents/server/postgres";
 
 const safeStorageLocationSchema = storageLocationSchema.extend({
   endpoint: storageLocationSchema.shape.endpoint.refine((value) => {
@@ -42,6 +44,56 @@ function associatedData({ endpoint, bucket, region }: Location) {
   return JSON.stringify([endpoint, bucket, region]);
 }
 
+async function requireUnusedLocation(db: Pick<Database, "select">) {
+  const [existing] = await db
+    .select({ key: conversationAttachmentObjects.key })
+    .from(conversationAttachmentObjects)
+    .limit(1);
+  if (existing) throw new ConfigError("STORAGE_LOCATION_IN_USE");
+}
+
+function sameLocation(left: Location, right: Location) {
+  return (
+    left.endpoint === right.endpoint && left.bucket === right.bucket && left.region === right.region
+  );
+}
+
+export function createAttachmentObjectStorage(secret: string): MessageAttachmentObjectStorage {
+  const cipher = configurationCipher(secret, purpose, id);
+  async function client(db: Pick<Database, "select">) {
+    const [row] = await db
+      .select()
+      .from(storageConfiguration)
+      .where(eq(storageConfiguration.id, id));
+    if (!row) throw new Error("OBJECT_STORAGE_UNAVAILABLE");
+    const { endpoint, bucket, region } = row;
+    const location = safeStorageLocationSchema.parse({ endpoint, bucket, region });
+    const credentials = storageCredentialsSchema.parse(
+      JSON.parse(await cipher.open(row.credentials, associatedData(location))),
+    );
+    return createS3ObjectStorage({ ...location, ...credentials });
+  }
+  return {
+    async enabled(db) {
+      const [row] = await db
+        .select({ enabled: storageConfiguration.enabled })
+        .from(storageConfiguration)
+        .where(eq(storageConfiguration.id, id))
+        .for("share");
+      return row?.enabled ?? false;
+    },
+    async put(db, key, bytes) {
+      await (await client(db)).put(key, bytes);
+    },
+    async read(db, key, size) {
+      return (await client(db)).read(key, size);
+    },
+    async remove(db, key) {
+      await (await client(db)).remove(key);
+    },
+  };
+}
+
 async function sealCredentials(
   secret: string,
   location: Location,
@@ -54,7 +106,7 @@ async function sealCredentials(
 }
 
 export async function saveStorageConfiguration(
-  db: Pick<Database, "insert">,
+  db: Pick<Database, "insert" | "select">,
   secret: string,
   input: z.output<typeof storageConfigSchema>,
   mode: "replace" | "initialize" = "replace",
@@ -65,6 +117,17 @@ export async function saveStorageConfiguration(
   const insert = db.insert(storageConfiguration).values({ id, ...location, credentials });
   if (mode === "initialize") {
     await insert.onConflictDoNothing();
+    return;
+  }
+  const [previous] = await db
+    .select()
+    .from(storageConfiguration)
+    .where(eq(storageConfiguration.id, id))
+    .for("update");
+  if (previous && !sameLocation(previous, location)) await requireUnusedLocation(db);
+  if (!previous) {
+    const [saved] = await insert.onConflictDoNothing().returning({ id: storageConfiguration.id });
+    if (!saved) throw new ConfigError("CONFIGURATION_CONFLICT");
     return;
   }
   await insert.onConflictDoUpdate({
@@ -141,12 +204,9 @@ export function createStorageSettings(
         if ((previous?.revision ?? 0) !== revision) throw new ConfigError("CONFIGURATION_CONFLICT");
         if (!canSetEndpoint(values.endpoint, previous?.endpoint))
           throw new ConfigError("STORAGE_ENDPOINT_REQUIRES_OPERATOR");
-        const changedLocation =
-          !previous ||
-          values.endpoint !== previous.endpoint ||
-          values.region !== previous.region ||
-          values.bucket !== previous.bucket;
+        const changedLocation = !previous || !sameLocation(values, previous);
         if (changedLocation && !credentials) throw new ConfigError("INVALID_INPUT");
+        if (changedLocation) await requireUnusedLocation(tx);
         const encrypted = credentials
           ? await sealCredentials(secret, values, credentials)
           : previous!.credentials;

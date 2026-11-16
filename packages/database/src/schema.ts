@@ -2625,7 +2625,24 @@ export const deviceConnectorEvents = pgTable(
   ],
 );
 
-/** Small member uploads live with their transactional message ownership. */
+/** Keeps an idempotent cleanup record after the owning attachment is deleted. */
+export const conversationAttachmentObjects = pgTable(
+  "conversation_attachment_objects",
+  {
+    key: text("key").primaryKey(),
+    cleanupAfter: date("cleanup_after")
+      .notNull()
+      .default(sql`now() + interval '1 minute'`),
+    cleanupQueued: boolean("cleanup_queued").notNull().default(false),
+  },
+  (t) => [
+    index("conversation_attachment_objects_cleanup_idx")
+      .on(t.cleanupAfter, t.key)
+      .where(sql`${t.cleanupQueued}`),
+  ],
+);
+
+/** PostgreSQL owns attachment metadata, staged chunks and inline files. */
 export const conversationAttachments = pgTable(
   "conversation_attachments",
   {
@@ -2640,12 +2657,14 @@ export const conversationAttachments = pgTable(
     ready: boolean("ready").notNull().default(true),
     expectedSize: integer("expected_size"),
     sha256: text("sha256").notNull(),
-    bytes: text("bytes").notNull(),
+    bytes: text("bytes"),
+    objectKey: text("object_key").references(() => conversationAttachmentObjects.key),
     createdAt: date("created_at").notNull().defaultNow(),
     expiresAt: date("expires_at").notNull(),
   },
   (t) => [
     primaryKey({ columns: [t.spaceId, t.conversationId, t.id] }),
+    unique("conversation_attachments_object_key").on(t.objectKey),
     unique("conversation_attachments_message_key").on(
       t.spaceId,
       t.conversationId,
@@ -2670,7 +2689,11 @@ export const conversationAttachments = pgTable(
     index("conversation_attachments_member_idx").on(t.spaceId, t.uploaderAccountId),
     check(
       "conversation_attachments_size_check",
-      sql`${t.size} between 1 and 1048576 and octet_length(decode(${t.bytes}, 'base64')) = ${t.size}`,
+      sql`${t.size} between 1 and 1048576 and (
+        (${t.bytes} is not null and octet_length(decode(${t.bytes}, 'base64')) = ${t.size}
+          and (${t.objectKey} is null or not ${t.ready}))
+        or (${t.bytes} is null and ${t.objectKey} is not null and ${t.ready})
+      )`,
     ),
     check(
       "conversation_attachments_upload_check",
@@ -2798,6 +2821,7 @@ export const memberConversationViews = pgTable(
 
 export const schema = {
   accountBootstrap,
+  conversationAttachmentObjects,
   conversationAttachments,
   conversationAttachmentDeliveries,
   deviceMemberFileReads,

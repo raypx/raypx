@@ -1,6 +1,7 @@
 import { expect, it, vi } from "vitest";
 import { createAttachmentDownloadRoutes, attachmentDownloadHeaders } from "./attachment-http.js";
 import { SpaceNotFound } from "@raypx/core/spaces";
+import { MessageAttachmentError } from "@raypx/agents/server";
 it("forces safe private downloads and rechecks the session and Space before every read", async () => {
   const id = crypto.randomUUID(),
     name = '报告 "x".txt';
@@ -27,6 +28,10 @@ it("forces safe private downloads and rechecks the session and Space before ever
   resolve.mockRejectedValueOnce(new SpaceNotFound());
   expect((await app.request(path)).status).toBe(404);
   expect(download).toHaveBeenCalledTimes(1);
+  download.mockRejectedValueOnce(new MessageAttachmentError("ATTACHMENT_STORAGE_UNAVAILABLE"));
+  const unavailable = await app.request(path);
+  expect(unavailable.status).toBe(503);
+  expect(unavailable.headers.get("cache-control")).toContain("no-store");
   readSession.mockResolvedValueOnce(null as never);
   expect((await app.request(path)).status).toBe(401);
   expect(attachmentDownloadHeaders("a\r\nb.txt").get("content-disposition")).not.toContain("\r");

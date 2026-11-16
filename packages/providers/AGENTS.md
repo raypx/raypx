@@ -37,6 +37,9 @@ public or customer endpoints and emits a bounded daily and hourly forecast.
 
 `./computer` also exports `createDeviceComputerProvider`, consumed by API's Run tool adapter. It delegates through an injected connector transport and never executes on the backend host. Device providers report `device-process`, unrestricted egress and no home transfer/snapshot or Screen capability. All host I/O remains in the outbound connector; backend approvals and effect receipts remain authoritative.
 
+`./object-storage` signs bounded backend-only S3 attachment requests with explicit
+credentials. API is its consumer and owns configuration and authorization.
+
 No local model/session process adapter or public core transport entry remains.
 Run check/test and explicit provider conformance when selected.
 

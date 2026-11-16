@@ -1,8 +1,8 @@
 # Member attachments, device files and notifications
 
-These workflows use current sessions and fresh Space membership. PostgreSQL is
-both the content authority and the source of notification state. Browser renderer
-acceptance, native components and packaged device acceptance remain separate gates.
+These workflows use current sessions and fresh Space membership. PostgreSQL owns
+attachment metadata, access and notification state. Browser renderer acceptance,
+native components and packaged device acceptance remain separate gates.
 
 ## Attachments
 
@@ -23,12 +23,18 @@ per member/Space, expiring 24 hours after creation. Worker scans and upload
 admission delete expired rows in batches of at most 100. Request admission allows
 120 upload/remove calls per minute and 60 downloads per minute per account/path.
 
-`conversation_attachments` stores these bounded bytes as base64 in PostgreSQL.
-Same-Space conversation/message foreign keys, finalization checks and transactional
-claiming prevent cross-Space or partial publication. Published files survive
-unsent cleanup and cascade with their conversation. Only the uploading member can
-remove or download their unsent file; every current Space member can download a
-published message's files. A removed member loses access immediately.
+`conversation_attachments` keeps base64 for partial uploads and completed
+inline files. With object storage enabled, finalization commits an object reservation
+before the backend puts the validated bytes in S3. Only a successful PUT makes the
+attachment ready and clears its inline bytes. An acknowledged continuation can
+retry the same object. Downloads and Run delivery use the saved location for each
+attachment and verify S3 bytes against the stored size and SHA-256.
+Same-Space conversation/message foreign keys and transactional claiming prevent
+cross-Space or partial publication. Published files survive unsent cleanup and
+cascade with their conversation. Only the uploading member can remove or download
+their unsent file. Every current Space member can download a published message's
+files. A removed member loses access immediately. A durable queue retries deletion
+of detached objects after draft expiry, explicit removal or a cascading delete.
 
 `conversations.send.message.attachmentIds` claims final uploads in the same
 transaction as the member message and Runs. Attachment-only messages are valid.

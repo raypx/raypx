@@ -20,7 +20,7 @@ export function createSpaceDeletionWorker(
   options: {
     intervalMs: number;
     onError(): void;
-    /** Space object adapters must remove idempotently; currently no Space record owns an S3 object. */
+    /** Adapters that clean external resources before dropping rows must remove them idempotently. */
     removeObjects?: (spaceId: string) => Promise<void>;
     leaseMs?: number;
     now?: () => Date;

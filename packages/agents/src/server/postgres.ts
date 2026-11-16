@@ -195,6 +195,9 @@ export { createConversationFanout } from "./fanout.js";
 export { createApprovalsRepository } from "./approvals.js";
 export { createProtectedInputsService } from "./protected-input.js";
 
-export { createMessageAttachmentsService } from "./attachments.js";
+export {
+  createMessageAttachmentsService,
+  type MessageAttachmentObjectStorage,
+} from "./attachments.js";
 
 export { createMemberNotificationsService } from "./notifications.js";

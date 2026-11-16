@@ -30,7 +30,11 @@ export function createConfigHandlers({
     const status =
       error.code === "CONFIGURATION_CONFLICT"
         ? "CONFLICT"
-        : error.code === "INVALID_INPUT" || error.code === "STORAGE_ENDPOINT_REQUIRES_OPERATOR"
+        : [
+              "INVALID_INPUT",
+              "STORAGE_ENDPOINT_REQUIRES_OPERATOR",
+              "STORAGE_LOCATION_IN_USE",
+            ].includes(error.code)
           ? "BAD_REQUEST"
           : error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN"
             ? error.code

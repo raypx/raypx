@@ -12,6 +12,7 @@ export class ConfigError extends Error {
       | "CONFIGURATION_CONFLICT"
       | "INVALID_INPUT"
       | "STORAGE_ENDPOINT_REQUIRES_OPERATOR"
+      | "STORAGE_LOCATION_IN_USE"
       | "UNAUTHORIZED"
       | "FORBIDDEN",
   ) {

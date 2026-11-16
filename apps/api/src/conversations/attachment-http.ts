@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { MessageAttachmentError } from "@raypx/agents/server";
 import { conversationIdSchema } from "@raypx/core/agents";
 import { attachmentIdSchema } from "@raypx/core/conversation";
 import { SpaceNotFound, spaceIdSchema } from "@raypx/core/spaces";
@@ -44,6 +45,11 @@ export function createAttachmentDownloadRoutes(
       });
     } catch (error) {
       if (error instanceof SpaceNotFound) return c.notFound();
+      if (
+        error instanceof MessageAttachmentError &&
+        error.code === "ATTACHMENT_STORAGE_UNAVAILABLE"
+      )
+        return c.body(null, 503, { "cache-control": "private, no-store" });
       throw error;
     }
   });

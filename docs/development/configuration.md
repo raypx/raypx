@@ -78,7 +78,7 @@ refused before these reads. Public configuration is unchanged.
 ## Settings and precedence
 
 The **Site** tab manages the settings below. The **Object storage** tab manages
-attachment upload availability, the S3 location and write-only credentials.
+the storage destination for new chat attachments, the S3 location and write-only credentials.
 The **Email** tab manages Resend. The **Sandbox** tab manages the deployment Computer
 provider. Each tab has its own revision and saves
 independently. Provider changes record only the enabled state in the audit.
