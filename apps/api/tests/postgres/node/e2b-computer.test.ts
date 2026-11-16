@@ -1,4 +1,5 @@
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { eq } from "drizzle-orm";
@@ -225,9 +226,25 @@ it("restores the E2B home across a backend restart and fences the old generation
     expect(fake.keys.size).toBe(fake.live ? 0 : 1);
     const old = { id: started.computer.id, generation: started.computer.generation };
     active = old;
-    const text = "E2B persists files";
+    const initial = "E2B persists files";
+    const text = "E2B persists edited files";
     const bytes = Buffer.from(text).toString("base64");
-    await runtime.provider.write(old, "saved.txt", bytes);
+    await runtime.provider.write(old, "saved.txt", Buffer.from(initial).toString("base64"));
+    await expect(
+      runtime.provider.searchFiles!(old, { path: ".", query: "persists" }),
+    ).resolves.toEqual({
+      matches: [{ path: "saved.txt", line: 1, text: initial }],
+      truncated: false,
+    });
+    await expect(
+      runtime.provider.replaceFile!(old, "saved.txt", { expected: "0".repeat(64), bytes }),
+    ).resolves.toEqual({ replaced: false });
+    await expect(
+      runtime.provider.replaceFile!(old, "saved.txt", {
+        expected: createHash("sha256").update(initial).digest("hex"),
+        bytes,
+      }),
+    ).resolves.toEqual({ replaced: true });
     const process = await runtime.provider.execute(old, {
       executable: "printf",
       argv: ["%s", "literal $HOME"],

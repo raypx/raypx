@@ -177,6 +177,9 @@ export function databaseComputerProvider(db: Database, secret: string, reads: Co
     read: (ref, path, maxBytes) => call((p) => p.read(ref, path, maxBytes), ref),
     readFile: (ref, path, maxBytes) => call((p) => p.readFile!(ref, path, maxBytes), ref),
     write: (ref, path, bytes) => call((p) => p.write(ref, path, bytes), ref),
+    searchFiles: (ref, input) => call((p) => p.searchFiles!(ref, input), ref),
+    replaceFile: (ref, path, replacement) =>
+      call((p) => p.replaceFile!(ref, path, replacement), ref),
     exportHome: (ref) => call((p) => p.exportHome(ref), ref),
     importHome: (ref, archive) => call((p) => p.importHome(ref, archive), ref),
     snapshot: (ref) => call((p) => p.snapshot(ref), ref),
