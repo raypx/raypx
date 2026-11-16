@@ -156,6 +156,7 @@
       "unavailable": "This tool is unavailable to the Run.",
       "invalidArguments": "The tool call has missing or invalid arguments.",
       "truncatedArguments": "The model reached its output limit before completing this tool call.",
+      "notExecuted": "Not run",
       "secretInput": "The tool call contains protected information.",
       "secretOutput": "This tool call could expose protected information.",
       "computerUnavailable": "The computer needed for this tool is unavailable."

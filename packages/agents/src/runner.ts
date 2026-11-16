@@ -655,12 +655,16 @@ export class ConversationRunner {
       const code =
         call.name === refusedToolName ? refusedToolCode(call.arguments.code) : "INVALID_TOOL";
       const tool = call.name === refusedToolName ? call.arguments.tool : undefined;
+      const hint =
+        code === "TOOL_ARGUMENTS_TRUNCATED" && tool === "agent_page_update"
+          ? "No Page update was saved. For a localized change, read the saved version and retry agent_page_update with edits containing short, unique oldText anchors and their newText. For a full rewrite, tell the member what remains unsaved if you cannot finish it."
+          : refusedToolHints[code];
       output = JSON.stringify({
         untrusted: true,
         state: "refused",
         code,
         ...(typeof tool === "string" ? { tool } : {}),
-        hint: refusedToolHints[code],
+        hint,
       });
       isError = true;
     } else {
@@ -1198,8 +1202,8 @@ export class ConversationRunner {
         if (
           !text.trim() &&
           !calls.length &&
-          previous?.role === "toolResult" &&
-          previous.toolName === refusedToolName
+          (result.stopReason === "length" ||
+            (previous?.role === "toolResult" && previous.toolName === refusedToolName))
         ) {
           errorCode = "MODEL_FAILED";
           break;

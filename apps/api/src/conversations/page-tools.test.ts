@@ -133,10 +133,15 @@ it("asks for routine Page changes and asks again after untrusted results even wi
       type: "toolCall",
       id: "update",
       name: "agent_page_update",
-      arguments: { id: s.saved()!.id, expectedVersion: 1, body: "Updated report" },
+      arguments: {
+        id: s.saved()!.id,
+        expectedVersion: 1,
+        edits: [{ oldText: "Initial", newText: "Updated" }],
+      },
     },
   ]);
   await expect.poll(() => f.requests.length).toBe(2);
+  expect(s.update).not.toHaveBeenCalled();
   await f.agentApprovals.answer(f.scope, f.requests[1]!.id, { decision: "approved" });
   await expect.poll(() => f.calls.length).toBe(3);
   const update = f.calls[2]!.input.continuation?.find(
@@ -150,6 +155,7 @@ it("asks for routine Page changes and asks again after untrusted results even wi
     { id: s.saved()!.id, version: 2 },
   ]);
   expect(s.update).toHaveBeenCalledTimes(1);
+  expect(s.saved()).toMatchObject({ version: 2, body: "Updated report" });
   expect(f.requests).toHaveLength(2);
   expect(f.effects.map((effect) => [effect.toolName, effect.state])).toEqual([
     ["agent_page_create", "succeeded"],

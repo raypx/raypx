@@ -978,6 +978,18 @@ it.each([
   expect(db.rows[0]!.run.failureCode).toBe(text ? null : "MODEL_FAILED");
 });
 
+it("fails an empty turn that reaches the output limit before generating a call or reply", async () => {
+  const db = store();
+  const fixture = model();
+  const executor = runner(db, fixture.models);
+  await send(executor);
+  await advance();
+  fixture.calls[0]!.complete("", [], "length");
+  await advance();
+  expect(db.rows[0]!.run).toMatchObject({ state: "failed", failureCode: "MODEL_FAILED" });
+  expect(db.toolEvents).toEqual([]);
+});
+
 it("commits lifecycle for every pending call before approval and cancels later calls on stop", async () => {
   const db = store();
   const tools = await toolFixture(db, "ask");

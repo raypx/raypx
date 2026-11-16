@@ -67,6 +67,10 @@ function ToolActivityRow({
 }) {
   const t = useTranslations("agents");
   const rejectedCall = call.toolName === "refused_tool";
+  const truncatedCall =
+    rejectedCall &&
+    call.outcome === "refused" &&
+    call.argumentSummary === "TOOL_ARGUMENTS_TRUNCATED";
   let toolName = toolOperationLabel(call, t);
   if (rejectedCall)
     toolName =
@@ -78,6 +82,9 @@ function ToolActivityRow({
     : "activity.refusal.generic";
   const operationKind = openApiOperationKind(call);
   const refusal = interactionCode(call);
+  let outcomeLabel = t(`activity.outcomes.${call.outcome ?? "running"}`);
+  if (refusal) outcomeLabel = t(refusal);
+  if (truncatedCall) outcomeLabel = t("activity.refusal.notExecuted");
   const automatic = answer ? automaticApprovalState(answer) : null;
   const pageTool =
     call.toolName === "agent_page_create" ||
@@ -117,8 +124,8 @@ function ToolActivityRow({
         </span>
       )}
       <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
-        <span className={statusStyle(call.outcome ?? "running")}>
-          {refusal ? t(refusal) : t(`activity.outcomes.${call.outcome ?? "running"}`)}
+        <span className={statusStyle(truncatedCall ? "unexecuted" : (call.outcome ?? "running"))}>
+          {outcomeLabel}
         </span>
         {call.durationMs !== null && (
           <span className="tabular-nums">

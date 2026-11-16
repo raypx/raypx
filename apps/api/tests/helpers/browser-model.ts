@@ -235,7 +235,12 @@ export function browserModelFixture() {
           return toolCall("agent_page_update", "browser-page-update", {
             id: lastMessage!.text.slice(pageUpdatePrefix.length),
             expectedVersion: 1,
-            body: "# Agent Page\n\nUpdated from the conversation.",
+            edits: [
+              {
+                oldText: "Created from the conversation.",
+                newText: "Updated from the conversation.",
+              },
+            ],
           });
         text = "The page has been updated.\n\n".repeat(30);
       }

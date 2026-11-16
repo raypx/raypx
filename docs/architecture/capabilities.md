@@ -46,6 +46,8 @@ prompt, not a workflow language.
   makes the page unreadable on the next request.
 - A routine can update a page. Members can open it full screen and ask the Agent
   about it.
+- For localized updates, the Agent can send exact replacements against the saved
+  Page version. Each old text must match once and the replacements commit together.
 
 ## Connections
 

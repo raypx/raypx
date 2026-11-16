@@ -19,6 +19,105 @@ const run = {
   runId: "run",
   execution: { conversationId: "conversation", ownerId: "worker", fence: 7 },
 };
+const pageId = pageIdSchema.parse("report");
+
+it("updates one long saved page using compact non-overlapping edits", async () => {
+  const untouched = "Existing analysis\r\n".repeat(3_000);
+  const body = `Title: Quarter 1\r\n${untouched}Draft only\r\n`;
+  const get = vi.fn<PagesService["get"]>(async () =>
+    pageVersionSchema.parse({
+      id: pageId,
+      spaceId: scope.spaceId,
+      agentId: run.agentId,
+      title: "Report",
+      kind: "document",
+      version: 3,
+      body,
+      author: { kind: "run", accountId: "member", runId: run.runId },
+      reason: "updated",
+      createdAt: at,
+      updatedAt: at,
+    }),
+  );
+  const update = vi.fn<PagesService["update"]>(async (_scope, _id, version, text) => ({
+    ...(await get(scope, pageId, version)),
+    version: version + 1,
+    body: text,
+  }));
+  const tools = createPageTools(
+    { get, update } as unknown as PagesService,
+    "https://workspace.example.test",
+  );
+  const call = tools.prepare({
+    id: "localized-update",
+    name: "agent_page_update",
+    arguments: {
+      id: pageId,
+      expectedVersion: 3,
+      edits: [
+        { oldText: "Draft only\r\n", newText: "" },
+        { oldText: "Quarter 1", newText: "Quarter 2" },
+      ],
+    },
+  });
+  expect(call.changes).toBe(true);
+  const result = await tools.execute(scope, run, call, new AbortController().signal);
+  expect(JSON.parse(result)).toMatchObject({ state: "succeeded", pageId, version: 4 });
+  expect(get).toHaveBeenCalledWith(scope, pageId, 3);
+  expect(update).toHaveBeenCalledExactlyOnceWith(
+    scope,
+    pageId,
+    3,
+    `Title: Quarter 2\r\n${untouched}`,
+    expect.objectContaining({ execution: run.execution, mutationKey: expect.any(String) }),
+  );
+});
+
+it.each([
+  ["missing", ["yellow"], "PAGE_EDIT_TEXT_NOT_FOUND"],
+  ["ambiguous", ["red"], "PAGE_EDIT_TEXT_NOT_UNIQUE"],
+  ["overlapping", ["green blue", "blue"], "PAGE_EDIT_OVERLAP"],
+] as const)("rejects %s exact edits before saving", async (_, matches, code) => {
+  const update = vi.fn();
+  const tools = createPageTools(
+    {
+      get: async () => ({ body: "red red green blue" }),
+      update,
+    } as unknown as PagesService,
+    "https://workspace.example.test",
+  );
+  const call = tools.prepare({
+    id: "edit",
+    name: "agent_page_update",
+    arguments: {
+      id: pageId,
+      expectedVersion: 1,
+      edits: matches.map((oldText) => ({ oldText, newText: "" })),
+    },
+  });
+  await expect(tools.execute(scope, run, call, new AbortController().signal)).rejects.toMatchObject(
+    { code },
+  );
+  expect(update).not.toHaveBeenCalled();
+});
+
+it("requires either an edits list or a complete body for a Page update", () => {
+  const tools = createPageTools({} as PagesService, "https://workspace.example.test");
+  const common = { id: pageId, expectedVersion: 1 };
+  for (const args of [
+    common,
+    { ...common, body: "New text", edits: [{ oldText: "Old", newText: "New" }] },
+  ]) {
+    expect(() =>
+      tools.prepare({
+        id: "write",
+        name: "agent_page_update",
+        arguments: args,
+      }),
+    ).toThrow("Provide exactly one");
+  }
+});
+
 it("paginates escaped Page text within the complete result budget and labels each slice untrusted", async () => {
   const body = '\u0001"\\'.repeat(5_000);
   const page = pageVersionSchema.parse({

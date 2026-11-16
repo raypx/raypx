@@ -48,7 +48,7 @@ it.each(["en", "zh"] as const)("starts collapsed and shows real outcomes in %s",
   expect(screen.queryByText("PRIVATE OUTPUT")).not.toBeInTheDocument();
 });
 
-it("shows why a Page update was rejected before approval", () => {
+it("shows a truncated Page update as not run", () => {
   render(
     <BrowserLanguageProvider initialPreference="zh" restorePreference={false}>
       <ToolActivity
@@ -69,6 +69,8 @@ it("shows why a Page update was rejected before approval", () => {
   const row = screen.getByRole("listitem");
   expect(row).toHaveTextContent(zh.agents.tools.updatePage);
   expect(row).toHaveTextContent(zh.agents.activity.refusal.truncatedArguments);
+  expect(row).toHaveTextContent(zh.agents.activity.refusal.notExecuted);
+  expect(row).not.toHaveTextContent(zh.agents.activity.outcomes.refused);
   expect(row).not.toHaveTextContent("refused_tool");
 });
 

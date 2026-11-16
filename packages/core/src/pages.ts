@@ -73,7 +73,10 @@ export class PageError extends Error {
       | "PAGE_CONFLICT"
       | "PAGE_TOO_LARGE"
       | "PAGE_LIMIT"
-      | "PAGE_INVALID_INPUT",
+      | "PAGE_INVALID_INPUT"
+      | "PAGE_EDIT_TEXT_NOT_FOUND"
+      | "PAGE_EDIT_TEXT_NOT_UNIQUE"
+      | "PAGE_EDIT_OVERLAP",
   ) {
     super(code);
     this.name = "PageError";
