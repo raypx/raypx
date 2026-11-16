@@ -1,0 +1,120 @@
+packages/pages/src/model/pages.ts
+  s_e8793b91e4301c::t_90091e89beaffe 93-98
+packages/database/AGENTS.md
+  s_e8793b91e4301c::t_349558acb230a3 24-25
+packages/pages/src/client/detail.tsx
+  s_9982c8d14794fa::t_84876caa99a90f 203-205
+  s_e8793b91e4301c::t_90091e89beaffe 28,202,206
+apps/api/src/conversations/connections.ts
+  s_e8793b91e4301c::t_f531ab74ff1535 102-106
+  s_e8793b91e4301c::t_1fac0df7839417 4,24,34,41,43,68-72,107-120,124-127,132,144
+apps/api/tests/postgres/node/model-connections.test.ts
+  s_e8793b91e4301c::t_1abef5eeb83118 51,201,214-223,241,247
+apps/web/e2e/model-connections.spec.ts
+  s_e8793b91e4301c::t_349558acb230a3 31,38
+packages/agents/src/client/workspace.tsx
+  s_e8793b91e4301c::t_ac9a46e7fa47e5 1558
+packages/agents/locales/zh/agents.json
+  s_e8793b91e4301c::t_35a61a2565e8a2 120,252
+apps/api/src/conversations/connections-postgres.ts
+  s_e8793b91e4301c::t_1fac0df7839417 48,160,163,167,176,180-181,184,191,196-202
+  s_e8793b91e4301c::t_0bb025bbcedade 203
+packages/agents/src/client/page-result.tsx
+  s_e8793b91e4301c::t_ac9a46e7fa47e5 12
+  s_e8793b91e4301c::t_7df281737a5e8e 10,21,26,47
+packages/pages/AGENTS.md
+  s_e8793b91e4301c::t_d33accf655d325 35-40
+packages/agents/src/client/conversation.tsx
+  s_e8793b91e4301c::t_ac9a46e7fa47e5 15,90,136,313,342,465,470,826,834,837-850,857,859,1367-1371
+  s_e8793b91e4301c::t_b497a42b586699 1183,1478
+  s_e8793b91e4301c::t_7df281737a5e8e 440-443,475,783,866,875-878,1046,1049,1140,2132,2201
+  s_e8793b91e4301c::t_eebbe4f66f606c 852-855
+  s_e8793b91e4301c::t_d75d86c8024bbc 851,856,858
+  s_e8793b91e4301c::t_0939b2758766a0 185,276
+packages/agents/locales/en/agents.json
+  s_e8793b91e4301c::t_35a61a2565e8a2 120,252
+packages/core/src/model-connections.ts
+  s_e8793b91e4301c::t_1fac0df7839417 18
+  s_e8793b91e4301c::t_f531ab74ff1535 55-58
+packages/agents/src/model/page-reference.test.ts
+  s_e8793b91e4301c::t_67d3bcb6cecdea 2,24-33
+  s_9982c8d14794fa::t_73ed520eb8951d 34
+packages/database/src/schema.ts
+  s_e8793b91e4301c::t_1fac0df7839417 977
+packages/agents/src/model/page-reference.ts
+  s_e8793b91e4301c::t_ac9a46e7fa47e5 7-28
+packages/pages/src/client/page-result-preview.tsx
+  s_e8793b91e4301c::t_0939b2758766a0 41,68,149,163,167,185,187,190
+  s_e8793b91e4301c::t_eebbe4f66f606c 1-2,4-10,164-166,171-177
+  s_e8793b91e4301c::t_d75d86c8024bbc 3,76,82-92,106
+  s_e8793b91e4301c::t_b497a42b586699 64,77-81,93-105,107-113,122,134,136,140,150,155-156,159,162
+  s_e8793b91e4301c::t_67d3bcb6cecdea 30-35,39,144-145
+  s_e8793b91e4301c::t_90091e89beaffe 24,169-170,178-181
+  s_e8793b91e4301c::t_9a0c79961cf0e5 168
+packages/agents/src/client/model-connections.component.test.tsx
+  s_e8793b91e4301c::t_1abef5eeb83118 23,66,100
+packages/agents/src/client/model-connections.tsx
+  s_e8793b91e4301c::t_35a61a2565e8a2 12,186-187,191,402-403,407-409
+  s_e8793b91e4301c::t_f531ab74ff1535 188-190,398-401,404-406
+packages/agents/src/model/approvals.ts
+  s_e8793b91e4301c::t_35a61a2565e8a2 129-135
+apps/api/src/conversations/connections.test.ts
+  s_e8793b91e4301c::t_1abef5eeb83118 111,120-125,129-134,221-229
+  s_e8793b91e4301c::t_d194cf70860848 280-285
+  s_e8793b91e4301c::t_621a0a5065a3ab 287
+  s_e8793b91e4301c::t_af19c8afe6190c 230
+packages/pages/locales/en/pages.json
+  s_e8793b91e4301c::t_90091e89beaffe 69
+packages/pages/locales/zh/pages.json
+  s_e8793b91e4301c::t_90091e89beaffe 69
+apps/api/tests/helpers/browser-model.ts
+  s_e8793b91e4301c::t_67d3bcb6cecdea 234-235,247-251
+e2e/tests/journeys/pages.ts
+  s_e8793b91e4301c::t_71f24590e281af 79-80,82,116-131,183-185,315-329,345
+  s_e8793b91e4301c::t_3428d063efc985 250-251,261
+  s_9982c8d14794fa::t_84876caa99a90f 346,348
+  s_e8793b91e4301c::t_80f12ed96a8136 246,252-257,301-307,343-344,347,349,364-366
+packages/agents/src/client/approval-card.component.test.tsx
+  s_e8793b91e4301c::t_1abef5eeb83118 231-247
+DESIGN.md
+  s_e8793b91e4301c::t_d33accf655d325 154-159
+packages/agents/src/client/approval-card.tsx
+  s_e8793b91e4301c::t_f531ab74ff1535 98-99,199-203
+  s_e8793b91e4301c::t_35a61a2565e8a2 100-102,129-145,147,175-181,198,229
+packages/pages/src/model/pages.test.ts
+  s_e8793b91e4301c::t_71f24590e281af 82,86-87
+  s_e8793b91e4301c::t_84279eaa981f27 88
+packages/pages/src/client/document-link.tsx
+  s_e8793b91e4301c::t_90091e89beaffe 1-18
+docs/architecture/capabilities.md
+  s_e8793b91e4301c::t_d33accf655d325 237-238,244-247
+  s_e8793b91e4301c::t_1abef5eeb83118 72-75
+packages/database/drizzle-foundation/20261116132851_mask_model_connection_keys/migration.sql
+  s_e8793b91e4301c::t_6809f24bfbe2e0 1
+packages/database/drizzle-foundation/20261116132851_mask_model_connection_keys/snapshot.json
+  s_e8793b91e4301c::t_57a32f7575aa1d 1-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c299db82604862c7b1027b23c9c4b717c7a35ea4",
+  "prompts": {},
+  "sessions": {
+    "s_9982c8d14794fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e405-521b-74e0-8156-fbfa29fb9ed2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
