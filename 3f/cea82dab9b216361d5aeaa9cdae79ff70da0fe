@@ -1,0 +1,163 @@
+docs/architecture/operations.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 163-164,167-188,194-196
+  s_1b51dc0e513ecb::t_62f0fe5c864bcd 197
+docs/development/accounts.md
+  s_1b51dc0e513ecb::t_8a559e8549b7d9 293-296,299-300,315-316,334-337
+  s_1b51dc0e513ecb::t_9b6408fcface3e 297-298
+apps/api/tests/helpers/workspace-server.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 87-88,108-110,114-115,120
+  s_1b51dc0e513ecb::t_a52d42f9c80bca 112,355
+  s_1b51dc0e513ecb::t_c4b409f553304a 317
+  s_1b51dc0e513ecb::t_05774c734c705a 111,113
+apps/api/src/runtime/relay.ts
+  s_1b51dc0e513ecb::t_3eae4ffc5bb90f 16
+packages/dev-cli/src/smoke/artifacts.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 43
+docs/development/configuration.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 9-10,115
+docs/development/deployment.md
+  s_1b51dc0e513ecb::t_340538988807df 116-120
+  s_1b51dc0e513ecb::t_9b6408fcface3e 111-115,121-158,451
+  s_1b51dc0e513ecb::t_c4b409f553304a 453-454
+  s_1b51dc0e513ecb::t_8a559e8549b7d9 105-106
+packages/dev-cli/src/validation/deployment.ts
+  s_1b51dc0e513ecb::t_5e58e71542f3f4 33-37
+  s_1b51dc0e513ecb::t_80c9f1a1510112 38,41-43,47,142-144,147-150
+  s_1b51dc0e513ecb::t_340538988807df 44-46,145-146
+  s_1b51dc0e513ecb::t_9f12ac3c581e0c 32
+apps/api/src/env.contract.ts
+  s_1b51dc0e513ecb::t_3eae4ffc5bb90f 3-5
+apps/cli/tests/fixtures/desktop/orpc-server.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,65
+apps/api/src/public-address.test.ts
+  s_1b51dc0e513ecb::t_666544a5b30d4e 1-2,9-23,28-42,47-53,59-60,81-85,98-107,110-112
+  s_1b51dc0e513ecb::t_a52d42f9c80bca 108-109
+  s_1b51dc0e513ecb::t_5e58e71542f3f4 115-126
+  s_1b51dc0e513ecb::t_340538988807df 3-8,24-27,43-46,54-58,61-71,74-80,86-97
+  s_1b51dc0e513ecb::t_c178ce12ef4536 72-73,113-114,127
+docs/architecture/security.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 45-49
+docs/development/desktop.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 64-69
+apps/api/src/env.ts
+  s_1b51dc0e513ecb::t_340538988807df 117-118,197-201
+  s_1b51dc0e513ecb::t_3eae4ffc5bb90f 1,13-15,97,99,139,147,158,164-166,207,213-215,224
+apps/api/src/public-address.ts
+  s_1b51dc0e513ecb::t_340538988807df 17-19,56-57,76-81
+  s_1b51dc0e513ecb::t_ebc1c397abd057 1-2,6-16,20-26,29,37-38,40-55,58-75,82-83
+  s_1b51dc0e513ecb::t_5e58e71542f3f4 27-28,30-36
+  s_1b51dc0e513ecb::t_80c9f1a1510112 3-5,39
+packages/auth/src/session-security.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,23
+  s_1b51dc0e513ecb::t_340538988807df 74-80
+apps/api/src/runtime/agents.ts
+  s_1b51dc0e513ecb::t_3eae4ffc5bb90f 80
+  s_1b51dc0e513ecb::t_340538988807df 82
+docs/development/railway.md
+  s_1b51dc0e513ecb::t_340538988807df 45
+  s_1b51dc0e513ecb::t_9b6408fcface3e 49-55,90-91,262
+deploy/compose.split.yaml
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 21-23,55-57
+apps/cli/src/runtime/daemon/desktop/events.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,86
+apps/api/src/pages/http.test.ts
+  s_1b51dc0e513ecb::t_340538988807df 187-226,229-230
+  s_1b51dc0e513ecb::t_80c9f1a1510112 1-4,185-186,227-228
+  s_1b51dc0e513ecb::t_acd4c3c61a28da 120,124
+apps/api/tests/integration/api.test.ts
+  s_1b51dc0e513ecb::t_5e58e71542f3f4 29-34
+  s_1b51dc0e513ecb::t_abaeb1c01fc697 1
+apps/desktop/src/external-links.test.ts
+  s_1b51dc0e513ecb::t_a52d42f9c80bca 2,16
+apps/api/src/runtime/plugin.ts
+  s_1b51dc0e513ecb::t_80c9f1a1510112 1,9,12-14
+apps/api/src/runtime/plugin.test.ts
+  s_1b51dc0e513ecb::t_888b570f28cb81 1-45
+apps/cli/src/runtime/daemon/desktop/api.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,91
+packages/dev-cli/src/validation/deployment.test.ts
+  s_1b51dc0e513ecb::t_340538988807df 172-186,189-197
+  s_1b51dc0e513ecb::t_80c9f1a1510112 171,187-188,198
+packages/dev-cli/src/smoke/artifacts.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 44,93
+apps/api/tests/integration/routine-read-rpc.test.ts
+  s_1b51dc0e513ecb::t_acd4c3c61a28da 11-12,89,91-92,95-96,99-100
+apps/cli/src/runtime/daemon/desktop/control.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,63
+packages/auth/src/server.ts
+  s_1b51dc0e513ecb::t_3eae4ffc5bb90f 102
+deploy/.env.example
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 48-52
+deploy/compose.yaml
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 65-67
+apps/api/AGENTS.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 26-27
+apps/cli/src/runtime/daemon/desktop/events.ts
+  s_1b51dc0e513ecb::t_340538988807df 141-146
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1
+docs/architecture/capabilities.md
+  s_1b51dc0e513ecb::t_8a559e8549b7d9 139-140
+  s_1b51dc0e513ecb::t_9b6408fcface3e 208-209
+  s_1b51dc0e513ecb::t_703f7765a23e59 141-142
+infra/railway/AGENTS.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 9-11
+packages/dev-cli/src/validation/backends.ts
+  s_1b51dc0e513ecb::t_5e58e71542f3f4 22-30,240-243
+  s_1b51dc0e513ecb::t_d93903f8782f97 21,244-247
+apps/api/tests/helpers/bootstrap-server.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 33-34
+apps/api/src/env.test.ts
+  s_1b51dc0e513ecb::t_acd4c3c61a28da 41,52,71,76,81,114
+  s_1b51dc0e513ecb::t_340538988807df 72-75,78-80
+apps/cli/src/runtime/daemon/desktop/api.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,136
+apps/cli/tests/integration/runtime/daemon/desktop/https.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,27
+docs/development/getting-started.md
+  s_1b51dc0e513ecb::t_340538988807df 51-64
+  s_1b51dc0e513ecb::t_9b6408fcface3e 107-110
+packages/core/src/auth.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 2,9-11
+  s_1b51dc0e513ecb::t_340538988807df 19-24
+docs/development/device-connector.md
+  s_1b51dc0e513ecb::t_c4b409f553304a 119-121
+  s_1b51dc0e513ecb::t_9b6408fcface3e 118
+packages/core/src/auth.ts
+  s_1b51dc0e513ecb::t_340538988807df 37-38
+  s_1b51dc0e513ecb::t_3eae4ffc5bb90f 1-6,33-35
+apps/api/tests/postgres/node/device-daemon.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,156,166
+packages/dev-cli/src/validation/deployment-smoke.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 328
+apps/api/src/relay-env.test.ts
+  s_1b51dc0e513ecb::t_acd4c3c61a28da 1,6,9,13,17,23
+  s_1b51dc0e513ecb::t_340538988807df 18,25-27
+docs/development/mobile.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 393-398
+apps/api/src/runtime/adapters.ts
+  s_1b51dc0e513ecb::t_3eae4ffc5bb90f 35
+.env.example
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 7-9,12-13
+packages/auth/src/desktop-login.test.ts
+  s_1b51dc0e513ecb::t_bf948dd3e124e0 1,31
+deploy/AGENTS.md
+  s_1b51dc0e513ecb::t_9b6408fcface3e 46
+packages/dev-cli/src/validation/backend-environment.test.ts
+  s_1b51dc0e513ecb::t_7c3ebd0850c24a 41-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3fcea82dab9b216361d5aeaa9cdae79ff70da0fe",
+  "prompts": {},
+  "sessions": {
+    "s_1b51dc0e513ecb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e2d3-5f8a-74b0-9383-fd358ae3f05b",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
