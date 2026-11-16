@@ -1,0 +1,20 @@
+packages/agents/src/client/workspace.tsx
+  s_753d33f7b4d5bc::t_adad163f5e6d16 993
+  s_753d33f7b4d5bc::t_cc075b52eece25 1320
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "81ca5f0e2d4e0f7efe5714251de4469e69977fdf",
+  "prompts": {},
+  "sessions": {
+    "s_753d33f7b4d5bc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e333-f3e6-7c02-ac8e-b9a7f327a134",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
