@@ -47,7 +47,7 @@ it("renders the Page icon and current title while preserving surrounding plain t
 
 it.each([
   `[Page](https://other.test/api/pages/member/${spaceId}/${id})`,
-  `[Page](${origin}.other.test/page-content/member/${spaceId}/${id})`,
+  `[Page](${origin}.other.test/api/pages/member/${spaceId}/${id})`,
   `[Page](${origin}/api/pages/member/space-two/${id})`,
   `[Page](${origin}/api/pages/member/${spaceId}/)`,
   `[Page](${origin}/api/pages/member/${spaceId}/%ZZ)`,

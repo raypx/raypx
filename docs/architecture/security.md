@@ -187,3 +187,8 @@ session/Space check and use attachment disposition, no-store, nosniff and sandbo
 CSP. Unsent files remain uploader-only and expire. Device member reads revalidate
 owner/grant/fence on dispatch and consumption. See
 [member input boundaries](member-input-and-notifications.md).
+
+Page documents live at `/api/pages/member` and `/api/pages/public`. Moving paths
+does not narrow or widen the existing root-scoped session cookies needed for SSR.
+Public serving never reads a session, and both document routes suppress Set-Cookie
+and retain their opaque sandbox and trusted application frame ancestors.

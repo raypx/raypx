@@ -80,9 +80,9 @@ origin without a path, query or credentials; a development device must be able t
 reach it. Expo embeds this public value at bundle time. Never put secrets in
 `EXPO_PUBLIC_*`. The gateway must follow the shared
 [API ingress contract](../../packages/tooling/src/build/deployment.ts), including
-attachment downloads, conversation SSE and the Space WebSocket at `/events`. `/pages`,
+attachment downloads, conversation SSE and the Space WebSocket at `/api/events`. `/pages`,
 `/signup` and `/forgot-password` stay on Web; Page handoff opens `/pages`, whose
-preview loads `/page-content/*` from API.
+preview loads `/api/pages/*` from API.
 
 ## Build verification
 
@@ -396,3 +396,7 @@ and `EXTRA_ALLOWED_ORIGINS`, including the fixed native identities automatically
 Mobile's configured API Origin is already covered by the derived API origin;
 operators do not maintain a separate allowlist. See
 [public address configuration](deployment.md#public-address-configuration).
+
+The [single-prefix server cutover](deployment.md#single-prefix-cutover) requires
+an upgraded Mobile build. The selected server origin and SecureStore namespace
+do not change; older builds request removed paths.

@@ -106,11 +106,11 @@ by default. The internal `retainAfter` maintenance operation removes only a pref
 and persists its floor even when no events remain. Message history and retry keys
 remain available. There is no scheduled retention policy in this slice.
 
-API-enabled roles mount `/events` on the same Hono/CrossWS listener for HTTP
+API-enabled roles mount `/api/events` on the same Hono/CrossWS listener for HTTP
 streams and WebSocket upgrades. Both require the normal account session and an
 allowed Origin when supplied. Credentials stay in headers.
 
-For a conversation, clients request `GET /events?spaceId=…&conversationId=…&after=…`
+For a conversation, clients request `GET /api/events?spaceId=…&conversationId=…&after=…`
 with `Accept: text/event-stream`. Each response serves one conversation and sends
 JSON in SSE `data` records. After admission and cursor validation it sends
 `{ type: "ready", version: 1 }` and the ordered `event` entries strictly after
@@ -164,7 +164,7 @@ segment. Missing offsets reconnect for a fresh prefix. The UI retains its draft
 through connecting, live, reconnecting and snapshot-required states, labels queued
 member messages and terminal failures, and offers explicit stop and retry editing.
 
-The initial reply executor and its `/events` subscribers share one API-enabled
+The initial reply executor and its `/api/events` subscribers share one API-enabled
 backend process. The existing PostgreSQL fanout still distributes committed events;
 live prefixes are process memory, with no content on LISTEN/NOTIFY. Multi-process
 transient distribution is outside this slice; use one API-enabled process for
@@ -245,7 +245,7 @@ same occurrence through a composite key.
 
 ## Space membership events
 
-The `/events` WebSocket accepts `space.subscribe` with `{ version: 1, spaceId, after }`,
+The `/api/events` WebSocket accepts `space.subscribe` with `{ version: 1, spaceId, after }`,
 `space.ack` with `{ version: 1, spaceId, sequence }` and `space.unsubscribe` with
 `{ version: 1, spaceId }`. Each socket supports up to 32 Space subscriptions with independent cursors and
 a ten-second ACK deadline. Screen uses its own acknowledged subscription.

@@ -17,12 +17,11 @@ and `test` for focused validation; root `check`, `test` and `verify` discover it
 through the root manifest's `infra/*` pattern.
 
 Gateway uses the pinned Caddy image and [Caddyfile](../../infra/railway/Caddyfile).
-Railway terminates public HTTPS on port 8080. Gateway routes `/api/*`, `/rpc/*`,
-`/routines/*`, `/device/*`, `/page-content/*`, `/message-attachments/*`, the two
-configured discovery paths, `/events`, `/health` and `/ready` to API; other paths
-go to Web. This includes member Page previews, public shares and attachment
-downloads; `/pages` remains Web-owned. Caddy proxies WebSocket upgrades, strips
-Cookie and preserves the connector Authorization header on `/device/connect`.
+Railway terminates public HTTPS on port 8080. Gateway forwards `/api/*` and only
+`/.well-known/openid-configuration`, `/.well-known/oauth-authorization-server`,
+`/health` and `/ready` to API; other paths go to Web. `/pages` remains Web-owned.
+Caddy proxies WebSocket upgrades, strips
+Cookie and preserves the connector Authorization header on `/api/device/connect`.
 API and Web have
 no public domains, and database connections use private
 references. Access logging is
@@ -86,13 +85,16 @@ Service ports and health paths come from `@raypx/tooling/build/deployment`; repo
 policy checks Caddy and Compose against the same ingress contract.
 
 `apiIngress` in [the deployment contract](../../packages/tooling/src/build/deployment.ts)
-is the authoritative path list. API route-coverage and Railway matcher tests guard
-it alongside Compose policy. Set `PUBLIC_URL` to the public Web origin: Page `frame-ancestors` and event
+declares one prefix and four exact root exceptions. The API startup invariant and
+source tests reject other root mounts; proxy tests and policy enforce this minimal
+rule. Set `PUBLIC_URL` to the public Web origin: Page `frame-ancestors` and event
 WebSocket admission automatically use it and the optional API/extra origins. Gateway preserves API response
 headers; Web's Nitro framing denial applies only to Web responses. Direct API
 tests do not establish deployed gateway acceptance. The default combined role
 includes recovery;
 Redis remains optional for new Runs and required for split device routing.
+
+For the breaking path release, follow the [coordinated ingress cutover](deployment.md#single-prefix-cutover). Gateway, API and Web images form one release; independent rolling deployments have a failure window.
 
 ## Apply and deploy
 
@@ -107,10 +109,8 @@ checks, then Railway builds the production images. The CI `container-smoke` job
 builds temporary images only for container/deployment configuration or image
 acceptance changes, manual CI runs and release tags. Those images remain on the
 CI runner; Railway does not consume them.
-The API container serves Relay on the same listener as HTTP. During migration
-from a Gateway image that still reads `RELAY_UPSTREAM`, set that variable to the
-same API address as `API_UPSTREAM`. Remove it after the new Gateway image is active
-and the authenticated Relay flow has been verified.
+The API container serves Relay on the same listener as HTTP. The connector
+matcher at `/api/device/connect` strips Cookie and preserves Authorization.
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
 
@@ -175,7 +175,7 @@ a Gateway path error.
 | Caddy configuration fails at startup                      | Runtime `API_UPSTREAM` and `WEB_UPSTREAM`; build-time validation uses placeholders and does not verify Railway variables |
 | Healthcheck `/ready` fails                                | Gateway port and logs, then API private DNS, port `3002` and readiness; Gateway forwards `/ready` to API                 |
 | Gateway is healthy but pages return 502                   | Web private DNS, port `3000`, and Web readiness; Gateway readiness only checks the API route                             |
-| Pages work but remote connections fail                    | API runtime role, `API_UPSTREAM`, and the authenticated `/device/connect` WebSocket flow                                 |
+| Pages work but remote connections fail                    | API runtime role, `API_UPSTREAM`, and the authenticated `/api/device/connect` WebSocket flow                             |
 
 After deployment, check the public HTTPS origin, `/ready`, SSR assets, login and
 Relay connectivity separately. A green Gateway healthcheck does not prove Web or

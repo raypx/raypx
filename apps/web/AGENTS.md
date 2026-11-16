@@ -114,7 +114,7 @@ browser, PostgreSQL and packaged platform acceptance are separate gates.
 
 Pages mounts `@raypx/pages/client` at `/pages` in the shared Space/sidebar workspace.
 Web passes `canEmbedAuthenticatedDocuments={true}`. Document frames use the API's
-`/page-content/member` route with an opaque sandbox;
+`/api/pages/member` route with an opaque sandbox;
 source drafts and one-time share links stay in component memory. Page invalidations
 arrive through the shared Space stream. Asking about a Page only restores a composer
 reference. Shared Agents renders same-origin, same-conversation-Space references as

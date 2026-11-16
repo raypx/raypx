@@ -15,20 +15,22 @@ SERVER_ROLE is api, worker, relay or default all. PostgreSQL owns leases, fences
 checkpoints, recovery and event fanout. Runtime construction performs no I/O;
 startup owns scans/subscriptions and shutdown releases owned resources. APIs start
 work directly; workers recover claims and routines. Relay owns only native-only
-/device routes and health, without Auth/mail/migrations/RPC. /events serves
+/api/device routes and health, without Auth/mail/migrations/RPC. /api/events serves
 session/Origin-authorized conversation SSE and Space/Screen WebSockets. No /relay, device task
 projection, enrollment or account scheduler exists. Message uploads use the
 Space-scoped messageAttachments procedures.
 
-Top-level HTTP mounts must fit apiIngress in @raypx/tooling/build/deployment;
-tests import that build-only contract and check the composed route table. Update
-both static proxies when adding paths. /page-content owns its sandbox/CSP with
+All client/integration HTTP mounts stay under /api/. Only the two standard
+/.well-known discovery documents and /health and /ready remain at the root.
+The real router invariant runs in source tests and production startup; the
+build-only apiIngress contract declares one prefix and those exceptions. Feature
+routes never require gateway edits. /api/pages owns its sandbox/CSP with
 frame-ancestors from the HTTP(S) trusted origins derived from PUBLIC_URL,
 API_PUBLIC_URL and EXTRA_ALLOWED_ORIGINS;
 Nitro must not add outer response header rules. The terminal H3 middleware must
 retain Hono 404 bodies/headers rather than falling through. Every API response,
 including upgrade rejections and assets, carries x-raypx-service: api. Public address
-startup checks are local; no DNS/provider probes. /device/connect refuses Cookies
+startup checks are local; no DNS/provider probes. /api/device/connect refuses Cookies
 that reach the API, so ingress must strip them while preserving Authorization.
 
 The connector registry revalidates current account/Space grants and fences per
@@ -53,7 +55,7 @@ Nitro KV storage is an explicit runtime dependency for bundled migration/assets;
 
 Runtime composes bounded message upload/delivery, notification queries and
 device member files. RPC mutations retain session, trusted-Origin and quota
-checks. /message-attachments downloads require fresh Space admission and always
+checks. /api/attachments downloads require fresh Space admission and always
 force safe attachment disposition; never inline supplied documents.
 
 Registration owns a transaction-locked account_bootstrap marker and fresh mail/signup admission through the auth adapter. SETUP_TOKEN is optional, API-only, bounded and rate-limited. No-mail accounts retain an unverified admission exemption. Recovery-link issuance commits with its audit, expires after 15 minutes and is returned once; test mail sends only to the current administrator.

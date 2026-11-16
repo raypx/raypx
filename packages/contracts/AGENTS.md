@@ -27,3 +27,5 @@ Administrator-only configuration.sandbox/updateSandbox/testSandbox expose safe s
 configuration.setupStatus adds a renderer-safe administrator-only configuration.read
 with strict empty input and exactly model/sandbox/mail booleans. It grants no Space
 access and changes neither configuration.public nor any database schema.
+
+Public RPC uses /api/rpc; device possession paths use /api/device. Transport path changes provide no aliases.

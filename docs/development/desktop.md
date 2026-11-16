@@ -59,8 +59,10 @@ profiles remain separate from the CLI's private local state directories.
 A shared API/Web origin must follow the
 [API ingress contract](../../packages/tooling/src/build/deployment.ts).
 Desktop opens authenticated Page previews at the Web `/pages` destination;
-its document frames load API `/page-content/*`. Attachment downloads also reach
-API through `/message-attachments/*`.
+Web document frames load `/api/pages/*`. The daemon allowlist and renderer use
+`/api/rpc` and `/api/events`; the CSP remains origin-based and needs no path
+exception. The public HTTP attachment route is `/api/attachments/*`. Upgrade
+Desktop with its bundled CLI for the [breaking cutover](deployment.md#single-prefix-cutover).
 
 Server deployments configure `PUBLIC_URL` once, plus `API_PUBLIC_URL` only for a
 separate API origin. Desktop's fixed native Origin is included automatically from

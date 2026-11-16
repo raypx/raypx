@@ -183,3 +183,5 @@ remains separate.
 Member rows hide self-management actions and disable known last-owner changes/leave
 with a reason. Roles are pills; localized short dates keep a full accessible date label.
 Image previews keep a neutral fallback until the authenticated raster decodes.
+
+RPC, conversation SSE, Space WebSockets and attachment downloads use /api/ at the selected origin. Earlier native builds require an upgrade at the server cutover.

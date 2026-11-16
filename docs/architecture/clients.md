@@ -78,7 +78,7 @@ history window.
 
 The Screen section uses optional graphical provider capabilities. Web and Desktop
 share start/stop, a fitted image, view pause and exclusive control. The existing
-authenticated `/events` bridge carries `screen.subscribe`, `screen.ack`,
+authenticated `/api/events` bridge carries `screen.subscribe`, `screen.ack`,
 `screen.unsubscribe` and `screen.event`; no new native credentials or supervisor
 endpoint enters the renderer. One frame is outstanding per viewer, with a
 ten-second ACK deadline and a 1,500,000-byte envelope limit. Closing a panel,

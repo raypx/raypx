@@ -41,7 +41,7 @@ History, snapshots and hydrated `message.created` events include attachment
 metadata. Additive `attachment.state` events record per-Run image, available or
 withheld outcomes and update chips before cursor acknowledgement. Download RPC
 returns bounded base64 for native transports. The session-checked
-`GET /message-attachments/:spaceId/:conversationId/:id` route always sends an
+`GET /api/attachments/:spaceId/:conversationId/:id` route always sends an
 attachment Content-Disposition, UTF-8 encoded safe filename, octet-stream,
 no-store, nosniff and a deny-all sandbox CSP. Files are never inline document frames.
 

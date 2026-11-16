@@ -87,7 +87,7 @@ connector journaling nor a terminal receipt promises exactly-once host effects.
 ## Channel and storage
 
 The separate `device` command namespace opens one outbound authenticated WebSocket
-to `/device/connect`. It publishes no inbound listener, local method router or
+to `/api/device/connect`. It publishes no inbound listener, local method router or
 provider credential. The private Desktop session channel remains independent.
 Native possession endpoints refuse browser Origin headers. Session RPCs use the
 existing trusted-Origin, quota and fresh membership gates. Native HTTP requests

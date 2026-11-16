@@ -79,3 +79,5 @@ remaining journey arguments pass through to Playwright.
 Run `bun run --cwd packages/dev-cli test` and `check`, `bun bin/raypx-dev.mjs doctor`,
 then `bun run policy`. Check the production-only filtered install when runtime
 dependencies change.
+
+Public deployment smoke verifies the single /api/ prefix, four root exceptions, event Origin admission, Page embedding and /api/device/connect Cookie stripping. Local production startup also checks the real built router ingress invariant.

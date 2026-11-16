@@ -46,3 +46,5 @@ Ask about a Page restores the existing member-content Markdown reference in the
 Agent draft. Agents owns its chip presentation and resolves the current title
 through the authorized Page read. Successful Page tools return a Page detail
 `pageUrl` built from the public Web origin injected by API.
+
+Document and share URLs use /api/pages/member and /api/pages/public. Ask references use the member URL; old stored references remain plain text.

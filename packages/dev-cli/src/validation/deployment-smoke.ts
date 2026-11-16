@@ -544,8 +544,8 @@ export async function smokePublicDeployment(
       report(message);
     }
   }
-  const read = (url: string) =>
-    fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5_000) });
+  const read = (url: string, headers: Record<string, string> = {}) =>
+    fetch(url, { headers, redirect: "manual", signal: AbortSignal.timeout(5_000) });
   function identity(response: { headers: Headers }, service: "api" | "web") {
     if (response.headers.get("x-raypx-service") !== service)
       throw new Error(`missing x-raypx-service: ${service}; check ingress forwarding`);
@@ -593,6 +593,17 @@ export async function smokePublicDeployment(
     identity(response, "api");
     status(response.status, 403);
   });
+  for (const [name, origin, expected] of [
+    ["events-sse-public-origin", web, 401],
+    ["events-sse-foreign-origin", "https://deployment-smoke-foreign.invalid", 403],
+  ] as const) {
+    await check(name, async () => {
+      const response = await read(api + "/api/events", { origin, accept: "text/event-stream" });
+      identity(response, "api");
+      status(response.status, expected);
+      await response.body?.cancel();
+    });
+  }
   await check("page-embedding", async () => {
     const response = await read(api + "/api/pages/public/deployment-smoke-missing");
     identity(response, "api");

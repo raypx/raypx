@@ -65,10 +65,6 @@ export function registerTests() {
     if (!apiUrl || !baseURL) return;
     test.setTimeout(90_000);
     const origin = new URL(baseURL).origin;
-    const frames: string[] = [];
-    page.on("websocket", (socket) => {
-      socket.on("framereceived", ({ payload }) => frames.push(String(payload)));
-    });
     const signedIn = await page.request.post(`${apiUrl}/api/auth/sign-in/email`, {
       headers: { origin },
       timeout,
@@ -200,7 +196,6 @@ export function registerTests() {
 
     const anchor = await firstVisibleMessage(log);
     const livePrompt = `A live message while reading history ${suffix}`;
-    const firstFrame = frames.length;
     const sent = await page.request.post(`${apiUrl}/api/rpc/conversations/send`, {
       headers: { origin },
       timeout,
@@ -213,18 +208,8 @@ export function registerTests() {
       },
     });
     expect(sent.status()).toBe(200);
-    await expect
-      .poll(
-        () =>
-          frames
-            .slice(firstFrame)
-            .some(
-              (frame) =>
-                frame.includes(selection.conversationId) && frame.includes("Fixture reply"),
-            ),
-        { timeout },
-      )
-      .toBe(true);
+    // Conversation replies arrive through SSE; assert applied text without moving the reader.
+    await expect(log.getByText("Fixture reply", { exact: true })).toHaveCount(1);
     await expect(log).toHaveAttribute("data-history-count", "121");
     await expectAnchor(log, anchor);
     const completed = await page.request.post(`${apiUrl}/fixture/conversation/complete`, {
@@ -233,19 +218,7 @@ export function registerTests() {
       data: { conversationId: selection.conversationId },
     });
     expect(completed.status()).toBe(204);
-    await expect
-      .poll(
-        () =>
-          frames
-            .slice(firstFrame)
-            .some(
-              (frame) =>
-                frame.includes(selection.conversationId) &&
-                frame.includes('"kind":"reply.segment"'),
-            ),
-        { timeout },
-      )
-      .toBe(true);
+    await expect(log.getByText("Fixture reply completed.", { exact: true })).toHaveCount(1);
     await expectAnchor(log, anchor);
     await page.unroute("**/api/rpc/conversations/history");
     // Traverse beyond the retained window, then reload released rows in both directions.

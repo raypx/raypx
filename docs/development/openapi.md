@@ -15,10 +15,10 @@ Swagger UI assets are included in the API build.
 - Hono defines and documents `GET /health` and `GET /ready`, including the
   dependency failure response from `/ready`.
 - oRPC serves selected reads under `/api/v1/*` and generates their schemas
-  from the same Zod contracts used by `/rpc/*`. The versioned HTTP endpoints
+  from the same Zod contracts used by `/api/rpc/*`. The versioned HTTP endpoints
   use `GET` with no request body and return plain JSON. Resource IDs go in the
   path, and filters and pagination go in the query string. The RPC SDK
-  continues to use its existing `/rpc/*` transport.
+  uses `/api/rpc/*` for its transport.
 
 To add a read to the versioned API, use `httpRead` beside its input and output
 schemas in `@raypx/contracts`. Give it a resource path such as `/tasks/{id}`.

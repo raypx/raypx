@@ -258,3 +258,5 @@ grid; feature-owned rail buttons use hover/focus tooltips. Attachment fallback s
 visible until the authenticated raster finishes decoding, and returns on failure.
 
 A new Run with a dynamically disabled sandbox retains conversation-only execution and no Computer tools. Pinned Runs never switch computers after a deployment configuration change. Shared availability copy includes PROVIDER_UNAVAILABLE for all clients.
+
+Member Page chips recognize only exact selected-origin /api/pages/member references in the conversation Space. Earlier stored references stay plain text.

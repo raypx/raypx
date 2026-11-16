@@ -100,10 +100,10 @@ bun apps/web/.output/server/index.mjs
 ```
 
 Use a common origin or `AUTH_DOMAIN` for the parent of sibling Web/API hosts so
-SSR receives the session cookie. `/events` serves authenticated conversation SSE and Space/Screen WebSockets;
-`/device/connect` is outbound device connector transport. Shared-origin proxies
-must match `apiIngress` in [the deployment contract](../../packages/tooling/src/build/deployment.ts),
-including `/page-content/*` and `/message-attachments/*`; `/pages` stays on Web.
+SSR receives the session cookie. `/api/events` serves authenticated conversation SSE and Space/Screen WebSockets;
+`/api/device/connect` is outbound device connector transport. Shared-origin proxies
+forward `/api/*` plus only the four root exceptions declared by `apiIngress` in
+[the deployment contract](../../packages/tooling/src/build/deployment.ts). `/pages` stays on Web.
 Set `PUBLIC_URL` to the Web origin; Page framing and event admission follow it automatically.
 Without origin settings, development uses Web `http://localhost:3000` and API
 `http://localhost:3002`. If you explicitly set `PUBLIC_URL` locally, also set

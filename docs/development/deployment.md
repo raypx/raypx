@@ -2,7 +2,7 @@
 
 The default topology is Web + one Bun backend + PostgreSQL. `apps/api` builds a
 single Nitro artifact; `SERVER_ROLE=all` is the default and hosts API, durable Run
-recovery and `/device/connect` together. New Runs start directly in the committing process;
+recovery and `/api/device/connect` together. New Runs start directly in the committing process;
 workers recover lost starts, expired leases and handed-over attempts through
 PostgreSQL only. Redis is optional for caches and required for split device connector
 transport. See the [execution guide](../architecture/execution.md).
@@ -90,10 +90,10 @@ Only Traefik publishes traffic. Keep the management panel behind SSH and block
 public database/application ports. Set APP_HOST, DNS, TLS and the exact project
 TRAEFIK_NETWORK. Attach only this project's containers and Traefik. Trust exact
 proxy /32 or /128 addresses in AUTH_TRUSTED_PROXIES; never trust a shared subnet.
-Traefik sends `/api/*`, `/rpc/*`, `/routines/*`, `/device/*`, `/page-content/*`,
-`/message-attachments/*`, the two configured discovery paths, `/events`, `/health`
-and `/ready` to the backend; other paths go to Web. `/pages` remains a Web route.
-Only `/device/connect` strips Cookie; Authorization reaches the connector intact.
+Traefik forwards `/api/*` plus the four exact root exceptions:
+`/.well-known/openid-configuration`, `/.well-known/oauth-authorization-server`,
+`/health` and `/ready`. Other paths go to Web; `/pages` remains a Web route.
+Only `/api/device/connect` strips Cookie; Authorization reaches the connector intact.
 
 Validate without printing resolved secrets:
 
@@ -131,8 +131,8 @@ origin; for split origins set the same `API_PUBLIC_URL` on Web and every backend
 role. It is a **runtime Web process variable**, never a Docker build argument or
 Vite definition. Web needs no address variable on a shared origin. Reverse proxies
 must preserve Host and supply the external scheme. Absolute sharing, invitation,
-Page reference and connector links use the effective request/API origin. Stored
-absolute Page references keep their existing format and exact origin/Space match.
+Page reference and connector links use the effective request/API origin. New absolute Page references use `/api/pages/member` with exact origin/Space
+matching. Earlier stored references render as plain text without migration.
 Desktop and Mobile retain their own selected origins.
 
 Split hosts require a registrable `AUTH_DOMAIN` covering both hosts so SSR receives
@@ -178,6 +178,36 @@ and its protected build settings when rolling back across the retired-input chan
 For Compose, deploy the changed template with the new image together; keep
 `APP_HOST` as the single hostname input and remove retired entries from the
 protected env file. The Compose template does not forward retired inputs.
+
+## Single-prefix cutover
+
+[ADR 0068](../architecture/0068-single-api-ingress.md) moves all client and integration
+API routes under `/api/`. Authentication, discovery, `/health` and `/ready` keep
+their paths. No alias, redirect, dual mount or data migration exists.
+
+For an existing hosted shared origin:
+
+1. Prepare matching gateway, API and Web images from the same release, plus updated
+   CLI connectors, Desktop and Mobile builds. Record previous image digests and
+   protected settings. Pause independent autodeploys and enter maintenance.
+2. Replace API and every split backend role; wait for direct `/ready`. Replace Web,
+   then activate the matching gateway image/rule. These are one coordinated release.
+   Expect failures from the first replacement until all three are active: old tabs
+   and installs request removed paths, and new clients cannot use an old API. Keep
+   maintenance for that entire sequential replacement window. No rolling order can
+   make the incompatible versions interoperate.
+3. Run public smoke through the shared origin, then verify real login, conversation
+   SSE, Space/Screen WebSockets, a member Page preview, public Page rendering,
+   attachment download and an upgraded connector. Upgrade/restart installed clients
+   and reload Web tabs. Retain existing origins, cookies, secrets and PostgreSQL.
+4. Re-issue public Page share URLs under `/api/pages/public`, update external routine
+   webhook/repository URLs and email relay HTTP targets to `/api/routines`, then
+   reopen traffic and restore autodeploys. Existing routine email addresses and
+   invitations are unchanged. Old stored member Page references stay plain text.
+
+Rollback restores gateway, API, Web and split-role images together under maintenance.
+It does not reset storage, rotate credentials or rewrite issued links. URLs changed
+at cutover must be restored for the previous release if rolling back.
 
 ## Optional computers
 
@@ -410,22 +440,24 @@ bun run smoke:deployment --public-url https://app.example.com
 bun run smoke:deployment --public-url https://app.example.com --api-public-url https://api.example.com
 ```
 
-The command provisions nothing and uses no credentials. Every API ingress entry
+The command provisions nothing and uses no credentials. The API prefix and each root exception
 must return `x-raypx-service: api`, including 401/404 responses; Web root must return
 `x-raypx-service: web` and bootstrap the expected runtime API origin. These fixed
 headers contain no version or secret. API-owned 404 bodies/security headers survive
 the outer server. `events-public-origin` requires an unauthenticated upgrade to
-return 401, and `events-foreign-origin` requires 403. `page-embedding` checks the
+return 401, and `events-foreign-origin` requires 403. The matching
+`events-sse-public-origin` and `events-sse-foreign-origin` checks require the same
+admission for conversation SSE requests. `page-embedding` checks the
 public Page route's **404 CSP**, which is observable without a session or share
 token; it requires the public Web origin in `frame-ancestors` and no conflicting
 X-Frame-Options. This does not establish authenticated Page rendering.
 `device-connect` requires a reachable unauthenticated upgrade.
 `device-cookie-stripping` sends a synthetic Cookie and still requires 401: the API
-refuses a Cookie that reaches `/device/connect`, making missing ingress stripping
+refuses a Cookie that reaches `/api/device/connect`, making missing ingress stripping
 observable. Existing Authorization forwarding remains required. Each failure is a
 named single line and the command exits non-zero.
 
-The three field regressions are detected by `api-ingress:<prefix/path>`,
+The three field regressions are detected by `api-ingress:/api/` (and each exception),
 `events-public-origin` and `page-embedding`, respectively. Login, authenticated
 sockets, mail and native acceptance remain separate checks.
 
@@ -435,11 +467,11 @@ explicit disposable loopback database:
 ```sh
 bun run build:web
 bun run build:api
-bun run smoke:deployment --local-production --database-url postgres://raypx@127.0.0.1:55439/raypx_next_test_b
+bun run smoke:deployment --local-production --database-url postgres://raypx@127.0.0.1:55439/raypx_next_test_c
 ```
 
 This starts owned production-artifact processes behind two local proxies, runs
-the public checks and API 404 regressions, and runs a browser hydration case against
+the public checks and API 404 regressions (startup validates the real built router namespace), and runs a browser hydration case against
 both origins. It records the unchanged Web artifact digest. No image rebuild,
 external deployment, database provisioning or account creation occurs. Both services run
 in production mode. The API has a synthetic HTTPS public identity and the two
@@ -521,7 +553,7 @@ credentials and storage are never inferred or migrated by the scripts.
 
 ## Device connector ingress
 
-Forward `/device/*` to API with Authorization intact. The shared ingress contract,
+Forward `/api/device/*` to API with Authorization intact. The shared ingress contract,
 Compose router and gateway include that prefix. For split roles, supply the same
 `PUBLIC_URL`, optional `API_PUBLIC_URL` and optional `REDIS_URL`
 to API/worker/Relay. Redis carries device frames, while Run leases/checkpoints

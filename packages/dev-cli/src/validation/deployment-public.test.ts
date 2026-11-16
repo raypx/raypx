@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { smokePublicDeployment } from "./deployment-smoke.js";
 
-async function fixture(failure?: "ingress" | "origin" | "embedding" | "cookie") {
+async function fixture(failure?: "ingress" | "origin" | "sse-origin" | "embedding" | "cookie") {
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -24,7 +24,11 @@ async function fixture(failure?: "ingress" | "origin" | "embedding" | "cookie") 
       if (path === "/api/events")
         return new Response(null, {
           status:
-            failure === "origin" || request.headers.get("origin")?.includes("foreign") ? 403 : 401,
+            failure === "origin" ||
+            (failure === "sse-origin" && request.headers.get("accept") === "text/event-stream") ||
+            request.headers.get("origin")?.includes("foreign")
+              ? 403
+              : 401,
           headers,
         });
       if (path === "/api/device/connect")
@@ -49,7 +53,9 @@ it("checks every ingress, unauthenticated upgrades, public Page CSP and connecto
     expect(lines).toContain("PASS events-public-origin");
     expect(lines).toContain("PASS page-embedding");
     expect(lines).toContain("PASS device-cookie-stripping");
-    expect(lines.filter((line) => line.startsWith("PASS"))).toHaveLength(11);
+    expect(lines).toContain("PASS events-sse-public-origin");
+    expect(lines).toContain("PASS events-sse-foreign-origin");
+    expect(lines.filter((line) => line.startsWith("PASS"))).toHaveLength(13);
   } finally {
     await f.server.stop(true);
   }
@@ -57,6 +63,7 @@ it("checks every ingress, unauthenticated upgrades, public Page CSP and connecto
 it.each([
   ["ingress", "api-ingress:/api/"],
   ["origin", "events-public-origin"],
+  ["sse-origin", "events-sse-public-origin"],
   ["embedding", "page-embedding"],
   ["cookie", "device-cookie-stripping"],
 ] as const)("names the %s field failure", async (failure, check) => {

@@ -135,8 +135,8 @@ be created. The relay POSTs a normalized address, sender, message ID, text and
 optional subject. Raypx does not run SMTP.
 
 `routines.list` and `routines.get` add optional `ingress` metadata. Webhook and
-repository entries return complete `/routines/:id/webhook` and
-`/routines/:id/repository` URLs from the derived public API origin
+repository entries return complete `/api/routines/:id/webhook` and
+`/api/routines/:id/repository` URLs from the derived public API origin
 (`API_PUBLIC_URL`, defaulting to `PUBLIC_URL`);
 the API supplies that origin in development too, using its port 3002 default.
 A service composed without a public origin returns `url: null` with
@@ -199,15 +199,15 @@ Share creation returns 32 random bytes as hex once. Only SHA-256 hashes persist;
 links may pin a version or follow the current one, expire, or be revoked individually
 or together. Public requests read authoritative state each time, including claimed
 Space deletion. Revoked, expired and invalid tokens share a not-found response.
-`GET /page-content/public/:token` never reads an account session. The authenticated
-`GET /page-content/member/:spaceId/:pageId?version=N` serves the same document and
+`GET /api/pages/public/:token` never reads an account session. The authenticated
+`GET /api/pages/member/:spaceId/:pageId?version=N` serves the same document and
 headers after fresh membership admission. Both are read-only, no-store and cookie-free.
 Markdown uses CommonMark/GFM with raw HTML disabled and allowlisted tags/protocols.
 HTML keeps inline scripts/styles and data images under an opaque sandbox origin:
 no same-origin, forms, frames, objects, external images/scripts or network access.
 CSP frame ancestors are the HTTP(S) trusted origins derived from `PUBLIC_URL`,
 optional `API_PUBLIC_URL` and `EXTRA_ALLOWED_ORIGINS`, including the
-public Web origin for a shared-origin deployment. Gateways forward `/page-content/*`
+public Web origin for a shared-origin deployment. Gateways forward `/api/pages/*`
 to API and preserve its response headers; `/pages` stays on Web. See
 [shared-origin routing](operations.md#shared-origin-routing). Public admission is
 120 requests per address/minute and 60 per token/minute; only digests enter limits.

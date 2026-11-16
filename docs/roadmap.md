@@ -81,7 +81,7 @@ queue, worker startup/interval recovery, graceful handover, pinned resources and
 steering during running/approval-waiting Runs. Runtime construction performs no
 recovery I/O. Default `SERVER_ROLE=all` combines API, worker and Relay; API/worker
 coordination needs PostgreSQL only. Client UI is a separate slice. PostgreSQL and
-loopback `/events` acceptance remain separate gates; implementation does not claim
+loopback `/api/events` acceptance remain separate gates; implementation does not claim
 an unrun database or listener check passed.
 
 Acceptance:

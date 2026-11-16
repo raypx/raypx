@@ -18,9 +18,10 @@ original Dockerfiles in the same builder.
 Image builds run the API and Web `check` and `build` scripts directly in the
 Git-free build context. Docker layers own image build caching.
 Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`
-checks static adapters and API environment forwarding. Keep Page document and
-attachment prefixes on API, /pages on Web, and API response headers intact.
-Strip Cookie only on /device/connect and preserve Authorization. Run `smoke:deployment`
+checks static adapters and API environment forwarding. Forward /api/* plus only
+the two discovery documents and /health and /ready; feature additions never add
+proxy prefixes. Keep /pages on Web and API response headers intact.
+Strip Cookie only on /api/device/connect and preserve Authorization. Run `smoke:deployment`
 for isolated image acceptance; its fixture account and database must remain owned
 and synthetic. Do not convert that fixture into an operator account command.
 Read `docs/development/deployment.md` before changing deployment behavior.

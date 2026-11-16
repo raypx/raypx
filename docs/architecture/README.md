@@ -168,3 +168,7 @@ show an optional administrator checklist in the workspace; Account owns the shar
 model/client, API exposes only configuration-presence booleans, and device dismissal
 is scoped by origin/account. No install wizard or new persistence table is involved.
 See [configuration](../development/configuration.md#first-setup).
+
+[ADR 0068](0068-single-api-ingress.md) gives the API one `/api/` namespace with
+only two discovery documents and `/health` and `/ready` at the root. See the
+[coordinated breaking cutover](../development/deployment.md#single-prefix-cutover).

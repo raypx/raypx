@@ -53,3 +53,5 @@ Login points to signup during bootstrap. The shell composes Account's administra
 setup checklist through renderer-safe configuration.setupStatus; model settings stay
 local and Sandbox/Email open the existing Web center. No admin router is added.
 Dismissal uses device localStorage scoped by API origin/account and survives logout.
+
+Selected-origin API paths use /api/. Browser previews and the daemon share /api/rpc and /api/events; path changes require upgrading the bundled CLI with Desktop.

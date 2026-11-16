@@ -157,10 +157,11 @@ settings ask the member. Review never falls back to Never ask or ambient keys.
 ## Shared-origin routing
 
 `apiIngress` in [the deployment contract](../../packages/tooling/src/build/deployment.ts)
-owns the API prefixes and exact paths used by Railway and Compose. API tests
-check mounted routes against it; proxy tests/policy check exact matcher parity.
-`/page-content/*` and `/message-attachments/*` reach API, while `/pages` and other
-Web destinations remain on Web. Page `frame-ancestors` comes from the derived HTTP(S) trusted origins,
+declares one `/api/` prefix and four root exceptions: the two standard discovery
+documents, `/health` and `/ready`. Both probes remain publicly forwarded. The real
+router is checked at startup in every built role and in source tests; proxy tests
+and policy enforce the minimal rule. Feature additions never add gateway entries.
+`/pages` and other Web destinations remain on Web. Page `frame-ancestors` comes from the derived HTTP(S) trusted origins,
 including `PUBLIC_URL` and the public API origin. Proxies preserve API
 response headers; Web's Nitro framing denial never wraps API responses.
 
@@ -188,7 +189,7 @@ for rollout order and rollback settings. All backend roles share this contract.
 
 ## Device connector routing
 
-`/device/*` is API ingress alongside `/rpc/*` and `/events`; Authorization must
+`/api/device/*` shares the single API prefix; Authorization must
 reach it. Combined roles need no broker. Split device Computer frames reuse the
 private Redis broker with a dedicated namespace; durable Runs still use PostgreSQL
 only. Every split API/worker/Relay role derives connector origin checks from

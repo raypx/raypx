@@ -38,3 +38,5 @@ Only the separate device connector handles expiring member-read frames. It
 validates local owner/grant/fence and uses no-follow descriptors for read-only
 browsing. Generated inbox parents are restricted to Run/attachment UUID paths
 inside the granted root. Connector receipts grant no Agent execution authority.
+
+Selected-origin RPC and event transport use /api/rpc and /api/events. Connector possession routes use /api/device; no old path is accepted.

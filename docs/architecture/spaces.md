@@ -170,7 +170,7 @@ tokens, emails or private item names. A crash can leave a visible pending intent
 Approval answers use the same writer. Audit actor/target IDs are historical
 selectors and confer no access; audit rows cascade only with their Space.
 
-`spaces.events` and `/events` Space subscriptions replay ordered
+`spaces.events` and `/api/events` Space subscriptions replay ordered
 `space.member.joined`, `space.member.removed`, `space.member.role_changed` and
 `space.renamed` records. PostgreSQL notifications actively close removed members'
 open streams, including conversation-only subscriptions, without waiting for a
