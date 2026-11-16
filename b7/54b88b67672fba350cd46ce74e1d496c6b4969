@@ -1,0 +1,62 @@
+packages/pages/src/model/pages.ts
+  s_ddbd52580b902f::t_7325cbb3e0c605 2-9,22-25
+packages/agents/src/client/workspace.tsx
+  s_ddbd52580b902f::t_7325cbb3e0c605 1498-1500
+  s_ddbd52580b902f::t_fa9c06ed8d1a81 169,204
+  s_ddbd52580b902f::t_173208bda4fb16 1494-1497,1501
+packages/core/AGENTS.md
+  s_ddbd52580b902f::t_178167d6756e3c 27
+packages/pages/AGENTS.md
+  s_ddbd52580b902f::t_fa9c06ed8d1a81 26-28
+packages/pages/src/server/postgres.ts
+  s_ddbd52580b902f::t_56ad89c60f320f 19,215,217-224,233-238
+apps/mobile/tests/resources.ts
+  s_ddbd52580b902f::t_173208bda4fb16 4,13,22
+apps/api/tests/integration/capabilities-rpc.test.ts
+  s_ddbd52580b902f::t_56ad89c60f320f 58-62,132,338
+packages/pages/src/client/workspace.component.test.tsx
+  s_ddbd52580b902f::t_7325cbb3e0c605 67-70
+  s_ddbd52580b902f::t_178167d6756e3c 87-109
+packages/pages/src/client.ts
+  s_ddbd52580b902f::t_fa9c06ed8d1a81 1-5
+packages/pages/tests/postgres/pages.test.ts
+  s_ddbd52580b902f::t_178167d6756e3c 91-104
+apps/web/src/routes/(app)/pages.tsx
+  s_ddbd52580b902f::t_fa9c06ed8d1a81 7,64
+apps/desktop/src/routes/pages.tsx
+  s_ddbd52580b902f::t_fa9c06ed8d1a81 7,76
+packages/core/src/pages.ts
+  s_ddbd52580b902f::t_56ad89c60f320f 49-52
+packages/pages/src/client/workspace.tsx
+  s_ddbd52580b902f::t_f57a0b5471f345 2,4,10,19,53-61,76,104,243-245
+  s_ddbd52580b902f::t_0d01c2c43f6338 324
+  s_ddbd52580b902f::t_7325cbb3e0c605 361-365,489-491
+  s_ddbd52580b902f::t_d05dce1905f092 417-418,439-443,500,504-507,511
+  s_ddbd52580b902f::t_e812079728e24e 304-311,313-323,325-328,333-344,346-360,366-369,373-416,419-438,444-454,466,481,484,494,518-521,530
+  s_ddbd52580b902f::t_0ecac486ee131e 6-8,12-13,15,455-465,467-480,482-483,485-488,492-493,495-499,501-503,508-510,512-517,522-529,531-535
+packages/contracts/src/pages.ts
+  s_ddbd52580b902f::t_56ad89c60f320f 7,27
+packages/pages/src/server/types.ts
+  s_ddbd52580b902f::t_56ad89c60f320f 33,87
+  s_ddbd52580b902f::t_7325cbb3e0c605 2-8
+packages/contracts/AGENTS.md
+  s_ddbd52580b902f::t_178167d6756e3c 20-21
+packages/agents/AGENTS.md
+  s_ddbd52580b902f::t_fa9c06ed8d1a81 35-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b754b88b67672fba350cd46ce74e1d496c6b4969",
+  "prompts": {},
+  "sessions": {
+    "s_ddbd52580b902f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e35b-a3ed-7d82-bc13-b90662a0bc24",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
