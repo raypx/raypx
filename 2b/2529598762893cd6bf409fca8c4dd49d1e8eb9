@@ -1,0 +1,36 @@
+packages/agents/locales/zh/agents.json
+  s_e8793b91e4301c::t_669e9f9f946d66 147-156
+packages/agents/locales/en/agents.json
+  s_e8793b91e4301c::t_669e9f9f946d66 147-156
+packages/agents/src/client/tool-activity.tsx
+  s_e8793b91e4301c::t_e6d4a17fa747ff 35-42,69-78,112-118
+packages/agents/src/client/tool-activity.component.test.tsx
+  s_e8793b91e4301c::t_8911d263384540 55-63
+  s_e8793b91e4301c::t_30294835964abf 51-54,64-74
+packages/agents/src/runner.ts
+  s_e8793b91e4301c::t_8911d263384540 184-190,578-579,631-632,1115-1120
+  s_e8793b91e4301c::t_beaf82afd2e2a3 166-167,179-183,191-208,1061
+  s_e8793b91e4301c::t_a132c577e15191 162-165,168-178,560,580-584,589-590,597-603,633-640,1114,1121-1123,1132
+  s_e8793b91e4301c::t_e6d4a17fa747ff 549,569
+packages/agents/src/runner.test.ts
+  s_e8793b91e4301c::t_f9043f7b4c324a 848
+  s_e8793b91e4301c::t_619ddb69111c05 800-813,825,834,841-847,849-850
+  s_e8793b91e4301c::t_8911d263384540 814-824,826-833,835-840
+  s_e8793b91e4301c::t_8a66b376f70f4d 339,372-374
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2b2529598762893cd6bf409fca8c4dd49d1e8eb9",
+  "prompts": {},
+  "sessions": {
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
