@@ -10,7 +10,7 @@ import type { AuthMode } from "./auth-link.js";
 import type { ModeConfig } from "./auth-modes.js";
 
 export const linkClassName =
-  "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:focus-control";
 
 export interface AuthFormLinkProps {
   to: "account" | "login" | "signup" | "forgot-password" | "verify-email";

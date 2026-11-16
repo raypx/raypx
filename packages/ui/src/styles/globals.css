@@ -34,6 +34,7 @@
   --color-badge-fill: var(--badge-fill);
   --color-badge-text: var(--badge-text);
   --color-control-ring: var(--control-ring);
+  --color-control-invalid-ring: var(--control-invalid-ring);
   --color-primary-hover: var(--primary-hover);
   --color-surface-panel: var(--surface-panel);
   --color-surface-raised: var(--surface-raised);
@@ -134,6 +135,20 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* Entry focus uses a solid 1px border; the translucent halo is supplementary. */
+@utility focus-entry {
+  @apply border-ring ring-3 ring-control-ring;
+}
+
+/* Keyboard focus on actions keeps a crisp 2px accent indicator. */
+@utility focus-control {
+  @apply ring-2 ring-ring;
+}
+
+@utility invalid-control {
+  @apply border-destructive ring-3 ring-control-invalid-ring;
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -169,7 +184,7 @@
     a:not([data-slot]),
     button:not([data-slot]),
     input:not([data-slot]),
-    select,
+    select:not([data-slot]),
     textarea:not([data-slot])
   ):focus-visible {
     outline: 2px solid var(--ring);

@@ -33,7 +33,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
         <Link
           to="/agents"
           aria-label="Raypx"
-          className="inline-flex rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [--app-region:no-drag]"
+          className="inline-flex rounded-sm focus-visible:outline-none focus-visible:focus-control focus-visible:ring-offset-4 focus-visible:ring-offset-background [--app-region:no-drag]"
         >
           <Logo className="text-sm [&_[data-slot=logo-mark]]:size-6" />
         </Link>

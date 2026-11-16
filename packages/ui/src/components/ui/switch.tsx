@@ -12,7 +12,7 @@ function Switch({ className, size = "default", ...props }: SwitchProps) {
     <BaseSwitch.Root
       data-slot="switch"
       className={cn(
-        "relative inline-flex shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-input p-0.5 outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-control-ring disabled:pointer-events-none disabled:opacity-50 data-checked:bg-primary",
+        "relative inline-flex shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-input p-0.5 outline-none transition-colors focus-visible:focus-control disabled:pointer-events-none disabled:opacity-50 data-checked:bg-primary",
         size === "sm" ? "h-5 w-9" : "h-6 w-11",
         className,
       )}

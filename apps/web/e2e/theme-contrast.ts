@@ -86,8 +86,9 @@ export async function measureTheme(page: Page) {
       ),
       contrast("primary-foreground", "primary"),
       contrast("primary-foreground", "primary-hover"),
-      contrast("control-ring", "background"),
-      contrast("control-ring", "card"),
+      ...["background", "sidebar", "card", "popover", "muted", "selected"].map((surface) =>
+        contrast("ring", surface),
+      ),
       contrast("primary", "success-bg"),
       contrast("primary", "warning-bg"),
       contrast("muted-foreground", "warning-bg"),

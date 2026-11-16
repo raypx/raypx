@@ -151,7 +151,7 @@ export function WorkspaceHome({
       </div>
       <footer className="flex shrink-0 justify-center gap-4 px-4 py-4 text-xs text-muted-foreground">
         <a
-          className="inline-flex items-center justify-center rounded-sm hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+          className="inline-flex items-center justify-center rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:focus-control pointer-coarse:min-h-11 pointer-coarse:min-w-11"
           onClick={(event) => {
             if (onOpenExternal) {
               event.preventDefault();
@@ -165,7 +165,7 @@ export function WorkspaceHome({
           {t("workspaceHome.privacy")}
         </a>
         <a
-          className="inline-flex items-center justify-center rounded-sm hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+          className="inline-flex items-center justify-center rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:focus-control pointer-coarse:min-h-11 pointer-coarse:min-w-11"
           onClick={(event) => {
             if (onOpenExternal) {
               event.preventDefault();
@@ -402,7 +402,7 @@ function HomeComposerView({
                   size="sm"
                   aria-label={t("workspaceHome.target")}
                   title={item.agent.name}
-                  className="min-w-0 max-w-44 rounded-full border-0 shadow-none sm:max-w-52"
+                  className="min-w-0 max-w-44 rounded-full border-transparent shadow-none sm:max-w-52"
                 >
                   <AgentIcon aria-hidden="true" />
                   <SelectValue className="min-w-0">

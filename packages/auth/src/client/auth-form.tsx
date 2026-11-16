@@ -171,7 +171,7 @@ export function AuthForm({
       {backLabel !== null && (
         <LinkComponent
           to="account"
-          className="group mb-7 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="group mb-7 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:focus-control"
         >
           <ArrowLeftIcon
             size={16}

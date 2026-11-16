@@ -19,7 +19,7 @@ function ComboboxTrigger({
       data-slot="combobox-trigger"
       data-size={size}
       className={cn(
-        "inline-flex min-w-0 items-center justify-between gap-2 border border-input bg-background px-2.5 text-sm outline-none transition-[background-color,border-color,box-shadow] hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-control-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-popup-open:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "inline-flex min-w-0 items-center justify-between gap-2 border border-input bg-background px-2.5 text-sm outline-none transition-[background-color,border-color,box-shadow] hover:bg-muted focus-visible:focus-entry disabled:pointer-events-none disabled:opacity-50 aria-invalid:invalid-control data-popup-open:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         controlSizeVariants({ size }),
         size === "sm" && "text-xs [&_svg:not([class*='size-'])]:size-3.5",
         className,
@@ -42,7 +42,7 @@ function ComboboxInput({
       data-slot="combobox-input"
       data-size={controlSize}
       className={cn(
-        "w-full min-w-0 border border-input bg-transparent px-2.5 py-1 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-control-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm",
+        "w-full min-w-0 border border-input bg-transparent px-2.5 py-1 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus-visible:focus-entry disabled:pointer-events-none disabled:opacity-50 aria-invalid:invalid-control md:text-sm",
         controlSizeVariants({ size: controlSize }),
         controlSize === "sm" && "md:text-xs",
         className,
@@ -106,7 +106,7 @@ function ComboboxItem({ className, children, ...props }: ComboboxPrimitive.Item.
     <ComboboxPrimitive.Item
       data-slot="combobox-item"
       className={cn(
-        "relative flex min-h-8 cursor-default items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex min-h-8 cursor-default items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-sm outline-none select-none focus-visible:focus-control focus-visible:ring-inset data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

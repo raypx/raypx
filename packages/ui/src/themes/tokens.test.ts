@@ -18,13 +18,13 @@ for (const mode of ["light", "dark"] as const) {
       const reference = /^var\(--([a-z0-9-]+)\)$/.exec(color)?.[1];
       return reference ? resolve(reference as ThemeToken) : color;
     }
-    function expectContrast(text: ThemeToken, surface: ThemeToken) {
+    function expectContrast(text: ThemeToken, surface: ThemeToken, minimum = 4.5) {
       const a = luminance(resolve(text)),
         b = luminance(resolve(surface));
       expect(
         (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05),
         `${text} on ${surface}`,
-      ).toBeGreaterThanOrEqual(4.5);
+      ).toBeGreaterThanOrEqual(minimum);
     }
     it("keeps body, muted and action text readable across neutral surfaces", () => {
       expect.hasAssertions();
@@ -36,6 +36,22 @@ for (const mode of ["light", "dark"] as const) {
       expectContrast("selected-text", "selected");
       expectContrast("ring", "background");
       expectContrast("ring", "popover");
+    });
+    it("keeps the solid focus border and keyboard ring visible without the halo", () => {
+      expect.hasAssertions();
+      for (const surface of [
+        "background",
+        "sidebar",
+        "card",
+        "popover",
+        "muted",
+        "selected",
+        "success-bg",
+        "warning-bg",
+        "danger-bg",
+        "info-bg",
+      ] as const)
+        expectContrast("ring", surface, 3);
     });
     it("keeps status labels and card links readable on their own tints", () => {
       expect.hasAssertions();

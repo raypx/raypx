@@ -25,6 +25,13 @@ other decoration remain neutral. Text and active accent controls meet WCAG AA in
 both appearances; visible focus indicators have at least 3:1 contrast. Do not use
 a blue or violet action accent.
 
+DOM text-entry surfaces and selection/date triggers use a 1px solid `border-ring`
+plus a 3px accent halo (`control-ring`: 24% light, 32% dark). The border carries
+the 3:1 focus contrast. Other controls use a keyboard-only 2px solid accent ring,
+preserving their offsets; bare elements use the same 2px fallback. Invalid controls
+retain a solid destructive border and a soft 3px destructive halo. Use UI’s shared
+`focus-entry`, `focus-control` and `invalid-control` utilities.
+
 Success, warning, danger and info each have background, border and text tokens.
 Running/starting/queued work uses info; waiting approvals and protected-input
 cards use warning; completed work and configured checklist items use success;

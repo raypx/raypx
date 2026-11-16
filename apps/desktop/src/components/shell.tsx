@@ -105,7 +105,7 @@ export function DesktopShell() {
                     onClick={() => void settings.open()}
                     aria-haspopup="dialog"
                     aria-label={c("settings")}
-                    className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                    className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:focus-control"
                   />
                 }
               >

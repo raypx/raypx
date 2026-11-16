@@ -42,7 +42,7 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
         ] as const
       ).map(([theme, Icon]) => (
         <label
-          className="relative min-w-0 cursor-pointer has-[:focus-visible]:rounded-md has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2"
+          className="relative min-w-0 cursor-pointer has-[:focus-visible]:rounded-md has-[:focus-visible]:focus-control has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background"
           key={theme}
         >
           <RadioGroupItem

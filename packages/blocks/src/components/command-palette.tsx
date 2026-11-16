@@ -101,7 +101,7 @@ export function CommandPalette({
             item.onSelect();
           }}
         >
-          <div className="flex items-center gap-2 border-b border-border px-4">
+          <div className="m-1 flex items-center gap-2 rounded-md border border-transparent border-b-border px-3 has-[[data-slot=combobox-input]:focus-visible]:focus-entry">
             <SearchIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
             <ComboboxInput
               aria-label={c("search")}

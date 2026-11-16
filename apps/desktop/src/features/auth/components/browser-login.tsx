@@ -161,7 +161,7 @@ export function BrowserLogin({ returnTo }: { returnTo: string }) {
         <Link
           to="/signup"
           search={{ returnTo }}
-          className="rounded-sm text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring"
+          className="rounded-sm text-sm underline underline-offset-4 focus-visible:outline-none focus-visible:focus-control"
         >
           {t("firstAdministratorAction")}
         </Link>

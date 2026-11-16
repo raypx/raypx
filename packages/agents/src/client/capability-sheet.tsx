@@ -52,7 +52,7 @@ export function CapabilitySheet({
             <SheetTitle
               ref={heading}
               tabIndex={-1}
-              className="min-w-0 truncate rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="min-w-0 truncate rounded-md outline-none focus-visible:focus-control"
             >
               {title}
             </SheetTitle>

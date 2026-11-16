@@ -53,7 +53,7 @@ export function PublicHeader({
           <Link
             to="/"
             aria-label={siteName}
-            className="mr-auto inline-flex min-w-0 max-w-full rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mr-auto inline-flex min-w-0 max-w-full rounded-sm focus-visible:outline-none focus-visible:focus-control"
           >
             <Logo
               label={siteName}

@@ -8,7 +8,7 @@ import markUrl from "@raypx/ui/logo-mark.webp";
 
 const copyrightYear = new Date().getUTCFullYear();
 const linkClass =
-  "inline-flex min-h-8 items-center rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "inline-flex min-h-8 items-center rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:focus-control";
 const landingLinkClass = "gap-1.5";
 export function LegalFooter({
   className,

@@ -443,5 +443,7 @@ test("captures the final shared color system", async ({ page, browser }) => {
   expect([...f.unexpected]).toEqual([]);
   for (const m of measurements)
     for (const pair of m.ratios)
-      expect(pair.ratio, `${m.theme} ${pair.text}/${pair.surface}`).toBeGreaterThanOrEqual(4.5);
+      expect(pair.ratio, `${m.theme} ${pair.text}/${pair.surface}`).toBeGreaterThanOrEqual(
+        pair.text === "ring" ? 3 : 4.5,
+      );
 });

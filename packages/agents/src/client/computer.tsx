@@ -171,7 +171,7 @@ export function ComputerPanel({
     );
   }
   const titleClass =
-    "min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    "min-w-0 truncate rounded-md text-lg font-medium outline-none focus-visible:focus-control";
   return (
     <div className="box-border flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-3">
       {!sheet && (
@@ -181,7 +181,7 @@ export function ComputerPanel({
             tabIndex={-1}
             className={
               compact
-                ? "min-w-0 truncate text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                ? "min-w-0 truncate text-sm font-medium outline-none focus-visible:focus-control"
                 : titleClass
             }
           >

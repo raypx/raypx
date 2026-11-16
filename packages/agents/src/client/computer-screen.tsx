@@ -297,7 +297,7 @@ export function ComputerScreen({
           tabIndex={0}
           aria-label={t(controlling ? "screen.inputSurface" : "screen.viewSurface")}
           aria-describedby={`screen-help-${controller.spaceId}`}
-          className="min-w-0 overflow-hidden rounded-md border bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-w-0 overflow-hidden rounded-md border bg-muted outline-none focus-visible:focus-control"
           onKeyDown={key}
           onPointerDown={(event) => sendPointer(event, "down")}
           onPointerUp={(event) => sendPointer(event, "up")}

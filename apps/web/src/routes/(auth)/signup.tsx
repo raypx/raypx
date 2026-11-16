@@ -20,7 +20,7 @@ export const Route = createFileRoute("/(auth)/signup")({
 
 const statusClass = "mx-auto flex w-full max-w-[25rem] flex-col";
 const footerLinkClass =
-  "self-center rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "self-center rounded-sm text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:focus-control";
 
 function SignupPage() {
   const common = useTranslations("common");

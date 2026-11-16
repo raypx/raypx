@@ -54,7 +54,7 @@ function PrivacyPage() {
                   to="/privacy"
                   hash={section}
                   activeOptions={{ includeHash: true }}
-                  className="group/toc inline-flex min-h-9 items-center gap-2.5 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:font-medium aria-[current=page]:text-foreground md:-ml-px md:border-l md:border-transparent md:pl-4 md:hover:border-foreground/30 md:aria-[current=page]:border-foreground motion-safe:transition-[color,border-color] motion-safe:duration-150"
+                  className="group/toc inline-flex min-h-9 items-center gap-2.5 rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:focus-control aria-[current=page]:font-medium aria-[current=page]:text-foreground md:-ml-px md:border-l md:border-transparent md:pl-4 md:hover:border-foreground/30 md:aria-[current=page]:border-foreground motion-safe:transition-[color,border-color] motion-safe:duration-150"
                 >
                   <span
                     aria-hidden="true"
@@ -76,7 +76,7 @@ function PrivacyPage() {
               aria-labelledby={`${section}-title`}
               tabIndex={-1}
               className={cn(
-                "scroll-mt-24 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring target:motion-safe:animate-in target:motion-safe:fade-in-50 target:motion-safe:duration-500",
+                "scroll-mt-24 rounded-sm outline-none focus-visible:focus-control target:motion-safe:animate-in target:motion-safe:fade-in-50 target:motion-safe:duration-500",
                 index > 0 && "border-t border-border pt-10",
               )}
             >
@@ -99,14 +99,14 @@ function PrivacyPage() {
                   <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
                     <Link
                       to="/settings"
-                      className="rounded-sm underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="rounded-sm underline underline-offset-4 focus-visible:outline-none focus-visible:focus-control"
                     >
                       {t("openSettings")}
                     </Link>
                     <Link
                       to="/agents"
                       hash="settings/account"
-                      className="rounded-sm underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="rounded-sm underline underline-offset-4 focus-visible:outline-none focus-visible:focus-control"
                     >
                       {t("openAccount")}
                     </Link>

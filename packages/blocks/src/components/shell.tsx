@@ -257,7 +257,7 @@ export function ShellProjectToolbar({
           <nav
             data-project-links=""
             aria-label={c("projectTools")}
-            className="flex min-w-0 items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-lg bg-muted p-0.5 [scrollbar-width:thin] *:flex *:h-control-sm *:shrink-0 *:items-center *:rounded-md *:px-2 *:text-xs *:font-medium *:whitespace-nowrap *:outline-none *:transition-colors *:hover:text-foreground *:focus-visible:ring-2 *:focus-visible:ring-ring *:focus-visible:ring-inset *:aria-[current=page]:bg-tab-selected *:aria-[current=page]:text-selected-text *:motion-reduce:transition-none pointer-coarse:p-0 pointer-coarse:[scrollbar-width:none] pointer-coarse:*:min-h-control-xl in-data-[frame=document]:max-[540px]:col-span-full in-data-[frame=document]:max-[540px]:row-start-2 in-data-[frame=document]:max-[540px]:justify-self-start"
+            className="flex min-w-0 items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-lg bg-muted p-0.5 [scrollbar-width:thin] *:flex *:h-control-sm *:shrink-0 *:items-center *:rounded-md *:px-2 *:text-xs *:font-medium *:whitespace-nowrap *:outline-none *:transition-colors *:hover:text-foreground *:focus-visible:focus-control *:focus-visible:ring-inset *:aria-[current=page]:bg-tab-selected *:aria-[current=page]:text-selected-text *:motion-reduce:transition-none pointer-coarse:p-0 pointer-coarse:[scrollbar-width:none] pointer-coarse:*:min-h-control-xl in-data-[frame=document]:max-[540px]:col-span-full in-data-[frame=document]:max-[540px]:row-start-2 in-data-[frame=document]:max-[540px]:justify-self-start"
           >
             {children}
           </nav>
@@ -406,7 +406,7 @@ function ShellContents<To extends string>({
       to={brand.to}
       markActive={false}
       aria-label={brand.label}
-      className="mx-1 flex min-h-9 w-fit max-w-full min-w-0 shrink-0 items-center rounded-md pointer-coarse:min-h-11 pointer-coarse:min-w-11 outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring [&_[data-slot=logo]>span]:hidden"
+      className="mx-1 flex min-h-9 w-fit max-w-full min-w-0 shrink-0 items-center rounded-md pointer-coarse:min-h-11 pointer-coarse:min-w-11 outline-none transition-opacity hover:opacity-80 focus-visible:focus-control [&_[data-slot=logo]>span]:hidden"
     >
       <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
     </LinkComponent>

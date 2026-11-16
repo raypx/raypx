@@ -31,7 +31,7 @@ import { ResendSettings } from "./resend.js";
 const row =
   "grid items-start gap-3 px-4 py-4 sm:px-6 @xl/main:grid-cols-[minmax(0,1fr)_minmax(12rem,15rem)] @xl/main:items-center @xl/main:gap-x-6";
 const panel =
-  "rounded-xl border border-border bg-card text-card-foreground focus-visible:ring-2 focus-visible:ring-ring";
+  "rounded-xl border border-border bg-card text-card-foreground focus-visible:focus-control";
 const tabTrigger =
   "relative z-10 gap-2 px-2 sm:px-3 group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:bg-transparent group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:shadow-none dark:group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:border-transparent dark:group-has-[[data-config-indicator]:not([hidden])]/tabs-list:data-active:bg-transparent";
 
