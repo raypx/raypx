@@ -1,0 +1,30 @@
+packages/agents/src/model/stream-retry.ts
+  s_030816a343f37e::t_263085666eb803 1-28
+packages/agents/src/model/space-live.test.ts
+  s_030816a343f37e::t_44b6000723264a 204-224
+packages/agents/src/model/lifecycle.test.ts
+  s_030816a343f37e::t_44b6000723264a 186-208
+packages/agents/src/model/controller.ts
+  s_030816a343f37e::t_263085666eb803 9,82,534,602,691
+packages/agents/src/model/space-live.ts
+  s_030816a343f37e::t_1643ed35a1377e 95,102
+  s_030816a343f37e::t_263085666eb803 3,15,78,120
+docs/architecture/events.md
+  s_030816a343f37e::t_263085666eb803 127-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "86643f8df3690126b1e57dd035cbe11c0381b828",
+  "prompts": {},
+  "sessions": {
+    "s_030816a343f37e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e350-789c-7202-9ccd-a645a338ab28",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
