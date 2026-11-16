@@ -98,20 +98,20 @@ it.each([
   const { port, controller } = fixture();
   vi.mocked(port.test).mockResolvedValue({ code });
   await controller.test(connection.id);
-  expect(controller.getSnapshot().testResults[connection.id]).toBe(code);
+  expect(controller.getSnapshot().testResults[connection.id]).toEqual({ code });
 });
 it("replaces provider diagnostics with the public failure outcome", async () => {
   const { port, controller } = fixture();
   vi.mocked(port.test).mockRejectedValue(new Error("private-key"));
   await controller.test(connection.id);
-  expect(controller.getSnapshot().testResults[connection.id]).toBe("REQUEST_FAILED");
+  expect(controller.getSnapshot().testResults[connection.id]).toEqual({ code: "REQUEST_FAILED" });
   expect(JSON.stringify(controller.getSnapshot())).not.toContain("private-key");
 });
 it("clears an earlier test outcome after saving a changed connection", async () => {
   const { controller } = fixture();
   await controller.load();
   await controller.test(connection.id);
-  expect(controller.getSnapshot().testResults[connection.id]).toBe("SUCCEEDED");
+  expect(controller.getSnapshot().testResults[connection.id]).toEqual({ code: "SUCCEEDED" });
   await controller.save(
     connection.id,
     connectionConfiguration({ ...createConnectionDraft(connection), models: "replacement-model" })!,

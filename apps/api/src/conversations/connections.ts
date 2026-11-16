@@ -4,7 +4,7 @@ import {
   modelConnectionConfigurationSchema,
   type ModelConnection,
   type ModelConnectionConfiguration,
-  type ModelConnectionTestCode,
+  type ModelConnectionTestResult,
 } from "@raypx/core/model-connections";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { taskText } from "@raypx/core/task-text";
@@ -55,7 +55,7 @@ export interface ConnectionTransport {
     connection: ModelConnection,
     model: string,
     secret: string,
-  ): Promise<ModelConnectionTestCode>;
+  ): Promise<ModelConnectionTestResult>;
   close(this: void): void;
 }
 function publicConnection(row: StoredModelConnection): ModelConnection {
@@ -121,7 +121,7 @@ export function createModelConnections(
       if (!connection.models.includes(model)) return { code: "MODEL_UNAVAILABLE" as const };
       try {
         const secret = await secrets.read(accountId, id, connection.secretId);
-        return { code: await transport.test(publicConnection(connection), model, secret) };
+        return await transport.test(publicConnection(connection), model, secret);
       } catch {
         return { code: "REQUEST_FAILED" as const };
       }

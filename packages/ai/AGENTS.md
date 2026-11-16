@@ -12,3 +12,6 @@ absolute timestamp. Stream idle mode requires a caller's abort signal and renews
 its deadline only on text, reasoning or tool argument progress. Custom endpoints
 reject embedded credentials; local HTTP is loopback-only. Run check/test. Live
 model acceptance stays opt-in.
+
+The API connection probe uses request-local fetch and stream observers to derive
+bounded diagnostics. Ordinary model replies still strip raw provider errors.

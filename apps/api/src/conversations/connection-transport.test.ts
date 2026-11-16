@@ -111,11 +111,11 @@ it.each([
     client.complete.mockRejectedValueOnce(new ai.AiError(failureCode));
     const transport = createConnectionTransport();
     const outcome = await transport.test(connection, "model-a", credential);
-    expect(outcome).toBe(expected);
+    expect(outcome).toEqual({ code: expected });
     expect(client.complete).toHaveBeenCalledExactlyOnceWith(
       { provider: "member-connection", model: "model-a" },
       { messages: [{ role: "user", content: "Reply OK.", timestamp: 0 }] },
-      { apiKey: credential, env: {}, maxTokens: 1, timeoutMs: 10_000 },
+      expect.objectContaining({ apiKey: credential, env: {}, maxTokens: 1, timeoutMs: 10_000 }),
     );
     expect(client.close).toHaveBeenCalledOnce();
     expect(JSON.stringify(outcome)).not.toContain(credential);
@@ -128,11 +128,93 @@ it("sanitizes arbitrary provider failures and reports a successful bounded test"
   const transport = createConnectionTransport();
   client.complete.mockRejectedValueOnce(new Error(`private provider error ${credential}`));
   const failure = await transport.test(connection, "model-a", credential);
-  expect(failure).toBe("REQUEST_FAILED");
+  expect(failure).toEqual({ code: "REQUEST_FAILED" });
   expect(JSON.stringify(failure)).not.toContain(credential);
-  expect(await transport.test(connection, "model-a", credential)).toBe("SUCCEEDED");
+  expect(await transport.test(connection, "model-a", credential)).toEqual({ code: "SUCCEEDED" });
   expect(client.complete).toHaveBeenCalledTimes(2);
   transport.close();
+});
+
+it.each([
+  {
+    api: "openai-responses",
+    path: "/api/v1/responses",
+    status: 400,
+    body: { error: { code: "1210", message: credential }, request_id: "glm-request-1" },
+    headers: { "x-request-id": "gateway-request" },
+    expected: { code: "REQUEST_FAILED", providerCode: "1210", providerRequestId: "glm-request-1" },
+  },
+  {
+    api: "anthropic-messages",
+    path: "/api/anthropic/v1/messages",
+    status: 403,
+    body: { type: "error", error: { type: "permission_error", code: 1002, message: credential } },
+    headers: { "request-id": "glm-request-2" },
+    expected: {
+      code: "AUTHENTICATION_FAILED",
+      providerCode: "1002",
+      providerRequestId: "glm-request-2",
+    },
+  },
+  {
+    api: "openai-responses",
+    path: "/api/v1/responses",
+    status: 400,
+    body: {
+      error: { code: Buffer.from(credential).toString("base64url"), message: "private message" },
+      request_id: `req-${credential}`,
+    },
+    headers: { "x-request-id": "invalid request ID" },
+    expected: { code: "REQUEST_FAILED" },
+  },
+] as const)("returns only allowed diagnostics from $api HTTP errors", async (fixture) => {
+  const serve = vi.fn((request: Request) => {
+    expect(new URL(request.url).pathname).toBe(fixture.path);
+    return Response.json(fixture.body, { status: fixture.status, headers: fixture.headers });
+  });
+  const endpoint = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: serve });
+  const transport = createConnectionTransport();
+  const basePath = fixture.api === "anthropic-messages" ? "api/anthropic" : "api/v1";
+  try {
+    const result = await transport.test(
+      { ...connection, api: fixture.api, baseUrl: new URL(basePath, endpoint.url).href },
+      "model-a",
+      credential,
+    );
+    expect(result).toEqual(fixture.expected);
+    expect(serve).toHaveBeenCalledOnce();
+  } finally {
+    transport.close();
+    await endpoint.stop(true);
+  }
+});
+
+it("reports a Responses error event with its request ID header", async () => {
+  const event = {
+    type: "response.failed",
+    response: { error: { code: "1305", message: credential } },
+  };
+  const endpoint = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch: () =>
+      new Response(`event: response.failed\ndata: ${JSON.stringify(event)}\n\n`, {
+        headers: { "content-type": "text/event-stream", "x-request-id": "glm-stream-1" },
+      }),
+  });
+  const transport = createConnectionTransport();
+  try {
+    expect(
+      await transport.test(
+        { ...connection, api: "openai-responses", baseUrl: new URL("api/v1", endpoint.url).href },
+        "model-a",
+        credential,
+      ),
+    ).toEqual({ code: "REQUEST_FAILED", providerCode: "1305", providerRequestId: "glm-stream-1" });
+  } finally {
+    transport.close();
+    await endpoint.stop(true);
+  }
 });
 
 it("keeps credentials out of streamed model events and results", async () => {

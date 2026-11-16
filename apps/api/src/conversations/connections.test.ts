@@ -76,7 +76,7 @@ function fixture() {
         throw new Error("Unused stream");
       },
     })),
-    test: vi.fn(async () => "SUCCEEDED" as const),
+    test: vi.fn<ConnectionTransport["test"]>(async () => ({ code: "SUCCEEDED" })),
     close: vi.fn(),
   };
   function owned(accountId: string, id: string) {

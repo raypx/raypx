@@ -13,6 +13,7 @@ import type {
 } from "@raypx/core/model-connections";
 import type { ModelTurn } from "@raypx/agents/server";
 import type { ConnectionTransport } from "./connections.js";
+import { observeConnectionTest } from "./connection-test-diagnostics.js";
 
 function configuredClient(
   connection: Pick<ModelConnection, "kind" | "baseUrl" | "api" | "models">,
@@ -161,16 +162,18 @@ export function createConnectionTransport(): ConnectionTransport {
     },
     async test(connection, model, secret) {
       const client = configuredClient(connection);
+      // Google GenAI does not support the injected fetch transport.
+      const diagnostics = connection.kind === "google" ? undefined : observeConnectionTest(secret);
       active.add(client);
       try {
         await client.complete(
           selected(connection, model),
           { messages: [{ role: "user", content: "Reply OK.", timestamp: 0 }] },
-          { apiKey: secret, env: {}, maxTokens: 1, timeoutMs: 10_000 },
+          { apiKey: secret, env: {}, maxTokens: 1, timeoutMs: 10_000, ...diagnostics?.options },
         );
-        return "SUCCEEDED";
+        return { code: "SUCCEEDED" };
       } catch (error) {
-        return testCode(error);
+        return { code: testCode(error), ...diagnostics?.details };
       } finally {
         client.close();
         active.delete(client);

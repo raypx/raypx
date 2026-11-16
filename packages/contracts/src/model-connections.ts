@@ -4,7 +4,7 @@ import {
   modelConnectionConfigurationSchema,
   modelConnectionIdSchema,
   modelConnectionSchema,
-  modelConnectionTestCodeSchema,
+  modelConnectionTestResultSchema,
 } from "@raypx/core/model-connections";
 import { exposeApiTo } from "./exposure.js";
 import { rpcAccess } from "./policy.js";
@@ -28,5 +28,5 @@ export const modelConnectionsContract = {
   delete: session.input(selection).output(z.strictObject({ deleted: z.literal(true) })),
   test: session
     .input(selection.extend({ model: z.string().min(1).max(128).optional() }))
-    .output(z.strictObject({ code: modelConnectionTestCodeSchema })),
+    .output(modelConnectionTestResultSchema),
 };

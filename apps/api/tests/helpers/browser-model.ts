@@ -426,7 +426,7 @@ export function browserModelFixture() {
     connectionTransport: {
       ...createConnectionTransport(),
       resolve: () => resolve(),
-      test: async () => "SUCCEEDED" as const,
+      test: async () => ({ code: "SUCCEEDED" as const }),
     },
     complete(conversationId?: string) {
       for (const [complete, entry] of completions) {

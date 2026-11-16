@@ -88,8 +88,10 @@ the credential preserves recovery. Removing access, deleting a connection or
 remapping its selected endpoint/model fails recovery with `CONNECTION_UNAVAILABLE`.
 
 Testing performs one ten-second request with a one-token output budget and a
-fixed prompt. It returns only `SUCCEEDED`, `AUTHENTICATION_FAILED`, `RATE_LIMITED`,
-`TIMED_OUT`, `MODEL_UNAVAILABLE` or `REQUEST_FAILED`. No provider error is returned.
+fixed prompt. It returns `SUCCEEDED`, `AUTHENTICATION_FAILED`, `RATE_LIMITED`,
+`TIMED_OUT`, `MODEL_UNAVAILABLE` or `REQUEST_FAILED`. Failures can include a bounded
+provider error code and request ID from the upstream response. The adapter omits
+raw provider messages, bodies, headers and credential echoes from the result.
 Construction performs no database writes or network requests.
 
 ## Skills

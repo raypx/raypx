@@ -244,6 +244,8 @@
     "deleteDescription": "固定使用此连接的运行将无法恢复。",
     "endpoint": "端点 URL",
     "protocol": "协议",
+    "providerCode": "上游错误码 {code}",
+    "providerRequestId": "上游请求 ID {id}",
     "secret": "API 密钥",
     "keepSecret": "留空以保留当前密钥。",
     "invalid": "请检查名称、模型标识、端点和 API 密钥。",

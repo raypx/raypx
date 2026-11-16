@@ -187,9 +187,19 @@ export function ModelConnectionsEditor({
                 <dd className="wrap-anywhere">{availability}</dd>
               </dl>
               {testResult && (
-                <p role="status" className="text-sm">
-                  {t(`connections.outcomes.${testResult}`)}
-                </p>
+                <div role="status" className="min-w-0 space-y-1 text-sm">
+                  <p>{t(`connections.outcomes.${testResult.code}`)}</p>
+                  {testResult.providerCode && (
+                    <p className="text-xs text-muted-foreground wrap-anywhere">
+                      {t("connections.providerCode", { code: testResult.providerCode })}
+                    </p>
+                  )}
+                  {testResult.providerRequestId && (
+                    <p className="text-xs text-muted-foreground wrap-anywhere">
+                      {t("connections.providerRequestId", { id: testResult.providerRequestId })}
+                    </p>
+                  )}
+                </div>
               )}
             </li>
           );

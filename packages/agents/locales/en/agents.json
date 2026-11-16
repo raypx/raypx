@@ -244,6 +244,8 @@
     "deleteDescription": "Runs pinned to this connection will fail to resume.",
     "endpoint": "Endpoint URL",
     "protocol": "Protocol",
+    "providerCode": "Provider error code {code}",
+    "providerRequestId": "Provider request ID {id}",
     "secret": "API key",
     "keepSecret": "Leave empty to keep the current key.",
     "invalid": "Check the name, model identifiers, endpoint and API key.",

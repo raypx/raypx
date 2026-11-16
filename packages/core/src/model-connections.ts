@@ -66,3 +66,12 @@ export const modelConnectionTestCodeSchema = z.enum([
   "REQUEST_FAILED",
 ]);
 export type ModelConnectionTestCode = z.infer<typeof modelConnectionTestCodeSchema>;
+export const modelConnectionDiagnosticTokenSchema = z
+  .string()
+  .regex(/^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$/);
+export const modelConnectionTestResultSchema = z.strictObject({
+  code: modelConnectionTestCodeSchema,
+  providerCode: modelConnectionDiagnosticTokenSchema.optional(),
+  providerRequestId: modelConnectionDiagnosticTokenSchema.optional(),
+});
+export type ModelConnectionTestResult = z.infer<typeof modelConnectionTestResultSchema>;

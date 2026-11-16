@@ -2,7 +2,7 @@ import {
   modelConnectionConfigurationSchema,
   type ModelConnection,
   type ModelConnectionConfiguration,
-  type ModelConnectionTestCode,
+  type ModelConnectionTestResult,
 } from "@raypx/core/model-connections";
 import type { SpaceMembership, OfferedModel } from "./port.js";
 
@@ -17,7 +17,7 @@ export interface ModelConnectionsPort {
     input: { id: string; connection: ModelConnectionConfiguration; secret?: string },
   ): Promise<ModelConnection>;
   delete(this: void, input: { id: string }): Promise<{ deleted: true }>;
-  test(this: void, input: { id: string }): Promise<{ code: ModelConnectionTestCode }>;
+  test(this: void, input: { id: string }): Promise<ModelConnectionTestResult>;
 }
 export interface ModelConnectionDraft {
   name: string;
@@ -80,7 +80,7 @@ interface ModelConnectionsView {
   loading: boolean;
   busy: string | null;
   error: "load" | "save" | "delete" | null;
-  testResults: Readonly<Record<string, ModelConnectionTestCode>>;
+  testResults: Readonly<Partial<Record<string, ModelConnectionTestResult>>>;
 }
 export class ModelConnectionsController {
   private view: ModelConnectionsView = {
@@ -156,13 +156,13 @@ export class ModelConnectionsController {
   async test(id: string) {
     if (this.disposed || this.view.busy) return;
     this.update({ busy: id, error: null });
-    let code: ModelConnectionTestCode = "REQUEST_FAILED";
+    let result: ModelConnectionTestResult;
     try {
-      code = (await this.port.test({ id })).code;
+      result = await this.port.test({ id });
     } catch {
-      /* Only the public outcome code enters view state. */
+      result = { code: "REQUEST_FAILED" };
     }
-    this.update({ testResults: { ...this.view.testResults, [id]: code }, busy: null });
+    this.update({ testResults: { ...this.view.testResults, [id]: result }, busy: null });
   }
   dispose() {
     this.disposed = true;

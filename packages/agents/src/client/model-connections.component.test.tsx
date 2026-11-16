@@ -52,16 +52,26 @@ async function mount(language: "en" | "zh" = "en") {
   return { controller, port };
 }
 it.each(["en", "zh"] as const)(
-  "lists connections and reports plain test outcomes in %s",
+  "lists connections and reports test diagnostics in %s",
   async (language) => {
-    await mount(language);
+    const { port } = await mount(language);
+    vi.mocked(port.test).mockResolvedValueOnce({
+      code: "AUTHENTICATION_FAILED",
+      providerCode: "1002",
+      providerRequestId: "glm-request-1",
+    });
     expect(screen.getByText("Personal")).toBeInTheDocument();
     expect(screen.getByText("model-one")).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: language === "en" ? "Test Personal" : "测试 Personal" }),
     );
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      language === "en" ? "Authentication failed" : "身份验证失败",
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent(language === "en" ? "Authentication failed" : "身份验证失败");
+    expect(status).toHaveTextContent(
+      language === "en" ? "Provider error code 1002" : "上游错误码 1002",
+    );
+    expect(status).toHaveTextContent(
+      language === "en" ? "Provider request ID glm-request-1" : "上游请求 ID glm-request-1",
     );
   },
 );

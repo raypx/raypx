@@ -102,7 +102,7 @@ async function fixture() {
         throw new Error("Unexpected model call");
       },
     })),
-    test: vi.fn<ConnectionTransport["test"]>(async () => "SUCCEEDED"),
+    test: vi.fn<ConnectionTransport["test"]>(async () => ({ code: "SUCCEEDED" })),
     close: vi.fn(),
   };
   const service = createModelConnections(repository, secrets, transport);
@@ -245,6 +245,13 @@ it("encrypts write-only credentials and preserves or replaces them through owner
     "chat-main",
     replacementSecret,
   );
+  const diagnostics = {
+    code: "AUTHENTICATION_FAILED",
+    providerCode: "1002",
+    providerRequestId: "glm-request-1",
+  } as const;
+  vi.mocked(f.transport.test).mockResolvedValueOnce(diagnostics);
+  expect(await f.ownerClient.modelConnections.test({ id: created.id })).toEqual(diagnostics);
   vi.mocked(f.transport.test).mockRejectedValueOnce(new Error(secret));
   const failedTest = await f.ownerClient.modelConnections.test({ id: created.id });
   expect(failedTest).toEqual({ code: "REQUEST_FAILED" });

@@ -18,7 +18,16 @@ export interface AiSelection {
 }
 export type AiRequestOptions = Pick<
   SimpleStreamOptions,
-  "signal" | "apiKey" | "env" | "headers" | "maxTokens" | "temperature" | "reasoning" | "sessionId"
+  | "signal"
+  | "apiKey"
+  | "env"
+  | "headers"
+  | "maxTokens"
+  | "temperature"
+  | "reasoning"
+  | "sessionId"
+  | "fetch"
+  | "onProviderStreamEvent"
 > &
   (
     | { timeoutMs?: number; timeoutMode?: never }
