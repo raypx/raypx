@@ -1,0 +1,66 @@
+packages/contracts/src/config.ts
+  s_e8793b91e4301c::t_53d1a6eaed5809 111-112
+apps/web/src/features/config/config.component.test.tsx
+  s_e8793b91e4301c::t_75d083ad72c2f7 235-261
+apps/api/AGENTS.md
+  s_e8793b91e4301c::t_33c53c35716722 68
+infra/sandbox/AGENTS.md
+  s_e8793b91e4301c::t_33c53c35716722 17
+apps/api/src/config/sandbox.ts
+  s_e8793b91e4301c::t_75d083ad72c2f7 74-77,130
+  s_e8793b91e4301c::t_53d1a6eaed5809 10,53,55,73,78-79,129,133,171
+infra/sandbox/Computer.Dockerfile
+  s_e8793b91e4301c::t_0e71bdbcc3bea7 13
+docs/development/sandbox.md
+  s_e8793b91e4301c::t_33c53c35716722 200-218,224-226
+packages/dev-cli/src/verification/plan.test.ts
+  s_e8793b91e4301c::t_0e71bdbcc3bea7 691
+docs/architecture/computers.md
+  s_e8793b91e4301c::t_33c53c35716722 101-102
+apps/api/src/routers/rpc/config.ts
+  s_e8793b91e4301c::t_53d1a6eaed5809 74-76
+apps/web/src/features/config/components/sandbox.tsx
+  s_e8793b91e4301c::t_75d083ad72c2f7 28-35
+  s_e8793b91e4301c::t_53d1a6eaed5809 22-27,36-39,124,162-167,220,314
+packages/providers/src/computer/e2b-guest/bootstrap.py
+  s_e8793b91e4301c::t_0e71bdbcc3bea7 1-14,21-64
+  s_e8793b91e4301c::t_33c53c35716722 15-20
+packages/providers/src/computer/e2b-guest/raw.d.ts
+  s_e8793b91e4301c::t_0e71bdbcc3bea7 1-4
+infra/sandbox/tests/home_test.py
+  s_e8793b91e4301c::t_0e71bdbcc3bea7 7
+packages/providers/src/computer/e2b.ts
+  s_e8793b91e4301c::t_33c53c35716722 24-25,127-128,146-147
+  s_e8793b91e4301c::t_0e71bdbcc3bea7 1,21-22,65,67,69,73-75,101-115,137-145,148-157,482,553-555
+  s_e8793b91e4301c::t_98c6a028e8373a 116
+packages/providers/AGENTS.md
+  s_e8793b91e4301c::t_33c53c35716722 49-51
+apps/web/locales/zh/site.json
+  s_e8793b91e4301c::t_53d1a6eaed5809 32-33
+docs/development/configuration.md
+  s_e8793b91e4301c::t_33c53c35716722 163-165,186,203
+apps/api/tests/postgres/node/e2b-computer.test.ts
+  s_e8793b91e4301c::t_6340da0bbee58d 6,12-16,26-27,52-53,59,86,89,93-95,97-99,103-121,156,166,182,196-197,201-207,209-218,221-222,270-271,284
+  s_e8793b91e4301c::t_33c53c35716722 96
+  s_e8793b91e4301c::t_75d083ad72c2f7 100-102
+apps/web/locales/en/site.json
+  s_e8793b91e4301c::t_53d1a6eaed5809 32-33
+packages/providers/src/computer/e2b-guest/sources.ts
+  s_e8793b91e4301c::t_6340da0bbee58d 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e705f565e4911ea9c3403e0fe9b24541c85d780d",
+  "prompts": {},
+  "sessions": {
+    "s_e8793b91e4301c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e356-e448-7f53-b257-f4d711618889",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
