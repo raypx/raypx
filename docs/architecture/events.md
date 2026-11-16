@@ -124,6 +124,11 @@ resubmit that cursor on reconnect. The server never sends an event at or below
 the supplied cursor. An event not yet applied/acknowledged remains replayable;
 there is no claim of exactly-once delivery across a lost ACK.
 
+Conversation and Space clients retry automatic reconnects after one second at
+first, then use exponential backoff with jitter capped at 30 seconds. A stream
+that stays ready for 30 seconds resets the delay. Brief successful handshakes
+do not reset it.
+
 A `snapshot-required` frame carries the selected identifiers and current cursor,
 and releases that subscription. The client fetches and applies the snapshot, then
 subscribes using the snapshot's cursor. LISTEN hints wake database reads; a

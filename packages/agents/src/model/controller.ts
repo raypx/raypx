@@ -6,6 +6,7 @@ import type { ConversationHistoryCursor, RunId } from "@raypx/core/conversation"
 import type { ApprovalRequest, EffectiveApprovalMode } from "@raypx/core/approvals";
 import { ApprovalProjection, type ApprovalCardView } from "./approvals.js";
 import { ConversationState, type ConversationView } from "./conversation.js";
+import { StreamRetry } from "./stream-retry.js";
 import type { ComputerController } from "./computer.js";
 import {
   conversationDraftKey,
@@ -78,6 +79,7 @@ export class ConversationController {
   private readonly approvals: ApprovalProjection;
   private readonly listeners = new Set<() => void>();
   private readonly draftKey: string;
+  private readonly streamRetry = new StreamRetry();
   private view: ConversationControllerView;
   private socket: ConversationSocket | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -529,6 +531,7 @@ export class ConversationController {
   }
   private openSocket() {
     if (this.disposed || this.suspended) return;
+    this.streamRetry.opening();
     const generation = ++this.generation;
     this.timer = setTimeout(() => {
       if (!this.disposed && generation === this.generation) this.interrupted(false);
@@ -596,6 +599,7 @@ export class ConversationController {
         after: this.view.cursor,
       });
       if (subscribed) {
+        this.streamRetry.ready();
         this.update({ connection: "live", error: null });
         void this.options.computer?.refresh();
         void this.refreshApprovals();
@@ -684,7 +688,7 @@ export class ConversationController {
       this.timer = setTimeout(() => {
         this.timer = undefined;
         if (!this.disposed) this.openSocket();
-      }, 1_000);
+      }, this.streamRetry.nextDelay());
   }
   reconnect() {
     if (this.disposed || this.suspended) return;

@@ -1,5 +1,6 @@
 import type { SpaceEvent, SpaceId } from "@raypx/core/spaces";
 import type { ConversationSocket, ConversationSocketPort, SpaceMembership } from "./port.js";
+import { StreamRetry } from "./stream-retry.js";
 
 export type SpaceSubscriptionEnd =
   | "removed"
@@ -11,6 +12,7 @@ export type SpaceSubscriptionEnd =
 /** The stream carries invalidation, never admission. Reconcile against fresh membership. */
 export class SpaceLiveController {
   private socket: ConversationSocket | undefined;
+  private readonly streamRetry = new StreamRetry();
   private timer: ReturnType<typeof setTimeout> | undefined;
   private generation = 0;
   private readonly cursors = new Map<SpaceId, number>();
@@ -73,6 +75,7 @@ export class SpaceLiveController {
     if (this.disposed || this.exited || this.socket || this.connecting) return;
     clearTimeout(this.timer);
     this.timer = undefined;
+    this.streamRetry.opening();
     const generation = ++this.generation;
     this.pending = Promise.resolve();
     const interrupted = (code?: number, reason?: string) => {
@@ -89,13 +92,14 @@ export class SpaceLiveController {
       if (code === 4003 && reason && Object.hasOwn(reasons, reason)) {
         this.endReason = reasons[reason as keyof typeof reasons];
       }
+      const delay = this.streamRetry.nextDelay();
       const nextGeneration = ++this.generation;
       this.closeSocket();
       void this.reconcileAt(nextGeneration)
         .catch(() => {})
         .finally(() => {
           if (!this.current(nextGeneration)) return;
-          this.timer = setTimeout(() => this.start(), 1_000);
+          this.timer = setTimeout(() => this.start(), delay);
         });
     };
     // Access may have ended before the socket opens, or while a window was suspended.
@@ -113,6 +117,7 @@ export class SpaceLiveController {
                 if (!this.current(generation)) return;
                 this.ready = true;
                 this.syncSubscriptions();
+                this.streamRetry.ready();
               }
               if (
                 !this.ready ||

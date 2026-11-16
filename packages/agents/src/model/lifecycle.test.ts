@@ -183,6 +183,29 @@ describe("conversation platform lifecycle", () => {
     expect(h.connections).toHaveLength(2);
   });
 
+  it("backs off across brief handshakes and retries quickly after a stable connection", async () => {
+    vi.useFakeTimers();
+    const h = harness();
+    await h.controller.start();
+    h.connections[0]!.onError();
+    await vi.advanceTimersByTimeAsync(1_000);
+    h.connections[1]!.onFrame({ type: "ready", version: 1 });
+    h.connections[1]!.onFrame(event(1));
+    h.connections[1]!.onClose(1006);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(h.connections).toHaveLength(2);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(h.connections).toHaveLength(3);
+    h.connections[2]!.onFrame({ type: "ready", version: 1 });
+    expect(h.frames.at(-1)).toMatchObject({ type: "subscribe", after: 1 });
+
+    await vi.advanceTimersByTimeAsync(30_000);
+    h.connections[2]!.onClose(1006);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(h.connections).toHaveLength(4);
+    expect(h.port.snapshot).toHaveBeenCalledOnce();
+  });
+
   it("fences a snapshot finishing in background and reads a new one on foreground", async () => {
     const h = harness();
     let finish: (value: ConversationSnapshot) => void = () => {};

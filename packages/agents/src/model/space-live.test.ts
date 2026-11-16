@@ -201,6 +201,27 @@ it("reconnects after a transport failure from the last applied cursor", async ()
   expect(h.onEvent).toHaveBeenCalledOnce();
 });
 
+it("slows repeated handshake failures without retrying Space discovery during the wait", async () => {
+  vi.useFakeTimers();
+  const h = fixture();
+  h.controller.start();
+  h.connections[0]!.onError();
+  await settle();
+  await vi.advanceTimersByTimeAsync(1_000);
+  h.connections[1]!.onError();
+  await settle();
+  const discoveryReads = h.list.mock.calls.length;
+  await vi.advanceTimersByTimeAsync(1_000);
+  expect(h.connections).toHaveLength(2);
+  expect(h.list).toHaveBeenCalledTimes(discoveryReads);
+
+  await vi.advanceTimersByTimeAsync(1_000);
+  expect(h.connections).toHaveLength(3);
+  h.connections[2]!.onFrame({ type: "ready", version: 1 });
+  await settle();
+  expect(h.frames.at(-1)).toMatchObject({ type: "space.subscribe", spaceId });
+});
+
 it("uses fresh discovery to leave a deleted or removed Space during reconnection", async () => {
   vi.useFakeTimers();
   const h = fixture();
