@@ -1,0 +1,19 @@
+README.md
+  s_cd85a386717881::t_a194ea49f9fbfe 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0788b10fb6f6dfc91f0cccc1bd245010e84de89e",
+  "prompts": {},
+  "sessions": {
+    "s_cd85a386717881": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2b61512c-1a68-4774-aa9b-046afd794c14",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
