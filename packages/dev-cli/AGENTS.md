@@ -66,6 +66,9 @@ remaining journey arguments pass through to Playwright.
 - Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 - Keep reusable mechanics in `src/repo/` free of Raypx package names and paths.
 - Reusable validation lives in `src/validation/`; `.artifacts/` holds generated evidence only.
+  deployment:smoke also probes public ingress without credentials; --local-production
+  consumes prepared artifacts and an explicit disposable loopback database, starts
+  two owned proxies and runs the Web public-origin browser acceptance.
 - Keep the i18n runtime out of the dependency closure; ICU comparison uses the dev
   catalog's parser.
 - Unit tests live beside source; integration tests in `tests/integration/`; shared

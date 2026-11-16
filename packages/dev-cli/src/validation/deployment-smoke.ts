@@ -1,6 +1,9 @@
 import { chmod, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { deploymentServices } from "@raypx/tooling/build/deployment";
+import { parseArgs } from "node:util";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+import { apiIngress, deploymentServices } from "@raypx/tooling/build/deployment";
 import { releaseMetadataFile } from "@raypx/tooling/build/release";
 import { checkApi, checkWeb, checkDeploymentSession } from "../smoke/checks.js";
 import { Evidence } from "./evidence.js";
@@ -66,6 +69,25 @@ async function untilReady(evidence: Evidence, probe: () => Promise<boolean>) {
 
 /** Build and exercise owned local images only; no operator env files, databases or accounts. */
 export async function smokeDeployment(root: string, args: string[]) {
+  if (args.includes("--local-production")) {
+    const { smokeLocalProduction } = await import("./deployment-production.js");
+    return smokeLocalProduction(
+      root,
+      args.filter((arg) => arg !== "--local-production"),
+    );
+  }
+  if (args.includes("--public-url")) {
+    const { values } = parseArgs({
+      args,
+      strict: true,
+      options: {
+        "public-url": { type: "string" },
+        "api-public-url": { type: "string" },
+      },
+    });
+    if (!values["public-url"]) throw new Error("--public-url requires an exact public origin");
+    return smokePublicDeployment(values["public-url"], values["api-public-url"]);
+  }
   const platform = deploymentSmokePlatform(args);
   const id = crypto.randomUUID().replaceAll("-", "").slice(0, 12);
   const project = `raypx-deployment-${id}`,
@@ -455,4 +477,151 @@ export async function smokeDeployment(root: string, args: string[]) {
       );
     if (failed) throw failure;
   });
+}
+
+function smokeOrigin(value: string) {
+  if (!/^https?:\/\/[^/?#\\\s@*]+$/.test(value))
+    throw new Error(
+      "Deployment smoke requires an exact HTTP(S) origin without credentials or a path",
+    );
+  return new URL(value).origin;
+}
+
+/** A real HTTP/1.1 WebSocket handshake; rejected upgrades keep their HTTP headers. */
+export function deploymentUpgrade(url: string, headers: Record<string, string> = {}) {
+  return new Promise<{ status: number; headers: Headers }>((resolve, reject) => {
+    const request = (url.startsWith("https:") ? httpsRequest : httpRequest)(url, {
+      method: "GET",
+      agent: false,
+      headers: {
+        connection: "Upgrade",
+        upgrade: "websocket",
+        "sec-websocket-version": "13",
+        "sec-websocket-key": Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString(
+          "base64",
+        ),
+        ...headers,
+      },
+    });
+    const finish = (status: number | undefined, raw: import("node:http").IncomingHttpHeaders) => {
+      const result = new Headers();
+      for (const [name, value] of Object.entries(raw))
+        if (value !== undefined) result.set(name, Array.isArray(value) ? value.join(", ") : value);
+      resolve({ status: status ?? 0, headers: result });
+    };
+    request.on("response", (response) => {
+      finish(response.statusCode, response.headers);
+      response.resume();
+    });
+    request.on("upgrade", (response, socket) => {
+      finish(response.statusCode, response.headers);
+      socket.destroy();
+    });
+    request.on("error", reject);
+    request.setTimeout(5_000, () => request.destroy(new Error("WebSocket probe timed out")));
+    request.end();
+  });
+}
+
+/** Credential-free probes for an already deployed public ingress. No provisioning or writes. */
+export async function smokePublicDeployment(
+  publicUrl: string,
+  apiPublicUrl?: string,
+  report: (message: string) => void = console.log,
+) {
+  const web = smokeOrigin(publicUrl),
+    api = smokeOrigin(apiPublicUrl || publicUrl);
+  const failures: string[] = [];
+  async function check(name: string, probe: () => Promise<void>) {
+    try {
+      await probe();
+      report(`PASS ${name}`);
+    } catch (error) {
+      const detail =
+        error instanceof Error ? error.message.replace(/[\r\n]+/g, " ") : "request failed";
+      const message = `FAIL ${name}: ${detail}`;
+      failures.push(message);
+      report(message);
+    }
+  }
+  const read = (url: string) =>
+    fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5_000) });
+  function identity(response: { headers: Headers }, service: "api" | "web") {
+    if (response.headers.get("x-raypx-service") !== service)
+      throw new Error(`missing x-raypx-service: ${service}; check ingress forwarding`);
+  }
+  function status(actual: number, expected: number) {
+    if (actual !== expected) throw new Error(`expected HTTP ${expected}, received ${actual}`);
+  }
+  await check("web-root", async () => {
+    const response = await read(web + "/");
+    identity(response, "web");
+    status(response.status, 200);
+    const body = await response.text();
+    const bootstrap = /window\.__RAYPX_PUBLIC_CONFIG__=(\{[^<]*?\})(?:;|<)/.exec(body)?.[1];
+    if (!bootstrap) throw new Error("missing Web runtime public configuration");
+    const configured = (JSON.parse(bootstrap) as { API_PUBLIC_URL?: string }).API_PUBLIC_URL;
+    if ((configured || web) !== api)
+      throw new Error(
+        "Web API_PUBLIC_URL disagrees with --api-public-url; configure the same API_PUBLIC_URL on both services",
+      );
+  });
+  for (const prefix of apiIngress.prefixes) {
+    await check(`api-ingress:${prefix}`, async () => {
+      const path =
+        prefix === "/page-content/"
+          ? `${prefix}public/deployment-smoke-missing`
+          : `${prefix}deployment-smoke-missing`;
+      const response = await read(api + path);
+      identity(response, "api");
+      if (response.status >= 500) throw new Error(`API returned HTTP ${response.status}`);
+      await response.body?.cancel();
+    });
+  }
+  for (const path of apiIngress.paths) {
+    await check(`api-ingress:${path}`, async () => {
+      const response = await read(api + path);
+      identity(response, "api");
+      if (path === "/health" || path === "/ready") status(response.status, 200);
+      else if (response.status >= 500) throw new Error(`API returned HTTP ${response.status}`);
+      await response.body?.cancel();
+    });
+  }
+  await check("events-public-origin", async () => {
+    const response = await deploymentUpgrade(api + "/events", { origin: web });
+    identity(response, "api");
+    status(response.status, 401);
+  });
+  await check("events-foreign-origin", async () => {
+    const response = await deploymentUpgrade(api + "/events", {
+      origin: "https://deployment-smoke-foreign.invalid",
+    });
+    identity(response, "api");
+    status(response.status, 403);
+  });
+  await check("page-embedding", async () => {
+    const response = await read(api + "/page-content/public/deployment-smoke-missing");
+    identity(response, "api");
+    status(response.status, 404);
+    const policy = response.headers.get("content-security-policy") ?? "";
+    const ancestors = /(?:^|;)\s*frame-ancestors\s+([^;]+)/i.exec(policy)?.[1]?.split(/\s+/);
+    if (!ancestors?.includes(web))
+      throw new Error("Page frame-ancestors does not include the public Web origin");
+    if (response.headers.has("x-frame-options"))
+      throw new Error("Page response has a conflicting X-Frame-Options header");
+    await response.body?.cancel();
+  });
+  await check("device-connect", async () => {
+    const response = await deploymentUpgrade(api + "/device/connect");
+    identity(response, "api");
+    status(response.status, 401);
+  });
+  await check("device-cookie-stripping", async () => {
+    const response = await deploymentUpgrade(api + "/device/connect", {
+      cookie: "raypx-smoke=synthetic",
+    });
+    identity(response, "api");
+    status(response.status, 401);
+  });
+  if (failures.length) throw new Error(`Deployment smoke failed (${failures.length} checks)`);
 }

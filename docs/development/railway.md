@@ -268,6 +268,7 @@ The Web artifact follows its served origin. API still requires the matching
 PUBLIC_URL configuration and restart. For split origins, set the same runtime
 API_PUBLIC_URL on Web and API, with covering AUTH_DOMAIN and passkey RP ID.
 Remove the retired Web build/runtime input during the image/environment cutover.
+Run the [public smoke](deployment.md#credential-free-public-smoke) after deployment.
 
 ## Sandbox connection from a PaaS
 

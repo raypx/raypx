@@ -54,6 +54,7 @@
     "ioredis": "catalog:",
     "lodash-es": "catalog:",
     "nitro": "catalog:",
+    "tldts": "catalog:",
     "unstorage": "catalog:",
     "zod": "catalog:"
   },

@@ -1,0 +1,40 @@
+name: Pre-release deployment smoke
+on:
+  workflow_dispatch:
+    inputs:
+      public_url:
+        description: Public origin (empty uses PRERELEASE_PUBLIC_URL repository variable)
+        type: string
+        required: false
+      api_public_url:
+        description: Separate API origin (empty uses PRERELEASE_API_PUBLIC_URL repository variable)
+        type: string
+        required: false
+  schedule:
+    - cron: "23 */2 * * *"
+permissions:
+  contents: read
+concurrency:
+  group: prerelease-deployment-smoke
+  cancel-in-progress: false
+jobs:
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || vars.PRERELEASE_PUBLIC_URL != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: next
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile --production --filter '@raypx/dev-cli' --ignore-scripts
+      - name: Probe the deployed public ingress
+        env:
+          PUBLIC_URL: ${{ inputs.public_url || vars.PRERELEASE_PUBLIC_URL }}
+          API_PUBLIC_URL: ${{ inputs.api_public_url || vars.PRERELEASE_API_PUBLIC_URL }}
+        run: |
+          args=(--public-url "$PUBLIC_URL")
+          if [ -n "$API_PUBLIC_URL" ]; then args+=(--api-public-url "$API_PUBLIC_URL"); fi
+          bun run smoke:deployment "${args[@]}"

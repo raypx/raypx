@@ -1,4 +1,8 @@
-import { derivePublicAddress, rejectRetiredOriginInputs } from "./public-address.js";
+import {
+  derivePublicAddress,
+  rejectRetiredOriginInputs,
+  validatePublicAddressSecurity,
+} from "./public-address.js";
 import { defineEnv, type Preset, z } from "@raypx/env";
 import type apiEnvironmentSources from "./env.contract.js";
 function computerLimit(fallback: string) {
@@ -97,6 +101,7 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
   rejectRetiredOriginInputs(runtimeEnv);
   const env = defineEnv({ extends: [apiServerEnv], runtimeEnv, isServer: true });
   const address = derivePublicAddress(env, runtimeEnv);
+  validatePublicAddressSecurity(address, env);
   validateRunTiming(env);
   if (Boolean(env.ROUTINE_EMAIL_RELAY_TOKEN) !== Boolean(env.ROUTINE_EMAIL_DOMAIN))
     throw new Error("Routine email requires ROUTINE_EMAIL_RELAY_TOKEN and ROUTINE_EMAIL_DOMAIN");

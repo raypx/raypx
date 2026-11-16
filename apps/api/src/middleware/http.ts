@@ -43,6 +43,7 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
       await next();
     } finally {
       c.header("x-request-id", requestId);
+      c.header("x-raypx-service", "api");
       // CORS preflights and non-RPC requests finish here. The RPC plugin owns
       // matched and unmatched RPC requests, including their errors.
       if (!c.get("rpcLogged")) {

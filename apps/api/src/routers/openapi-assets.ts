@@ -4,6 +4,7 @@ import { getServerRole } from "../env.js";
 import { openApiAssets, openApiAssetsPath, openApiAssetStorage } from "./openapi-paths.js";
 
 export default defineHandler(async (event) => {
+  event.res.headers.set("x-raypx-service", "api");
   if (event.req.headers.get("upgrade")?.toLowerCase() === "websocket") {
     const rejected = new Response(null, { status: 404 });
     setWebSocketHooks(event.req, { upgrade: () => rejected });

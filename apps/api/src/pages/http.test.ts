@@ -192,7 +192,13 @@ it.each(["document", "html"] as const)(
       for (const origin of [oldOrigin, "https://new.example.test"]) {
         const environment = getApiEnvironment({
           PUBLIC_URL: origin,
-          ...(apiOrigin ? { API_PUBLIC_URL: apiOrigin } : {}),
+          ...(apiOrigin
+            ? {
+                API_PUBLIC_URL: apiOrigin,
+                AUTH_DOMAIN: "example.test",
+                AUTH_PASSKEY_RP_ID: "example.test",
+              }
+            : {}),
         });
         const page = fixture(kind);
         const session = conversationFixture();

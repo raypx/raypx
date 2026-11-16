@@ -35,6 +35,8 @@ for (const parse of [getApiEnvironment, getRelayEnvironment, getWorkerEnvironmen
       ...production,
       PUBLIC_URL: "https://WEB.example.test:443",
       API_PUBLIC_URL: "https://api.example.test",
+      AUTH_DOMAIN: "example.test",
+      AUTH_PASSKEY_RP_ID: "example.test",
       EXTRA_ALLOWED_ORIGINS: ` https://extra.example.test,https://web.example.test,${nativeClientOrigins.desktop},${nativeClientOrigins.mobile},https://extra.example.test:443, `,
     });
     expect(environment.publicWebOrigin).toBe(production.PUBLIC_URL);
@@ -115,6 +117,8 @@ it("sets authentication and its passkey RP source to the API origin in split dep
   const environment = getApiEnvironment({
     ...production,
     API_PUBLIC_URL: "https://api.example.test",
+    AUTH_DOMAIN: "example.test",
+    AUTH_PASSKEY_RP_ID: "example.test",
   });
   expect(createAuthConfig(environment)).toMatchObject({
     baseURL: "https://api.example.test",
@@ -124,4 +128,79 @@ it("sets authentication and its passkey RP source to the API origin in split dep
       ...Object.values(nativeClientOrigins),
     ],
   });
+});
+
+it.each(["other.example.test", "test", "com", "co.uk", "example.test.other"])(
+  "rejects an unrelated or non-registrable passkey RP ID",
+  (rp) => {
+    expect(() => getApiEnvironment({ ...production, AUTH_PASSKEY_RP_ID: rp })).toThrow(
+      "AUTH_PASSKEY_RP_ID",
+    );
+  },
+);
+it("accepts an explicit parent RP ID and cookie domain for split hosts", () => {
+  expect(
+    getApiEnvironment({
+      ...production,
+      API_PUBLIC_URL: "https://api.example.test",
+      AUTH_PASSKEY_RP_ID: "example.test",
+      AUTH_DOMAIN: ".example.test",
+    }).publicApiOrigin,
+  ).toBe("https://api.example.test");
+});
+it("requires split Web/API sessions to cover both hosts", () => {
+  const split = {
+    ...production,
+    API_PUBLIC_URL: "https://api.example.test",
+    AUTH_PASSKEY_RP_ID: "example.test",
+  };
+  for (const domain of [
+    undefined,
+    "api.example.test",
+    "test",
+    "other.test",
+    "https://example.test",
+  ])
+    expect(() => getApiEnvironment({ ...split, AUTH_DOMAIN: domain })).toThrow("AUTH_DOMAIN");
+});
+it("requires a Web public address when declaring a production split API address", () => {
+  expect(() =>
+    getApiEnvironment({
+      ...production,
+      PUBLIC_URL: undefined,
+      API_PUBLIC_URL: "https://api.example.test",
+    }),
+  ).toThrow("PUBLIC_URL");
+});
+it.each(["https://0.0.0.0", "https://[::]", "https://255.255.255.255"])(
+  "rejects connector public endpoints that cannot identify a destination host",
+  (origin) => {
+    expect(() => getApiEnvironment({ ...production, API_PUBLIC_URL: origin })).toThrow(
+      /API_PUBLIC_URL.*device connectors/,
+    );
+  },
+);
+it("rejects a mixed scheme and a public suffix even when it matches both hosts", () => {
+  expect(() =>
+    getApiEnvironment({
+      PUBLIC_URL: "http://web.example.test",
+      API_PUBLIC_URL: "https://api.example.test",
+      AUTH_DOMAIN: "example.test",
+      AUTH_PASSKEY_RP_ID: "example.test",
+    }),
+  ).toThrow("same scheme");
+  expect(() =>
+    getApiEnvironment({
+      ...production,
+      PUBLIC_URL: "https://web.example.co.uk",
+      AUTH_PASSKEY_RP_ID: "co.uk",
+    }),
+  ).toThrow("AUTH_PASSKEY_RP_ID");
+  expect(() =>
+    getApiEnvironment({
+      ...production,
+      PUBLIC_URL: "https://web.example.co.uk",
+      AUTH_DOMAIN: "co.uk",
+    }),
+  ).toThrow("AUTH_DOMAIN");
 });

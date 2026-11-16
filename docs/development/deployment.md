@@ -135,9 +135,15 @@ Page reference and connector links use the effective request/API origin. Stored
 absolute Page references keep their existing format and exact origin/Space match.
 Desktop and Mobile retain their own selected origins.
 
-For separate Web/API hosts, configure `AUTH_DOMAIN` to cover both hosts for SSR
-cookies and select a passkey RP ID covering the Web hostname. Same-host development
-ports need neither setting. The default RP ID is the API hostname.
+Split hosts require a registrable `AUTH_DOMAIN` covering both hosts so SSR receives
+the session cookie, and `AUTH_PASSKEY_RP_ID` must be a registrable suffix of both
+public hosts. For sibling hosts, set both to their shared parent. Public suffixes
+such as `co.uk` are refused, including when they are a textual suffix. Same-host
+development ports require neither setting. The passkey default remains the API
+hostname. The API rejects mixed schemes and unspecified/broadcast connector hosts.
+All startup checks are local and make no network calls. Configuration on another
+service, DNS, certificate issuance and actual ingress routing are observable only
+after deployment.
 
 Delete `AUTH_URL` and `ALLOWED_ORIGINS` from API and all split role environments,
 including shared/group variables. Also delete `DEVICE_CONNECTOR_ORIGIN` if present;
@@ -161,7 +167,7 @@ For an existing hosted shared-origin deployment:
    environment cutover. Keep Web `API_PUBLIC_URL` absent on a shared origin; add no
    Web address variable. An older Web image already contains its compiled address,
    but rolling it back requires restoring its old build settings before rebuilding.
-5. Verify login, a real authenticated event
+5. Run the public smoke command below, then verify login, a real authenticated event
    socket and a Page preview. A later domain change updates API's `PUBLIC_URL`
    source/reference and restarts backend roles; the Web artifact needs no rebuild.
 
@@ -395,6 +401,58 @@ the real gateway. Owned temporary databases/containers/networks/images are remov
 The fixture is separately bundled and mounted read-only into the migration image;
 production images contain no synthetic provisioner. No operator resources are used.
 See [validation evidence](validation-artifacts.md).
+
+### Credential-free public smoke
+
+```sh
+bun run smoke:deployment --public-url https://app.example.com
+# Separate Web/API origins:
+bun run smoke:deployment --public-url https://app.example.com --api-public-url https://api.example.com
+```
+
+The command provisions nothing and uses no credentials. Every API ingress entry
+must return `x-raypx-service: api`, including 401/404 responses; Web root must return
+`x-raypx-service: web` and bootstrap the expected runtime API origin. These fixed
+headers contain no version or secret. API-owned 404 bodies/security headers survive
+the outer server. `events-public-origin` requires an unauthenticated upgrade to
+return 401, and `events-foreign-origin` requires 403. `page-embedding` checks the
+public Page route's **404 CSP**, which is observable without a session or share
+token; it requires the public Web origin in `frame-ancestors` and no conflicting
+X-Frame-Options. This does not establish authenticated Page rendering.
+`device-connect` requires a reachable unauthenticated upgrade.
+`device-cookie-stripping` sends a synthetic Cookie and still requires 401: the API
+refuses a Cookie that reaches `/device/connect`, making missing ingress stripping
+observable. Existing Authorization forwarding remains required. Each failure is a
+named single line and the command exits non-zero.
+
+The three field regressions are detected by `api-ingress:<prefix/path>`,
+`events-public-origin` and `page-embedding`, respectively. Login, authenticated
+sockets, mail and native acceptance remain separate checks.
+
+For local acceptance, prepare Web/API production outputs, then use only an
+explicit disposable loopback database:
+
+```sh
+bun run build:web
+bun run build:api
+bun run smoke:deployment --local-production --database-url postgres://raypx@127.0.0.1:55439/raypx_next_test_b
+```
+
+This starts owned production-artifact processes behind two local proxies, runs
+the public checks and API 404 regressions, and runs a browser hydration case against
+both origins. It records the unchanged Web artifact digest. No image rebuild,
+external deployment, database provisioning or account creation occurs. Both services run
+in production mode. The API has a synthetic HTTPS public identity and the two
+HTTP loopback ingresses as explicit extra origins; this is not public HTTPS acceptance.
+Web permits HTTP API origins only on loopback for prepared local acceptance.
+
+`.github/workflows/deployment-smoke.yml` checks out `next` and reads repository
+variables `PRERELEASE_PUBLIC_URL` and optional `PRERELEASE_API_PUBLIC_URL`. Manual
+dispatch may supply explicit URLs; the scheduled check runs every two hours when
+the public repository variable is configured. The platform deploys after CI and
+exposes no reliable deployment-complete trigger here, so a CI success is not used
+as a deployment signal. Dispatch after deployment; a scheduled run may observe an
+in-progress rollout. Scheduled workflows require the file on the default branch.
 
 Container/deployment inputs select this gate in CI. The images are temporary and
 never published. BuildKit progress streams to the CI job log. Only `results.json`

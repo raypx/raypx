@@ -14,6 +14,7 @@ import { defineConfig, loadEnv } from "vite-plus";
 // Pages render inline hydration and theme scripts, so CSP limits framing, plugins,
 // base URLs and form targets rather than script sources.
 const securityHeaders = {
+  "x-raypx-service": "web",
   "Content-Security-Policy":
     "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
   "X-Frame-Options": "DENY",

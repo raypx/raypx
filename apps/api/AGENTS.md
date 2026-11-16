@@ -25,7 +25,11 @@ tests import that build-only contract and check the composed route table. Update
 both static proxies when adding paths. /page-content owns its sandbox/CSP with
 frame-ancestors from the HTTP(S) trusted origins derived from PUBLIC_URL,
 API_PUBLIC_URL and EXTRA_ALLOWED_ORIGINS;
-Nitro must not add outer response header rules.
+Nitro must not add outer response header rules. The terminal H3 middleware must
+retain Hono 404 bodies/headers rather than falling through. Every API response,
+including upgrade rejections and assets, carries x-raypx-service: api. Public address
+startup checks are local; no DNS/provider probes. /device/connect refuses Cookies
+that reach the API, so ingress must strip them while preserving Authorization.
 
 The connector registry revalidates current account/Space grants and fences per
 operation. Split-process device routing requires the lazy private Redis broker;

@@ -1,3 +1,5 @@
+import { isIP } from "node:net";
+import { getDomain } from "tldts";
 import { nativeClientOrigins, normalizeTrustedOrigins } from "@raypx/core/auth";
 
 /** Messages contain setting names and rules only, never supplied values. */
@@ -27,6 +29,10 @@ function browserOrigin(value: string, key: string, httpsOnly: boolean) {
     if (!/^https?:\/\/[^/?#\\\s]+$/i.test(value) || value.includes("*") || value.includes("@"))
       throw new Error();
     const url = new URL(value);
+    if (["0.0.0.0", "[::]", "255.255.255.255"].includes(url.hostname))
+      throw new PublicAddressConfigurationError(
+        `${key} cannot use an unspecified or broadcast host; device connectors require a reachable public API origin`,
+      );
     if (
       url.username ||
       url.password ||
@@ -35,7 +41,8 @@ function browserOrigin(value: string, key: string, httpsOnly: boolean) {
     )
       throw new Error();
     return url.origin;
-  } catch {
+  } catch (error) {
+    if (error instanceof PublicAddressConfigurationError) throw error;
     throw new PublicAddressConfigurationError(
       `${key} must be an exact ${httpsOnly ? "HTTPS" : "HTTP(S)"} origin without a trailing slash, path, query, fragment, credentials or wildcard`,
     );
@@ -80,4 +87,45 @@ export function derivePublicAddress(
       ...extras,
     ]),
   };
+}
+
+/** Local consistency only: this performs no DNS, HTTP or provider calls. */
+export function validatePublicAddressSecurity(
+  address: { publicWebOrigin: string; publicApiOrigin: string },
+  environment: { AUTH_DOMAIN?: string | undefined; AUTH_PASSKEY_RP_ID?: string | undefined },
+) {
+  const web = new URL(address.publicWebOrigin);
+  const api = new URL(address.publicApiOrigin);
+  const covers = (host: string, domain: string) =>
+    host === domain || (!isIP(host) && host.endsWith(`.${domain}`));
+  const rp = environment.AUTH_PASSKEY_RP_ID || api.hostname;
+  if (
+    !covers(web.hostname, rp) ||
+    !covers(api.hostname, rp) ||
+    (!isIP(rp) && rp !== "localhost" && !getDomain(rp, { allowPrivateDomains: true }))
+  )
+    throw new PublicAddressConfigurationError(
+      "AUTH_PASSKEY_RP_ID must be a registrable domain suffix of both PUBLIC_URL and API_PUBLIC_URL hosts; set their shared parent domain for split origins",
+    );
+  const domain = environment.AUTH_DOMAIN?.replace(/^\./, "").toLowerCase();
+  if (
+    domain &&
+    (!/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/.test(domain) ||
+      !covers(web.hostname, domain) ||
+      !covers(api.hostname, domain) ||
+      (!isIP(domain) &&
+        domain !== "localhost" &&
+        !getDomain(domain, { allowPrivateDomains: true })))
+  )
+    throw new PublicAddressConfigurationError(
+      "AUTH_DOMAIN must be a registrable cookie domain covering both PUBLIC_URL and API_PUBLIC_URL hosts",
+    );
+  if (web.hostname !== api.hostname && !domain)
+    throw new PublicAddressConfigurationError(
+      "Split PUBLIC_URL and API_PUBLIC_URL hosts require AUTH_DOMAIN covering both hosts so Web SSR can receive the API session cookie",
+    );
+  if (web.protocol !== api.protocol)
+    throw new PublicAddressConfigurationError(
+      "PUBLIC_URL and API_PUBLIC_URL must use the same scheme for credentialed browser requests",
+    );
 }

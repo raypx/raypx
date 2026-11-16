@@ -177,8 +177,9 @@ const commands: Record<string, Command> = {
     },
   },
   "deployment:smoke": {
-    usage: "deployment:smoke [--platform linux/amd64|linux/arm64]",
-    summary: "Build and probe the container images",
+    usage:
+      "deployment:smoke [--platform linux/amd64|linux/arm64] | --public-url <origin> [--api-public-url <origin>]",
+    summary: "Probe a public deployment or build isolated container images",
     async run(args) {
       const { smokeDeployment } = await import("./validation/deployment-smoke.js");
       await smokeDeployment(root, args);

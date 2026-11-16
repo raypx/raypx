@@ -127,6 +127,11 @@ export function createDeviceConnectorRoutes(
   });
   app.get(DEVICE_CONNECTOR_PATHS.connect, async (c) => {
     const request = c.req.raw;
+    if (request.headers.has("cookie")) {
+      const denied = c.json({ error: "ACCESS_DENIED" }, 403);
+      setWebSocketHooks(request, { upgrade: () => denied });
+      return denied;
+    }
     const response = c.json({ error: "UPGRADE_REQUIRED" }, 426);
     if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") return response;
     let credential: string;

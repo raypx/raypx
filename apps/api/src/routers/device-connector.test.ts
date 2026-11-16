@@ -146,3 +146,11 @@ it("counts authenticated possession requests against both IP and credential quot
   expect(rateLimit.mock.calls[0]?.[0]).toContain("device-connector:ip:");
   expect(rateLimit.mock.calls[1]?.[0]).toContain("device-connector:credential:");
 });
+it("refuses Cookie headers at the connector upgrade boundary before possession", async () => {
+  const f = fixture();
+  const response = await f.app.request("/device/connect", {
+    headers: { upgrade: "websocket", cookie: "synthetic=must-be-stripped" },
+  });
+  expect(response.status).toBe(403);
+  expect(f.authenticate).not.toHaveBeenCalled();
+});

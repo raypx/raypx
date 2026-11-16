@@ -72,6 +72,8 @@ it("shares the derived public API origin across device roles without reading aut
   const input = {
     PUBLIC_URL: "https://web.example.test",
     API_PUBLIC_URL: "https://api.example.test",
+    AUTH_DOMAIN: "example.test",
+    AUTH_PASSKEY_RP_ID: "example.test",
   };
   expect(getWorkerEnvironment(input).publicApiOrigin).toBe(input.API_PUBLIC_URL);
   expect(
