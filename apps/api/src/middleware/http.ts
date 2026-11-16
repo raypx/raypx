@@ -43,6 +43,7 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
     } finally {
       c.header("x-request-id", requestId);
       c.header("x-raypx-service", "api");
+      c.header("x-raypx-revision", process.env.RAYPX_BUILD_REVISION ?? "development");
       // CORS preflights and non-RPC requests finish here. The RPC plugin owns
       // matched and unmatched RPC requests, including their errors.
       if (!c.get("rpcLogged")) {
@@ -82,7 +83,13 @@ export function registerApiMiddleware(app: Hono<ApiRouterEnv>, options: ApiAppOp
         "X-Raypx-Setup-Token",
         "X-Raypx-Invitation",
       ],
-      exposeHeaders: ["X-Request-Id", "Retry-After", "X-Retry-After"],
+      exposeHeaders: [
+        "X-Request-Id",
+        "Retry-After",
+        "X-Retry-After",
+        "X-Raypx-Service",
+        "X-Raypx-Revision",
+      ],
       // Every JSON RPC call is preflighted; let browsers reuse the answer for ten minutes.
       maxAge: 600,
     }),

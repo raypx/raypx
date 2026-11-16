@@ -5,6 +5,7 @@ import { analyticsBuild } from "@raypx/tooling/build/analytics";
 import { startEnvironment } from "@raypx/tooling/build/start-env";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
 import { deploymentServices } from "@raypx/tooling/build/deployment";
+import { resolveRelease } from "@raypx/tooling/build/release";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
@@ -27,6 +28,7 @@ const securityHeaders = {
 export default defineConfig(() => {
   validateWebEnvironment(process.env);
   const analytics = analyticsBuild("web");
+  const revision = resolveRelease(process.cwd(), process.env);
   return {
     devtools: { apply: "serve", embeddedVisibility: "passive" },
     define: analytics.define,
@@ -46,7 +48,7 @@ export default defineConfig(() => {
         ...nitroTarget(),
         plugins: ["./src/runtime/plugin.ts"],
         routeRules: {
-          "/**": { headers: securityHeaders },
+          "/**": { headers: { ...securityHeaders, "x-raypx-revision": revision } },
           "/manifest.webmanifest": { headers: { "Cache-Control": "no-cache" } },
           "/sw.js": { headers: { "Cache-Control": "no-cache" } },
         },

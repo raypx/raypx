@@ -4,6 +4,10 @@ import { accessForRole, type AccountRole } from "@raypx/account/access";
 import { web } from "./surfaces.js";
 
 export async function authResponse(route: Route, body: unknown, status = 200) {
+  if (status === 200 && route.request().url().endsWith("/configuration/public")) {
+    const value = body as { json?: Record<string, unknown> };
+    if (value?.json) body = { ...value, json: { ingressVersion: 1, ...value.json } };
+  }
   await route.fulfill({
     status,
     contentType: "application/json",

@@ -8,12 +8,16 @@ import {
 } from "./src/routers/openapi-paths.js";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
 import { deploymentServices } from "@raypx/tooling/build/deployment";
+import { resolveRelease } from "@raypx/tooling/build/release";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite-plus";
 
 const handler = "./src/app/server.ts";
 const swaggerDir = swaggerPackage.getAbsoluteFSPath();
 export default defineConfig({
+  define: {
+    "process.env.RAYPX_BUILD_REVISION": JSON.stringify(resolveRelease(process.cwd(), process.env)),
+  },
   resolve: { tsconfigPaths: true },
   plugins: [
     nitro({

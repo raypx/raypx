@@ -26,12 +26,15 @@ export const configurationUpdateSchema = z.strictObject({
   values: configurationValuesSchema,
   revision: z.number().int().nonnegative(),
 });
+/** Increment only for a breaking ingress/client bootstrap contract change. */
+export const apiIngressVersion = 1;
 export const publicConfigurationSchema = configurationValuesSchema
   .pick({
     siteName: true,
     registrationEnabled: true,
   })
   .extend({
+    ingressVersion: z.number().int().positive(),
     bootstrap: z.boolean(),
     setupTokenRequired: z.boolean(),
     mailConfigured: z.boolean(),

@@ -220,3 +220,8 @@ Harmless schema/table-exists NOTICEs are suppressed only on migration connection
 Lock acquisition remains bounded to 120 seconds and DDL lock waits to ten seconds;
 connection establishment is bounded to five seconds. Both explicit pre-deploy and
 startup use these diagnostics and the same transaction-scoped lock.
+
+API and Web publish their immutable build in `x-raypx-revision`; gateway adds its
+own `x-raypx-gateway-revision` to forwarded responses. Public deployment smoke
+requires all three to agree. Public configuration's `ingressVersion` lets Web
+show one updating state and automatically recover from an incompatible API.

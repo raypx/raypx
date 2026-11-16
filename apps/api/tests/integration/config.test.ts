@@ -97,6 +97,7 @@ describe("administrator configuration", () => {
     const publicConfig = await f.app.request("/api/v1/configuration");
     expect(publicConfig.status).toBe(200);
     expect(await publicConfig.json()).toEqual({
+      ingressVersion: 1,
       siteName: configurationDefaults.siteName,
       registrationEnabled: configurationDefaults.registrationEnabled,
       bootstrap: false,
@@ -279,6 +280,7 @@ describe("administrator configuration", () => {
     });
     f.setAuth(null);
     expect(await f.client().public({})).toEqual({
+      ingressVersion: 1,
       siteName: "My workspace",
       registrationEnabled: false,
       bootstrap: false,

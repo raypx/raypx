@@ -442,8 +442,11 @@ bun run smoke:deployment --public-url https://app.example.com --api-public-url h
 
 The command provisions nothing and uses no credentials. The API prefix and each root exception
 must return `x-raypx-service: api`, including 401/404 responses; Web root must return
-`x-raypx-service: web` and bootstrap the expected runtime API origin. These fixed
-headers contain no version or secret. API-owned 404 bodies/security headers survive
+`x-raypx-service: web` and bootstrap the expected runtime API origin. Public `x-raypx-revision` identifies each immutable API/Web build. Gateway adds
+`x-raypx-gateway-revision` without replacing upstream identity/security headers.
+`service-revisions` requires all three values to exist and match; failures name
+API, Web and gateway values. For this source-available project publishing the
+source revision is acceptable; no secrets or dependency versions are included. API-owned 404 bodies/security headers survive
 the outer server. `events-public-origin` requires an unauthenticated upgrade to
 return 401, and `events-foreign-origin` requires 403. The matching
 `events-sse-public-origin` and `events-sse-foreign-origin` checks require the same
@@ -560,3 +563,21 @@ to API/worker/Relay. Redis carries device frames, while Run leases/checkpoints
 remain PostgreSQL-only. Compose derives the common public origin from APP_HOST;
 other deployments must set split-role public-address inputs together.
 No listener or inbound connection to the member machine is required.
+
+### Detecting partial rollouts
+
+Use the same immutable release identifier for API, Web and gateway builds. Railway
+builds use `RAILWAY_GIT_COMMIT_SHA`; local/container builds can explicitly supply
+`VITE_APP_RELEASE`. These values are embedded at build time, so restarting an old
+image with a new runtime variable cannot make it appear current. Public smoke
+requires all three revisions, including the static gateway image's own revision.
+A direct API/Web pair without the gateway is not a passing three-service deployment.
+The local production probe supplies the proxy revision from the prepared Web artifact.
+
+Public configuration declares `ingressVersion`. Increment it for a breaking ingress
+or bootstrap contract change. Web compares it with its compiled contract and shows
+one updating state when absent, different or when the bootstrap procedure is absent.
+It preserves mounted drafts and retries the existing public read automatically; a
+compatible response restores the workspace without a reload. This guard cannot
+retrofit an already deployed older client that predates it. Equal ingress versions
+do not prove equal releases; public revision smoke is the deployment check.

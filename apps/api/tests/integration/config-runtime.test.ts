@@ -90,6 +90,7 @@ it("scopes injected repositories to each runtime and shares the service with HTT
       fetch: async (input, init) => first.app.fetch(new Request(input, init)),
     });
     expect(await client.configuration.public({})).toEqual({
+      ingressVersion: 1,
       siteName: "First runtime",
       registrationEnabled: true,
       bootstrap: true,

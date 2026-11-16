@@ -20,6 +20,7 @@ import appCss from "../styles.css?url";
 import { Button } from "@raypx/ui/components/ui/button";
 import { EmptyState } from "@raypx/ui/empty-state";
 import { FileTextIcon } from "@raypx/icons/file-text";
+import { DeploymentBoundary } from "../features/config/deployment-boundary.js";
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import("@raypx/devtools").then((module) => ({ default: module.DevtoolsBridge })))
@@ -107,7 +108,7 @@ function RootDocument({ children }: { children: ReactNode }) {
             initialSystemLocales={preferences.systemLocales}
           >
             <AppAnalytics>
-              {children}
+              <DeploymentBoundary>{children}</DeploymentBoundary>
               {Devtools && (
                 <ClientOnly fallback={null}>
                   <Suspense fallback={null}>

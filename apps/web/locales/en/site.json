@@ -1,4 +1,6 @@
 {
+  "deploymentUpdating": "This deployment is being updated",
+  "deploymentRecovery": "Reconnecting automatically…",
   "unavailableTitle": "Registration unavailable",
   "registrationUnavailable": "Couldn't check whether registration is open. Try again in a moment.",
   "checkingRegistration": "Checking registration availability…",

@@ -16,7 +16,10 @@ it("matches exactly the shared API ingress and preserves upstream response heade
   expect(caddy).toMatch(/handle @api\s*\{\s*reverse_proxy \{\$API_UPSTREAM\}/);
   expect(caddy).toMatch(/handle\s*\{\s*reverse_proxy \{\$WEB_UPSTREAM\}/);
   // Response headers, including the Page sandbox/CSP, belong to the upstream.
-  expect(caddy).not.toMatch(/^\s*(?:header|header_down)\b/m);
+  expect(caddy).toContain('header X-Raypx-Gateway-Revision "__RAYPX_BUILD_REVISION__"');
+  expect(caddy.replace(/^\s*header X-Raypx-Gateway-Revision.*$/m, "")).not.toMatch(
+    /^\s*(?:header|header_down)\b/m,
+  );
   expect(caddy).toContain(`@relay path ${relayIngress.paths.join(" ")}`);
   expect(caddy).toMatch(
     /handle @relay\s*\{\s*reverse_proxy \{\$API_UPSTREAM\}\s*\{\s*header_up -Cookie\s*\}/,

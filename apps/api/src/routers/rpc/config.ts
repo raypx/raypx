@@ -1,4 +1,5 @@
 import { ConfigError } from "../../config/service.js";
+import { apiIngressVersion } from "@raypx/contracts/api";
 import type { ConfigService } from "../../config/types.js";
 import type { RpcContext } from "../../middleware/rpc.js";
 import { ORPCError } from "@orpc/server";
@@ -50,6 +51,7 @@ export function createConfigHandlers({
       configurationCall(context, async (service) => {
         const { values } = await service.readCached();
         return {
+          ingressVersion: apiIngressVersion,
           siteName: values.siteName,
           registrationEnabled: values.registrationEnabled,
           ...(options.registration

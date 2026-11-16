@@ -230,7 +230,7 @@ export async function smokeDeployment(root: string, args: string[]) {
       for (const [label, file, image, buildArgs] of [
         ["railway-api", "apps/api/Dockerfile", images.railwayApi, ["--build-arg", releaseArg]],
         ["railway-web", "apps/web/Dockerfile", images.railwayWeb, ["--build-arg", releaseArg]],
-        ["gateway", "infra/railway/Dockerfile", images.gateway, []],
+        ["gateway", "infra/railway/Dockerfile", images.gateway, ["--build-arg", releaseArg]],
       ] as const) {
         await evidence.command(
           `${label}-build`,
@@ -553,6 +553,22 @@ export async function smokePublicDeployment(
   function status(actual: number, expected: number) {
     if (actual !== expected) throw new Error(`expected HTTP ${expected}, received ${actual}`);
   }
+  await check("service-revisions", async () => {
+    const [webResponse, apiResponse] = await Promise.all([read(web + "/"), read(api + "/health")]);
+    const revisions = {
+      api: apiResponse.headers.get("x-raypx-revision"),
+      web: webResponse.headers.get("x-raypx-revision"),
+      gateway: webResponse.headers.get("x-raypx-gateway-revision"),
+    };
+    await Promise.all([webResponse.body?.cancel(), apiResponse.body?.cancel()]);
+    const values = Object.values(revisions);
+    if (values.some((value) => !value) || new Set(values).size !== 1)
+      throw new Error(
+        Object.entries(revisions)
+          .map(([name, value]) => `${name}=${value ?? "missing"}`)
+          .join(", "),
+      );
+  });
   await check("web-root", async () => {
     const response = await read(web + "/");
     identity(response, "web");

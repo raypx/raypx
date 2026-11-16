@@ -1,7 +1,9 @@
 import { expect, it } from "vitest";
 import { smokePublicDeployment } from "./deployment-smoke.js";
 
-async function fixture(failure?: "ingress" | "origin" | "sse-origin" | "embedding" | "cookie") {
+async function fixture(
+  failure?: "ingress" | "origin" | "sse-origin" | "embedding" | "cookie" | "revision",
+) {
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -12,13 +14,18 @@ async function fixture(failure?: "ingress" | "origin" | "sse-origin" | "embeddin
         return new Response(
           `<script>window.__RAYPX_PUBLIC_CONFIG__={"API_PUBLIC_URL":""}</script>`,
           {
-            headers: { "x-raypx-service": "web" },
+            headers: {
+              "x-raypx-service": "web",
+              "x-raypx-revision": "abc",
+              "x-raypx-gateway-revision": failure === "revision" ? "old" : "abc",
+            },
           },
         );
       if (failure === "ingress" && path.startsWith("/api/"))
         return new Response("Web fallback", { headers: { "x-raypx-service": "web" } });
       const headers = {
         "x-raypx-service": "api",
+        "x-raypx-revision": "abc",
         "content-security-policy": `frame-ancestors ${failure === "embedding" ? "'none'" : origin}`,
       };
       if (path === "/api/events")
@@ -55,7 +62,7 @@ it("checks every ingress, unauthenticated upgrades, public Page CSP and connecto
     expect(lines).toContain("PASS device-cookie-stripping");
     expect(lines).toContain("PASS events-sse-public-origin");
     expect(lines).toContain("PASS events-sse-foreign-origin");
-    expect(lines.filter((line) => line.startsWith("PASS"))).toHaveLength(13);
+    expect(lines.filter((line) => line.startsWith("PASS"))).toHaveLength(14);
   } finally {
     await f.server.stop(true);
   }
@@ -66,6 +73,7 @@ it.each([
   ["sse-origin", "events-sse-public-origin"],
   ["embedding", "page-embedding"],
   ["cookie", "device-cookie-stripping"],
+  ["revision", "service-revisions"],
 ] as const)("names the %s field failure", async (failure, check) => {
   const f = await fixture(failure);
   const lines: string[] = [];

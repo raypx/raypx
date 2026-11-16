@@ -37,13 +37,13 @@ Runtime variables are deliberately unmanaged by IaC. This preserves secrets and
 operator settings on Railway. Configure references in the dashboard or with
 railway variable set --skip-deploys; never commit decrypted variables.
 
-| Service  | Variables                                                                                                                                                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| gateway  | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                                             |
-| api      | NODE_ENV=production; SERVER_ROLE=all (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET and APP_KEY are distinct private random values of at least 32 characters |
-| api      | PUBLIC_URL=${{gateway.PUBLIC_ORIGIN}}; JOBS_ENABLED=true; omit API_PUBLIC_URL for this shared origin; EXTRA_ALLOWED_ORIGINS is optional                                                                                                                |
-| web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; omit API_PUBLIC_URL on a shared origin                                                                                                                                                       |
-| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                                              |
+| Service           | Variables                                                                                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| gateway           | PORT=8080; PUBLIC_ORIGIN is the current HTTPS origin; API_UPSTREAM=${{api.RAILWAY_PRIVATE_DOMAIN}}:3002; WEB_UPSTREAM=${{web.RAILWAY_PRIVATE_DOMAIN}}:3000                                                                                             |
+| api               | NODE_ENV=production; SERVER_ROLE=all (the default); HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET and APP_KEY are distinct private random values of at least 32 characters |
+| api               | PUBLIC_URL=${{gateway.PUBLIC_ORIGIN}}; JOBS_ENABLED=true; omit API_PUBLIC_URL for this shared origin; EXTRA_ALLOWED_ORIGINS is optional                                                                                                                |
+| web               | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; omit API_PUBLIC_URL on a shared origin                                                                                                                                                       |
+| api, web, gateway | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                                                                              |
 
 Remove retired `AUTH_URL`, `ALLOWED_ORIGINS` and any `DEVICE_CONNECTOR_ORIGIN`
 from runtime/shared variables at the new-build cutover. The old build may safely
@@ -78,7 +78,7 @@ off for invitation-only. Without mail, share copied invitation links and use
 administrator-issued one-time reset links. See [first setup and risks](configuration.md#first-setup).
 Bootstrap stays closed after account deletion; no reset command exists.
 
-Both Dockerfiles declare `RAILWAY_GIT_COMMIT_SHA` as a build argument. Manual builds
+All three service Dockerfiles declare `RAILWAY_GIT_COMMIT_SHA` as a build argument. Manual builds
 outside Git must supply it or `VITE_APP_RELEASE`; no unversioned production fallback
 is generated. Client assets record the resolved version for later SourceMap upload.
 Service ports and health paths come from `@raypx/tooling/build/deployment`; repository
@@ -286,3 +286,25 @@ can front the private authenticated supervisor. Otherwise provide a private rout
 See [required topology and bounds](sandbox-hosting.md#paas-reachability-without-wireguard).
 The IaC partial provisions no supervisor, private route or TLS proxy; live network
 and host acceptance remain separate.
+
+### Revision skew after a push
+
+The checked-in API, Web and gateway definitions already share the same Git source,
+Wait for CI setting and empty watch paths. The IaC file does not update dashboard
+settings on push. An older live watch filter, branch, Dockerfile override or failed
+service build/pre-deploy can leave just one service behind while others activate.
+Compare every service's source/branch, Wait for CI and empty Watch Paths with the
+reviewed definition, then apply the reviewed configuration or repair those same
+settings manually. Redeploy the same verified commit to **all three** services,
+wait for readiness and run credential-free public smoke. Do not retry an older
+deployment or treat CI success as proof that the three active images agree.
+
+Gateway's Dockerfile accepts the same build revision inputs as API/Web and embeds
+them as literal Caddy configuration in its image. No dashboard runtime revision override is needed.
+Its `X-Raypx-Gateway-Revision` response header identifies the proxy itself while
+preserving the upstream service identity and revision headers.
+
+The checked-in source currently selects `canary` for all three services. If the
+intended deployment tracks `next`, review that branch choice for all three before
+applying IaC; do not unintentionally switch an existing deployment's branch. This
+guide describes repository configuration, not a verified view of live settings.

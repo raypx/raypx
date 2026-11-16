@@ -36,6 +36,11 @@ export async function smokeLocalProduction(root: string, args: string[]) {
   const digest = () =>
     readFile(webArtifact).then((value) => createHash("sha256").update(value).digest("hex"));
   const before = await digest();
+  const metadata = await readFile(
+    join(root, "apps/web/.output/public/assets/raypx-release.json"),
+    "utf8",
+  );
+  const revision = (JSON.parse(metadata) as { release: string }).release;
   function target(request: IncomingMessage) {
     const path = new URL(request.url!, "http://localhost").pathname;
     const api =
@@ -61,7 +66,10 @@ export async function smokeLocalProduction(root: string, args: string[]) {
               method: request.method,
             },
             (result) => {
-              response.writeHead(result.statusCode!, result.headers);
+              response.writeHead(result.statusCode!, {
+                ...result.headers,
+                "x-raypx-gateway-revision": revision,
+              });
               result.pipe(response);
             },
           );

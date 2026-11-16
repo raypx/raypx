@@ -3,6 +3,7 @@ import { createMiddleware } from "hono/factory";
 export const relayHeaders = createMiddleware(async (context, next) => {
   await next();
   context.header("x-raypx-service", "api");
+  context.header("x-raypx-revision", process.env.RAYPX_BUILD_REVISION ?? "development");
   context.header("cache-control", "no-store");
   context.header("x-content-type-options", "nosniff");
   context.header("content-security-policy", "default-src 'none'");
