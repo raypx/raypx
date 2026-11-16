@@ -1,0 +1,21 @@
+apps/web/locales/en/site.json
+  s_7f9362525d805b::t_72d5ce915f121c 3
+apps/web/locales/zh/site.json
+  s_7f9362525d805b::t_546ec42ab46a33 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "88c2fdc674ecc4e719be4f56d0ab5be151e0dab3",
+  "prompts": {},
+  "sessions": {
+    "s_7f9362525d805b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e2-b18c-79c0-acca-50ae949d3042",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
