@@ -6,8 +6,8 @@ The replaced device-owned execution stack is removed by
 bridge; see [clients](clients.md) and [Desktop development](../development/desktop.md).
 
 Phase 1 provides Space/member and Agent/Conversation schemas, scoped repositories,
-session-authorized oRPC, member messages, ordered conversation logs, snapshots and
-an acknowledged WebSocket event stream. Backend Runs provide Pi model calls,
+session-authorized oRPC, member messages, ordered conversation logs, snapshots,
+conversation SSE and acknowledged WebSockets for Space and Screen. Backend Runs provide Pi model calls,
 transient reply text, committed segments, fenced leases, checkpoints, steering,
 recovery and cancellation. The bounded Computer tool loop supports approvals,
 effect records and durable tool lifecycle activity. Members can attach bounded files/images, browse team-computer or owned granted

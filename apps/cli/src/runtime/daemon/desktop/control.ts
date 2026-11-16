@@ -82,7 +82,7 @@ export class DesktopControl {
       const scope = AbortSignal.any([signal, this.httpScope.signal, this.selection.signal]);
       await this.verify(input.accountId, scope);
       scope.throwIfAborted();
-      return this.api.events.open(client, input.id, scope);
+      return this.api.events.open(client, input.id, scope, input.conversation);
     }
     if (method === "events_read") {
       const input = desktopEventsRequests.events_read.parse(raw);

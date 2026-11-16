@@ -115,7 +115,8 @@ export const conversationsContract = {
     )
     .output(conversationHistorySchema),
 };
-const streamSelection = selection.extend({ version: z.literal(1) });
+export const conversationFeedSelectionSchema = selection.extend({ after: cursor });
+export type ConversationFeedSelection = z.infer<typeof conversationFeedSelectionSchema>;
 const screenSelection = z.strictObject({
   version: z.literal(1),
   spaceId: spaceIdSchema,
@@ -125,9 +126,6 @@ export const conversationClientFrameSchema = z.discriminatedUnion("type", [
   screenSelection.extend({ type: z.literal("screen.subscribe") }),
   screenSelection.extend({ type: z.literal("screen.unsubscribe") }),
   screenSelection.extend({ type: z.literal("screen.ack"), sequence: cursor }),
-  streamSelection.extend({ type: z.literal("subscribe"), after: cursor }),
-  streamSelection.extend({ type: z.literal("ack"), sequence: cursor }),
-  streamSelection.extend({ type: z.literal("unsubscribe") }),
   z.strictObject({
     version: z.literal(1),
     type: z.literal("space.subscribe"),
@@ -147,7 +145,7 @@ export const conversationClientFrameSchema = z.discriminatedUnion("type", [
   }),
 ]);
 export type ConversationClientFrame = z.infer<typeof conversationClientFrameSchema>;
-export const conversationServerFrameSchema = z.discriminatedUnion("type", [
+const socketFrames = [
   z.strictObject({
     type: z.literal("screen.event"),
     spaceId: spaceIdSchema,
@@ -162,15 +160,39 @@ export const conversationServerFrameSchema = z.discriminatedUnion("type", [
     conversationId: z.never().optional(),
     event: spaceEventSchema,
   }),
+] as const;
+const readyFrame = z.strictObject({ type: z.literal("ready"), version: z.literal(1) });
+const feedFrames = [
+  readyFrame,
   liveReplySchema.extend({ type: z.literal("reply.prefix"), offset: z.literal(0) }),
   liveReplySchema.extend({
     type: z.literal("reply.delta"),
     offset: z.number().int().min(0).max(32_000),
   }),
-  z.strictObject({ type: z.literal("ready"), version: z.literal(1) }),
   z.strictObject({ type: z.literal("event"), entry }),
   selection.extend({ type: z.literal("snapshot-required"), cursor }),
+] as const;
+export const conversationServerFrameSchema = z.discriminatedUnion("type", [
+  ...socketFrames,
+  ...feedFrames,
 ]);
+export const conversationSocketFrameSchema = z.discriminatedUnion("type", [
+  readyFrame,
+  ...socketFrames,
+]);
+export const conversationFeedCloseSchema = z.strictObject({
+  type: z.literal("closed"),
+  code: z.union([
+    z.literal(1001),
+    z.literal(4000),
+    z.literal(4001),
+    z.literal(4003),
+    z.literal(1013),
+  ]),
+  reason: z.string().max(123),
+});
+export const conversationFeedFrameSchema = z.discriminatedUnion("type", feedFrames);
+export type ConversationFeedFrame = z.infer<typeof conversationFeedFrameSchema>;
 export type ConversationServerFrame = z.infer<typeof conversationServerFrameSchema>;
 export const MAX_CONVERSATION_FRAME_BYTES = 256_000;
 /** Screens travel one acknowledged frame at a time, including their bounded base64 envelope. */

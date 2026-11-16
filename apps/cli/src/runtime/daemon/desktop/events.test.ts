@@ -1,4 +1,5 @@
 import { nativeClientOrigins } from "@raypx/core/auth";
+import { conversationFeedSelectionSchema } from "@raypx/contracts/api";
 import { expect, it, vi } from "vitest";
 import { DesktopEvents, type EventsSocketFactory } from "./events.js";
 import { parseSessionCookie, SessionCookies } from "./cookies.js";
@@ -42,6 +43,56 @@ function fixture() {
 }
 const signal = () => new AbortController().signal;
 
+it("streams the selected conversation over authenticated HTTP and cancels the body on close", async () => {
+  const cookies = new SessionCookies("https://api.example.test");
+  cookies.apply([
+    parseSessionCookie(
+      cookies.origin,
+      "__Secure-better-auth.session_token=private; Secure; HttpOnly; Path=/",
+    )!,
+  ]);
+  const cancelled = vi.fn();
+  const fetch = vi.fn(
+    async (_url: string, _init?: RequestInit) =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('data: {"type":"ready","version":1}\n\n'));
+          },
+          cancel: cancelled,
+        }),
+        { headers: { "content-type": "text/event-stream" } },
+      ),
+  );
+  const socket = vi.fn();
+  const events = new DesktopEvents(cookies, socket, fetch);
+  const id = crypto.randomUUID();
+  events.open(
+    "page",
+    id,
+    signal(),
+    conversationFeedSelectionSchema.parse({
+      spaceId: "space",
+      conversationId: "conversation",
+      after: 17,
+    }),
+  );
+  try {
+    expect(await events.read("page", id, signal())).toEqual({ type: "ready", version: 1 });
+    expect(fetch).toHaveBeenCalledExactlyOnceWith(
+      "https://api.example.test/events?spaceId=space&conversationId=conversation&after=17",
+      expect.objectContaining({ headers: expect.any(Headers), redirect: "error" }),
+    );
+    expect(new Headers(fetch.mock.calls[0]![1]?.headers).get("cookie")).toBe(
+      "__Secure-better-auth.session_token=private",
+    );
+    expect(socket).not.toHaveBeenCalled();
+  } finally {
+    events.closeAll();
+  }
+  expect(events.idle).toBe(true);
+  await vi.waitFor(() => expect(cancelled).toHaveBeenCalledOnce());
+});
 it("forwards one bounded screen frame through the private bridge and retains renderer ACK ownership", async () => {
   const f = fixture();
   const viewerId = crypto.randomUUID();
@@ -97,10 +148,9 @@ it("isolates pages and forwards explicit subscribe/ACK frames without changing t
     code: "EVENTS_UNAVAILABLE",
   });
   const frame = {
-    type: "subscribe",
+    type: "space.subscribe",
     version: 1,
     spaceId: "space",
-    conversationId: "conversation",
     after: 7,
   } as const;
   // Transport values have already been parsed by DesktopControl's contract boundary.
@@ -203,13 +253,15 @@ it("removes cancelled readers and long-poll timers without closing a healthy soc
 it("bounds queued UTF-8 bytes separately from frame count", () => {
   const f = fixture();
   const frame = {
-    type: "reply.prefix",
+    type: "space.event",
     spaceId: "space",
-    conversationId: "conversation",
-    runId: "run",
-    segmentId: "segment",
-    offset: 0,
-    text: "你".repeat(32_000),
+    event: {
+      id: 1,
+      spaceId: "space",
+      kind: "space.renamed",
+      payload: { name: "你".repeat(32_000) },
+      createdAt: "2026-11-16T00:00:00.000Z",
+    },
   };
   for (let index = 0; index < 11; index++) f.receive(frame);
   expect(f.events.idle).toBe(true);

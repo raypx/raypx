@@ -212,8 +212,9 @@ Keep documentation aligned with the implementation and remove obsolete guides.
 ## Remote control
 
 New conversations use session-authorized oRPC and the backend event stream, with
-fresh Space membership checks. Apply state and its cursor together before ACK;
-reconnect replays durable events or replaces state from a snapshot. History paging
+fresh Space membership checks. Conversations use SSE and reconnect from the last
+applied cursor or a fresh snapshot. Apply state and its cursor together. Space
+and Screen WebSockets ACK after application. History paging
 uses its own scoped boundaries, independently of the event cursor. Transient reply
 text stays process-local; committed segments are durable. Runs use PostgreSQL leases,
 fences, attempts and checkpoints. Never replay unknown effects or promise exactly-once

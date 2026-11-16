@@ -18,7 +18,8 @@ routes, mounted drafts and scroll. Packaged routes use hash history. Agents and
 Pages inject the same native device pairing/grant ports. Pages keeps Web handoff
 for authenticated previews and never imports cookies into the renderer.
 
-The daemon owns cookies, browser sign-in, HTTP and bounded server-event transport.
+The daemon owns cookies, browser sign-in, HTTP, conversation SSE and Space/Screen
+WebSockets. The shared renderer owns the applied replay cursor.
 Native and renderer channel capabilities are distinct. The renderer has no
 administrative router, exec/terminal hooks or credentials. Native consent fixes
 the configured origin, verifies current account/Space, picks a directory and

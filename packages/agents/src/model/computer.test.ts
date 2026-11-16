@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ConversationClientFrame } from "@raypx/contracts/api";
+import type { ConversationFeedSelection } from "@raypx/contracts/api";
 import { agentIdSchema, type Conversation } from "@raypx/core/agents";
 import {
   computerAvailabilityReasonSchema,
@@ -9,7 +9,7 @@ import {
 import { spaceIdSchema } from "@raypx/core/spaces";
 import { ComputerController } from "./computer.js";
 import { ConversationController } from "./controller.js";
-import type { ComputerPort, ConversationSocketPort } from "./port.js";
+import type { ComputerPort, ConversationFeedPort } from "./port.js";
 import {
   computerConversationId,
   computerEvent,
@@ -374,12 +374,11 @@ describe("ComputerController", () => {
 });
 
 describe("computer conversation convergence", () => {
-  it("refreshes on initial connection and reconnect, and applies an ordered event before ACK", async () => {
+  it("refreshes on initial connection and reconnect, and applies ordered events and resumes from the applied cursor", async () => {
     vi.useFakeTimers();
     const { controller: computer, port } = fixture();
-    const connections: Parameters<ConversationSocketPort["connect"]>[0][] = [];
-    const frames: ConversationClientFrame[] = [];
-    const observed: string[] = [];
+    const connections: Parameters<ConversationFeedPort["subscribe"]>[1][] = [];
+    const subscriptions: ConversationFeedSelection[] = [];
     const conversation: Conversation = {
       id: computerConversationId,
       spaceId: computerSpaceId,
@@ -395,16 +394,11 @@ describe("computer conversation convergence", () => {
         send: vi.fn(),
         stop: vi.fn(),
       },
-      socket: {
-        connect(callbacks) {
+      feed: {
+        subscribe(input, callbacks) {
           connections.push(callbacks);
-          return {
-            close() {},
-            send(frame) {
-              frames.push(frame);
-              if (frame.type === "ack") observed.push(computer.getSnapshot().status);
-            },
-          };
+          subscriptions.push(input);
+          return { close() {} };
         },
       },
       drafts: { read: () => null, write() {}, remove() {} },
@@ -420,8 +414,7 @@ describe("computer conversation convergence", () => {
     vi.mocked(port.get).mockReturnValueOnce(read.promise);
     connections[0]!.onFrame({ type: "event", entry: { event: computerEvent("running") } });
     expect(controller.getSnapshot().cursor).toBe(1);
-    expect(observed).toEqual(["running"]);
-    expect(frames.at(-1)).toMatchObject({ type: "ack", sequence: 1 });
+    expect(computer.getSnapshot().status).toBe("running");
     connections[0]!.onFrame({ type: "event", entry: { event: computerEvent("running") } });
     expect(port.get).toHaveBeenCalledTimes(2);
     read.resolve(computerResult("running"));
@@ -433,6 +426,6 @@ describe("computer conversation convergence", () => {
     await Promise.resolve();
     expect(port.get).toHaveBeenCalledTimes(3);
     expect(computer.getSnapshot().status).toBe("stopped");
-    expect(frames.at(-1)).toMatchObject({ type: "subscribe", after: 1 });
+    expect(subscriptions.at(-1)).toMatchObject({ after: 1 });
   });
 });

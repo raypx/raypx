@@ -16,6 +16,7 @@ import {
   type ConversationDraftStore,
   type ConversationOwner,
   type ConversationSocketPort,
+  type ConversationFeedPort,
 } from "@raypx/agents/model";
 import type { ApiClient } from "@raypx/client/api";
 import { messageKey } from "./ports.js";
@@ -71,6 +72,7 @@ export class MobileWorkspace {
     readonly owner: ConversationOwner,
     readonly port: AgentsWorkspacePort,
     private socket: ConversationSocketPort,
+    private feed: ConversationFeedPort,
     private drafts: ConversationDraftStore,
     private preference: { read(): string | null; write(id: string): void },
     readonly api?: ApiClient,
@@ -249,7 +251,7 @@ export class MobileWorkspace {
       owner: this.owner,
       port: this.port.conversations,
       ...(this.port.messageAttachments ? { attachments: this.port.messageAttachments } : {}),
-      socket: this.socket,
+      feed: this.feed,
       drafts: this.drafts,
       key: messageKey,
       computer,
@@ -287,7 +289,7 @@ export class MobileWorkspace {
       void this.refresh();
     }
   }
-  /** Leaving the conversation closes its stream but retains the acknowledged projection. */
+  /** Leaving the conversation closes its stream and retains the applied projection. */
   leaveConversation() {
     this.focused = false;
     this.updateViewed();

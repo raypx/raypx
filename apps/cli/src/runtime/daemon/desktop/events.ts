@@ -1,9 +1,12 @@
 import { nativeClientOrigins } from "@raypx/core/auth";
+import type { FetchCallable } from "@raypx/client/api";
+import { readConversationFeed } from "@raypx/client/events";
 import {
-  conversationServerFrameSchema,
+  conversationSocketFrameSchema,
   MAX_CONVERSATION_FRAME_BYTES,
   MAX_SCREEN_STREAM_FRAME_BYTES,
   type ConversationClientFrame,
+  type ConversationFeedSelection,
   type ConversationServerFrame,
 } from "@raypx/contracts/api";
 import type { DesktopEventsClose, DesktopEventsRead } from "@raypx/contracts/desktop";
@@ -56,15 +59,17 @@ interface Stream {
   bytes: number;
   closed?: DesktopEventsClose;
   expiry?: ReturnType<typeof setTimeout>;
+  consumed?: () => void;
   waiter?: { resolve(frame: Exclude<DesktopEventsRead, null>): void; reject(): void };
 }
 
-/** A bounded private bridge to /events. Only the renderer applies and ACKs events. */
+/** A bounded private bridge to /events. The renderer owns applied cursors and WebSocket ACKs. */
 export class DesktopEvents {
   private readonly streams = new Map<string, Stream>();
   constructor(
     private readonly cookies: SessionCookies,
     private readonly connect: EventsSocketFactory = socketFactory,
+    private readonly fetch?: FetchCallable,
   ) {}
   get idle() {
     return this.streams.size === 0;
@@ -72,7 +77,12 @@ export class DesktopEvents {
   private key(client: string, id: string) {
     return `${client}:${id}`;
   }
-  open(client: string, id: string, parent: AbortSignal): true {
+  open(
+    client: string,
+    id: string,
+    parent: AbortSignal,
+    conversation?: ConversationFeedSelection,
+  ): true {
     parent.throwIfAborted();
     this.cookies.assertAvailable();
     const key = this.key(client, id);
@@ -95,6 +105,7 @@ export class DesktopEvents {
         stream.bytes = 0;
         stream.socket?.close();
         stream.waiter?.reject();
+        stream.consumed?.();
       },
       { once: true },
     );
@@ -104,7 +115,7 @@ export class DesktopEvents {
         if (typeof data !== "string") throw unavailable();
         const bytes = Buffer.byteLength(data);
         if (bytes > MAX_SCREEN_STREAM_FRAME_BYTES) throw unavailable();
-        const frame = conversationServerFrameSchema.parse(JSON.parse(data));
+        const frame = conversationSocketFrameSchema.parse(JSON.parse(data));
         if (frame.type !== "screen.event" && bytes > MAX_CONVERSATION_FRAME_BYTES)
           throw unavailable();
         if (stream.waiter) {
@@ -119,9 +130,12 @@ export class DesktopEvents {
         close();
       }
     };
-    const ended = (code?: number, reason?: string) => {
+    const ended = (code?: number, reason?: string, retryAfterMs?: number) => {
       if (this.streams.get(key) !== stream || stream.closed) return;
-      stream.closed = closeResult(code, reason);
+      stream.closed = {
+        ...closeResult(code, reason),
+        ...(retryAfterMs !== undefined && { retryAfterMs }),
+      };
       // Admission may have ended: discard unread content before delivering closure.
       stream.queue.length = 0;
       stream.bytes = 0;
@@ -136,14 +150,40 @@ export class DesktopEvents {
       // Retain one terminal result between long polls, within the eight-stream bound.
       stream.expiry = setTimeout(close, 20_000);
     };
+    const headers = { cookie, origin: nativeClientOrigins.desktop };
+    if (conversation) {
+      void (async () => {
+        for await (const frame of readConversationFeed(resource.origin, conversation, {
+          headers: () => headers,
+          ...(this.fetch && { fetch: this.fetch }),
+          signal: stream.scope.signal,
+        })) {
+          if (stream.scope.signal.aborted) return;
+          if (frame.type === "closed") {
+            ended(frame.code, frame.reason, frame.retryAfterMs);
+            return;
+          }
+          if (stream.waiter) stream.waiter.resolve(frame);
+          else {
+            // Keep one unread feed frame. The renderer controls when the next body read starts.
+            stream.queue.push({ frame, bytes: 0 });
+            await new Promise<void>((resolve) => {
+              const timeout = setTimeout(close, 20_000);
+              stream.consumed = () => {
+                clearTimeout(timeout);
+                delete stream.consumed;
+                resolve();
+              };
+            });
+          }
+        }
+        ended();
+      })().catch(() => ended());
+      return true;
+    }
     resource.protocol = resource.protocol === "https:" ? "wss:" : "ws:";
     try {
-      stream.socket = this.connect(
-        resource,
-        { cookie, origin: nativeClientOrigins.desktop },
-        receive,
-        ended,
-      );
+      stream.socket = this.connect(resource, headers, receive, ended);
       if (stream.scope.signal.aborted || stream.closed) {
         stream.socket.close();
         delete stream.socket;
@@ -161,9 +201,9 @@ export class DesktopEvents {
   }
   send(client: string, id: string, frame: ConversationClientFrame): true {
     const stream = this.get(client, id);
-    if (stream.closed) throw unavailable();
+    if (stream.closed || !stream.socket) throw unavailable();
     try {
-      stream.socket!.send(JSON.stringify(frame));
+      stream.socket.send(JSON.stringify(frame));
     } catch {
       this.close(client, id);
       throw unavailable();
@@ -182,6 +222,7 @@ export class DesktopEvents {
     const next = stream.queue.shift();
     if (next) {
       stream.bytes -= next.bytes;
+      stream.consumed?.();
       return next.frame;
     }
     return new Promise((resolve, reject) => {

@@ -1,7 +1,11 @@
 import { desktopLoginAuthorizationSchema, desktopLoginStartSchema } from "./desktop-login.js";
 import { z } from "zod";
 import { localEventSchema } from "./local.js";
-import { conversationClientFrameSchema, conversationServerFrameSchema } from "./conversation.js";
+import {
+  conversationClientFrameSchema,
+  conversationFeedSelectionSchema,
+  conversationServerFrameSchema,
+} from "./conversation.js";
 
 /** Native confirmation use cases; no renderer-controlled origin, directory or credential. */
 export const desktopDeviceRequests = {
@@ -107,10 +111,14 @@ export const desktopEventsCloseSchema = z.strictObject({
   type: z.literal("closed"),
   code: z.number().int().min(1000).max(4999),
   reason: z.string().max(123),
+  retryAfterMs: z.number().int().nonnegative().optional(),
 });
 export type DesktopEventsClose = z.infer<typeof desktopEventsCloseSchema>;
 export const desktopEventsRequests = {
-  events_open: desktopEventsIdentity.extend({ accountId: z.string().min(1).max(128) }),
+  events_open: desktopEventsIdentity.extend({
+    accountId: z.string().min(1).max(128),
+    conversation: conversationFeedSelectionSchema.optional(),
+  }),
   events_read: desktopEventsIdentity,
   events_send: desktopEventsIdentity.extend({ frame: conversationClientFrameSchema }),
   events_close: desktopEventsIdentity,

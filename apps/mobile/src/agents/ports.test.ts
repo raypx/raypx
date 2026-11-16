@@ -1,3 +1,4 @@
+import { conversationIdSchema } from "@raypx/core/agents";
 import { describe, expect, it, vi } from "vitest";
 import { MAX_CONVERSATION_FRAME_BYTES } from "@raypx/contracts/api";
 import {
@@ -5,7 +6,6 @@ import {
   readConversationDraft,
   writeConversationDraft,
 } from "@raypx/agents/model";
-import { conversationIdSchema } from "@raypx/core/agents";
 import { approvalRequestIdSchema } from "@raypx/core/approvals";
 import { spaceIdSchema } from "@raypx/core/spaces";
 import {
@@ -133,10 +133,10 @@ describe("mobile authenticated transports", () => {
     h.native.emitMessage(JSON.stringify({ type: "ready", version: 1 }));
     expect(h.callbacks.onFrame).toHaveBeenCalledWith({ type: "ready", version: 1 });
     const frame = {
-      type: "subscribe" as const,
+      type: "space.subscribe" as const,
       version: 1 as const,
       spaceId: spaceIdSchema.parse("space"),
-      conversationId: conversationIdSchema.parse("conversation"),
+
       after: 12,
     };
     h.socket.send(frame);
@@ -186,10 +186,10 @@ describe("mobile authenticated transports", () => {
     expect(h.expired).not.toHaveBeenCalled();
     expect(() =>
       h.socket.send({
-        type: "ack",
+        type: "space.ack",
         version: 1,
         spaceId: spaceIdSchema.parse("space"),
-        conversationId: conversationIdSchema.parse("conversation"),
+
         sequence: 0,
       }),
     ).toThrow("Socket is not open");

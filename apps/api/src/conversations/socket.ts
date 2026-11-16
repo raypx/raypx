@@ -2,6 +2,7 @@ import { setWebSocketHooks, type Hooks } from "crossws";
 import { Hono } from "hono";
 import { MAX_CONVERSATION_FRAME_BYTES, MAX_SCREEN_STREAM_FRAME_BYTES } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/core/auth";
+import { conversationSse, feedSelection } from "./sse.js";
 import type { ConversationStream } from "./stream.js";
 
 export function createConversationSocketRoutes(options: {
@@ -18,7 +19,19 @@ export function createConversationSocketRoutes(options: {
     else if (origin && !options.allowedOrigins.includes(origin)) status = 403;
     else if (!auth || auth.session.expiresAt.getTime() <= Date.now()) status = 401;
     const response = c.json({ error: status === 426 ? "UPGRADE_REQUIRED" : "UNAVAILABLE" }, status);
-    if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") return response;
+    if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") {
+      if (status !== 426 || !auth) return response;
+      if (
+        !request.headers
+          .get("accept")
+          ?.split(",")
+          .some((type) => type.trim() === "text/event-stream")
+      )
+        return response;
+      const selection = feedSelection(request.url);
+      if (!selection) return c.json({ error: "INVALID_INPUT" }, 400);
+      return conversationSse(request, auth.user.id, selection, options.stream);
+    }
     if (status !== 426 || !auth) {
       setWebSocketHooks(request, { upgrade: () => response });
       return response;

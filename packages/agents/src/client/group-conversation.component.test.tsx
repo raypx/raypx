@@ -9,7 +9,7 @@ import commonEn from "@raypx/i18n/messages/en";
 import commonZh from "@raypx/i18n/messages/zh";
 import en from "../../locales/en/index.js";
 import zh from "../../locales/zh/index.js";
-import type { ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationFeedFrame } from "@raypx/contracts/api";
 import type { ApprovalPort, ConversationPort, ConversationSnapshot } from "../model.js";
 import { AgentConversation } from "./conversation.js";
 
@@ -70,7 +70,7 @@ function fixture(
   language: "en" | "zh" = "en",
   approvals?: ApprovalPort,
 ) {
-  let receive: ((frame: ConversationServerFrame) => void) | undefined;
+  let receive: ((frame: ConversationFeedFrame) => void) | undefined;
   const send = vi.fn<ConversationPort["send"]>(async () => message);
   const stop = vi.fn(async ({ runId }) => ({
     ...makeRun(0),
@@ -89,11 +89,11 @@ function fixture(
       ...snapshot,
     }),
   };
-  const socket = {
-    connect(callbacks: { onFrame: (frame: ConversationServerFrame) => void }) {
+  const feed = {
+    subscribe(_selection: unknown, callbacks: { onFrame: (frame: ConversationFeedFrame) => void }) {
       receive = callbacks.onFrame;
       queueMicrotask(() => receive?.({ type: "ready", version: 1 }));
-      return { send() {}, close() {} };
+      return { close() {} };
     },
   };
   const manage = vi.fn();
@@ -110,7 +110,8 @@ function fixture(
           start: async () => ({ status: "not-configured" }),
           stop: async () => ({ status: "not-configured" }),
         }}
-        socket={socket}
+        socket={{ connect: () => ({ send() {}, close() {} }) }}
+        feed={feed}
         drafts={{ read: () => null, write() {}, remove() {} }}
         accountId="member"
         origin="https://test.example"
@@ -121,7 +122,7 @@ function fixture(
     ...view,
     send,
     stop,
-    emit: async (frame: ConversationServerFrame) => act(async () => receive?.(frame)),
+    emit: async (frame: ConversationFeedFrame) => act(async () => receive?.(frame)),
   };
 }
 it.each(["en", "zh"] as const)(

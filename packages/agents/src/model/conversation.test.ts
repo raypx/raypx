@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationFeedSelection, ConversationFeedFrame } from "@raypx/contracts/api";
 import { agentIdSchema, conversationIdSchema, type Conversation } from "@raypx/core/agents";
 import {
   messageIdSchema,
@@ -29,7 +29,7 @@ import type {
   AgentConversationView,
   ConversationPort,
   ConversationSnapshot,
-  ConversationSocketPort,
+  ConversationFeedPort,
   SpaceMembership,
 } from "./port.js";
 
@@ -79,7 +79,7 @@ function snapshot(input: Partial<ConversationSnapshot> = {}): ConversationSnapsh
 function messageEvent(
   sequence = 1,
   id = "message",
-): Extract<ConversationServerFrame, { type: "event" }> {
+): Extract<ConversationFeedFrame, { type: "event" }> {
   const value = message(id, sequence);
   return {
     type: "event",
@@ -98,7 +98,7 @@ function messageEvent(
 function runEvent(
   state: Run["state"],
   sequence: number,
-): Extract<ConversationServerFrame, { type: "event" }> {
+): Extract<ConversationFeedFrame, { type: "event" }> {
   return {
     type: "event",
     entry: {
@@ -114,7 +114,7 @@ function runEvent(
     },
   };
 }
-function prefix(text: string): Extract<ConversationServerFrame, { type: "reply.prefix" }> {
+function prefix(text: string): Extract<ConversationFeedFrame, { type: "reply.prefix" }> {
   return {
     type: "reply.prefix",
     ...selection,
@@ -127,7 +127,7 @@ function prefix(text: string): Extract<ConversationServerFrame, { type: "reply.p
 function segment(
   text: string,
   sequence: number,
-): Extract<ConversationServerFrame, { type: "event" }> {
+): Extract<ConversationFeedFrame, { type: "event" }> {
   const value: ReplySegment = {
     id: "segment",
     ...selection,
@@ -145,8 +145,8 @@ function segment(
 }
 function harness(initial = snapshot()) {
   const stored = new Map<string, string>();
-  const frames: ConversationClientFrame[] = [];
-  const connections: Array<Parameters<ConversationSocketPort["connect"]>[0]> = [];
+  const subscriptions: ConversationFeedSelection[] = [];
+  const connections: Array<Parameters<ConversationFeedPort["subscribe"]>[1]> = [];
   const close = vi.fn();
   const port: ConversationPort = {
     snapshot: vi.fn(async () => initial),
@@ -162,20 +162,16 @@ function harness(initial = snapshot()) {
       stored.delete(key);
     },
   };
-  const socket: ConversationSocketPort = {
-    connect(callbacks) {
+  const feed: ConversationFeedPort = {
+    subscribe(input, callbacks) {
       connections.push(callbacks);
-      return {
-        send: (frame) => {
-          frames.push(frame);
-        },
-        close,
-      };
+      subscriptions.push(input);
+      return { close };
     },
   };
   const key = vi.fn(() => "receipt-1");
-  const controller = new ConversationController({ selection, owner, port, drafts, socket, key });
-  return { controller, stored, drafts, socket, port, frames, connections, close, key };
+  const controller = new ConversationController({ selection, owner, port, drafts, feed, key });
+  return { controller, stored, drafts, feed, port, subscriptions, connections, close, key };
 }
 afterEach(() => {
   vi.useRealTimers();
@@ -291,7 +287,7 @@ describe("ConversationController", () => {
     await vi.advanceTimersByTimeAsync(1_000);
     expect(h.connections).toHaveLength(2);
     h.connections[1]!.onFrame({ type: "ready", version: 1 });
-    expect(h.frames.at(-1)).toMatchObject({ type: "subscribe", after: 1 });
+    expect(h.subscriptions.at(-1)).toMatchObject({ after: 1 });
     expect(h.controller.getSnapshot().connection).toBe("live");
     h.controller.dispose();
   });
@@ -305,12 +301,11 @@ describe("ConversationController", () => {
     expect(h.key).not.toHaveBeenCalled();
     h.controller.dispose();
   });
-  it("acknowledges a replayed event while preserving the applied projection", async () => {
+  it("ignores an already applied event while preserving the projection", async () => {
     const h = harness(snapshot({ cursor: 1, messages: [message()] }));
     await h.controller.start();
     h.connections[0]!.onFrame({ type: "ready", version: 1 });
     h.connections[0]!.onFrame(messageEvent());
-    expect(h.frames.at(-1)).toEqual({ type: "ack", version: 1, ...selection, sequence: 1 });
     expect(h.controller.getSnapshot().messages).toEqual([message()]);
     expect(h.controller.getSnapshot().cursor).toBe(1);
     h.controller.dispose();
@@ -341,7 +336,7 @@ describe("ConversationController", () => {
       selection,
       owner,
       port: h.port,
-      socket: h.socket,
+      feed: h.feed,
       drafts: {
         ...h.drafts,
         read() {
@@ -358,7 +353,7 @@ describe("ConversationController", () => {
       selection,
       owner,
       port: h.port,
-      socket: h.socket,
+      feed: h.feed,
       drafts: {
         ...h.drafts,
         remove() {
@@ -381,24 +376,23 @@ describe("ConversationController", () => {
     cleanupFailure.dispose();
     h.controller.dispose();
   });
-  it("subscribes from its snapshot cursor, applies before acknowledgement, then resumes after a lost ACK", async () => {
+  it("subscribes from its snapshot cursor, resumes from its last applied event after disconnect", async () => {
     vi.useFakeTimers();
     const h = harness(snapshot({ cursor: 2, messages: [message()], runs: [run()] }));
     await h.controller.start();
     h.connections[0]!.onFrame({ type: "ready", version: 1 });
-    expect(h.frames[0]).toEqual({ type: "subscribe", version: 1, ...selection, after: 2 });
+    expect(h.subscriptions[0]).toEqual({ ...selection, after: 2 });
     const observed: number[] = [];
     h.controller.subscribe(() => {
       observed.push(h.controller.getSnapshot().cursor);
     });
     h.connections[0]!.onFrame(runEvent("running", 3));
     expect(observed).toContain(3);
-    expect(h.frames.at(-1)).toEqual({ type: "ack", version: 1, ...selection, sequence: 3 });
     h.connections[0]!.onClose(1006);
     expect(h.controller.getSnapshot().connection).toBe("reconnecting");
     await vi.advanceTimersByTimeAsync(1_000);
     h.connections[1]!.onFrame({ type: "ready", version: 1 });
-    expect(h.frames.at(-1)).toEqual({ type: "subscribe", version: 1, ...selection, after: 3 });
+    expect(h.subscriptions.at(-1)).toEqual({ ...selection, after: 3 });
     h.connections[1]!.onFrame(runEvent("running", 3));
     expect(h.controller.getSnapshot().runs).toHaveLength(1);
     h.controller.dispose();
@@ -416,7 +410,7 @@ describe("ConversationController", () => {
     expect(h.controller.getSnapshot().cursor).toBe(6);
     expect(h.controller.getSnapshot().draft).toBe("unsent draft");
     h.connections[1]!.onFrame({ type: "ready", version: 1 });
-    expect(h.frames.at(-1)).toMatchObject({ type: "subscribe", after: 6 });
+    expect(h.subscriptions.at(-1)).toMatchObject({ after: 6 });
     expect(h.controller.getSnapshot().messages).toHaveLength(2);
     expect(h.port.send).not.toHaveBeenCalled();
     h.controller.dispose();
@@ -452,7 +446,7 @@ describe("ConversationController", () => {
       owner,
       port: h.port,
       drafts: h.drafts,
-      socket: h.socket,
+      feed: h.feed,
       key: h.key,
     });
     await restored.start();
@@ -507,7 +501,7 @@ describe("ConversationController", () => {
       selection,
       owner,
       port: h.port,
-      socket: h.socket,
+      feed: h.feed,
       drafts: {
         ...h.drafts,
         write() {
@@ -558,7 +552,7 @@ describe("draft and page isolation", () => {
       selection,
       owner: { ...owner, accountId: "other" },
       port: h.port,
-      socket: h.socket,
+      feed: h.feed,
       drafts: h.drafts,
       key: h.key,
     });

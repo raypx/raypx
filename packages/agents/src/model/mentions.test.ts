@@ -61,7 +61,7 @@ describe("explicit mention tokens", () => {
       selection,
       owner: { accountId: "member", origin: "https://test.example" },
       port: { send, snapshot: vi.fn(), stop: vi.fn() },
-      socket: { connect: vi.fn() },
+      feed: { subscribe: vi.fn() },
       drafts: {
         read: (key: string) => store.get(key) ?? null,
         write: (key: string, value: string) => {
@@ -102,7 +102,7 @@ it("shows a non-participant refusal without preserving an uncertain receipt", as
     },
     owner: { accountId: "member", origin: "https://test.example" },
     port: { send, snapshot: vi.fn(), stop: vi.fn() },
-    socket: { connect: vi.fn() },
+    feed: { subscribe: vi.fn() },
     drafts: { read: () => null, write() {}, remove() {} },
     key: () => "refusal-key",
   });

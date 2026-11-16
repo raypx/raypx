@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationFeedSelection, ConversationFeedFrame } from "@raypx/contracts/api";
 import { agentIdSchema, conversationIdSchema } from "@raypx/core/agents";
 import { approvalRequestIdSchema, type ApprovalRequest } from "@raypx/core/approvals";
 import { messageIdSchema, runIdSchema, type Message } from "@raypx/core/conversation";
@@ -9,7 +9,7 @@ import type {
   ApprovalPort,
   ConversationPort,
   ConversationSnapshot,
-  ConversationSocketPort,
+  ConversationFeedPort,
 } from "./port.js";
 
 const selection = {
@@ -35,7 +35,7 @@ function snapshot(): ConversationSnapshot {
   };
 }
 
-function event(sequence: number): Extract<ConversationServerFrame, { type: "event" }> {
+function event(sequence: number): Extract<ConversationFeedFrame, { type: "event" }> {
   const message: Message = {
     id: messageIdSchema.parse(`message-${sequence}`),
     ...selection,
@@ -79,8 +79,8 @@ function request(target = "current.txt"): ApprovalRequest {
 }
 
 function harness() {
-  const frames: ConversationClientFrame[] = [];
-  const connections: Array<Parameters<ConversationSocketPort["connect"]>[0]> = [];
+  const subscriptions: ConversationFeedSelection[] = [];
+  const connections: Array<Parameters<ConversationFeedPort["subscribe"]>[1]> = [];
   const close = vi.fn();
   const port: ConversationPort = {
     snapshot: vi.fn(async () => snapshot()),
@@ -99,20 +99,16 @@ function harness() {
     approvals,
     drafts: { read: () => null, write() {}, remove() {} },
     key: vi.fn(() => "new-receipt"),
-    socket: {
-      connect(callbacks) {
+    feed: {
+      subscribe(input, callbacks) {
         connections.push(callbacks);
-        return {
-          send: (frame) => {
-            frames.push(frame);
-          },
-          close,
-        };
+        subscriptions.push(input);
+        return { close };
       },
     },
   });
   controllers.push(controller);
-  return { controller, port, approvals, frames, connections, close };
+  return { controller, port, approvals, subscriptions, connections, close };
 }
 
 afterEach(() => {
@@ -127,7 +123,6 @@ describe("conversation platform lifecycle", () => {
     await h.controller.start();
     h.connections[0]!.onFrame({ type: "ready", version: 1 });
     h.connections[0]!.onFrame(event(1));
-    expect(h.frames.at(-1)).toMatchObject({ type: "ack", sequence: 1 });
     h.connections[0]!.onFrame({
       type: "reply.prefix",
       ...selection,
@@ -158,14 +153,13 @@ describe("conversation platform lifecycle", () => {
     h.controller.resume();
     expect(h.connections).toHaveLength(2);
     h.connections[1]!.onFrame({ type: "ready", version: 1 });
-    expect(h.frames.at(-1)).toEqual({ type: "subscribe", version: 1, ...selection, after: 1 });
+    expect(h.subscriptions.at(-1)).toEqual({ ...selection, after: 1 });
     h.connections[1]!.onFrame(event(1));
     h.connections[1]!.onFrame(event(2));
     expect(h.controller.getSnapshot().messages.map((message) => message.id)).toEqual([
       "message-1",
       "message-2",
     ]);
-    expect(h.frames.at(-1)).toEqual({ type: "ack", version: 1, ...selection, sequence: 2 });
     expect(h.port.snapshot).toHaveBeenCalledOnce();
     expect(h.port.send).not.toHaveBeenCalled();
   });
@@ -197,13 +191,27 @@ describe("conversation platform lifecycle", () => {
     await vi.advanceTimersByTimeAsync(1_000);
     expect(h.connections).toHaveLength(3);
     h.connections[2]!.onFrame({ type: "ready", version: 1 });
-    expect(h.frames.at(-1)).toMatchObject({ type: "subscribe", after: 1 });
+    expect(h.subscriptions.at(-1)).toMatchObject({ after: 1 });
 
     await vi.advanceTimersByTimeAsync(30_000);
     h.connections[2]!.onClose(1006);
     await vi.advanceTimersByTimeAsync(1_000);
     expect(h.connections).toHaveLength(4);
     expect(h.port.snapshot).toHaveBeenCalledOnce();
+  });
+
+  it("honors Retry-After from an SSE admission failure", async () => {
+    vi.useFakeTimers();
+    const h = harness();
+    await h.controller.start();
+    h.connections[0]!.onClose(1013, "", 45_000);
+    await vi.advanceTimersByTimeAsync(44_999);
+    expect(h.subscriptions).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(h.subscriptions).toEqual([
+      { ...selection, after: 0 },
+      { ...selection, after: 0 },
+    ]);
   });
 
   it("fences a snapshot finishing in background and reads a new one on foreground", async () => {

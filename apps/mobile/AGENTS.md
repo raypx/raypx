@@ -40,14 +40,14 @@ idempotent sends, approvals and computer lifecycle. Never import its DOM client.
 Native Mobile has no Screen UI, graphical input or takeover; use the phone Web
 client for those workflows. Keep existing native groups, Spaces, routines, memory,
 resource availability, activity and approvals intact.
-Mobile injects authenticated RPC, `/events`, device storage and AppState ports.
+Mobile injects authenticated RPC, conversation SSE, Space WebSocket, device storage and AppState ports.
 The foreground Space live controller reconciles membership even outside chat;
 known Space close reasons route to the directory, session expiry to login.
 Feature screens read the same session-fenced API client through the workspace;
 never retain credentials in screen state.
-Close the socket in the background; resume the retained projection/cursor on
-foreground and refresh pending approvals and computer state. Apply durable events
-before ACK; transient reply text never advances the cursor. No automatic send on
+Close event connections in the background. Resume the conversation from its
+applied cursor on foreground and refresh pending approvals and computer state.
+Space events are ACKed after application. No automatic send on
 draft restoration or retry editing. Drafts and frozen uncertain-send receipts use
 SecureStore with keys scoped by origin, account, Space and conversation. Do not
 persist server history or live text as a second authority.

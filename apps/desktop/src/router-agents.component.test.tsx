@@ -48,7 +48,10 @@ vi.mock("./features/agents/client.js", () => ({
     },
   },
 }));
-vi.mock("./features/agents/socket.js", () => ({ desktopConversationSocket: mocks.socket }));
+vi.mock("./features/agents/socket.js", () => ({
+  desktopConversationSocket: mocks.socket,
+  desktopConversationFeed: () => ({ subscribe: vi.fn() }),
+}));
 import { Route } from "./routes/agents.js";
 
 beforeEach(() => {

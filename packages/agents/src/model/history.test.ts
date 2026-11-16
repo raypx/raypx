@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationFeedFrame } from "@raypx/contracts/api";
 import { agentIdSchema, conversationIdSchema } from "@raypx/core/agents";
 import { messageIdSchema, runIdSchema, type Message, type Run } from "@raypx/core/conversation";
 import { spaceIdSchema } from "@raypx/core/spaces";
@@ -13,7 +13,7 @@ import type {
   ApprovalPort,
   ConversationHistory,
   ConversationPort,
-  ConversationSocketPort,
+  ConversationFeedPort,
 } from "./port.js";
 
 const selection = {
@@ -74,7 +74,7 @@ afterEach(() => {
 });
 function harness(count = 210, approvals?: ApprovalPort) {
   const messages = Array.from({ length: count }, (_, index) => message(index + 1));
-  const callbacks: Array<Parameters<ConversationSocketPort["connect"]>[0]> = [];
+  const callbacks: Array<Parameters<ConversationFeedPort["subscribe"]>[1]> = [];
   const port: ConversationPort = {
     snapshot: vi.fn(async () => {
       throw new Error("Full snapshots must not be used");
@@ -96,17 +96,17 @@ function harness(count = 210, approvals?: ApprovalPort) {
     port,
     drafts: { read: () => null, write: () => {}, remove: () => {} },
     key: () => "key",
-    socket: {
-      connect: (callback) => {
+    feed: {
+      subscribe: (_selection, callback) => {
         callbacks.push(callback);
-        return { send: () => {}, close: () => {} };
+        return { close: () => {} };
       },
     },
   });
   controllers.push(controller);
   return { controller, port, messages, callbacks };
 }
-function event(value: Message): ConversationServerFrame {
+function event(value: Message): ConversationFeedFrame {
   return {
     type: "event",
     entry: {

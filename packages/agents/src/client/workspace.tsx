@@ -1,3 +1,4 @@
+import { createConversationFeed } from "@raypx/client/events";
 import { agentIdentityStyle } from "./identity.js";
 import { NotificationsBell } from "./notifications.js";
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -107,6 +108,7 @@ import {
   type ConversationPort,
   type ComputerPort,
   type ConversationSocketPort,
+  type ConversationFeedPort,
   type ApprovalPort,
 } from "../model.js";
 import { GroupForm, GroupParticipants } from "./group-directory.js";
@@ -183,6 +185,7 @@ export interface AgentsWorkspaceProps {
   modelCatalogKey?: string | undefined;
   onNavigate?: (selection: { spaceId: string; agentId?: string; groupId?: string }) => void;
   socket?: ConversationSocketPort;
+  feed?: ConversationFeedPort;
   drafts?: ConversationDraftStore;
 }
 
@@ -215,6 +218,7 @@ function AgentsWorkspaceContents({
   onOpenExternal,
   modelCatalogKey,
   socket,
+  feed,
   drafts,
 }: AgentsWorkspaceProps) {
   const t = useTranslations("agents");
@@ -329,6 +333,24 @@ function AgentsWorkspaceContents({
   const deletingRef = useRef<string | null>(null);
   const confirmation = useConfirmation();
   const eventSocket = useMemo(() => socket ?? browserConversationSocket(origin), [socket, origin]);
+  const sessionEnded = useRef(onSessionEnded);
+  useLayoutEffect(() => {
+    sessionEnded.current = onSessionEnded;
+  }, [onSessionEnded]);
+  const conversationFeed = useMemo<ConversationFeedPort>(() => {
+    const source = feed ?? createConversationFeed(origin);
+    return {
+      subscribe(selection, callbacks) {
+        return source.subscribe(selection, {
+          ...callbacks,
+          onClose(code, reason, retryAfterMs) {
+            callbacks.onClose(code, reason, retryAfterMs);
+            if (code === 4001) sessionEnded.current?.();
+          },
+        });
+      },
+    };
+  }, [feed, origin]);
   const draftStore = useMemo(() => drafts ?? browserConversationDrafts(), [drafts]);
   const conversationPort = useMemo<ConversationPort>(
     () => ({
@@ -1543,6 +1565,7 @@ function AgentsWorkspaceContents({
             onActivity={rememberActivity}
             onComputerOpen={() => void refreshSpaceActivity()}
             socket={eventSocket}
+            feed={conversationFeed}
             drafts={draftStore}
             origin={origin}
             accountId={accountId}
@@ -1574,6 +1597,7 @@ function AgentsWorkspaceContents({
             computerPort={computerPort}
             approvalPort={approvalPort}
             socket={eventSocket}
+            feed={conversationFeed}
             drafts={draftStore}
             origin={origin}
             accountId={accountId}

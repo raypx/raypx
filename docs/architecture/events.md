@@ -49,14 +49,12 @@ Each conversation has one ordered event log in PostgreSQL.
 
 ## Transport
 
-- Clients open one authenticated WebSocket to the backend. A client subscribes to
-  the conversations of the Spaces it has joined.
-- A client reads from a cursor and acknowledges what it has applied. The server
-  resumes from the acknowledged cursor on reconnect.
-- A gap between the cursor and the oldest retained event forces a snapshot. The
-  client replaces its state with the snapshot and then resumes incremental events.
-- The server checks membership when a subscription opens and again when a
-  membership changes. A removed member's subscriptions close.
+- Clients receive conversation messages, Run state and live replies over SSE.
+- Clients apply state and its cursor together and reconnect from the last applied
+  cursor. A gap or expired replay window requires a fresh snapshot.
+- Space and Screen subscriptions use WebSocket with explicit acknowledgements.
+- The server rechecks session and Space membership during delivery and closes
+  affected streams when access ends.
 
 ## Fanout
 
@@ -108,36 +106,36 @@ by default. The internal `retainAfter` maintenance operation removes only a pref
 and persists its floor even when no events remain. Message history and retry keys
 remain available. There is no scheduled retention policy in this slice.
 
-API-enabled roles mount `/events` on the existing Hono/CrossWS listener. Upgrade
-requires the normal account session and an allowed Origin when one is present.
-Credentials never appear in the URL. The server sends `{ type: "ready", version: 1 }`.
-Conversation client frames carry `version: 1`, `spaceId` and `conversationId`:
+API-enabled roles mount `/events` on the same Hono/CrossWS listener for HTTP
+streams and WebSocket upgrades. Both require the normal account session and an
+allowed Origin when supplied. Credentials stay in headers.
 
-- `subscribe` supplies `after`, the client's persisted applied cursor.
-- `ack` supplies `sequence`, exactly matching the event just applied.
-- `unsubscribe` releases the subscription and any pending ACK wait.
+For a conversation, clients request `GET /events?spaceId=…&conversationId=…&after=…`
+with `Accept: text/event-stream`. Each response serves one conversation and sends
+JSON in SSE `data` records. After admission and cursor validation it sends
+`{ type: "ready", version: 1 }` and the ordered `event` entries strictly after
+`after`. The server writes one bounded frame at a time and closes a stalled
+writer after ten seconds. A comment heartbeat every five seconds keeps idle
+connections open. Clients reconnect if they stop receiving bytes.
 
-An `event` frame contains one hydrated entry. Each of at most 32 subscriptions has
-one event in flight and a ten-second ACK deadline, using the same AcknowledgedStream
-as the CLI. Clients persist applied state and its cursor together, ACK it, and
-resubmit that cursor on reconnect. The server never sends an event at or below
-the supplied cursor. An event not yet applied/acknowledged remains replayable;
-there is no claim of exactly-once delivery across a lost ACK.
+The client supplies its last applied cursor on each request. Merely receiving an
+event does not advance that cursor, so a disconnect can replay received events
+that were not applied. A `snapshot-required` frame carries the conversation
+identifiers and current cursor and terminates the feed. The client applies a
+snapshot before subscribing from its cursor.
 
 Conversation and Space clients retry automatic reconnects after one second at
-first, then use exponential backoff with jitter capped at 30 seconds. A stream
-that stays ready for 30 seconds resets the delay. Brief successful handshakes
-do not reset it.
+first, then use exponential backoff with jitter capped at 30 seconds. Thirty
+seconds of stable connection resets the delay. Conversation SSE also honors
+`Retry-After` on HTTP 429 and 503, when supplied.
 
-A `snapshot-required` frame carries the selected identifiers and current cursor,
-and releases that subscription. The client fetches and applies the snapshot, then
-subscribes using the snapshot's cursor. LISTEN hints wake database reads; a
-one-second repair poll covers missed notifications. Session and Space membership
-are resolved again before delivery and during idle/ACK waits. Removal closes the
-connection with 4003; authentication loss uses 4001. Invalid frames/cursors/ACKs
-use 4000, unavailable storage uses 1013, and shutdown uses 1001. Socket and query
-bounds apply independently. No message text, account credentials or event content
-is published on the notification channel or written to logs.
+LISTEN hints wake database reads. A one-second poll repairs missed hints and
+checks session and Space membership during idle periods and stalled writes.
+Fresh admission also guards each delivery. SSE terminal records carry
+`{ type: "closed", code, reason }`. Space access loss uses 4003, session loss
+4001, invalid cursors 4000, storage unavailability 1013 and shutdown 1001.
+If a write stalls at revocation the server aborts the body and the next request
+rechecks access. No event content or credentials enter notifications or logs.
 
 ## Approval cards
 
@@ -151,7 +149,7 @@ command output and credentials never enter these events.
 Creating a request writes `card.created` then `run.state: waiting` atomically.
 Answering or expiration writes `card.resolved` then `run.state: running` unless
 the Run is already terminal. Stop writes cancellation and pending-card resolutions
-in one transaction. They use the same counter, fanout, replay and ACK protocol as
+in one transaction. They use the same counter, fanout and replay protocol as
 other events, without another stream version. After a snapshot, clients can read
 current addressed requests through `approvals.pending`; snapshots do not embed
 request arguments or effect results. Live approval handling still requires the
@@ -159,8 +157,8 @@ single API-enabled execution process.
 
 ## Live replies in phase 1
 
-The shared Agents model applies snapshots and consecutive event sequences before
-acknowledging. Duplicate events are harmless; gaps request a fresh snapshot.
+The shared Agents model applies snapshots and consecutive event sequences and
+updates the cursor with the projection. A gap requests a fresh snapshot.
 Transient deltas require adjacent UTF-16 offsets and converge to the committed
 segment. Missing offsets reconnect for a fresh prefix. The UI retains its draft
 through connecting, live, reconnecting and snapshot-required states, labels queued
@@ -176,17 +174,17 @@ After replay reaches the current durable cursor, the server sends `reply.prefix`
 with `spaceId`, `conversationId`, `runId`, `segmentId`, `offset: 0` and the whole
 open text. Subsequent `reply.delta` frames carry the same identifiers, an offset
 in UTF-16 code units and text to append at that offset. Deltas may be coalesced
-while replay is awaiting ACKs. Prefix capture and offset registration occur
-synchronously, so a joining subscriber cannot miss a concurrent append. Every
-delivery still rechecks authentication and Space membership.
+while the HTTP writer is busy. Each feed tracks the written offset per Run. A
+new live notification wakes the feed so it can continue from that offset. Every
+delivery rechecks authentication and Space membership.
 
-Transient frames neither advance nor require an event ACK. Clients replace a
+Transient frames leave the durable cursor untouched. Clients replace a
 segment's draft on a prefix, require adjacent offsets for appends, and replace it
 with the full `reply.segment` when that event arrives. A terminal failed or
 cancelled `run.state` clears any uncommitted draft. A successful model turn is one
 segment, limited to 32,000 UTF-16 code units. Reasoning and tool-call content are
 never published. Errors or stops discard incomplete text; completed segments stay
-in snapshots after event retention. A socket joining during completion gets either
+in snapshots after event retention. A feed joining during completion gets either
 the prefix and following appends, or the committed segment through cursor replay.
 The first visible text timestamp is captured in memory and written to the Run in
 the segment/event transaction.
@@ -247,10 +245,10 @@ same occurrence through a composite key.
 
 ## Space membership events
 
-`/events` also accepts `space.subscribe` with `{ version: 1, spaceId, after }`,
+The `/events` WebSocket accepts `space.subscribe` with `{ version: 1, spaceId, after }`,
 `space.ack` with `{ version: 1, spaceId, sequence }` and `space.unsubscribe` with
-`{ version: 1, spaceId }`. Space and conversation subscriptions share the 32-slot
-bound, session admission and ACK deadline, with independent cursors.
+`{ version: 1, spaceId }`. Each socket supports up to 32 Space subscriptions with independent cursors and
+a ten-second ACK deadline. Screen uses its own acknowledged subscription.
 
 The server sends `{ type: "space.event", spaceId, event }`; `conversationId` is
 absent. The event contains `{ id, spaceId, kind, payload, createdAt }`:
@@ -271,31 +269,13 @@ Apply each event and its cursor together, then ACK its exact ID. These events
 never extend the existing conversation event union.
 
 The membership transaction publishes a content-free `raypx_space_events` hint.
-Removal actively aborts all affected open sockets, including conversation-only
-subscriptions and idle ACK waiters. A deletion claim likewise closes the Space's
-subscribers. Both use 4003; the internal deletion hint is not a public event kind.
-The repair poll remains a fallback when notifications are missed. Close code 4003
-adds stable reason strings `SPACE_MEMBER_REMOVED`, `SPACE_MEMBER_LEFT` and
-`SPACE_DELETING`; session loss retains 4001 with `SESSION_ENDED`. The persisted
-membership removal reason distinguishes leave from removal after a missed hint.
-An unknown selector still uses the existing generic refusal, so the close reason
-does not reveal a Space to a caller who never belonged to it. No frame or event
-variant is added.
+Removal and deletion close affected SSE and WebSocket streams, including idle
+listeners. The poll repairs missed hints. Code 4003 carries the stable reasons
+`SPACE_MEMBER_REMOVED`, `SPACE_MEMBER_LEFT` and `SPACE_DELETING`. Session loss
+uses 4001 with `SESSION_ENDED`. Unknown selectors use a generic refusal.
 
-Web and Desktop browser previews receive the code and reason from the browser
-WebSocket. Packaged Desktop's daemon owns that remote socket and carries a
-terminal `{ type: "closed", code, reason }` through its private `events_read`
-result to the renderer's conversation socket port. Existing frames and null idle
-polls are unchanged. The daemon validates the reason's UTF-8 and 123-byte limit,
-then forwards only `4003` paired with `SPACE_MEMBER_REMOVED`, `SPACE_MEMBER_LEFT`
-or `SPACE_DELETING`, and `4001` paired with `SESSION_ENDED`. Other reasons are
-empty and unknown codes keep the generic state; malformed codes become abnormal
-close `1006`. No raw errors, cookies or host credentials enter this result.
-Unread content is discarded at termination. One terminal result survives between
-polls within the existing stream bound, until read, peer/session cleanup or a
-20-second expiry. The renderer reports closure once and stops polling; local
-teardown ignores late reads. This adds no backend event or conversation frame
-variant and does not move transport into Go.
+Packaged Desktop carries terminal records from both upstream transports through
+the private daemon channel. See [Desktop clients](clients.md#desktop).
 
 ## Group conversations
 
@@ -323,7 +303,7 @@ Run-related events and transient replies add `agentId` and nullable `parentRunId
 committed segments carry the same attribution. Each live Run has independent
 prefix/delta offsets. All writers still lock the conversation's single counter,
 so concurrent Agents share one gapless durable sequence and the existing snapshot,
-cursor, retention and ACK protocol. Child Runs produce activity under their parent,
+cursor and retention protocol. Child Runs produce activity under their parent,
 without independent visible reply segments or live text.
 
 `agent_send_message` routes a structural mention within the current group. It
@@ -382,9 +362,8 @@ not another message page.
 Reads hold the counter and persist departed-actor cancellation before reading
 state and `cursor` together. `cursor` keeps its existing event replay meaning;
 `olderCursor` is exclusively a history boundary. Applying an older window must
-not replace an already newer event-stream cursor. No ACK, retention or stream
-resume semantics change. The new procedure leaves existing snapshot clients
-unchanged while giving adopting clients a bounded initial and older-history read.
+not replace an already newer event-stream cursor. History provides bounded
+initial and older-message reads independent of stream replay.
 
 Snapshot and history also return optional additive `activeRuns` and
 `activeRunsTruncated`, independent of the requested message window. At most 100

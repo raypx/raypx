@@ -5,9 +5,10 @@ import {
   type AgentConversationView,
   type AgentsWorkspacePort,
   type ConversationSocketPort,
+  type ConversationFeedPort,
   type SpaceMembership,
 } from "@raypx/agents/model";
-import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationClientFrame, ConversationFeedFrame } from "@raypx/contracts/api";
 import { agentIdSchema, conversationIdSchema, conversationSchema } from "@raypx/core/agents";
 import { messageIdSchema } from "@raypx/core/conversation";
 import { spaceIdSchema } from "@raypx/core/spaces";
@@ -54,7 +55,7 @@ function item(id: string, spaceId = "space-one"): AgentConversationView {
 const one = item("agent-one");
 const two = item("agent-two", "space-two");
 
-function messageEvent(value: AgentConversationView, sequence = 1): ConversationServerFrame {
+function messageEvent(value: AgentConversationView, sequence = 1): ConversationFeedFrame {
   const selection = { spaceId: value.agent.spaceId, conversationId: value.conversation.id };
   const message = {
     id: messageIdSchema.parse(`message-${sequence}`),
@@ -75,7 +76,9 @@ function messageEvent(value: AgentConversationView, sequence = 1): ConversationS
 
 function harness(live = false) {
   const exited = vi.fn();
-  const connections: Array<Parameters<ConversationSocketPort["connect"]>[0]> = [];
+  const sockets: Array<Parameters<ConversationSocketPort["connect"]>[0]> = [];
+  const connections: Array<Parameters<ConversationFeedPort["subscribe"]>[1]> = [];
+  const subscriptions: Parameters<ConversationFeedPort["subscribe"]>[0][] = [];
   const frames: ConversationClientFrame[] = [];
   const close = vi.fn();
   const stored = new Map<string, string>();
@@ -117,13 +120,20 @@ function harness(live = false) {
     port,
     {
       connect(callbacks) {
-        connections.push(callbacks);
+        sockets.push(callbacks);
         return {
           send: (frame) => {
             frames.push(frame);
           },
           close,
         };
+      },
+    },
+    {
+      subscribe(selection, callbacks) {
+        connections.push(callbacks);
+        subscriptions.push(selection);
+        return { close };
       },
     },
     {
@@ -140,7 +150,18 @@ function harness(live = false) {
     exited,
   );
   workspaces.push(workspace);
-  return { workspace, port, connections, frames, close, stored, preference, exited };
+  return {
+    workspace,
+    port,
+    connections,
+    sockets,
+    subscriptions,
+    frames,
+    close,
+    stored,
+    preference,
+    exited,
+  };
 }
 
 async function settle() {
@@ -165,7 +186,7 @@ describe("mobile workspace composition", () => {
     h.connections[0]!.onFrame({ type: "ready", version: 1 });
     h.connections[0]!.onFrame(messageEvent(one));
     selected.conversation.setDraft("Unsent text");
-    expect(h.frames.at(-1)).toMatchObject({ type: "ack", sequence: 1 });
+    expect(selected.conversation.getSnapshot().cursor).toBe(1);
 
     h.workspace.setActive(false);
     expect(h.close).toHaveBeenCalledOnce();
@@ -176,7 +197,7 @@ describe("mobile workspace composition", () => {
     expect(h.workspace.conversation(one)).toBe(selected);
     expect(h.connections).toHaveLength(2);
     h.connections[1]!.onFrame({ type: "ready", version: 1 });
-    expect(h.frames.at(-1)).toMatchObject({ type: "subscribe", after: 1 });
+    expect(h.subscriptions.at(-1)).toMatchObject({ after: 1 });
     h.connections[1]!.onFrame(messageEvent(one));
     h.connections[1]!.onFrame(messageEvent(one, 2));
     expect(selected.conversation.getSnapshot()).toMatchObject({ cursor: 2, draft: "Unsent text" });
@@ -330,13 +351,13 @@ it.each([
   const h = harness(true);
   await h.workspace.refresh();
   h.workspace.setActive(true);
-  await vi.waitFor(() => expect(h.connections).toHaveLength(1));
-  h.connections[0]!.onFrame({ type: "ready", version: 1 });
+  await vi.waitFor(() => expect(h.sockets).toHaveLength(1));
+  h.sockets[0]!.onFrame({ type: "ready", version: 1 });
   await vi.waitFor(() =>
     expect(h.frames.some((frame) => frame.type === "space.subscribe")).toBe(true),
   );
   vi.spyOn(h.port.spaces, "list").mockResolvedValue([membership("space-two")]);
-  h.connections[0]!.onClose(4003, reason);
+  h.sockets[0]!.onClose(4003, reason);
   await vi.waitFor(() => expect(h.exited).toHaveBeenCalledWith(expected));
   await vi.waitFor(() => expect(h.workspace.getSnapshot().page.spaceId).toBe("space-two"));
   expect(h.workspace.getSnapshot().page.agents).not.toContainEqual(one);

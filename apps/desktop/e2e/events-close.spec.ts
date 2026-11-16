@@ -139,6 +139,10 @@ async function nativeEventsFixture(page: Page) {
     return { json: reads[path] };
   }
   await page.routeWebSocket("**/events", () => unexpected.push("browser /events"));
+  await page.route("**/events?**", (route) => {
+    unexpected.push("browser SSE");
+    return route.abort();
+  });
   await page.routeWebSocket(channelUrl, (socket) => {
     function reply(id: string, result: unknown) {
       socket.send(JSON.stringify({ type: "response", id, result }));
@@ -173,6 +177,12 @@ async function nativeEventsFixture(page: Page) {
       ) {
         reply(id, { state: "registered" });
       } else if (method === "events_open") {
+        if (
+          params.conversation?.spaceId === spaceId &&
+          params.conversation?.conversationId === conversation.id &&
+          params.conversation?.after === 0
+        )
+          subscriptions.add("conversation.sse");
         streams.set(params.id, { ready: false });
         reply(id, true);
       } else if (method === "events_read") {
@@ -222,7 +232,7 @@ for (const [code, reason, notice] of [
     await composer.fill("Unsent native fixture draft");
     await expect
       .poll(() => [...fixture.subscriptions])
-      .toEqual(expect.arrayContaining(["subscribe", "space.subscribe"]));
+      .toEqual(expect.arrayContaining(["conversation.sse", "space.subscribe"]));
     expect(fixture.publicConfigurationReads).toEqual([]);
     fixture.end(code, reason);
     if (notice) {

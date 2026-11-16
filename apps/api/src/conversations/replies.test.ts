@@ -41,25 +41,18 @@ function fixture() {
 }
 async function subscribe(f: ReturnType<typeof fixture>, stream: ConversationStream, id: string) {
   const frames: ConversationServerFrame[] = [];
-  stream.open(id, "member", new Headers(), {
-    send(frame) {
-      frames.push(frame);
-      if (frame.type === "event")
-        queueMicrotask(() =>
-          stream.receive(
-            id,
-            JSON.stringify({
-              ...f.selection,
-              version: 1,
-              type: "ack",
-              sequence: frame.entry.event.sequence,
-            }),
-          ),
-        );
+  stream.openFeed(
+    id,
+    "member",
+    new Headers(),
+    { ...f.selection, after: 0 },
+    {
+      async write(frame) {
+        frames.push(frame);
+      },
+      close() {},
     },
-    close() {},
-  });
-  stream.receive(id, JSON.stringify({ ...f.selection, version: 1, type: "subscribe", after: 0 }));
+  );
   return frames;
 }
 function text(frames: ConversationServerFrame[]) {
@@ -236,20 +229,18 @@ it("replays approval handover from the applied cursor without gaps or duplicate 
   const selection = { version: 1 as const, spaceId: f.spaceId, conversationId: f.conversationId };
   function connect(id: string, after: number) {
     const frames: ConversationServerFrame[] = [];
-    stream.open(id, "member", new Headers(), {
-      send(frame) {
-        frames.push(frame);
-        if (frame.type === "event")
-          queueMicrotask(() =>
-            stream.receive(
-              id,
-              JSON.stringify({ ...selection, type: "ack", sequence: frame.entry.event.sequence }),
-            ),
-          );
+    stream.openFeed(
+      id,
+      "member",
+      new Headers(),
+      { spaceId: selection.spaceId, conversationId: selection.conversationId, after },
+      {
+        async write(frame) {
+          frames.push(frame);
+        },
+        close() {},
       },
-      close() {},
-    });
-    stream.receive(id, JSON.stringify({ ...selection, type: "subscribe", after }));
+    );
     return () => frames.flatMap((frame) => (frame.type === "event" ? [frame.entry.event] : []));
   }
   const first = connect("first", 0);
@@ -270,7 +261,7 @@ it("replays approval handover from the applied cursor without gaps or duplicate 
     .poll(() => first().some((event) => event.kind === "run.state" && event.state === "waiting"))
     .toBe(true);
   const cursor = first().at(-1)!.sequence;
-  stream.close("first");
+  stream.closeFeed("first");
   await f.conversations.send(f.scope, f.conversationId, {
     idempotencyKey: "steering",
     text: "Mention the file name",

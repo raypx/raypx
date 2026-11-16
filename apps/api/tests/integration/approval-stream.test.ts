@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "vitest";
 import { Hono } from "hono";
 import { createApiClient } from "@raypx/client/api";
 import { ConversationRunner } from "@raypx/agents/server";
-import { conversationServerFrameSchema, type ConversationServerFrame } from "@raypx/contracts/api";
+import { connectConversationFeed } from "../helpers/conversation-feed.js";
 import { ConversationStream } from "../../src/conversations/stream.js";
 import { createConversationSocketRoutes } from "../../src/conversations/socket.js";
 import { serveBackend } from "../fixtures/backend-server.js";
@@ -38,38 +38,15 @@ it("recovers a waiting Run, delivers steering and replays its approval answer on
   const client = createApiClient({ baseUrl: String(server.url), headers: { origin: origins[0]! } });
   const selection = { spaceId: f.spaceId, conversationId: f.conversationId };
   async function connect(after: number) {
-    const url = new URL("/events", server.url);
-    url.protocol = "ws:";
-    const socket = new WebSocket(url);
-    const frames: ConversationServerFrame[] = [];
-    const closed: number[] = [];
-    socket.addEventListener("message", (event) => {
-      const frame = conversationServerFrameSchema.parse(JSON.parse(String(event.data)));
-      frames.push(frame);
-      if (frame.type === "event")
-        socket.send(
-          JSON.stringify({
-            version: 1,
-            ...selection,
-            type: "ack",
-            sequence: frame.entry.event.sequence,
-          }),
-        );
-    });
-    socket.addEventListener("close", (event) => closed.push(event.code));
-    cleanups.push(async () => {
-      socket.close();
-    });
-    await expect.poll(() => frames[0]).toEqual({ version: 1, type: "ready" });
-    socket.send(JSON.stringify({ version: 1, ...selection, type: "subscribe", after }));
-    const events = () =>
-      frames.flatMap((frame) => (frame.type === "event" ? [frame.entry.event] : []));
-    return { socket, frames, closed, events };
+    const feed = connectConversationFeed(server.url, { ...selection, after });
+    cleanups.push(async () => feed.close());
+    await expect.poll(() => feed.frames[0]).toEqual({ version: 1, type: "ready" });
+    return feed;
   }
   const first = await connect(0);
   await client.conversations.send({
     ...selection,
-    message: { idempotencyKey: "approval-socket", text: "Write a file" },
+    message: { idempotencyKey: "approval-feed", text: "Write a file" },
   });
   await expect.poll(() => f.calls.length).toBe(1);
   f.calls[0]!.toolCalls([
@@ -98,8 +75,7 @@ it("recovers a waiting Run, delivers steering and replays its approval answer on
     computerId: pinnedComputer.id,
     computerGeneration: pinnedComputer.generation,
   });
-  first.socket.close();
-  await expect.poll(() => first.closed.length).toBe(1);
+  first.close();
   await f.conversations.send(f.scope, f.conversationId, {
     idempotencyKey: "waiting-steering",
     text: "Mention the file name in your reply",

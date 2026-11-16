@@ -51,6 +51,7 @@ export type {
   ConversationPort,
   ConversationSocket,
   ConversationSocketPort,
+  ConversationFeedPort,
   ConversationDraftStore,
   AgentsWorkspacePort,
   SpaceMembership,

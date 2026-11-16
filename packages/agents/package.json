@@ -22,6 +22,7 @@
   "dependencies": {
     "@raypx/ai": "workspace:*",
     "@raypx/blocks": "workspace:*",
+    "@raypx/client": "workspace:*",
     "@raypx/computers": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",

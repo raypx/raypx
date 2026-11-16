@@ -61,6 +61,7 @@ import {
   type AgentConversationView,
   type ConversationDraftStore,
   type ConversationSocketPort,
+  type ConversationFeedPort,
   type ConversationPort,
   type ApprovalPort,
 } from "../model.js";
@@ -147,6 +148,7 @@ interface AgentConversationProps {
   onActivity?: ((spaceId: string, calls: readonly ToolCallActivity[]) => void) | undefined;
   onComputerOpen?: (() => void) | undefined;
   socket: ConversationSocketPort;
+  feed: ConversationFeedPort;
   drafts: ConversationDraftStore;
   origin: string;
   accountId: string;
@@ -181,6 +183,7 @@ export function AgentConversation({
   onActivity,
   onComputerOpen,
   socket,
+  feed,
   drafts,
   origin,
   accountId,
@@ -212,7 +215,7 @@ export function AgentConversation({
         selection: { spaceId: item.agent.spaceId, conversationId: item.conversation.id },
         owner: { origin, accountId },
         port,
-        socket,
+        feed,
         drafts,
         key: () => crypto.randomUUID(),
       });
@@ -242,6 +245,7 @@ export function AgentConversation({
     computerPort,
     approvalPort,
     socket,
+    feed,
     drafts,
   ]);
   if (!controllers) return <ConversationLoading label={t("loading")} />;

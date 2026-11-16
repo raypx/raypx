@@ -13,7 +13,12 @@ import {
   type SpaceEvent,
 } from "@raypx/core/spaces";
 import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
-import type { AgentsWorkspacePort, ConversationSocketPort, SpaceManagementPort } from "../model.js";
+import type {
+  AgentsWorkspacePort,
+  ConversationFeedPort,
+  ConversationSocketPort,
+  SpaceManagementPort,
+} from "../model.js";
 import commonEn from "@raypx/i18n/messages/en";
 import commonZh from "@raypx/i18n/messages/zh";
 import blocksEn from "@raypx/blocks/messages/en";
@@ -140,6 +145,19 @@ async function fixture(language: "en" | "zh") {
       return { send: (frame) => connection.sent.push(frame), close: connection.close };
     },
   };
+  const feeds: {
+    selection: Parameters<ConversationFeedPort["subscribe"]>[0];
+    receive: Parameters<ConversationFeedPort["subscribe"]>[1]["onFrame"];
+    close: ReturnType<typeof vi.fn>;
+  }[] = [];
+  const feed: ConversationFeedPort = {
+    subscribe(selection, callbacks) {
+      const close = vi.fn();
+      feeds.push({ selection, receive: callbacks.onFrame, close });
+      queueMicrotask(() => callbacks.onFrame({ type: "ready", version: 1 }));
+      return { close };
+    },
+  };
   const getMembers = vi.fn<SpaceManagementPort["members"]>(async ({ spaceId }) =>
     spaceId === space.id ? directory : [{ ...viewer, spaceId: otherSpace.id }],
   );
@@ -255,6 +273,7 @@ async function fixture(language: "en" | "zh") {
             spaceId={space.id}
             agentId={agent.id}
             socket={socket}
+            feed={feed}
             drafts={{ read: () => null, write() {}, remove() {} }}
             onNavigate={navigate}
             onSessionEnded={sessionEnded}
@@ -275,18 +294,8 @@ async function fixture(language: "en" | "zh") {
     await act(async () => stream!.receive({ type: "space.event", spaceId: space.id, event }));
   }
   async function emitConversation(event: Record<string, unknown>) {
-    await waitFor(() =>
-      expect(
-        connections.some((connection) =>
-          connection.sent.some((frame) => frame.type === "subscribe"),
-        ),
-      ).toBe(true),
-    );
-    const stream = connections.find(
-      (connection) =>
-        connection.close.mock.calls.length === 0 &&
-        connection.sent.some((frame) => frame.type === "subscribe"),
-    );
+    await waitFor(() => expect(feeds).not.toHaveLength(0));
+    const stream = feeds.find((connection) => connection.close.mock.calls.length === 0);
     expect(stream).toBeDefined();
     await act(async () =>
       stream!.receive({
@@ -304,6 +313,7 @@ async function fixture(language: "en" | "zh") {
   }
   return {
     connections,
+    feeds,
     send,
     navigate,
     sessionEnded,
@@ -521,11 +531,10 @@ it.each([
     expect(screen.getByRole("button", { name: strings.space })).toHaveTextContent(otherSpace.name);
     await waitFor(() =>
       expect(
-        test.connections.some(
+        test.feeds.some(
           (connection) =>
-            connection.sent.some(
-              (frame) => frame.type === "subscribe" && frame.conversationId === conversation.id,
-            ) && connection.close.mock.calls.length > 0,
+            connection.selection.conversationId === conversation.id &&
+            connection.close.mock.calls.length > 0,
         ),
       ).toBe(true),
     );

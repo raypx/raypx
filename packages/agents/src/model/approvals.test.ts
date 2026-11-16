@@ -18,7 +18,7 @@ import {
   approvalForToolCall,
 } from "./approvals.js";
 import { ConversationController } from "./controller.js";
-import type { ApprovalPort, ConversationSnapshot, ConversationSocketPort } from "./port.js";
+import type { ApprovalPort, ConversationSnapshot, ConversationFeedPort } from "./port.js";
 
 const selection = {
   spaceId: spaceIdSchema.parse("space"),
@@ -64,7 +64,7 @@ function cardEvent(sequence = 1): Extract<ConversationEvent, { kind: "card.creat
   };
 }
 function harness() {
-  const connections: Array<Parameters<ConversationSocketPort["connect"]>[0]> = [];
+  const connections: Array<Parameters<ConversationFeedPort["subscribe"]>[1]> = [];
   const approvals: ApprovalPort = {
     pending: vi.fn().mockResolvedValue([request()]),
     answer: vi
@@ -94,10 +94,10 @@ function harness() {
     port: { snapshot: vi.fn().mockResolvedValue(initial), send: vi.fn(), stop: vi.fn() },
     drafts: { read: () => null, write() {}, remove() {} },
     key: () => "message-key",
-    socket: {
-      connect(callbacks) {
+    feed: {
+      subscribe(_selection, callbacks) {
         connections.push(callbacks);
-        return { send() {}, close() {} };
+        return { close() {} };
       },
     },
   });

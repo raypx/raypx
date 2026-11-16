@@ -6,7 +6,7 @@ import {
   ConversationController,
   type ConversationPort,
   type ConversationSnapshot,
-  type ConversationSocketPort,
+  type ConversationFeedPort,
 } from "@raypx/agents/model";
 import {
   act,
@@ -66,7 +66,7 @@ const readerRun = runSchema.parse({
 const writerRun = runSchema.parse({ ...readerRun, id: "writer-run", agentId: "Writer" });
 
 async function harness(initial: Partial<ConversationSnapshot> = {}) {
-  let callbacks: Parameters<ConversationSocketPort["connect"]>[0] | undefined;
+  let callbacks: Parameters<ConversationFeedPort["subscribe"]>[1] | undefined;
   const port: ConversationPort = {
     snapshot: vi.fn(async () => ({
       conversation,
@@ -94,10 +94,10 @@ async function harness(initial: Partial<ConversationSnapshot> = {}) {
     owner: { origin: "https://app.example.test", accountId: "member" },
     port,
     computer,
-    socket: {
-      connect: (next) => {
+    feed: {
+      subscribe: (_selection, next) => {
         callbacks = next;
-        return { send() {}, close() {} };
+        return { close() {} };
       },
     },
     drafts: { read: () => null, write() {}, remove() {} },

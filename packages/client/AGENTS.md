@@ -1,8 +1,9 @@
 # Client SDK
 
 No root export. /api provides the typed current RPC client and injectable fetch.
-/events provides AcknowledgedStream and StreamCursor for API event delivery.
-Exact ACKs advance cursors; deadlines, aborts and resets cancel pending delivery.
+/events provides the authenticated SSE reader for conversation feeds and the
+AcknowledgedStream and StreamCursor helpers for WebSocket delivery. SSE callers
+own their applied cursor and retry schedule.
 
 This package is browser/native safe: no filesystem, SQLite, environment or server
 imports. Fetch credentials/headers for each request. Never automatically replay

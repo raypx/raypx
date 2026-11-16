@@ -82,10 +82,9 @@ it("isolates event read, send and close by the authenticated renderer client", a
         {
           id,
           frame: {
-            type: "subscribe",
+            type: "space.subscribe",
             version: 1,
             spaceId: "space",
-            conversationId: "conversation",
             after: 4,
           },
         },

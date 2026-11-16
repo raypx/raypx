@@ -73,8 +73,8 @@ counter, reuse a member/conversation idempotency receipt, then atomically insert
 message and immutable event, advance the counter and publish a content-free hint.
 Snapshot and cursor reads hold the conversation counter while persisting departed
 actor cancellations and reading state with its cursor. Prefix retention keeps
-messages and advances the replay floor atomically. API owns socket lifecycle,
-ACKs and fresh membership checks. Sends also record a queued Run and keyed delayed backup job in the message
+messages and advances the replay floor atomically. API owns the SSE conversation feed, acknowledged Space/Screen sockets and
+fresh membership checks. Sends also record a queued Run and keyed delayed backup job in the message
 transaction, then dispatch directly through ConversationRunner. Messages received
 while a Run is running or waiting steer that Run at the next model boundary.
 `/server` owns the injectable member-aware ModelAccess port and process-local
@@ -184,7 +184,7 @@ Snapshot/history `activeRuns` is an independently bounded (100) Space/conversati
 projection, including trigger message position, up to 16 pending card summaries
 and the latest committed segment position. It contains no request arguments.
 The shared model merges those Runs outside its loaded message window and applies
-state, segment and card events before ACK. `run.state.triggerMessage` identifies
+state, segment and card events with their cursor. `run.state.triggerMessage` identifies
 old-trigger and delegated work without guessing from the most recent message.
 DOM and Mobile show this work above the composer with direct Stop, approval,
 steering and a bounded trigger-page jump; loading its message hides the strip row.

@@ -1,4 +1,9 @@
-import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
+import type {
+  ConversationClientFrame,
+  ConversationFeedFrame,
+  ConversationFeedSelection,
+  ConversationServerFrame,
+} from "@raypx/contracts/api";
 import type {
   Agent,
   AgentId,
@@ -110,6 +115,17 @@ export interface ConversationSocketPort {
       onError(): void;
     },
   ): ConversationSocket;
+}
+export interface ConversationFeedPort {
+  subscribe(
+    this: void,
+    selection: ConversationFeedSelection,
+    callbacks: {
+      onFrame(this: void, frame: ConversationFeedFrame): void;
+      onClose(this: void, code?: number, reason?: string, retryAfterMs?: number): void;
+      onError(this: void): void;
+    },
+  ): { close(): void };
 }
 /** Device storage adapter. No browser or platform implementation enters the model. */
 export interface ConversationDraftStore {

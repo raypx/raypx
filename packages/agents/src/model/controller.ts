@@ -1,5 +1,5 @@
 import { AttachmentsController, type MessageAttachmentsPort } from "./attachments.js";
-import type { ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationFeedFrame } from "@raypx/contracts/api";
 import type { AgentId } from "@raypx/core/agents";
 import { editMentionTokens, insertMention, mentionIds, type MentionToken } from "./mentions.js";
 import type { ConversationHistoryCursor, RunId } from "@raypx/core/conversation";
@@ -20,8 +20,7 @@ import type {
   ConversationOwner,
   ConversationPort,
   ConversationSelection,
-  ConversationSocket,
-  ConversationSocketPort,
+  ConversationFeedPort,
   ApprovalPort,
   ConversationHistory,
   ConversationSnapshot,
@@ -67,7 +66,7 @@ export interface ConversationControllerOptions {
   selection: ConversationSelection;
   owner: ConversationOwner;
   port: ConversationPort;
-  socket: ConversationSocketPort;
+  feed: ConversationFeedPort;
   drafts: ConversationDraftStore;
   key(this: void): string;
 }
@@ -81,7 +80,7 @@ export class ConversationController {
   private readonly draftKey: string;
   private readonly streamRetry = new StreamRetry();
   private view: ConversationControllerView;
-  private socket: ConversationSocket | undefined;
+  private feed: ReturnType<ConversationFeedPort["subscribe"]> | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private generation = 0;
   private started = false;
@@ -220,13 +219,13 @@ export class ConversationController {
     if (this.suspended) return;
     await this.refreshSnapshot("connecting");
   }
-  private closeSocket() {
-    const socket = this.socket;
-    this.socket = undefined;
+  private closeFeed() {
+    const feed = this.feed;
+    this.feed = undefined;
     try {
-      socket?.close();
+      feed?.close();
     } catch {
-      // Lifecycle fencing already invalidated this socket; it can no longer apply data.
+      // Lifecycle fencing already invalidated this feed; it can no longer apply data.
     }
   }
   private cancelTimer() {
@@ -238,7 +237,7 @@ export class ConversationController {
     const generation = ++this.generation;
     const request = ++this.snapshotRequest;
     this.snapshotLoading = true;
-    this.closeSocket();
+    this.closeFeed();
     ++this.historyGeneration;
     this.state.clearLiveReplies();
     this.update({
@@ -317,7 +316,7 @@ export class ConversationController {
       this.hasSnapshot = true;
       this.update({ loading: false });
       void this.refreshApprovals();
-      this.openSocket();
+      this.openFeed();
     } catch {
       if (this.disposed || generation !== this.generation) return;
       this.update({ loading: false, error: "load" });
@@ -349,7 +348,7 @@ export class ConversationController {
     const request = ++this.snapshotRequest;
     ++this.historyGeneration;
     this.snapshotLoading = true;
-    this.closeSocket();
+    this.closeFeed();
     this.update({ history: { ...this.view.history, loading: "earlier", error: false } });
     try {
       const page = await history({
@@ -375,12 +374,12 @@ export class ConversationController {
           revision: this.view.history.revision + 1,
         },
       });
-      this.openSocket();
+      this.openFeed();
       return true;
     } catch {
       if (!this.disposed && generation === this.generation) {
         this.update({ history: { ...this.view.history, loading: null, error: true } });
-        this.openSocket();
+        this.openFeed();
       }
       return false;
     } finally {
@@ -529,48 +528,51 @@ export class ConversationController {
       return false;
     }
   }
-  private openSocket() {
+  private openFeed() {
     if (this.disposed || this.suspended) return;
     this.streamRetry.opening();
     const generation = ++this.generation;
     this.timer = setTimeout(() => {
       if (!this.disposed && generation === this.generation) this.interrupted(false);
     }, 10_000);
-    const waiting: ConversationServerFrame[] = [];
+    const waiting: ConversationFeedFrame[] = [];
     let opening = true;
-    const onFrame = (frame: ConversationServerFrame) => {
+    const onFrame = (frame: ConversationFeedFrame) => {
       if (this.disposed || generation !== this.generation) return;
       if (opening) waiting.push(frame);
       else this.receiveFrame(frame);
     };
     try {
-      const socket = this.options.socket.connect({
-        onFrame,
-        onClose: (code, reason) => {
-          if (this.disposed || generation !== this.generation) return;
-          const endings = {
-            SPACE_MEMBER_REMOVED: "removed",
-            SPACE_MEMBER_LEFT: "left",
-            SPACE_DELETING: "deleting",
-            SESSION_ENDED: "session-ended",
-          } as const;
-          const subscriptionEnd =
-            reason && Object.hasOwn(endings, reason)
-              ? endings[reason as keyof typeof endings]
-              : undefined;
-          if (subscriptionEnd || code === 4001)
-            this.update({ subscriptionEnd: subscriptionEnd ?? "session-ended" });
-          this.interrupted(code === 4001 || code === 4003);
+      const feed = this.options.feed.subscribe(
+        { ...this.options.selection, after: this.view.cursor },
+        {
+          onFrame,
+          onClose: (code, reason, retryAfterMs) => {
+            if (this.disposed || generation !== this.generation) return;
+            const endings = {
+              SPACE_MEMBER_REMOVED: "removed",
+              SPACE_MEMBER_LEFT: "left",
+              SPACE_DELETING: "deleting",
+              SESSION_ENDED: "session-ended",
+            } as const;
+            const subscriptionEnd =
+              reason && Object.hasOwn(endings, reason)
+                ? endings[reason as keyof typeof endings]
+                : undefined;
+            if (subscriptionEnd || code === 4001)
+              this.update({ subscriptionEnd: subscriptionEnd ?? "session-ended" });
+            this.interrupted(code === 4001 || code === 4003, retryAfterMs);
+          },
+          onError: () => {
+            if (!this.disposed && generation === this.generation) this.interrupted(false);
+          },
         },
-        onError: () => {
-          if (!this.disposed && generation === this.generation) this.interrupted(false);
-        },
-      });
+      );
       if (this.disposed || generation !== this.generation) {
-        socket.close();
+        feed.close();
         return;
       }
-      this.socket = socket;
+      this.feed = feed;
       opening = false;
       for (const frame of waiting) onFrame(frame);
     } catch {
@@ -578,32 +580,13 @@ export class ConversationController {
       this.interrupted(false);
     }
   }
-  private sendFrame(frame: Parameters<ConversationSocket["send"]>[0]): boolean {
-    try {
-      if (!this.socket) return false;
-      this.socket.send(frame);
-      return true;
-    } catch {
-      this.interrupted(false);
-      return false;
-    }
-  }
-  private receiveFrame(frame: ConversationServerFrame) {
-    if (frame.type === "screen.event") return;
+  private receiveFrame(frame: ConversationFeedFrame) {
     if (frame.type === "ready") {
       this.cancelTimer();
-      const subscribed = this.sendFrame({
-        type: "subscribe",
-        version: 1,
-        ...this.options.selection,
-        after: this.view.cursor,
-      });
-      if (subscribed) {
-        this.streamRetry.ready();
-        this.update({ connection: "live", error: null });
-        void this.options.computer?.refresh();
-        void this.refreshApprovals();
-      }
+      this.streamRetry.ready();
+      this.update({ connection: "live", error: null });
+      void this.options.computer?.refresh();
+      void this.refreshApprovals();
       return;
     }
     if (frame.type === "event") {
@@ -620,12 +603,6 @@ export class ConversationController {
       this.update();
       if (applied === "applied" && frame.entry.event.kind === "run.state")
         void this.refreshRunDetails();
-      this.sendFrame({
-        type: "ack",
-        version: 1,
-        ...this.options.selection,
-        sequence: frame.entry.event.sequence,
-      });
       return;
     }
     if (
@@ -677,18 +654,21 @@ export class ConversationController {
         void this.refreshRunDetails();
     }
   }
-  private interrupted(authorizationLost: boolean) {
+  private interrupted(authorizationLost: boolean, retryAfterMs = 0) {
     if (this.disposed || this.suspended) return;
     ++this.generation;
     this.cancelTimer();
-    this.closeSocket();
+    this.closeFeed();
     this.state.clearLiveReplies();
     this.update({ connection: "reconnecting", error: authorizationLost ? "load" : null });
     if (!authorizationLost)
-      this.timer = setTimeout(() => {
-        this.timer = undefined;
-        if (!this.disposed) this.openSocket();
-      }, this.streamRetry.nextDelay());
+      this.timer = setTimeout(
+        () => {
+          this.timer = undefined;
+          if (!this.disposed) this.openFeed();
+        },
+        Math.max(this.streamRetry.nextDelay(), retryAfterMs),
+      );
   }
   reconnect() {
     if (this.disposed || this.suspended) return;
@@ -702,10 +682,10 @@ export class ConversationController {
     }
     ++this.generation;
     this.cancelTimer();
-    this.closeSocket();
+    this.closeFeed();
     this.state.clearLiveReplies();
     this.update({ connection: "reconnecting", error: null });
-    this.openSocket();
+    this.openFeed();
   }
   /** Platform lifecycle adapter: retain applied state/cursor, fence I/O and discard transient text. */
   suspend() {
@@ -715,7 +695,7 @@ export class ConversationController {
     ++this.generation;
     ++this.approvalsGeneration;
     this.cancelTimer();
-    this.closeSocket();
+    this.closeFeed();
     this.state.clearLiveReplies();
     this.update({
       connection: "reconnecting",
@@ -895,7 +875,7 @@ export class ConversationController {
     ++this.historyGeneration;
     ++this.generation;
     this.cancelTimer();
-    this.closeSocket();
+    this.closeFeed();
     this.listeners.clear();
   }
 }

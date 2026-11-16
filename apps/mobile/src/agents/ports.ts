@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClient, type FetchCallable } from "@raypx/client/api";
-import { conversationServerFrameSchema, MAX_CONVERSATION_FRAME_BYTES } from "@raypx/contracts/api";
+import { conversationSocketFrameSchema, MAX_CONVERSATION_FRAME_BYTES } from "@raypx/contracts/api";
 import type {
   AgentsWorkspacePort,
   ConversationDraftStore,
@@ -136,7 +136,7 @@ export function mobileConversationSocket(
                   new TextEncoder().encode(event.data).byteLength > MAX_CONVERSATION_FRAME_BYTES
                 )
                   throw new Error("Invalid conversation frame");
-                const frame = conversationServerFrameSchema.parse(JSON.parse(event.data));
+                const frame = conversationSocketFrameSchema.parse(JSON.parse(event.data));
                 callbacks.onFrame(frame);
               } catch {
                 closed = true;

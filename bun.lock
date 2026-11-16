@@ -80,6 +80,7 @@
       "name": "cli",
       "version": "0.1.0",
       "dependencies": {
+        "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/logger": "workspace:*",
@@ -357,6 +358,7 @@
       "dependencies": {
         "@raypx/ai": "workspace:*",
         "@raypx/blocks": "workspace:*",
+        "@raypx/client": "workspace:*",
         "@raypx/computers": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",

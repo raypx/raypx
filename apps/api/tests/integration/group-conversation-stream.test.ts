@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
 import { Hono } from "hono";
-import { conversationServerFrameSchema, type ConversationServerFrame } from "@raypx/contracts/api";
+import { connectConversationFeed } from "../helpers/conversation-feed.js";
 import { conversationEventSchema } from "@raypx/core/conversation";
 import type { ConversationEventEntry } from "@raypx/agents/server";
 import { ConversationStream } from "../../src/conversations/stream.js";
@@ -30,7 +30,7 @@ async function fixture() {
   cleanups.push(async () => {
     await server.stop(true);
   });
-  const base = { version: 1, spaceId: state.spaceId, conversationId: state.conversationId };
+  const base = { spaceId: state.spaceId, conversationId: state.conversationId };
   function append(payload: object) {
     const event = conversationEventSchema.parse({
       spaceId: state.spaceId,
@@ -43,41 +43,21 @@ async function fixture() {
     return event;
   }
   async function connect(after = 0) {
-    const url = new URL("/events", server.url);
-    url.protocol = "ws:";
-    const socket = new WebSocket(url);
-    const frames: ConversationServerFrame[] = [];
-    const closed: number[] = [];
-    socket.addEventListener("message", (message) => {
-      frames.push(conversationServerFrameSchema.parse(JSON.parse(String(message.data))));
-    });
-    socket.addEventListener("close", (event) => closed.push(event.code));
-    cleanups.push(async () => {
-      socket.close();
-    });
-    await expect.poll(() => frames[0]).toEqual({ type: "ready", version: 1 });
-    socket.send(JSON.stringify({ ...base, type: "subscribe", after }));
+    const feed = connectConversationFeed(server.url, { ...base, after });
+    cleanups.push(async () => feed.close());
+    await expect.poll(() => feed.frames[0]).toEqual({ type: "ready", version: 1 });
     const entries = (): ConversationEventEntry[] =>
-      frames.flatMap((frame) => {
+      feed.frames.flatMap((frame) => {
         if (frame.type !== "event") return [];
         const { event, message } = frame.entry;
         return [{ event, ...(message ? { message } : {}) }];
       });
-    return {
-      socket,
-      frames,
-      closed,
-      entries,
-      sequences: () => entries().map(({ event }) => event.sequence),
-      ack(sequence: number) {
-        socket.send(JSON.stringify({ ...base, type: "ack", sequence }));
-      },
-    };
+    return { ...feed, entries };
   }
   return { ...state, append, connect };
 }
 
-it("replays interleaved group replies and child activity through exact ACKs on loopback /events", async () => {
+it("replays interleaved group replies and child activity over SSE on loopback /events", async () => {
   const f = await fixture();
   f.append({
     kind: "run.state",
@@ -94,8 +74,8 @@ it("replays interleaved group replies and child activity through exact ACKs on l
     failureCode: null,
   });
   const first = await f.connect();
-  await expect.poll(first.sequences).toEqual([1]);
-  // The second Agent and child commit while the first event awaits its ACK.
+  await expect.poll(first.sequences).toEqual([1, 2]);
+  // Child activity arrives while the stream is already live.
   f.append({
     kind: "run.state",
     runId: "child-run",
@@ -122,11 +102,7 @@ it("replays interleaved group replies and child activity through exact ACKs on l
     state: "succeeded",
     failureCode: null,
   });
-  for (let sequence = 1; sequence <= 5; sequence++) {
-    await expect.poll(() => first.sequences().at(-1)).toBe(sequence);
-    first.ack(sequence);
-  }
-  expect(first.sequences()).toEqual([1, 2, 3, 4, 5]);
+  await expect.poll(first.sequences).toEqual([1, 2, 3, 4, 5]);
   expect(first.entries()[1]!.event).toMatchObject({ runId: "beta-run", agentId: "beta" });
   expect(first.entries()[2]!.event).toMatchObject({
     runId: "child-run",
@@ -138,8 +114,7 @@ it("replays interleaved group replies and child activity through exact ACKs on l
     parentRunId: "alpha-run",
     agentId: "alpha",
   });
-  first.socket.close();
-  await expect.poll(() => first.closed.length).toBe(1);
+  first.close();
 
   for (const [agentId, runId, text] of [
     ["beta", "beta-run", "Beta reply"],
@@ -162,10 +137,7 @@ it("replays interleaved group replies and child activity through exact ACKs on l
     });
   }
   const resumed = await f.connect(5);
-  await expect.poll(resumed.sequences).toEqual([6]);
-  resumed.ack(6);
   await expect.poll(resumed.sequences).toEqual([6, 7]);
-  resumed.ack(7);
   expect(
     resumed
       .entries()

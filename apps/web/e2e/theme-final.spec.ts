@@ -165,6 +165,26 @@ async function fixture(page: Page) {
     socket.send(JSON.stringify({ type: "ready", version: 1 }));
     socket.onMessage(() => {});
   });
+  await page.addInitScript(() => {
+    const fetch = window.fetch.bind(window);
+    Object.assign(window, {
+      fetch(input: RequestInfo | URL, init?: RequestInit) {
+        const url = new URL(input instanceof Request ? input.url : String(input), location.origin);
+        if (url.pathname !== "/events" || !url.searchParams.has("conversationId"))
+          return fetch(input, init);
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('data: {"type":"ready","version":1}\n\n'));
+          },
+        });
+        return Promise.resolve(
+          new Response(stream, {
+            headers: { "content-type": "text/event-stream" },
+          }),
+        );
+      },
+    });
+  });
   const unexpected = new Set<string>();
   await page.route("**/rpc/**", async (route: Route) => {
     if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);

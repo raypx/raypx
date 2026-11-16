@@ -21,6 +21,9 @@ renderer state. This database contains only desktop_sessions; old profile.sqlite
 is never opened or imported. Session reset changes only this storage. Keep native
 and renderer capabilities separate, exact Origins, one-use authentication, ACK
 limits, deadlines and account/origin cleanup. Sign-out revokes connector binding.
+The daemon opens selected-origin conversation SSE from the renderer's applied
+cursor and relays one unread frame at a time. Space and Screen use upstream
+WebSockets with renderer-owned ACKs.
 
 Tests and daemons always use private temporary homes/data directories. Never read
 user configuration, cookies or credentials. Build once using the pinned Bun

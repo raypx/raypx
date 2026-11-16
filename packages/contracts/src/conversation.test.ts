@@ -2,6 +2,8 @@ import { expect, it } from "vitest";
 import {
   apiContract,
   conversationClientFrameSchema,
+  conversationFeedSelectionSchema,
+  conversationSocketFrameSchema,
   conversationServerFrameSchema,
   getRpcAccess,
 } from "./api.js";
@@ -26,9 +28,8 @@ it("admits conversation operations only with a session and rejects forged scope 
 it("requires the current stream version and bounded acknowledged cursors", () => {
   const frame = {
     version: 1,
-    type: "subscribe",
+    type: "space.subscribe",
     spaceId: "space",
-    conversationId: "conversation",
     after: 0,
   };
   expect(conversationClientFrameSchema.safeParse(frame).success).toBe(true);
@@ -39,6 +40,19 @@ it("requires the current stream version and bounded acknowledged cursors", () =>
     { after: Number.MAX_SAFE_INTEGER + 1 },
   ])
     expect(conversationClientFrameSchema.safeParse({ ...frame, ...change }).success).toBe(false);
+  const selection = { spaceId: "space", conversationId: "conversation", after: 10 };
+  expect(conversationFeedSelectionSchema.parse(selection)).toEqual(selection);
+  expect(conversationFeedSelectionSchema.safeParse({ ...selection, after: -1 }).success).toBe(
+    false,
+  );
+  expect(
+    conversationClientFrameSchema.safeParse({ ...selection, type: "subscribe", version: 1 })
+      .success,
+  ).toBe(false);
+  expect(
+    conversationSocketFrameSchema.safeParse({ ...selection, type: "snapshot-required", cursor: 10 })
+      .success,
+  ).toBe(false);
 });
 
 it("separates transient prefix/appends from acknowledged durable events", () => {

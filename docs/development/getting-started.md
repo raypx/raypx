@@ -100,7 +100,7 @@ bun apps/web/.output/server/index.mjs
 ```
 
 Use a common origin or `AUTH_DOMAIN` for the parent of sibling Web/API hosts so
-SSR receives the session cookie. `/events` is the authenticated Agent/Space stream;
+SSR receives the session cookie. `/events` serves authenticated conversation SSE and Space/Screen WebSockets;
 `/device/connect` is outbound device connector transport. Shared-origin proxies
 must match `apiIngress` in [the deployment contract](../../packages/tooling/src/build/deployment.ts),
 including `/page-content/*` and `/message-attachments/*`; `/pages` stays on Web.

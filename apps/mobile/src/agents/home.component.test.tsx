@@ -67,7 +67,7 @@ async function harness(stopped = false, devices?: DeviceComputersController) {
     owner: { origin: "https://example.test", accountId: "member" },
     port,
     computer,
-    socket: { connect: () => ({ close() {}, send() {} }) },
+    feed: { subscribe: () => ({ close() {} }) },
     drafts: { read: () => null, write() {}, remove() {} },
     key: () => "home-message",
   });

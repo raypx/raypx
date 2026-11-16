@@ -11,6 +11,7 @@ const ports = vi.hoisted(() => ({
   replace: vi.fn(),
   socket: vi.fn((_options: { forbidden(reason?: string): void }) => ({})),
 }));
+vi.mock("expo/fetch", () => ({ fetch: vi.fn() }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ replace: ports.replace }) }));
 vi.mock("expo-secure-store", () => ({
   getItem: vi.fn(() => null),

@@ -80,7 +80,7 @@ origin without a path, query or credentials; a development device must be able t
 reach it. Expo embeds this public value at bundle time. Never put secrets in
 `EXPO_PUBLIC_*`. The gateway must follow the shared
 [API ingress contract](../../packages/tooling/src/build/deployment.ts), including
-attachment downloads and the authenticated `/events` WebSocket. `/pages`,
+attachment downloads, conversation SSE and the Space WebSocket at `/events`. `/pages`,
 `/signup` and `/forgot-password` stay on Web; Page handoff opens `/pages`, whose
 preview loads `/page-content/*` from API.
 
@@ -190,12 +190,12 @@ streamed-prefix reconciliation, cursor advancement, idempotent send receipts,
 approval projection and computer lifecycle. Mobile supplies the model's ports;
 it does not fork these rules or import `@raypx/agents/client`. RPC uses
 `@raypx/client/api` with the current SecureStore-backed Expo session cookie and
-the configured Origin. The native `/events` socket authenticates with headers;
-credentials never enter its URL or logs. Durable events update projection and
-cursor before ACK, reconnect resumes that cursor, and a gap or expired replay
-window replaces state from a snapshot. Committed segments replace streamed text.
+the configured Origin. Mobile uses Expo streaming fetch for conversation SSE and
+a WebSocket for Space updates. Both authenticate with headers. Durable events
+update the projection and cursor together. Reconnect resumes that cursor, and a
+gap or expired replay window requires a snapshot.
 
-AppState closes the socket while inactive/backgrounded and resumes the retained
+AppState closes the feed while inactive/backgrounded and resumes the retained
 controller on foreground. Late frames and reads from the suspended connection
 are fenced. Load, reconnect and foreground refresh pending approvals; computer
 state refreshes on reconnect. Unsent drafts and frozen unconfirmed-send receipts
@@ -347,7 +347,7 @@ shared DOM adapters or render content as raw HTML.
 Run the workspace's `check`, `test` and `build` commands above, plus repository
 `bun run check`, `bun run lint`, `bun run policy` and `bun run i18n:types` for
 delivery. The production export is a JavaScript bundle check, not native or live
-backend acceptance. Port unit tests cover native session headers, socket frames,
+backend acceptance. Port unit tests cover native session headers, event frames,
 storage isolation and lifecycle resume. Native component tests cover the Agent
 directory, conversation, the outside-window strip, HTTP API activity, approval
 cards and computer sheet using Vitest and `react-test-renderer` with native/HeroUI
@@ -387,7 +387,7 @@ approvals after enabling operations in Web/Desktop.
 Check a small phone and tablet in portrait and landscape, safe-area cutouts,
 keyboard opening/closing, large text, VoiceOver/TalkBack, reduced motion and
 Markdown links/code/tables without raw HTML. Simulator and physical-device
-acceptance, authenticated live WebSocket/listener checks, PostgreSQL and live
+acceptance, authenticated live SSE and WebSocket listener checks, PostgreSQL and live
 computer/provider checks have not been run for this mobile implementation.
 Exported bundles and unit/component tests do not substitute for this acceptance.
 

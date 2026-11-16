@@ -1,6 +1,6 @@
 import * as Clipboard from "expo-clipboard";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ConversationClientFrame, ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationFeedSelection, ConversationFeedFrame } from "@raypx/contracts/api";
 import { agentSchema, conversationIdSchema, directConversation } from "@raypx/core/agents";
 import { protectedInputRequestSchema } from "@raypx/core/protected-input";
 import {
@@ -25,7 +25,7 @@ import {
   type ProtectedInputsPort,
   type ConversationPort,
   type ConversationSnapshot,
-  type ConversationSocketPort,
+  type ConversationFeedPort,
 } from "@raypx/agents/model";
 import {
   act,
@@ -138,8 +138,8 @@ async function harness(
   devices?: DeviceComputersController,
   protectedInputsPort?: ProtectedInputsPort,
 ) {
-  const frames: ConversationClientFrame[] = [];
-  const connections: Parameters<ConversationSocketPort["connect"]>[0][] = [];
+  const subscriptions: ConversationFeedSelection[] = [];
+  const connections: Parameters<ConversationFeedPort["subscribe"]>[1][] = [];
   const stored = new Map<string, string>();
   const port: ConversationPort = {
     ...(historyPort ? { history: historyPort } : {}),
@@ -181,15 +181,11 @@ async function harness(
     port,
     approvals,
     computer,
-    socket: {
-      connect(callbacks) {
+    feed: {
+      subscribe(input, callbacks) {
         connections.push(callbacks);
-        return {
-          send: (frame) => {
-            frames.push(frame);
-          },
-          close: vi.fn(),
-        };
+        subscriptions.push(input);
+        return { close: vi.fn() };
       },
     },
     drafts: {
@@ -228,11 +224,11 @@ async function harness(
     port,
     computerPort,
     approvals,
-    frames,
+    subscriptions,
     stored,
     onBack,
     onEdit,
-    async frame(frame: ConversationServerFrame) {
+    async frame(frame: ConversationFeedFrame) {
       await act(async () => connections[0]?.onFrame(frame));
     },
     async close() {
@@ -332,7 +328,7 @@ describe("mobile Agent conversation", () => {
   it("renders snapshot history, streams text and replaces it with one committed reply", async () => {
     const h = await harness({ messages: [message()], runs: [run()], cursor: 2 });
     expect(textContent(h.view.root)).toContain("Member question");
-    expect(h.frames[0]).toEqual({ type: "subscribe", version: 1, ...selection, after: 2 });
+    expect(h.subscriptions[0]).toEqual({ ...selection, after: 2 });
     await h.frame({
       type: "reply.prefix",
       ...selection,
@@ -351,7 +347,7 @@ describe("mobile Agent conversation", () => {
       text: "ed answer",
     });
     expect(textContent(h.view.root)).toContain("A streamed answer");
-    const commit: ConversationServerFrame = {
+    const commit: ConversationFeedFrame = {
       type: "event",
       entry: {
         event: {
@@ -389,7 +385,6 @@ describe("mobile Agent conversation", () => {
     expect(textContent(h.view.root)).not.toContain("A streamed answer");
     expect(textContent(h.view.root).split("Committed answer")).toHaveLength(2);
     expect(h.controller.getSnapshot().cursor).toBe(4);
-    expect(h.frames).toContainEqual({ type: "ack", version: 1, ...selection, sequence: 4 });
     await h.close();
   });
 
@@ -521,7 +516,7 @@ describe("mobile Agent conversation", () => {
         },
       },
     });
-    const finish: ConversationServerFrame = {
+    const finish: ConversationFeedFrame = {
       type: "event",
       entry: {
         event: {
@@ -548,7 +543,6 @@ describe("mobile Agent conversation", () => {
     expect(activityText).toContain("notes.md");
     expect(activityText).toContain("Succeeded");
     expect(activityText).toContain("2.0 s");
-    expect(h.frames.at(-1)).toEqual({ type: "ack", version: 1, ...selection, sequence: 8 });
     const toolActivity = h.controller.getSnapshot().toolActivity;
     const resolvedApprovals: NonNullable<ConversationSnapshot["resolvedApprovals"]> = [
       {

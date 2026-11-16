@@ -3,11 +3,12 @@ import {
   conversationClientFrameSchema,
   MAX_CONVERSATION_FRAME_BYTES,
   MAX_SCREEN_STREAM_FRAME_BYTES,
+  type ConversationFeedFrame,
+  type ConversationFeedSelection,
   type ConversationServerFrame,
 } from "@raypx/contracts/api";
 import { InvalidConversationCursor } from "@raypx/core/conversation";
 import { SpaceNotFound, type SpaceId, type SpaceEvent } from "@raypx/core/spaces";
-import type { ConversationId } from "@raypx/core/agents";
 import type { AuthSession } from "@raypx/core/auth";
 import type {
   ConversationFanout,
@@ -31,32 +32,33 @@ interface ScreenSubscription extends AuthorizedSubscription {
   stream: AcknowledgedStream;
 }
 
-interface Subscription {
-  spaceId: SpaceId;
-  conversationId: ConversationId;
-  stream: AcknowledgedStream;
-  controller: AbortController;
+interface SessionConnection {
+  accountId: string;
+  headers: Headers;
+  close(code?: number, reason?: string): void;
+}
+interface Feed extends AuthorizedSubscription, SessionConnection {
+  conversationId: ConversationFeedSelection["conversationId"];
+  cursor: number;
+  write(frame: ConversationFeedFrame): Promise<void>;
+  ready: boolean;
   running: boolean;
   dirty: boolean;
+  checking: boolean;
   liveOffsets: Map<string, { segmentId: string; offset: number }>;
   committedSegments: Map<string, string>;
 }
-interface Connection {
-  accountId: string;
-  headers: Headers;
+interface Connection extends SessionConnection {
   send(frame: ConversationServerFrame): void;
-  close(code: number, reason: string): void;
-  subscriptions: Map<string, Subscription>;
   spaceSubscriptions: Map<string, SpaceSubscription>;
   screenSubscription?: ScreenSubscription;
   checking: boolean;
 }
-const streamId = (spaceId: string, conversationId: string) =>
-  JSON.stringify([spaceId, conversationId]);
 
-/** One in-flight event per subscription. Only an exact applied ACK advances its cursor. */
+/** Feeds wait for HTTP backpressure. Space and Screen sockets require exact ACKs. */
 export class ConversationStream {
   private readonly peers = new Map<string, Connection>();
+  private readonly feeds = new Map<string, Feed>();
   private unsubscribe: (() => Promise<void>) | undefined;
   private unsubscribeLive: (() => void) | undefined;
   private unsubscribeSpace: (() => Promise<void>) | undefined;
@@ -78,30 +80,28 @@ export class ConversationStream {
   ) {}
   async start() {
     this.unsubscribe = await this.options.fanout.subscribe((notice) => {
-      for (const peer of this.peers.values())
-        for (const subscription of peer.subscriptions.values())
-          if (subscription.conversationId === notice.conversationId) this.wake(peer, subscription);
+      for (const feed of this.feeds.values())
+        if (feed.conversationId === notice.conversationId) this.wake(feed);
     });
     this.unsubscribeLive = this.options.live?.subscribe((id) => {
-      for (const peer of this.peers.values())
-        for (const subscription of peer.subscriptions.values())
-          if (subscription.conversationId === id) this.wake(peer, subscription);
+      for (const feed of this.feeds.values()) if (feed.conversationId === id) this.wake(feed);
     });
     this.unsubscribeSpace = await this.options.spaceFanout?.subscribe((notice) => {
+      let reason: string | undefined;
+      if (notice.kind === "space.deleted") reason = "SPACE_DELETING";
+      else if (notice.kind === "space.member.removed")
+        reason = notice.reason === "left" ? "SPACE_MEMBER_LEFT" : "SPACE_MEMBER_REMOVED";
+      const revoked = (accountId: string) =>
+        notice.kind === "space.deleted" || notice.accountId === accountId;
+      if (reason)
+        for (const feed of this.feeds.values())
+          if (feed.spaceId === notice.spaceId && revoked(feed.accountId))
+            this.fail(feed, 4003, reason);
       for (const peer of this.peers.values()) {
         const subscribed =
           peer.spaceSubscriptions.has(notice.spaceId) ||
-          peer.screenSubscription?.spaceId === notice.spaceId ||
-          [...peer.subscriptions.values()].some((item) => item.spaceId === notice.spaceId);
-        if (!subscribed) continue;
-        if (
-          notice.kind === "space.deleted" ||
-          (notice.kind === "space.member.removed" && notice.accountId === peer.accountId)
-        ) {
-          // Abort ACK waiters synchronously; no further event can escape while checking admission.
-          let reason = "SPACE_MEMBER_REMOVED";
-          if (notice.kind === "space.deleted") reason = "SPACE_DELETING";
-          else if (notice.reason === "left") reason = "SPACE_MEMBER_LEFT";
+          peer.screenSubscription?.spaceId === notice.spaceId;
+        if (reason && subscribed && revoked(peer.accountId)) {
           this.fail(peer, 4003, reason);
           continue;
         }
@@ -112,6 +112,7 @@ export class ConversationStream {
     // Hints may be lost during LISTEN reconnects. Polling also rechecks idle memberships/sessions.
     this.timer = setInterval(() => {
       for (const peer of this.peers.values()) void this.check(peer);
+      for (const feed of this.feeds.values()) void this.checkFeed(feed);
     }, this.options.pollMs ?? 1_000);
   }
   open(
@@ -124,7 +125,6 @@ export class ConversationStream {
       ...socket,
       accountId,
       headers,
-      subscriptions: new Map(),
       spaceSubscriptions: new Map(),
       checking: false,
     });
@@ -134,14 +134,46 @@ export class ConversationStream {
     const peer = this.peers.get(id);
     if (!peer) return;
     this.peers.delete(id);
-    for (const subscription of peer.subscriptions.values()) subscription.controller.abort();
-    peer.subscriptions.clear();
     for (const subscription of peer.spaceSubscriptions.values()) subscription.controller.abort();
     peer.spaceSubscriptions.clear();
     peer.screenSubscription?.controller.abort();
     delete peer.screenSubscription;
   }
-  private fail(peer: Connection, code: number, reason: string) {
+  openFeed(
+    id: string,
+    accountId: string,
+    headers: Headers,
+    selection: ConversationFeedSelection,
+    sink: Pick<Feed, "write" | "close">,
+  ) {
+    const feed: Feed = {
+      ...sink,
+      close: (code, reason) => {
+        this.closeFeed(id);
+        sink.close(code, reason);
+      },
+      spaceId: selection.spaceId,
+      conversationId: selection.conversationId,
+      cursor: selection.after,
+      accountId,
+      headers,
+      controller: new AbortController(),
+      ready: false,
+      running: false,
+      dirty: false,
+      checking: false,
+      liveOffsets: new Map(),
+      committedSegments: new Map(),
+    };
+    this.feeds.set(id, feed);
+    this.wake(feed);
+  }
+  closeFeed(id: string) {
+    const feed = this.feeds.get(id);
+    this.feeds.delete(id);
+    feed?.controller.abort();
+  }
+  private fail(peer: SessionConnection, code: number, reason: string) {
     for (const [id, candidate] of this.peers) if (candidate === peer) this.close(id);
     peer.close(code, reason);
   }
@@ -209,8 +241,7 @@ export class ConversationStream {
         previous?.controller.abort();
         peer.spaceSubscriptions.delete(frame.spaceId);
         if (frame.type === "space.unsubscribe") return;
-        if (peer.subscriptions.size + peer.spaceSubscriptions.size >= 32)
-          throw new Error("Subscription limit");
+        if (peer.spaceSubscriptions.size >= 32) throw new Error("Subscription limit");
         const stream = new AcknowledgedStream();
         stream.reset({ streamId: key, sequence: frame.after });
         const subscription: SpaceSubscription = {
@@ -224,38 +255,14 @@ export class ConversationStream {
         this.wakeSpace(peer, subscription);
         return;
       }
-      const key = streamId(frame.spaceId, frame.conversationId);
-      const previous = peer.subscriptions.get(key);
-      if (frame.type === "ack") {
-        if (!previous?.stream.acknowledge({ streamId: key, sequence: frame.sequence }))
-          throw new Error("Unexpected ACK");
-        return;
-      }
-      previous?.controller.abort();
-      peer.subscriptions.delete(key);
-      if (frame.type === "unsubscribe") return;
-      if (peer.subscriptions.size + peer.spaceSubscriptions.size >= 32)
-        throw new Error("Subscription limit");
-      const stream = new AcknowledgedStream();
-      stream.reset({ streamId: key, sequence: frame.after });
-      const subscription: Subscription = {
-        spaceId: frame.spaceId,
-        conversationId: frame.conversationId,
-        stream,
-        controller: new AbortController(),
-        running: false,
-        dirty: false,
-        liveOffsets: new Map(),
-        committedSegments: new Map(),
-      };
-      peer.subscriptions.set(key, subscription);
-      this.wake(peer, subscription);
     } catch {
       this.fail(peer, 4000, "Invalid frame");
     }
   }
-  private async authorize(peer: Connection, subscription: AuthorizedSubscription) {
+  private async authorize(peer: SessionConnection, subscription: AuthorizedSubscription) {
+    if (subscription.controller.signal.aborted) return undefined;
     const auth = await this.options.readSession(peer.headers);
+    if (subscription.controller.signal.aborted) return undefined;
     if (
       !auth ||
       auth.user.id !== peer.accountId ||
@@ -268,7 +275,11 @@ export class ConversationStream {
     if (subscription.controller.signal.aborted) return undefined;
     return scope;
   }
-  private async rejected(peer: Connection, subscription: AuthorizedSubscription, error: unknown) {
+  private async rejected(
+    peer: SessionConnection,
+    subscription: AuthorizedSubscription,
+    error: unknown,
+  ) {
     if (subscription.controller.signal.aborted) return;
     if (error instanceof SpaceNotFound) {
       let reason = error.subscriptionEndReason;
@@ -290,13 +301,6 @@ export class ConversationStream {
     if (peer.checking) return;
     peer.checking = true;
     try {
-      for (const subscription of peer.subscriptions.values()) {
-        try {
-          if (await this.authorize(peer, subscription)) this.wake(peer, subscription);
-        } catch (error) {
-          await this.rejected(peer, subscription, error);
-        }
-      }
       for (const subscription of peer.spaceSubscriptions.values()) {
         try {
           if (await this.authorize(peer, subscription)) this.wakeSpace(peer, subscription);
@@ -385,55 +389,68 @@ export class ConversationStream {
       if (events.length === 100) subscription.dirty = true;
     }
   }
-  private wake(peer: Connection, subscription: Subscription) {
+  private async checkFeed(feed: Feed) {
+    if (!feed.running) {
+      this.wake(feed);
+      return;
+    }
+    if (feed.checking) return;
+    feed.checking = true;
+    try {
+      await this.authorize(feed, feed);
+    } catch (error) {
+      await this.rejected(feed, feed, error);
+    } finally {
+      feed.checking = false;
+    }
+  }
+  private wake(subscription: Feed) {
     subscription.dirty = true;
     if (subscription.running) return;
     subscription.running = true;
-    void this.drain(peer, subscription)
-      .catch((error: unknown) => this.rejected(peer, subscription, error))
+    void this.drain(subscription)
+      .catch((error: unknown) => this.rejected(subscription, subscription, error))
       .finally(() => {
         subscription.running = false;
-        if (subscription.dirty && !subscription.controller.signal.aborted)
-          this.wake(peer, subscription);
+        if (subscription.dirty && !subscription.controller.signal.aborted) this.wake(subscription);
       });
   }
-  private async drain(peer: Connection, subscription: Subscription) {
+  private async drain(subscription: Feed) {
     const { signal } = subscription.controller;
     while (subscription.dirty && !signal.aborted) {
       subscription.dirty = false;
-      const scope = await this.authorize(peer, subscription);
+      const scope = await this.authorize(subscription, subscription);
       if (!scope) return;
       const result = await this.options.conversations.events(
         scope,
         subscription.conversationId,
-        subscription.stream.cursor!.sequence,
+        subscription.cursor,
         100,
       );
       if (signal.aborted) return;
+      if (!subscription.ready) {
+        await subscription.write({ type: "ready", version: 1 });
+        subscription.ready = true;
+      }
+      if (signal.aborted) return;
       if (result.status === "snapshot-required") {
-        peer.send({
+        if (!(await this.authorize(subscription, subscription))) return;
+        await subscription.write({
           type: "snapshot-required",
           spaceId: subscription.spaceId,
           conversationId: subscription.conversationId,
           cursor: result.cursor,
         });
-        peer.subscriptions.delete(streamId(subscription.spaceId, subscription.conversationId));
-        subscription.controller.abort();
+        subscription.close();
         return;
       }
       for (const entry of result.events) {
-        // A page can wait on an ACK. Reauthorize before delivering its next event.
-        if (!(await this.authorize(peer, subscription))) return;
+        // A page can wait on HTTP backpressure. Reauthorize before delivering its next event.
+        if (!(await this.authorize(subscription, subscription))) return;
         if (entry.event.kind === "reply.segment")
           subscription.committedSegments.set(entry.event.segment.runId, entry.event.segment.id);
-        await subscription.stream.wait(
-          {
-            streamId: streamId(subscription.spaceId, subscription.conversationId),
-            sequence: entry.event.sequence,
-          },
-          signal,
-          () => peer.send({ type: "event", entry }),
-        );
+        await subscription.write({ type: "event", entry });
+        subscription.cursor = entry.event.sequence;
       }
       const replies =
         this.options.live?.readAll(subscription.spaceId, subscription.conversationId) ?? [];
@@ -446,23 +463,18 @@ export class ConversationStream {
         subscription.dirty = true;
         continue;
       }
-      // Read synchronously after replay and authorization: the prefix and offset form one handoff.
-      if (!(await this.authorize(peer, subscription))) return;
-      // Capture synchronously after authorization; each Run owns an independent offset.
-      for (const live of this.options.live?.readAll(
-        subscription.spaceId,
-        subscription.conversationId,
-      ) ?? []) {
+      for (const live of replies) {
         if (subscription.committedSegments.get(live.runId) === live.segmentId) continue;
+        if (!(await this.authorize(subscription, subscription))) return;
         const previous = subscription.liveOffsets.get(live.runId);
         if (previous?.segmentId !== live.segmentId) {
-          peer.send({ ...live, type: "reply.prefix", offset: 0 });
+          await subscription.write({ ...live, type: "reply.prefix", offset: 0 });
           subscription.liveOffsets.set(live.runId, {
             segmentId: live.segmentId,
             offset: live.text.length,
           });
         } else if (live.text.length > previous.offset) {
-          peer.send({
+          await subscription.write({
             ...live,
             type: "reply.delta",
             offset: previous.offset,
@@ -477,6 +489,7 @@ export class ConversationStream {
     if (this.timer) clearInterval(this.timer);
     this.timer = undefined;
     for (const peer of this.peers.values()) this.fail(peer, 1001, "Server shutting down");
+    for (const feed of this.feeds.values()) this.fail(feed, 1001, "Server shutting down");
     this.unsubscribeLive?.();
     this.unsubscribeLive = undefined;
     await this.unsubscribe?.();

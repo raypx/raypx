@@ -95,7 +95,9 @@ export class DesktopApi {
       globalThis.fetch(request, { redirect: "manual", credentials: "omit" }),
     connectEvents?: EventsSocketFactory,
   ) {
-    this.events = new DesktopEvents(cookies, connectEvents);
+    this.events = new DesktopEvents(cookies, connectEvents, (url, init) =>
+      this.fetch(new Request(url, init)),
+    );
   }
   get idle() {
     return this.active === 0 && this.events.idle;

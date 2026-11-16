@@ -5,7 +5,7 @@ shares Core, contracts and feature models for its native Space and Agent workflo
 Native Screen viewing/input remains unavailable; the phone Web client provides it.
 An implemented workflow works on each client or degrades for a stated reason.
 
-Web uses relative API requests on a shared origin and derives event socket URLs
+Web uses relative API requests on a shared origin and derives event stream URLs
 from the active browser origin. Separate API origins are runtime `API_PUBLIC_URL`
 on the Web server, serialized per SSR request before client modules run. SSR
 resolves the request origin without retaining it in module state; sharing,
@@ -122,25 +122,20 @@ regions; a polite status announces reply activity and completion.
 - The renderer receives no credentials.
 - Native notifications for server Agent Runs are not implemented; approvals remain in the shared workspace.
 
-The daemon bridges `/events` through bounded private open/read/send/close methods
-on the existing renderer channel. It fixes the destination and session headers;
-the renderer receives validated conversation frames and sends its own ACK after
-application. Peer loss, account selection and session replacement close the
-remote socket. Browser previews use the ordinary cookie-authenticated WebSocket.
+The daemon opens authenticated SSE for conversations and WebSocket for Space
+and Screen subscriptions at the selected origin. The existing renderer channel
+carries bounded `events_open`, `events_read`, `events_send` and `events_close`
+requests. Conversation opens carry the selection and the renderer's last applied
+cursor. The daemon holds at most one unread conversation frame. Space and Screen
+acknowledgements use `events_send`. Peer loss, account selection and session
+replacement close the upstream transports.
 
-Packaged Desktop carries remote WebSocket termination through the same daemon
-channel: `events_read` returns existing conversation/Space frames, null for an
-idle poll, or the additive `{ type: "closed", code, reason }` terminal result.
-The daemon accepts only well-formed UTF-8 reasons within the 123-byte WebSocket
-budget and forwards the public Space/session reason only with its expected code.
-Other reasons are empty; unknown codes retain generic client behavior. Closed
-streams discard unread content and retain one terminal result until read, peer/
-session cleanup or a 20-second expiry, within the eight-stream limit. The renderer
-passes its code/reason to the shared conversation socket's `onClose` once and
-stops reading. Local teardown suppresses late callbacks. Go remains the finite
-bootstrap and native-capability host; cookies and host credentials stay private.
-Browser simulation and daemon transport tests cover this boundary separately
-from packaged WKWebView/WebView2 acceptance.
+`events_read` returns a validated frame, null for an idle poll or
+`{ type: "closed", code, reason, retryAfterMs? }`. The daemon forwards only
+recognized session and membership reasons and keeps a terminal result for up to
+20 seconds, within its eight-stream limit. Browser previews use the standard
+cookie-authenticated transports. Packaged WKWebView and WebView2 acceptance are
+separate from browser simulation and daemon transport tests.
 
 ## Mobile
 

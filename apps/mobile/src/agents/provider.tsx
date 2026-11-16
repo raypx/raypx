@@ -7,6 +7,8 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { fetch as expoFetch } from "expo/fetch";
+import { createConversationFeed } from "@raypx/client/events";
 import { useRouter } from "expo-router";
 import { Alert, AppState } from "react-native";
 import { Spinner } from "heroui-native/spinner";
@@ -129,6 +131,11 @@ export function AgentsProvider({
         { origin: apiOrigin, accountId },
         mobileWorkspacePort(client),
         socket,
+        createConversationFeed(apiOrigin, {
+          fetch: expoFetch,
+          headers: async () => ({ Origin: apiOrigin, Cookie: await session.cookie() }),
+          onSessionEnded: () => session.expired(),
+        }),
         deviceDrafts(secureDevice),
         {
           read: () => secureDevice.getItem(preferenceKey),

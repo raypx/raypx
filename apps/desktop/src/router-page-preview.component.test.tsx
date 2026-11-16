@@ -30,6 +30,7 @@ vi.mock("./features/auth/client.js", () => ({
 vi.mock("./features/agents/client.js", () => ({ agentsClient: { pages: mocks.pages } }));
 vi.mock("./features/agents/socket.js", () => ({
   desktopConversationSocket: () => ({ connect: vi.fn() }),
+  desktopConversationFeed: () => ({ subscribe: vi.fn() }),
 }));
 vi.mock("./lib/desktop.js", () => ({
   isDesktop: () => mocks.native,

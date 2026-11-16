@@ -1,5 +1,5 @@
 import {
-  conversationServerFrameSchema,
+  conversationSocketFrameSchema,
   MAX_CONVERSATION_FRAME_BYTES,
   MAX_SCREEN_STREAM_FRAME_BYTES,
 } from "@raypx/contracts/api";
@@ -18,7 +18,7 @@ export function browserConversationSocket(origin: string): ConversationSocketPor
             new TextEncoder().encode(event.data).byteLength > MAX_SCREEN_STREAM_FRAME_BYTES
           )
             throw new Error("Invalid conversation frame");
-          const frame = conversationServerFrameSchema.parse(JSON.parse(event.data));
+          const frame = conversationSocketFrameSchema.parse(JSON.parse(event.data));
           if (
             frame.type !== "screen.event" &&
             new TextEncoder().encode(event.data).byteLength > MAX_CONVERSATION_FRAME_BYTES

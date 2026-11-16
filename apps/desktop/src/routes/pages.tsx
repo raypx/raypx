@@ -14,7 +14,7 @@ import { isDesktop, getBridge, pairDeviceConnector, grantDeviceDirectory } from 
 import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
 import { desktopReturnTo } from "../features/auth/return-to.js";
-import { desktopConversationSocket } from "../features/agents/socket.js";
+import { desktopConversationFeed, desktopConversationSocket } from "../features/agents/socket.js";
 
 const nativeDeviceConfirmation = { pair: pairDeviceConnector, grant: grantDeviceDirectory };
 
@@ -50,6 +50,7 @@ function SignedInPages({ accountId }: { accountId: string }) {
   const selection = Route.useSearch();
   const navigate = Route.useNavigate();
   const socket = useMemo(() => desktopConversationSocket(accountId), [accountId]);
+  const feed = useMemo(() => desktopConversationFeed(accountId), [accountId]);
   return (
     <AgentsWorkspace
       client={agentsClient}
@@ -66,6 +67,7 @@ function SignedInPages({ accountId }: { accountId: string }) {
       origin={apiUrl}
       {...(selection.spaceId ? { spaceId: selection.spaceId } : {})}
       socket={socket}
+      feed={feed}
       onNavigate={(next) => {
         if (next.agentId || next.groupId)
           void navigate({ to: "/agents", search: parseAgentSelection(next) });

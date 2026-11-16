@@ -11,12 +11,13 @@ import { spaceSchema, spaceMemberSchema } from "@raypx/core/spaces";
 import type { DeviceComputer, DeviceComputerSelection } from "@raypx/core/computers";
 import type { DeviceComputersPort } from "../model/device-computers.js";
 import { computerRecord, deferred } from "../../tests/support/computer-fixture.js";
-import type { ConversationServerFrame } from "@raypx/contracts/api";
+import type { ConversationFeedFrame } from "@raypx/contracts/api";
 import type {
   AgentsWorkspacePort,
   AgentConversationView,
   ConversationDraftStore,
   ConversationSocketPort,
+  ConversationFeedPort,
   ConversationSnapshot,
   ApprovalPort,
   SpaceManagementPort,
@@ -112,15 +113,22 @@ function fixture({
   memberships?: (typeof membership)[];
   approvals?: ApprovalPort;
 } = {}) {
-  let receive: ((frame: ConversationServerFrame) => void) | undefined;
+  let receive: ((frame: ConversationFeedFrame) => void) | undefined;
   let close: ((code?: number) => void) | undefined;
-  const frames: unknown[] = [];
+  const subscriptions: Parameters<ConversationFeedPort["subscribe"]>[0][] = [];
   const socket: ConversationSocketPort = {
     connect(callbacks) {
-      receive = (frame) => callbacks.onFrame(frame);
-      close = (code) => callbacks.onClose(code);
       queueMicrotask(() => callbacks.onFrame({ type: "ready", version: 1 }));
-      return { send: (frame) => frames.push(frame), close: () => {} };
+      return { send() {}, close() {} };
+    },
+  };
+  const feed: ConversationFeedPort = {
+    subscribe(selection, callbacks) {
+      subscriptions.push(selection);
+      receive = callbacks.onFrame;
+      close = callbacks.onClose;
+      queueMicrotask(() => callbacks.onFrame({ type: "ready", version: 1 }));
+      return { close() {} };
     },
   };
   const storage = new Map<string, string>();
@@ -183,6 +191,7 @@ function fixture({
         accountId="account"
         origin="https://example.test"
         socket={socket}
+        feed={feed}
         drafts={drafts}
         {...(selected ? { agentId: agent.id } : {})}
         {...(onNavigate ? { onNavigate } : {})}
@@ -212,6 +221,7 @@ function fixture({
   return {
     mount,
     socket,
+    feed,
     client,
     drafts,
     storage,
@@ -220,12 +230,12 @@ function fixture({
     update,
     remove,
     create,
-    frames,
+    subscriptions,
     readSnapshot,
     disconnect: async () => {
       await act(async () => close?.(1006));
     },
-    emit: async (frame: ConversationServerFrame) => {
+    emit: async (frame: ConversationFeedFrame) => {
       await act(async () => receive?.(frame));
     },
   };
@@ -691,9 +701,7 @@ it("converges streamed text to one committed segment without announcing each del
   test.mount(true);
   await screen.findByText("Hello Agent");
   await waitFor(() =>
-    expect(test.frames).toContainEqual({
-      type: "subscribe",
-      version: 1,
+    expect(test.subscriptions).toContainEqual({
       spaceId: agent.spaceId,
       conversationId: conversation.id,
       after: 3,
@@ -744,13 +752,6 @@ it("converges streamed text to one committed segment without announcing each del
   });
   expect(screen.queryByText("A streamed reply")).not.toBeInTheDocument();
   expect(screen.getAllByText("The committed reply.")).toHaveLength(1);
-  expect(test.frames).toContainEqual({
-    type: "ack",
-    version: 1,
-    spaceId: agent.spaceId,
-    conversationId: conversation.id,
-    sequence: 4,
-  });
   fireEvent.click(screen.getByRole("button", { name: "Stop reply" }));
   await waitFor(() => expect(test.stop).toHaveBeenCalledOnce());
 });
@@ -806,14 +807,8 @@ it("resumes from the applied cursor and replaces a required snapshot without dup
   await screen.findByText("Reconnecting…");
   const refreshButtons = screen.getAllByRole("button", { name: "Refresh" });
   fireEvent.click(refreshButtons.at(-1)!);
-  await waitFor(() =>
-    expect(
-      test.frames.filter((frame) => (frame as { type: string }).type === "subscribe"),
-    ).toHaveLength(2),
-  );
-  expect(test.frames.at(-1)).toEqual({
-    type: "subscribe",
-    version: 1,
+  await waitFor(() => expect(test.subscriptions).toHaveLength(2));
+  expect(test.subscriptions.at(-1)).toEqual({
     spaceId: agent.spaceId,
     conversationId: conversation.id,
     after: 2,
@@ -831,9 +826,7 @@ it("resumes from the applied cursor and replaces a required snapshot without dup
   });
   await waitFor(() => expect(test.readSnapshot).toHaveBeenCalledTimes(2));
   await waitFor(() =>
-    expect(test.frames.at(-1)).toEqual({
-      type: "subscribe",
-      version: 1,
+    expect(test.subscriptions.at(-1)).toEqual({
       spaceId: agent.spaceId,
       conversationId: conversation.id,
       after: 3,
@@ -1866,6 +1859,7 @@ it.each(["en", "zh"] as const)(
       port: test.client.conversations,
       computerPort: test.client.computers,
       socket: test.socket,
+      feed: test.feed,
       drafts: test.drafts,
       origin: "https://example.test",
       accountId: "account",

@@ -22,7 +22,8 @@ vi.mock("../../lib/desktop.js", () => ({
 }));
 vi.mock("../auth/client.js", () => ({ apiUrl: "https://api.example.test" }));
 vi.mock("@raypx/agents/client", () => ({ createBrowserConversationSocket: mocks.browser }));
-import { desktopConversationSocket } from "./socket.js";
+import { conversationFeedSelectionSchema } from "@raypx/contracts/api";
+import { desktopConversationFeed, desktopConversationSocket } from "./socket.js";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -34,6 +35,27 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
+it("opens the daemon conversation feed at the applied cursor and forwards server retry timing", async () => {
+  const selection = conversationFeedSelectionSchema.parse({
+    spaceId: "space",
+    conversationId: "conversation",
+    after: 17,
+  });
+  mocks.read
+    .mockResolvedValueOnce({ type: "ready", version: 1 })
+    .mockResolvedValueOnce({ type: "closed", code: 1013, reason: "", retryAfterMs: 45_000 });
+  const onFrame = vi.fn();
+  const onClose = vi.fn();
+  desktopConversationFeed("owner").subscribe(selection, { onFrame, onClose, onError: vi.fn() });
+  await vi.waitFor(() => expect(onClose).toHaveBeenCalledExactlyOnceWith(1013, "", 45_000));
+  expect(mocks.open).toHaveBeenCalledWith({
+    id: expect.any(String),
+    accountId: "owner",
+    conversation: selection,
+  });
+  expect(onFrame).toHaveBeenCalledExactlyOnceWith({ type: "ready", version: 1 });
+  expect(mocks.send).not.toHaveBeenCalled();
+});
 it("carries public frames through native requests, retaining explicit ACK order", async () => {
   mocks.read.mockResolvedValueOnce({ type: "ready", version: 1 });
   const onFrame = vi.fn(),
@@ -42,10 +64,9 @@ it("carries public frames through native requests, retaining explicit ACK order"
   await vi.waitFor(() => expect(onFrame).toHaveBeenCalledWith({ type: "ready", version: 1 }));
   const id = mocks.open.mock.calls[0]![0].id as string;
   const frame = {
-    type: "ack",
+    type: "space.ack",
     version: 1,
     spaceId: "space",
-    conversationId: "conversation",
     sequence: 9,
   } as unknown as ConversationClientFrame;
   socket.send(frame);

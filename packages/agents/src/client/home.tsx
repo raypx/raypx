@@ -35,6 +35,7 @@ import {
   type ConversationDraftStore,
   type ConversationPort,
   type ConversationSocketPort,
+  type ConversationFeedPort,
   type OfferedModel,
 } from "../model.js";
 import { ComposerCard } from "./composer-card.js";
@@ -69,6 +70,7 @@ export function WorkspaceHome({
   approvalPort,
   drafts,
   socket,
+  feed,
   accountId,
   origin,
   publicOrigin,
@@ -90,6 +92,7 @@ export function WorkspaceHome({
   approvalPort?: ApprovalPort | undefined;
   drafts: ConversationDraftStore;
   socket: ConversationSocketPort;
+  feed: ConversationFeedPort;
   accountId: string;
   origin: string;
   publicOrigin: string;
@@ -140,6 +143,7 @@ export function WorkspaceHome({
             approvalPort={approvalPort}
             drafts={drafts}
             socket={socket}
+            feed={feed}
             accountId={accountId}
             origin={origin}
           />
@@ -199,6 +203,7 @@ interface HomeComposerProps {
   approvalPort?: ApprovalPort | undefined;
   drafts: ConversationDraftStore;
   socket: ConversationSocketPort;
+  feed: ConversationFeedPort;
   accountId: string;
   origin: string;
 }
@@ -214,6 +219,7 @@ function HomeComposer(props: HomeComposerProps) {
     accountId,
     port,
     socket,
+    feed,
     drafts,
   } = props;
   const [controllers, setControllers] = useState<{
@@ -236,7 +242,7 @@ function HomeComposer(props: HomeComposerProps) {
         selection: { spaceId: item.agent.spaceId, conversationId: item.conversation.id },
         owner: { origin, accountId },
         port,
-        socket,
+        feed,
         drafts,
         key: () => crypto.randomUUID(),
       });
@@ -268,6 +274,7 @@ function HomeComposer(props: HomeComposerProps) {
     accountId,
     port,
     socket,
+    feed,
     drafts,
   ]);
   if (!controllers) return <div className="h-36 w-full max-w-150" />;

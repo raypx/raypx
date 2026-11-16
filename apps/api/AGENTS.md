@@ -15,8 +15,8 @@ SERVER_ROLE is api, worker, relay or default all. PostgreSQL owns leases, fences
 checkpoints, recovery and event fanout. Runtime construction performs no I/O;
 startup owns scans/subscriptions and shutdown releases owned resources. APIs start
 work directly; workers recover claims and routines. Relay owns only native-only
-/device routes and health, without Auth/mail/migrations/RPC. /events is the
-session/Origin-authorized conversation/screen stream. No /relay, device task
+/device routes and health, without Auth/mail/migrations/RPC. /events serves
+session/Origin-authorized conversation SSE and Space/Screen WebSockets. No /relay, device task
 projection, enrollment or account scheduler exists. Message uploads use the
 Space-scoped messageAttachments procedures.
 

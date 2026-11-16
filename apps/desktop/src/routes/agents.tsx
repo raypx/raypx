@@ -7,7 +7,7 @@ import { parseAgentSelection } from "@raypx/agents/model";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
 import { useSettingsNavigation } from "../features/settings/navigation.js";
 import { agentsClient } from "../features/agents/client.js";
-import { desktopConversationSocket } from "../features/agents/socket.js";
+import { desktopConversationFeed, desktopConversationSocket } from "../features/agents/socket.js";
 import { RemoteBoundary } from "../features/auth/components/remote-boundary.js";
 import { apiUrl, webUrl, authClient } from "../features/auth/client.js";
 import { useDesktopSignOut } from "../features/auth/sign-out.js";
@@ -51,6 +51,7 @@ function SignedInAgents({ accountId }: { accountId: string }) {
   const selection = Route.useSearch();
   const navigate = Route.useNavigate();
   const socket = useMemo(() => desktopConversationSocket(accountId), [accountId]);
+  const feed = useMemo(() => desktopConversationFeed(accountId), [accountId]);
   return (
     <AgentsWorkspace
       client={agentsClient}
@@ -72,6 +73,7 @@ function SignedInAgents({ accountId }: { accountId: string }) {
       accountId={accountId}
       origin={apiUrl}
       socket={socket}
+      feed={feed}
       {...selection}
       composerReference={
         selection.pageRef && selection.spaceId

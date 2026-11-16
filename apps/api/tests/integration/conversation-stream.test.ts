@@ -3,7 +3,8 @@ import { replyFixture } from "../helpers/replies.js";
 import { agentToolsFixture } from "../helpers/agent-tools.js";
 import { ConversationRunner, type LiveReplies } from "@raypx/agents/server";
 import { Hono } from "hono";
-import { conversationServerFrameSchema, type ConversationServerFrame } from "@raypx/contracts/api";
+import { conversationSocketFrameSchema, type ConversationServerFrame } from "@raypx/contracts/api";
+import { connectConversationFeed } from "../helpers/conversation-feed.js";
 import { ConversationStream } from "../../src/conversations/stream.js";
 import { createConversationSocketRoutes } from "../../src/conversations/socket.js";
 import { conversationFixture } from "../helpers/conversations.js";
@@ -33,7 +34,16 @@ async function fixture(
   cleanups.push(async () => {
     await server.stop(true);
   });
-  async function connect(after = 0, autoAck = false) {
+  function connect(after = 0) {
+    const feed = connectConversationFeed(server.url, {
+      spaceId: f.spaceId,
+      conversationId: f.conversationId,
+      after,
+    });
+    cleanups.push(async () => feed.close());
+    return feed;
+  }
+  async function connectSpace() {
     const url = new URL("/events", server.url);
     url.protocol = "ws:";
     const socket = new WebSocket(url);
@@ -41,18 +51,7 @@ async function fixture(
     const closed: number[] = [];
     const closeReasons: string[] = [];
     socket.addEventListener("message", (event) => {
-      const frame = conversationServerFrameSchema.parse(JSON.parse(String(event.data)));
-      frames.push(frame);
-      if (autoAck && frame.type === "event")
-        socket.send(
-          JSON.stringify({
-            version: 1,
-            spaceId: f.spaceId,
-            conversationId: f.conversationId,
-            type: "ack",
-            sequence: frame.entry.event.sequence,
-          }),
-        );
+      frames.push(conversationSocketFrameSchema.parse(JSON.parse(String(event.data))));
     });
     socket.addEventListener("close", (event) => {
       closed.push(event.code);
@@ -62,52 +61,30 @@ async function fixture(
       socket.close();
     });
     await expect.poll(() => frames[0]).toEqual({ type: "ready", version: 1 });
-    const base = { version: 1, spaceId: f.spaceId, conversationId: f.conversationId };
-    socket.send(JSON.stringify({ ...base, type: "subscribe", after }));
-    const sequences = () =>
-      frames.flatMap((frame) => (frame.type === "event" ? [frame.entry.event.sequence] : []));
-    return {
-      socket,
-      frames,
-      closed,
-      closeReasons,
-      sequences,
-      ack(sequence: number) {
-        socket.send(JSON.stringify({ ...base, type: "ack", sequence }));
-      },
-    };
+    return { socket, frames, closed, closeReasons };
   }
-  return { ...f, server, connect };
+  return { ...f, server, connect, connectSpace };
 }
+
 it("replays in order through concurrent commits and reconnects from the applied cursor without gaps or duplicates", async () => {
   const f = await fixture();
   f.append();
   f.append();
-  const first = await f.connect();
-  await expect.poll(first.sequences).toEqual([1]);
-  // Commit while replay is waiting for the client's application ACK, losing the hint.
-  f.append(f.conversationId, false);
-  first.ack(1);
+  const first = f.connect();
   await expect.poll(first.sequences).toEqual([1, 2]);
-  first.ack(2);
-  await expect.poll(first.sequences).toEqual([1, 2, 3]);
-  first.ack(3);
-  await expect.poll(() => f.events.mock.calls.some((call) => call[2] === 3)).toBe(true);
-  first.socket.close();
-  await expect.poll(() => first.closed.length).toBe(1);
+  // The client only applied event 1 before disconnecting. Event 2 was received.
+  first.close();
   f.append(f.conversationId, false);
-  const resumed = await f.connect(3);
-  await expect.poll(resumed.sequences).toEqual([4]);
-  resumed.ack(4);
+  const resumed = f.connect(1);
+  await expect.poll(resumed.sequences).toEqual([2, 3]);
   f.append();
-  await expect.poll(resumed.sequences).toEqual([4, 5]);
-  resumed.ack(5);
+  await expect.poll(resumed.sequences).toEqual([2, 3, 4]);
 });
 it("asks for a snapshot when the entire retained prefix has expired", async () => {
   const f = await fixture();
   f.append();
   f.retain(1);
-  const old = await f.connect(0);
+  const old = f.connect(0);
   await expect
     .poll(() => old.frames.find((frame) => frame.type === "snapshot-required"))
     .toEqual({
@@ -117,20 +94,19 @@ it("asks for a snapshot when the entire retained prefix has expired", async () =
       cursor: 1,
     });
   expect(old.sequences()).toEqual([]);
-  const current = await f.connect(1);
+  const current = f.connect(1);
   f.append();
   await expect.poll(current.sequences).toEqual([2]);
-  current.ack(2);
 });
 it("rejects a non-member and closes an already-open subscription when membership is removed", async () => {
   const f = await fixture();
   f.append();
-  const member = await f.connect();
+  const member = f.connect();
   await expect.poll(member.sequences).toEqual([1]);
   f.removeMember();
   await expect.poll(() => member.closed).toContain(4003);
   f.events.mockClear();
-  const refused = await f.connect();
+  const refused = f.connect();
   await expect.poll(() => refused.closed).toContain(4003);
   expect(refused.sequences()).toEqual([]);
   expect(f.events).not.toHaveBeenCalled();
@@ -139,7 +115,7 @@ it("rejects a non-member and closes an already-open subscription when membership
 it("actively closes an idle loopback /events subscription on removal before its next membership poll", async () => {
   const state = spaceStreamFixture();
   const f = await fixture(state, 60_000);
-  const peer = await f.connect();
+  const peer = f.connect();
   await expect.poll(() => state.events.mock.calls.length).toBe(1);
   state.removeMemberActively();
   await expect.poll(() => peer.closed, { timeout: 1_000 }).toContain(4003);
@@ -156,12 +132,13 @@ it.each([
   "closes loopback /events with $reason and its existing code",
   async ({ reason, code, change }) => {
     const state = spaceStreamFixture();
+    state.appendSpace({ kind: "space.renamed", payload: { name: "Before close" } });
     const f = await fixture(state);
-    const peer = await f.connect();
+    const peer = await f.connectSpace();
     peer.socket.send(
       JSON.stringify({ version: 1, type: "space.subscribe", spaceId: state.spaceId, after: 0 }),
     );
-    await expect.poll(() => state.events.mock.calls.length).toBeGreaterThan(0);
+    await expect.poll(() => peer.frames.some((frame) => frame.type === "space.event")).toBe(true);
     if (change === "deleting") state.deleteSpaceActively();
     else if (change === "session") state.signOut();
     else state.removeMemberActively(change);
@@ -173,7 +150,8 @@ it.each([
 it("delivers ordered Space changes additively alongside conversation subscriptions", async () => {
   const state = spaceStreamFixture();
   const f = await fixture(state, 60_000);
-  const peer = await f.connect();
+  const peer = await f.connectSpace();
+  const conversation = f.connect();
   peer.socket.send(
     JSON.stringify({ version: 1, type: "space.subscribe", spaceId: state.spaceId, after: 0 }),
   );
@@ -190,8 +168,7 @@ it("delivers ordered Space changes additively alongside conversation subscriptio
     JSON.stringify({ version: 1, type: "space.ack", spaceId: state.spaceId, sequence: second.id }),
   );
   state.append();
-  await expect.poll(peer.sequences).toEqual([1]);
-  peer.ack(1);
+  await expect.poll(conversation.sequences).toEqual([1]);
 });
 it("requires a live session and checks Origin before upgrading on the existing listener", async () => {
   const f = await fixture();
@@ -208,11 +185,11 @@ it("requires a live session and checks Origin before upgrading on the existing l
   ).toBe(401);
 });
 
-it("streams a fixture reply on the loopback socket and a mid-segment subscriber converges", async () => {
+it("streams a fixture reply over loopback SSE and a mid-segment subscriber converges", async () => {
   const reply = replyFixture();
   cleanups.push(() => reply.runner.close());
   const f = await fixture(reply);
-  const first = await f.connect(0, true);
+  const first = f.connect(0);
   await reply.conversations.send(reply.scope, reply.conversationId, {
     text: "Private input",
     idempotencyKey: "socket-reply",
@@ -234,7 +211,7 @@ it("streams a fixture reply on the loopback socket and a mid-segment subscriber 
     return result;
   };
   await expect.poll(() => text(first.frames)).toBe("Hello");
-  const middle = await f.connect(0, true);
+  const middle = f.connect(0);
   await expect.poll(() => text(middle.frames)).toBe("Hello");
   reply.calls[0]!.delta(" world");
   await expect.poll(() => text(middle.frames)).toBe("Hello world");
@@ -258,7 +235,7 @@ it("replays committed output once after a worker resumes a handed-over Run with 
   const reply = replyFixture();
   cleanups.push(() => reply.runner.close());
   const f = await fixture(reply);
-  const first = await f.connect(0, true);
+  const first = f.connect(0);
   await reply.conversations.send(reply.scope, reply.conversationId, {
     text: "Begin",
     idempotencyKey: "handover",
@@ -273,7 +250,7 @@ it("replays committed output once after a worker resumes a handed-over Run with 
   await expect.poll(() => first.sequences().length).toBe(reply.log.length);
   const cursor = first.sequences().at(-1)!;
   await reply.runner.close();
-  first.socket.close();
+  first.close();
   const worker = new ConversationRunner(
     reply.repository,
     reply.models,
@@ -290,7 +267,7 @@ it("replays committed output once after a worker resumes a handed-over Run with 
   await worker.startWorker(reply.fanout);
   await expect.poll(() => reply.calls.length).toBe(3);
   reply.calls[2]!.complete("Committed after handover");
-  const reconnected = await f.connect(cursor, true);
+  const reconnected = f.connect(cursor);
   await expect.poll(() => reply.runs[0]!.state).toBe("succeeded");
   await expect.poll(() => reconnected.sequences().at(-1)).toBe(reply.log.length);
   const segments = reconnected.frames.flatMap((frame) =>
@@ -310,7 +287,7 @@ it("replays tool lifecycle and related approval cards over /events without tool 
   const reply = agentToolsFixture();
   cleanups.push(() => reply.runner.close());
   const f = await fixture(reply);
-  const peer = await f.connect(0, true);
+  const peer = f.connect(0);
   await reply.conversations.send(reply.scope, reply.conversationId, {
     text: "Inspect",
     idempotencyKey: "tool-events",
@@ -342,8 +319,8 @@ it("replays tool lifecycle and related approval cards over /events without tool 
     exitStatus: null,
   });
   expect(JSON.stringify(lifecycle)).not.toMatch(/fixture-known-secret|arguments|stdout|stderr/);
-  peer.socket.close();
-  const replay = await f.connect(0, true);
+  peer.close();
+  const replay = f.connect(0);
   await expect.poll(() => replay.sequences().at(-1)).toBe(reply.log.length);
   expect(
     replay.frames.filter(
