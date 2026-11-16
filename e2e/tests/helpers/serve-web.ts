@@ -1,9 +1,10 @@
+import { web } from "./surfaces.js";
 import { resolve } from "node:path";
 
 const child = Bun.spawn(
   [process.execPath, resolve(import.meta.dirname, "../../../apps/web/.output/server/index.mjs")],
   {
-    env: { ...process.env, NODE_ENV: "production", HOST: "127.0.0.1", PORT: "4173" },
+    env: { ...process.env, NODE_ENV: "production", HOST: "127.0.0.1", PORT: new URL(web).port },
     stdin: "ignore",
     stdout: "inherit",
     stderr: "inherit",

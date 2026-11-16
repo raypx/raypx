@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
+  web,
   selectOption,
   expectConversationHeaderControls,
   expectSurfaceAtRest,
@@ -115,7 +116,7 @@ test(
     const name = `Conversation fixture 长名称 ${"long-name-".repeat(5)}${crypto.randomUUID()}`;
     const prompt = `Remember this message ${crypto.randomUUID()}`;
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("http://127.0.0.1:4173/agents", { timeout: actionTimeout });
+    await page.goto(`${web}/agents`, { timeout: actionTimeout });
     await page
       .getByLabel("Email address", { exact: true })
       .pressSequentially("control-e2e@example.com", { timeout: actionTimeout });
@@ -205,7 +206,7 @@ test(
     await expect(page.getByText("Fixture reply", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toBeVisible();
     const complete = await page.request.post(`${apiUrl}/fixture/conversation/complete`, {
-      headers: { origin: "http://127.0.0.1:4173" },
+      headers: { origin: web },
       timeout: actionTimeout,
       data: { conversationId },
     });
@@ -311,7 +312,7 @@ test(
     await expect(page.getByText("Fixture reply", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Stop reply", exact: true })).toBeVisible();
     const finishWrite = await page.request.post(`${apiUrl}/fixture/conversation/complete`, {
-      headers: { origin: "http://127.0.0.1:4173" },
+      headers: { origin: web },
       timeout: actionTimeout,
       data: { conversationId },
     });

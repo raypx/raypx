@@ -19,6 +19,17 @@ export const test = base.extend<{
   },
   publicApi: [
     async ({ page }, use) => {
+      await page.route("**/*", (route) => {
+        const host = new URL(route.request().url()).hostname;
+        return ["localhost", "127.0.0.1", "[::1]"].includes(host)
+          ? route.fallback()
+          : route.abort();
+      });
+      await page.routeWebSocket("**/*", (socket) => {
+        const host = new URL(socket.url()).hostname;
+        if (["localhost", "127.0.0.1", "[::1]"].includes(host)) socket.connectToServer();
+        else void socket.close();
+      });
       await accountAccessFixture(page, null);
       await page.route("**/api/rpc/configuration/public", (route) =>
         authResponse(route, {

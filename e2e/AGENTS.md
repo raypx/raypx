@@ -174,3 +174,11 @@ computed measurements live under `.artifacts/focus/`. Native device acceptance i
 `e2e:deployment` consumes two already-running local production ingresses from
 RAYPX_DEPLOYMENT_ORIGINS. public-origins.spec.ts verifies hydration and identical
 script inventories across them; deployment:smoke --local-production owns the services.
+
+`sidebar.spec.ts` runs on both renderer projects with delayed local responses. It
+records cold/navigation state timelines, sidebar layout-shift sources, request counts
+and screenshots under `.artifacts/sidebar/`; `RAYPX_SIDEBAR_PHASE=before` records a
+baseline. Normal runs assert retained entries, zero sidebar shift, Space URLs, folds,
+scroll, persisted preferences and narrow navigation. Response fixtures block unmatched
+non-loopback requests. `RAYPX_E2E_PORT_OFFSET` moves both owned loopback servers
+from 4173/4174 for concurrent worktrees without changing the CI project matrix.

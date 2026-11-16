@@ -120,6 +120,7 @@ async function nativeEventsFixture(page: Page) {
       "/api/rpc/computers/get": { status: "not-configured" },
       "/api/rpc/deviceComputers/list": { devices: [] },
       "/api/rpc/deviceComputers/getSelection": { selection: null },
+      "/api/rpc/routines/list": [],
       "/api/rpc/notifications/list": { items: [], truncated: false },
       "/api/rpc/notifications/viewed": { ok: true },
       "/api/rpc/approvals/pending": [],

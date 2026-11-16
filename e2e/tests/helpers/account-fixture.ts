@@ -1,7 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 import { accessForRole, type AccountRole } from "@raypx/account/access";
 
-const web = "http://127.0.0.1:4173";
+import { web } from "./surfaces.js";
 
 export async function authResponse(route: Route, body: unknown, status = 200) {
   await route.fulfill({

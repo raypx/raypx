@@ -275,6 +275,7 @@ async function fixture(page: Page) {
       },
       "approvals/settings": { mode: "ask", rules: [], revision: 0, availableModes },
       "approvals/pending": approval ? [pending] : [],
+      "routines/list": [],
       "notifications/list": { items: [], truncated: false },
       "notifications/viewed": { ok: true },
       "deviceComputers/list": { devices: [] },

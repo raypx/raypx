@@ -37,7 +37,7 @@ export default defineConfig({
       : [
           {
             command: "bun run tests/helpers/serve-web.ts",
-            url: "http://127.0.0.1:4173",
+            url: web,
             reuseExistingServer: false,
             timeout: 30000,
           },
@@ -47,7 +47,7 @@ export default defineConfig({
       : [
           {
             command: "bun run tests/helpers/serve-desktop.ts",
-            url: "http://127.0.0.1:4174",
+            url: desktop,
             reuseExistingServer: false,
             timeout: 30000,
           },

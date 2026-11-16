@@ -1,3 +1,4 @@
+import { web } from "@raypx/e2e/testing";
 import { expect, test } from "@playwright/test";
 
 const apiUrl = process.env.CONTROL_E2E_API_URL;
@@ -10,12 +11,12 @@ test(
     const name = `Member model ${crypto.randomUUID()}`;
     const editedName = `${name} edited`;
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto("http://127.0.0.1:4173/agents");
+    await page.goto(`${web}/agents`);
     await page.getByLabel("Email address", { exact: true }).fill("control-e2e@example.com");
     await page.getByLabel("Password", { exact: true }).fill("Raypx-control-test-123");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page).toHaveURL(/\/agents(?:\?|$)/);
-    await page.goto("http://127.0.0.1:4173/agents#settings/models");
+    await page.goto(`${web}/agents#settings/models`);
     const settings = page.getByRole("dialog", { name: "Settings", exact: true });
     await settings.getByRole("button", { name: "Add model connection", exact: true }).click();
     const form = page.getByRole("dialog", { name: "Add model connection", exact: true });
@@ -57,7 +58,7 @@ test(
       `${editedName} / fixture-member-model`,
     );
     await agent.getByRole("button", { name: "Cancel", exact: true }).click();
-    await page.goto("http://127.0.0.1:4173/agents#settings/models");
+    await page.goto(`${web}/agents#settings/models`);
     await settings.getByRole("button", { name: `Delete ${editedName}`, exact: true }).click();
     const deletion = page.getByRole("alertdialog", { name: `Delete ${editedName}?`, exact: true });
     await expect(
