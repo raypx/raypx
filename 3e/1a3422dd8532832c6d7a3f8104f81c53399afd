@@ -1,0 +1,20 @@
+apps/desktop/e2e/events-close.spec.ts
+  s_bdc69bf0ae8364::t_161a13be6c15ab 59,87-100,202,226,228,230-233,237
+  s_bdc69bf0ae8364::t_3dc6940d7f91ae 234-236
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3e1a3422dd8532832c6d7a3f8104f81c53399afd",
+  "prompts": {},
+  "sessions": {
+    "s_bdc69bf0ae8364": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e2f0-d444-77b2-a615-b94776642f82",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
