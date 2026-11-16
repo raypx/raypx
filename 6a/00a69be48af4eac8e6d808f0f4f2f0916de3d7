@@ -1,0 +1,118 @@
+apps/desktop/src/components/shell.tsx
+  s_de5c5bfaaee2d9::t_92c0cfeee7ae55 1-6,44,48-49,71-73,96-119,121-165,178-181,188-211
+packages/agents/src/client/workspace.component.test.tsx
+  s_de5c5bfaaee2d9::t_dd92dd33b84dc9 3002
+packages/agents/src/client/sidebar-state.tsx
+  s_de5c5bfaaee2d9::t_ddccecea8bcfc7 1-7,9-10,12-19
+  s_de5c5bfaaee2d9::t_47a016b82be207 8,11
+packages/agents/src/model/notifications.ts
+  s_de5c5bfaaee2d9::t_527811913e1b36 36
+apps/web/src/components/shell.tsx
+  s_de5c5bfaaee2d9::t_6927ef1ee61de1 1-5,49,53-54,117-121,123-125,171,176,180-194
+packages/blocks/src/components/shell.tsx
+  s_de5c5bfaaee2d9::t_67c728fdd4966f 540,561,577,618,627,654-668
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 7,10,56,114-128,130-133,298-301,322-324,340-343,399,440,474-479,518,536-539,541-544,558-560,562-565,568-576,578-581,604-606,608-613,623-626,628-631,669
+packages/pages/AGENTS.md
+  s_de5c5bfaaee2d9::t_77496a663267fa 59-62
+apps/desktop/src/routes/pages.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1,6,11,41-42
+  s_de5c5bfaaee2d9::t_efca4ed4f8e360 47-63,65-79
+packages/agents/src/client/workspace.tsx
+  s_de5c5bfaaee2d9::t_9042bc59f783cf 4-8,10-14,25,112-113,179-182,210-213,220-221,223,225-227,229-231,233-234,239,242,244-246,251-255,263-264,271,282-329,331,334,349-350,352,367-370,373-376,380,383,386,389,391-394,397-400,403-407,410,418,420-421,424-430,432-440,442,446-447,449-454,456-457,461-467,469-473,475-480,482,484,486,490-491,498,513,515-516,536-537,539,541-548,597,601-614,676-679,681,837,850,883,885,962,1041,1266,1338,1370-1373,1375-1389,1392-1418,1421-1422,1437,1515,1522-1523,1540-1546,1556,1617-1621,1680,1683-1684,1689,1692,1706-1707,1710-1711,1720-1723,1729-1734,1736-1738,1747,1755,1770,1789,1800,1874-1892,1903,2108,2115,2123-2124,2126-2127,2129-2132,2163-2170,2173,2175-2179,2229,2232
+  s_de5c5bfaaee2d9::t_fe773adbe3e567 1685,1691
+  s_de5c5bfaaee2d9::t_4d5024e16ead9c 1-3,9,222,228,232,235-238,240-241,243,332-333,335-343,348,351,353-354,365-366,371-372,377-379,381-382,384-385,387-388,390,395-396,401-402,408-409,411-417,419,422-423,431,441,443-445,448,455,458-460,468,474,481,483,485,487-489,492-497,538,682,753,763-764,773,777,786-791,796-804,838-849,852-882,884,959-961,984,1030,1038-1040,1115,1130,1138,1154,1196,1220-1221,1230,1252-1265,1267,1331,1374,1390-1391,1419-1420,1681-1682,1686-1688,1690,1708-1709,1724-1728,1735,1740-1746,1749-1754,1756-1769,1771-1788,1790-1799,1801-1810,1812-1873,1893-1902,2068-2072,2171-2172,2174,2225-2228,2230-2231
+packages/agents/src/client/agent-directory-list.tsx
+  s_de5c5bfaaee2d9::t_e76f5bae2181b6 1-71
+packages/agents/src/model/sidebar.ts
+  s_de5c5bfaaee2d9::t_fd8b274623b2f1 148-149
+  s_de5c5bfaaee2d9::t_c448e9db2a4a47 96-99
+  s_de5c5bfaaee2d9::t_ca6e5454192985 119-123
+  s_de5c5bfaaee2d9::t_ddccecea8bcfc7 1-24,27-69,71,86-95,100-112,114-118,124-132,134-145,147,150-153
+  s_de5c5bfaaee2d9::t_cece553adb3acb 113
+  s_de5c5bfaaee2d9::t_13b7268eef71bc 70,72-85,133,146,154-166
+  s_de5c5bfaaee2d9::t_8e2cf9e24df5d3 25-26
+packages/ui/src/sidebar.component.test.tsx
+  s_de5c5bfaaee2d9::t_14ccfdbf194db7 2-4,19-34
+apps/web/src/router-page-preview.component.test.tsx
+  s_de5c5bfaaee2d9::t_675e1d7d996747 26-31
+packages/agents/src/client.ts
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 12-14
+apps/desktop/src/router-page-preview.component.test.tsx
+  s_de5c5bfaaee2d9::t_ac3640c9129d3b 41-46
+packages/agents/src/model/sidebar.test.ts
+  s_de5c5bfaaee2d9::t_5b6f45cd6f2ebc 1-19,21-31,34-35,38-39,118
+  s_de5c5bfaaee2d9::t_2074564f812d3f 32-33,36,96-107,111-116
+  s_de5c5bfaaee2d9::t_1bbf79c7edd019 20,37,40-95,108-110,117
+apps/desktop/src/routes/agents.tsx
+  s_de5c5bfaaee2d9::t_1d6734611d4096 1-2,6,8,33
+packages/agents/src/client/workspace-context.tsx
+  s_de5c5bfaaee2d9::t_ddccecea8bcfc7 1-9,17
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 10-16
+packages/ui/src/components/ui/sidebar.tsx
+  s_de5c5bfaaee2d9::t_c780b87d25c6e7 55-56,66-67,70-79
+apps/web/src/routes/(app)/agents.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 30
+  s_de5c5bfaaee2d9::t_156871f67e363e 4,6
+packages/agents/src/client/sidebar-state.component.test.tsx
+  s_de5c5bfaaee2d9::t_8377765ae2acca 1-68
+apps/web/src/routes/(app)/pages.tsx
+  s_de5c5bfaaee2d9::t_986f30ace07d0d 43-56,58-62
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1,6,37-38
+apps/web/src/routes/(app)/settings.tsx
+  s_de5c5bfaaee2d9::t_fe773adbe3e567 5,10-11
+  s_de5c5bfaaee2d9::t_1540574a5192fb 1-2,17,22-33
+apps/web/src/features/settings/quick-settings-modal.tsx
+  s_de5c5bfaaee2d9::t_fe773adbe3e567 16-17,28,102
+packages/agents/src/client/sidebar-queries.ts
+  s_de5c5bfaaee2d9::t_d6ccd1b8084c0a 1-44
+apps/desktop/src/router-agents.component.test.tsx
+  s_de5c5bfaaee2d9::t_699f87e03f594f 1,80,82-97,100
+apps/desktop/src/routes/account.tsx
+  s_de5c5bfaaee2d9::t_fda883d12cb65b 1,20-21
+packages/ui/AGENTS.md
+  s_de5c5bfaaee2d9::t_82e8779c3030ac 127-130
+packages/agents/package.json
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 40
+  s_de5c5bfaaee2d9::t_6c8bb6cbf7f241 37,41
+apps/desktop/AGENTS.md
+  s_de5c5bfaaee2d9::t_da856800bc0a10 58-63
+apps/desktop/src/router-settings.component.test.tsx
+  s_de5c5bfaaee2d9::t_0e383993af34fb 56-62
+packages/agents/AGENTS.md
+  s_de5c5bfaaee2d9::t_29b19dd466787c 278-287
+docs/architecture/clients.md
+  s_de5c5bfaaee2d9::t_41cac5242f8d85 43-59
+packages/agents/src/model.ts
+  s_de5c5bfaaee2d9::t_eccfb31375f524 195
+  s_de5c5bfaaee2d9::t_23684a0a49a33d 189-194,196
+apps/web/src/components/workspace.tsx
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1-16,18-19,21-28,30-36,38-72,88-100
+  s_de5c5bfaaee2d9::t_0b828892a607a8 85-87
+  s_de5c5bfaaee2d9::t_546236ca5f61cf 17,20,29,37,73-84
+packages/blocks/AGENTS.md
+  s_de5c5bfaaee2d9::t_8d669d4f03fa4a 30-31,104-110
+apps/desktop/src/components/workspace.tsx
+  s_de5c5bfaaee2d9::t_0b828892a607a8 104-106
+  s_de5c5bfaaee2d9::t_bbd582ed74e06f 1-22,24-25,27-37,39-45,47-91,107-119
+  s_de5c5bfaaee2d9::t_7092aa9710dbb6 23,26,38,46,92-103
+apps/web/AGENTS.md
+  s_de5c5bfaaee2d9::t_4a40147d3a7f5f 153-159
+bun.lock
+  s_de5c5bfaaee2d9::t_99191c9522f6b2 373,377
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6a00a69be48af4eac8e6d808f0f4f2f0916de3d7",
+  "prompts": {},
+  "sessions": {
+    "s_de5c5bfaaee2d9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4e8-47cf-7651-994f-ba1c53ca3e94",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
