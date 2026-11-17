@@ -57,7 +57,8 @@ export function browserModelFixture() {
       const requestsOpenApi = lastMessage?.text.startsWith("Fixture API call ") ?? false;
       const requestsWeb = lastMessage?.text === "Fixture web lookup";
       const requestsWeather = lastMessage?.text === "上海明天会下雨吗？";
-      const pagePrefix = "Fixture Page create ";
+      const htmlPage = lastMessage?.text.startsWith("Fixture HTML Page create ") ?? false;
+      const pagePrefix = htmlPage ? "Fixture HTML Page create " : "Fixture Page create ";
       const requestsPage = lastMessage?.text.startsWith(pagePrefix) ?? false;
       const pageUpdatePrefix = "Fixture Page update ";
       const updatesPage = lastMessage?.text.startsWith(pageUpdatePrefix) ?? false;
@@ -227,8 +228,10 @@ export function browserModelFixture() {
       if (requestsPage && !results.some((entry) => entry.toolName === "agent_page_create"))
         return toolCall("agent_page_create", "browser-page-create", {
           title: lastMessage!.text.slice(pagePrefix.length),
-          kind: "document",
-          body: "# Agent Page\n\nCreated from the conversation.",
+          kind: htmlPage ? "html" : "document",
+          body: htmlPage
+            ? '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><h1>Interactive preview</h1><button onclick="this.textContent=\'Clicked\'">Try preview</button>'
+            : "# Agent Page\n\nCreated from the conversation.",
         });
       if (updatesPage) {
         const updatedPage = results.find((entry) => entry.toolName === "agent_page_update");

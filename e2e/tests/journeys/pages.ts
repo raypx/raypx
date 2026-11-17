@@ -374,6 +374,29 @@ export function registerTests() {
       await page.getByRole("button", { name: "Create page", exact: true }).click({ timeout });
       expect(new URL(page.url()).searchParams.get("pageId")).toBe(producedId);
       await expect(page.getByRole("alert")).toHaveText("This Page was deleted");
+
+      if (embedded) {
+        await page.goto(conversationUrl, { timeout });
+        const htmlTitle = "HTML preview fixture";
+        await page
+          .getByRole("textbox", { name: "Message", exact: true })
+          .fill(`Fixture HTML Page create ${htmlTitle}`, { timeout });
+        await page.getByRole("button", { name: "Send", exact: true }).click({ timeout });
+        await approval.getByRole("button", { name: "Approve", exact: true }).click({ timeout });
+        await expect(createdResult).toHaveCount(2);
+        await createdResult.last().click({ timeout });
+        const htmlResult = page.getByRole("complementary", { name: htmlTitle, exact: true });
+        await expect(htmlResult.getByRole("tab")).toHaveCount(0);
+        const preview = htmlResult.frameLocator("iframe");
+        await preview.getByRole("button", { name: "Try preview" }).click({ timeout });
+        await expect(preview.getByRole("button", { name: "Clicked" })).toBeVisible();
+        await htmlResult.getByRole("button", { name: "Reload preview" }).click({ timeout });
+        await expect(preview.getByRole("button", { name: "Try preview" })).toBeVisible();
+        const panelBox = (await htmlResult.boundingBox())!;
+        const frameBox = (await htmlResult.locator("iframe").boundingBox())!;
+        expect(panelBox.width - frameBox.width).toBeLessThanOrEqual(2);
+        expect(panelBox.height - frameBox.height).toBeLessThan(64);
+      }
     } finally {
       await rpc("spaces/delete", { spaceId });
     }

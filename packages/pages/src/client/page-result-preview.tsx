@@ -13,7 +13,9 @@ import { ReplyMarkdown } from "@raypx/blocks/markdown";
 import type { PageId, PageVersion } from "@raypx/core/pages";
 import type { SpaceId } from "@raypx/core/spaces";
 import { CloseIcon } from "@raypx/icons/close";
+import { RefreshIcon } from "@raypx/icons/refresh";
 import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@raypx/ui/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
@@ -142,33 +144,73 @@ function PageResultPanel({
   const t = useTranslations("pages");
   const current = usePageVersion(read, spaceId, id, version);
   const comparesVersions = version !== undefined && version > 1;
+  const [view, setView] = useState(comparesVersions ? "changes" : "preview");
+  const [reload, setReload] = useState(0);
   const previous = usePageVersion(read, spaceId, id, comparesVersions ? version - 1 : null);
   const page = current.state && "page" in current.state ? current.state.page : null;
   const base = previous.state && "page" in previous.state ? previous.state.page : null;
   const htmlSource = page?.kind === "html" && !canEmbedAuthenticatedDocuments;
+  const embeddedPage = page?.kind === "html" && canEmbedAuthenticatedDocuments ? page : null;
   const displayVersion = version ?? page?.version;
   const Title = docked ? "h2" : SheetTitle;
+  const preview = embeddedPage ? (
+    <PageDocumentPreview
+      key={reload}
+      available
+      onOpenWebPreview={undefined}
+      title={embeddedPage.title}
+      src={pageDocumentUrl(apiOrigin, embeddedPage)}
+      className="min-h-0 w-full flex-1 border-0 bg-background"
+    />
+  ) : (
+    <div className="min-h-0 flex-1 overflow-auto overscroll-contain px-4 py-3">
+      {page?.kind === "document" && (
+        <ReplyMarkdown
+          copyLabel={t("copy")}
+          copiedLabel={t("copied")}
+          copyErrorLabel={t("copyError")}
+        >
+          {page.body}
+        </ReplyMarkdown>
+      )}
+      {htmlSource && <PageSource body={page.body} />}
+    </div>
+  );
   return (
     <>
-      <SheetHeader className="flex-row items-start justify-between gap-3 border-b">
-        <div className="min-w-0">
+      <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
           <Title
             id={headingId}
             ref={heading}
             tabIndex={-1}
-            className="truncate rounded-md font-heading text-base font-medium text-foreground outline-none focus-visible:focus-control"
+            className="truncate rounded-md font-heading text-sm font-medium text-foreground outline-none focus-visible:focus-control"
+            title={page?.title}
           >
             {page?.title ?? t("result.title")}
           </Title>
           {displayVersion !== undefined && (
-            <p className="text-xs text-muted-foreground">
+            <Badge variant="outline" className="shrink-0 tabular-nums">
               {t("version", { version: displayVersion })}
-            </p>
+            </Badge>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {embeddedPage && (
+            <IconButton
+              size="icon-sm"
+              label={t("result.reloadPreview")}
+              onClick={() => {
+                setView("preview");
+                setReload((value) => value + 1);
+              }}
+            >
+              <RefreshIcon aria-hidden="true" />
+            </IconButton>
+          )}
           {page && canEmbedAuthenticatedDocuments && (
             <PageDocumentLink
+              compact
               href={pageDocumentUrl(apiOrigin, {
                 spaceId,
                 id,
@@ -181,46 +223,34 @@ function PageResultPanel({
           </IconButton>
         </div>
       </SheetHeader>
-      {page ? (
-        <Tabs defaultValue={comparesVersions ? "changes" : "preview"} className="min-h-0 flex-1">
-          <TabsList aria-label={t("result.title")} variant="line" className="mx-4 mt-2 shrink-0">
-            {comparesVersions && <TabsTrigger value="changes">{t("result.changes")}</TabsTrigger>}
-            <TabsTrigger value="preview">{t(htmlSource ? "source" : "preview")}</TabsTrigger>
-          </TabsList>
-          {comparesVersions && (
-            <TabsContent value="changes" className="min-h-0 overflow-y-auto overscroll-contain p-4">
-              {base ? <PageChanges before={base} after={page} /> : <VersionStatus {...previous} />}
-            </TabsContent>
-          )}
-          <TabsContent value="preview" className="min-h-0 overflow-y-auto overscroll-contain p-4">
-            {page.kind === "document" && (
-              <ReplyMarkdown
-                copyLabel={t("copy")}
-                copiedLabel={t("copied")}
-                copyErrorLabel={t("copyError")}
-              >
-                {page.body}
-              </ReplyMarkdown>
-            )}
-            {page.kind === "html" &&
-              (htmlSource ? (
-                <PageSource body={page.body} />
-              ) : (
-                <PageDocumentPreview
-                  available
-                  onOpenWebPreview={undefined}
-                  title={page.title}
-                  src={pageDocumentUrl(apiOrigin, page)}
-                  className="h-full min-h-48 w-full rounded-lg border bg-background"
-                />
-              ))}
-          </TabsContent>
-        </Tabs>
-      ) : (
+      {!page && (
         <div className="p-4">
           <VersionStatus {...current} />
         </div>
       )}
+      {page && comparesVersions && (
+        <Tabs
+          value={view}
+          onValueChange={(next) => {
+            if (next === "changes" || next === "preview") setView(next);
+          }}
+          className="min-h-0 flex-1 gap-0"
+        >
+          <div className="shrink-0 border-b px-3">
+            <TabsList aria-label={t("result.title")} variant="line">
+              <TabsTrigger value="changes">{t("result.changes")}</TabsTrigger>
+              <TabsTrigger value="preview">{t(htmlSource ? "source" : "preview")}</TabsTrigger>
+            </TabsList>
+          </div>
+          <TabsContent value="changes" className="min-h-0 overflow-y-auto overscroll-contain p-4">
+            {base ? <PageChanges before={base} after={page} /> : <VersionStatus {...previous} />}
+          </TabsContent>
+          <TabsContent value="preview" className="flex min-h-0 flex-col overflow-hidden">
+            {preview}
+          </TabsContent>
+        </Tabs>
+      )}
+      {page && !comparesVersions && preview}
     </>
   );
 }

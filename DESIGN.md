@@ -157,6 +157,9 @@ preview alongside the conversation, with the transcript and composer available.
 Narrow screens use a right sheet. Closing restores focus to the opener. In Web,
 the preview can open its document in a new tab, and the Page detail toolbar opens
 the latest version in a standalone tab.
+The preview toolbar keeps the title, version and actions on one row. Show tabs
+when there is a version comparison. HTML fills the available preview area and
+can be reloaded from the toolbar.
 Web lookups group public source links by Run in a compact card. Its right sheet
 shows the original links and excerpts and preserves the same reading position.
 Weather forecasts appear inline with the resolved city, local date, conditions,

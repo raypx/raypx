@@ -71,6 +71,7 @@
   "unknownAgent": "Unavailable Agent",
   "result": {
     "title": "Page result",
+    "reloadPreview": "Reload preview",
     "changes": "Changes",
     "comparison": "{from} → {to}",
     "lines": "Line {before, number} → line {after, number}",

@@ -70,6 +70,7 @@
   "member": "成员",
   "unknownAgent": "智能体不可用",
   "result": {
+    "reloadPreview": "重新加载预览",
     "title": "页面结果",
     "changes": "改动",
     "comparison": "{from} → {to}",
