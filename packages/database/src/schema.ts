@@ -1080,7 +1080,7 @@ export const conversationToolCalls = pgTable(
     }).onDelete("cascade"),
     check(
       "conversation_tool_calls_page_check",
-      sql`(${table.pageId} is null and ${table.pageVersion} is null) or (${table.pageId} is not null and ${table.pageVersion} is not null and ${table.pageVersion} > 0 and ${table.finishedAt} is not null and ${table.outcome} = 'succeeded' and ${table.toolName} in ('agent_page_create', 'agent_page_update'))`,
+      sql`(${table.pageId} is null and ${table.pageVersion} is null) or (${table.pageId} is not null and ${table.pageVersion} is not null and ${table.pageVersion} > 0 and ${table.finishedAt} is not null and ${table.outcome} = 'succeeded' and ${table.toolName} in ('agent_page_create', 'agent_page_update', 'agent_page_fill_form'))`,
     ),
     check(
       "conversation_tool_calls_web_sources_check",
@@ -1150,7 +1150,7 @@ export const approvalRules = pgTable(
     check("approval_rules_decision_check", sql`${table.decision} in ('allow', 'block')`),
     check(
       "approval_rules_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_fill_form', 'browser_fill_form', 'browser_inspect_form', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_rules_executable_check",
@@ -1311,7 +1311,7 @@ export const approvalRequests = pgTable(
     }).onDelete("cascade"),
     check(
       "approval_requests_tool_check",
-      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_fill_form', 'browser_fill_form', 'browser_inspect_form', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "approval_requests_state_check",
@@ -1380,7 +1380,7 @@ export const conversationEffects = pgTable(
     }).onDelete("cascade"),
     check(
       "conversation_effects_tool_check",
-      sql`(${table.toolName} in ('computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
+      sql`(${table.toolName} in ('computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_fill_form', 'browser_fill_form', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (${table.toolName} ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or ${table.toolName} ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(${table.toolName}) <= 128)`,
     ),
     check(
       "conversation_effects_state_check",
@@ -2096,6 +2096,32 @@ export const pageVersions = pgTable(
       sql`${table.reason} in ('created', 'updated', 'renamed', 'restored')`,
     ),
     check("page_versions_size_check", sql`octet_length(${table.body}) <= 262144`),
+  ],
+);
+export const pageFormDrafts = pgTable(
+  "page_form_drafts",
+  {
+    spaceId: text("space_id").notNull(),
+    pageId: text("page_id").notNull(),
+    accountId: text("account_id").notNull(),
+    version: integer("version").notNull(),
+    fields: jsonb("fields").$type<{ name: string; value: string }[]>().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.spaceId, table.pageId, table.accountId] }),
+    foreignKey({
+      columns: [table.spaceId, table.pageId, table.version],
+      foreignColumns: [pageVersions.spaceId, pageVersions.pageId, pageVersions.version],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.spaceId, table.accountId],
+      foreignColumns: [spaceMembers.spaceId, spaceMembers.accountId],
+    }).onDelete("cascade"),
+    index("page_form_drafts_member_idx").on(table.spaceId, table.accountId),
+    check(
+      "page_form_drafts_fields_check",
+      sql`jsonb_typeof(${table.fields}) = 'array' and octet_length(${table.fields}::text) <= 65536`,
+    ),
   ],
 );
 export const pageShareLinks = pgTable(

@@ -37,6 +37,8 @@ import { WEATHER_API_URL, WEB_SEARCH_API_URL } from "@raypx/core/openapi-servers
 import { createMcpServers } from "../../src/conversations/mcp-servers.js";
 import { createMcpServersRepository } from "../../src/conversations/mcp-postgres.js";
 import { withPageTools } from "../../src/conversations/page-tools.js";
+import { withBrowserTools } from "../../src/conversations/browser-tools.js";
+import { createBrowserProvider } from "@raypx/providers/browser";
 import { withSkillTools } from "../../src/conversations/skill-tools.js";
 import { withMcpTools } from "../../src/conversations/mcp-tools.js";
 import { createOpenApiServers } from "../../src/conversations/openapi-servers.js";
@@ -323,51 +325,58 @@ const protectedValues = () => [
 ];
 const conversationRepository = createConversationsRepository(connection.db);
 const computerQueue = createComputerUseQueue(connection.db);
+const browserEndpoint = process.env.CONTROL_E2E_BROWSER_ENDPOINT;
+const browserToken = process.env.CONTROL_E2E_BROWSER_TOKEN;
+const browser =
+  browserEndpoint && browserToken
+    ? createBrowserProvider(browserEndpoint, browserToken, environment.APP_KEY)
+    : undefined;
+const fixtureTools = withOpenApiTools(
+  withMcpTools(
+    withSkillTools(
+      withPageTools(
+        withMemoryTools(
+          withDeviceComputerTools(
+            createComputerTools(
+              computers,
+              computerProvider,
+              [],
+              conversationRepository.pinResources,
+              computerQueue,
+              {
+                withAgentInput: computerScreens.withAgentInput,
+                setPaused: (scope, run, paused) =>
+                  conversationRepository.setComputerInputPaused!(scope, run, paused),
+              },
+            ),
+            deviceComputersRepository,
+            deviceConnector,
+            conversationRepository.pinResources,
+            computerQueue,
+            protectedValues,
+          ),
+          spaceMemory,
+          protectedValues,
+        ),
+        pages,
+        { publicWebOrigin: environment.publicWebOrigin, secrets: protectedValues },
+      ),
+      skills,
+      protectedValues,
+    ),
+    mcpServers,
+    protectedValues,
+  ),
+  openApiServers,
+  protectedValues,
+);
 const runner = new ConversationRunner(
   conversationRepository,
   conversationModels,
   undefined,
   undefined,
   {
-    tools: withOpenApiTools(
-      withMcpTools(
-        withSkillTools(
-          withPageTools(
-            withMemoryTools(
-              withDeviceComputerTools(
-                createComputerTools(
-                  computers,
-                  computerProvider,
-                  [],
-                  conversationRepository.pinResources,
-                  computerQueue,
-                  {
-                    withAgentInput: computerScreens.withAgentInput,
-                    setPaused: (scope, run, paused) =>
-                      conversationRepository.setComputerInputPaused!(scope, run, paused),
-                  },
-                ),
-                deviceComputersRepository,
-                deviceConnector,
-                conversationRepository.pinResources,
-                computerQueue,
-                protectedValues,
-              ),
-              spaceMemory,
-              protectedValues,
-            ),
-            pages,
-            { publicWebOrigin: environment.publicWebOrigin, secrets: protectedValues },
-          ),
-          skills,
-          protectedValues,
-        ),
-        mcpServers,
-        protectedValues,
-      ),
-      openApiServers,
-      protectedValues,
-    ),
+    tools: browser ? withBrowserTools(fixtureTools, browser, protectedValues) : fixtureTools,
     approvals: agentApprovals,
     attachments: messageAttachments,
     protectedInputs,
@@ -410,6 +419,7 @@ const stream = new ConversationStream({
 });
 await stream.start();
 const app = createApiApp({
+  browser,
   messageAttachments,
   deviceFiles,
   notifications,

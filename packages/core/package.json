@@ -17,6 +17,7 @@
     "./routines": "./src/routines.ts",
     "./space-memory": "./src/space-memory.ts",
     "./pages": "./src/pages.ts",
+    "./browser": "./src/browser.ts",
     "./skills": "./src/skills.ts",
     "./mcp-servers": "./src/mcp-servers.ts",
     "./openapi-servers": "./src/openapi-servers.ts",

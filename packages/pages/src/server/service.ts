@@ -2,11 +2,13 @@ import {
   MAX_PAGE_BYTES,
   PageError,
   pageBodySchema,
+  pageFormFieldsSchema,
   pageIdSchema,
   pageInputSchema,
 } from "@raypx/core/pages";
 import type { SpaceScope } from "@raypx/spaces/server";
 import type { PageActor, PagesRepository, PagesService } from "./types.js";
+import { fillPageForm } from "./forms.js";
 
 export async function pageTokenHash(token: string): Promise<string> {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
@@ -34,6 +36,20 @@ export function createPagesService(
     list: (scope, input = {}) =>
       repository.list(scope, { ...input, limit: Math.min(100, Math.max(1, input.limit ?? 100)) }),
     get: (scope, id, version) => repository.get(scope, id, version),
+    async memberDocument(scope, id, version) {
+      const page = await repository.get(scope, id, version);
+      if (page.kind !== "html") return page;
+      const fields = await repository.formDraft(scope, id, page.version);
+      return fields ? { ...page, body: fillPageForm(page.body, fields) } : page;
+    },
+    saveFormDraft: (scope, id, version, fields, author) =>
+      repository.saveFormDraft(
+        scope,
+        id,
+        version,
+        pageFormFieldsSchema.parse(fields),
+        actor(scope, author),
+      ),
     async create(scope, input, author, id) {
       body(input.body);
       return repository.create(

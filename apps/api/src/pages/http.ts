@@ -101,7 +101,7 @@ export function createPagesRoutes(options: PagesHttpOptions) {
     if (!session) return missing();
     try {
       const scope = await options.spaces.resolve(session.user.id, spaceId.data);
-      const page = await options.pages.get(
+      const page = await options.pages.memberDocument(
         scope,
         pageId.data,
         requested === undefined ? undefined : Number(requested),

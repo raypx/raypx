@@ -61,6 +61,11 @@ device member files. RPC mutations retain session, trusted-Origin and quota
 checks. /api/attachments downloads require fresh Space admission and always
 force safe attachment disposition; never inline supplied documents.
 
+The optional private browser broker uses separate credentials and short-lived
+sessions scoped to the initiating member, Space and conversation. The member
+RPC owns browser navigation and takeover. Agent tools inspect form labels and
+require per-call approval before filling. The broker never grants Space access.
+
 Registration owns a transaction-locked account_bootstrap marker and fresh mail/signup admission through the auth adapter. SETUP_TOKEN is optional, API-only, bounded and rate-limited. No-mail accounts retain an unverified admission exemption. Recovery-link issuance commits with its audit, expires after 15 minutes and is returned once; test mail sends only to the current administrator.
 
 Sandbox settings use the existing revisioned/audited PostgreSQL provider configuration, write-only URL-bound credentials and configuration.testSandbox. API/worker Computer adapters read current settings without startup I/O; revision changes fence results and streams. Runtime env never overrides saved settings. Private supervisor placement prevents empty-home replacement after URL changes.

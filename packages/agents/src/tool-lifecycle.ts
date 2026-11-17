@@ -51,7 +51,9 @@ export function toolCompletion(
     // This is the server operation's returned value, never model-supplied arguments.
     if (
       outcome === "succeeded" &&
-      (toolName === "agent_page_create" || toolName === "agent_page_update")
+      (toolName === "agent_page_create" ||
+        toolName === "agent_page_update" ||
+        toolName === "agent_page_fill_form")
     ) {
       const parsed = toolPageSchema.safeParse({ id: result?.pageId, version: result?.version });
       if (parsed.success) page = parsed.data;

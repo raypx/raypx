@@ -1,10 +1,12 @@
 import {
   approvalRequestIdSchema,
+  requiresExplicitFormApproval,
   toolNameSchema,
   type ApprovalRequest,
   type ApprovalState,
   type ToolName,
 } from "@raypx/core/approvals";
+import { pageFormFieldsSchema, type PageFormFields } from "@raypx/core/pages";
 import type {
   PendingApprovalSummary,
   ConversationEvent,
@@ -31,6 +33,7 @@ export interface ApprovalCardView {
   answeredByAccountId: string | null;
   review?: ApprovalRequest["review"] | undefined;
   device?: ApprovalRequest["device"] | undefined;
+  formFields?: PageFormFields | undefined;
   answering: boolean;
   error: ApprovalCardError | null;
 }
@@ -102,6 +105,9 @@ export function approvalExtraSummary(
     "tools.createPage": ["Create page", "创建页面"],
     "tools.updatePage": ["Update page", "更新页面"],
     "tools.readPage": ["Read page", "读取页面"],
+    "tools.fillPageForm": ["Fill Page form", "填写页面表单"],
+    "tools.inspectBrowserForm": ["Inspect website form", "查看网站表单"],
+    "tools.fillBrowserForm": ["Fill website form", "填写网站表单"],
     "tools.searchHistory": ["Search conversation history", "搜索对话历史"],
     "tools.loadSkill": ["Load skill", "加载技能"],
     "tools.saveSkill": ["Save skill", "保存技能"],
@@ -141,7 +147,7 @@ export function activityForRun(cards: readonly ApprovalCardView[], runId: RunId)
   return cards.filter((card) => card.runId === runId).sort((a, b) => a.sequence - b.sequence);
 }
 
-/** Only bounded card data enters the conversation projection, never exact arguments. */
+/** Pending forms get bounded values only from the addressed approval response. */
 export class ApprovalProjection {
   private cards: ApprovalCardView[] = [];
   private readonly submitted = new Set<ApprovalRequest["id"]>();
@@ -176,6 +182,7 @@ export class ApprovalProjection {
       toolName: event.toolName,
       target: event.target.slice(0, 1_024),
       device: event.device,
+      formFields: resolved ? undefined : previous?.formFields,
       argumentSummary: event.argumentSummary.slice(0, 1_024),
       memberAccountId: event.memberAccountId,
       expiresAt: event.expiresAt,
@@ -264,7 +271,7 @@ export class ApprovalProjection {
         card.state === "pending" &&
         !card.answering
       )
-        this.put({ ...card, error: "resolvedElsewhere" });
+        this.put({ ...card, formFields: undefined, error: "resolvedElsewhere" });
     }
   }
   receive(request: ApprovalRequest, sequence: number) {
@@ -278,6 +285,10 @@ export class ApprovalProjection {
       toolName: request.toolName,
       target: request.target.slice(0, 1_024),
       device: request.device,
+      formFields:
+        request.state === "pending" && requiresExplicitFormApproval(request.toolName)
+          ? pageFormFieldsSchema.safeParse(request.arguments.fields).data
+          : undefined,
       argumentSummary: request.argumentSummary.slice(0, 1_024),
       memberAccountId: request.memberAccountId,
       expiresAt: request.expiresAt,

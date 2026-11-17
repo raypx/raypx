@@ -28,6 +28,7 @@ export function knownComputerSecrets(environment: AgentEnvironment): string[] {
     ...Object.values(credentials as Record<string, string>),
     environment.AUTH_SECRET,
     environment.APP_KEY,
+    environment.BROWSER_BROKER_TOKEN,
     environment.ROUTINE_EMAIL_RELAY_TOKEN,
     environment.GOOGLE_CLIENT_SECRET,
     environment.GITHUB_CLIENT_SECRET,

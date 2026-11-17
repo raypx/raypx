@@ -38,6 +38,8 @@ export default {
   AUTH_IP_HEADERS: "input",
   AUTH_TRUSTED_PROXIES: "input",
   REDIS_URL: "input",
+  BROWSER_BROKER_URL: "input",
+  BROWSER_BROKER_TOKEN: "input",
   POSTHOG_PROJECT_TOKEN: "input",
   POSTHOG_HOST: "input",
 } as const;

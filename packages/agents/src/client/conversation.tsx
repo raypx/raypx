@@ -114,6 +114,8 @@ import { WeatherForecastCards } from "./weather-forecast.js";
 import { ComputerFileCards, ComputerFileSheet } from "./computer-file-results.js";
 import { EffectRecords } from "./effects.js";
 import { useTranslations } from "./i18n.js";
+import { BrowserPanel, type BrowserPreviewPort } from "./browser-panel.js";
+import { GlobalIcon } from "@raypx/icons/global";
 
 const connectionKeys = {
   connecting: "connecting",
@@ -128,6 +130,7 @@ const errorKeys = {
 } as const;
 
 interface AgentConversationProps {
+  browser?: BrowserPreviewPort | undefined;
   supportsImages?: boolean | undefined;
   onBack?: (() => void) | undefined;
   onEditAgent?: (() => void) | undefined;
@@ -178,6 +181,7 @@ interface AgentConversationProps {
 }
 
 export function AgentConversation({
+  browser,
   supportsImages,
   onBack,
   onEditAgent,
@@ -271,6 +275,7 @@ export function AgentConversation({
   if (!controllers) return <ConversationLoading label={t("loading")} />;
   return (
     <ConversationContents
+      browser={browser}
       item={item}
       onBack={onBack}
       onEditAgent={onEditAgent}
@@ -306,6 +311,7 @@ export function AgentConversation({
 }
 
 function ConversationContents({
+  browser,
   subscribePages,
   supportsImages,
   runReference,
@@ -337,6 +343,7 @@ function ConversationContents({
   onActivity,
   onComputerOpen,
 }: {
+  browser: BrowserPreviewPort | undefined;
   subscribePages: PageReferenceSubscription | undefined;
   runReference: { id: string; runId: string } | undefined;
   onBack: (() => void) | undefined;
@@ -401,6 +408,8 @@ function ConversationContents({
   const panelId = useId();
   const attachmentFiles = useAttachmentFiles(controller.attachments, supportsImages === true);
   const computerTrigger = useRef<HTMLButtonElement>(null);
+  const browserTrigger = useRef<HTMLButtonElement>(null);
+  const [browserOpen, setBrowserOpen] = useState(false);
   const capabilityMenuTrigger = useRef<HTMLButtonElement>(null);
   const computerMenuOpener = useRef<HTMLButtonElement | null>(null);
   const [computerOpen, setComputerOpen] = useState(false);
@@ -442,6 +451,7 @@ function ConversationContents({
   else if (deviceState?.loading) computerStatus = t("loading");
   else if (deviceState?.error) computerStatus = t("computerUnavailable");
   function openComputer(opener: HTMLButtonElement | null = computerTrigger.current) {
+    setBrowserOpen(false);
     computerMenuOpener.current = opener === computerTrigger.current ? null : opener;
     if (wide) {
       if (pageDocked) closeResultPanel(false);
@@ -830,6 +840,7 @@ function ConversationContents({
       void controller.loadLater();
   }
   function openResultPanel(result: Result, opener: HTMLElement) {
+    setBrowserOpen(false);
     const node = history.current;
     if (node) {
       follow.current = false;
@@ -1050,13 +1061,33 @@ function ConversationContents({
                     : undefined
                 }
                 deviceConnected={selectedDevice?.connected}
-                open={wide ? contextOpen && !pageDocked : computerOpen}
+                open={wide ? contextOpen && !pageDocked && !browserOpen : computerOpen}
                 panelId={panelId}
                 onOpen={() => {
-                  if (wide ? contextOpen && !pageDocked : computerOpen) closeComputer();
+                  if (wide ? contextOpen && !pageDocked && !browserOpen : computerOpen)
+                    closeComputer();
                   else openComputer();
                 }}
               />
+              {browser && (
+                <IconButton
+                  ref={browserTrigger}
+                  size="icon-sm"
+                  label={t("browser.title")}
+                  aria-expanded={browserOpen}
+                  onClick={() => {
+                    if (browserOpen) {
+                      setBrowserOpen(false);
+                      return;
+                    }
+                    if (resultPanel?.open) closeResultPanel(false);
+                    setComputerOpen(false);
+                    setBrowserOpen(true);
+                  }}
+                >
+                  <GlobalIcon aria-hidden="true" />
+                </IconButton>
+              )}
             </div>
           </header>
         </ShellToolbar>
@@ -2136,7 +2167,49 @@ function ConversationContents({
           </form>
         </div>
       </section>
-      {wide && contextOpen && !pageDocked && (
+      {browser && browserOpen && wide && (
+        <aside
+          aria-label={t("browser.title")}
+          className="flex min-h-0 min-w-0 w-[clamp(24rem,40%,36rem)] shrink-0 flex-col border-l bg-background"
+        >
+          <header className="flex items-center justify-between border-b px-3 py-2">
+            <h2 className="text-sm font-medium">{t("browser.title")}</h2>
+            <IconButton
+              size="icon-sm"
+              label={t("browser.close")}
+              onClick={() => {
+                setBrowserOpen(false);
+                browserTrigger.current?.focus({ preventScroll: true });
+              }}
+            >
+              <CloseIcon aria-hidden="true" />
+            </IconButton>
+          </header>
+          <BrowserPanel
+            port={browser}
+            spaceId={item.conversation.spaceId}
+            conversationId={item.conversation.id}
+          />
+        </aside>
+      )}
+      {browser && browserOpen && !wide && (
+        <CapabilitySheet
+          open
+          onClose={() => setBrowserOpen(false)}
+          title={t("browser.title")}
+          closeLabel={t("browser.close")}
+          finalFocus={() => browserTrigger.current ?? false}
+          bodyClassName="p-0"
+          className="data-[side=right]:w-full"
+        >
+          <BrowserPanel
+            port={browser}
+            spaceId={item.conversation.spaceId}
+            conversationId={item.conversation.id}
+          />
+        </CapabilitySheet>
+      )}
+      {wide && contextOpen && !pageDocked && !browserOpen && (
         <aside
           id={panelId}
           aria-label={t("computerTitle")}

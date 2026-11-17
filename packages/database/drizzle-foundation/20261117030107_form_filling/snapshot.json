@@ -1,0 +1,404 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "2366c512-d8d5-4020-b8d0-d98afe6d293f",
+  "prevIds": [
+    "a9889192-ea1c-4788-ad6b-9534555668bd"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "page_form_drafts"
+      ],
+      "writes": [
+        "s|tbl|public.page_form_drafts",
+        "n|tbl|public.page_form_drafts",
+        "e|tbl|public.page_form_drafts",
+        "n|rel|public.page_form_drafts",
+        "n|type|public.page_form_drafts",
+        "n|rel|public.page_form_drafts_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "page_form_drafts",
+        "page_form_drafts_member_idx"
+      ],
+      "writes": [
+        "s|idx|public.page_form_drafts_member_idx",
+        "n|idx|public.page_form_drafts_member_idx",
+        "e|idx|public.page_form_drafts_member_idx",
+        "n|rel|public.page_form_drafts_member_idx"
+      ],
+      "reads": [
+        "n|tbl|public.page_form_drafts",
+        "n|sch|public",
+        "n|col|public.page_form_drafts.space_id",
+        "n|col|public.page_form_drafts.account_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "page_form_drafts"
+      ],
+      "writes": [
+        "s|fk|public.page_form_drafts.page_form_drafts_W0bTqE7LzP0Z_fkey",
+        "n|fk|public.page_form_drafts.page_form_drafts_W0bTqE7LzP0Z_fkey",
+        "e|fk|public.page_form_drafts.page_form_drafts_W0bTqE7LzP0Z_fkey",
+        "n|con|public.page_form_drafts.page_form_drafts_W0bTqE7LzP0Z_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.page_form_drafts",
+        "n|sch|public",
+        "n|tbl|public.page_versions",
+        "n|sch|public",
+        "n|col|public.page_form_drafts.space_id",
+        "n|col|public.page_form_drafts.page_id",
+        "n|col|public.page_form_drafts.version",
+        "n|col|public.page_versions.space_id",
+        "n|col|public.page_versions.page_id",
+        "n|col|public.page_versions.version",
+        "e|uniqueness|public.page_versions.page_id.space_id.version"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "page_form_drafts"
+      ],
+      "writes": [
+        "s|fk|public.page_form_drafts.page_form_drafts_6aXQIZyis2b2_fkey",
+        "n|fk|public.page_form_drafts.page_form_drafts_6aXQIZyis2b2_fkey",
+        "e|fk|public.page_form_drafts.page_form_drafts_6aXQIZyis2b2_fkey",
+        "n|con|public.page_form_drafts.page_form_drafts_6aXQIZyis2b2_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.page_form_drafts",
+        "n|sch|public",
+        "n|tbl|public.space_members",
+        "n|sch|public",
+        "n|col|public.page_form_drafts.space_id",
+        "n|col|public.page_form_drafts.account_id",
+        "n|col|public.space_members.space_id",
+        "n|col|public.space_members.account_id",
+        "e|uniqueness|public.space_members.account_id.space_id"
+      ]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_requests"
+      ],
+      "writes": [
+        "s|ck|public.approval_requests.approval_requests_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_requests",
+        "n|sch|public",
+        "n|col|public.approval_requests.tool_name",
+        "e|col|public.approval_requests.tool_name"
+      ],
+      "sqlHash": "9c40f311ed3d1e4e"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approval_rules"
+      ],
+      "writes": [
+        "s|ck|public.approval_rules.approval_rules_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.approval_rules",
+        "n|sch|public",
+        "n|col|public.approval_rules.tool_name",
+        "e|col|public.approval_rules.tool_name"
+      ],
+      "sqlHash": "46246ae9d8c3b6af"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_effects"
+      ],
+      "writes": [
+        "s|ck|public.conversation_effects.conversation_effects_tool_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_effects",
+        "n|sch|public",
+        "n|col|public.conversation_effects.tool_name",
+        "e|col|public.conversation_effects.tool_name"
+      ],
+      "sqlHash": "ca89df36a69eabd5"
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "conversation_tool_calls"
+      ],
+      "writes": [
+        "s|ck|public.conversation_tool_calls.conversation_tool_calls_page_check"
+      ],
+      "reads": [
+        "n|tbl|public.conversation_tool_calls",
+        "n|sch|public",
+        "n|col|public.conversation_tool_calls.page_id",
+        "n|col|public.conversation_tool_calls.page_version",
+        "n|col|public.conversation_tool_calls.finished_at",
+        "n|col|public.conversation_tool_calls.outcome",
+        "n|col|public.conversation_tool_calls.tool_name",
+        "e|col|public.conversation_tool_calls.page_id",
+        "e|col|public.conversation_tool_calls.page_version",
+        "e|col|public.conversation_tool_calls.finished_at",
+        "e|col|public.conversation_tool_calls.outcome",
+        "e|col|public.conversation_tool_calls.tool_name"
+      ],
+      "sqlHash": "92461ba5fd8fca9f"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "page_form_drafts",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "space_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "page_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "version",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "fields",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "page_form_drafts_member_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "space_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "account_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "page_form_drafts_W0bTqE7LzP0Z_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "page_id",
+          "version"
+        ],
+        "schemaTo": "public",
+        "tableTo": "page_versions",
+        "columnsTo": [
+          "space_id",
+          "page_id",
+          "version"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "page_form_drafts_6aXQIZyis2b2_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "space_id",
+          "account_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "space_members",
+        "columnsTo": [
+          "space_id",
+          "account_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "page_form_drafts_pkey",
+        "columns": [
+          "space_id",
+          "page_id",
+          "account_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "page_form_drafts",
+        "name": "page_form_drafts_fields_check",
+        "value": "jsonb_typeof(\"fields\") = 'array' and octet_length(\"fields\"::text) <= 65536",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_requests\",\"approval_requests_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_fill_form', 'browser_fill_form', 'browser_inspect_form', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approval_rules\",\"approval_rules_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_list_files', 'computer_read_file', 'computer_search_files', 'computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_fill_form', 'browser_fill_form', 'browser_inspect_form', 'agent_page_read', 'agent_skill_load', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_effects\",\"conversation_effects_tool_check\"]",
+      "set": {
+        "value": "(\"tool_name\" in ('computer_write_file', 'computer_edit_file', 'computer_run_command', 'computer_screenshot', 'computer_pointer', 'computer_keyboard', 'agent_memory_save', 'agent_memory_update', 'agent_page_create', 'agent_page_update', 'agent_page_fill_form', 'browser_fill_form', 'agent_skill_save', 'web_search', 'web_read', 'weather_forecast') or (\"tool_name\" ~ '^mcp_[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$' or \"tool_name\" ~ '^openapi_[a-f0-9]{32}__[a-zA-Z0-9_-]{1,64}$') and length(\"tool_name\") <= 128)"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"conversation_tool_calls\",\"conversation_tool_calls_page_check\"]",
+      "set": {
+        "value": "(\"page_id\" is null and \"page_version\" is null) or (\"page_id\" is not null and \"page_version\" is not null and \"page_version\" > 0 and \"finished_at\" is not null and \"outcome\" = 'succeeded' and \"tool_name\" in ('agent_page_create', 'agent_page_update', 'agent_page_fill_form'))"
+      }
+    }
+  ]
+}

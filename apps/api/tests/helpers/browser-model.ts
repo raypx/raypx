@@ -62,6 +62,9 @@ export function browserModelFixture() {
       const requestsPage = lastMessage?.text.startsWith(pagePrefix) ?? false;
       const pageUpdatePrefix = "Fixture Page update ";
       const updatesPage = lastMessage?.text.startsWith(pageUpdatePrefix) ?? false;
+      const pageFillPrefix = "Fixture Page fill ";
+      const fillsPage = lastMessage?.text.startsWith(pageFillPrefix) ?? false;
+      const fillsBrowser = lastMessage?.text === "Fixture browser fill";
       const requestsFile = lastMessage?.text.startsWith("Fixture file write ") ?? false;
       const fileSearch = lastMessage?.text === "Fixture file search";
       const fileEdit = lastMessage?.text === "Fixture exact edit";
@@ -230,9 +233,35 @@ export function browserModelFixture() {
           title: lastMessage!.text.slice(pagePrefix.length),
           kind: htmlPage ? "html" : "document",
           body: htmlPage
-            ? '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><h1>Interactive preview</h1><button onclick="this.textContent=\'Clicked\'">Try preview</button>'
+            ? '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><h1>Interactive preview</h1><button onclick="this.textContent=\'Clicked\'">Try preview</button><form><label>Company <input name="company"></label></form>'
             : "# Agent Page\n\nCreated from the conversation.",
         });
+      if (fillsPage && !results.some((entry) => entry.toolName === "agent_page_fill_form"))
+        return toolCall("agent_page_fill_form", "browser-page-fill", {
+          id: lastMessage!.text.slice(pageFillPrefix.length),
+          expectedVersion: 1,
+          fields: [{ name: "company", value: "Raypx fixture" }],
+        });
+      if (fillsBrowser && !results.some((entry) => entry.toolName === "browser_fill_form")) {
+        const inspection = results.find((entry) => entry.toolName === "browser_inspect_form");
+        if (!inspection) return toolCall("browser_inspect_form", "browser-inspect-form", {});
+        const content = inspection.content.find((entry) => entry.type === "text");
+        if (content) {
+          const { origin, formToken } = JSON.parse(content.text);
+          if (origin && formToken)
+            return toolCall("browser_fill_form", "browser-fill-form", {
+              origin,
+              formToken,
+              fields: [{ name: "company", value: "Raypx fixture" }],
+            });
+        }
+      }
+      if (fillsBrowser) {
+        const result = results.find((entry) => entry.toolName === "browser_fill_form");
+        const content = result?.content.find((entry) => entry.type === "text");
+        if (content && JSON.parse(content.text).code === "BROWSER_FORM_CHANGED")
+          text = "Browser form needs fresh approval";
+      }
       if (updatesPage) {
         const updatedPage = results.find((entry) => entry.toolName === "agent_page_update");
         if (!updatedPage)
@@ -383,6 +412,8 @@ export function browserModelFixture() {
         requestsMcp ||
         requestsPage ||
         updatesPage ||
+        fillsPage ||
+        fillsBrowser ||
         requestsOpenApi ||
         requestsWeb ||
         requestsWeather ||

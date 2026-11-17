@@ -8,6 +8,7 @@ root with `bun install`.
 | ---------------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
 | `@raypx/infra-railway` | Railway backend, Web and gateway service definitions                | [Railway](railway/README.md)                    |
 | `sandbox`              | Private Computer supervisor and prepared image; Engine socket owner | [Local sandbox](../docs/development/sandbox.md) |
+| `browser`              | Private agent-browser sessions for external forms                   | [Browser forms](../docs/development/browser.md) |
 
 Run focused checks from the repository root:
 

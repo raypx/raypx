@@ -69,6 +69,7 @@ export function WebWorkspace({
         })
       }
       pageResultPreview={ChatPagePreview}
+      browser={agentsClient.browsers}
       modelCatalogKey={settingsHash}
       onOpenModels={() => void settings.open("models")}
       onOpenTools={() => void settings.open("tools")}

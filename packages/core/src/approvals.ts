@@ -18,6 +18,9 @@ export const computerToolNameSchema = z.enum([
   "agent_page_create",
   "agent_page_update",
   "agent_page_read",
+  "agent_page_fill_form",
+  "browser_inspect_form",
+  "browser_fill_form",
   "agent_search_history",
   "agent_skill_load",
   "agent_skill_save",
@@ -44,6 +47,9 @@ export const toolNameSchema = z.union([
   openApiToolNameSchema,
 ]);
 export type ToolName = z.infer<typeof toolNameSchema>;
+export function requiresExplicitFormApproval(name: string): boolean {
+  return name === "agent_page_fill_form" || name === "browser_fill_form";
+}
 export const approvalModeSchema = z.enum(["ask", "never", "auto"]);
 export type ApprovalMode = z.infer<typeof approvalModeSchema>;
 // Accept the explicit choice at the boundary so the service can report unavailability.

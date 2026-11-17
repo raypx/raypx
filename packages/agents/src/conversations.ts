@@ -54,6 +54,7 @@ export interface ConversationHistory extends ConversationSnapshot {
   segmentsTruncated: boolean;
 }
 export interface ConversationsRepository {
+  assertConversation?(scope: SpaceScope, id: ConversationId): Promise<void>;
   createGroup?(scope: SpaceScope, input: GroupConversationInput): Promise<Conversation>;
   listGroups?(scope: SpaceScope, limit: number): Promise<Conversation[]>;
   getGroup?(scope: SpaceScope, id: ConversationId): Promise<Conversation>;

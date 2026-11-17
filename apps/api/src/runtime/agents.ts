@@ -67,6 +67,8 @@ import {
 } from "../conversations/secrets.js";
 import { knownComputerSecrets, type AgentEnvironment } from "./computers.js";
 import { createAttachmentObjectStorage } from "../storage/config.js";
+import { createBrowserProvider } from "@raypx/providers/browser";
+import { withBrowserTools } from "../conversations/browser-tools.js";
 
 /** Shared by API direct dispatch and worker recovery. Composition performs no database I/O. */
 export async function composeAgents(
@@ -171,7 +173,15 @@ export async function composeAgents(
     spaceMemory,
     protectedValues,
   );
-  const tools = withOpenApiTools(
+  const browser =
+    environment.BROWSER_BROKER_URL && environment.BROWSER_BROKER_TOKEN
+      ? createBrowserProvider(
+          environment.BROWSER_BROKER_URL,
+          environment.BROWSER_BROKER_TOKEN,
+          environment.APP_KEY,
+        )
+      : undefined;
+  const resourceTools = withOpenApiTools(
     withMcpTools(
       withSkillTools(
         withPageTools(memoryTools, pages, {
@@ -196,7 +206,7 @@ export async function composeAgents(
         .createLogger({ operation })
         .emit({ status: 200, code: "OK", runId, durationMs, ...timings }),
     {
-      tools,
+      tools: browser ? withBrowserTools(resourceTools, browser, protectedValues) : resourceTools,
       approvals: agentApprovals,
       protectedInputs,
       attachments: messageAttachments,
@@ -273,6 +283,7 @@ export async function composeAgents(
     runner,
     computers,
     computerScreens,
+    browser,
     computerProvider,
     conversationModels,
     agentApprovals,

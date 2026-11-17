@@ -1,4 +1,5 @@
 import { createNotificationsHandlers } from "./notifications.js";
+import { createBrowserHandlers } from "./browser.js";
 import { createMessageAttachmentsHandlers } from "./message-attachments.js";
 import { createProtectedInputHandlers } from "./protected-input.js";
 import { createDeviceComputersHandlers } from "./device-computers.js";
@@ -29,6 +30,7 @@ export const rpcPrefix = "/api/rpc";
 export function createRpcRouter(options: ApiAppOptions, readReadiness: ReadReadiness) {
   const setup = createRpcSetup(options);
   return setup.implementer.router({
+    browsers: createBrowserHandlers(setup),
     notifications: createNotificationsHandlers(setup),
     messageAttachments: createMessageAttachmentsHandlers(setup),
     deviceComputers: createDeviceComputersHandlers(setup),
@@ -72,6 +74,10 @@ export function createRpcRoutes(
     await next();
   });
   routes.use("/notifications/*", async (c, next) => {
+    c.header("cache-control", "no-store");
+    await next();
+  });
+  routes.use("/browsers/*", async (c, next) => {
     c.header("cache-control", "no-store");
     await next();
   });

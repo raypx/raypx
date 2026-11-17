@@ -8,7 +8,7 @@ export const pageIdSchema = z.string().min(1).max(128).brand<"PageId">();
 export type PageId = z.infer<typeof pageIdSchema>;
 export const pageKindSchema = z.enum(["document", "html"]);
 /** Match UTF-8 encoding, including replacement of lone surrogates, on every platform. */
-function fitsPageBody(text: string): boolean {
+function fitsUtf8(text: string, limit: number): boolean {
   let bytes = 0;
   for (const character of text) {
     const point = character.codePointAt(0)!;
@@ -16,13 +16,16 @@ function fitsPageBody(text: string): boolean {
     else if (point <= 0x7ff) bytes += 2;
     else if (point <= 0xffff) bytes += 3;
     else bytes += 4;
-    if (bytes > MAX_PAGE_BYTES) return false;
+    if (bytes > limit) return false;
   }
   return true;
 }
-export const pageBodySchema = z.string().max(MAX_PAGE_BYTES).refine(fitsPageBody, {
-  message: "PAGE_TOO_LARGE",
-});
+export const pageBodySchema = z
+  .string()
+  .max(MAX_PAGE_BYTES)
+  .refine((body) => fitsUtf8(body, MAX_PAGE_BYTES), {
+    message: "PAGE_TOO_LARGE",
+  });
 export const pageInputSchema = z.strictObject({
   title: z.string().trim().min(1).max(200),
   kind: pageKindSchema,
@@ -56,6 +59,25 @@ export const pageVersionSchema = pageSchema.extend({
   reason: z.enum(["created", "updated", "renamed", "restored"]),
 });
 export type PageVersion = z.infer<typeof pageVersionSchema>;
+export const pageFormFieldsSchema = z
+  .array(
+    z.strictObject({
+      name: z
+        .string()
+        .min(1)
+        .max(120)
+        .regex(/^[a-zA-Z0-9_.[\]-]+$/),
+      value: z
+        .string()
+        .max(2_000)
+        .refine((value) => !value.includes("\0")),
+    }),
+  )
+  .min(1)
+  .max(24)
+  .refine((fields) => new Set(fields.map((field) => field.name)).size === fields.length)
+  .refine((fields) => fitsUtf8(JSON.stringify(fields), 64_000));
+export type PageFormFields = z.infer<typeof pageFormFieldsSchema>;
 export const pageShareLinkSchema = z.strictObject({
   id: z.string().min(1).max(128),
   spaceId: spaceIdSchema,

@@ -67,7 +67,7 @@ interface PageResultPreviewProps {
   onClose: () => void;
   finalFocus: () => HTMLElement | false;
   spaceId: SpaceId;
-  page: { id: PageId; version?: number };
+  page: { id: PageId; version?: number; previewOnly?: boolean };
   read: PageReader;
   apiOrigin: string;
   canEmbedAuthenticatedDocuments: boolean;
@@ -94,7 +94,7 @@ export function PageResultPreview({ open, onClose, ...props }: PageResultPreview
   }, [open, docked]);
   const panel = open && (
     <PageResultPanel
-      key={JSON.stringify([props.spaceId, page.id, page.version])}
+      key={JSON.stringify([props.spaceId, page.id, page.version, page.previewOnly])}
       {...props}
       heading={heading}
       headingId={headingId}
@@ -129,7 +129,7 @@ export function PageResultPreview({ open, onClose, ...props }: PageResultPreview
 
 function PageResultPanel({
   spaceId,
-  page: { id, version },
+  page: { id, version, previewOnly },
   read,
   apiOrigin,
   canEmbedAuthenticatedDocuments,
@@ -143,7 +143,7 @@ function PageResultPanel({
 }) {
   const t = useTranslations("pages");
   const current = usePageVersion(read, spaceId, id, version);
-  const comparesVersions = version !== undefined && version > 1;
+  const comparesVersions = !previewOnly && version !== undefined && version > 1;
   const [view, setView] = useState(comparesVersions ? "changes" : "preview");
   const [reload, setReload] = useState(0);
   const previous = usePageVersion(read, spaceId, id, comparesVersions ? version - 1 : null);

@@ -396,6 +396,19 @@ export function registerTests() {
         const frameBox = (await htmlResult.locator("iframe").boundingBox())!;
         expect(panelBox.width - frameBox.width).toBeLessThanOrEqual(2);
         expect(panelBox.height - frameBox.height).toBeLessThan(64);
+        const htmlUrl = await htmlResult.locator("iframe").getAttribute("src");
+        const formPage = decodeURIComponent(new URL(htmlUrl!, origin).pathname.split("/").at(-1)!);
+        await expect(preview.getByRole("textbox", { name: "Company" })).toHaveValue("");
+        const formEditor = page.getByRole("textbox", { name: "Message", exact: true });
+        await formEditor.fill(`Fixture Page fill ${formPage}`, { timeout });
+        await page.getByRole("button", { name: "Send", exact: true }).click({ timeout });
+        await expect(approval.getByText("Raypx fixture", { exact: true })).toBeVisible();
+        await expect(preview.getByRole("textbox", { name: "Company" })).toHaveValue("");
+        await approval.getByRole("button", { name: "Approve", exact: true }).click({ timeout });
+        await page.getByRole("button", { name: "Form draft filled Version 1" }).click({ timeout });
+        await expect(preview.getByRole("textbox", { name: "Company" })).toHaveValue(
+          "Raypx fixture",
+        );
       }
     } finally {
       await rpc("spaces/delete", { spaceId });

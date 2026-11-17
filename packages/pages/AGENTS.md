@@ -7,6 +7,9 @@ every edit uses expected-version CAS. Run writes carry current execution fences
 and mutation identities. Share tokens are returned once; only digests persist.
 The Page update tool accepts exact replacements against one saved version for
 localized changes. All replacements match uniquely and commit as one version.
+The form tool saves a confirmed text-field draft for the initiating member and
+the current HTML version. The member document applies this draft at render time
+while source, history and public links continue to use the immutable version.
 No Page content or token enters events or logs. API owns fresh membership and HTTP
 admission. Public rendering never resolves a session. Both rendering routes must
 preserve the restrictive sandbox CSP, no-store and no-cookie response contract.

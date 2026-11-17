@@ -133,6 +133,7 @@ import { GroupForm, GroupParticipants } from "./group-directory.js";
 import { AgentForm } from "./agent-form.js";
 import { SpaceForm } from "./space-form.js";
 import { AgentConversation } from "./conversation.js";
+import type { BrowserPreviewPort } from "./browser-panel.js";
 import { ConversationLoading, conversationColumn } from "./conversation-loading.js";
 import { browserConversationDrafts, browserConversationSocket } from "./browser-ports.js";
 import { useTranslations } from "./i18n.js";
@@ -176,6 +177,7 @@ function screenMethods(port: ComputerPort): Partial<ComputerScreenPort> {
 export interface AgentsWorkspaceProps {
   nativeDeviceConfirmation?: NativeDeviceConfirmation | undefined;
   client: AgentsWorkspacePort;
+  browser?: BrowserPreviewPort | undefined;
   route?: string;
   ensureSpaceSearch?: boolean;
   children?: ReactNode;
@@ -249,6 +251,7 @@ function ScopedWorkspace(props: AgentsWorkspaceProps) {
 
 function AgentsWorkspaceContents({
   client: sourceClient,
+  browser,
   route = "/agents",
   ensureSpaceSearch = false,
   children,
@@ -1887,6 +1890,7 @@ function AgentsWorkspaceContents({
             page.spaceId &&
             (selected ? (
               <AgentConversation
+                browser={browser}
                 key={JSON.stringify([accountId, origin, selected.conversation.id])}
                 item={selected}
                 runReference={

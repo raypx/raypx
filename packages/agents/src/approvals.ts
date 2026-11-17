@@ -2,6 +2,7 @@ import {
   approvalSettingsSchema,
   approvalSettingsStateSchema,
   MAX_TOOL_RESULT,
+  requiresExplicitFormApproval,
   type ApprovalMode,
   type ApprovalRequest,
   type ApprovalRule,
@@ -204,6 +205,7 @@ export function approvalDisposition(
 ): "approved" | "blocked" | "ask" {
   const rules = settings.rules.filter((rule) => matchingRule(rule, call));
   if (rules.some((rule) => rule.decision === "block")) return "blocked";
+  if (requiresExplicitFormApproval(call.name)) return "ask";
   // OS commands are never implicitly authorized by an account's broad mode.
   if (call.device && call.name === "computer_run_command") {
     if (untrustedInput || call.argumentsUntrusted) return "ask";

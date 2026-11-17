@@ -104,6 +104,9 @@
     "createPage": "Create page",
     "updatePage": "Update page",
     "readPage": "Read page",
+    "fillPageForm": "Fill Page form",
+    "inspectBrowserForm": "Inspect website form",
+    "fillBrowserForm": "Fill website form",
     "loadSkill": "Load skill",
     "saveSkill": "Save skill",
     "webSearch": "Search the web",
@@ -114,6 +117,9 @@
     "keyboard": "Keyboard input"
   },
   "approval": {
+    "emptyField": "Empty",
+    "loadingFormFields": "Loading proposed values…",
+    "browserFillEffects": "This website may save values as they are entered.",
     "answeredBy": "Answered by {member}",
     "awaitingExpiry": "Time elapsed; confirming expiry…",
     "alwaysTool": "Always allow this exact tool",
@@ -812,10 +818,23 @@
     "count": "{count, plural, one {# web source} other {# web sources}}"
   },
   "pageResult": {
+    "formFilled": "Form draft filled",
     "label": "Page results",
     "created": "Page created",
     "updated": "Page updated",
     "version": "Version {version, number}"
+  },
+  "browser": {
+    "title": "Browser",
+    "address": "Website URL",
+    "open": "Open",
+    "close": "Close browser panel",
+    "end": "End session",
+    "takeover": "Take control",
+    "release": "Release control",
+    "viewport": "Browser viewport",
+    "unavailable": "The deployment browser is unavailable.",
+    "failed": "The browser action failed. Check the website or retry."
   },
   "pageReference": {
     "page": "Page",

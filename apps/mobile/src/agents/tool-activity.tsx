@@ -36,9 +36,12 @@ function ToolCallRow({
 }) {
   const { t } = useCopy();
   const [linkError, setLinkError] = useState(false);
-  const pageTool = ["agent_page_create", "agent_page_update", "agent_page_read"].includes(
-    call.toolName,
-  );
+  const pageTool = [
+    "agent_page_create",
+    "agent_page_update",
+    "agent_page_fill_form",
+    "agent_page_read",
+  ].includes(call.toolName);
   function openPage() {
     const url = new URL("/pages", origin);
     url.searchParams.set("spaceId", spaceId);

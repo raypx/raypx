@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   pageBodySchema,
+  pageFormFieldsSchema,
   pageIdSchema,
   pageInputSchema,
   PageError,
@@ -35,6 +36,11 @@ export const pageToolSchemas = {
     version: z.number().int().positive().optional(),
     offset: z.number().int().nonnegative().default(0),
     limit: z.number().int().min(1).max(8_000).default(8_000),
+  }),
+  agent_page_fill_form: z.strictObject({
+    id: pageIdSchema,
+    expectedVersion: z.number().int().positive(),
+    fields: pageFormFieldsSchema,
   }),
 };
 type PageToolName = keyof typeof pageToolSchemas;
@@ -77,6 +83,8 @@ export function createPageTools(service: PagesService, publicWebOrigin: string) 
       "Create a Page that you maintain. This change uses the member's approval rules, including in routine Runs.",
     agent_page_update:
       "Update a Page that you maintain. Use agent_page_read to obtain expectedVersion and the original text. Prefer edits for localized changes: each oldText must match exactly once in that version, and matches must not overlap. newText may be empty to delete the match. Provide either edits or a complete body for a full rewrite. The update saves one version and uses the member's approval rules, including in routine Runs.",
+    agent_page_fill_form:
+      "Propose non-sensitive values for named text inputs or textareas in an HTML Page form. Read the saved Page first to obtain expectedVersion and exact field names. The member must approve each proposal. Saves a private draft for the requesting member and neither edits the shared Page nor submits a form.",
   };
 
   function pageUrl(page: Pick<Page, "spaceId" | "id">) {
@@ -164,6 +172,15 @@ export function createPageTools(service: PagesService, publicWebOrigin: string) 
           { ...args, agentId: run.agentId },
           actor,
           pageIdSchema.parse(`page-${mutationKey}`),
+        );
+      } else if (call.name === "agent_page_fill_form") {
+        const args = pageToolSchemas.agent_page_fill_form.parse(call.arguments);
+        page = await service.saveFormDraft(
+          scope,
+          args.id,
+          args.expectedVersion,
+          args.fields,
+          actor,
         );
       } else {
         const args = pageToolSchemas.agent_page_update.parse(call.arguments);

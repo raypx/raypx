@@ -162,6 +162,37 @@ it("stores only link hashes, follows current or pinned versions, expires and rev
   expect(await service.resolveShare("0".repeat(64))).toBeNull();
   await service.revokeShareLinks(f.a, page.id);
 });
+it("shows a draft only to its member and exact Page version, including after a reload", async () => {
+  const f = await fixture();
+  await connection.db
+    .insert(spaceMembers)
+    .values({ spaceId: f.a.spaceId, accountId: f.member, role: "member" });
+  const member = await access.resolve(f.member, f.a.spaceId);
+  const source = '<form><input name="company"></form>';
+  const page = await service.create(f.a, {
+    title: "Form",
+    kind: "html",
+    body: source,
+    agentId: null,
+  });
+  const share = await service.createShareLink(f.a, page.id);
+  await service.saveFormDraft(f.a, page.id, 1, [{ name: "company", value: "Example & Co" }], {
+    kind: "member",
+    accountId: f.owner,
+  });
+  expect((await service.memberDocument(f.a, page.id)).body).toContain("Example &amp; Co");
+  expect((await service.memberDocument(member, page.id)).body).toBe(source);
+  expect((await service.resolveShare(share.token))?.body).toBe(source);
+  expect((await service.get(f.a, page.id)).body).toBe(source);
+  await service.update(f.a, page.id, 1, source);
+  await expect(
+    service.saveFormDraft(f.a, page.id, 1, [{ name: "company", value: "Stale" }], {
+      kind: "member",
+      accountId: f.owner,
+    }),
+  ).rejects.toThrow("PAGE_CONFLICT");
+  expect((await service.memberDocument(f.a, page.id)).body).toBe(source);
+});
 it("rejects every cross-Space Page, version and link foreign key including pinned versions", async () => {
   const f = await fixture();
   const page = await service.create(f.a, {

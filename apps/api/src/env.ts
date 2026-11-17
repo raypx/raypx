@@ -87,6 +87,8 @@ const server = {
   AUTH_IP_HEADERS: z.string().optional(),
   AUTH_TRUSTED_PROXIES: z.string().optional(),
   REDIS_URL: z.url().optional(),
+  BROWSER_BROKER_URL: z.url().optional(),
+  BROWSER_BROKER_TOKEN: z.string().min(32).max(512).optional(),
   POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
   POSTHOG_HOST: z.url().optional(),
 } satisfies Record<keyof typeof apiEnvironmentSources, z.ZodType>;
@@ -186,6 +188,8 @@ export function getWorkerEnvironment(runtimeEnv: Record<string, string | undefin
       RUN_BACKUP_MARGIN_MS: server.RUN_BACKUP_MARGIN_MS,
       ROUTINE_EMAIL_DOMAIN: server.ROUTINE_EMAIL_DOMAIN,
       REDIS_URL: server.REDIS_URL,
+      BROWSER_BROKER_URL: server.BROWSER_BROKER_URL,
+      BROWSER_BROKER_TOKEN: server.BROWSER_BROKER_TOKEN,
     },
   });
   validateRunTiming(environment);

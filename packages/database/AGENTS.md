@@ -33,6 +33,8 @@ monotonic revision for compare-and-swap writes.
 Nullable Page ID/version pairs reference body-free `page_identities` with a
 same-Space foreign key. These identities survive Page deletion until Space deletion.
 Finished-event JSON has a generated Page ID with the same composite foreign key.
+Page form drafts reference a same-Space member and exact Page version. A fenced
+write replaces that member's draft for the Page.
 
 PostgreSQL authority for accounts, Spaces, Agents, conversations, durable Runs,
 approvals/effects, computers, routines, memory, Pages, skills, model/MCP/OpenAPI resources

@@ -14,6 +14,7 @@ import {
 } from "@raypx/agents/model";
 import { useCopy } from "../locale.js";
 import { Action } from "../ui.js";
+import { requiresExplicitFormApproval } from "@raypx/core/approvals";
 
 export interface ApprovalCardProps {
   card: ApprovalCardView;
@@ -57,6 +58,7 @@ export function ApprovalCard({
   }, [card.requestId, card.expiresAt, pending, remaining, onRefresh]);
   const duration = approvalDuration(remaining);
   const addressed = card.memberAccountId === accountId;
+  const confirmForm = requiresExplicitFormApproval(card.toolName);
   const disabled =
     card.answering ||
     remaining === 0 ||
@@ -145,23 +147,51 @@ export function ApprovalCard({
             </Text>
           ) : (
             <>
-              <View className="flex-row items-center gap-3">
-                <Switch
-                  accessibilityLabel={rememberLabel}
-                  isSelected={remember}
-                  onSelectedChange={setRemember}
-                  isDisabled={disabled || card.error === "ruleLimit"}
-                />
-                <Text className="flex-1 text-sm leading-5 text-foreground">{rememberLabel}</Text>
-              </View>
+              {confirmForm &&
+                (card.formFields ? (
+                  <View className="gap-2">
+                    {card.formFields.map(({ name, value }) => (
+                      <View key={name}>
+                        <Text className="text-xs font-semibold text-foreground">{name}</Text>
+                        <Text selectable className="text-xs text-foreground">
+                          {value || t("agents.approval.emptyField")}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text className="text-xs text-muted-foreground">
+                    {t("agents.approval.loadingFormFields")}
+                  </Text>
+                ))}
+              {card.toolName === "browser_fill_form" && (
+                <Text className="text-xs text-muted-foreground">
+                  {t("agents.approval.browserFillEffects")}
+                </Text>
+              )}
+              {!confirmForm && (
+                <View className="flex-row items-center gap-3">
+                  <Switch
+                    accessibilityLabel={rememberLabel}
+                    isSelected={remember}
+                    onSelectedChange={setRemember}
+                    isDisabled={disabled || card.error === "ruleLimit"}
+                  />
+                  <Text className="flex-1 text-sm leading-5 text-foreground">{rememberLabel}</Text>
+                </View>
+              )}
               <View className="flex-row flex-wrap gap-2">
                 <View className="min-w-32 flex-1">
                   <Action
                     label={t("agents.approval.approve")}
                     busy={card.answering}
-                    disabled={disabled}
+                    disabled={disabled || (confirmForm && !card.formFields)}
                     onPress={() =>
-                      onAnswer(card.requestId, "approved", remember && card.error !== "ruleLimit")
+                      onAnswer(
+                        card.requestId,
+                        "approved",
+                        !confirmForm && remember && card.error !== "ruleLimit",
+                      )
                     }
                   />
                 </View>

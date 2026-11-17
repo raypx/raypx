@@ -104,6 +104,9 @@
     "createPage": "创建页面",
     "updatePage": "更新页面",
     "readPage": "读取页面",
+    "fillPageForm": "填写页面表单",
+    "inspectBrowserForm": "查看网站表单",
+    "fillBrowserForm": "填写网站表单",
     "loadSkill": "加载技能",
     "saveSkill": "保存技能",
     "webSearch": "搜索网页",
@@ -114,6 +117,9 @@
     "keyboard": "键盘输入"
   },
   "approval": {
+    "emptyField": "留空",
+    "loadingFormFields": "正在加载拟填值…",
+    "browserFillEffects": "网站可能在填写时自动保存。",
     "answeredBy": "由{member}处理",
     "awaitingExpiry": "已到期，正在确认状态…",
     "alwaysTool": "始终允许此工具",
@@ -812,10 +818,23 @@
     "count": "{count, number} 个网页来源"
   },
   "pageResult": {
+    "formFilled": "已填写表单草稿",
     "label": "页面结果",
     "created": "已创建页面",
     "updated": "已更新页面",
     "version": "第 {version, number} 版"
+  },
+  "browser": {
+    "title": "浏览器",
+    "address": "网站地址",
+    "open": "打开",
+    "close": "关闭浏览器面板",
+    "end": "结束会话",
+    "takeover": "接管",
+    "release": "交还控制",
+    "viewport": "浏览器画面",
+    "unavailable": "当前部署的浏览器不可用。",
+    "failed": "浏览器操作失败。请检查网站地址或重试。"
   },
   "pageReference": {
     "page": "页面",

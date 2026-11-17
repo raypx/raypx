@@ -40,6 +40,7 @@ export interface ApiAppOptions {
   agentApprovals: import("@raypx/agents/server").ApprovalsService;
   computers: import("@raypx/computers/server").ComputersService;
   computerScreens: import("@raypx/computers/server").ComputerScreensService;
+  browser?: import("@raypx/providers/browser").BrowserProvider | undefined;
   spaces: SpaceAccess;
   spaceManagement: SpaceManagement;
   agents: AgentsRepository;

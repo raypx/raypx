@@ -1,6 +1,7 @@
 import type { AgentId } from "@raypx/core/agents";
 import type {
   PageId,
+  PageFormFields,
   PageInput,
   PageListItem,
   PageShareLink,
@@ -32,6 +33,14 @@ export interface PageRunActor {
 export interface PagesRepository {
   list(scope: SpaceScope, options: { agentId?: AgentId; limit: number }): Promise<PageListItem[]>;
   get(scope: SpaceScope, id: PageId, version?: number): Promise<PageVersion>;
+  formDraft(scope: SpaceScope, id: PageId, version: number): Promise<PageFormFields | null>;
+  saveFormDraft(
+    scope: SpaceScope,
+    id: PageId,
+    version: number,
+    fields: PageFormFields,
+    actor: PageActor,
+  ): Promise<PageVersion>;
   create(
     scope: SpaceScope,
     id: PageId,
@@ -86,6 +95,14 @@ export interface PagesRepository {
 export interface PagesService {
   list(scope: SpaceScope, options?: { agentId?: AgentId; limit?: number }): Promise<PageListItem[]>;
   get(scope: SpaceScope, id: PageId, version?: number): Promise<PageVersion>;
+  memberDocument(scope: SpaceScope, id: PageId, version?: number): Promise<PageVersion>;
+  saveFormDraft(
+    scope: SpaceScope,
+    id: PageId,
+    version: number,
+    fields: PageFormFields,
+    actor: PageActor,
+  ): Promise<PageVersion>;
   create(scope: SpaceScope, input: PageInput, actor?: PageActor, id?: PageId): Promise<PageVersion>;
   update(
     scope: SpaceScope,

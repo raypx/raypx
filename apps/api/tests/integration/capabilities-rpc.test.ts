@@ -126,6 +126,8 @@ function fixture() {
   // These stubs validate the domain arguments, independently of the RPC input
   // schema. Forwarding the transport envelope into a strict domain input fails.
   const pages = {
+    memberDocument: vi.fn<PagesService["memberDocument"]>(async () => page),
+    saveFormDraft: vi.fn<PagesService["saveFormDraft"]>(async () => page),
     list: vi.fn<PagesService["list"]>(async (current, input) => {
       requireScope(current);
       scopedPageList.parse(input);

@@ -4,6 +4,7 @@ import {
   agents,
   conversationCounters,
   conversationRuns,
+  pageFormDrafts,
   pageShareLinks,
   pageIdentities,
   pages,
@@ -16,6 +17,7 @@ import {
   MAX_PAGES_PER_SPACE,
   PageError,
   pageSchema,
+  pageFormFieldsSchema,
   pageListItemSchema,
   pageShareLinkSchema,
   pageVersionSchema,
@@ -26,6 +28,7 @@ import {
 import { normalizeTaskJson } from "@raypx/core/task-text";
 import type { SpaceScope } from "@raypx/spaces/server";
 import { PageExecutionFenceError, type PageActor, type PagesRepository } from "./types.js";
+import { fillPageForm } from "./forms.js";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type PageRow = typeof pages.$inferSelect;
@@ -60,6 +63,14 @@ function linkView(row: typeof pageShareLinks.$inferSelect) {
 }
 function selectPage(scope: SpaceScope, id: PageId) {
   return and(eq(pages.spaceId, scope.spaceId), eq(pages.id, id));
+}
+function selectDraft(scope: SpaceScope, id: PageId, version: number) {
+  return and(
+    eq(pageFormDrafts.spaceId, scope.spaceId),
+    eq(pageFormDrafts.pageId, id),
+    eq(pageFormDrafts.accountId, scope.member.accountId),
+    eq(pageFormDrafts.version, version),
+  );
 }
 async function requiredPage(
   tx: Transaction | Database,
@@ -254,6 +265,47 @@ export function createPagesRepository(db: Database): PagesRepository {
         .where(selectPage(scope, id));
       if (!row) throw new PageError("PAGE_NOT_FOUND");
       return versionView(row.page, row.version);
+    },
+    async formDraft(scope, id, version) {
+      const [draft] = await db
+        .select({ fields: pageFormDrafts.fields })
+        .from(pageFormDrafts)
+        .where(selectDraft(scope, id, version));
+      return draft?.fields ?? null;
+    },
+    async saveFormDraft(scope, id, version, fields, actor) {
+      return db.transaction(async (tx) => {
+        await assertExecution(tx, scope, actor);
+        const current = await requiredPage(tx, scope, id, true);
+        if (current.version !== version) throw new PageError("PAGE_CONFLICT");
+        if (current.kind !== "html") throw new PageError("PAGE_INVALID_INPUT");
+        const saved = await requiredVersion(tx, scope.spaceId, id, version);
+        const [draft] = await tx
+          .select({ fields: pageFormDrafts.fields })
+          .from(pageFormDrafts)
+          .where(selectDraft(scope, id, version));
+        const merged = new Map((draft?.fields ?? []).map(({ name, value }) => [name, value]));
+        for (const { name, value } of fields) merged.set(name, value);
+        const input = pageFormFieldsSchema.safeParse(
+          [...merged].map(([name, value]) => ({ name, value })),
+        );
+        if (!input.success) throw new PageError("PAGE_INVALID_INPUT");
+        fillPageForm(saved.body, input.data);
+        await tx
+          .insert(pageFormDrafts)
+          .values({
+            spaceId: scope.spaceId,
+            pageId: id,
+            accountId: scope.member.accountId,
+            version,
+            fields: input.data,
+          })
+          .onConflictDoUpdate({
+            target: [pageFormDrafts.spaceId, pageFormDrafts.pageId, pageFormDrafts.accountId],
+            set: { version, fields: input.data },
+          });
+        return versionView(current, saved);
+      });
     },
     async create(scope, id, input, actor, now) {
       return db.transaction(async (tx) => {

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { SpaceScope } from "@raypx/spaces/server";
-import type { ApprovalReview } from "@raypx/core/approvals";
+import { requiresExplicitFormApproval, type ApprovalReview } from "@raypx/core/approvals";
 import type { ApprovalCall } from "./approvals.js";
 import type { ExecutionRun } from "./conversations.js";
 
@@ -41,6 +41,7 @@ export const APPROVAL_REVIEW_PROMPT = [
 ].join("\n");
 
 export function autoReviewIneligibility(run: ExecutionRun, call: ApprovalCall): string | undefined {
+  if (requiresExplicitFormApproval(call.name)) return "Form fills require a member decision.";
   if (call.protectedInput) return "Protected operations require a member decision.";
   if (call.device && call.name === "computer_run_command")
     return "Device commands require an exact Allow rule or a member decision.";

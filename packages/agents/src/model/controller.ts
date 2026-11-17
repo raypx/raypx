@@ -3,7 +3,11 @@ import type { ConversationFeedFrame } from "@raypx/contracts/api";
 import type { AgentId } from "@raypx/core/agents";
 import { editMentionTokens, insertMention, mentionIds, type MentionToken } from "./mentions.js";
 import type { ConversationHistoryCursor, Message, RunId } from "@raypx/core/conversation";
-import type { ApprovalRequest, EffectiveApprovalMode } from "@raypx/core/approvals";
+import {
+  requiresExplicitFormApproval,
+  type ApprovalRequest,
+  type EffectiveApprovalMode,
+} from "@raypx/core/approvals";
 import { ApprovalProjection, type ApprovalCardView } from "./approvals.js";
 import { ConversationState, type ConversationView } from "./conversation.js";
 import { isRpcRateLimited, PENDING_READ_COOLDOWN_MS } from "./rpc-rate-limit.js";
@@ -92,6 +96,7 @@ export class ConversationController {
   private hasSnapshot = false;
   private storageUnavailable = false;
   private approvalsGeneration = 0;
+  private refreshPendingForm = false;
   private approvalsRetryAt = 0;
   private runDetailsLoading = false;
   private historyGeneration = 0;
@@ -662,6 +667,15 @@ export class ConversationController {
       if (applied === "applied" && event.kind === "computer.state")
         this.options.computer?.applyEvent(event);
       if (applied === "applied") this.approvals.applyEvent(event);
+      if (
+        applied === "applied" &&
+        event.kind === "card.created" &&
+        event.memberAccountId === this.options.owner.accountId &&
+        requiresExplicitFormApproval(event.toolName)
+      ) {
+        if (this.view.approvalsLoading) this.refreshPendingForm = true;
+        else void this.refreshApprovals();
+      }
       if (applied === "applied" && !this.view.history.hasNewer) this.releaseHistory("later");
       this.update({
         protectedInputsRevision:
@@ -762,6 +776,7 @@ export class ConversationController {
     ++this.historyGeneration;
     ++this.generation;
     ++this.approvalsGeneration;
+    this.refreshPendingForm = false;
     this.cancelTimer();
     this.closeFeed();
     this.state.clearLiveReplies();
@@ -855,6 +870,11 @@ export class ConversationController {
       if (this.disposed || generation !== this.approvalsGeneration) return;
       if (isRpcRateLimited(error)) this.approvalsRetryAt = Date.now() + PENDING_READ_COOLDOWN_MS;
       this.update({ approvalsLoading: false, approvalsError: true });
+    } finally {
+      if (generation === this.approvalsGeneration && this.refreshPendingForm) {
+        this.refreshPendingForm = false;
+        void this.refreshApprovals();
+      }
     }
   }
   async answerApproval(

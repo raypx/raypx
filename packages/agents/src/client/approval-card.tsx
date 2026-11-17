@@ -14,6 +14,7 @@ import {
   type ApprovalCardView,
 } from "../model.js";
 import { useTranslations } from "./i18n.js";
+import { requiresExplicitFormApproval } from "@raypx/core/approvals";
 
 /** A timer updates presentation only; the server decides when a request resolves. */
 function useApprovalRemaining(card: ApprovalCardView, onExpired: () => void) {
@@ -92,6 +93,7 @@ export function ApprovalCard({
   const [remember, setRemember] = useState(false);
   const [elapsed, setElapsed] = useState(() => approvalRemainingSeconds(card, Date.now()) === 0);
   const addressed = card.memberAccountId === accountId;
+  const confirmForm = requiresExplicitFormApproval(card.toolName);
   const expired = elapsed;
   const summary = approvalExtraSummary(card);
   const operationKind = openApiOperationKind(card);
@@ -99,6 +101,7 @@ export function ApprovalCard({
     card.target === "Space page" &&
     (card.toolName === "agent_page_create" ||
       card.toolName === "agent_page_update" ||
+      card.toolName === "agent_page_fill_form" ||
       card.toolName === "agent_page_read");
   const disabled =
     card.answering || expired || card.error === "unconfirmed" || card.error === "resolvedElsewhere";
@@ -108,10 +111,15 @@ export function ApprovalCard({
     resolvedElsewhere: "approval.resolvedElsewhere",
   } as const;
   async function answer(decision: "approved" | "denied") {
-    if (disabled || approvalRemainingSeconds(card, Date.now()) === 0) return;
+    if (
+      disabled ||
+      (decision === "approved" && confirmForm && !card.formFields) ||
+      approvalRemainingSeconds(card, Date.now()) === 0
+    )
+      return;
     const accepted = await onAnswer(
       decision,
-      decision === "approved" && remember && card.error !== "ruleLimit",
+      decision === "approved" && !confirmForm && remember && card.error !== "ruleLimit",
     );
     if (accepted) onAnswered();
   }
@@ -182,6 +190,23 @@ export function ApprovalCard({
       {summary && (
         <pre className="min-w-0 font-mono text-xs whitespace-pre-wrap wrap-anywhere">{summary}</pre>
       )}
+      {addressed &&
+        confirmForm &&
+        (card.formFields ? (
+          <dl className="flex min-w-0 flex-col gap-2 rounded-md bg-muted p-2 text-xs">
+            {card.formFields.map(({ name, value }) => (
+              <div className="min-w-0 wrap-anywhere" key={name}>
+                <dt className="font-medium">{name}</dt>
+                <dd className="whitespace-pre-wrap">{value || t("approval.emptyField")}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <p role="status">{t("approval.loadingFormFields")}</p>
+        ))}
+      {addressed && card.toolName === "browser_fill_form" && (
+        <p className="text-xs text-muted-foreground">{t("approval.browserFillEffects")}</p>
+      )}
       {card.review?.reason && (
         <p className="min-w-0 text-xs text-muted-foreground whitespace-pre-wrap wrap-anywhere">
           {card.review.reason}
@@ -196,25 +221,31 @@ export function ApprovalCard({
       )}
       {addressed && (
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <Field
-            orientation="horizontal"
-            className="w-fit"
-            data-disabled={disabled || card.error === "ruleLimit"}
-          >
-            <Checkbox
-              id={`${id}-remember`}
-              checked={remember && card.error !== "ruleLimit"}
-              onCheckedChange={setRemember}
-              disabled={disabled || card.error === "ruleLimit"}
-            />
-            <FieldLabel htmlFor={`${id}-remember`}>
-              {card.toolName === "computer_run_command"
-                ? t("approval.alwaysExecutable")
-                : t("approval.alwaysTool")}
-            </FieldLabel>
-          </Field>
+          {!confirmForm && (
+            <Field
+              orientation="horizontal"
+              className="w-fit"
+              data-disabled={disabled || card.error === "ruleLimit"}
+            >
+              <Checkbox
+                id={`${id}-remember`}
+                checked={remember && card.error !== "ruleLimit"}
+                onCheckedChange={setRemember}
+                disabled={disabled || card.error === "ruleLimit"}
+              />
+              <FieldLabel htmlFor={`${id}-remember`}>
+                {card.toolName === "computer_run_command"
+                  ? t("approval.alwaysExecutable")
+                  : t("approval.alwaysTool")}
+              </FieldLabel>
+            </Field>
+          )}
           <div className="flex min-w-0 flex-wrap gap-2">
-            <Button size="sm" disabled={disabled} onClick={() => void answer("approved")}>
+            <Button
+              size="sm"
+              disabled={disabled || (confirmForm && !card.formFields)}
+              onClick={() => void answer("approved")}
+            >
               {t("approval.approve")}
             </Button>
             <Button

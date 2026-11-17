@@ -9,7 +9,7 @@ export interface PageResultMountProps {
   open: boolean;
   docked: boolean;
   spaceId: SpaceId;
-  page: { id: ToolPage["id"]; version?: number };
+  page: { id: ToolPage["id"]; version?: number; previewOnly?: boolean };
   onClose: () => void;
   finalFocus: () => HTMLElement | false;
 }
@@ -22,7 +22,7 @@ export function PageResultCards({
 }: {
   activity: readonly ToolActivity[];
   delegated: readonly { activity: readonly ToolActivity[] }[];
-  onOpen: (page: ToolPage, opener: HTMLButtonElement) => void;
+  onOpen: (page: PageResultMountProps["page"], opener: HTMLButtonElement) => void;
   docked: boolean;
 }) {
   const t = useTranslations("agents");
@@ -31,27 +31,40 @@ export function PageResultCards({
     if (
       outcome !== "succeeded" ||
       !page ||
-      (toolName !== "agent_page_create" && toolName !== "agent_page_update")
+      (toolName !== "agent_page_create" &&
+        toolName !== "agent_page_update" &&
+        toolName !== "agent_page_fill_form")
     )
       return [];
-    return [{ page, toolName }];
+    return [{ page, toolName, key: JSON.stringify([call.runId, call.toolCallId]) }];
   });
   if (!cards.length) return null;
   return (
     <ul aria-label={t("pageResult.label")} className="flex min-w-0 flex-wrap gap-2">
-      {cards.map(({ page, toolName }) => (
-        <li key={JSON.stringify([page.id, page.version])} className="min-w-0 max-w-full">
+      {cards.map(({ page, toolName, key }) => (
+        <li key={key} className="min-w-0 max-w-full">
           <Button
             size="sm"
             variant="outline"
             aria-haspopup={docked ? undefined : "dialog"}
             className="h-auto min-h-11 max-w-full gap-2.5 py-2"
-            onClick={(event) => onOpen(page, event.currentTarget)}
+            onClick={(event) =>
+              onOpen(
+                toolName === "agent_page_fill_form" ? { ...page, previewOnly: true } : page,
+                event.currentTarget,
+              )
+            }
           >
             <FileTextIcon data-icon="inline-start" aria-hidden="true" />
             <span className="flex min-w-0 flex-col items-start gap-0.5 text-left whitespace-normal">
               <span>
-                {t(toolName === "agent_page_create" ? "pageResult.created" : "pageResult.updated")}
+                {toolName === "agent_page_fill_form"
+                  ? t("pageResult.formFilled")
+                  : t(
+                      toolName === "agent_page_create"
+                        ? "pageResult.created"
+                        : "pageResult.updated",
+                    )}
               </span>
               <span className="text-xs text-muted-foreground">
                 {t("pageResult.version", { version: page.version })}

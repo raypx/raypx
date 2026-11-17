@@ -17,6 +17,7 @@ import {
   approvalRequestSchema,
   approvalReviewSchema,
   revisionedApprovalSettingsSchema,
+  requiresExplicitFormApproval,
   effectSchema,
   type ApprovalRequest,
   type ApprovalState,
@@ -514,7 +515,11 @@ export function createApprovalsRepository(
             await audit.append(tx, operationId, context, "refused", "EXPIRED");
             return { expired: true, request };
           }
-          if (answer.decision === "approved" && answer.allowTool) {
+          if (
+            answer.decision === "approved" &&
+            answer.allowTool &&
+            !requiresExplicitFormApproval(current.toolName)
+          ) {
             await tx
               .insert(settings)
               .values({ accountId: scope.member.accountId, mode: "ask" })

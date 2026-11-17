@@ -115,6 +115,19 @@ it.each(["computer_pointer", "computer_keyboard"] as const)(
   },
 );
 
+it.each(["agent_page_fill_form", "browser_fill_form"] as const)(
+  "requires per-call confirmation for %s even when an Allow rule exists",
+  (name) => {
+    const call: ApprovalCall = { ...write, name };
+    const allow = { toolName: name, executable: null, decision: "allow" as const };
+    const block = { ...allow, decision: "block" as const };
+    for (const mode of ["ask", "auto", "never"] as const) {
+      expect(approvalDisposition({ mode, rules: [allow] }, call)).toBe("ask");
+      expect(approvalDisposition({ mode, rules: [allow, block] }, call)).toBe("blocked");
+    }
+  },
+);
+
 it("keeps screenshots as reads with Block precedence in Auto", () => {
   const screenshot: ApprovalCall = {
     ...write,

@@ -35,6 +35,7 @@ function fixture(kind: "html" | "document" = "document") {
   const pages = {
     resolveShare: vi.fn(async (supplied: string) => (supplied === token && !revoked ? page : null)),
     get,
+    memberDocument: get,
   } as unknown as PagesService;
   const readSession = vi.fn(async () => null);
   const app = createApiApp({ pages, allowedOrigins: ["https://app.example"], readSession });

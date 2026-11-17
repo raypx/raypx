@@ -533,6 +533,9 @@ export function createConversationsRepository(
   return {
     ...createGroupsRepository(db, { lock, cancelRun }),
     ...createDelegationsRepository(db, { lock, writeCheckpoint, appendState, cancelRun }),
+    async assertConversation(scope, id) {
+      await requireConversation(db, scope, id);
+    },
     /** Maintenance selectors never fabricate a current member scope. */
     async cancelSpaceRuns(spaceId, accountId) {
       await db.transaction(async (tx) => {

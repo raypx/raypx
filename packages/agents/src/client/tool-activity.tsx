@@ -89,6 +89,7 @@ function ToolActivityRow({
   const pageTool =
     call.toolName === "agent_page_create" ||
     call.toolName === "agent_page_update" ||
+    call.toolName === "agent_page_fill_form" ||
     call.toolName === "agent_page_read";
   // Only server-produced identity is a selector; target remains display text.
   const canOpenPage = pageTool && onOpenPage;

@@ -15,7 +15,10 @@ export function withPageTools(
   const pages = createPageTools(service, publicWebOrigin);
   function isPage(name: string) {
     return (
-      name === "agent_page_create" || name === "agent_page_update" || name === "agent_page_read"
+      name === "agent_page_create" ||
+      name === "agent_page_update" ||
+      name === "agent_page_read" ||
+      name === "agent_page_fill_form"
     );
   }
   function guarded(value: unknown, code: "SECRET_INPUT" | "SECRET_OUTPUT" = "SECRET_INPUT") {
