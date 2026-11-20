@@ -1,0 +1,20 @@
+docs/development/deployment.md
+  s_383e17d31e2491::t_dd96c2f536b093 486-487
+  s_383e17d31e2491::t_b42126c7238b23 484-485
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "14739130f3150caac6697af76660dbebaab78d56",
+  "prompts": {},
+  "sessions": {
+    "s_383e17d31e2491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f8a1-cec8-7192-87be-f06818f25303",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
