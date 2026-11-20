@@ -481,13 +481,10 @@ in production mode. The API has a synthetic HTTPS public identity and the two
 HTTP loopback ingresses as explicit extra origins; this is not public HTTPS acceptance.
 Web permits HTTP API origins only on loopback for prepared local acceptance.
 
-`.github/workflows/deployment-smoke.yml` checks out `next` and reads repository
-variables `PRERELEASE_PUBLIC_URL` and optional `PRERELEASE_API_PUBLIC_URL`. Manual
-dispatch may supply explicit URLs; the scheduled check runs every two hours when
-the public repository variable is configured. The platform deploys after CI and
-exposes no reliable deployment-complete trigger here, so a CI success is not used
-as a deployment signal. Dispatch after deployment; a scheduled run may observe an
-in-progress rollout. Scheduled workflows require the file on the default branch.
+Run `.github/workflows/deployment-smoke.yml` manually after deployment. It checks
+out `next` and reads repository variables `PRERELEASE_PUBLIC_URL` and optional
+`PRERELEASE_API_PUBLIC_URL`. Manual dispatch can override either URL. The platform
+starts deployment after CI and exposes no deployment-complete trigger to this workflow.
 
 Container/deployment inputs select this gate in CI. The images are temporary and
 never published. BuildKit progress streams to the CI job log. Only `results.json`

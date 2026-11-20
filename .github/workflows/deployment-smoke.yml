@@ -10,8 +10,6 @@ on:
         description: Separate API origin (empty uses PRERELEASE_API_PUBLIC_URL repository variable)
         type: string
         required: false
-  schedule:
-    - cron: "23 */2 * * *"
 permissions:
   contents: read
 concurrency:
@@ -21,7 +19,6 @@ env:
   BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
   smoke:
-    if: github.event_name == 'workflow_dispatch' || vars.PRERELEASE_PUBLIC_URL != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
